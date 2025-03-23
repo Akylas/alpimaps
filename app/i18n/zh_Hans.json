@@ -707,7 +707,9 @@
     "until": "直到",
     "inapp": {
         "bigtip_desc": "敬请期待新功能！",
-        "bigtip": "非常好的赞助"
+        "bigtip": "非常好的赞助",
+        "largetip": "啤酒",
+        "largertip": "一品拖"
     },
     "threed_map": "3D地图",
     "copied_to_clipboard": "已复制到剪切板",
@@ -715,5 +717,7 @@
     "export_geoson": "导出 GeoJSON",
     "export_gpx": "导出 GPX",
     "share_geoson": "分享 GeoJSON",
-    "share_gpx": "分享 GPX"
+    "share_gpx": "分享 GPX",
+    "city_min_zoom": "城市最小缩放级别",
+    "emphasis_drinking_water": "强调饮用水和泉水"
 }
