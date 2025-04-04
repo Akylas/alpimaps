@@ -57,6 +57,8 @@
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
         cityMinZoom,
+        forestPatternZoom,
+        rockPatternZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -1072,7 +1074,9 @@
     $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
-    $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
+    $: vectorTileDecoder && && $cityMinZoom > 0 setStyleParameter('city_min_zoom', $cityMinZoom);
+    $: vectorTileDecoder && $forestPatternZoom > 0 && setStyleParameter('forest_pattern_zoom', $forestPatternZoom);
+    $: vectorTileDecoder && && $rockPatternZoom > 0 setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
@@ -2285,7 +2289,7 @@
                     verticalAlignment="top"
                     visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
                     on:tap={resetBearing}>
-                    <label class="mdi" color={colorPrimary} rotate={-currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
+                    <label class="mdi" color={colorPrimary} rotate={currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
                 </mdcardview>
                 <!-- <mdbutton
 

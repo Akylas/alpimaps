@@ -14,6 +14,8 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import {
         cityMinZoom,
+        forestPatternZoom,
+        rockPatternZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -207,7 +209,39 @@
                     description: lc('city_min_zoom_desc'),
                     type: 'slider',
                     rightValue: () => $cityMinZoom,
-                    currentValue: () => $cityMinZoom
+                    currentValue: () => Math.max(0, $cityMinZoom)
+                },
+                {
+                    id: 'setting',
+                    mapStore: forestPatternZoom,
+                    key: 'forestPatternZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('forest_pattern_zoom'),
+                    description: lc('forest_pattern_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $forestPatternZoom,
+                    currentValue: () => Math.max(0, $forestPatternZoom)
+                },
+                {
+                    id: 'setting',
+                    mapStore: rockPatternZoom,
+                    key: 'rockPatternZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('rock_pattern_zoom'),
+                    description: lc('rock_pattern_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $rockPatternZoom,
+                    currentValue: () => Math.max(0, $rockPatternZoom)
                 },
                 {
                     mapStore: showSubBoundaries,

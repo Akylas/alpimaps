@@ -51,4 +51,6 @@ export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', 
 export const emphasisRails = settingsStore('emphasisRails', false);
 export const emphasisDrinkingWater = settingsStore('emphasisDrinkingWater', false);
 export const showSubBoundaries = settingsStore('showSubBoundaries', true);
-export const cityMinZoom = settingsStore('cityMinZoom', 4);
+export const cityMinZoom = settingsStore('cityMinZoom', -1);
+export const forestPatternZoom = settingsStore('forestPatternZoom', -1);
+export const rockPatternZoom = settingsStore('rockPatternZoom', -1);
