@@ -35,7 +35,7 @@ Map {
   [class=rock]{
     polygon-fill: @rock;
     [subclass=bare_rock]  {
-      [zoom>=$rock_pattern_zoom] {
+      [zoom>='nuti::rock_pattern_zoom'] {
         polygon-pattern-fill: $rock_pattern_fill;
         polygon-pattern-opacity: $rock_pattern_opacity;
         polygon-pattern-file: $rock_pattern;
@@ -43,7 +43,7 @@ Map {
     }
     [subclass=scree]{
       polygon-fill: @scree;
-      [zoom>=$scree_pattern_zoom] {
+      [zoom>='nuti::scree_pattern_zoom'] {
         polygon-pattern-fill: $scree_pattern_fill;
         polygon-pattern-opacity: $scree_pattern_opacity;
         polygon-pattern-file: $scree_pattern;
@@ -74,7 +74,7 @@ Map {
     }
     [subclass=scrub] {
       polygon-fill:@scrub;
-      [zoom>=$scrub_pattern_zoom] {
+      [zoom>='nuti::scrub_pattern_zoom'] {
         polygon-pattern-fill: $scrub_pattern_fill;
         polygon-pattern-file: $scrub_pattern;
         polygon-pattern-opacity: $scrub_pattern_opacity;
@@ -96,7 +96,7 @@ Map {
   }
   ::wood [class=wood]{
     polygon-fill: @forest;
-    [zoom>=$forest_pattern_zoom] {
+    [zoom>='nuti::forest_pattern_zoom'] {
       polygon-pattern-fill: @forest_pattern_fill;
       polygon-pattern-file: $forest_pattern;
       polygon-pattern-opacity:@forest_pattern_opacity;
@@ -117,7 +117,7 @@ Map {
     [subclass=marsh] {
         polygon-fill: @grass;
     }
-    [zoom>=$wetland_pattern_zoom] {
+    [zoom>='nuti::wetland_pattern_zoom'] {
       polygon-pattern-fill: $wetland_pattern_fill;
       polygon-pattern-opacity: $wetland_pattern_opacity;
       polygon-pattern-file: $wetland_pattern;
