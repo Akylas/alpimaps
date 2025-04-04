@@ -1,3 +1,4 @@
+import { ApplicationSettings } from '@nativescript/core';
 import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
 import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { LineGeometry, PolygonGeometry } from '@nativescript-community/ui-carto/geometry';

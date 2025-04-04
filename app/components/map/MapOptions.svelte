@@ -16,6 +16,8 @@
         cityMinZoom,
         forestPatternZoom,
         rockPatternZoom,
+        scrubPatternZoom,
+        screePatternZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -26,7 +28,8 @@
         rotateEnabled,
         show3DBuildings,
         showContourLines,
-        showSubBoundaries
+        showSubBoundaries,
+        showPolygonsBorder
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -244,6 +247,38 @@
                     currentValue: () => Math.max(0, $rockPatternZoom)
                 },
                 {
+                    id: 'setting',
+                    mapStore: screePatternZoom,
+                    key: 'screePatternZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('scree_pattern_zoom'),
+                    description: lc('scree_pattern_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $screePatternZoom,
+                    currentValue: () => Math.max(0, $screePatternZoom)
+                },
+                {
+                    id: 'setting',
+                    mapStore: scrubPatternZoom,
+                    key: 'scrubPatternZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('scrub_pattern_zoom'),
+                    description: lc('scrub_pattern_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $scrubPatternZoom,
+                    currentValue: () => Math.max(0, $scrubPatternZoom)
+                },
+                {
                     mapStore: showSubBoundaries,
                     type: 'switch',
                     value: $showSubBoundaries,
@@ -260,8 +295,15 @@
                     type: 'switch',
                     value: $emphasisRails,
                     title: lc('emphasis_rail_tracks')
+                },
+                {
+                    mapStore: showPolygonsBorder,
+                    type: 'switch',
+                    value: $showPolygonsBorder,
+                    title: lc('show_polygone_border')
                 }
             );
+
         }
         items = new ObservableArray(newItems);
     }

@@ -59,6 +59,8 @@
         cityMinZoom,
         forestPatternZoom,
         rockPatternZoom,
+        scrubPatternZoom,
+        screePatternZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -71,8 +73,9 @@
         show3DBuildings,
         showContourLines,
         showRoutes,
-        showSlopePercentages,
-        showSubBoundaries
+        showPolygonsBorder,
+        showSubBoundaries,
+        showPolygonsBorder
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -1074,9 +1077,12 @@
     $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
-    $: vectorTileDecoder && && $cityMinZoom > 0 setStyleParameter('city_min_zoom', $cityMinZoom);
+    $: vectorTileDecoder && $cityMinZoom > 0 setStyleParameter('city_min_zoom', $cityMinZoom);
     $: vectorTileDecoder && $forestPatternZoom > 0 && setStyleParameter('forest_pattern_zoom', $forestPatternZoom);
-    $: vectorTileDecoder && && $rockPatternZoom > 0 setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
+    $: vectorTileDecoder && $rockPatternZoom > 0 setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
+    $: vectorTileDecoder && $screePatternZoom > 0 setStyleParameter('scree_pattern_zoom', $screePatternZoom);
+    $: vectorTileDecoder && $scrubPatternZoom > 0 setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
+    $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
