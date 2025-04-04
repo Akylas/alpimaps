@@ -28,6 +28,7 @@
         "cemetery_pattern":"symbols/grave_yard_generic.svg"
     },
     "nutiparameters": {
+        "polygons_border": 0,
         "wetland_pattern_zoom":13,
         "rock_pattern_zoom":10,
         "scree_pattern_zoom":12,
@@ -35,5 +36,5 @@
         "forest_pattern_zoom":11,
         "contoursOpacity": 0.85
     },
-    "name": "outdoors"
+    "name": "eink"
 }

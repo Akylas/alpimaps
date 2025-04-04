@@ -1,4 +1,4 @@
-import { ApplicationSettings } from '@akylas/nativescript';
+import { ApplicationSettings } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
 
@@ -54,3 +54,6 @@ export const showSubBoundaries = settingsStore('showSubBoundaries', true);
 export const cityMinZoom = settingsStore('cityMinZoom', -1);
 export const forestPatternZoom = settingsStore('forestPatternZoom', -1);
 export const rockPatternZoom = settingsStore('rockPatternZoom', -1);
+export const screePatternZoom = settingsStore('screePatternZoom', -1);
+export const scrubPatternZoom = settingsStore('scrubPatternZoom', -1);
+export const showPolygonsBorder  = settingsStore('showPolygonsBorder', true);
