@@ -20,12 +20,7 @@
         "river_min_zoom":4,
         "iceshelf_pattern_zoom":4,
         "iceshelf_pattern":"symbols/ice_sheet.png",
-        "wetland_pattern_zoom":13,
         "wetland_pattern_opacity":0.4,
-        "rock_pattern_zoom":10,
-        "scree_pattern_zoom":12,
-        "scrub_pattern_zoom":12,
-        "forest_pattern_zoom":11,
         "water_pattern_zoom":0, 
         "water_pattern":"symbols/wetland.png",
         "cemetery_pattern_zoom":15,
@@ -33,6 +28,11 @@
         "cemetery_pattern":"symbols/grave_yard_generic.svg"
     },
     "nutiparameters": {
+        "wetland_pattern_zoom":13,
+        "rock_pattern_zoom":10,
+        "scree_pattern_zoom":12,
+        "scrub_pattern_zoom":12,
+        "forest_pattern_zoom":11,
         "contoursOpacity": 0.85
     },
     "name": "outdoors"
