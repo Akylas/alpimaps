@@ -73,7 +73,7 @@
         show3DBuildings,
         showContourLines,
         showRoutes,
-        showPolygonsBorder,
+        showSlopePercentages,
         showSubBoundaries,
         showPolygonsBorder
     } from '~/stores/mapStore';
@@ -1076,12 +1076,12 @@
     $: vectorTileDecoder && setStyleParameter('emphasis_rails', $emphasisRails ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
-    $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
-    $: vectorTileDecoder && $cityMinZoom > 0 setStyleParameter('city_min_zoom', $cityMinZoom);
+    $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2)));
+    $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
     $: vectorTileDecoder && $forestPatternZoom > 0 && setStyleParameter('forest_pattern_zoom', $forestPatternZoom);
-    $: vectorTileDecoder && $rockPatternZoom > 0 setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
-    $: vectorTileDecoder && $screePatternZoom > 0 setStyleParameter('scree_pattern_zoom', $screePatternZoom);
-    $: vectorTileDecoder && $scrubPatternZoom > 0 setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
+    $: vectorTileDecoder && $rockPatternZoom > 0 && setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
+    $: vectorTileDecoder && $screePatternZoom > 0 && setStyleParameter('scree_pattern_zoom', $screePatternZoom);
+    $: vectorTileDecoder && $scrubPatternZoom > 0 && setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
     $: {
         const visible = $showRoutes;
