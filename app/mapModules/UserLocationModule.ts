@@ -53,6 +53,7 @@ export default class UserLocationModule extends MapModule {
         navigationModeStore.set(value);
         if (value) {
             this.userFollow = true;
+            this.moveToUserLocation();
         }
     }
     override onMapDestroyed() {
