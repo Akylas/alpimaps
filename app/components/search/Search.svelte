@@ -10,7 +10,7 @@
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { lc, slc } from '~/helpers/locale';
-    import { currentTheme } from '~/helpers/theme';
+    import { currentTheme, isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
@@ -445,9 +445,11 @@
     bind:this={gridLayout}
     id="search"
     {...$$restProps}
-    backgroundColor={colorWidgetBackground}
+    backgroundColor={(!isEInk || focused) ? colorWidgetBackground : 'transparent'}
     columns="auto,*,auto,auto,auto,auto"
-    elevation={$currentTheme !== 'dark' && focused ? 6 : 0}
+    elevation={$currentTheme !== 'dark' && !isEInk && focused ? 6 : 0} 
+    borderColor='#00000066'
+    borderWidth={(isEInk && !focused) ? 1 : 0}
     rows="auto,auto"
     on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
