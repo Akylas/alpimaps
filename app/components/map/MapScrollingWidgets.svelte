@@ -319,7 +319,7 @@
         isVisible={$watchingLocation && !$queryingLocation}
         marginBottom={16}
         row={2}
-        text={$navigationModeStore ? "mdi-navigation-outline" : "mdi-navigation"}
+        text={$navigationModeStore ? "mdi-navigation" : "mdi-navigation-outline"}
         verticalAlignment="bottom"
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
     <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
