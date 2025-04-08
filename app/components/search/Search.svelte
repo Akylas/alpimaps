@@ -131,7 +131,7 @@
     $: DEV_LOG && console.log('searchResultsVisible', searchResultsVisible, focused, searchResultsCount);
     // $: {
     //     if (nGridLayout) {
-    //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
+    //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && !isEInk && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
     //     }
     // }
 
@@ -141,7 +141,7 @@
         if (nCollectionView || nGridLayout) {
             animateTargets([
                 { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : __ANDROID__ ? 0 : 0.01, duration: 100 },
-                { target: nGridLayout, elevation: $currentTheme !== 'dark' && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25, duration: 100 }
+                { target: nGridLayout, elevation: $currentTheme !== 'dark' && !isEInk && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25, duration: 100 }
             ]);
             // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
