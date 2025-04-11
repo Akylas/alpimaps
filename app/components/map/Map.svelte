@@ -84,7 +84,6 @@
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
-    import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
     import { ScreenOnOffReceiver } from '~/receivers/screenoff';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
@@ -652,19 +651,7 @@
       if (__ANDROID__) {
         if (!screenOnOffReceiver) {
           
-          screenOnOffReceiver = new ScreenOnOffReceiver({
-            onReceive: () => { 
-              const action = intent.getAction();
-              DEV_LOG && console.log('screenOnOffReceiver', action);
-              if (action === android.content.Intent.ACTION_SCREEN_ON) {
-                DEV_LOG && console.log("Screen ON");
-                stopRefreshAlarm();
-              } else if (action === android.content.Intent.ACTION_SCREEN_OFF) {
-                DEV_LOG && console.log("Screen OFF");
-                startRefreshAlarm();
-              }
-            }
-          }) as android.content.BroadcastReceiver;
+          screenOnOffReceiver = new ScreenOnOffReceiver() as android.content.BroadcastReceiver;
   
           // Create an IntentFilter to listen for screen on/off events
           const filter = new android.content.IntentFilter();
