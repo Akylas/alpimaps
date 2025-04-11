@@ -266,13 +266,13 @@ export function scheduleRefreshAlarm(){
         const context = Utils.android.getApplicationContext();
         // Reschedule the alarm
         const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
-        const triggerAtMillis = android.os.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
+        const triggerAtMillis = java.lang.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
        
         const pendingIntent = android.content.PendingIntent.getBroadcast(
             context,
             0,
             new android.content.Intent(context, java.lang.Class.forName(__APP_ID__ + '.RefreshAlarmReceiver')),
-            android.content.PendingIntent.FLAG_UPDATE_CURRENT or android.content.PendingIntent.FLAG_IMMUTABLE
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE
         );
         
         // Reschedule using setExactAndAllowWhileIdle
