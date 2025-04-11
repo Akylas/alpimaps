@@ -2159,13 +2159,13 @@
                       debounceDuration: 100,
                       anchor: event.object,
                       vertPos: VerticalPosition.BELOW,
-                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000);,
+                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000),
                       onChange(value) {
                           ApplicationSettings.setNumber('refreshAlarmInterval', value);
                       },
                       step: 100,
                       min: 0,
-                      max: 10 * 60 * 1000
+                      max: 10 * 60 * 1000,
                       title: lc('refresh_alarm_interval')
                     });
   
