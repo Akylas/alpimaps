@@ -2,7 +2,7 @@ export * from './index.common';
 export { gClearInterval as clearInterval, gClearTimeout as clearTimeout, gSetInterval as setInterval, gSetTimeout as setTimeout };
 import { lc } from '@nativescript-community/l';
 import { request } from '@nativescript-community/perms';
-import { Application, Color, Device, File, Frame, Utils, View, path } from '@nativescript/core';
+import { Application, ApplicationSettings, Color, Device, File, Frame, Utils, View, path } from '@nativescript/core';
 import { AndroidActivityResultEventData } from '@nativescript/core/application';
 import { Dayjs } from 'dayjs';
 import { clock_24 } from '~/helpers/locale';
@@ -240,6 +240,47 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         }
         inStream.close();
         out.close();
+    }
+}
+
+export function startRefreshAlarm() {
+    const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
+    const interval = ApplicationSettings.getNumber('refreshAlarmInterval', 0);
+    DEV_LOG && console.log("startRefreshAlarm", enabled, interval);
+    if (!enabled && interval > 0) {
+        ApplicationSettings.setBoolean('refreshAlarmEnabled', true);
+        scheduleRefreshAlarm();
+    }
+}
+export function stopRefreshAlarm() {
+    const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
+    DEV_LOG && console.log("stopRefreshAlarm", enabled);
+    if (enabled) {
+        ApplicationSettings.setBoolean('refreshAlarmEnabled', false);
+    }
+}
+export function scheduleRefreshAlarm(){
+    const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
+    DEV_LOG && console.log("scheduleRefreshAlarm", enabled);
+    if (enabled) {
+        const context = Utils.android.getApplicationContext();
+        // Reschedule the alarm
+        const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
+        const triggerAtMillis = android.os.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
+       
+        const pendingIntent = android.content.PendingIntent.getBroadcast(
+            context,
+            0,
+            new android.content.Intent(context, java.lang.Class.forName(__APP_ID__ + '.RefreshAlarmReceiver')),
+            android.content.PendingIntent.FLAG_UPDATE_CURRENT or android.content.PendingIntent.FLAG_IMMUTABLE
+        );
+        
+        // Reschedule using setExactAndAllowWhileIdle
+        alarmManager.setExactAndAllowWhileIdle(
+            android.app.AlarmManager.RTC_WAKEUP,
+            triggerAtMillis,
+            pendingIntent
+        );
     }
 }
 

@@ -95,6 +95,13 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
     }
 }
 
+export function startRefreshAlarm() {
+}
+export function stopRefreshAlarm() {
+}
+export function scheduleRefreshAlarm(){
+}
+
 export const setTimeout = global.__ns__setTimeout;
 export const setInterval = global.__ns__setInterval;
 export const clearTimeout = global.__ns__clearTimeout;

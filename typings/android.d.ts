@@ -12,6 +12,7 @@ declare namespace akylas {
             class VectorTileEventListener extends com.akylas.carto.additions.AKVectorTileEventListener {}
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
+            class RefreshAlarmReceiver extends globalAndroid.content.BroadcastReceiver {}
         }
     }
 }

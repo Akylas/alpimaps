@@ -84,6 +84,7 @@
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
+    import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
@@ -645,6 +646,46 @@
     }, 500);
 
     let appUrlRegistered = false;
+    let screenOnOffReceiver = null;
+    function registerScreenOnOff(){
+      if (__ANDROID__) {
+        if (!screenOnOffReceiver) {
+          screenOnOffReceiver = new android.content.BroadcastReceiver({
+            onReceive: () => { 
+            const action = intent.getAction();
+              DEV_LOG && console.log('screenOnOffReceiver', action);
+              import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
+              if (action === android.content.Intent.ACTION_SCREEN_ON) {
+                DEV_LOG && console.log("Screen ON");
+                stopRefreshAlarm();
+              } else if (action === android.content.Intent.ACTION_SCREEN_OFF) {
+                DEV_LOG && console.log("Screen OFF");
+                startRefreshAlarm();
+              }
+            }
+          });
+  
+          // Create an IntentFilter to listen for screen on/off events
+          const filter = new android.content.IntentFilter();
+          filter.addAction(android.content.Intent.ACTION_SCREEN_ON);
+          filter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
+  
+          // Register the receiver
+          const context = Utils.android.getApplicationContext();
+          context.registerReceiver(screenOnOffReceiver, filter);
+        }
+      }
+    }
+    function unregisterScreenOnOff(){
+      if (__ANDROID__) {
+        if (screenOnOffReceiver) {
+          
+          const context = Utils.android.getApplicationContext();
+          context.unregisterReceiver(screenOnOffReceiver);
+          screenOnOffReceiver = null;
+        }
+      }
+    }
     async function onMainMapReady(e) {
         try {
             // if (!PRODUCTION) {
@@ -705,6 +746,7 @@
                     });
                 }
             }
+            registerScreenOnOff();
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -1802,6 +1844,7 @@
     // });
     onDestroy(() => {
         webserver?.stop();
+        unregisterScreenOnOff();
     });
     const showMapMenu = tryCatchFunction(
         async (event) => {
@@ -2110,7 +2153,23 @@
                 isSelected: showOnLockscreen,
                 tooltip: lc('show_screen_lock'),
                 visible: __ANDROID__,
-                onTap: switchShowOnLockscreen
+                onTap: switchShowOnLockscreen,
+                onLongPress: tryCatchFunction(async (event, button) => {
+                    await showSliderPopover({
+                      debounceDuration: 100,
+                      anchor: event.object,
+                      vertPos: VerticalPosition.BELOW,
+                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000);,
+                      onChange(value) {
+                          ApplicationSettings.setNumber('refreshAlarmInterval', value);
+                      },
+                      step: 100,
+                      min: 0,
+                      max: 10 * 60 * 1000
+                      title: lc('refresh_alarm_interval')
+                    });
+  
+                })
             }
         ];
         if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
