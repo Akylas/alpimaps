@@ -85,6 +85,7 @@
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
     import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
+    import { ScreenOnOffReceiver } from '~/receivers/screenoff';
 
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
@@ -650,11 +651,11 @@
     function registerScreenOnOff(){
       if (__ANDROID__) {
         if (!screenOnOffReceiver) {
-          screenOnOffReceiver = new android.content.BroadcastReceiver({
+          
+          screenOnOffReceiver = new ScreenOnOffReceiver({
             onReceive: () => { 
-            const action = intent.getAction();
+              const action = intent.getAction();
               DEV_LOG && console.log('screenOnOffReceiver', action);
-              import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
               if (action === android.content.Intent.ACTION_SCREEN_ON) {
                 DEV_LOG && console.log("Screen ON");
                 stopRefreshAlarm();
@@ -663,7 +664,7 @@
                 startRefreshAlarm();
               }
             }
-          });
+          }) as android.content.BroadcastReceiver;
   
           // Create an IntentFilter to listen for screen on/off events
           const filter = new android.content.IntentFilter();
@@ -679,7 +680,6 @@
     function unregisterScreenOnOff(){
       if (__ANDROID__) {
         if (screenOnOffReceiver) {
-          
           const context = Utils.android.getApplicationContext();
           context.unregisterReceiver(screenOnOffReceiver);
           screenOnOffReceiver = null;
