@@ -158,6 +158,8 @@
         <meta-data android:name="io.sentry.breadcrumbs.system-events" android:value="false" />
         <meta-data android:name="io.sentry.breadcrumbs.app-components" android:value="false" />
         <meta-data android:name="io.sentry.breadcrumbs.user-interaction" android:value="false" />
+        <receiver android:name=".RefreshAlarmReceiver" android:enabled="true" android:exported="false">
+        </receiver>
     </application>
     <queries>
         <package android:name="com.akylas.weather" />
