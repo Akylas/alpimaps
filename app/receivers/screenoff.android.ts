@@ -2,9 +2,6 @@ import { startRefreshAlarm, stopRefreshAlarm } from '~/utils/utils';
 
 @NativeClass
 export class ScreenOnOffReceiver extends android.content.BroadcastReceiver {
-    constructor(private args) {
-        super(args);
-    }
     onReceive(context: android.content.Context, intent: android.content.Intent) {
         DEV_LOG && console.log("ScreenOnOffReceiver");
         const action = intent.getAction();
