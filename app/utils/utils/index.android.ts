@@ -268,7 +268,7 @@ export function scheduleRefreshAlarm(){
         const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
         const triggerAtMillis = java.lang.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
        
-        const pendingIntent = android.content.PendingIntent.getBroadcast(
+        const pendingIntent = android.app.PendingIntent.getBroadcast(
             context,
             0,
             new android.content.Intent(context, java.lang.Class.forName(__APP_ID__ + '.RefreshAlarmReceiver')),
