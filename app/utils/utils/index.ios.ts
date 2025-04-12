@@ -10,6 +10,9 @@ export function checkManagePermission() {
 export async function askForManagePermission() {
     return true;
 }
+export async function askForScheduleAlarmPermission() {
+    return true;
+}
 
 export async function getDefaultMBTilesDir() {
     // on iOS we cant save the path as the knownFolders path can change upon app upgrade
