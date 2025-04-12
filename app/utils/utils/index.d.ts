@@ -6,3 +6,4 @@ export function restartApp();
 export function startRefreshAlarm();
 export function stopRefreshAlarm();
 export function scheduleRefreshAlarm();
+export async function askForScheduleAlarmPermission(): Promise<boolean>;
