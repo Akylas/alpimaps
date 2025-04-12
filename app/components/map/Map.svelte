@@ -2146,9 +2146,12 @@
                       debounceDuration: 100,
                       anchor: event.object,
                       vertPos: VerticalPosition.BELOW,
-                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000),
+                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 0),
                       onChange(value) {
                           ApplicationSettings.setNumber('refreshAlarmInterval', value);
+                          if (value > 0) {
+                            askForScheduleAlarmPermission();
+                          }
                       },
                       step: 100,
                       min: 0,

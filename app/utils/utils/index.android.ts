@@ -259,6 +259,33 @@ export function stopRefreshAlarm() {
         ApplicationSettings.setBoolean('refreshAlarmEnabled', false);
     }
 }
+
+export async function askForScheduleAlarmPermission() {
+    if (sdkVersion < 31) {
+        return true;
+    }
+    const context = Utils.android.getApplicationContext();
+    const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
+
+    if (alarmManager.canScheduleExactAlarms()) {
+        return true;
+    }
+    
+    const activity = Application.android.startActivity;
+    return new Promise<boolean>((resolve, reject) => {
+        const REQUEST_CODE = 6647;
+        const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
+            if (data.requestCode === REQUEST_CODE) {
+                Application.android.off(Application.android.activityResultEvent, onActivityResultHandler);
+                resolve(alarmManager.canScheduleExactAlarms());
+            }
+        };
+        Application.android.on(Application.android.activityResultEvent, onActivityResultHandler);
+        const intent = new android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse('package:' + __APP_ID__));
+        activity.startActivityForResult(intent, REQUEST_CODE);
+    });
+}
+
 export function scheduleRefreshAlarm(){
     const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
     DEV_LOG && console.log("scheduleRefreshAlarm", enabled);
