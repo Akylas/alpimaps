@@ -10,6 +10,7 @@ import { ApplicationSettings, Color, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
+import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
@@ -224,15 +225,24 @@ export default class UserLocationModule extends MapModule {
             this.accuracyMarker.positions = this.getCirclePoints(newPos);
         }
         this.lastUserLocation = position;
+        const inBackground = getBGServiceInstance().appInBackground;
         if (this.userFollow) {
-            this.moveToUserLocation();
+            this.moveToUserLocation(inBackground ? 0 : undefined);
+        }
+        if (__ANDROID__ && inBackground) {
+            const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
+            if (a9ScreenRefresh) {
+                const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', "com.akylas.A9_REFRESH_SCREEN"));       
+                broadcastIntent.set extra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));               
+                context.sendBroadcast(broadcastIntent);
+            }
         }
     }
-    moveToUserLocation() {
+    moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
             return;
         }
-        this.mapView.setZoom(Math.max(this.mapView.zoom, 10), LOCATION_ANIMATION_DURATION);
+        this.mapView.setZoom(Math.max(this.mapView.zoom, 10), duration);
         if (this.navigationMode) {
             const options = mapContext.getMap().getOptions();
             options.setFocusPointOffset(
@@ -241,15 +251,15 @@ export default class UserLocationModule extends MapModule {
                     y: mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
                 })
             );
-            this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
+            this.mapView.setFocusPos(this.mLastUserLocation, duration);
 
-            this.mapView.setBearing(-this.mLastUserLocation.bearing, LOCATION_ANIMATION_DURATION);
+            this.mapView.setBearing(-this.mLastUserLocation.bearing, duration);
             const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
             if (tilt > 0) {
-                this.mapView.setTilt(tilt, LOCATION_ANIMATION_DURATION);
+                this.mapView.setTilt(tilt, duration);
             }
         } else {
-            this.mapView.setFocusPos(this.mLastUserLocation, LOCATION_ANIMATION_DURATION);
+            this.mapView.setFocusPos(this.mLastUserLocation, duration);
         }
     }
     onLocation(event: UserLocationdEventData) {
