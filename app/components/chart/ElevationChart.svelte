@@ -10,7 +10,7 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import { Utils } from '@nativescript/core';
+    import { ApplicationSettings, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
@@ -318,7 +318,7 @@
             const chartData = chartView.data;
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
-                set.maxFilterNumber = 50;
+                set.maxFilterNumber = ApplicationSettings.getNumber('chart_max_filter', 50);
                 set.useColorsForFill = true;
                 set.fillFormatter = {
                     getFillLinePosition(dataSet: LineDataSet, dataProvider) {
