@@ -259,6 +259,8 @@ export function stopRefreshAlarm() {
         ApplicationSettings.setBoolean('refreshAlarmEnabled', false);
     }
     if (pendingAlarmIntent !== null) {
+        const context = Utils.android.getApplicationContext();
+        const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
        alarmManager.cancel(pendingAlarmIntent);
        pendingAlarmIntent = null; 
     }
@@ -314,7 +316,7 @@ export function scheduleRefreshAlarm(){
         alarmManager.setExactAndAllowWhileIdle(
             android.app.AlarmManager.RTC_WAKEUP,
             triggerAtMillis,
-            pendingIntent
+            pendingAlarmIntent
         );
     }
 }
