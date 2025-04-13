@@ -235,12 +235,12 @@
                         id: 'setting'
                     });
                 });
-                new items.push({
-                        type: 'switch',
-                        key: 'show_accuracy_marker',
-                        value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
-                        title: lc('show_accuracy_marker')
-                    });
+                newItems.push({
+                    type: 'switch',
+                    key: 'show_accuracy_marker',
+                    value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
+                    title: lc('show_accuracy_marker')
+                });
                 if (__ANDROID__ && Device.model === 'HLTE556N') {
                     newItems.push({
                         type: 'switch',
