@@ -113,6 +113,12 @@ export class GeoHandler extends Handler {
                 this.wasWatchingBeforePause = false;
             } else if (this.isWatching()) {
                 if (__ANDROID__) {
+                    const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
+                    const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
+                    if (backgroundUpdateTime !== updateTime) {
+                        this.stopWatch();
+                        this.startWatch();
+                    }
                     (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
                 }
             }
@@ -135,6 +141,14 @@ export class GeoHandler extends Handler {
                 this.stopWatch();
             } else {
                 if (__ANDROID__) {
+                    const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
+                    const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
+                    if (backgroundUpdateTime !== updateTime) {
+                        this.stopWatch();
+                        this.startWatch({
+                            minimumUpdateTime: backgroundUpdateTime
+                        })
+                    }
                     (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
                 }
             }
@@ -413,6 +427,14 @@ export class GeoHandler extends Handler {
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime),
+                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
+                    type: 'prompt'
+                },
+                gps_background_update_minTime: {
+                    title: lc('gps_background_update_minTime'),
+                    description: lc('gps_background_update_minTime_desc'),
+                    default: minimumUpdateTime,
+                    value: () => ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime),
                     formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
                     type: 'prompt'
                 }
