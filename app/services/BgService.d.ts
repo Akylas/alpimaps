@@ -7,6 +7,7 @@ export class BgService extends Observable {
     readonly geoHandler: GeoHandler;
     readonly loaded: boolean;
     readonly started: boolean;
+    readonly appInBackground: boolean;
     start();
     stop();
 

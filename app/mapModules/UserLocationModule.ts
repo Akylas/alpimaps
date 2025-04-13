@@ -243,7 +243,7 @@ export default class UserLocationModule extends MapModule {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
                 const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', "com.akylas.A9_REFRESH_SCREEN"));       
-                broadcastIntent.setExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));   
+                broadcastIntent.putExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));   
                 const context = Utils.android.getApplicationContext();            
                 context.sendBroadcast(broadcastIntent);
             }
