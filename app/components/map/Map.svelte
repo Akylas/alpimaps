@@ -733,7 +733,7 @@
                     });
                 }
             }
-            registerScreenOnOff();
+            //registerScreenOnOff();
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -1831,7 +1831,7 @@
     // });
     onDestroy(() => {
         webserver?.stop();
-        unregisterScreenOnOff();
+        //unregisterScreenOnOff();
     });
     const showMapMenu = tryCatchFunction(
         async (event) => {

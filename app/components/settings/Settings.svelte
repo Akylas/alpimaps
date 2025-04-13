@@ -10,7 +10,7 @@
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
-    import { ApplicationSettings, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
+    import { ApplicationSettings, Device, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
     import { Sentry } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
@@ -235,6 +235,28 @@
                         id: 'setting'
                     });
                 });
+                if (__ANDROID__ && Device.model === 'HLTE556N') {
+                    newItems.push({
+                        type: 'switch',
+                        key: 'a9_background_location_screenrefresh',
+                        value: ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false),
+                        title: lc('a9_refresh_screen_on_location')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('tile_server_port'),
+                        key: 'a9_background_location_screenrefresh_delay',
+                        valueType: 'number',
+                        default: 100,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100)
+                    });
+                }
                 return newItems;
             case 'api_keys':
                 const tokenSettings = [
