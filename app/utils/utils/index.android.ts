@@ -258,6 +258,10 @@ export function stopRefreshAlarm() {
     if (enabled) {
         ApplicationSettings.setBoolean('refreshAlarmEnabled', false);
     }
+    if (pendingAlarmIntent !== null) {
+       alarmManager.cancel(pendingAlarmIntent);
+       pendingAlarmIntent = null; 
+    }
 }
 
 export async function askForScheduleAlarmPermission() {
@@ -286,6 +290,7 @@ export async function askForScheduleAlarmPermission() {
     });
 }
 
+let pendingAlarmIntent;
 export function scheduleRefreshAlarm(){
     const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
     DEV_LOG && console.log("scheduleRefreshAlarm", enabled);
@@ -294,8 +299,11 @@ export function scheduleRefreshAlarm(){
         // Reschedule the alarm
         const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
         const triggerAtMillis = java.lang.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
+        if (pendingAlarmIntent !== null) {
+            alarmManager.cancel(pendingAlarmIntent);
+        }
        
-        const pendingIntent = android.app.PendingIntent.getBroadcast(
+        pendingAlarmIntent = android.app.PendingIntent.getBroadcast(
             context,
             0,
             new android.content.Intent(context, java.lang.Class.forName(__APP_ID__ + '.RefreshAlarmReceiver')),
