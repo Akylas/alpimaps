@@ -151,29 +151,36 @@ export default class UserLocationModule extends MapModule {
         }
         // DEV_LOG && console.log('updateUserLocation', JSON.stringify(geoPos));
         let accuracyColor = '#0e7afe';
+        let accuracySize = 14;
         const accuracy = geoPos.horizontalAccuracy || 0;
         if (geoPos.age > 120000) {
             accuracyColor = 'gray';
         } else if (accuracy > 1000) {
+            accuracySize = 8;
             accuracyColor = 'red';
         } else if (accuracy > 20) {
+            accuracySize = 11;
             accuracyColor = 'orange';
         }
         if (!this.userMarker) {
             const posWithoutAltitude = { lat: position.lat, lon: position.lon };
             this.getOrCreateLocalVectorLayer();
-
-            this.accuracyMarker = new Polygon<LatLonKeys>({
-                positions: this.getCirclePoints(position),
-                styleBuilder: {
-                    size: 16,
-                    color: new Color(70, 14, 122, 254),
-                    lineStyleBuilder: {
-                        color: new Color(150, 14, 122, 254),
-                        width: 1
-                    }
-                }
-            });
+            const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
+            if (accuracyMarkerEnabled) {
+                this.accuracyMarker = new Polygon<LatLonKeys>({
+                  positions: this.getCirclePoints(position),
+                  styleBuilder: {
+                      size: 16,
+                      color: new Color(70, 14, 122, 254),
+                      lineStyleBuilder: {
+                          color: new Color(150, 14, 122, 254),
+                          width: 1
+                      }
+                  }
+              });
+              this.localBackVectorDataSource.add(this.accuracyMarker);
+            }
+            
 
             this.userBackMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
@@ -188,17 +195,14 @@ export default class UserLocationModule extends MapModule {
                 },
                 position: posWithoutAltitude,
                 styleBuilder: {
-                    size: 14,
+                    size: accuracyMarkerEnabled ? 14 : accuracySize,
                     color: accuracyColor
                 }
             });
-            this.localBackVectorDataSource.add(this.accuracyMarker);
             this.localVectorDataSource.add(this.userBackMarker);
             this.localVectorDataSource.add(this.userMarker);
         } else {
             this.userMarker.color = accuracyColor;
-            this.accuracyMarker.visible = accuracy > 20;
-
             const newPos = { lat: position.lat, lon: position.lon };
             // TODO: fix tween animation which is only working once
             // console.log('animating position', { lat: this.lastUserLocation.lat, lon: this.lastUserLocation.lon }, { lat: position.lat, lon: position.lon });
@@ -222,7 +226,13 @@ export default class UserLocationModule extends MapModule {
             // }
             this.userBackMarker.position = newPos;
             this.userMarker.position = newPos;
-            this.accuracyMarker.positions = this.getCirclePoints(newPos);
+            if (this.accuracyMarker){
+                this.accuracyMarker.positions = this.getCirclePoints(newPos);
+                this.accuracyMarker.visible = accuracy > 20;
+            } else {
+                this.userMarker.size = accuracySize;
+            }
+            
         }
         this.lastUserLocation = position;
         const inBackground = getBGServiceInstance().appInBackground;
@@ -233,7 +243,8 @@ export default class UserLocationModule extends MapModule {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
                 const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', "com.akylas.A9_REFRESH_SCREEN"));       
-                broadcastIntent.set extra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));               
+                broadcastIntent.setExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));   
+                const context = Utils.android.getApplicationContext();            
                 context.sendBroadcast(broadcastIntent);
             }
         }
