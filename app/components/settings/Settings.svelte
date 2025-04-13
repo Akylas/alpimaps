@@ -199,6 +199,21 @@
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
                     }
                 ];
+            case 'charts':
+                return [{
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('chart_max_filter'),
+                        key: chart_max_filter,
+                        valueType: 'number',
+                        default: 50,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber(chart_max_filter, 50)
+                    }];
             case 'offline_data':
                 return [
                     {
@@ -429,6 +444,13 @@
                         title: lc('directions'),
                         description: lc('directions_settings'),
                         options: () => getSubSettings('directions')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-chart-bar',
+                        title: lc('charts'),
+                        description: lc('charts_settings'),
+                        options: () => getSubSettings('charts')
                     },
                     {
                         id: 'sub_settings',
