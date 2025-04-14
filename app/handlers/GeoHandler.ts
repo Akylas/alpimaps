@@ -143,6 +143,7 @@ export class GeoHandler extends Handler {
                 if (__ANDROID__) {
                     const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
                     const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
+                    DEV_LOG && console.log('pause background gps', updateTime, backgroundUpdateTime);
                     if (backgroundUpdateTime !== updateTime) {
                         this.stopWatch();
                         this.startWatch({
