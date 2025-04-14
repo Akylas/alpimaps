@@ -139,7 +139,7 @@ module.exports = (env, params = {}) => {
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
-    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/processtextactivity', '~/android/activity.android', '~/android/refresh_alarm_receiver');
+    env.appComponents.push('~/services/android/BgService', '~/services/android/BgServiceBinder', '~/android/processtextactivity', '~/android/activity.android');
 
     const ignoredSvelteWarnings = new Set(['a11y-no-onchange', 'a11y-label-has-associated-control', 'illegal-attribute-character']);
 
