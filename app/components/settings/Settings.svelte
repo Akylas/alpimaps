@@ -204,7 +204,7 @@
                         id: 'setting',
                         type: 'prompt',
                         title: lc('chart_max_filter'),
-                        key: chart_max_filter,
+                        key: 'chart_max_filter',
                         valueType: 'number',
                         default: 50,
                         textFieldProperties: {
@@ -212,7 +212,7 @@
                             autocapitalizationType: 'none',
                             autocorrect: false
                         } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber(chart_max_filter, 50)
+                        rightValue: () => ApplicationSettings.getNumber('chart_max_filter', 50)
                     }];
             case 'offline_data':
                 return [
