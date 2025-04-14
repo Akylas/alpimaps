@@ -266,7 +266,7 @@
                     {
                         id: 'setting',
                         type: 'prompt',
-                        title: lc('tile_server_port'),
+                        title: lc('a9_background_location_screenrefresh_delay'),
                         key: 'a9_background_location_screenrefresh_delay',
                         valueType: 'number',
                         default: 100,
