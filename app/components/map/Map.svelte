@@ -84,8 +84,6 @@
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
-    import { ScreenOnOffReceiver } from '~/receivers/screenoff';
-
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
