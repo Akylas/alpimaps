@@ -646,33 +646,7 @@
     }, 500);
 
     let appUrlRegistered = false;
-    let screenOnOffReceiver = null;
-    function registerScreenOnOff(){
-      if (__ANDROID__) {
-        if (!screenOnOffReceiver) {
-          
-          screenOnOffReceiver = new ScreenOnOffReceiver() as android.content.BroadcastReceiver;
-  
-          // Create an IntentFilter to listen for screen on/off events
-          const filter = new android.content.IntentFilter();
-          filter.addAction(android.content.Intent.ACTION_SCREEN_ON);
-          filter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
-  
-          // Register the receiver
-          const context = Utils.android.getApplicationContext();
-          context.registerReceiver(screenOnOffReceiver, filter);
-        }
-      }
-    }
-    function unregisterScreenOnOff(){
-      if (__ANDROID__) {
-        if (screenOnOffReceiver) {
-          const context = Utils.android.getApplicationContext();
-          context.unregisterReceiver(screenOnOffReceiver);
-          screenOnOffReceiver = null;
-        }
-      }
-    }
+    
     async function onMainMapReady(e) {
         try {
             // if (!PRODUCTION) {
@@ -733,7 +707,6 @@
                     });
                 }
             }
-            //registerScreenOnOff();
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -1831,7 +1804,6 @@
     // });
     onDestroy(() => {
         webserver?.stop();
-        //unregisterScreenOnOff();
     });
     const showMapMenu = tryCatchFunction(
         async (event) => {
