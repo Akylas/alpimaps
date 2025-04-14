@@ -28,7 +28,6 @@
     <uses-permission android:name="android.webkit.PermissionRequest" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature
         android:name="android.hardware.camera"
