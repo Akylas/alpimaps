@@ -23,6 +23,7 @@
     import CActionBar from '~/components/common/CActionBar.svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import TagView from '~/components/common/TagView.svelte';
+    import { showSliderPopover } from '~/utils/ui';
 
     $: ({ colorBackground, colorOnPrimary, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     export let item: Item;
