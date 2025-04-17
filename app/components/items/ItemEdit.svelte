@@ -223,7 +223,7 @@
             await showSliderPopover({
                 anchor: event.object,
                 value: itemIconSize || 0,
-                step: 1
+                step: 1,
                 min: 0,
                 max: 30,
                 onChange(value) {
