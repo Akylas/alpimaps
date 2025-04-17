@@ -204,7 +204,6 @@
         const style = getUpdateStyle();
         style['fontFamily'] = 'osm';
         style['mapFontFamily'] = 'osm';
-        style['iconDx'] = 0;
         style['icon'] = osmIcon;
         console.log('setOSMIcon', updatedProperties);
         updatePreview();
@@ -214,7 +213,6 @@
         console.log('setDefaultIcon', updatedProperties);
         style['fontFamily'] = $fonts.mdi;
         style['mapFontFamily'] = MATERIAL_MAP_FONT_FAMILY;
-        style['iconDx'] = -2;
         style['icon'] = 'mdi-map-marker';
         updatePreview();
     }
@@ -242,7 +240,6 @@
                 style['fontFamily'] = result.fontFamily;
                 itemUsingMdi = result.fontFamily === $fonts.mdi;
                 style['mapFontFamily'] = itemUsingMdi ? MATERIAL_MAP_FONT_FAMILY : 'osm';
-                style['iconDx'] = itemUsingMdi ? -2 : 0;
                 style['icon'] = result.icon;
                 updatePreview();
                 // const provider = result.data;
