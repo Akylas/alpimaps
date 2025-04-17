@@ -398,10 +398,8 @@ export default class ItemsModule extends MapModule {
         delete item.properties.style;
         if (!item.route) {
             item.properties.style = {
-                iconSize: 20,
                 fontFamily: mdi,
                 mapFontFamily: MATERIAL_MAP_FONT_FAMILY,
-                iconDx: -2,
                 icon: 'mdi-map-marker'
             };
         }
