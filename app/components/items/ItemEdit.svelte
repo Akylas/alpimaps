@@ -225,7 +225,7 @@
                 value: itemIconSize || 0,
                 step: 1
                 min: 0,
-                max: 30
+                max: 30,
                 onChange(value) {
                     itemIconSize = value;
                     const style = getUpdateStyle();
