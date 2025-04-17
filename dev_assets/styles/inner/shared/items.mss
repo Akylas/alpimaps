@@ -2,6 +2,9 @@
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 @pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));
 @bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
+@default_icon_size: [style.iconSize] = 'osm' ? 14 : 18;
+
+@default_icon_dx : [style.iconDx] = 'osm' ? 0 : -2;
 
 @itemColor: [color] ? [color] : [nuti::main_color];
 @lineColor: [color] ? [color] : [nuti::main_darker_color];
@@ -76,12 +79,12 @@
         text-allow-overlap: true;
         text-clip: false;
         text-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
-        text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([style.iconSize] ? [style.iconSize]: 10);
+        text-size: ([style.iconSize] ? [style.iconSize]: @default_icon_size);
         text-halo-fill: @itemContrastColor;
         text-halo-radius: @standard-halo-radius;
         text-horizontal-alignment: [style.horizontalAlignment] ? [style.horizontalAlignment] : middle;
         text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : bottom;
-        text-dx:[style.iconDx] ? [style.iconDx] :0;
+        text-dx:[style.iconDx] ? [style.iconDx] :@default_icon_dx;
         text-dy:[style.iconDy] ? [style.iconDy] :0;
         when ([nuti::selected_id]=[id]) {
             text-size: linear([view::zoom], (10, 10), (16, 10), (18, 12))+ ([style.iconSize] ? [style.iconSize]: 15)

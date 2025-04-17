@@ -2110,26 +2110,7 @@
                 isSelected: showOnLockscreen,
                 tooltip: lc('show_screen_lock'),
                 visible: __ANDROID__,
-                onTap: switchShowOnLockscreen,
-                onLongPress: tryCatchFunction(async (event, button) => {
-                    await showSliderPopover({
-                      debounceDuration: 100,
-                      anchor: event.object,
-                      vertPos: VerticalPosition.BELOW,
-                      value: ApplicationSettings.getNumber('refreshAlarmInterval', 0),
-                      onChange(value) {
-                          ApplicationSettings.setNumber('refreshAlarmInterval', value);
-                          if (value > 0) {
-                            askForScheduleAlarmPermission();
-                          }
-                      },
-                      step: 100,
-                      min: 0,
-                      max: 10 * 60 * 1000,
-                      title: lc('refresh_alarm_interval')
-                    });
-  
-                })
+                onTap: switchShowOnLockscreen
             }
         ];
         if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
