@@ -43,6 +43,7 @@
     $: itemIcon = getStyleProperty(updatedProperties, 'icon') || getStyleProperty(item.properties, 'icon');
     $: osmIcon = osmicon(formatter.geItemIcon(item));
     $: itemIconFontFamily = getStyleProperty(updatedProperties, 'fontFamily') || getStyleProperty(item.properties, 'fontFamily');
+    $: itemIconSize = getStyleProperty(updatedProperties, 'iconSize') || getStyleProperty(item.properties, 'iconSize');
     $: itemUsingMdi = itemIconFontFamily === $fonts.mdi;
     $: itemUsingDefault = itemUsingMdi && itemIcon === 'mdi-map-marker';
     $: itemUsingOsm = itemIcon === osmIcon && itemIconFontFamily === 'osm';
@@ -216,7 +217,28 @@
         style['icon'] = 'mdi-map-marker';
         updatePreview();
     }
-
+    async function setCustomIconSize(event) {
+        try {
+            await showSliderPopover({
+                anchor: event.object,
+                value: itemIconSize || 0,
+                step: 1
+                min: 0,
+                max: 30
+                onChange(value) {
+                    itemIconSize = value;
+                    const style = getUpdateStyle();
+                    if (value === 0) {
+                       style['iconSize'] = null;
+                    } else {
+                        style['iconSize'] = value;
+                    }                 
+                }
+            });
+        } catch(error) {
+            showError(error);
+        }
+    }
     async function selectCustomIcon(event) {
         try {
             const IconChooser = (await import('~/components/items/IconChooser.svelte')).default;
@@ -475,6 +497,26 @@
                     on:tap={selectCustomIcon}>
                     <cspan color={itemColor} fontFamily={itemIconFontFamily} text={itemIcon} />
                     <cspan fontSize={12} text={'\n' + lc('custom')} />
+                </label>
+                <label
+                    backgroundColor={colorBackground}
+                    borderColor={colorOnSurfaceVariant}
+                    borderRadius={4}
+                    borderWidth={1}
+                    col={2}
+                    elevation={2}
+                    fontSize={16}
+                    height={50}
+                    margin="0 4 0 4"
+                    padding={5}
+                    rippleColor={itemColor}
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    width={50}
+                    on:tap={setCustomIconSize}
+                    text={(itemIconSize || '?') + 'px'}>
+                    <cspan text={itemIconSize || '?'} />
+                    <cspan fontSize={12} text={'\n' + 'px'} />
                 </label>
             </gridlayout>
         {/if}
