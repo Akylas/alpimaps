@@ -239,8 +239,8 @@
     padding={6}
     visibility={showLocationInfo ? 'visible' : 'collapse'}
     width={200}
-    scaleX={0.7}
-    scaleY={0.7}
+    scaleX={0.9}
+    scaleY={0.9}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
