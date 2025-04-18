@@ -54,6 +54,11 @@ export function getValhallaSettings(key) {
                 min: 0,
                 max: 200
             };
+        } else if (key === 'use_tracks') {
+            settings = {
+                min: -100,
+                max: 1
+            };
         } else {
             settings = {
                 min: 0,
