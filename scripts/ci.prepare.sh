@@ -32,7 +32,7 @@ echo "FLAVOR    = ${FLAVOR}"
 echo "FLAVOR    = $(dirname $0)"
 
 if [[ -z "${CARTO_SDK_VERSION}" ]]; then
-  CARTO_SDK_VERSION="5.0.0-rc.6"
+  CARTO_SDK_VERSION="v5.0.0-rc.7"
 else
   CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
 fi
