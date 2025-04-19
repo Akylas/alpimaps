@@ -88,5 +88,6 @@
         text-dy:[style.iconDy] ? [style.iconDy] :0;
         when ([nuti::selected_id]=[id]) {
             text-size: ([style.iconSize] ? [style.iconSize]: @default_icon_size) + 10;
+        }
 
 }
