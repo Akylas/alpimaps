@@ -39,6 +39,9 @@ export const valhallaSettings = {
         min: 1,
         max: 6
     },
+    exclude_unpaved: {
+        type: 'switch'
+    },
     // bicycle_type: ['Road', 'Hybrid', 'Mountain'],
     // pedestrian_type: ['normal', 'mountaineer'],
     walking_speed: {
@@ -85,7 +88,7 @@ export const defaultProfileCostingOptions = {
         use_tracks: 1,
         sidewalk_factor: 10
     },
-    bicycle: { use_roads: 1, use_tracks: 0.5, non_network_penalty: 15 },
+    bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15 },
     auto: { use_tolls: 1, use_highways: 1 },
     motorcycle: { use_tolls: 1, use_trails: 0 }
 };

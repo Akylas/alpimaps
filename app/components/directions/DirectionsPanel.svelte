@@ -115,7 +115,7 @@
     const used_settings = {
         common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks'],
         pedestrian: ['walking_speed', 'weight', 'use_hills', 'max_hiking_difficulty', 'step_penalty', 'driveway_factor', 'walkway_factor', 'sidewalk_factor', 'alley_factor', 'use_roads'],
-        bicycle: ['use_hills', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed', 'non_network_penalty'],
+        bicycle: ['use_hills', 'weight', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed', 'non_network_penalty', 'exclude_unpaved'],
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
         motorcycle: ['use_highways', 'use_tolls', 'use_trails']
     };
@@ -208,6 +208,8 @@
                 }
             case 'weight':
                 return 0;
+            case 'exclude_unpaved':
+                return false;
         }
     }
     function switchValhallaSetting(key: string, options: any = profileCostingOptions) {
@@ -1019,6 +1021,9 @@
                 vertPos: VerticalPosition.ALIGN_TOP,
                 props: {
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
+                    onCheckBox(item, value) {
+                        item.onChange.(value);
+                    },
                     onOptionChange: (value) => {
                         if (profile === 'bicycle') {
                             bicycle_type = value;
