@@ -73,6 +73,7 @@ export function getValhallaSettings(key, value) {
                 max: 1
             };
         }
+    }
     if (settings.type === 'switch') {
         settings = JSON.parse(JSON.stringify(settings));
         settings.checked = value;
