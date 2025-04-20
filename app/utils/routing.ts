@@ -98,7 +98,7 @@ export const defaultProfileCostingOptions = {
         use_tracks: 1,
         sidewalk_factor: 10
     },
-    bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15 l, exclude_unpaved: false },
+    bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15, exclude_unpaved: false },
     auto: { use_tolls: 1, use_highways: 1 },
     motorcycle: { use_tolls: 1, use_trails: 0 }
 };
