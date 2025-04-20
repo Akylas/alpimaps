@@ -18,7 +18,7 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
         if (options[profile]) {
             options = options[profile];
         }
-        const settings = getValhallaSettings(key);
+        const settings = getValhallaSettings(key, options[key]);
         if (Array.isArray(settings)) {
             const index = Math.max(settings.indexOf(options[key]), 0);
             return new Color(baseColor).setAlpha(((index + 1) / settings.length) * 255).hex;
@@ -49,7 +49,7 @@ export const valhallaSettings = {
         max: 20
     }
 };
-export function getValhallaSettings(key, value = null) {
+export function getValhallaSettings(key, value) {
     let settings = valhallaSettings[key];
     if (!settings) {
         if (key.endsWith('_factor') || key.endsWith('_penalty')) {
@@ -76,8 +76,9 @@ export function getValhallaSettings(key, value = null) {
     }
     if (settings.type === 'switch') {
         settings = JSON.parse(JSON.stringify(settings));
-        settings.checked = value;
+        settings.value = value || false;
     }
+    DEV_LOG && console.log('getValhallaSettings', key, value, JSON.stringify(settings)); 
     return settings;
 }
 
@@ -97,7 +98,7 @@ export const defaultProfileCostingOptions = {
         use_tracks: 1,
         sidewalk_factor: 10
     },
-    bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15 },
+    bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15 l, exclude_unpaved: false },
     auto: { use_tolls: 1, use_highways: 1 },
     motorcycle: { use_tolls: 1, use_trails: 0 }
 };
