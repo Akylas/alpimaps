@@ -49,7 +49,7 @@ export const valhallaSettings = {
         max: 20
     }
 };
-export function getValhallaSettings(key, value) {
+export function getValhallaSettings(key, value = null) {
     let settings = valhallaSettings[key];
     if (!settings) {
         if (key.endsWith('_factor') || key.endsWith('_penalty')) {
