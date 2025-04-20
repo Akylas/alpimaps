@@ -1021,8 +1021,8 @@
                 vertPos: VerticalPosition.ALIGN_TOP,
                 props: {
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
-                    onCheckBox(item, value) {
-                        item.onChange.(value);
+                    onCheckBox: (item, value) => {
+                        item.onChange(value);
                     },
                     onOptionChange: (value) => {
                         if (profile === 'bicycle') {
