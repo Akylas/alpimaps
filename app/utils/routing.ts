@@ -49,7 +49,7 @@ export const valhallaSettings = {
         max: 20
     }
 };
-export function getValhallaSettings(key) {
+export function getValhallaSettings(key, value) {
     let settings = valhallaSettings[key];
     if (!settings) {
         if (key.endsWith('_factor') || key.endsWith('_penalty')) {
@@ -73,6 +73,9 @@ export function getValhallaSettings(key) {
                 max: 1
             };
         }
+    if (settings.type === 'switch') {
+        settings = JSON.parse(JSON.stringify(settings));
+        settings.checked = value;
     }
     return settings;
 }

@@ -1006,7 +1006,7 @@
                     title: lc(key),
                     defaultValue: valhallaSettingsDefaultValue(profile, key),
                     value: profileCostingOptions[profile][key],
-                    ...getValhallaSettings(key),
+                    ...getValhallaSettings(key, profileCostingOptions[profile][key]),
                     onChange(value) {
                         profileCostingOptions[profile][key] = value;
                         profileCostingOptions = profileCostingOptions; // for svelte to see the update
@@ -1062,7 +1062,7 @@
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
-            const settings = getValhallaSettings(key);
+            const settings = getValhallaSettings(key, options[key]);
             await showSliderPopover({
                 debounceDuration: 0,
                 anchor: event.object,
