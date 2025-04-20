@@ -288,7 +288,7 @@ export class GeoHandler extends Handler {
         return Promise.resolve();
     }
     getLastKnownLocation(): GeoLocation {
-        return geolocation.getLastKnownLocation<LatLonKeys>();
+        return geolocation?.getLastKnownLocation<LatLonKeys>();
     }
 
     async getLocation(options?) {
