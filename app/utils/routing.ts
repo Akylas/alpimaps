@@ -57,10 +57,15 @@ export function getValhallaSettings(key) {
                 min: 0,
                 max: 200
             };
-        } else if (key === 'use_tracks') {
+        } else if (key === 'use_tracks' || key === 'use_hills') {
             settings = {
                 min: -100,
                 max: 1
+            };
+        } else if (key === 'avoid_bad_surfaces') {
+            settings = {
+                min: 0,
+                max: 100
             };
         } else {
             settings = {
