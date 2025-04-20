@@ -217,7 +217,7 @@
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
             }
-            const settings = getValhallaSettings(key);
+            const settings = getValhallaSettings(key, options[key]);
             if (Array.isArray(settings)) {
                 const index = settings.indexOf(options[key]);
                 options[key] = settings[(index + 1) % settings.length];
