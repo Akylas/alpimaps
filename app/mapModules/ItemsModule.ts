@@ -465,6 +465,9 @@ export default class ItemsModule extends MapModule {
         }
     }
     async takeItemPicture(item, restore = false) {
+        if (!ApplicationSettings.getBoolean('route_image_capture', true)) {
+            return;
+        }
         // console.log('takeItemPicture', new Error().stack);
         //item needs to be already selected
         // we hide other items before the screenshot
@@ -504,32 +507,12 @@ export default class ItemsModule extends MapModule {
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
                     if (restore) {
-                        // console.log('takeItemPicture', 'restore', !!oldItem, mapBounds);
+                
                         if (oldItem) {
                             mapContext.selectItem({ item: oldItem, isFeatureInteresting: true, preventZoom: true });
                         }
                         mapContext.getMap().moveToFitBounds(mapBounds, undefined, true, true, true, 0);
                     }
-
-                    // image.saveToFile(item.image_path, 'jpg');
-                    // const viewPort = mapContext.getMapViewPort();
-                    // //we offset a bit to be sure we the whole trace
-                    // const offset = 20;
-                    // const left = Math.max(viewPort.left - offset, 0);
-                    // const top = Math.max(viewPort.top - offset, 0);
-                    // const width = Math.min(left + viewPort.width + offset, mapView.getMeasuredWidth() - left);
-                    // const height = Math.min(top + viewPort.height + offset, mapView.getMeasuredHeight() - top);
-                    // const canvas = new Canvas(width, height);
-                    // console.log('captureRendering', item.image_path, image.width, image.height, viewPort, canvas.getWidth(), canvas.getHeight());
-                    // // const actuaWidth = Math.min(width, height);
-                    // if (__IOS__) {
-                    //     canvas.scale(1, -1, width / 2, height / 2);
-                    // }
-                    // canvas.drawBitmap(image, new Rect(left, top, left + width, top + height), new Rect(0, 0, canvas.getWidth(), canvas.getHeight()), null);
-                    // canvasImage = new ImageSource(canvas.getImage());
-                    // canvasImage.saveToFile(item.image_path, 'jpg');
-                    // // console.log('saved bitmap', imagePath, Date.now() - startTime, 'ms');
-                    // canvas.release();
                     resolve();
                 } catch (error) {
                     console.error(error, error.stack);

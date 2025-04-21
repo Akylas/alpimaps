@@ -235,6 +235,12 @@
                             autocorrect: false
                         } as TextFieldProperties,
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)
+                    },
+                    {
+                        type: 'switch',
+                        key: 'route_image_capture',
+                        value: ApplicationSettings.getBoolean('route_image_capture', true),
+                        title: lc('route_item_image_capture')
                     }
                 ];
             case 'geolocation':
