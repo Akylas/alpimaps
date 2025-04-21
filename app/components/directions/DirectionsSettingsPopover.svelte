@@ -30,6 +30,7 @@
         if (onOptionChange) {
             settings = onOptionChange(value);
         }
+        options = options // we want svelte to trigger ui change
     }
     function onActualReset() {
         if (onReset) {
