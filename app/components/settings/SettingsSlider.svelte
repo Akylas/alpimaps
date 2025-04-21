@@ -2,6 +2,7 @@
 
 <script context="module" lang="ts">
     import { Paint } from '@nativescript-community/ui-canvas';
+    import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
 </script>
 
@@ -24,10 +25,32 @@
     $: actualValue = value ?? defaultValue;
     function onValueChange(event) {
         value = event.value;
-        if (onChange) {
-            onChange(event.value);
-        }
+        onChange?.(event.value);
         // canvas?.nativeView.invalidate();
+    }
+    async function promptForValue(event) {
+        try {
+            const result = await prompt({
+                title: title,
+                message: subtitle,
+                okButtonText: l('save'),
+                cancelButtonText: l('cancel'),
+                autoFocus: true,
+                textFieldProperties: {
+                    keyboardType: 'number',
+                    autocapitalizationType: 'none',
+                    autocorrect: false
+                } as TextFieldProperties,
+                defaultText: actualValue + '',
+            });
+            Utils.dismissSoftInput();
+            if (result && !!result.result && result.text.length > 0) {
+                value = parseInt(result.text, 10);
+                onChange?.(value);
+            }
+        } catch(error) {
+            showError(error);
+        }
     }
     // function onDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
     //     try {
@@ -76,7 +99,7 @@
     <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
     <label col={1} color={colorOnSurface} fontSize={15} padding="0 10 0 0" text={title} textWrap={true} verticalTextAlignment="center" />
     <label col={1} color={colorOnSurfaceVariant} fontSize={14} row={1} text={subtitle} verticalTextAlignment="center" visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapse'} />
-    <label col={2} color={colorOnSurface} fontSize={15} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" />
+    <label col={2} color={colorOnSurface} fontSize={15} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" on:tap={promptForValue}/>
     <label col={2} color={colorOnSurface} fontSize={15} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
     <label color={colorOnSurface} fontSize={15} row={2} text={formatter(min)} verticalTextAlignment="center" />
     <slider

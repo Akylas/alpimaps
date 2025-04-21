@@ -23,7 +23,9 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
             const index = Math.max(settings.indexOf(options[key]), 0);
             return new Color(baseColor).setAlpha(((index + 1) / settings.length) * 255).hex;
         } else {
-            let perc = ((options[key] || settings.min) - settings.min) / (settings.max - settings.min);
+            const min = Math.max(0, settings.min);
+            const max = Math.min(1, settings.max); 
+            let perc = ((options[key] || min) - min) / (max - min);
             if (key.endsWith('_factor') || key.endsWith('_penalty')) {
                 perc = 1 - perc;
             }
