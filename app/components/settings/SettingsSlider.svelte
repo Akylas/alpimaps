@@ -4,6 +4,9 @@
     import { Paint } from '@nativescript-community/ui-canvas';
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
+    import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { l } from '~/helpers/locale';
 </script>
 
 <script lang="ts">
