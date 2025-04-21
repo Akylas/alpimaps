@@ -7,6 +7,7 @@
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { l } from '~/helpers/locale';
+    import { Utils } from '@nativescript/core';
 </script>
 
 <script lang="ts">
