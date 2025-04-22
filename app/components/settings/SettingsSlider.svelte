@@ -41,7 +41,7 @@
                 cancelButtonText: l('cancel'),
                 autoFocus: true,
                 textFieldProperties: {
-                    keyboardType: 'number',
+                keyboardType: 'number',
                     autocapitalizationType: 'none',
                     autocorrect: false
                 } as TextFieldProperties,
