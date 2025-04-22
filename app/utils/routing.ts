@@ -25,7 +25,8 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
         } else {
             const min = Math.max(0, settings.min);
             const max = Math.min(1, settings.max); 
-            let perc = ((options[key] || min) - min) / (max - min);
+            const value = Math.min(Math.max(options[key], 0), 1);
+            let perc = ((value || min) - min) / (max - min);
             if (key.endsWith('_factor') || key.endsWith('_penalty')) {
                 perc = 1 - perc;
             }
@@ -57,17 +58,17 @@ export function getValhallaSettings(key, value) {
         if (key.endsWith('_factor') || key.endsWith('_penalty')) {
             settings = {
                 min: 0,
-                max: 200
+                max: 20
             };
         } else if (key === 'use_tracks' || key === 'use_hills') {
             settings = {
-                min: -100,
+                min: -20,
                 max: 1
             };
         } else if (key === 'avoid_bad_surfaces') {
             settings = {
                 min: 0,
-                max: 100
+                max: 20
             };
         } else {
             settings = {
@@ -80,7 +81,6 @@ export function getValhallaSettings(key, value) {
         settings = JSON.parse(JSON.stringify(settings));
         settings.value = value || false;
     }
-    DEV_LOG && console.log('getValhallaSettings', key, value, JSON.stringify(settings)); 
     return settings;
 }
 
