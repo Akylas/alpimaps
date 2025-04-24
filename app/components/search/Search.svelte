@@ -236,6 +236,13 @@
     let didSearch = false;
     async function instantSearch(_query) {
         try {
+            if (/\d+(\.\d+)?\s*,\s*\d+(\.\d+)?/.test(_query) {
+                const latlong = _query.split(':')[1].split(',').map(parseFloat) as [number, number];
+                if (latlong[0] !== 0 || latlong[1] !== 0) {
+                    cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
+                }
+                return;
+            }
             loading = true;
             if (!loaded) {
                 await loadView();
