@@ -320,11 +320,11 @@ export default class UserLocationModule extends MapModule {
         this.geoHandler.stopWatch();
         watchingLocation.set(false);
         queryingLocation.set(false);
-        if (!queryingLocation) {
-            showSnack({
-                message: lc('stopped_watching_location')
-            });
-        }
+      //  if (!queryingLocation) {
+       //     showSnack({
+       //         message: lc('stopped_watching_location')
+      //      });
+   //   }
     }
     async askUserLocation() {
         await this.geoHandler.enableLocation();
