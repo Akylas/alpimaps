@@ -440,7 +440,7 @@
                 width={20} />
         </canvaslabel>
         {#if !itemIsRoute}
-            <gridlayout columns="auto,auto,auto" height={50} horizontalAlignment="left" margin={5} row={1} verticalAlignment="bottom">
+            <gridlayout columns="auto,auto,auto,auto" height={50} horizontalAlignment="left" margin={5} row={1} verticalAlignment="bottom">
                 <label
                     backgroundColor={colorBackground}
                     borderColor={colorOnSurfaceVariant}
@@ -504,7 +504,7 @@
                     borderColor={colorOnSurfaceVariant}
                     borderRadius={4}
                     borderWidth={1}
-                    col={2}
+                    col={3}
                     elevation={2}
                     fontSize={16}
                     height={50}
