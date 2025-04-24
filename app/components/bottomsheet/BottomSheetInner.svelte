@@ -161,6 +161,16 @@
             showError(error);
         }
     }
+    function openOpenStreetMap() {
+        try {
+            if (item && !itemIsRoute) {
+                const geometry = item.geometry as Point;
+                openLink(`https://www.openstreetmap.org/#map=14/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
     function searchWeb(canUseWebsite = true) {
         let query;
         try {
@@ -953,7 +963,7 @@
 
         <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
+                <IconButton isVisible={item && !itemIsRoute} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} onLongPress={()=>openOpenStreetMap()} />
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
                 <!-- {#if packageService.hasElevation()} -->
