@@ -169,7 +169,9 @@
                 nChart.highlight(null);
             }
         } else {
-            if (highlight) {
+            const item = highlight?.entry || profileData[onPathIndex];
+
+            if (item) {
                 const spans = [
                     {
                         fontFamily: $fonts.mdi,
@@ -185,7 +187,7 @@
                         text: 'mdi-triangle-outline'
                     },
                     {
-                        text: (highlight.entry.a || 0).toFixed() + 'm' + '  '
+                        text: (item.a || 0).toFixed() + 'm' + '  '
                     },
                     {
                         fontFamily: $fonts.app,
@@ -193,7 +195,7 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (highlight.entry.g || 0).toFixed() + '%'
+                        text: '~' + (item.g || 0).toFixed() + '%'
                     }
                 ];
                 if (!isNaN(remainingTime)) {
@@ -211,6 +213,8 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
+            }
+            if (highlight) {
                 return;
             }
             function highlightFunc() {
