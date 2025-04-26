@@ -169,9 +169,9 @@
                 nChart.highlight(null);
             }
         } else {
-            const item = highlight?.entry || item?.profile?.data?.[onPathIndex];
+            const itemData = highlight?.entry || item?.profile?.data?.[onPathIndex];
 
-            if (item) {
+            if (itemData) {
                 const spans = [
                     {
                         fontFamily: $fonts.mdi,
@@ -187,7 +187,7 @@
                         text: 'mdi-triangle-outline'
                     },
                     {
-                        text: (item.a || 0).toFixed() + 'm' + '  '
+                        text: (itemData.a || 0).toFixed() + 'm' + '  '
                     },
                     {
                         fontFamily: $fonts.app,
@@ -195,7 +195,7 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (item.g || 0).toFixed() + '%'
+                        text: '~' + (itemData.g || 0).toFixed() + '%'
                     }
                 ];
                 if (!isNaN(remainingTime)) {
