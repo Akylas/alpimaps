@@ -169,7 +169,7 @@
                 nChart.highlight(null);
             }
         } else {
-            const item = highlight?.entry || profileData[onPathIndex];
+            const item = highlight?.entry || item?.profile?.data?.[onPathIndex];
 
             if (item) {
                 const spans = [
