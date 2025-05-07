@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { Utils } from '@nativescript/core';
+    import { ApplicationSettings, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
@@ -53,6 +53,48 @@
     let itemProps: ItemProperties = null;
     let nString;
     let nString2;
+    let nString3;
+    let userOnRouteData;
+    
+    const itemsModule = mapContext.mapModule('items');
+    itemsModule.on('user_onroute_data', (event) => {
+        if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false) {
+            userOnRouteData = null;
+            nString3 = null;
+            return;
+        }
+        if(event.remainingDistance) {
+            userOnRouteData = event;
+            nString3= createNativeAttributedString({
+                spans: [
+                    {
+                        fontFamily: $fonts.mdi,
+                        color: colorPrimary,
+                        text: 'mdi-arrow-expand-right'
+                    },
+                    {
+                        text: formatDistance(remainingDistance) + '  '
+                    }
+                ].concat(isNaN(remainingTime) ? [] : [
+                    {
+                        text: '\n'
+                    },
+                    {
+                        fontFamily: $fonts.mdi,
+                        color: colorPrimary,
+                        text: 'mdi-timer-outline'
+                    },
+                    {
+                        text: convertDurationSeconds(remainingTime) + '  '
+                    }
+                ])
+            });
+        } else {
+            userOnRouteData = null;
+            nString3 = null;
+        }
+        canvas?.nativeView.invalidate();
+    });
 
     onMapLanguageChanged((lang) => updateItemText(item, lang));
     function updateItemText(it: Item = item, lang?: string) {
@@ -256,6 +298,16 @@
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop + h - props2Bottom);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            }
+            
+            if (nString3) {
+                propsPaint.setTextAlign(Align.LEFT);
+                propsPaint.color = colorOnSurface;
+                const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                canvas.save();
+                canvas.translate(paddingLeft, paddingTop);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
