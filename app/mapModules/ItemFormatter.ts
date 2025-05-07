@@ -46,6 +46,7 @@ export default class ItemFormatter {
             properties['name_latin'] ||
             properties.name ||
             properties.name_int ||
+            properties.int_name ||
             (properties.address && properties.address.name) ||
             (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
             (properties.class && lc(properties.class.replace(/-/g, '_')))

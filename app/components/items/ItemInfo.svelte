@@ -224,7 +224,7 @@
         topItemsToDraw = toDraw;
     }
     const itemsModule = mapContext.mapModule('items');
-
+    
     const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele', 'currency:XLT', 'cuisine'];
 
     let loading = false;
