@@ -261,6 +261,12 @@
                     key: 'show_accuracy_marker',
                     value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
                     title: lc('show_accuracy_marker')
+                },
+                {
+                    type: 'switch',
+                    key: 'draw_onroute_live_data',
+                    value: ApplicationSettings.getBoolean('draw_onroute_live_data', false),
+                    title: lc('draw_onroute_live_data')
                 });
                 if (__ANDROID__ && Device.model === 'HLTE556N') {
                     newItems.push({

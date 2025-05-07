@@ -238,13 +238,15 @@
     height={70}
     padding={6}
     visibility={showLocationInfo ? 'visible' : 'collapse'}
-    width={200}
+    width={hasBarometer ? 200 : 150}
     scaleX={0.9}
     scaleY={0.9}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} color={ isEInk ? "black" : "white" } height={60} width={60}>
+        <canvaslabel backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60}>
+        </canvaslabel>
+        <canvaslabel bind:this={firstCanvas} color={ isEInk ? "black" : "white" } height={60} width={60}>
             <cspan
                 fontSize={22}
                 fontWeight="bold"

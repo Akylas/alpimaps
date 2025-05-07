@@ -762,6 +762,10 @@ export default class ItemsModule extends MapModule {
             }
         });
         const properties = item.properties;
+        if (properties.int_name) {
+            properties.name_int = properties.int_name;
+            delete properties.int_name;
+        }
         const matches = properties.name
             ? results.elements.filter((e) => e.tags && e.tags.name === properties.name)
             : results.elements
