@@ -58,7 +58,7 @@
     let userOnRouteData;
     
     const itemsModule = getMapContext().mapModule('items');
-    itemsModule.on('user_onroute_data', (event) => {
+    itemsModule.on('user_onroute_data', (event: any) => {
         if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false)) {
             userOnRouteData = null;
             nString3 = null;
@@ -76,7 +76,7 @@
                     {
                         text: formatDistance(event.remainingDistance) + '  '
                     }
-                ].concat(isNaN(remainingTime) ? [] : [
+                ].concat(isNaN(event.remainingTime) ? [] : [
                     {
                         text: '\n'
                     },
