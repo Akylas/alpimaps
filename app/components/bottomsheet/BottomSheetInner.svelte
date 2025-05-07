@@ -165,7 +165,7 @@
         try {
             if (item && !itemIsRoute) {
                 const geometry = item.geometry as Point;
-                openLink(`https://www.openstreetmap.org/#map=14/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
+                openLink(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().zoom)}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
             }
         } catch (error) {
             showError(error);
@@ -176,7 +176,7 @@
         try {
             const props = item && item.properties;
             if (props) {
-                query = props.name || formatter.getItemPositionToString(item);
+                query = formatter.getItemName(item) || formatter.getItemPositionToString(item);
                 if (canUseWebsite && props.website) {
                     query = props.website;
                 } else {
