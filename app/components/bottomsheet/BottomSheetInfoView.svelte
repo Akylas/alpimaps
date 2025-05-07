@@ -3,13 +3,14 @@
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, openingHoursText, osmicon } from '~/helpers/formatter';
+    import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, formatDistance, openingHoursText, osmicon } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fonts } from '~/variables';
     import SymbolShape from '../common/SymbolShape';
+    import { getMapContext } from '~/mapModules/MapModule';
 
     const propsPaint = new Paint();
     propsPaint.textSize = 14;
@@ -20,7 +21,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorPrimary, colorOnSurface, colorOnSurfaceVariant } = $colors);
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
@@ -56,9 +57,9 @@
     let nString3;
     let userOnRouteData;
     
-    const itemsModule = mapContext.mapModule('items');
+    const itemsModule = getMapContext().mapModule('items');
     itemsModule.on('user_onroute_data', (event) => {
-        if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false) {
+        if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false)) {
             userOnRouteData = null;
             nString3 = null;
             return;
@@ -73,7 +74,7 @@
                         text: 'mdi-arrow-expand-right'
                     },
                     {
-                        text: formatDistance(remainingDistance) + '  '
+                        text: formatDistance(event.remainingDistance) + '  '
                     }
                 ].concat(isNaN(remainingTime) ? [] : [
                     {
@@ -85,7 +86,7 @@
                         text: 'mdi-timer-outline'
                     },
                     {
-                        text: convertDurationSeconds(remainingTime) + '  '
+                        text: convertDurationSeconds(event.remainingTime) + '  '
                     }
                 ])
             });

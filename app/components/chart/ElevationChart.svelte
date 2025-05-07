@@ -169,7 +169,7 @@
                 nChart.highlight(null);
             }
             mapContext.mapModule('items').notify({
-                eventName: 'user_onroute_data
+                eventName: 'user_onroute_data'
             });
         } else {
             const itemData = highlight?.entry || item?.profile?.data?.[onPathIndex];
@@ -217,14 +217,14 @@
                     spans
                 });
                 mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data,
+                    eventName: 'user_onroute_data',
                     itemData,
                     remainingTime,
                     remainingDistance
                 });
             } else {
                 mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data,
+                    eventName: 'user_onroute_data',
                     remainingTime,
                     remainingDistance
                 });
