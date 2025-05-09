@@ -353,11 +353,11 @@
 }
 
 #transportation_name {
-  ['nuti::polygons_border'>0]{
-    [class = 'motorway'][zoom >= 10],
-    [class = 'trunk'][zoom >= 11],
-    [class = 'primary'][zoom >= 11],
-    [class = 'secondary'][zoom >= 12] {
+  ['nuti::road_shields'>0][zoom<14][ref != null]{
+    [class=motorway][zoom >= 10],
+    [class=trunk][zoom >= 11],
+    [class=primary][zoom >= 11],
+    [class=secondary][zoom >= 12] {
       shield-name: [ref];
       shield-size: @shield-size;
       shield-line-spacing: @shield-line-spacing;
@@ -367,25 +367,22 @@
       shield-margin: @shield-margin;
       shield-face-name: @shield-font;
       shield-clip: @shield-clip;
+      shield-file: url("shields/road_shield.svg");
   
-      [class = 'motorway'] {
+      [class=motorway] {
         shield-fill: @motorway-fill;
-        shield-file: url("shields/road_shield.svg");
       }
   
-      [class = 'trunk'] {
+      [class=trunk] {
         shield-fill: @trunk-fill;
-        shield-file: url("shields/road_shield.svg");
       }
 
-      [class = 'primary'] {
+      [class=primary] {
         shield-fill: @primary-fill;
-        shield-file: url("shields/road_shield.svg");
       }
   
-      [class = 'secondary'] {
+      [class=secondary] {
         shield-fill: @secondary-fill;
-        shield-file: url("shields/road_shield.svg");
       }
     }
   }
