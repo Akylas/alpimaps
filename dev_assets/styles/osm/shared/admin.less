@@ -22,7 +22,7 @@
 //     [class='national_park'] {
 //         text-size: @park_font_size;
 //     }
-//     text-name: [name];
+//     text-name: @name;
 //     text-face-name: @mont;
 //     text-wrap-width: 100;
 //     text-vertical-alignment: middle;
@@ -44,7 +44,7 @@
             polygon-fill: @national_park_fill;
         }
         [zoom>=12][zoom<16]::label{
-            text-name: [name];
+            text-name: @name;
             text-face-name: @mont_it;
             text-wrap-width: 60;
             text-placement: point;
@@ -81,7 +81,7 @@
             // [class='aboriginal_lands'] {
             //     text-fill: @aboriginal_label;
             // }
-            text-name: [name];
+            text-name: @name;
             text-face-name: @mont;
             text-placement: line;
             text-halo-fill: @protected-area_halo;

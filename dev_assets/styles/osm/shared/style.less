@@ -6,6 +6,8 @@
 @mont_it: @font_face + ' Medium Italic';
 @osm: 'osm';
 
+@name: [name:[nuti::lang]] ? [name:[nuti::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : [name]));
+
 @background: #e6e4e0;
 
 @standard-halo-radius: 2;
@@ -76,13 +78,12 @@
 @via_ferrata-line-width: 2;
 
 @shield-size: 10;
-@shield-line-spacing: 1.50; // -0.15 em
+@shield-line-spacing: -1.50; // -0.15 em
 @shield-size-z16: 11;
 @shield-line-spacing-z16: -1.65; // -0.15 em
 @shield-size-z18: 12;
 @shield-line-spacing-z18: -1.80; // -0.15 em
-@shield-spacing: 76;
-@shield-repeat-distance: 40;
+@shield-spacing: 760;
+@shield-repeat-distance: 400;
 @shield-margin: 40;
-@shield-font: @mont;
 @shield-clip: false;

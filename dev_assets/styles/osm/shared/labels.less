@@ -1,5 +1,4 @@
-@name_default : [name_int] ? [name_int] : ([name:en] ? [name:en] : [name]);
-@name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : @name_default)) : @name_default;
+
 @osm_icon: [nuti::osm-[subclass]] ? [nuti::osm-[subclass]] : ([nuti::osm-[class]]?[nuti::osm-[class]]:[nuti::osm-symbol-dot]);
 @featureId: [name]+[subclass];
 
@@ -365,10 +364,11 @@
       shield-spacing: @shield-spacing;
       shield-repeat-distance: @shield-repeat-distance;
       shield-margin: @shield-margin;
-      shield-face-name: @shield-font;
+      shield-face-name: @mont;
       shield-clip: @shield-clip;
-      shield-file: url("shields/road_shield.svg");
-  
+      shield-file: url(shields/road_shield.svg);
+      shield-unlock-image: true;
+      
       [class=motorway] {
         shield-fill: @motorway-fill;
       }
