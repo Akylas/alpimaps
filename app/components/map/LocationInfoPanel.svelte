@@ -244,15 +244,15 @@
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <label backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60} fontSize={22} color={ isEInk ? "black" : "white" } textAlignment="center" verticalAlignment="middle" autoFontSize={true} html={`<b>${currentLocation && currentLocation.speed !== undefined ? Math.floor(currentLocation.speed) : ''}</b></br><small><small>km/h</small></small>`} />
-   {#if hasBarometer}
-        <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5} visibility={listeningForBarometer ? 'visible' : 'collapse'}>
+        <label backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60} fontSize={22} color={ isEInk ? "black" : "white" } textAlignment="center" verticalAlignment="middle" autoFontSize={true} html={`<b>${currentLocation && currentLocation.speed !== undefined ? Math.floor(currentLocation.speed) : ''}</b><br/><small><small>km/h</small></small>`} />
+        <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5}>
             <cspan color={isEInk ? "#000" : colorPrimary} fontSize={11} text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
                 <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
                 <cspan fontSize={12} text=" m" />
             </cgroup>
         </canvaslabel>
+    {#if hasBarometer}
         <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'} color={ isEInk ? "#000" : "#fff" }>
             <cspan fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
         </canvaslabel>
