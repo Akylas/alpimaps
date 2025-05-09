@@ -283,10 +283,10 @@
                 iconPaint.color = iconColor || colorOnSurface;
                 canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop, iconPaint);
             }
-
+            
+            propsPaint.setTextAlign(Align.LEFT);
+            propsPaint.color = colorOnSurface;
             if (nString) {
-                propsPaint.setTextAlign(Align.LEFT);
-                propsPaint.color = colorOnSurface;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom);
@@ -294,8 +294,6 @@
                 canvas.restore();
             }
             if (nString2) {
-                propsPaint.setTextAlign(Align.LEFT);
-                propsPaint.color = colorOnSurface;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop + h - props2Bottom);
@@ -304,13 +302,13 @@
             }
             
             if (nString3) {
-                propsPaint.setTextAlign(Align.LEFT);
-                propsPaint.color = colorOnSurface;
+                propsPaint.textSize = 12;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop);
                 staticLayout.draw(canvas);
                 canvas.restore();
+                propsPaint.textSize = 14;
             }
 
             if (item.properties?.['opening_hours']) {

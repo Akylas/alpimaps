@@ -707,7 +707,7 @@ class PackageService extends Observable {
                 gradesCounter = 0;
                 colors.push({
                     d: lastIndex,
-                    g: avgGrade,
+                  //  g: avgGrade,
                     color: getGradeColor(Math.abs(avgGrade))
                 });
                 for (let j = lastIndex; j <= i; j++) {
@@ -721,7 +721,7 @@ class PackageService extends Observable {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
-                g: avgGrade,
+               // g: avgGrade,
                 color: getGradeColor(avgGrade)
             });
         }
