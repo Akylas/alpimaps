@@ -29,7 +29,8 @@
         show3DBuildings,
         showContourLines,
         showSubBoundaries,
-        showPolygonsBorder
+        showPolygonsBorder,
+        showRoadShields
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -301,6 +302,12 @@
                     type: 'switch',
                     value: $showPolygonsBorder,
                     title: lc('show_polygone_border')
+                },
+                {
+                    mapStore: showRoadShields,
+                    type: 'switch',
+                    value: $showRoadShields,
+                    title: lc('show_road_shields')
                 }
             );
 

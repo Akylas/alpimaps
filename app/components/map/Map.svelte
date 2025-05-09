@@ -75,7 +75,8 @@
         showRoutes,
         showSlopePercentages,
         showSubBoundaries,
-        showPolygonsBorder
+        showPolygonsBorder,
+        showRoadShields
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -1083,6 +1084,7 @@
     $: vectorTileDecoder && $screePatternZoom > 0 && setStyleParameter('scree_pattern_zoom', $screePatternZoom);
     $: vectorTileDecoder && $scrubPatternZoom > 0 && setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('road_shields', $showRoadShields ? '1' : '0');
     $: {
         const visible = $showRoutes;
         getLayers('routes').forEach((l) => {
