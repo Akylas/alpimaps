@@ -244,19 +244,9 @@
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <canvaslabel backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60}>
-        </canvaslabel>
-        <canvaslabel bind:this={firstCanvas} color={ isEInk ? "black" : "white" } height={60} width={60}>
-            <cspan
-                fontSize={22}
-                fontWeight="bold"
-                paddingBottom={3}
-                text={currentLocation && currentLocation.speed !== undefined ? currentLocation.speed.toFixed() : ''}
-                textAlignment="center"
-                verticalAlignment="middle" />
-            <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
-        </canvaslabel>
-        <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5}>
+        <label bind:this={firstCanvas} backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60} fontSize={22} color={ isEInk ? "black" : "white" } textAlignment="center" verticalAlignment="middle" autoFontSize={true} html={`<b>${currentLocation && currentLocation.speed !== undefined ? Math.floor(currentLocation.speed) : ''}<\b><\n><small><small>km/h<\small><\small>`} />
+   {#if hasBarometer}
+        <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5} visibility={listeningForBarometer ? 'visible' : 'collapse'}>
             <cspan color={isEInk ? "#000" : colorPrimary} fontSize={11} text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
                 <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
@@ -270,5 +260,6 @@
             <IconButton small={true} text="mdi-gauge" white={!isEInk} on:tap={switchBarometer} />
             <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={!isEInk} on:tap={getNearestAirportPressure} />
         </stacklayout>
+    {/if}
     {/if}
 </gridlayout>
