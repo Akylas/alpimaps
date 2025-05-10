@@ -353,17 +353,17 @@
 
 #transportation_name {
   ['nuti::road_shields'>0][zoom<14][ref != null]{
-    [class=motorway][zoom >= 8],
-    [class=trunk][zoom >= 9],
-    [class=primary][zoom >= 9],
-    [class=secondary][zoom >= 19] {
+    [class=motorway][zoom >= 5],
+    [class=trunk][zoom >= 5],
+    [class=primary][zoom >= 7],
+    [class=secondary][zoom >= 9] {
       shield-name: [ref];
       shield-size: @shield-size;
       shield-line-spacing: @shield-line-spacing;
-      shield-placement: line;
+      shield-placement: nutibillboard;
       shield-spacing: @shield-spacing;
-     shield-repeat-distance: @shield-repeat-distance;
-  //    shield-margin: @shield-margin;
+      shield-repeat-distance: @shield-repeat-distance;
+      shield-margin: @shield-margin;
       shield-face-name: @mont;
   //    shield-clip: @shield-clip;
       shield-file: url(shields/road_shield.svg);
@@ -388,9 +388,9 @@
   }
 
 	
-	[class=motorway][zoom>=5],
-	[class=trunk][zoom>=5],
-	[class=primary][zoom>=7]{
+	[class=motorway][zoom>=12],
+	[class=trunk][zoom>=12],
+	[class=primary][zoom>=13]{
 		// ::major {
 
 			text-name: @name;

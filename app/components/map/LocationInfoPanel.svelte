@@ -244,7 +244,16 @@
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <label backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} height={60} width={60} maxFontSize={22} fontSize={22} color={ isEInk ? "black" : "white" } textAlignment="center" verticalAlignment="middle" autoFontSize={true} html={`<b>${currentLocation && currentLocation.speed !== undefined ? Math.floor(currentLocation.speed) : ''}</b><br/><small><small><small><small>km/h</small></small></small></small>`} />
+        <canvaslabel bind:this={firstCanvas} backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} color={ isEInk ? "black" : "white" } height={60} width={60}>
+            <cspan
+                fontSize={22}
+                fontWeight="bold"
+                paddingBottom={3}
+                text={currentLocation && currentLocation.speed !== undefined ? (currentLocation.speed * 3.6).toFixed() : ''}
+                textAlignment="center"
+                verticalAlignment="middle" />
+            <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
+        </canvaslabel>
         <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5}>
             <cspan color={isEInk ? "#000" : colorPrimary} fontSize={11} text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
