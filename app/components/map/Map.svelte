@@ -653,7 +653,7 @@
             // }
             const map = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
-            if (!PRODUCTION && DEV_LOG) {
+            if (DEV_LOG) {
                 setShowDebug(true);
                 setShowInfo(true);
                 setShowWarn(true);
