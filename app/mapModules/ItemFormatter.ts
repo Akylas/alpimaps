@@ -40,13 +40,17 @@ export default class ItemFormatter {
 
     getItemName(item: Item, lang = mapContext.getCurrentLanguage()) {
         const properties = item.properties || {};
-        return (
-            properties[`name:${lang}`] ||
+        let name = properties[`name:${lang}`] ||
             properties['name:en'] ||
             properties['name_latin'] ||
             properties.name_int ||
             properties.int_name ||
-            properties.name ||
+            properties.name;
+        if (name && properties.name && name !== properties.name) {
+            name = name + ` (${properties.name})`;
+        }
+        return (
+            name ||
             (properties.address && properties.address.name) ||
             (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
             (properties.class && lc(properties.class.replace(/-/g, '_')))
@@ -83,6 +87,7 @@ export default class ItemFormatter {
             } else {
                 return this.getItemAddress(item, 1);
             }
+            
         }
     }
     getSymbol(itemProps) {

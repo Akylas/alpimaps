@@ -557,7 +557,7 @@
 		text-same-feature-id-dependent: true;
 	}
 }
-#poi[class!=lodging][class!=spring][class!=campsite] {
+#poi[class!=lodging][class!=spring][class!=campsite],#aerodrome_label {
 	['nuti::highlight_drinking_water'>0][class='drinking_water'],
 	[zoom=14][rank<=5][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'][class!='bus'],
 	[zoom=15][rank<=10][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'],
@@ -581,6 +581,9 @@
 			[class=national_park],[class=protected_area] {
 				text-fill: @poi-national_park-fill;
 			}
+            #aerodrome_label {
+                text-name:  [nuti::osm-airport];
+            }
 			[class=aboriginal_lands] {
 				text-fill: @poi-aboriginal-fill;
 			}

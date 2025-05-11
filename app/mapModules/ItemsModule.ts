@@ -178,6 +178,9 @@ export default class ItemsModule extends MapModule {
             }
         }
     }
+    setVisibility(value: boolean){
+        this.getOrCreateLocalVectorLayer().visible = value;
+    }
     createLocalPoint(position: GenericMapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
         const styleBuilder = new PointStyleBuilder(options);
         return new Point({ position, projection: mapContext.getProjection(), styleBuilder });

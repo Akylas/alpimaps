@@ -456,10 +456,12 @@
     async function show(editingItem?: IItem) {
         try {
             if (editingItem) {
+                const actualWaypoints = JSON.parse(JSON.stringify(editingItem.route.waypoints));
                 waypoints.splice(0, waypoints.length);
-                waypoints.push(...editingItem.route.waypoints);
+                waypoints.push(...actualWaypoints);
+                nbWayPoints = waypoints.length;
                 features.splice(0, features.length);
-                features.push(...(editingItem.route.waypoints as any));
+                features.push(...(actualWaypoints as any));
                 updateWayPointLines();
                 setLayerGeoJSONString();
             }
@@ -972,6 +974,7 @@
             });
             if (index >= 0) {
                 waypoints.splice(index, 1);
+                nbWayPoints--;
                 const fIndex = features.findIndex((f) => f.properties.id === item.properties.id);
                 if (fIndex >= 0) {
                     features.splice(fIndex, 1);
