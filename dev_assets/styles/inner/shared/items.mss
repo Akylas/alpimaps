@@ -79,7 +79,7 @@
         text-allow-overlap: true;
         text-clip: false;
         text-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
-        text-size: (([style.iconSize] ? [style.iconSize]: @default_icon_size) + 5) * linear([view::zoom], (4, 0.1), (6, 0.5), (8, 1));
+        text-size: (([style.iconSize] ? [style.iconSize]: @default_icon_size) + 5) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
         text-halo-fill: @itemContrastColor;
         text-halo-radius: @standard-halo-radius;
         text-horizontal-alignment: [style.horizontalAlignment] ? [style.horizontalAlignment] : middle;
