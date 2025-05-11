@@ -1011,7 +1011,7 @@ export default class CustomLayersModule extends MapModule {
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     // clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
                     // clickHandlerLayerFilter: PRODUCTION ? '.*::(icon|label)' : '.*',
-                    clickHandlerLayerFilter: '.*::(icon|label)',
+                    clickHandlerLayerFilter: '(transportation_name|.*::(icon|label))',
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0
                 });

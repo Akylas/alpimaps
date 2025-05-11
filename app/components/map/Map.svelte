@@ -76,7 +76,8 @@
         showSlopePercentages,
         showSubBoundaries,
         showPolygonsBorder,
-        showRoadShields
+        showRoadShields,
+        showItemsLayer
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -422,11 +423,9 @@
                     }
                 });
             } else if (link.endsWith('.gpx')) {
-                const itemModule = mapContext.mapModule('items');
                 showLoading();
                 await itemModule.importGPXFile(link);
             } else if (link.endsWith('.geojson')) {
-                const itemModule = mapContext.mapModule('items');
                 showLoading();
                 await itemModule.importGeoJSONFile(link);
             } else {
@@ -441,6 +440,7 @@
         networkConnected = event.data.connected;
     }
     let customLayersModule: CustomLayersModule;
+    let itemModule: ItemsModule;
 
     let isLandscape = Application.orientation() === 'landscape';
     function onOrientationChanged(event: OrientationChangedEventData) {
@@ -466,6 +466,9 @@
         }
         customLayersModule = new CustomLayersModule();
         customLayersModule.once('ready', onLayersReady);
+        
+        itemModule = new ItemsModule();
+        
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => cartoMap,
@@ -505,7 +508,7 @@
             showMapMenu,
             showMapOptions,
             mapModules: {
-                items: new ItemsModule(),
+                items: itemModule,
                 userLocation: new UserLocationModule(),
                 customLayers: customLayersModule,
                 directionsPanel,
@@ -595,7 +598,6 @@
         if (!localVectorLayer) {
             const localVectorDataSource = new LocalVectorDataSource({ projection });
 
-            const itemModule = mapContext.mapModule('items');
             selectedPosMarker = itemModule.createLocalPoint(position, {
                 color: new Color(colorPrimary).setAlpha(178).hex,
                 clickSize: 0,
@@ -700,7 +702,6 @@
                 registerUniversalLinkCallback(onAppUrl);
                 const current = getUniversalLink();
                 if (current) {
-                    const itemModule = mapContext.mapModule('items');
                     itemModule.onDbInit(() => {
                         onAppUrl(current);
                     });
@@ -1093,6 +1094,7 @@
         cartoMap?.requestRedraw();
     }
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
+    $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
@@ -1353,7 +1355,6 @@
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureData, featurePosition, position } = data;
         TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
-        const itemModule = mapContext.mapModule('items');
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
             return false;
@@ -1672,12 +1673,13 @@
         item = await itemsModule.saveItem(item);
         if (item.route) {
             mapContext.mapModules.directionsPanel.cancel(false);
+            
         }
-        if (item.route) {
-            itemsModule.takeItemPicture(item);
-        } else {
+    //    if (item.route) {
+           await itemsModule.takeItemPicture(item);
+  //      } else {
             mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
-        }
+  //      }
     });
 
     async function showHideKeepAwakeNotification(value: boolean) {
