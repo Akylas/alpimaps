@@ -43,7 +43,7 @@
 @via_ferrata-dasharray: 3, 2, 1, 2;
 @via_ferrata-line-width: 2;
 
-@lowevel_road_color: #555;
+@lowevel_road_color: #bbb;
 @motorway-color: lighten(#e66e89, @applied_eink_lighten);
 @trunk-color: lighten(#f9b29c, @applied_eink_lighten_light);
 @primary-color: lighten(#f3ba5c, @applied_eink_lighten);
@@ -180,8 +180,8 @@
 @residential-fill: #fff;
 @noaccess-opacity: 0.8;
 @residential-tunnel-fill: @residential-fill;
-@residential-casing: linear([view::zoom], (12, fadeout(@lowevel_road_color, 1)), (13, @lowevel_road_color));
-@residential-casing-width: linear([view::zoom], (12, 0), (12.01, 0.75), (12, 1), (14, 1.5), (16, 2));
+@residential-casing: @lowevel_road_color);
+//@residential-casing-width: linear([view::zoom], (12, 0), (12.01, 0.75), (12, 1), (14, 1.5), (16, 2));
 @residential-width: linear([view::zoom], (12, 0.5), (13, 0.95), (14, 1.9), (15, 2.4), (16, 5.2), (17, 5.7), (18, 7.7));
 
 
