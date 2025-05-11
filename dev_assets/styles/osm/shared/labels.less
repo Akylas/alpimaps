@@ -563,6 +563,7 @@
 	[zoom=15][rank<=10][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'],
 	[zoom=16][rank<=30][class!='shop'],
 	[zoom=17][rank<=70],
+    #aerodrome_label,
 	[zoom>=18] {
 		::icon {
 			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
@@ -618,6 +619,7 @@
 		[class!=bus][class!=railway][class!=drinking_water][rank<=10],
 		[zoom=16][class!=bus][class!=railway][class!=drinking_water][rank<=20],
 		[zoom=17][rank<=50],
+        #aerodrome_label[zoom>=13],
 		[zoom>=18] {
 			::label {
 				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
