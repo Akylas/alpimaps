@@ -2,7 +2,8 @@
 @color: [color];
 
 #boundary {
-    [admin_level=4][zoom>=4][zoom<7],
+      [admin_level=2][zoom<5],
+    [admin_level=4][zoom>=5][zoom<7],
     [admin_level>=5][zoom>=7][zoom<=14] {
         line-color: #000;
         polygon-fill: @color;
@@ -12,7 +13,7 @@
 
 }
 #boundary['mapnik::geometry_type'=1] {
-    [admin_level=4][zoom>=4][zoom<7],
+    [admin_level=4][zoom>=5][zoom<7],
     [admin_level>=5][zoom>=7][zoom<=14] {
 
             text-placement-priority: -10000000;
