@@ -179,8 +179,9 @@ export default class ItemsModule extends MapModule {
         }
     }
     setVisibility(value: boolean){
-        this.getOrCreateLocalVectorLayer();
-        this.localVectorLayer.visible = value;
+        if (this.localVectorLayer){
+            this.localVectorLayer.visible = value;
+        }
     }
     createLocalPoint(position: GenericMapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
         const styleBuilder = new PointStyleBuilder(options);
