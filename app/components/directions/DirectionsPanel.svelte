@@ -366,7 +366,7 @@
                 coordinates: [position.lon, position.lat]
             }
         };
-        toAdd.properties.name = metaData.title || formatter.getItemTitle(toAdd as Item);
+        toAdd.properties.name = metaData.title || metadata.name;
         if (metaData.isStart) {
             features.unshift(toAdd);
             waypoints.unshift(toAdd as any);
@@ -1185,7 +1185,7 @@
                     properties: {
                         id,
                         ...result,
-                        name: result.title || formatter.getItemTitle(result as Item)
+                        name: result.title
                     },
                     geometry: result.geometry
                 };
