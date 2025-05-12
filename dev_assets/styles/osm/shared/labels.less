@@ -488,9 +488,9 @@
 		}
 	}
 }
-#poi[class=campsite][zoom>=10] {
-	[rank<=15],
-	[zoom>=14] {
+#poi[class=campsite][zoom>=10],#aerodrome_label {
+//	[rank<=15],
+//	[zoom>=14] {
 		::icon {
 			text-placement: nutibillboard;
 			text-name: @osm_icon;
@@ -502,6 +502,9 @@
 			text-size: @poi_icon_width;
 			text-fill: @poi-campsite-fill;
 			text-allow-overlap-same-feature-id: true;
+            #aerodrome_label {
+                text-name:  [nuti::osm-airport];
+            }
 		}
 		::label[zoom>=17] {
 			text-name: @name;
@@ -518,7 +521,7 @@
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
 		}
-	}
+//	}
 }
 
 #poi[class=spring][zoom>=12] {
@@ -557,13 +560,12 @@
 		text-same-feature-id-dependent: true;
 	}
 }
-#poi[class!=lodging][class!=spring][class!=campsite],#aerodrome_label {
+#poi[class!=lodging][class!=spring][class!=campsite] {
 	['nuti::highlight_drinking_water'>0][class='drinking_water'],
 	[zoom=14][rank<=5][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'][class!='bus'],
 	[zoom=15][rank<=10][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'],
 	[zoom=16][rank<=30][class!='shop'],
 	[zoom=17][rank<=70],
-    #aerodrome_label,
 	[zoom>=18] {
 		::icon {
 			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
@@ -582,9 +584,6 @@
 			[class=national_park],[class=protected_area] {
 				text-fill: @poi-national_park-fill;
 			}
-            #aerodrome_label {
-                text-name:  [nuti::osm-airport];
-            }
 			[class=aboriginal_lands] {
 				text-fill: @poi-aboriginal-fill;
 			}
@@ -619,7 +618,6 @@
 		[class!=bus][class!=railway][class!=drinking_water][rank<=10],
 		[zoom=16][class!=bus][class!=railway][class!=drinking_water][rank<=20],
 		[zoom=17][rank<=50],
-        #aerodrome_label[zoom>=13],
 		[zoom>=18] {
 			::label {
 				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
