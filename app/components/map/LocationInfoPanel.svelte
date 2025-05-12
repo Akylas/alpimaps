@@ -232,15 +232,12 @@
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
-    backgroundColor={ isEInk ? "#ffffff" : "#00000077" }
-    borderRadius={40}
+    backgroundColor={ isEInk ? "#ffffff66" : "#00000077" }
+    borderRadius={30}
     columns="auto,*,auto"
-    height={70}
-    padding={6}
+    height={60}
     visibility={showLocationInfo ? 'visible' : 'collapse'}
-    width={hasBarometer ? 200 : 150}
-    scaleX={0.9}
-    scaleY={0.9}
+    width={hasBarometer ? 200 : 150
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
