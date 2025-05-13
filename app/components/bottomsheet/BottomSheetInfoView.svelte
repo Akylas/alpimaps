@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+  <script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
