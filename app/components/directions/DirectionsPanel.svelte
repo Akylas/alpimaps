@@ -113,7 +113,7 @@
     export let translationFunction: Function = null;
 
     const used_settings = {
-        common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks'],
+        common: ['service_factor', 'service_penalty', 'use_living_streets', 'use_tracks', 'use_ferry'],
         pedestrian: ['walking_speed', 'weight', 'use_hills', 'max_hiking_difficulty', 'step_penalty', 'driveway_factor', 'walkway_factor', 'sidewalk_factor', 'alley_factor', 'use_roads'],
         bicycle: ['use_hills', 'weight', 'avoid_bad_surfaces', 'use_roads', 'cycling_speed', 'non_network_penalty', 'exclude_unpaved'],
         auto: ['use_highways', 'use_distance', 'use_tolls', 'alley_factor'],
@@ -163,7 +163,7 @@
             case 'driveway_factor':
                 return 5;
             case 'use_ferry':
-                return 1;
+                return 0;
             case 'walkway_factor':
                 return 1;
             case 'walking_speed':
