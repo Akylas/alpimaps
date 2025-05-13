@@ -4,7 +4,7 @@
         line-width: @border_country_width;
         line-opacity: @border_country_opacity;
         [zoom>=7] {
-            line-dasharray: ['nuti::sub_boundaries'>0] ?  @border_country_dasharray:  @border_region_dasharray;
+            line-dasharray: @border_country_dasharray;
         }
     }
     ['nuti::sub_boundaries'>0] {
