@@ -366,7 +366,7 @@
                 coordinates: [position.lon, position.lat]
             }
         };
-        toAdd.properties.name = metaData.title || metadata.name;
+        toAdd.properties.name = metaData.title || metaData.name;
         if (metaData.isStart) {
             features.unshift(toAdd);
             waypoints.unshift(toAdd as any);
