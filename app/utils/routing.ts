@@ -10,7 +10,8 @@ export const valhallaSettingIcon = {
     weight: 'mdi-weight',
     avoid_bad_surfaces: 'mdi-texture-box',
     step_penalty: 'mdi-stairs',
-    use_tracks: 'mdi-shoe-print'
+    use_tracks: 'mdi-shoe-print',
+    'use_ferry': 'mdi-ferry'
 };
 
 export function valhallaSettingColor(key: string, profile: string, options: any, baseColor = 'white') {
