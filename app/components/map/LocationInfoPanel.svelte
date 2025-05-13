@@ -237,11 +237,11 @@
     columns="auto,*,auto"
     height={60}
     visibility={showLocationInfo ? 'visible' : 'collapse'}
-    width={hasBarometer ? 200 : 150
+    width={hasBarometer ? 200 : 150}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} backgroundColor={ isEInk ? "#ffffff" : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} color={ isEInk ? "black" : "white" } height={60} width={60}>
+        <canvaslabel bind:this={firstCanvas} backgroundColor={ isEInk ? null : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} color={ isEInk ? "black" : "white" } height={60} width={60}>
             <cspan
                 fontSize={22}
                 fontWeight="bold"
