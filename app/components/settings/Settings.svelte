@@ -462,6 +462,12 @@
                     },
                     {
                         id: 'sub_settings',
+                        icon: 'mdi-cards-outline',
+                        title: lc('behavior'),
+                        description: lc('behavior_settings'),
+                        options: () => getSubSettings('general'),
+                    {
+                        id: 'sub_settings',
                         icon: 'mdi-directions',
                         title: lc('directions'),
                         description: lc('directions_settings'),
