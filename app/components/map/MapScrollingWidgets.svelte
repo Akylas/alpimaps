@@ -5,7 +5,7 @@
     import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert } from '@nativescript-community/ui-material-dialogs';
-    import { GridLayout } from '@nativescript/core';
+    import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -290,6 +290,18 @@
             showError(error);
         }
     }
+    async function onListItemLongPress() {
+        try {
+            if(ApplicationSettings.getBoolean('list_longpress_camera', false)) {
+                const intent = android.content.Intent('android.media.action.STILL_IMAGE_CAMERA_SECURE');
+                intent.addFlags(Android.content.Intent.FLAG_ACTIVITY_NEW_TASK);                
+                Utils.android.getApplicationContext().startActivity(intent);
+            }
+            
+        } catch (error) {
+            showError(error);
+        }
+    }
 </script>
 
 <gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
@@ -324,7 +336,7 @@
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
     <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
-        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} />
+        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress}/>
         <mdbutton class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
