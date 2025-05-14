@@ -139,6 +139,16 @@
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
                     }
                 ];
+            case 'general':
+                return [
+                    {
+                        
+                        type: 'switch',
+                        key: 'list_longpress_camera',
+                        value: ApplicationSettings.getBoolean('list_longpress_camera', false),
+                        title: lc('longpress_list_open_camera')
+                    }
+                ];
             case 'address':
                 return [
                     {
