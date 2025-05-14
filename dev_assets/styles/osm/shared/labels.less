@@ -352,11 +352,11 @@
 }
 
 #transportation_name {
-  ['nuti::road_shields'>0][zoom<14][ref != null]{
+  ['nuti::road_shields'>0][zoom<14][ref != null]::label{
     [class=motorway][zoom >= 9],
-    [class=trunk][zoom >= 9],
-    [class=primary][zoom >= 10],
-    [class=secondary][zoom >= 12] {
+    [class=trunk][zoom >= 10],
+    [class=primary][zoom >= 12],
+    [class=secondary][zoom >= 13] {
       shield-name: [ref];
       shield-size: @shield-size;
       shield-line-spacing: @shield-line-spacing;
@@ -364,27 +364,10 @@
       shield-spacing: @shield-spacing;
       shield-repeat-distance: @shield-repeat-distance;
       shield-min-distance: @shield-margin;
-      shield-face-name: @mont_md;
+      shield-face-name: @mont_bd;
   //    shield-clip: @shield-clip;
       shield-file: url(shields/road_shield.svg);
- //     shield-unlock-image: true;
       shield-fill: #ffffff;
-      
-      [class=motorway] {
- //       shield-fill: @motorway-fill;
-      }
-  
-      [class=trunk] {
- //       shield-fill: @trunk-fill;
-      }
-
-      [class=primary] {
-//        shield-fill: @primary-fill;
-      }
-  
-      [class=secondary] {
- //       shield-fill: @secondary-fill;
-      }
     }
   }
 
