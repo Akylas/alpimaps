@@ -58,4 +58,5 @@ export const screePatternZoom = settingsStore('screePatternZoom', -1);
 export const scrubPatternZoom = settingsStore('scrubPatternZoom', -1);
 export const showPolygonsBorder  = settingsStore('showPolygonsBorder', true);
 export const showRoadShields = settingsStore('showRoadShields', true);
+export const showRouteShields = settingsStore('showRouteShields', false);
 export const showItemsLayer = settingsStore('showItemsLayer', true);

@@ -31,6 +31,7 @@
         showSubBoundaries,
         showPolygonsBorder,
         showRoadShields,
+        showRouteShields,
         showItemsLayer
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
@@ -309,6 +310,12 @@
                     type: 'switch',
                     value: $showRoadShields,
                     title: lc('show_road_shields')
+                },
+                {
+                    mapStore: showRouteShields,
+                    type: 'switch',
+                    value: $showRouteShields,
+                    title: lc('show_route_shields')
                 }
             );
 

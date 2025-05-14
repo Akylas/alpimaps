@@ -77,6 +77,7 @@
         showSubBoundaries,
         showPolygonsBorder,
         showRoadShields,
+        showRouteShields,
         showItemsLayer
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
@@ -1067,6 +1068,13 @@
     $: {
         try {
             cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
+        } catch (error) {
+            console.error(error, error.stack);
+        }
+    }
+    $: {
+        try {
+            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
         } catch (error) {
             console.error(error, error.stack);
         }
