@@ -45,7 +45,7 @@ try {
     registerNativeViewElement('wraplayout', () => require('@nativescript/core').WrapLayout);
     registerNativeViewElement('image', () => require('@nativescript-community/ui-image').Img);
     registerNativeViewElement('flexlayout', () => require('@nativescript/core').FlexboxLayout);
-     registerNativeViewElement('ctextfield', () => require('@nativescript/core').TextField);
+ //    registerNativeViewElement('ctextfield', () => require('@nativescript/core').TextField);
     // registerNativeViewElement('image', () => require('@nativescript/core').Image);
     registerNativeViewElement('span', () => require('@nativescript/core').Span);
     registerNativeViewElement('button', () => require('@nativescript/core').Button);
