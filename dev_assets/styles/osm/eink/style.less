@@ -76,7 +76,7 @@
 @border_region_color: lighten(#787b8ca9, @applied_eink_lighten);
 @border_region: linear([view::zoom], (11, @border_region_color), (13, fadeout(@border_region_color, 0.5)), (14, fadeout(@border_region_color, 1)));
 @border_region_dasharray: 1, 2;
-@border_country_dasharray: 20, 5;
+@border_country_dasharray: 20, 4, 10, 4;
 
 @contour_width: linear([view::zoom], (16, 0.6), (22, 1.6));
 @contour_label: @contour_color;
