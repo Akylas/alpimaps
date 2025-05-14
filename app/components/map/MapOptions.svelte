@@ -384,6 +384,6 @@
         <IconButton isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" toggable={true} tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
         <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
         <IconButton isSelected={$preloading} text="mdi-map-clock" toggable={true} tooltip={lc('preloading')} on:tap={() => preloading.set(!$preloading)} />
-        <IconButton isSelected={$showItemsLayer} text="mdi-locations-outline" toggable={true} tooltip={lc('show_items_routes')} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
+        <IconButton isSelected={$showItemsLayer} text="mdi-marker-off-outline" toggable={true} tooltip={lc('show_items_routes')} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
     </stacklayout>
 </gesturerootview>
