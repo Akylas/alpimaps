@@ -293,7 +293,7 @@
     async function onListItemLongPress() {
         try {
             if(ApplicationSettings.getBoolean('list_longpress_camera', false)) {
-                const intent = android.content.Intent('android.media.action.STILL_IMAGE_CAMERA_SECURE');
+                const intent = new android.content.Intent('android.media.action.STILL_IMAGE_CAMERA_SECURE');
                 intent.addFlags(Android.content.Intent.FLAG_ACTIVITY_NEW_TASK);                
                 Utils.android.getApplicationContext().startActivity(intent);
             }
