@@ -62,7 +62,7 @@
                 shield-face-name: @mont_bd;
             //    shield-clip: @shield-clip;
                 shield-file: url(shields/route_shield.svg);
-                shield-fill: #00000;
+                shield-fill: #000000;
               }
             }
 			[ref !=null][zoom>=13],
