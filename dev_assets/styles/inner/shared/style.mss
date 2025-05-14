@@ -28,3 +28,11 @@
 @symbolColor: @symbolColorPrep = 'white' ? @hiking_route_fill : @symbolColorPrep = '' ? @hiking_route_fill : @symbolColorPrep;
 @biking_symbolColor: @symbolColorPrep = 'white' ? @biking_route_fill : @symbolColorPrep = '' ? @biking_route_fill : @symbolColorPrep;
 @routeOffset: [network] > 2 ? 2- [network] : [network];
+
+@shield-size: 8;
+@shield-line-spacing: -1.50; // -0.15 em
+@shield-size-z18: 12;
+@shield-spacing: 260;
+@shield-repeat-distance: 200;
+@shield-margin: 40;
+@shield-clip: false;

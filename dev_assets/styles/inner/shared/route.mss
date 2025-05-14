@@ -47,19 +47,34 @@
 					line-dasharray: @biking_route_dasharray;
 				}
 			}
+            ['nuti::route_shields'>0][zoom<13][ref != null]::label{
+              [network=1][zoom>=5],
+              [network=2][class=bicycle][zoom>=6],
+              [network=2][zoom>=8],
+              [network=3][zoom>=9]{
+                shield-name: [ref];
+                shield-size: @shield-size;
+                shield-line-spacing: @shield-line-spacing;
+                shield-placement: line;
+                shield-spacing: @shield-spacing;
+                shield-repeat-distance: @shield-repeat-distance;
+                shield-min-distance: @shield-margin;
+                shield-face-name: @mont_bd;
+            //    shield-clip: @shield-clip;
+                shield-file: url(shields/route_shield.svg);
+                shield-fill: #00000;
+              }
+            }
 			[ref !=null][zoom>=13],
 			[name !=null][zoom>=15] {
 				text-fill:@symbolColor;
-
 				[class=bicycle] {
 					text-fill:@biking_symbolColor;
 				}
 				text-name: [ref];
-
 				[zoom>=15] {
 					text-name: [name];
 				}
-
 				text-placement: line;
 				text-wrap-before: true;
 				text-face-name: @mont_bd;
