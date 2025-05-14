@@ -18,6 +18,7 @@
         "shared/search.mss"
     ],
     "nutiparameters": {
+        "route_shields": 0,
         "lang": "en",
         "fallback_lang": "en",
         "routes_type": 0,
