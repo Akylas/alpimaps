@@ -470,7 +470,7 @@
     on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
     <!-- <label class="icon-label" text="mdi-magnify" color={colorOnSurfaceVariant} /> -->
-    <ctextfield
+    <textfield
         bind:this={textField}
         autocapitalizationType="none"
         col={1}
