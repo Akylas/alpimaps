@@ -60,3 +60,4 @@ export const showPolygonsBorder  = settingsStore('showPolygonsBorder', true);
 export const showRoadShields = settingsStore('showRoadShields', true);
 export const showRouteShields = settingsStore('showRouteShields', false);
 export const showItemsLayer = settingsStore('showItemsLayer', true);
+export const itemLock = writable(false);
