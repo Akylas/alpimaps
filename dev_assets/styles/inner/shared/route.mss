@@ -30,7 +30,7 @@
 			line-cap: round;
 			// line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
 			// line-opacity: [osmid] = [nuti::selected_osmid] ? linear([view::zoom], (14, 1), (15, 0.3), (17, 0.1)):0.5;
-			line-width: @route_width +([osmid]=[nuti::selected_osmid] ? 1 : 0);
+			line-width: @route_width +([osmid]=[nuti::selected_osmid] ? 2 : 0);
 			// line-offset: @routeOffset * linear([view::zoom], (15, 0),  (16, 1), (18, 4));
 
 			// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
@@ -41,7 +41,7 @@
 				// }
 
 			[class=bicycle] {
-				line-width: @biking_route_width +([osmid]=[nuti::selected_osmid] ? 1 : 0);
+				line-width: @biking_route_width +([osmid]=[nuti::selected_osmid] ? 2 : 0);
 				line-color: @biking_symbolColor;
 				[zoom>='nuti::routes_dash_min_zoom'] {
 					line-dasharray: @biking_route_dasharray;
@@ -53,6 +53,7 @@
               [network=2][zoom>=8],
               [network=3][zoom>=9]{
                 shield-name: [ref];
+                shield-placement-priority: 10-[network];
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;

@@ -13,7 +13,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
 
     const propsPaint = new Paint();
-    propsPaint.textSize = 14;
+    propsPaint.textSize = 13;
     propsPaint.setTextAlign(Align.LEFT);
 
     const iconPaint = new Paint();
@@ -55,17 +55,14 @@
     let nString;
     let nString2;
     let nString3;
-    let userOnRouteData;
     
     const itemsModule = getMapContext().mapModule('items');
     itemsModule.on('user_onroute_data', (event: any) => {
         if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false)) {
-            userOnRouteData = null;
             nString3 = null;
             return;
         }
         if(event.remainingDistance) {
-            userOnRouteData = event;
             nString3= createNativeAttributedString({
                 spans: [
                     {
@@ -91,7 +88,6 @@
                 ])
             });
         } else {
-            userOnRouteData = null;
             nString3 = null;
         }
         canvas?.nativeView.invalidate();
@@ -110,6 +106,7 @@
         if (!it) {
             nString = null;
             nString2 = null;
+            nString3 = null;
             return;
         }
         itemProps = it?.properties;
@@ -294,6 +291,7 @@
                 canvas.restore();
             }
             if (nString2) {
+                propsPaint.textSize = 14;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop + h - props2Bottom);
@@ -308,9 +306,9 @@
                 canvas.translate(paddingLeft, paddingTop);
                 staticLayout.draw(canvas);
                 canvas.restore();
-                propsPaint.textSize = 14;
+                
             }
-
+            propsPaint.textSize = 13;
             if (item.properties?.['opening_hours']) {
                 const data = openingHoursText(item);
                 propsPaint.color = data.color;

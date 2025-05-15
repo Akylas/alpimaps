@@ -29,6 +29,7 @@
     import { debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { navigate } from '@shared/utils/svelte/ui';
+    import { writable } from 'svelte/store';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -78,7 +79,8 @@
         showPolygonsBorder,
         showRoadShields,
         showRouteShields,
-        showItemsLayer
+        showItemsLayer,
+        itemLock
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -125,7 +127,7 @@
     let steps;
     let topTranslationY;
     let networkConnected = false;
-    const itemLoading = false;
+    const itemLoading = false;  
 
     let projection: Projection = new EPSG4326();
     const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
@@ -810,6 +812,9 @@
         forceZoomOut?: boolean;
     }) {
         try {
+            if ($itemLock && $selectedItem) {
+                return;
+            }
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
@@ -1035,8 +1040,16 @@
         }
         // DEV_LOG && console.log('zoomToItem done ');
     }
-    export function unselectItem(updateBottomSheet = true) {
+    export function unselectItem(updateBottomSheet = true, forceUnlock = false) {
         // TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
+        
+        if ($itemLock) {
+            if (forceUnlock) {
+                $itemLock = false;
+            } else {
+                return;
+            }
+        }
         if (!!$selectedItem) {
             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
             setSelectedItem(null);
@@ -1106,7 +1119,7 @@
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
-    $: bottomSheetStepIndex === 0 && unselectItem();
+    $: bottomSheetStepIndex === 0 && unselectItem(true, true);
     $: {
         if (steps?.length) {
             mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 };
@@ -2206,7 +2219,7 @@
             mapContext.innerDecoder.setStyleParameter('editing_id', item.properties.id + '');
             getMapContext().mapModule('items').showItem(item);
             editingItem = item;
-            unselectItem();
+            unselectItem(true, true);
 
             // getMapContext().mapModule('items').hideItem(item);
         }
