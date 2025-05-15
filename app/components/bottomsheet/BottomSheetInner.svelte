@@ -38,32 +38,7 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import dayjs from 'dayjs';
-    import { import {
-        cityMinZoom,
-        forestPatternZoom,
-        rockPatternZoom,
-        scrubPatternZoom,
-        screePatternZoom,
-        contourLinesOpacity,
-        emphasisDrinkingWater,
-        emphasisRails,
-        mapFontScale,
-        pitchEnabled,
-        preloading,
-        projectionModeSpherical,
-        rotateEnabled,
-        routesType,
-        show3DBuildings,
-        showContourLines,
-        showRoutes,
-        showSlopePercentages,
-        showSubBoundaries,
-        showPolygonsBorder,
-        showRoadShields,
-        showRouteShields,
-        showItemsLayer,
-        itemLock
-    } from '~/stores/mapStore'; } from '~/stores/mapStore';
+    import { itemLock } from '~/stores/mapStore';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -991,7 +966,7 @@
                 color="white"
                 height="100%"
                 shape="none"
-                text={$itemLock ? "mdi-lock-off-outline" : "mdi-lock-outline}
+                text={$itemLock ? "mdi-lock-off-outline" : "mdi-lock-outline" }
                 width={60}
                 on:tap={() => $itemLock = !$itemLock} />
              </stacklayout>
