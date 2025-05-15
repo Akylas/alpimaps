@@ -147,9 +147,11 @@
 		text-halo-fill: @place_halo;
 		text-halo-radius: @place_halo_radius;
 		text-size: @hamlet_label_width ;
+        text-placement-priority: 25;
 	}
 	
 	[class=village][zoom>=8][zoom<=16] {
+        text-placement-priority: 26;
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;
@@ -162,6 +164,7 @@
 		text-size: @village_label_width ;
 	}
 	[class=suburb][zoom>=12][zoom<=14]{
+      text-placement-priority: 27;
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;
@@ -177,7 +180,7 @@
 	}
 	
 	[class=town][zoom>=7][zoom<14] {
-		
+		text-placement-priority: 28;
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;
@@ -194,8 +197,8 @@
 		
 	}
 	[class=city][zoom>='nuti::city_min_zoom'][zoom<14]{
-		shield-placement-priority: 3;
-		shield-feature-id: [name]+[ele];
+		shield-placement-priority: 30;
+	//	shield-feature-id: [name]+[ele];
 		shield-name: @name;
 		shield-unlock-image: true;
 		shield-face-name: @mont_md;
@@ -445,6 +448,7 @@
 	[zoom>=18] {
 		::icon {
 			text-placement: nutibillboard;
+            text-placement-priority: 40;
 			text-feature-id: @featureId;
 			text-name: @osm_icon;
 			text-size: @poi_icon_width;
@@ -455,6 +459,7 @@
 			text-allow-overlap-same-feature-id: true;
 		}
 		::label {
+            text-placement-priority: 40;
 			text-name: @name;
 			text-feature-id: @featureId;
 			text-face-name: @mont_md;
@@ -476,6 +481,7 @@
 //	[zoom>=14] {
 		::icon {
 			text-placement: nutibillboard;
+            text-placement-priority: 40;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
@@ -492,6 +498,7 @@
 		::label[zoom>=17] {
 			text-name: @name;
 			text-feature-id: @featureId;
+            text-placement-priority: 40;
 			text-face-name: @mont_md;
 			text-placement: nutibillboard;
 			text-halo-fill: @poi_halo;
@@ -553,6 +560,7 @@
 		::icon {
 			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
 			text-placement: nutibillboard;
+            text-placement-priority: 39;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
@@ -606,6 +614,7 @@
 				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
 				text-name: @name;
 				text-feature-id: @featureId;
+                text-placement-priority: 39;
 				text-face-name: @mont_md;
 				text-placement: nutibillboard;
 				text-halo-fill: @poi_halo;
@@ -657,6 +666,7 @@
 #park['mapnik::geometry_type'=1][class=national_park][zoom>=5][zoom<12] {
 	::icon {
 		text-placement: nutibillboard;
+        text-placement-priority: 29;
 		text-name: [nuti::osm-park];
 		text-feature-id: @featureId;
 		text-size: @poi_icon_width;
@@ -669,6 +679,7 @@
 	[zoom>=8]::label {
 		text-name: @name;
 		text-feature-id: @featureId;
+        text-placement-priority: 29;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;
 		text-halo-fill: @poi_halo;

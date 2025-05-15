@@ -38,6 +38,32 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import dayjs from 'dayjs';
+    import { import {
+        cityMinZoom,
+        forestPatternZoom,
+        rockPatternZoom,
+        scrubPatternZoom,
+        screePatternZoom,
+        contourLinesOpacity,
+        emphasisDrinkingWater,
+        emphasisRails,
+        mapFontScale,
+        pitchEnabled,
+        preloading,
+        projectionModeSpherical,
+        rotateEnabled,
+        routesType,
+        show3DBuildings,
+        showContourLines,
+        showRoutes,
+        showSlopePercentages,
+        showSubBoundaries,
+        showPolygonsBorder,
+        showRoadShields,
+        showRouteShields,
+        showItemsLayer,
+        itemLock
+    } from '~/stores/mapStore'; } from '~/stores/mapStore';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -275,12 +301,13 @@
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
-            if (routeItem?.route) {
+            if (routeItem?.route) { 
+                const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
                 // const props = routeItem.properties;
                 const route = routeItem.route;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
-                const onPathIndex = isLocationOnPath(location, positions, false, true, 15);
+                const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
                 let remainingDistance: number, remainingTime: number;
                 // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(routeItem.instructions));
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
@@ -948,9 +975,9 @@
             </BottomSheetInfoView>
             <IconButton prop:leftDrawer backgroundColor={colorError} color="white" height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
 
-            <!-- <stacklayout prop:rightDrawer orientation="horizontal"> -->
+            <stacklayout prop:rightDrawer orientation="horizontal">
             <IconButton
-                prop:rightDrawer
+                
                 backgroundColor={new Color(colorPrimary).setAlpha(180).hex}
                 color="white"
                 height="100%"
@@ -958,7 +985,16 @@
                 text="mdi-crosshairs-gps"
                 width={60}
                 on:tap={zoomToItem} />
-            <!-- </stacklayout> -->
+              <IconButton
+                
+                backgroundColor={new Color(colorPrimary).setAlpha(180).hex}
+                color="white"
+                height="100%"
+                shape="none"
+                text={$itemLock ? "mdi-lock-off-outline" : "mdi-lock-outline}
+                width={60}
+                on:tap={() => $itemLock = !$itemLock} />
+             </stacklayout>
         </swipemenu>
 
         <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
