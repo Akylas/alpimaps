@@ -438,7 +438,7 @@ export default class ItemsModule extends MapModule {
     }
     async hideItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
-            mapContext.unselectItem();
+            mapContext.unselectItem(true, true);
         }
         const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index > -1) {
@@ -452,7 +452,7 @@ export default class ItemsModule extends MapModule {
     async deleteItem(item: IItem) {
         DEV_LOG && console.log('deleteItem', item.id);
         if (item === mapContext.getSelectedItem()) {
-            mapContext.unselectItem();
+            mapContext.unselectItem(true, true);
         }
         const index = this.currentItems.findIndex((d) => d.id === item.id);
         if (index > -1) {

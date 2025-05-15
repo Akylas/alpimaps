@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+  <script context="module" lang="ts">
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
@@ -133,10 +133,24 @@
                         key: SETTINGS_NAVIGATION_POSITION_OFFSET,
                         min: 0,
                         max: 0.5,
-                        step: 0.1,
+                        step: 0.01,
                         title: lc('navigation_position_offset'),
                         type: 'slider',
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('offline_routing_pedestrian_max_distance'),
+                        key: 'location_distance_from_route',
+                        valueType: 'number',
+                        default: 15,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber('location_distance_from_route', 15)
                     }
                 ];
             case 'general':

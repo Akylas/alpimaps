@@ -1286,12 +1286,11 @@
                             height={30}
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={item.properties.name} verticalTextAlignment="center" />
+                            <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemName(item)} verticalTextAlignment="center" />
 
                             <IconButton
                                 col={1}
                                 color={buttonsColor}
-                                isVisible={item.properties.name && item.properties.name.length > 0}
                                 small={true}
                                 text="mdi-delete"
                                 on:tap={() => clearWayPoint(item)} />
