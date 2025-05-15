@@ -108,7 +108,7 @@ export interface MapContext {
         forceZoomOut?: boolean;
     }) => void;
     zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
-    unselectItem: () => void;
+    unselectItem: (updateBottomSheet?: boolean, forceUnlock?: boolean) => void;
     selectStyle: () => Promise<void>;
     unFocusSearch: () => void;
     showMapResultsPager: (items: IItem[]) => void;
