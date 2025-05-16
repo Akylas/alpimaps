@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { isEInk } from '~/helpers/theme';
     import addressFormatter from '@akylas/address-formatter';
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
@@ -948,13 +949,13 @@
             <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
                 <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
             </BottomSheetInfoView>
-            <IconButton prop:leftDrawer backgroundColor={colorError} color="white" height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
+            <IconButton prop:leftDrawer backgroundColor={isEInk ? 'white' : colorError} color={ isEInk ? "black" : "white"} height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
 
             <stacklayout prop:rightDrawer orientation="horizontal">
             <IconButton
                 
-                backgroundColor={new Color(colorPrimary).setAlpha(180).hex}
-                color="white"
+                backgroundColor={isEInk ? 'white' :  new Color(colorPrimary).setAlpha(180).hex}
+                color={ isEInk ? "black" : "white"}
                 height="100%"
                 shape="none"
                 text="mdi-crosshairs-gps"
@@ -962,8 +963,8 @@
                 on:tap={zoomToItem} />
               <IconButton
                 
-                backgroundColor={new Color(colorPrimary).setAlpha(180).hex}
-                color="white"
+                backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                color={ isEInk ? "black" : "white"}
                 height="100%"
                 shape="none"
                 text={$itemLock ? "mdi-lock-off-outline" : "mdi-lock-outline" }
