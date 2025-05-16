@@ -164,7 +164,7 @@
 		text-size: @village_label_width ;
 	}
 	[class=suburb][zoom>=12][zoom<=14]{
-      text-placement-priority: 27;
+        text-placement-priority: 27;
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;
@@ -200,6 +200,7 @@
 		shield-placement-priority: 30;
 	//	shield-feature-id: [name]+[ele];
 		shield-name: @name;
+        shield-placement-priority: 20;
 		shield-unlock-image: true;
 		shield-face-name: @mont_md;
 		shield-size: @city-label-width;
@@ -361,6 +362,7 @@
     [class=primary][zoom >= 12],
     [class=secondary][zoom >= 13] {
       shield-name: [ref];
+      shield-placement-priority: 10;
       shield-size: @shield-size;
       shield-line-spacing: @shield-line-spacing;
       shield-placement: line;
