@@ -47,7 +47,7 @@
 					line-dasharray: @biking_route_dasharray;
 				}
 			}
-            ['nuti::route_shields'>0][zoom<13][ref != null]::label{
+            ['nuti::route_shields'>0][zoom<15][ref != null]::label{
               [network=1][zoom>=5],
               [network=2][class=bicycle][zoom>=6],
               [network=2][zoom>=8],
