@@ -48,12 +48,12 @@
 				}
 			}
             ['nuti::route_shields'>0][zoom<15][ref != null]::label{
-              [network=1][zoom>=5],
-              [network=2][class=bicycle][zoom>=6],
-              [network=2][zoom>=8],
-              [network=3][zoom>=9]{
+              [network=1][zoom>=6],
+              [network=2][class=bicycle][zoom>=8],
+              [network=2][zoom>=10],
+              [network=3][zoom>=11]{
                 shield-name: [ref];
-                shield-placement-priority: [network];
+                shield-placement-priority: 20 - [network];
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
@@ -66,7 +66,7 @@
                 shield-fill: #000000;
               }
             }
-			[ref !=null][zoom>=13],
+			[ref !=null][zoom>=14],
 			[name !=null][zoom>=15] {
 				text-fill:@symbolColor;
 				[class=bicycle] {
