@@ -201,7 +201,6 @@
 		shield-placement-priority: 30;
 	//	shield-feature-id: [name]+[ele];
 		shield-name: @name;
-        shield-placement-priority: 20;
 		shield-unlock-image: true;
 		shield-face-name: @mont_md;
 		shield-size: @city-label-width;
@@ -484,7 +483,9 @@
 //	[zoom>=14] {
 		::icon {
 			text-placement: nutibillboard;
-            text-placement-priority: 40;
+            #poi {     
+              text-placement-priority: 40;
+            }
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
 			text-size: @poi_icon_width;
@@ -501,7 +502,9 @@
 		::label[zoom>=17] {
 			text-name: @name;
 			text-feature-id: @featureId;
-            text-placement-priority: 40;
+            #poi {     
+              text-placement-priority: 40;
+            }
 			text-face-name: @mont_md;
 			text-placement: nutibillboard;
 			text-halo-fill: @poi_halo;
