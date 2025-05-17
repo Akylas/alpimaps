@@ -817,7 +817,7 @@
                     return this._parsedProfile;
                 },
                 properties: {
-                    name: formatter.getItemName(waypoints.getItem(0)) + ' - ' + formatter.getItemName(waypoints.getItem(waypoints.length - 1)),
+                    name: formatter.getItemTitle(waypoints.getItem(0)) + ' - ' + formatter.getItemTitle(waypoints.getItem(waypoints.length - 1)),
                     hasRealName: false,
                     class: profile,
                     id,
@@ -1286,7 +1286,7 @@
                             height={30}
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemName(item)} verticalTextAlignment="center" />
+                            <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemTitle(item)} verticalTextAlignment="center" />
 
                             <IconButton
                                 col={1}
