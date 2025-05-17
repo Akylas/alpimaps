@@ -53,7 +53,7 @@
               [network=2][zoom>=10],
               [network=3][zoom>=11]{
                 shield-name: [ref];
-                shield-placement-priority: 20 - [network];
+                shield-placement-priority: 2;
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
