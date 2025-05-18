@@ -1,9 +1,9 @@
 {
     "layers": [
         "housenumber",
+        "route",
         "transportation",
         "contour",
-        "route",
         "transportation_name",
         "aerodrome_label",
         "building_name",
