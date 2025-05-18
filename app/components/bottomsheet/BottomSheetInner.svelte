@@ -1010,7 +1010,7 @@
                     on:tap={() => searchWeb()} />
                 <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
                 {#if networkService.canCheckWeather}
-                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} onLongPress={()=>openWeather()/>
+                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} onLongPress={()=>openWeather()}/>
                 {/if}
                 <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
                 {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
