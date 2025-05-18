@@ -975,7 +975,7 @@
 
         <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                <IconButton isVisible={item} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} onLongPress={()=>openOpenStreetMap()} />
+                <IconButton isVisible={!!item} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} onLongPress={()=>openOpenStreetMap()} />
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
                 <!-- {#if packageService.hasElevation()} -->
