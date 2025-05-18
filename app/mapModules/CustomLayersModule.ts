@@ -978,9 +978,9 @@ export default class CustomLayersModule extends MapModule {
             if (worldMbtilesEntity) {
                 const dataSource: TileDataSource<any, any> = this.createMergeDataSource(
                             [worldMbtilesEntity, worldRouteMbtilesEntity].filter(s=>!!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path))
-                const datasource = new MBTilesTileDataSource({
-                    databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
-                });
+  //              const datasource = new MBTilesTileDataSource({
+//                    databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
+//                });
                 mbtiles.push(datasource);
                 // if (!worldRouteMbtilesEntity) {
                 //     routes.push(datasource);
