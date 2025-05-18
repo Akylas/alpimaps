@@ -10,7 +10,8 @@
         "shared/landuse.less",
         "shared/roads.less",
         "shared/labels.less",
-        "eink/extended.less"
+        "eink/extended.less",
+        "shared/route.mss"
     ],
     "constants":{
         "parking_pattern_zoom":15,
