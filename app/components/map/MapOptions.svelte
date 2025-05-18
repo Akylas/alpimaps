@@ -18,6 +18,7 @@
         rockPatternZoom,
         scrubPatternZoom,
         screePatternZoom,
+        routeDashMinZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -280,6 +281,22 @@
                     type: 'slider',
                     rightValue: () => $scrubPatternZoom,
                     currentValue: () => Math.max(0, $scrubPatternZoom)
+                },
+                {
+                    id: 'setting',
+                    mapStore: routeDashMinZoom,
+                    key: 'routeDashMinZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('routes_dash_min_zoom'),
+                    description: lc('routes_dash_min_zoom_desc'),
+                    type: 'slider',
+                    rightValue: () => $routeDashMinZoom,
+                    currentValue: () => Math.max(0, $routeDashMinZoom)
                 },
                 {
                     mapStore: showSubBoundaries,
