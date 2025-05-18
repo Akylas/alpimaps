@@ -921,7 +921,7 @@ export default class CustomLayersModule extends MapModule {
             const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
             // const worldMbtilesEntity = undefined;
             const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
-            this.hasRoute |= !!worldRouteMbtilesEntity;
+            this.hasRoute = this.hasRoute || !!worldRouteMbtilesEntity;
             const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
@@ -932,7 +932,7 @@ export default class CustomLayersModule extends MapModule {
                 if (subentities?.length > 0) {
                     const sources = subentities.filter((s) => s.path.endsWith('.mbtiles'));
                     const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
-                    this.hasRoute |= routesSourceIndex >= 0;
+                    this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
                     if (false) {
                         const routesSource = sources.splice(routesSourceIndex, 1)[0];
                         routes.push(
