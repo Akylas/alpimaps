@@ -869,6 +869,7 @@
                             }
                         }
                         mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                        mapContext.mapDecoder.setJSONStyleParameters(styleParameters);
 
                         if (selectedPosMarker) {
                             selectedPosMarker.visible = false;
@@ -1116,7 +1117,8 @@
  //   }
     $: vectorTileDecoder && setStyleParameter('show_routes', $showRoutes ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('route_type', $routesType + '');
+    $: vectorTileDecoder && setStyleParameter('routes_type', $routesType + '');
+    $: vectorTileDecoder && $routeDashMinZoom > 0 && setStyleParameter('routes_dash_min_zoom', $routeDashMinZoom);
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
