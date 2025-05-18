@@ -650,17 +650,18 @@
     }
     
     async function openWeather() {
-    if (__ANDROID__) {
-        try {
-            const query = formatter.getItemTitle(item);
-            const geometry = item.geometry as Point;
-            let url = `ossweather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
-            if (item.properties.address) {
-                url += `&address=${JSON.stringify(item.properties.address)}`;
+        if (__ANDROID__) {
+            try {
+                const query = formatter.getItemTitle(item);
+                const geometry = item.geometry as Point;
+                let url = `ossweather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
+                if (item.properties.address) {
+                    url += `&address=${JSON.stringify(item.properties.address)}`;
+                }
+                openUrl(url);
+            } catch (err) {
+                showError(err);
             }
-            openUrl(url);
-        } catch (err) {
-            showError(err);
         }
     }
 
