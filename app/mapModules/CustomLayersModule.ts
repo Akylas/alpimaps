@@ -933,16 +933,7 @@ export default class CustomLayersModule extends MapModule {
                     const sources = subentities.filter((s) => s.path.endsWith('.mbtiles'));
                     const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
                     this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
-                    if (false) {
-                        const routesSource = sources.splice(routesSourceIndex, 1)[0];
-                        routes.push(
-                            new MBTilesTileDataSource({
-                                minZoom: 5,
-                                databasePath: getFileNameThatICanUseInNativeCode(context, routesSource.path)
-                            })
-                        );
-                    }
-
+                    
                     DEV_LOG &&
                         console.log(
                             'sources',
