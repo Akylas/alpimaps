@@ -930,7 +930,8 @@ export default class CustomLayersModule extends MapModule {
                 const subentities = listFolder(f.path);
                 if (subentities?.length > 0) {
                     const sources = subentities.filter((s) => s.path.endsWith('.mbtiles'));
-                    const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
+                 //   const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
+                    const routesSourceIndex = -1;
                     if (routesSourceIndex >= 0) {
                         const routesSource = sources.splice(routesSourceIndex, 1)[0];
                         routes.push(
@@ -966,15 +967,17 @@ export default class CustomLayersModule extends MapModule {
                 }
             }
 
-            if (worldRouteMbtilesEntity) {
-                routes.push(
-                    new MBTilesTileDataSource({
-                        minZoom: 5,
-                        databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
-                    })
-                );
-            }
+           // if (worldRouteMbtilesEntity) {
+             //   routes.push(
+               //     new MBTilesTileDataSource({
+                 //       minZoom: 5,
+                   //     databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
+             //       })
+               // );
+      //      }
             if (worldMbtilesEntity) {
+                const dataSource: TileDataSource<any, any> = this.createMergeDataSource(
+                            [worldMbtilesEntity, worldRouteMbtilesEntity].filter(s=>!!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path))
                 const datasource = new MBTilesTileDataSource({
                     databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
                 });
