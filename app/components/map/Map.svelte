@@ -1078,20 +1078,20 @@
         }
     }
 
-    $: {
-        try {
-            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-    }
-    $: {
-        try {
-            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-    }
+//    $: {
+//        try {
+//            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
+//        } catch (error) {
+ //           console.error(error, error.stack);
+ //       }
+//    }
+//    $: {
+//        try {
+//            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
+ //       } catch (error) {
+//            console.error(error, error.stack);
+ //       }
+//    }
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
     $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
@@ -1107,13 +1107,16 @@
     $: vectorTileDecoder && $scrubPatternZoom > 0 && setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('road_shields', $showRoadShields ? '1' : '0');
-    $: {
-        const visible = $showRoutes;
-        getLayers('routes').forEach((l) => {
-            l.layer.visible = visible;
-        });
-        cartoMap?.requestRedraw();
-    }
+   // $: {
+     //   const visible = $showRoutes;
+    //    getLayers('routes').forEach((l) => {
+ //           l.layer.visible = visible;
+//        });
+  //      cartoMap?.requestRedraw();
+ //   }
+    $: vectorTileDecoder && setStyleParameter('show_routes', $showRoutes ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
+    $: vectorTileDecoder && setStyleParameter('route_type', $routesType + '');
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
