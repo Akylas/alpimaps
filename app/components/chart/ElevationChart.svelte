@@ -152,18 +152,19 @@
             dataSet.valueTextColor = colorOnSurface;
         }
     });
-    export function hilghlightPathIndex(onPathIndex: number, remainingDistance: number, remainingTime: number, highlight?: Highlight<Entry>, sendEvent = true) {
+    export function hilghlightPathIndex(params:{onPathIndex: number, remainingDistance: number, remainingTime: number, dplus?: number, dmin?: number}, highlight?: Highlight<Entry>, sendEvent = true) {
         if (!chart) {
             return;
         }
         if (!item) {
             onChartDataUpdateCallbacks.push(() => {
-                hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, sendEvent);
+                hilghlightPathIndex(params, highlight, sendEvent);
             });
             return;
         }
         const nChart = chart?.nativeView;
         // DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, JSON.stringify(highlight), nChart);
+        const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
             if (nChart) {
                 nChart.highlight(null);
@@ -182,7 +183,7 @@
                         text: 'mdi-arrow-expand-right'
                     },
                     {
-                        text: formatDistance(remainingDistance) + '  '
+                        text: formatDistance(params.remainingDistance) + '  '
                     },
                     {
                         fontFamily: $fonts.mdi,
@@ -201,7 +202,7 @@
                         text: '~' + (itemData.g || 0).toFixed() + '%'
                     }
                 ];
-                if (!isNaN(remainingTime)) {
+                if (!isNaN(params.remainingTime)) {
                     spans.unshift(
                         {
                             fontFamily: $fonts.mdi,
@@ -209,7 +210,7 @@
                             text: 'mdi-timer-outline'
                         },
                         {
-                            text: convertDurationSeconds(remainingTime) + '  '
+                            text: convertDurationSeconds(params.remainingTime) + '  '
                         }
                     );
                 }
@@ -219,14 +220,12 @@
                 mapContext.mapModule('items').notify({
                     eventName: 'user_onroute_data',
                     itemData,
-                    remainingTime,
-                    remainingDistance
+                    ...params
                 });
             } else {
                 mapContext.mapModule('items').notify({
                     eventName: 'user_onroute_data',
-                    remainingTime,
-                    remainingDistance
+                    ...params
                 });
             }
             if (highlight) {
