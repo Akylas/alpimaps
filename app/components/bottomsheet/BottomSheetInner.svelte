@@ -13,8 +13,9 @@
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { Application, ApplicationSettings, Color } from '@nativescript/core';
-    import { openUrl } from '@nativescript/core/utils';
+    import { denounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -37,7 +38,6 @@
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
     import dayjs from 'dayjs';
     import { itemLock } from '~/stores/mapStore';
 
@@ -952,7 +952,7 @@
         return result;
     }
     
-    async function showElevationProfileSettings {
+    async function showElevationProfileSettings(event) {
         try {
             await showSlidersPopover({
                 debounceDuration: 0,
@@ -1034,7 +1034,7 @@
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
                 <!-- {#if packageService.hasElevation()} -->
-                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} />
+                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile() onLongPress={event=>showElevationProfileSettings(event)} />
                 <!-- {/if} -->
                 <!-- {#if packageService.offlineRoutingSearchService()} -->
                 <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
