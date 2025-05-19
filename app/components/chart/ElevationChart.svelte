@@ -10,10 +10,11 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
+    import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertDurationSeconds, formatDistance, formatElevation } from '~/helpers/formatter';
+    import { convertDurationSeconds, formatDistance, convertElevation } from '~/helpers/formatter';
     import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -328,7 +329,7 @@
             if (deltaA < 250) {
              //   const space = (250 - deltaA) / 2;
             //    spaceMin += space;
-                spaceMax += 250 - delta;
+                spaceMax += 250 - deltaA;
             }
        //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
             leftAxis.spaceMin = spaceMin;
@@ -378,14 +379,14 @@
                 chartView.notifyDataSetChanged();
             }
             leftAxis.removeAllLimitLines();
-            let limitLine = new LimitLine(profile.min[1], formatElevation(profile.min[1]));
+            let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
             limitLine.setLineColor(colorOnSurface);
             limitLine.enableDashedLine(3, 3, 0);
             limitLine.textColor=(colorOnSurface);
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
             
-            limitLine = new LimitLine(profile.max[1], formatElevation(profile.max[1]));
+            limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
             limitLine.setLineColor(colorOnSurface);
             limitLine.enableDashedLine(3, 3, 0);
             limitLine.textColor=(colorOnSurface);
