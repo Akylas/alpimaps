@@ -80,7 +80,8 @@
         showRoadShields,
         showRouteShields,
         showItemsLayer,
-        itemLock
+        itemLock,
+        routeDashMinZoom
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
