@@ -13,7 +13,7 @@
     import { ApplicationSettings, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
+    import { convertDurationSeconds, formatDistance, formatElevation } from '~/helpers/formatter';
     import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -285,7 +285,7 @@
                 chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
-                chartView.setExtraOffsets(0, 24, 0, 10);
+                chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
                 leftAxis.gridColor = colorOutlineVariant;
@@ -323,14 +323,14 @@
                 chartView.resetZoom();
             }
             const deltaA = profile.max[1] - profile.min[1];
-            let spaceMin = 0;
+            let spaceMin = 20;
             let spaceMax = 0;
-            if (deltaA < 100) {
-                const space = (100 - deltaA) / 2;
-                spaceMin += space;
-                spaceMax += space;
+            if (deltaA < 250) {
+             //   const space = (250 - deltaA) / 2;
+            //    spaceMin += space;
+                spaceMax += 250 - delta;
             }
-            spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 30;
+       //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
             const chartData = chartView.data;
@@ -377,6 +377,20 @@
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }
+            leftAxis.removeAllLimitLines();
+            let limitLine = new LimitLine(profile.min[1], formatElevation(profile.min[1]));
+            limitLine.setLineColor(colorOnSurface);
+            limitLine.enableDashedLine(3, 3, 0);
+            limitLine.textColor=(colorOnSurface);
+            limitLine.ensureVisible = true;
+            leftAxis.addLimitLine(limitLine);
+            
+            limitLine = new LimitLine(profile.max[1], formatElevation(profile.max[1]));
+            limitLine.setLineColor(colorOnSurface);
+            limitLine.enableDashedLine(3, 3, 0);
+            limitLine.textColor=(colorOnSurface);
+            limitLine.ensureVisible = true;
+            leftAxis.addLimitLine(limitLine);
 
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
