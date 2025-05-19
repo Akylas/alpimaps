@@ -8,7 +8,7 @@
     import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
-    import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
+    import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Utils } from '@nativescript/core';
@@ -355,6 +355,7 @@
                 set.color = '#60B3FC';
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
+                set.mode = Mode.CUBIC_BEZIER:
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.lineWidth = 2;
                     set.colors = profile.colors as any;
@@ -380,15 +381,17 @@
             }
             leftAxis.removeAllLimitLines();
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
-            limitLine.lineColor = colorOnSurface;
-            limitLine.enableDashedLine(3, 3, 0);
+            limitLine.lineColor = colorOutlineVariant;
+            limitLine.enableDashedLine(6, 3, 0);
+            limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
             
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
-            limitLine.lineColor = colorOnSurface;
-            limitLine.enableDashedLine(3, 3, 0);
+            limitLine.lineColor = colorOutlineVariant;
+            limitLine.enableDashedLine(6, 3, 0);
+            limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
