@@ -379,17 +379,17 @@
                 chartView.notifyDataSetChanged();
             }
             leftAxis.removeAllLimitLines();
-            let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
-            limitLine.setLineColor(colorOnSurface);
+            let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));q
+            limitLine.lineColor = colorOnSurface;
             limitLine.enableDashedLine(3, 3, 0);
-            limitLine.textColor=(colorOnSurface);
+            limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
             
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
-            limitLine.setLineColor(colorOnSurface);
+            limitLine.lineColor = colorOnSurface;
             limitLine.enableDashedLine(3, 3, 0);
-            limitLine.textColor=(colorOnSurface);
+            limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
 
