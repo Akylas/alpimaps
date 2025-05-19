@@ -1034,7 +1034,7 @@
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
                 <!-- {#if packageService.hasElevation()} -->
-                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile() onLongPress={event=>showElevationProfileSettings(event)} />
+                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} onLongPress={event=>showElevationProfileSettings(event)} />
                 <!-- {/if} -->
                 <!-- {#if packageService.offlineRoutingSearchService()} -->
                 <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
