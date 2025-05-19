@@ -60,7 +60,7 @@ export interface RouteProfile {
     min: [number, number];
     dplus?: any;
     dmin?: any;
-    data: { d: number; a: number; g?: number }[];
+    data: { d: number; a: number; g?: number, dp?: number, dm?: number }[];
     colors?: { d: number; color: string }[];
 }
 export interface DirectionWayPoint {

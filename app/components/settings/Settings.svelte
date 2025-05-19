@@ -151,6 +151,34 @@
                             autocorrect: false
                         } as TextFieldProperties,
                         rightValue: () => ApplicationSettings.getNumber('location_distance_from_route', 15)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('elevation_profile_smooth_window'),
+                        key: 'elevation_profile_smooth_window',
+                        valueType: 'number',
+                        default: 3,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber('elevation_profile_smooth_window', 3)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('elevation_profile_filter_step'),
+                        key: 'elevation_profile_filter_step',
+                        valueType: 'number',
+                        default: 10,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber('elevation_profile_filter_step', 10)
                     }
                 ];
             case 'general':

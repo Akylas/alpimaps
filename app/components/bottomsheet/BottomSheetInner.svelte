@@ -31,7 +31,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { hideLoading, openLink, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
+    import { hideLoading, openLink, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -136,8 +136,8 @@
         try {
             if (elevationChart && chartLoadHighlightData) {
                 try {
-                    const { highlight, onPathIndex, remainingDistance, remainingTime } = chartLoadHighlightData;
-                    elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
+                    const { highlight, ...others } = chartLoadHighlightData;
+                    elevationChart.hilghlightPathIndex(others, highlight, false);
                 } catch (error) {
                     console.error(error, error.stack);
                 } finally {
@@ -281,6 +281,7 @@
                 const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
                 // const props = routeItem.properties;
                 const route = routeItem.route;
+                const profile = routeItem.profile;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
@@ -317,10 +318,10 @@
 
                 if (updateGraph && graphAvailable) {
                     if (elevationChart) {
-                        elevationChart.hilghlightPathIndex(onPathIndex, remainingDistance, remainingTime, highlight, false);
+                        elevationChart.hilghlightPathIndex({onPathIndex, remainingDistance, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin}, highlight, false);
                     } else {
                         // chart must be loading
-                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingTime, highlight };
+                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingTime, highlight , dplus: profile?.dplus, dmin: profile?.dmin};
                     }
                 }
             } else if (updateNavigationInstruction) {
@@ -949,6 +950,44 @@
         };
 
         return result;
+    }
+    
+    async function showElevationProfileSettings {
+        try {
+            await showSlidersPopover({
+                debounceDuration: 0,
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                items: [
+                    {
+                        title: lc('elevation_profile_smooth_window'),
+                        icon: 'mdi-window-closed-variant',
+                        min: 0,
+                        max: 50,
+                        resetValue: 3,
+                        step: 1,
+                        value: ApplicationSettings.getNumber('elevation_profile_smooth_window', 3),
+                        onChange: debounce((value) => {
+                            ApplicationSettings.setNumber('elevation_profile_smooth_window', value);
+                        }, 10)
+                    },
+                    {
+                        title: lc('elevation_profile_filter_step'),
+                        icon: 'mdi-filter',
+                        min: 0,
+                        max: 50,
+                        resetValue: 10,
+                        step: 1,
+                        value: ApplicationSettings.getNumber('elevation_profile_filter_step', 10),
+                        onChange: debounce((value) => {
+                            ApplicationSettings.setNumber('elevation_profile_filter_step', value);
+                        }, 10)
+                    }
+                ]
+            });
+        } catch(error) {
+            showError(error);
+        }
     }
 </script>
 

@@ -598,6 +598,8 @@ class PackageService extends Observable {
     // }
 
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
+        const smoothWindow = ApplicationSettings.getNumber('elevation_profile_smooth_window', 3);
+        const filterStep = ApplicationSettings.getNumber('elevation_profile_filter_step', 10);
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
@@ -610,7 +612,7 @@ class PackageService extends Observable {
         };
 
         const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
-        const altitudeFilter = new WindowFilter({ windowLength: 2 });
+        const altitudeFilter = new WindowFilter({ windowLength: smoothWindow });
         const jsElevation: number[] = typeof elevations['toArray'] === 'function' ? (elevations as any).toArray() : elevations;
         const usingNative = typeof positions.size === 'function';
         const getPos = usingNative
@@ -632,7 +634,6 @@ class PackageService extends Observable {
         let ascent = 0;
         let descent = 0;
         let lastAlt;
-        const filterStep = 10;
         const avgs = [];
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
@@ -645,7 +646,7 @@ class PackageService extends Observable {
                 if (rdiff > filterStep) {
                     ascent += rdiff;
                     lastAlt = sample.altitude;
-                } else if (diff < -filterStep) {
+                } else if (rdiff < -filterStep) {
                     descent -= rdiff;
                     lastAlt = sample.altitude;
                 }
@@ -657,6 +658,8 @@ class PackageService extends Observable {
             avgs.push(avg);
             result.data.push({
                 d: Math.round(currentDistance * 100) / 100,
+                dp: Math.round(ascent),
+                dm: Math.round(-descent),
                 a: currentHeight
             });
             if (currentHeight > result.max[1]) {
