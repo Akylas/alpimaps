@@ -71,7 +71,7 @@
                         text: 'mdi-arrow-expand-right'
                     },
                     {
-                        text: formatDistance(event.remainingDistance) + '  '
+                        text: ' ' + formatDistance(event.remainingDistance)
                     }
                 ].concat(isNaN(event.remainingTime) ? [] : [
                     {
@@ -83,7 +83,7 @@
                         text: 'mdi-timer-outline'
                     },
                     {
-                        text: convertDurationSeconds(event.remainingTime) + '  '
+                        text: ' ' + convertDurationSeconds(event.remainingTime)
                     }
                 ]).concat(isNaN(event.itemData.dp) ? [] : [
                     {
@@ -95,7 +95,7 @@
                         text: 'mdi-arrow-top-right'
                     },
                     {
-                        text: convertElevation(event.dplus - event.itemData.dp) + '  '
+                        text: ' ' + convertElevation(event.dplus - event.itemData.dp)
                     }
                 ])
             });
