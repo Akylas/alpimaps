@@ -85,6 +85,18 @@
                     {
                         text: convertDurationSeconds(event.remainingTime) + '  '
                     }
+                ]).concat(isNaN(event.itemData.dp) ? [] : [
+                    {
+                        text: '\n'
+                    },
+                    {
+                        fontFamily: $fonts.mdi,
+                        color: colorPrimary,
+                        text: 'mdi-arrow-top-right'
+                    },
+                    {
+                        text: convertElevation(event.dplus - event.itemData.dp) + '  '
+                    }
                 ])
             });
         } else {

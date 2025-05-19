@@ -181,6 +181,39 @@ export async function showSliderPopover({
     });
 }
 
+export async function showSlidersPopover({
+    anchor,
+    debounceDuration = 100,
+    horizPos = HorizontalPosition.ALIGN_LEFT,
+    items,
+    vertPos = VerticalPosition.CENTER,
+    width = 0.8 * screenWidthDips
+}: {
+    debounceDuration?;
+    horizPos?;
+    anchor;
+    vertPos?;
+    width?;
+    items;
+}) {
+    const component = (await import('~/components/common/SlidersPopover.svelte')).default;
+    const { colorSurfaceContainer } = get(colors);
+
+    return showPopover({
+        backgroundColor: colorSurfaceContainer,
+        view: component,
+        anchor,
+        horizPos,
+        vertPos,
+        props: {
+            width,
+            items
+        }
+
+        // trackingScrollView: 'collectionView'
+    });
+}
+
 export async function showSettings(props?) {
     const Settings = (await import('~/components/settings/Settings.svelte')).default;
     navigate({
