@@ -15,7 +15,7 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { Application, ApplicationSettings, Color } from '@nativescript/core';
-    import { denounce, openUrl } from '@nativescript/core/utils';
+    import { debounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
