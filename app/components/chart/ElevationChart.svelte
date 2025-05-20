@@ -352,7 +352,7 @@
                 spaceMax += 250 - deltaA;
             }
             const labelCount = 5; 
-            const interval = deltaA /   < 100 ? 50 : Math.round(deltas / labelCount / 100) * 100;
+            const interval = deltaA / labelCount < 200 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
        //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
