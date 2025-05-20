@@ -213,7 +213,7 @@
                         text: convertElevation(params.dplus - itemData.dp) + ' '
                     });
                 }
-                if (!isNaN(itemData.dm) && Math.abs(params.dmin - itemData.dm > 0)) {
+                if (!isNaN(itemData.dm) && Math.abs(params.dmin - itemData.dm) > 0) {
                     spans.push({
                         fontFamily: $fonts.mdi,
                         color: colorPrimary,
