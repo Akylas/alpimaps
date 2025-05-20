@@ -85,7 +85,7 @@
                     {
                         text: ' ' + convertDurationSeconds(event.remainingTime)
                     }
-                ]).concat(isNaN(event.itemData.dp) ? [] : [
+                ]).concat((!isNaN(event.itemData.dp && (event.dplus - event.itemData.dp > 0)) ? [
                     {
                         text: '\n'
                     },
@@ -97,7 +97,7 @@
                     {
                         text: ' ' + convertElevation(event.dplus - event.itemData.dp)
                     }
-                ])
+                ] : [])
             });
         } else {
             nString3 = null;
