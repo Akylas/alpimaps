@@ -68,10 +68,11 @@
                     {
                         fontFamily: $fonts.mdi,
                         color: colorPrimary,
-                        text: 'mdi-arrow-expand-right'
+                        text: 'mdi-flag-checkered'
                     },
                     {
-                        text: ' ' + formatDistance(event.remainingDistance)
+                        text: ' ' + formatDistance(event.remainingDistance),
+                        fontWeight: 'bold'
                     }
                 ].concat(isNaN(event.remainingTime) ? [] : [
                     {
@@ -83,9 +84,10 @@
                         text: 'mdi-timer-outline'
                     },
                     {
-                        text: ' ' + convertDurationSeconds(event.remainingTime)
+                        text: ' ' + convertDurationSeconds(event.remainingTime),
+                        fontWeight: 'bold'
                     }
-                ]).concat(!isNaN(event.itemData.dp) && (event.dplus - event.itemData.dp > 0)) ? [
+                ]).concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
                     {
                         text: '\n'
                     },
@@ -95,7 +97,8 @@
                         text: 'mdi-arrow-top-right'
                     },
                     {
-                        text: ' ' + convertElevation(event.dplus - event.itemData.dp)
+                        text: ' ' + convertElevation(event.dplus - event.itemData.dp),
+                        fontWeight: 'bold'
                     }
                 ] : [])
             });
@@ -149,7 +152,8 @@
                     color: colorOnSurfaceVariant
                 },
                 {
-                    text: convertElevation(itemProps.ele) + ' '
+                    text: convertElevation(itemProps.ele) + ' ',
+                    fontWeight: 'bold'
                 }
             );
         }
@@ -164,7 +168,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' '
+                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -177,7 +182,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: convertDurationSeconds(route.totalTime) + ' '
+                        text: convertDurationSeconds(route.totalTime) + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -193,7 +199,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.ascent)}` + ' '
+                        text: `${convertElevation(itemProps.ascent)}` + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -205,7 +212,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.descent)}` + ' '
+                        text: `${convertElevation(itemProps.descent)}` + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -219,7 +227,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(profile.dplus)}` + ' '
+                        text: `${convertElevation(profile.dplus)}` + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -231,7 +240,8 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(-profile.dmin)}` + ' '
+                        text: `${convertElevation(-profile.dmin)}` + ' ',
+                        fontWeight: 'bold'
                     }
                 );
             }
@@ -312,7 +322,7 @@
             }
             
             if (nString3) {
-                propsPaint.textSize = 12;
+                propsPaint.textSize = 11;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop);
