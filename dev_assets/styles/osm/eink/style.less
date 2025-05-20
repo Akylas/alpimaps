@@ -3,6 +3,9 @@
 @applied_eink_lighten_mlight: 10%;
 @applied_eink_lighten_light: 5%;
 
+@standard-halo-radius: 2;
+@standard-halo-fill: #ffffff;
+
 @background: lighten(#e6e4e0, @applied_eink_lighten);
 @contour_color: lighten(#29660a, @applied_eink_lighten);
 @water: lighten(#9ecad8, @applied_eink_lighten);
@@ -249,9 +252,6 @@
 @raceway-width: linear([view::zoom], (12, 0), (12.01, 0.5), (14, 2), (16, 6), (18, 18));
 @raceway-casing-width: linear([view::zoom], (12, 0), (12.01, 0.75), (20, 2));
 
-@standard-halo-radius: 1;
-@standard-halo-fill: #ffffff88;
-
 @footway-fill: #ffffff;
 @steps-fill: @path;
 @cycleway-fill: 0;
@@ -335,7 +335,7 @@
 @country_halo: @standard-halo-fill;
 @state_halo: @standard-halo-fill;
 @place_halo: @standard-halo-fill;
-@place_halo_radius: @standard-halo-radius;
+@place_halo_radius: 2;
 @road_label: #303030;
 
 @road_label_halo: @standard-halo-fill;
