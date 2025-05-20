@@ -184,7 +184,8 @@
                         text: 'mdi-arrow-expand-right'
                     },
                     {
-                        text: formatDistance(params.remainingDistance) + '  '
+                        text: formatDistance(params.remainingDistance) + '  ',
+                        fontWeight: 'bold'
                     },
                     {
                         fontFamily: $fonts.mdi,
@@ -192,7 +193,8 @@
                         text: 'mdi-triangle-outline'
                     },
                     {
-                        text: (itemData.a || 0).toFixed() + 'm' + '  '
+                        text: (itemData.a || 0).toFixed() + 'm' + '  ',
+                        fontWeight: 'bold'
                     },
                     {
                         fontFamily: $fonts.app,
@@ -200,7 +202,8 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (itemData.g || 0).toFixed() + '% '
+                        text: '~' + (itemData.g || 0).toFixed() + '% ',
+                        fontWeight: 'bold'
                     }
                 ];
                 if (!isNaN(itemData.dp) && (params.dplus - itemData.dp > 0)) {
@@ -210,7 +213,8 @@
                         text: 'alpimaps-arrow-top-right'
                     },
                     {
-                        text: convertElevation(params.dplus - itemData.dp) + ' '
+                        text: convertElevation(params.dplus - itemData.dp) + ' ',
+                        fontWeight: 'bold'
                     });
                 }
                 if (!isNaN(itemData.dm) && (params.dmin - itemData.dm > 0)) {
@@ -220,7 +224,8 @@
                         text: 'alpimaps-arrow-bottom-right'
                     },
                     {
-                        text: convertElevation(params.dmin - itemData.dm) + ' '
+                        text: convertElevation(params.dmin - itemData.dm) + ' ',
+                        fontWeight: 'bold'
                     });
                 }
                 if (!isNaN(params.remainingTime)) {
@@ -231,7 +236,8 @@
                             text: 'mdi-timer-outline'
                         },
                         {
-                            text: convertDurationSeconds(params.remainingTime) + '  '
+                            text: convertDurationSeconds(params.remainingTime) + '  ',
+                        fontWeight: 'bold'
                         }
                     );
                 }
