@@ -346,10 +346,11 @@
             const deltaA = profile.max[1] - profile.min[1];
             let spaceMin = 20;
             let spaceMax = 0;
-            if (deltaA < 250) {
-             //   const space = (250 - deltaA) / 2;
+            const chartElevationMinRange = ApplicationSettings.getNumber('chart_elevation_min_range', 250);
+            if (deltaA < chartElevationMinRange) {
+             //   const space = (chartElevationMinRange - deltaA) / 2;
             //    spaceMin += space;
-                spaceMax += 250 - deltaA;
+                spaceMax += chartElevationMinRange - deltaA;
             }
             const labelCount = 5; 
             const interval = deltaA / labelCount < 200 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
@@ -379,7 +380,7 @@
                 set.color = '#60B3FC';
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
-                set.mode = Mode.CUBIC_BEZIER;
+                set.mode = Mode.HORIZONTAL_BEZIER;
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.lineWidth = 2;
                     set.colors = profile.colors as any;
