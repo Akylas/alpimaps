@@ -9,39 +9,25 @@
 	[network=3][zoom>=9],
 	[zoom>=10]
 	{
-		when ([nuti::selected_osmid]=[osmid])::selected,
+		when ([nuti::selected_id]=[osmid])::selected,
 		{
-			when ([nuti::selected_osmid]=[osmid]) {
-				// line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
+			when ([nuti::selected_id]=[osmid]) {
 				casing/line-color: white;
 				casing/line-width: @route_casing_width + @route_width + 2.0;
 				casing/line-join: round;
 				casing/line-cap: round;
-
-				//[class=hiking][zoom>=18] {
-					// casing/line-geometry-transform: translate(0, @routeOffset*4);
-				// }
 			}
-			// [class=hiking][zoom>=18] {
-			// 	line-geometry-transform: translate(0, @routeOffset*4);
-			// }
 
 			line-join: round;
 			line-cap: round;
-			// line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
-			// line-opacity: [osmid] = [nuti::selected_osmid] ? linear([view::zoom], (14, 1), (15, 0.3), (17, 0.1)):0.5;
-			line-width: @route_width +([osmid]=[nuti::selected_osmid] ? 2 : 0);
-			// line-offset: @routeOffset * linear([view::zoom], (15, 0),  (16, 1), (18, 4));
-
-			// line-dasharray: [id] = [nuti::selected_id] ? (0,0) :  @biking_route_dasharray;
-			// [class=hiking],
-			// [class=foot] {
-				line-color: @symbolColor;
-				line-dasharray: @hiking_route_dasharray;
-				// }
+			
+			line-width: @route_width +([osmid]=[nuti::selected_id] ? 2 : 0);
+		
+            line-color: @symbolColor;
+			line-dasharray: @hiking_route_dasharray;
 
 			[class=bicycle] {
-				line-width: @biking_route_width +([osmid]=[nuti::selected_osmid] ? 2 : 0);
+				line-width: @biking_route_width +([osmid]=[nuti::selected_id] ? 2 : 0);
 				line-color: @biking_symbolColor;
 				[zoom>='nuti::routes_dash_min_zoom'] {
 					line-dasharray: @biking_route_dasharray;
@@ -55,11 +41,11 @@
                 shield-name: [ref];
                 shield-placement-priority: 2;
                 shield-size: @shield-size;
-                shield-line-spacing: @shield-line-spacing;
+         //       shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
-                shield-spacing: @shield-spacing;
-                shield-repeat-distance: @shield-repeat-distance;
-                shield-min-distance: @shield-margin;
+         //       shield-spacing: @shield-spacing;
+          //      shield-repeat-distance: @shield-repeat-distance;
+         //       shield-min-distance: @shield-margin;
                 shield-face-name: @mont_bd;
             //    shield-clip: @shield-clip;
                 shield-file: url(shields/route_shield.svg);

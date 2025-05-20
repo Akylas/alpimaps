@@ -836,41 +836,44 @@
                 if (setSelected && route) {
                     (async () => {
                         TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
-                        if (selectedMapId) {
-                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
-                            selectedMapId = null;
-                        }
-                        // selected_osmid is for routes
-                        // mapContext.mapDecoder.setStyleParameter('selected_id', '');
-                        const styleParameters = {};
-                        if (props.id !== undefined) {
-                            selectedId = props.id;
-                            selectedOSMId = undefined;
-                            styleParameters['selected_osmid'] = '0';
-                            if (typeof props.id === 'string') {
-                                styleParameters['selected_id_str'] = selectedId;
-                                styleParameters['selected_id'] = '0';
-                            } else {
-                                styleParameters['selected_id_str'] = '0';
-                                styleParameters['selected_id'] = selectedId + '';
+                        if (setMapSelected) {
+                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: props.osmid || (props.name + props.class) });
+                        } else {
+                            if (selectedMapId) {
+                                mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                              selectedMapId = null;
                             }
-                        } else if (route.osmid !== undefined) {
-                            if (typeof route.osmid === 'string') {
-                                selectedId = route.osmid;
+                            // selected_osmid is for routes
+                            // mapContext.mapDecoder.setStyleParameter('selected_id', '');
+                            const styleParameters = {};
+                            if (props.id !== undefined) {
+                                selectedId = props.id;
                                 selectedOSMId = undefined;
-                                styleParameters['selected_id_str'] = selectedId + '';
                                 styleParameters['selected_osmid'] = '0';
-                                styleParameters['selected_id'] = '0';
-                            } else {
-                                selectedId = undefined;
-                                selectedOSMId = route.osmid;
-                                styleParameters['selected_osmid'] = selectedOSMId + '';
-                                styleParameters['selected_id_str'] = '0';
-                                styleParameters['selected_id'] = '0';
+                                if (typeof props.id === 'string') {
+                                    styleParameters['selected_id_str'] = selectedId;
+                                    styleParameters['selected_id'] = '0';
+                                } else {
+                                    styleParameters['selected_id_str'] = '0';
+                                    styleParameters['selected_id'] = selectedId + '';
+                                }
+                            } else if (route.osmid !== undefined) {
+                                if (typeof route.osmid === 'string') {
+                                    selectedId = route.osmid;
+                                    selectedOSMId = undefined;
+                                    styleParameters['selected_id_str'] = selectedId + '';
+                                    styleParameters['selected_osmid'] = '0';
+                                    styleParameters['selected_id'] = '0';
+                                } else {
+                                    selectedId = undefined;
+                                    selectedOSMId = route.osmid;
+                                    styleParameters['selected_osmid'] = selectedOSMId + '';
+                                    styleParameters['selected_id_str'] = '0';
+                                    styleParameters['selected_id'] = '0';
+                                }
                             }
+                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
                         }
-                        mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
-                        mapContext.mapDecoder.setJSONStyleParameters(styleParameters);
 
                         if (selectedPosMarker) {
                             selectedPosMarker.visible = false;
@@ -1146,7 +1149,7 @@
         try {
             if (selectedRoutes && selectedRoutes.length > 0) {
                 if (selectedRoutes.length === 1) {
-                    selectItem({ item: selectedRoutes[0], isFeatureInteresting: true });
+                    selectItem({ item: selectedRoutes[0], isFeatureInteresting: true, setMapSelected: true });
                 } else {
                     const RouteSelect = (await import('~/components/routes/RouteSelect.svelte')).default;
                     const results = await showBottomSheet({
@@ -1160,7 +1163,7 @@
                     });
                     const result = Array.isArray(results) ? results[0] : results;
                     if (result) {
-                        selectItem({ item: result.route, isFeatureInteresting: true });
+                        selectItem({ item: result.route, isFeatureInteresting: true, setMapSelected: true });
                     }
                 }
             }
