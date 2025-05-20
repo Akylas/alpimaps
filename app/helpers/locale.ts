@@ -283,7 +283,7 @@ export function convertDurationSeconds(seconds, formatStr?: string) {
     const thedate = new Date(0, 0, 0, 0, 0, seconds);
     if (!formatStr) {
         if (thedate.getHours()) {
-            formatStr = 'H [h] m [m]';
+            formatStr = 'H [h] mm [m]';
         } else {
             formatStr = 'm [m]';
         }

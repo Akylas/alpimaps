@@ -292,6 +292,7 @@
         const profile = it.profile;
         const profileData = profile?.data;
         const leftAxis = chartView.leftAxis;
+        let xinterval;
         if (profileData) {
             const xAxis = chartView.xAxis;
             if (!chartInitialized) {
@@ -321,7 +322,7 @@
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
                 xAxis.valueFormatter = {
-                    getAxisLabel: (value) => formatDistance(value)
+                    getAxisLabel: (value) => formatDistance(value, xinterval < 1000 ? 1 : 0)
                 };
 
                 chartView.customRenderer = {
@@ -360,7 +361,7 @@
             
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6; 
-            const xinterval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
+            xinterval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             
@@ -423,7 +424,6 @@
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
-            
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
