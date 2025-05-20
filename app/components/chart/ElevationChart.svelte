@@ -355,7 +355,7 @@
                 set.color = '#60B3FC';
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
-                set.mode = Mode.CUBIC_BEZIER:
+                set.mode = Mode.CUBIC_BEZIER;
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.lineWidth = 2;
                     set.colors = profile.colors as any;
