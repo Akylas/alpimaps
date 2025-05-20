@@ -343,7 +343,7 @@
                 chartView.resetZoom();
             }
             const deltaA = profile.max[1] - profile.min[1];
-            let spaceMin = 20;
+            let spaceMin = 50;
             let spaceMax = 0;
             const chartElevationMinRange = ApplicationSettings.getNumber('chart_elevation_min_range', 250);
             if (deltaA < chartElevationMinRange) {
