@@ -22,7 +22,7 @@
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    $: ({ colorOnSurface, colorOutlineVariant, colorPrimary } = $colors);
+    $: ({ colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
