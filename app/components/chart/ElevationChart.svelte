@@ -11,7 +11,7 @@
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
-    import { ApplicationSettings, Utils } from '@nativescript/core';
+    import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { convertDurationSeconds, formatDistance, convertElevation } from '~/helpers/formatter';
@@ -184,8 +184,7 @@
                         text: 'mdi-arrow-expand-right'
                     },
                     {
-                        text: formatDistance(params.remainingDistance) + '  ',
-                        fontWeight: 'bold'
+                        text: formatDistance(params.remainingDistance) + '  '
                     },
                     {
                         fontFamily: $fonts.mdi,
@@ -193,8 +192,7 @@
                         text: 'mdi-triangle-outline'
                     },
                     {
-                        text: (itemData.a || 0).toFixed() + 'm' + '  ',
-                        fontWeight: 'bold'
+                        text: (itemData.a || 0).toFixed() + 'm' + '  '
                     },
                     {
                         fontFamily: $fonts.app,
@@ -202,30 +200,27 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (itemData.g || 0).toFixed() + '% ',
-                        fontWeight: 'bold'
+                        text: '~' + (itemData.g || 0).toFixed() + '% '
                     }
                 ];
                 if (!isNaN(itemData.dp) && (params.dplus - itemData.dp > 0)) {
                     spans.push({
-                        fontFamily: $fonts.app,
+                        fontFamily: $fonts.mdi,
                         color: colorPrimary,
-                        text: 'alpimaps-arrow-top-right'
+                        text: 'mdi-arrow-top-right'
                     },
                     {
-                        text: convertElevation(params.dplus - itemData.dp) + ' ',
-                        fontWeight: 'bold'
+                        text: convertElevation(params.dplus - itemData.dp) + ' '
                     });
                 }
                 if (!isNaN(itemData.dm) && (params.dmin - itemData.dm > 0)) {
                     spans.push({
-                        fontFamily: $fonts.app,
+                        fontFamily: $fonts.mdi,
                         color: colorPrimary,
-                        text: 'alpimaps-arrow-bottom-right'
+                        text: 'mdi-arrow-bottom-right'
                     },
                     {
-                        text: convertElevation(params.dmin - itemData.dm) + ' ',
-                        fontWeight: 'bold'
+                        text: convertElevation(params.dmin - itemData.dm) + ' '
                     });
                 }
                 if (!isNaN(params.remainingTime)) {
@@ -236,8 +231,7 @@
                             text: 'mdi-timer-outline'
                         },
                         {
-                            text: convertDurationSeconds(params.remainingTime) + '  ',
-                        fontWeight: 'bold'
+                            text: convertDurationSeconds(params.remainingTime) + '  '
                         }
                     );
                 }
@@ -315,7 +309,7 @@
                 chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = colorOutlineVariant;
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(150);
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 //leftAxis.ensureLastLabel = true;
@@ -324,7 +318,6 @@
                 xAxis.labelTextAlign = Align.CENTER;
                 xAxis.ensureLastLabel = true;
                 xAxis.textColor = colorOnSurface;
-                xAxis.gridColor = colorOutlineVariant;
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
                 xAxis.valueFormatter = {
@@ -359,12 +352,19 @@
                 spaceMax += chartElevationMinRange - deltaA;
             }
             const labelCount = 5; 
-            const interval = deltaA / labelCount < 200 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
+            const interval = deltaA / labelCount < 100 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
        //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
+            
+            const totalDistance = it.route.totalDistance;
+            const xLabelCount = 6; 
+            const interval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
+            xAxis.forcedInterval = interval;
+            xAxis.labelCount = xLabelCount;
+            
             const chartData = chartView.data;
             if (!chartData) {
                 const set = new LineDataSet(profileData, 'a', 'd', 'a');
@@ -386,7 +386,7 @@
                 set.color = '#60B3FC';
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
-                set.mode = Mode.HORIZONTAL_BEZIER;
+                set.mode = Mode.CUBIC_BEZIER;
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
                     set.lineWidth = 2;
                     set.colors = profile.colors as any;
@@ -417,13 +417,14 @@
             limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
+            limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             leftAxis.addLimitLine(limitLine);
             
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
-            limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
+            
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
