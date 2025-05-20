@@ -213,14 +213,14 @@
                         text: convertElevation(params.dplus - itemData.dp) + ' '
                     });
                 }
-                if (!isNaN(itemData.dm) && (params.dmin - itemData.dm > 0)) {
+                if (!isNaN(itemData.dm) && Math.abs(params.dmin - itemData.dm > 0)) {
                     spans.push({
                         fontFamily: $fonts.mdi,
                         color: colorPrimary,
                         text: 'mdi-arrow-bottom-right'
                     },
                     {
-                        text: convertElevation(params.dmin - itemData.dm) + ' '
+                        text: convertElevation(-(params.dmin - itemData.dm)) + ' '
                     });
                 }
                 if (!isNaN(params.remainingTime)) {
@@ -309,10 +309,10 @@
                 chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(150).hex;
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(100).hex;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
-                //leftAxis.ensureLastLabel = true;
+                leftAxis.ensureLastLabel = true;
 
                 xAxis.position = XAxisPosition.TOP;
                 xAxis.labelTextAlign = Align.CENTER;
@@ -355,7 +355,6 @@
             const interval = deltaA / labelCount < 100 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
-       //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
             
@@ -413,7 +412,7 @@
             leftAxis.removeAllLimitLines();
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
             limitLine.lineColor = colorOutline;
-            limitLine.enableDashedLine(64, 3, 0);
+            limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
