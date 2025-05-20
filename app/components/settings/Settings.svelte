@@ -265,6 +265,20 @@
                             autocorrect: false
                         } as TextFieldProperties,
                         rightValue: () => ApplicationSettings.getNumber('chart_max_filter', 50)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('chart_elevation_min_range'),
+                        key: 'chart_elevation_min_range',
+                        valueType: 'number',
+                        default: 250,
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        rightValue: () => ApplicationSettings.getNumber('chart_elevation_min_range', 250)
                     }];
             case 'offline_data':
                 return [
