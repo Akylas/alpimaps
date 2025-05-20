@@ -141,7 +141,7 @@
                     {
                         id: 'setting',
                         type: 'prompt',
-                        title: lc('offline_routing_pedestrian_max_distance'),
+                        title: lc('location_distance_from_route'),
                         key: 'location_distance_from_route',
                         valueType: 'number',
                         default: 15,
