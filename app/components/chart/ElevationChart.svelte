@@ -200,9 +200,29 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (itemData.g || 0).toFixed() + '%'
+                        text: '~' + (itemData.g || 0).toFixed() + '% '
                     }
                 ];
+                if ((!isNaN(itemData.dp && (params.dplus - itemData.dp > 0))) {
+                    spans.push({
+                        fontFamily: $fonts.app,
+                        color: colorPrimary,
+                        text: 'alpimaps-arrow-top-right'
+                    },
+                    {
+                        text: convertElevation(params.dplus - itemData.dp) + ' '
+                    });
+                }
+                if ((!isNaN(itemData.dm && (params.dmin - itemData.dm > 0))) {
+                    spans.push({
+                        fontFamily: $fonts.app,
+                        color: colorPrimary,
+                        text: 'alpimaps-arrow-bottom-right'
+                    },
+                    {
+                        text: convertElevation(params.dmin - itemData.dm) + ' '
+                    });
+                }
                 if (!isNaN(params.remainingTime)) {
                     spans.unshift(
                         {
@@ -292,7 +312,7 @@
                 leftAxis.gridColor = colorOutlineVariant;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
-                leftAxis.ensureLastLabel = true;
+                //leftAxis.ensureLastLabel = true;
 
                 xAxis.position = XAxisPosition.TOP;
                 xAxis.labelTextAlign = Align.CENTER;
@@ -331,6 +351,10 @@
             //    spaceMin += space;
                 spaceMax += 250 - deltaA;
             }
+            const labelCount = 5; 
+            const interval = deltaA /   < 100 ? 50 : Math.round(deltas / labelCount / 100) * 100;
+            leftAxis.forcedInterval = interval;
+            leftAxis.labelCount = labelCount;
        //     spaceMin += ((deltaA + spaceMin + spaceMax) / Utils.layout.toDeviceIndependentPixels(chart.nativeView.getMeasuredHeight())) * 40;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
@@ -381,17 +405,18 @@
             }
             leftAxis.removeAllLimitLines();
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
-            limitLine.lineColor = colorOutlineVariant;
-            limitLine.enableDashedLine(6, 3, 0);
+            limitLine.lineColor = colorOutline;
+            limitLine.enableDashedLine(64, 3, 0);
             limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
             
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
-            limitLine.lineColor = colorOutlineVariant;
-            limitLine.enableDashedLine(6, 3, 0);
+            limitLine.lineColor = colorOutline;
+            limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
+            limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
