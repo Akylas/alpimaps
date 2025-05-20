@@ -309,7 +309,7 @@
                 chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(150);
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(150).hex;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 //leftAxis.ensureLastLabel = true;
@@ -361,8 +361,8 @@
             
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6; 
-            const interval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
-            xAxis.forcedInterval = interval;
+            const xinterval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
+            xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             
             const chartData = chartView.data;
