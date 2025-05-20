@@ -87,7 +87,7 @@
                         text: ' ' + convertDurationSeconds(event.remainingTime),
                         fontWeight: 'bold'
                     }
-                ]).concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
+                ] as any).concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
                     {
                         text: '\n'
                     },
@@ -100,7 +100,7 @@
                         text: ' ' + convertElevation(event.dplus - event.itemData.dp),
                         fontWeight: 'bold'
                     }
-                ] : [])
+                ] as any : [])
             });
         } else {
             nString3 = null;
