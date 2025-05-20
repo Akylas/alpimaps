@@ -55,11 +55,11 @@
                 shield-name: [ref];
                 shield-placement-priority: 20 - [network];
                 shield-size: @shield-size;
-                shield-line-spacing: @shield-line-spacing;
+            //    shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
-                shield-spacing: @shield-spacing;
-                shield-repeat-distance: @shield-repeat-distance;
-                shield-min-distance: @shield-margin;
+            //    shield-spacing: @shield-spacing;
+            //    shield-repeat-distance: @shield-repeat-distance;
+            //    shield-min-distance: @shield-margin;
                 shield-face-name: @mont_bd;
             //    shield-clip: @shield-clip;
                 shield-file: url(shields/route_shield.svg);
