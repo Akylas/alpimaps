@@ -63,7 +63,7 @@
             return;
         }
         if(event.remainingDistance) {
-            nString3= createNativeAttributedString({
+            nString3 = createNativeAttributedString({
                 spans: [
                     {
                         fontFamily: $fonts.mdi,
@@ -71,8 +71,7 @@
                         text: 'mdi-flag-checkered'
                     },
                     {
-                        text: ' ' + formatDistance(event.remainingDistance),
-                        fontWeight: 'bold'
+                        text: ' ' + formatDistance(event.remainingDistance)
                     }
                 ].concat(isNaN(event.remainingTime) ? [] : [
                     {
@@ -84,8 +83,7 @@
                         text: 'mdi-timer-outline'
                     },
                     {
-                        text: ' ' + convertDurationSeconds(event.remainingTime),
-                        fontWeight: 'bold'
+                        text: ' ' + convertDurationSeconds(event.remainingTime)
                     }
                 ] as any).concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
                     {
@@ -97,8 +95,7 @@
                         text: 'mdi-arrow-top-right'
                     },
                     {
-                        text: ' ' + convertElevation(event.dplus - event.itemData.dp),
-                        fontWeight: 'bold'
+                        text: ' ' + convertElevation(event.dplus - event.itemData.dp)
                     }
                 ] as any : [])
             });
@@ -152,8 +149,7 @@
                     color: colorOnSurfaceVariant
                 },
                 {
-                    text: convertElevation(itemProps.ele) + ' ',
-                    fontWeight: 'bold'
+                    text: convertElevation(itemProps.ele) + ' '
                 }
             );
         }
@@ -168,8 +164,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' ',
-                        fontWeight: 'bold'
+                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' '
                     }
                 );
             }
@@ -182,8 +177,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: convertDurationSeconds(route.totalTime) + ' ',
-                        fontWeight: 'bold'
+                        text: convertDurationSeconds(route.totalTime) + ' '
                     }
                 );
             }
@@ -199,8 +193,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.ascent)}` + ' ',
-                        fontWeight: 'bold'
+                        text: `${convertElevation(itemProps.ascent)}` + ' '
                     }
                 );
             }
@@ -212,8 +205,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.descent)}` + ' ',
-                        fontWeight: 'bold'
+                        text: `${convertElevation(itemProps.descent)}` + ' '
                     }
                 );
             }
@@ -227,8 +219,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(profile.dplus)}` + ' ',
-                        fontWeight: 'bold'
+                        text: `${convertElevation(profile.dplus)}` + ' '
                     }
                 );
             }
@@ -240,8 +231,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(-profile.dmin)}` + ' ',
-                        fontWeight: 'bold'
+                        text: `${convertElevation(-profile.dmin)}` + ' '
                     }
                 );
             }
