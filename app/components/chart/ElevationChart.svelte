@@ -203,7 +203,7 @@
                         text: '~' + (itemData.g || 0).toFixed() + '% '
                     }
                 ];
-                if ((!isNaN(itemData.dp && (params.dplus - itemData.dp > 0))) {
+                if (!isNaN(itemData.dp) && (params.dplus - itemData.dp > 0)) {
                     spans.push({
                         fontFamily: $fonts.app,
                         color: colorPrimary,
@@ -213,7 +213,7 @@
                         text: convertElevation(params.dplus - itemData.dp) + ' '
                     });
                 }
-                if ((!isNaN(itemData.dm && (params.dmin - itemData.dm > 0))) {
+                if (!isNaN(itemData.dm && (params.dmin - itemData.dm > 0)) {
                     spans.push({
                         fontFamily: $fonts.app,
                         color: colorPrimary,
