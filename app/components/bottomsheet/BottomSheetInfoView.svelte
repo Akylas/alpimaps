@@ -85,7 +85,7 @@
                     {
                         text: ' ' + convertDurationSeconds(event.remainingTime)
                     }
-                ]).concat((!isNaN(event.itemData.dp && (event.dplus - event.itemData.dp > 0)) ? [
+                ]).concat(!isNaN(event.itemData.dp) && (event.dplus - event.itemData.dp > 0)) ? [
                     {
                         text: '\n'
                     },
