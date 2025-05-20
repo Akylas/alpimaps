@@ -415,7 +415,7 @@
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
             limitLine.textColor= colorOnSurface;
-            limitLine.ensureVisible = true;
+           // limitLine.ensureVisible = true;
             limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             leftAxis.addLimitLine(limitLine);
             
