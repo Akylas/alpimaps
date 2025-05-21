@@ -813,7 +813,7 @@
         forceZoomOut?: boolean;
     }) {
         try {
-            if ($itemLock && $selectedItem) {
+            if (isFeatureInteresting && $itemLock && $selectedItem) {
                 return;
             }
             didIgnoreAlreadySelected = false;
