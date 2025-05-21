@@ -843,6 +843,7 @@
                             styleParameters['selected_osmid'] = '0';
                             styleParameters['selected_id_str'] = '0';
                             styleParameters['selected_id'] = '0';
+                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
                         } else {
                             if (selectedMapId) {
                                 mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
