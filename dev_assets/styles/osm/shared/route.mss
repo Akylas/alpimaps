@@ -30,7 +30,9 @@
 					line-dasharray: @biking_route_dasharray;
 				}
 			}
-            ['nuti::route_shields'>0][zoom<15][ref != null]::label{
+            
+		}
+        ['nuti::route_shields'>0][zoom<15][ref != null]::label{
               [network=1][zoom>=6],
               [network=2][class=bicycle][zoom>=8],
               [network=2][zoom>=10],
@@ -55,7 +57,7 @@
 				}
 				text-name: [ref];
 				[zoom>=15] {
-					text-name: [name];
+					text-name: @name;
 				}
 				text-placement: line;
 				text-wrap-before: true;
@@ -65,6 +67,5 @@
 				text-halo-radius: @route_label_halo_radius;
 				text-dy: @route_text_dy;
 			}
-		}
 	}
 }
