@@ -1469,16 +1469,13 @@
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
+            try {
+                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+            } catch(error) {
+                vectorTileDecoder = null;
+                showError(error);
+            }
 
-            tryCatch(
-                async () => {
-                    vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
-                },
-                () => {
-                    vectorTileDecoder = null;
-                }
-            );
-            // }
             handleNewLanguage(currentLanguage);
         }
     }
