@@ -8,7 +8,7 @@
 	[network=3][zoom>=9],
 	[zoom>=10]
 	{
-		when ([nuti::selected_osmid]=[osmid])::selected,
+		when ([nuti::selected_osmid]=@osm_id)::selected,
 		{
 			when ([nuti::selected_osmid]=[osmid]) {
 				// line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
