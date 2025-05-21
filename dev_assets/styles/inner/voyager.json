@@ -1,9 +1,7 @@
 {
     "layers": [
         "lines",
-        "routes",
         "stops",
-        "route",
         "items",
         "directions",
         "search"
@@ -11,17 +9,12 @@
     "styles": [
         "voyager/style.mss",
         "shared/style.mss",
-        "shared/route.mss",
         "shared/transit.mss",
         "shared/items.mss",
         "shared/directions.mss",
         "shared/search.mss"
     ],
     "nutiparameters": {
-        "route_shields": 0,
-        "routes": 1,
-        "routes_type": 0,
-        "routes_dash_min_zoom": 14,
         "lang": "en",
         "fallback_lang": "en",
         "hide_unselected": 0,

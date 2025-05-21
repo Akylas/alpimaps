@@ -3,7 +3,6 @@
     "styles": [
         "eink/style.mss",
         "shared/style.mss",
-        "shared/route.mss",
         "shared/transit.mss",
         "shared/items.mss",
         "shared/directions.mss",
