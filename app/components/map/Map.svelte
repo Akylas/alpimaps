@@ -837,8 +837,12 @@
                     (async () => {
                         TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
                         if (setMapSelected) {
-                            selectedMapId = (route.osmid  || (props.name + props.class)) + '';
+                            selectedMapId = (route.osmid  || props.osmid || props.id || (props.name + props.class)) + '';
                             mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
+                            const styleParameters = {};
+                            styleParameters['selected_osmid'] = '0';
+                            styleParameters['selected_id_str'] = '0';
+                            styleParameters['selected_id'] = '0';
                         } else {
                             if (selectedMapId) {
                                 mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
