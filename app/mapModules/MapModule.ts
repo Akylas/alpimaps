@@ -25,6 +25,7 @@ import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 import { routesType } from '~/stores/mapStore';
+import { showError } from '@shared/utils/showError';
 import { showSnack } from '~/utils/ui';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -145,24 +146,28 @@ export interface MapModules {
 }
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
-    DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
-    return new MBVectorTileDecoder({
-        style,
-        pack:
-            PRODUCTION || TEST_ZIP_STYLES
-                ? new ZippedAssetPackage({
-                      liveReload: !PRODUCTION,
-                      zipPath: `~/assets/styles/${name}.zip`,
-                      basePack,
-                      getAssetNames: getAssetNamesWithMaterial
-                  })
-                : new DirAssetPackage({
-                      loadUsingNS: !PRODUCTION,
-                      dirPath: `~/assets/styles/${name}`
+    try {
+        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
+        return new MBVectorTileDecoder({
+            style,
+            pack:
+                PRODUCTION || TEST_ZIP_STYLES
+                    ? new ZippedAssetPackage({
+                          liveReload: !PRODUCTION,
+                          zipPath: `~/assets/styles/${name}.zip`,
+                          basePack,
+                          getAssetNames: getAssetNamesWithMaterial
+                      })
+                    : new DirAssetPackage({
+                          loadUsingNS: !PRODUCTION,
+                          dirPath: `~/assets/styles/${name}`
                       // loadAsset,
                       // getAssetNames: getAssetNamesWithMaterial
-                  })
-    });
+                      })
+        });
+    } catch(error) {
+        showError(error);
+    }
 }
 
 export function onNetworkChanged(callback: (theme) => void) {}
