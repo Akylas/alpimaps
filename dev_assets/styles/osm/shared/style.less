@@ -98,8 +98,8 @@
 
 @route_label_fill: #000;
 @route_label_width: linear([view::zoom], (15, 8), (20, 11));
-@route_label_halo_radius: 0.5;
-@route_label_halo: #f2f5f8;
+@route_label_halo_radius: 1;
+@route_label_halo: #ffffff;
 
 @symbolColorPrep: replace([symbol], '(:|_).*', '');
 @symbolColor: @symbolColorPrep = 'white' ? @hiking_route_fill : @symbolColorPrep = '' ? @hiking_route_fill : @symbolColorPrep;
