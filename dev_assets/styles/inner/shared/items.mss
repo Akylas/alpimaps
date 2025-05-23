@@ -16,7 +16,6 @@
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
         when ([nuti::selected_id] !=[id]) {
-
             back/line-color: white;
             back/line-width: @bicycle_line_width + 2;
             back/line-join: round;
@@ -86,6 +85,7 @@
         text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : bottom;
         text-dx:[style.iconDx] ? [style.iconDx] :@default_icon_dx;
         text-dy:[style.iconDy] ? [style.iconDy] :0;
+        text-placement-priority: 27;
         when ([nuti::selected_id]=[id]) {
             text-size: ([style.iconSize] ? [style.iconSize]: @default_icon_size) + 10;
         }

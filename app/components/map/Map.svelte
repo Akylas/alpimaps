@@ -81,7 +81,9 @@
         showRouteShields,
         showItemsLayer,
         itemLock,
-        routeDashMinZoom
+        routeDashMinZoom,
+        immersive,
+        immersiveOnlyLocked
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -462,12 +464,66 @@
             startStopWebServer();
         }
     }
+    let screenOnOffReceiver: android.content.BroadcastReceiver;
+    
+    let toggleSystemBarsWithWindowCompat;
+    if (__ANDROID__) {
+         toggleSystemBarsWithWindowCompat = function(show = true) {
+        const activity = Application.android.startActivity;
+    if (!activity) return;
+
+    const window = activity.getWindow();
+    const decorView = window.getDecorView();
+
+    const WindowCompat = androidx.core.view.WindowCompat;
+    const WindowInsetsControllerCompat = androidx.core.view.WindowInsetsControllerCompat;
+    const WindowInsetsCompat = androidx.core.view.WindowInsetsCompat;
+
+    // Make content extend into system windows
+    WindowCompat.setDecorFitsSystemWindows(window, false);
+
+    const controller = new WindowInsetsControllerCompat(window, decorView);
+    if (show) {
+        controller.show(WindowInsetsCompat.Type.systemBars());
+    } else {
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+
+    // Set behavior to allow swipe to show bars temporarily
+    controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+    }
+    
+}
+    }
+    
+    
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
+            if (!screenOnOffReceiver) {
+                screenOnOffReceiver = new android.content.BroadcastReceiver({
+                    onReceive: function (context, intent) {
+                        if (intent.getAction() === android.content.Intent.ACTION_SCREEN_OFF) {
+                            console.log("Screen turned ON");
+                            if ($immersiveOnlyLocked) {
+                                toggleSystemBarsWithWindowCompat()false;
+                            }
+                        } else if (intent.getAction() === android.content.Intent.ACTION_USER_PRESENT) {
+                            if ($immersiveOnlyLocked) {
+                                toggleSystemBarsWithWindowCompat(true);
+                            }
+                        }
+                   }
+                });
+
+                const intentFilter = new android.content.IntentFilter();
+                filter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
+                filter.addAction(android.content.Intent.ACTION_USER_PRESENT);
+                activity.registerReceiver(screenOnOffReceiver, intentFilter);
+            }
+            
         }
         customLayersModule = new CustomLayersModule();
         customLayersModule.once('ready', onLayersReady);
@@ -543,6 +599,14 @@
             };
         }
     });
+    $: {
+        if (__ANDROID__) {
+            if (screenOnOffReceiver && !$immersiveOnlyLocked){
+                toggleSystemBarsWithWindowCompat($immersive)
+                
+            }
+        }
+    }
     function onColorsChange() {
         if (cartoMap) {
             mapContext.innerDecoder.setJSONStyleParameters({
@@ -814,7 +878,7 @@
         forceZoomOut?: boolean;
     }) {
         try {
-            if (isFeatureInteresting && $itemLock && $selectedItem) {
+            if (isFeatureInteresting && setSelected && $itemLock && $selectedItem) {
                 return;
             }
             didIgnoreAlreadySelected = false;

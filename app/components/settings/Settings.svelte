@@ -24,7 +24,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
-    import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+    import { immersive, immersiveOnlyLocked, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -190,7 +190,18 @@
                         value: ApplicationSettings.getBoolean('list_longpress_camera', false),
                         title: lc('longpress_list_open_camera')
                     }
-                ];
+                ].concept(__ANDROID__ ? [{
+                        type: 'switch',
+                        mapStore: immersive,
+                        value: get(immersive),
+                        title: lc('immersive_mode')
+                    },
+                    {
+                        type: 'switch',
+                        mapStore: immersiveOnlyLocked,
+                        value: get(immersiveOnlyLocked),
+                        title: lc('immersive_mode_lock_only')
+                    }] : []);
             case 'address':
                 return [
                     {
