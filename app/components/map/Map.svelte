@@ -503,24 +503,25 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
             if (!screenOnOffReceiver) {
-                screenOnOffReceiver = new android.content.BroadcastReceiver({
-                    onReceive: function (context, intent) {
-                        if (intent.getAction() === android.content.Intent.ACTION_SCREEN_OFF) {
+                const ScreenOnReceiver = (<any>android.content.BroadcastReceiver).extend('com.example.ScreenOnReceiver', {
+            onReceive: function (context: android.content.Context, intent: android.content.Intent) {
+                if (intent.getAction() === android.content.Intent.ACTION_SCREEN_OFF) {
                             console.log("Screen turned ON");
                             if ($immersiveOnlyLocked) {
-                                toggleSystemBarsWithWindowCompat()false;
+                                toggleSystemBarsWithWindowCompat(false);
                             }
                         } else if (intent.getAction() === android.content.Intent.ACTION_USER_PRESENT) {
                             if ($immersiveOnlyLocked) {
                                 toggleSystemBarsWithWindowCompat(true);
                             }
                         }
-                   }
-                });
+            }
+        });
+                screenOnOffReceiver = new ScreenOnReceiver();
 
                 const intentFilter = new android.content.IntentFilter();
-                filter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
-                filter.addAction(android.content.Intent.ACTION_USER_PRESENT);
+                intentFilter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
+                intentFilter.addAction(android.content.Intent.ACTION_USER_PRESENT);
                 activity.registerReceiver(screenOnOffReceiver, intentFilter);
             }
             
