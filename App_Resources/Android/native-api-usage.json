@@ -39,6 +39,7 @@
         "androidx.core.splashscreen:SplashScreen",
         "androidx.core.widget:NestedScrollView",
         "androidx.core.view:WindowInsetsCompat",
+        "androidx.core.view:WindowInsetsCompat.Type",
         "androidx.core.view:WindowCompat",
         "androidx.core.view:WindowInsetsControllerCompat",
         "androidx.documentfile.provider:DocumentFile",

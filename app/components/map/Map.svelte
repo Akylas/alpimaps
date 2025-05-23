@@ -505,12 +505,12 @@
             if (!screenOnOffReceiver) {
                 const ScreenOnReceiver = (<any>android.content.BroadcastReceiver).extend('akylas.alpi.maps.ScreenOnReceiver', {
             onReceive: function (context: android.content.Context, intent: android.content.Intent) {
-                if (intent.getAction() === android.content.Intent.ACTION_SCREEN_OFF) {
+                if (intent.getAction() === "android.intent.action.SCREEN_OFF") {
                             console.log("Screen turned ON");
                             if ($immersiveOnlyLocked) {
                                 toggleSystemBarsWithWindowCompat(false);
                             }
-                        } else if (intent.getAction() === android.content.Intent.ACTION_USER_PRESENT) {
+                        } else if (intent.getAction() === "android.intent.action.ACTION_USER_PRESENT") {
                             if ($immersiveOnlyLocked) {
                                 toggleSystemBarsWithWindowCompat(true);
                             }
