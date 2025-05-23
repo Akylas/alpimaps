@@ -8,9 +8,9 @@
 	[network=3][zoom>=9],
 	[zoom>=10]
 	{
-		when ([nuti::selected_id]=([osmid]+''))::selected,
+		when ([nuti::selected_id]=[osmid]+'')::selected,
 		{
-			when ([nuti::selected_id]=([osmid]+'')) {
+			when ([nuti::selected_id]=[osmid]+'') {
 				casing/line-color: white;
 				casing/line-width: @route_casing_width + @route_width + 2.0;
 				casing/line-join: round;

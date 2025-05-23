@@ -62,3 +62,5 @@ export const showRouteShields = settingsStore('showRouteShields', false);
 export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
 export const routeDashMinZoom = settingsStore('routeDashMinZoom', -1);
+export const immersive = settingsStore('immersive', false);
+export const immersiveOnlyLocked immersiveOnlyLocked = settingsStore('immersiveOnlyLocked', false);
