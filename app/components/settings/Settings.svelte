@@ -201,7 +201,7 @@
                         mapStore: immersiveOnlyLocked,
                         value: get(immersiveOnlyLocked),
                         title: lc('immersive_mode_lock_only')
-                    }] : []);
+                    }] as any : []);
             case 'address':
                 return [
                     {
