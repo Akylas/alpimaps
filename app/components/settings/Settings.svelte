@@ -190,7 +190,7 @@
                         value: ApplicationSettings.getBoolean('list_longpress_camera', false),
                         title: lc('longpress_list_open_camera')
                     }
-                ].concept(__ANDROID__ ? [{
+                ].concat(__ANDROID__ ? [{
                         type: 'switch',
                         mapStore: immersive,
                         value: get(immersive),
