@@ -503,7 +503,7 @@
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
             if (!screenOnOffReceiver) {
-                const ScreenOnReceiver = (<any>android.content.BroadcastReceiver).extend('android.content.BroadcastReceiver', {
+                const ScreenOnReceiver = (<any>android.content.BroadcastReceiver).extend('akylas.alpi.maps.ScreenOnReceiver', {
             onReceive: function (context: android.content.Context, intent: android.content.Intent) {
                 if (intent.getAction() === android.content.Intent.ACTION_SCREEN_OFF) {
                             console.log("Screen turned ON");
