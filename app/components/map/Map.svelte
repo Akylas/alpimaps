@@ -522,7 +522,7 @@
                 const intentFilter = new android.content.IntentFilter();
                 intentFilter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
                 intentFilter.addAction(android.content.Intent.ACTION_USER_PRESENT);
-                activity.registerReceiver(screenOnOffReceiver, intentFilter);
+                Application.android.startActivity.registerReceiver(screenOnOffReceiver, intentFilter);
             }
             
         }
@@ -602,8 +602,8 @@
     });
     $: {
         if (__ANDROID__) {
-            if (screenOnOffReceiver && !$immersiveOnlyLocked){
-                toggleSystemBarsWithWindowCompat($immersive)
+            if (screenOnOffReceiver){
+                toggleSystemBarsWithWindowCompat(!$immersive || $immersiveOnlyLocked)
                 
             }
         }
