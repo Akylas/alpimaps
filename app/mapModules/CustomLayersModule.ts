@@ -959,26 +959,12 @@ export default class CustomLayersModule extends MapModule {
                 }
             }
 
-           // if (worldRouteMbtilesEntity) {
-             //   routes.push(
-               //     new MBTilesTileDataSource({
-                 //       minZoom: 5,
-                   //     databasePath: getFileNameThatICanUseInNativeCode(context, worldRouteMbtilesEntity.path)
-             //       })
-               // );
-      //      }
             if (worldMbtilesEntity) {
                 const datasource: TileDataSource<any, any> = this.createMergeDataSource(
                             [worldMbtilesEntity, worldRouteMbtilesEntity].filter(s=>!!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
                             mbTilesSourceGenerator,
                             undefined);
-  //              const datasource = new MBTilesTileDataSource({
-//                    databasePath: getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path)
-//                });
                 mbtiles.push(datasource);
-                // if (!worldRouteMbtilesEntity) {
-                //     routes.push(datasource);
-                // }
             }
 
             if (worldTerrainMbtilesEntity) {

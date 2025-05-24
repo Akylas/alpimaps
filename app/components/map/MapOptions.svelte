@@ -30,6 +30,7 @@
         show3DBuildings,
         showContourLines,
         showSubBoundaries,
+        showSlopePercentages,
         showPolygonsBorder,
         showRoadShields,
         showRouteShields,
@@ -390,9 +391,13 @@
             ></ListItemAutoSize>
         </Template>
     </collectionview>
+    
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
         {#if !!customLayers?.hasLocalData}
             <IconButton isSelected={$showContourLines} text="mdi-bullseye" toggable={true} tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
+        {/if}
+        {#if !!customLayers?.hasTerrain}
+            <IconButton isSelected={$showSlopePercentages} text="mdi-signal" toggable={true} tooltip={lc('show_percentage_slopes')} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
         {/if}
         {#if !!customLayers?.hasLocalData}
             <IconButton isSelected={$show3DBuildings} text="mdi-domain" toggable={true} tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
