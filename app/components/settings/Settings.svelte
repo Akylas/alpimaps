@@ -24,7 +24,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
-    import { immersive, immersiveOnlyLocked, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -195,12 +195,6 @@
                         mapStore: immersive,
                         value: get(immersive),
                         title: lc('immersive_mode')
-                    },
-                    {
-                        type: 'switch',
-                        mapStore: immersiveOnlyLocked,
-                        value: get(immersiveOnlyLocked),
-                        title: lc('immersive_mode_lock_only')
                     }] as any : []);
             case 'address':
                 return [

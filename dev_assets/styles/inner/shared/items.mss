@@ -52,7 +52,7 @@
             back/line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
             line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
 
-            [zoom>=14] {
+            [zoom>=13] {
                 marker-placement: line;
                 marker-type: arrow;
                 marker-line-width: 1;

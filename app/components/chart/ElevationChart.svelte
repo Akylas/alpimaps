@@ -30,7 +30,12 @@
     highlightPaint.setColor('#aaa');
     // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
-    highlightPaint.setTextSize(12);
+    highlightPaint.setTextSize(10);
+    
+    const nstringPaint = new Paint();
+    nstringPaint.setColor('#aaa');
+    nstringPaint.setStrokeWidth(1);
+    nstringPaint.setTextSize(12);
 
     export let item: Item;
     let chart: NativeViewElementNode<LineChart>;
@@ -329,7 +334,7 @@
                     drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                         const x = h.drawX;
                         if (highlightNString) {
-                            const staticLayout = new StaticLayout(highlightNString, highlightPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                            const staticLayout = new StaticLayout(highlightNString, nstringPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
                             c.translate(10, 0);
                             staticLayout.draw(c);
@@ -337,6 +342,7 @@
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
+                        c.drawText(x, 18, formatDistance(h.d, xinterval < 1000 ? 1 : 0), highlightPaint);
                     }
                 };
             } else {
