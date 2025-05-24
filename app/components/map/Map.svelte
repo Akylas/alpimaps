@@ -82,8 +82,7 @@
         showItemsLayer,
         itemLock,
         routeDashMinZoom,
-        immersive,
-        immersiveOnlyLocked
+        immersive
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -464,7 +463,6 @@
             startStopWebServer();
         }
     }
-    let screenOnOffReceiver: android.content.BroadcastReceiver;
     
     let toggleSystemBarsWithWindowCompat;
     if (__ANDROID__) {
@@ -495,36 +493,12 @@
 }
     }
     
-    
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
         networkConnected = networkService.connected;
         if (__ANDROID__) {
             Application.android.on(Application.android.activityBackPressedEvent, onAndroidBackButton);
-            if (!screenOnOffReceiver) {
-                const ScreenOnReceiver = (<any>android.content.BroadcastReceiver).extend('akylas.alpi.maps.ScreenOnReceiver', {
-            onReceive: function (context: android.content.Context, intent: android.content.Intent) {
-                if (intent.getAction() === "android.intent.action.SCREEN_OFF") {
-                            console.log("Screen turned ON");
-                            if ($immersiveOnlyLocked) {
-                                toggleSystemBarsWithWindowCompat(false);
-                            }
-                        } else if (intent.getAction() === "android.intent.action.ACTION_USER_PRESENT") {
-                            if ($immersiveOnlyLocked) {
-                                toggleSystemBarsWithWindowCompat(true);
-                            }
-                        }
-            }
-        });
-                screenOnOffReceiver = new ScreenOnReceiver();
-
-                const intentFilter = new android.content.IntentFilter();
-                intentFilter.addAction(android.content.Intent.ACTION_SCREEN_OFF);
-                intentFilter.addAction(android.content.Intent.ACTION_USER_PRESENT);
-                Application.android.startActivity.registerReceiver(screenOnOffReceiver, intentFilter);
-            }
-            
         }
         customLayersModule = new CustomLayersModule();
         customLayersModule.once('ready', onLayersReady);
@@ -602,10 +576,7 @@
     });
     $: {
         if (__ANDROID__) {
-            if (screenOnOffReceiver){
-                toggleSystemBarsWithWindowCompat(!$immersive || $immersiveOnlyLocked)
-                
-            }
+                toggleSystemBarsWithWindowCompat?.(!$immersive);
         }
     }
     function onColorsChange() {
@@ -2143,11 +2114,11 @@
     $: {
         const newButtons: any[] = [
             {
-                text: 'mdi-rotate-3d-variant',
-                id: 'map_rotation',
-                tooltip: lc('enable_map_rotation'),
-                isSelected: $rotateEnabled,
-                onTap: () => rotateEnabled.set(!$rotateEnabled)
+                text: 'mdi-fullscreem',
+                id: 'immersive',
+                tooltip: lc('immersive_mode'),
+                isSelected: $immersive,
+                onTap: () => immersive.set(!$immersive)
             },
             // {
             //     text: 'mdi-bullseye',
