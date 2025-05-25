@@ -902,11 +902,14 @@ class PackageService extends Observable {
                 } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified' || key === 'service_road' || key === 'pedestrian_crossing') {
                     key = 'road';
                 } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
-                    key = 'highway';
+                  //  key = 'highway';
                 }
                 stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
                 key = edge.surface;
                 stats.surfaces[key] = stats.surfaces[key] ? stats.surfaces[key] + edge.length : edge.length;
+                if (edge.unpaved) {
+                    stats.surfaces['unpaved'] = stats.surfaces['unpaved'] ? stats.surfaces['unpaved'] + edge.length : edge.length;
+                }
             }
         } catch (error) {
             console.error(error, error.stack);
