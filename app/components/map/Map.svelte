@@ -2114,7 +2114,7 @@
     $: {
         const newButtons: any[] = [
             {
-                text: 'mdi-fullscreem',
+                text: 'mdi-fullscreen',
                 id: 'immersive',
                 tooltip: lc('immersive_mode'),
                 isSelected: $immersive,

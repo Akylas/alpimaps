@@ -26,9 +26,9 @@
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
+    
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
-    // highlightPaint.setTextAlign(Align.CENTER);
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(10);
     
@@ -342,7 +342,7 @@
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
-                        c.drawText(formatDistance(h.x, xinterval < 1000 ? 1 : 0), x, 18, highlightPaint);
+                        c.drawText(formatDistance(h.entry['d'], xinterval < 1000 ? 1 : 0), x, 18, highlightPaint);
                     }
                 };
             } else {
