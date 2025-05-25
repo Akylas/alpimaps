@@ -42,6 +42,7 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+        SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
     import { showSnack } from '~/utils/ui';
@@ -254,6 +255,20 @@
                         } as TextFieldProperties,
                         onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('offline_routing_trace_max_distance'),
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
+                        valueType: 'number',
+                        textFieldProperties: {
+                            keyboardType: 'number',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties,
+                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_TRACE, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
                     }
                 ];
             case 'charts':
