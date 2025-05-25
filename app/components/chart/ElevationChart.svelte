@@ -342,7 +342,7 @@
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
-                        c.drawText(formatDistance(h.entry['d'], xinterval < 1000 ? 1 : 0), x + 7, 23, highlightPaint);
+                        c.drawText(formatDistance(h.entry['d'], xinterval < 1000 ? 1 : 0), x + 6, 23, highlightPaint);
                     }
                 };
             } else {
