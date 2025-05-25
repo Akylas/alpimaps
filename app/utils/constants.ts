@@ -14,6 +14,7 @@ export const MAP_FONT_SCALE = 1;
 export const SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN = 'service_limits.pedestrian.max_distance';
 export const SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE = 'service_limits.bicycle.max_distance';
 export const SETTINGS_VALHALLA_MAX_DISTANCE_AUTO = 'service_limits.auto.max_distance';
+export const SETTINGS_VALHALLA_MAX_DISTANCE_TRACE = 'service_limits.trace.max_distance';
 export const SETTINGS_TILE_SERVER_AUTO_START = 'tile.server.auto.start';
 export const SETTINGS_TILE_SERVER_PORT = 'tile.server.port';
 export const SETTINGS_VALHALLA_ONLINE_URL = 'online_valhalla_url';
