@@ -641,17 +641,17 @@ class PackageService extends Observable {
             const deltaDistance = last ? dist2d(last, sample) : 0;
             currentDistance += deltaDistance;
             if (i >= 1) {
-                const diff = sample.altitude - lastAlt;
+                const diff = sample.tmpElevation - lastAlt;
                 const rdiff = Math.round(diff);
                 if (rdiff > filterStep) {
                     ascent += rdiff;
-                    lastAlt = sample.altitude;
+                    lastAlt = sample.tmpElevation;
                 } else if (rdiff < -filterStep) {
                     descent -= rdiff;
-                    lastAlt = sample.altitude;
+                    lastAlt = sample.tmpElevation;
                 }
             } else {
-                lastAlt = sample.altitude;
+                lastAlt = sample.tmpElevation;
             }
             currentHeight = Math.round(sample.altitude);
             const avg = Math.round(sample.tmpElevation);
@@ -665,7 +665,7 @@ class PackageService extends Observable {
             if (currentHeight > result.max[1]) {
                 result.max[1] = currentHeight;
             }
-            if (sample.tmpElevation < result.min[1]) {
+            if (currentHeight < result.min[1]) {
                 result.min[1] = currentHeight;
             }
             last = sample;
