@@ -42,6 +42,7 @@ import {
     SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
     SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
     SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+    SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
     SETTINGS_VALHALLA_ONLINE_URL
 } from '~/utils/constants';
 import { fullLangStore } from '~/helpers/locale';
@@ -945,6 +946,7 @@ class PackageService extends Observable {
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
+                this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_TRACE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
                 files.forEach((f) => source.add(f.path));
                 if (currentLanguage !== 'en-US' && SUPPORTED_VALHALLA_LOCALES.indexOf(currentLanguage) !== -1) {
                     const localeData = require(`~/assets/valhalla/${currentLanguage}.json`);
