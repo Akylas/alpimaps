@@ -8,6 +8,7 @@
 @standard-halo-fill: #f2f5f888;
 @wrap_characters: '-_';
 
+@name: [name:[nuti::lang]] ? [name:[nuti::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
 
 @hiking_route_fill:[network] = 4 ? yellow:   [network] <= 3 ? red:   #8800ff;
 @hiking_route_dasharray: none;
@@ -35,3 +36,16 @@
 @shield-repeat-distance: 100;
 @shield-margin: 40;
 @shield-clip: false;
+
+@pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));
+@bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
+@default_icon_size: [style.iconSize] = 'osm' ? 16 : 20;
+
+@default_icon_dx : [style.iconDx] = 'osm' ? 0 : -2;
+
+@itemColor: [color] ? [color] : [nuti::main_color];
+@lineColor: [color] ? [color] : [nuti::main_darker_color];
+@editing_dash: 12, 8;
+@non_editing_dash: none;
+
+@itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 140 ? #33333388 : #f2f5f888;

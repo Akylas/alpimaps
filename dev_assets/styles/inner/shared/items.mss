@@ -1,17 +1,4 @@
-@name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
-@pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));
-@bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
-@default_icon_size: [style.iconSize] = 'osm' ? 16 : 20;
-
-@default_icon_dx : [style.iconDx] = 'osm' ? 0 : -2;
-
-@itemColor: [color] ? [color] : [nuti::main_color];
-@lineColor: [color] ? [color] : [nuti::main_darker_color];
-@editing_dash: 12, 8;
-@non_editing_dash: none;
-
-@itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 140 ? #33333388 : #f2f5f888;
 
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
