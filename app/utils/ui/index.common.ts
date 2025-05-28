@@ -3,7 +3,7 @@ import { lc } from '@nativescript-community/l';
 import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { AlertOptions, GridLayout, View } from '@nativescript/core';
+import { AlertOptions, Application, GridLayout, View } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
 import { tryCatchFunction } from '@shared/utils/ui';
 import { showError } from '@shared/utils/showError';
@@ -110,6 +110,12 @@ export async function showPopoverMenu<T = any>({
                 undefined,
                 hideLoading
             ),
+            onDismiss:()=>{
+                if (__ANDROID__) {
+                    const currentFocus = Application.android.startActivity?.currentFocus;
+                    currentFocus?.clearFocus();
+                }
+            }
             ...(props || {})
         }
     });
