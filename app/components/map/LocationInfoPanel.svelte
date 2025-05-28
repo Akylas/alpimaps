@@ -252,7 +252,7 @@
             <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
         </canvaslabel>
         <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5}>
-            <cspan color={isEInk ? "#000" : colorPrimary} fontSize={11} text={lu('altitude') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
+            <cspan color={isEInk ? "#000" : colorPrimary} fontSize={10} text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
                 <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
                 <cspan fontSize={12} text=" m" />
