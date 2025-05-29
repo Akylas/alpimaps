@@ -668,7 +668,11 @@ class PackageService extends Observable {
             }
             currentHeight = Math.round(sample.altitude);
             const avg = Math.round(sample.tmpElevation);
-            const elevation = avg;
+            
+            function getElevation(index) {
+                return Math.round(profile[index].tmpElevation);
+            }
+            const elevation = getElevation(i);
             avgs.push(avg);
             result.data.push({
                 d: Math.round(currentDistance * 100) / 100,
@@ -708,7 +712,7 @@ class PackageService extends Observable {
 
             if (dipFromPeak > ascentsDipTolerance) {
             // Too much dip – end current ascent if gain is enough
-              const gain = highestElevation - elevations[startIndex];
+              const gain = highestElevation - getElevation(startIndex);
               if (gain >= ascentsMinGain) {
                 ascents.push({
                   startIndex,
@@ -728,8 +732,8 @@ class PackageService extends Observable {
             }
 
             // End the ascent if it's the last point
-            const isLast = i === elevations.length - 1;
-            const gain = highestElevation - elevations[startIndex];
+            const isLast = i === nbPoints - 1;
+            const gain = highestElevation - getElevation()startIndex);
             if (isLast && gain >= ascentsMinGain) {
               ascents.push({
                 startIndex,

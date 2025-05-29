@@ -437,7 +437,7 @@
             leftAxis.addLimitLine(limitLine);
             
             profile.ascents.forEach((ascent: AscentSegment) => {
-            limitLine = new LimitLine(ascent.highestPointIndex, convertElevation(highestElevation));
+            limitLine = new LimitLine(ascent.highestPointIndex, convertElevation(ascent.highestElevation));
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 1;
