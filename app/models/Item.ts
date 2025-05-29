@@ -55,6 +55,14 @@ export interface RouteInstruction {
     inst: string;
 }
 
+expor interface AscentSegment {
+  startIndex: number;
+  endIndex: number;
+  gain: number;
+  highestElevation: number;
+  highestPointIndex: number;
+}
+
 export interface RouteProfile {
     max: [number, number];
     min: [number, number];
@@ -62,6 +70,7 @@ export interface RouteProfile {
     dmin?: any;
     data: { d: number; a: number; g?: number, dp?: number, dm?: number }[];
     colors?: { d: number; color: string }[];
+    ascents: AscentSegment[]
 }
 export interface DirectionWayPoint {
     geometry: Point;

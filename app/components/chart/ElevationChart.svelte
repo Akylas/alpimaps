@@ -18,7 +18,7 @@
     import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item } from '~/models/Item';
+    import type { AscentSegment, IItem as Item } from '~/models/Item';
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
@@ -435,6 +435,16 @@
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
+            
+            profile.ascents.forEach((ascent: AscentSegment) => {
+            limitLine = new LimitLine(ascent.highestPointIndex, convertElevation(highestElevation));
+            limitLine.lineColor = colorOutline;
+            limitLine.enableDashedLine(4, 3, 0);
+            limitLine.lineWidth = 1;
+            limitLine.textColor= colorOnSurface;
+            limitLine.ensureVisible = true;
+            xAxis.addLimitLine(limitLine);
+            });
 
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
