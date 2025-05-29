@@ -644,7 +644,8 @@ class PackageService extends Observable {
         let startIndex: number | null = null;
         let highestElevation = -Infinity;
         let highestPointIndex = -1;
-        let currentMinSincePeak = Infinity
+        let currentMinSincePeak = Infinity;
+        let inBetweenAscent = false;
   
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
@@ -701,6 +702,13 @@ class PackageService extends Observable {
               highestElevation = elevation;
               highestPointIndex = i;
               currentMinSincePeak = elevation;
+              inBetweenAscent = false;
+            } else if (inBetweenAscent){
+                startIndex = i;
+                highestElevation = elevation;
+                highestPointIndex = i;
+                currentMinSincePeak = elevation;
+                continue;
             }
 
             // Track the lowest point after the peak
@@ -728,6 +736,7 @@ class PackageService extends Observable {
               highestElevation = elevation;
               highestPointIndex = i;
               currentMinSincePeak = elevation;
+              inBetweenAscent = true;
               continue;
             }
 
