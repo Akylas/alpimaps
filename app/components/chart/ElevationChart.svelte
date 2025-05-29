@@ -436,6 +436,7 @@
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
             
+            xAxis.removeAllLimitLines();
             profile.ascents.forEach((ascent: AscentSegment) => {
               limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, convertElevation(ascent.highestElevation));
               limitLine.lineColor = colorOutline;
