@@ -733,7 +733,7 @@ class PackageService extends Observable {
 
             // End the ascent if it's the last point
             const isLast = i === nbPoints - 1;
-            const gain = highestElevation - getElevation()startIndex);
+            const gain = highestElevation - getElevation(startIndex);
             if (isLast && gain >= ascentsMinGain) {
               ascents.push({
                 startIndex,
