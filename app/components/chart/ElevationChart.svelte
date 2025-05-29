@@ -438,10 +438,13 @@
             
             xAxis.removeAllLimitLines();
             profile.ascents.forEach((ascent: AscentSegment) => {
-              limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, convertElevation(ascent.highestElevation));
+            const text = convertElevation(ascent.highestElevation) + '\n' + convertElevation(profileData[ascent.startIndex].a) + '\n+' + convertElevation(ascent.gain);
+            
+              limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
               limitLine.lineColor = colorOutline;
               limitLine.enableDashedLine(6, 3, 0);
               limitLine.lineWidth = 0.5;
+              limitLine.textSize = 9;
               limitLine.textColor= colorOnSurface;
               limitLine.ensureVisible = true;
               xAxis.addLimitLine(limitLine);
