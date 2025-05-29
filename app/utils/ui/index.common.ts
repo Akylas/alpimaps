@@ -110,6 +110,8 @@ export async function showPopoverMenu<T = any>({
                 undefined,
                 hideLoading
             ),
+            ...(props || {})
+        },
             onDismiss:()=>{
                 if (__ANDROID__) {
                     let currentFocus = Application.android.startActivity?.getCurrentFocus();
@@ -121,9 +123,7 @@ export async function showPopoverMenu<T = any>({
                     currentFocus?.clearFocus();
                     }, 1000)
                 }
-            },
-            ...(props || {})
-        }
+            }
     });
     return result;
 }
