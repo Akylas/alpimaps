@@ -115,7 +115,7 @@ export async function showPopoverMenu<T = any>({
                     const currentFocus = Application.android.startActivity?.currentFocus;
                     currentFocus?.clearFocus();
                 }
-            }
+            },
             ...(props || {})
         }
     });
