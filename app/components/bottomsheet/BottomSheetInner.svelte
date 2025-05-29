@@ -982,6 +982,30 @@
                         onChange: debounce((value) => {
                             ApplicationSettings.setNumber('elevation_profile_filter_step', value);
                         }, 10)
+                    },
+                    {
+                        title: lc('elevation_profile_ascents_min_gain'),
+                        icon: 'mdi-filter',
+                        min: 0,
+                        max: 200,
+                        resetValue: 10,
+                        step: 1,
+                        value: ApplicationSettings.getNumber('elevation_profile_ascents_min_gain', 10),
+                        onChange: debounce((value) => {
+                            ApplicationSettings.setNumber('elevation_profile_ascents_min_gain', value);
+                        }, 10)
+                    },
+                    {
+                        title: lc('elevation_profile_ascents_dip_tolerance'),
+                        icon: 'mdi-filter',
+                        min: 0,
+                        max: 200,
+                        resetValue: 10,
+                        step: 1,
+                        value: ApplicationSettings.getNumber('elevation_profile_ascents_dip_tolerance', 10),
+                        onChange: debounce((value) => {
+                            ApplicationSettings.setNumber('elevation_profile_ascents_dip_tolerance', value);
+                        }, 10)
                     }
                 ]
             });
