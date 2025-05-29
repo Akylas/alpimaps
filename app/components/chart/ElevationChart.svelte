@@ -447,6 +447,13 @@
               limitLine.textSize = 9;
               limitLine.textColor= colorOnSurface;
               limitLine.ensureVisible = true;
+              limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
+                const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                c.save();
+                c.translate(x, y);
+                staticLayout.draw(c);
+                c.restore();
+              }
               xAxis.addLimitLine(limitLine);
             });
 
