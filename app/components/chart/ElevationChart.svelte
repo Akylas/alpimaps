@@ -437,13 +437,13 @@
             leftAxis.addLimitLine(limitLine);
             
             profile.ascents.forEach((ascent: AscentSegment) => {
-            limitLine = new LimitLine(ascent.highestPointIndex, convertElevation(ascent.highestElevation));
-            limitLine.lineColor = colorOutline;
-            limitLine.enableDashedLine(4, 3, 0);
-            limitLine.lineWidth = 1;
-            limitLine.textColor= colorOnSurface;
-            limitLine.ensureVisible = true;
-            xAxis.addLimitLine(limitLine);
+              limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, convertElevation(ascent.highestElevation));
+              limitLine.lineColor = colorOutline;
+              limitLine.enableDashedLine(6, 3, 0);
+              limitLine.lineWidth = 0.5;
+              limitLine.textColor= colorOnSurface;
+              limitLine.ensureVisible = true;
+              xAxis.addLimitLine(limitLine);
             });
 
             onChartDataUpdateCallbacks.forEach((c) => c());
