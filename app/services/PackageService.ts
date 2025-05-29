@@ -27,7 +27,7 @@ import { File, Folder, knownFolders, path } from '@nativescript/core/file-system
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
-import { Address, IItem, IItem as Item, Route, RouteProfile } from '~/models/Item';
+import { Address, AscentSegment, IItem, IItem as Item, Route, RouteProfile } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
@@ -601,6 +601,8 @@ class PackageService extends Observable {
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
         const smoothWindow = ApplicationSettings.getNumber('elevation_profile_smooth_window', 3);
         const filterStep = ApplicationSettings.getNumber('elevation_profile_filter_step', 10);
+        const ascentsMinGain = ApplicationSettings.getNumber('elevatiom_profile_ascents_min_gain', 10);
+        const ascentsDipTolerance = ApplicationSettings.getNumber('elevatiom_profile_ascents_dip_tolerance', 10);
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
@@ -609,7 +611,8 @@ class PackageService extends Observable {
             min: [100000, 100000],
             dplus: 0,
             dmin: 0,
-            data: []
+            data: [],
+            ascents: []
         };
 
         const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
@@ -636,11 +639,20 @@ class PackageService extends Observable {
         let descent = 0;
         let lastAlt;
         const avgs = [];
+        
+        const ascents: AscentSegment[] = [];
+        let startIndex: number | null = null;
+        let highestElevation = -Infinity;
+        let highestPointIndex = -1;
+        let currentMinSincePeak = Infinity
+  
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
             const deltaDistance = last ? dist2d(last, sample) : 0;
             currentDistance += deltaDistance;
+            
+            
             if (i >= 1) {
                 const diff = sample.tmpElevation - lastAlt;
                 const rdiff = Math.round(diff);
@@ -656,6 +668,7 @@ class PackageService extends Observable {
             }
             currentHeight = Math.round(sample.altitude);
             const avg = Math.round(sample.tmpElevation);
+            const elevation = avg;
             avgs.push(avg);
             result.data.push({
                 d: Math.round(currentDistance * 100) / 100,
@@ -668,6 +681,63 @@ class PackageService extends Observable {
             }
             if (currentHeight < result.min[1]) {
                 result.min[1] = currentHeight;
+            }
+            
+            // ascent detection
+            if (startIndex === null) {
+              startIndex = i;
+              highestElevation = elevation;
+              highestPointIndex = i;
+              currentMinSincePeak = elevation;
+              continue;
+            }
+
+            // Update the highest point in the current segment
+            if (elevation > highestElevation) {
+              highestElevation = elevation;
+              highestPointIndex = i;
+              currentMinSincePeak = elevation;
+            }
+
+            // Track the lowest point after the peak
+            if (i > highestPointIndex) {
+              currentMinSincePeak = Math.min(currentMinSincePeak, elevation);
+            }
+
+            const dipFromPeak = highestElevation - currentMinSincePeak;
+
+            if (dipFromPeak > ascentsDipTolerance) {
+            // Too much dip – end current ascent if gain is enough
+              const gain = highestElevation - elevations[startIndex];
+              if (gain >= ascentsMinGain) {
+                ascents.push({
+                  startIndex,
+                  endIndex: highestPointIndex,
+                  gain,
+                  highestElevation,
+                  highestPointIndex
+                });
+              }
+
+              // Start a new potential ascent from current point
+              startIndex = i;
+              highestElevation = elevation;
+              highestPointIndex = i;
+              currentMinSincePeak = elevation;
+              continue;
+            }
+
+            // End the ascent if it's the last point
+            const isLast = i === elevations.length - 1;
+            const gain = highestElevation - elevations[startIndex];
+            if (isLast && gain >= ascentsMinGain) {
+              ascents.push({
+                startIndex,
+                endIndex: highestPointIndex,
+                gain,
+                highestElevation,
+                highestPointIndex
+              });
             }
             last = sample;
             delete sample.tmpElevation;
@@ -732,6 +802,7 @@ class PackageService extends Observable {
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
         result.colors = colors;
+        result.ascents = ascents;
         return result;
     }
     _reader: GeoJSONGeometryReader;
