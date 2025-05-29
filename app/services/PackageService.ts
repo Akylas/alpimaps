@@ -601,8 +601,8 @@ class PackageService extends Observable {
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
         const smoothWindow = ApplicationSettings.getNumber('elevation_profile_smooth_window', 3);
         const filterStep = ApplicationSettings.getNumber('elevation_profile_filter_step', 10);
-        const ascentsMinGain = ApplicationSettings.getNumber('elevatiom_profile_ascents_min_gain', 10);
-        const ascentsDipTolerance = ApplicationSettings.getNumber('elevatiom_profile_ascents_dip_tolerance', 10);
+        const ascentsMinGain = ApplicationSettings.getNumber('elevation_profile_ascents_min_gain', 10);
+        const ascentsDipTolerance = ApplicationSettings.getNumber('elevation_profile_ascents_dip_tolerance', 10);
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
