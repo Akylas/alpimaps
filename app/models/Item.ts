@@ -55,7 +55,7 @@ export interface RouteInstruction {
     inst: string;
 }
 
-expor interface AscentSegment {
+export interface AscentSegment {
   startIndex: number;
   endIndex: number;
   gain: number;
