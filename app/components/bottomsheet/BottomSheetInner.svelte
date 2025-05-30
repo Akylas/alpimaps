@@ -19,7 +19,7 @@
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { get } from 'svelte/store';
+    import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import { formatDistance } from '~/helpers/formatter';
     import { langStore } from '~/helpers/locale';
@@ -963,7 +963,11 @@
                      width: screenWidthDips * 0.8,
                      autoSizeListItem: true,
                      onCheckBox: (item, value, event) => {
-                        ApplicationSettings.setBoolean(item.key || item.id, value);
+                        if (item.store) {
+                            (item.store as Writable<boolean>).set(value);
+                        } else {
+                            ApplicationSettings.setBoolean(item.key || item.id, value);
+                        }         
                     },
                 },   
                 options: [{
@@ -1020,7 +1024,7 @@
                     {
                         type: 'slider',
                         title: lc('elevation_profile_ascents_dip_tolerance'),
-                        icon: 'mdi-transfer_done',
+                        icon: 'mdi-transfer-done',
                         min: 0,
                         max: 200,
                         defaultValue: 10,
