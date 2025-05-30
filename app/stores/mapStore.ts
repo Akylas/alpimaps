@@ -63,3 +63,5 @@ export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
 export const routeDashMinZoom = settingsStore('routeDashMinZoom', -1);
 export const immersive = settingsStore('immersive', false);
+export const showAscents = settingsStore('elevation_profile_show_ascents', true);
+export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
