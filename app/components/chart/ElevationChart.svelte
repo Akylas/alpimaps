@@ -23,6 +23,12 @@
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     $: ({ colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    
+    const xintervals = [1, 2, 5, 10, 20, 50, 100];
+    function closestUpper(arr: number[], target: number): number | undefined {
+      return arr.filter(x => x >= target).sort((a, b) => a - b)[0];
+    }
+
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
@@ -319,7 +325,7 @@
                 chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(50).hex;
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(70).hex;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 leftAxis.ensureLastLabel = true;
@@ -371,7 +377,7 @@
             
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6; 
-            xinterval = totalDistance / xLabelCount < 1000 ? 100 : Math.round(totalDistance / xLabelCount / 1000) * 1000;
+            xinterval = closestUpper(totalDistance / xLabelCount / 1000)* 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             
@@ -424,8 +430,8 @@
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
-            limitLine.lineWidth = 1;
-            limitLine.yOffset = -2;
+            limitLine.lineWidth = 0.5;
+            limitLine.yOffset = -1;
             limitLine.textColor= colorOnSurface;
            // limitLine.ensureVisible = true;
             limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
@@ -434,8 +440,8 @@
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
-            limitLine.lineWidth = 1;
-            limitLine.yOffset = 0;
+            limitLine.lineWidth = 0.5;
+            limitLine.yOffset = 1;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
