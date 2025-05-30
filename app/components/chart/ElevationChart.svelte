@@ -377,7 +377,7 @@
             
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6; 
-            xinterval = closestUpper(totalDistance / xLabelCount / 1000)* 1000;
+            xinterval = closestUpper( xintervals, totalDistance / xLabelCount / 1000)* 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             
