@@ -52,7 +52,7 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && ($showProfileGrades !== undefined || $showAscents !== undefined)){
+    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined)){
         updateChartData(item);
     }
     let onChartDataUpdateCallbacks = [];
@@ -363,7 +363,7 @@
                 spaceMax += chartElevationMinRange - deltaA;
             }
             const labelCount = 5; 
-            const interval = Math max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : Math.round(Math max(chartElevationMinRange, deltaA) / labelCount / 100) * 100;
+            const interval = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;

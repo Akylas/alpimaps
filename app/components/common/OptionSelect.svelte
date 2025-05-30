@@ -10,11 +10,12 @@
     import { onDestroy } from 'svelte';
     import { Template } from 'svelte-native/components';
     import IconButton from '~/components/common/IconButton.svelte';
-    import ListItem from '~/components/common/ListItem.svelte';
     import { ListItem as IListItem } from '~/components/common/ListItem';
+    import ListItem from '~/components/common/ListItem.svelte';
+    import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
+    import SettingsSlider from '~/components/settings/SettingsSlider.svelte';
     import { lc } from '~/helpers/locale';
-    import { colors } from '~/variables';
-    import ListItemAutoSize from './ListItemAutoSize.svelte';
+    import { colors, fontScale, fonts } from '~/variables';
     export interface OptionType extends IListItem {
         subtitle?: string;
         isPick?: boolean;
@@ -32,6 +33,9 @@
     export let borderRadius = 8;
     export let rowHeight = null;
     export let autofocus = false;
+    export let estimatedItemSize = true;
+    export let autoSize = false;
+    export let isScrollEnabled = true;
     export let width: string | number = '*';
     export let containerColumns: string = '*';
     export let autoSizeListItem: boolean = false;
@@ -45,8 +49,8 @@
     export let onlyOneSelected = false;
     export let currentlyCheckedItem = null;
     export let onCheckBox: (item, value, e) => void = null;
+    export let onChange: (item, value, e) => void = null;
     export let onRightIconTap: (item, e) => void = null;
-    export let onLongPress: (item, e) => void = null;
 
     export let titleProps: Partial<svelteNative.JSX.LabelAttributes> = {};
     export let titleHolderProps: Partial<svelteNative.JSX.StackLayoutAttributes> = {};
@@ -60,7 +64,7 @@
     let filter: string = null;
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutline } = $colors);
+    $: ({ colorOutline, colorOnSurface } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -105,7 +109,7 @@
             } catch (err) {
                 close(null);
             }
-        } else if (item.type === 'checkbox') {
+        } else if (item.type === 'checkbox' || item.type === 'switch') {
             // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
             const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
             clearCheckboxTimer();
@@ -176,6 +180,9 @@
         if (item.type) {
             return item.type;
         }
+        if (autoSizeListItem && item.icon) {
+            return 'lefticon';
+        }
         if (item.rightIcon) {
             return 'righticon';
         }
@@ -227,7 +234,16 @@
                     }} />
             </gridlayout>
         {/if}
-        <collectionView {itemTemplateSelector} items={filteredOptions} row={2} {rowHeight} on:dataPopulated={onDataPopulated} ios:contentInsetAdjustmentBehavior={2}>
+        <collectionView
+            {autoSize}
+            {estimatedItemSize}
+            {isScrollEnabled}
+            {itemTemplateSelector}
+            items={filteredOptions}
+            row={2}
+            {rowHeight}
+            on:dataPopulated={onDataPopulated}
+            ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
                     this={component}
@@ -235,10 +251,9 @@
                     columns="auto,*,auto"
                     {fontSize}
                     {fontWeight}
-                    {iconFontSize}
+                    iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
                     mainCol={1}
-                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -255,6 +270,25 @@
                         on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>
             </Template>
+            <Template key="switch" let:item>
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    columns="auto,*,auto"
+                    {fontSize}
+                    {fontWeight}
+                    iconFontSize={item.iconFontSize || iconFontSize}
+                    {item}
+                    mainCol={1}
+                    showBottomLine={showBorders}
+                    {subtitleProps}
+                    {titleHolderProps}
+                    {titleProps}
+                    {...templateProps}
+                    on:tap={(event) => onTap(item, event)}>
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                </svelte:component>
+            </Template>
             <Template key="righticon" let:item>
                 <svelte:component
                     this={component}
@@ -262,9 +296,8 @@
                     columns="*,auto"
                     {fontSize}
                     {fontWeight}
-                    {iconFontSize}
+                    iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
-                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -274,6 +307,32 @@
                     <mdbutton class="icon-btn" col={1} text={item.rightIcon} variant="text" on:tap={(event) => onRightTap(item, event)} />
                 </svelte:component>
             </Template>
+            <Template key="lefticon" let:item>
+                <svelte:component
+                    this={component}
+                    {borderRadius}
+                    columns="auto,*"
+                    {fontSize}
+                    {fontWeight}
+                    {item}
+                    mainCol={1}
+                    showBottomLine={showBorders}
+                    {subtitleProps}
+                    {titleHolderProps}
+                    {titleProps}
+                    {...templateProps}
+                    on:tap={(event) => onTap(item, event)}>
+                    <label
+                        col={0}
+                        color={item.color || colorOnSurface}
+                        fontFamily={$fonts.mdi}
+                        fontSize={(item.iconFontSize || iconFontSize) * $fontScale}
+                        paddingLeft="8"
+                        text={item.icon}
+                        verticalAlignment="center"
+                        width={iconFontSize * 2} />
+                </svelte:component>
+            </Template>
             <Template key="image" let:item>
                 <svelte:component
                     this={component}
@@ -281,10 +340,9 @@
                     columns="auto,*"
                     {fontSize}
                     {fontWeight}
-                    {iconFontSize}
+                    iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
                     mainCol={1}
-                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     title={item.name}
@@ -292,8 +350,11 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <image borderRadius={4} col={0} colorMatrix={item.imageMatrix} marginBottom={5} marginRight={10} marginTop={5} src={item.image} />
+                    <image borderRadius={4} col={0} marginBottom={5} marginRight={10} marginTop={5} src={item.image} />
                 </svelte:component>
+            </Template>
+            <Template key="slider" let:item>
+                <SettingsSlider {...item} onChange={(value, event) => onChange?.(item, value, event)} />
             </Template>
             <Template let:item>
                 <svelte:component
@@ -301,9 +362,8 @@
                     {borderRadius}
                     {fontSize}
                     {fontWeight}
-                    {iconFontSize}
+                    iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
-                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
