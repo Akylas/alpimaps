@@ -733,5 +733,6 @@
     "export_settings_desc": "تصدير جميع إعدادات AlpiMaps حتى تتمكن من استيرادها لاحقًا",
     "fabric": "أقمشة",
     "farm": "مزرعة",
-    "vehicle_inspection": "فحص المركبات"
+    "vehicle_inspection": "فحص المركبات",
+    "altitude_short": "ارتفاع"
 }
