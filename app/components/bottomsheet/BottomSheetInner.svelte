@@ -972,13 +972,13 @@
                 },   
                 options: [{
                         type: 'switch',
-                        id: 'elevation_profile_show_grade_colors',
+                        store: showGradeColors,
                         value: get(showGradeColors),
                         title: lc('show_elevation_profile_grade_colors')
                     },
                     {
                         type: 'switch',
-                        id: 'elevation_profile_show_ascents',
+                        store: showAscents,
                         value: get(showAscents),
                         title: lc('show_elevation_profile_ascents')
                     },
@@ -1024,7 +1024,7 @@
                     {
                         type: 'slider',
                         title: lc('elevation_profile_ascents_dip_tolerance'),
-                        icon: 'mdi-transfer-done',
+                        icon: 'mdi-transfer-down',
                         min: 0,
                         max: 200,
                         defaultValue: 10,
