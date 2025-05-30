@@ -39,7 +39,7 @@
     import { compareArrays } from '~/utils/utils';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import dayjs from 'dayjs';
-    import { itemLock } from '~/stores/mapStore';
+    import { itemLock, showGradeColors, showAscents } from '~/stores/mapStore';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -958,7 +958,18 @@
                 debounceDuration: 0,
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
-                items: [
+                items: [{
+                        type: 'switch',
+                        mapStore: showGradeColors,
+                        value: get(showGradeColors),
+                        title: lc('show_elevation_profile_grade_colors')
+                    },
+                    {
+                        type: 'switch',
+                        mapStore: showAscents,
+                        value: get(showAscents),
+                        title: lc('show_elevation_profile_ascents')
+                    },
                     {
                         title: lc('elevation_profile_smooth_window'),
                         icon: 'mdi-window-closed-variant',
@@ -985,7 +996,7 @@
                     },
                     {
                         title: lc('elevation_profile_ascents_min_gain'),
-                        icon: 'mdi-filter',
+                        icon: 'mdi-trending-up',
                         min: 0,
                         max: 200,
                         resetValue: 10,
@@ -997,7 +1008,7 @@
                     },
                     {
                         title: lc('elevation_profile_ascents_dip_tolerance'),
-                        icon: 'mdi-filter',
+                        icon: 'mdi-transfer_done',
                         min: 0,
                         max: 200,
                         resetValue: 10,
@@ -1093,7 +1104,7 @@
         </scrollview>
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} />
-        <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
+        <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats} showAscents={$showAscents} showProfileGrades={$showGradeColors}>
             <IconButton
                 fontSize={20}
                 horizontalAlignment="right"

@@ -38,8 +38,9 @@
     nstringPaint.setTextSize(12);
 
     export let item: Item;
+    export let showAscents = true;
     let chart: NativeViewElementNode<LineChart>;
-    const showProfileGrades = true;
+    export let showProfileGrades = true;
 
     $: {
         try {
@@ -50,6 +51,9 @@
             console.error('updateChartData', !!err, err, err.stack);
             showError(err);
         }
+    }
+    $: if (chart?.nativeView?.data && ($showProfileGrades !== undefined || $showAscents !== undefined)){
+        updateChartData(item);
     }
     let onChartDataUpdateCallbacks = [];
 
@@ -315,7 +319,7 @@
                 chartView.setExtraOffsets(0, 24, 10, 10);
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(100).hex;
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(50).hex;
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 leftAxis.ensureLastLabel = true;
@@ -359,7 +363,7 @@
                 spaceMax += chartElevationMinRange - deltaA;
             }
             const labelCount = 5; 
-            const interval = deltaA / labelCount < 100 ? 50 : Math.round(deltaA / labelCount / 100) * 100;
+            const interval = Math max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : Math.round(Math max(chartElevationMinRange, deltaA) / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
@@ -437,25 +441,28 @@
             leftAxis.addLimitLine(limitLine);
             
             xAxis.removeAllLimitLines();
-            profile.ascents.forEach((ascent: AscentSegment) => {
-            const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
+            if (showAscents) {
+                profile.ascents.forEach((ascent: AscentSegment) => {
+                    const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
             
-              limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
-              limitLine.lineColor = colorOutline;
-              limitLine.enableDashedLine(6, 3, 0);
-              limitLine.lineWidth = 0.5;
-              limitLine.textSize = 9;
-              limitLine.textColor= colorOnSurface;
-              limitLine.ensureVisible = true;
-              limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                c.save();
-                c.translate(x, y - 14);
-                staticLayout.draw(c);
-                c.restore();
-              }
-              xAxis.addLimitLine(limitLine);
-            });
+                    limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
+                    limitLine.lineColor = colorOutline;
+                    limitLine.enableDashedLine(6, 3, 0);
+                    limitLine.lineWidth = 0.5;
+                    limitLine.textSize = 9;
+                    limitLine.textColor= colorOnSurface;
+                    limitLine.ensureVisible = true;
+                    limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
+                        const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                        c.save();
+                        c.translate(x, y - 14);
+                        staticLayout.draw(c);
+                        c.restore();
+                    }
+                    xAxis.addLimitLine(limitLine);
+              });
+            }
+            
 
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
