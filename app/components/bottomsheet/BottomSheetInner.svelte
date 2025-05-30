@@ -40,6 +40,7 @@
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import dayjs from 'dayjs';
     import { itemLock, showGradeColors, showAscents } from '~/stores/mapStore';
+    import { screenWidthDips } from '~/variables';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
     const PROFILE_HEIGHT = 150;
@@ -958,6 +959,13 @@
                // debounceDuration: 0,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
+                props: {
+                     width: screenWidthDips * 0.8,
+                     autoSizeListItem: true
+                 },
+                onCheckBox: (item, value, event) => {
+                    ApplicationSettings.setBoolean(item.key || item.id, value);
+                },
                 options: [{
                         type: 'switch',
                         id: 'elevation_profile_show_grade_colors',
@@ -976,7 +984,7 @@
                         icon: 'mdi-window-closed-variant',
                         min: 0,
                         max: 50,
-                        resetValue: 3,
+                        defaultValue: 3,
                         step: 1,
                         value: ApplicationSettings.getNumber('elevation_profile_smooth_window', 3),
                         onChange: debounce((value) => {
@@ -997,6 +1005,7 @@
                         }, 10)
                     },
                     {
+                        type: 'slider',
                         title: lc('elevation_profile_ascents_min_gain'),
                         icon: 'mdi-trending-up',
                         min: 0,
@@ -1009,11 +1018,12 @@
                         }, 10)
                     },
                     {
+                        type: 'slider',
                         title: lc('elevation_profile_ascents_dip_tolerance'),
                         icon: 'mdi-transfer_done',
                         min: 0,
                         max: 200,
-                        resetValue: 10,
+                        defaultValue: 10,
                         step: 1,
                         value: ApplicationSettings.getNumber('elevation_profile_ascents_dip_tolerance', 10),
                         onChange: debounce((value) => {
