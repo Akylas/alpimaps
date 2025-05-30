@@ -671,7 +671,7 @@ class PackageService extends Observable {
             const avg = Math.round(sample.tmpElevation);
             
             function getElevation(index) {
-                return Math.round(profile[index].tmpElevation);
+                return Math.round(profile[index].altitude);
             }
             const elevation = getElevation(i);
             avgs.push(avg);
