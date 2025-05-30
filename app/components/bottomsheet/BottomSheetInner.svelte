@@ -961,11 +961,11 @@
                 vertPos: VerticalPosition.ABOVE,
                 props: {
                      width: screenWidthDips * 0.8,
-                     autoSizeListItem: true
-                 },
-                onCheckBox: (item, value, event) => {
-                    ApplicationSettings.setBoolean(item.key || item.id, value);
-                },
+                     autoSizeListItem: true,
+                     onCheckBox: (item, value, event) => {
+                        ApplicationSettings.setBoolean(item.key || item.id, value);
+                    },
+                },   
                 options: [{
                         type: 'switch',
                         id: 'elevation_profile_show_grade_colors',
