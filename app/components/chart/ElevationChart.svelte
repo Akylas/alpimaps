@@ -438,7 +438,7 @@
             
             xAxis.removeAllLimitLines();
             profile.ascents.forEach((ascent: AscentSegment) => {
-            const text = convertElevation(ascent.highestElevation) + '\n' + convertElevation(profileData[ascent.startIndex].a) + '\n+' + convertElevation(ascent.gain);
+            const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
             
               limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
               limitLine.lineColor = colorOutline;
@@ -450,7 +450,7 @@
               limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                 const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 c.save();
-                c.translate(x, y);
+                c.translate(x, y - 14);
                 staticLayout.draw(c);
                 c.restore();
               }
