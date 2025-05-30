@@ -954,23 +954,24 @@
     
     async function showElevationProfileSettings(event) {
         try {
-            await showSlidersPopover({
-                debounceDuration: 0,
+            await showPopoverMenu({
+               // debounceDuration: 0,
                 anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                items: [{
+                vertPos: VerticalPosition.ABOVE,
+                options: [{
                         type: 'switch',
-                        mapStore: showGradeColors,
+                        id: 'elevation_profile_show_grade_colors',
                         value: get(showGradeColors),
                         title: lc('show_elevation_profile_grade_colors')
                     },
                     {
                         type: 'switch',
-                        mapStore: showAscents,
+                        id: 'elevation_profile_show_ascents',
                         value: get(showAscents),
                         title: lc('show_elevation_profile_ascents')
                     },
                     {
+                        type: 'slider',
                         title: lc('elevation_profile_smooth_window'),
                         icon: 'mdi-window-closed-variant',
                         min: 0,
@@ -983,11 +984,12 @@
                         }, 10)
                     },
                     {
+                        type: 'slider',
                         title: lc('elevation_profile_filter_step'),
                         icon: 'mdi-filter',
                         min: 0,
                         max: 50,
-                        resetValue: 10,
+                        defaultValue: 10,
                         step: 1,
                         value: ApplicationSettings.getNumber('elevation_profile_filter_step', 10),
                         onChange: debounce((value) => {
@@ -999,7 +1001,7 @@
                         icon: 'mdi-trending-up',
                         min: 0,
                         max: 200,
-                        resetValue: 10,
+                        defaultValue: 10,
                         step: 1,
                         value: ApplicationSettings.getNumber('elevation_profile_ascents_min_gain', 10),
                         onChange: debounce((value) => {
