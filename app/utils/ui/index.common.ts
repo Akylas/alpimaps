@@ -118,12 +118,12 @@ export async function showPopoverMenu<T = any>({
                     let currentFocus = Application.android.startActivity?.getCurrentFocus();
                     showToast('test' + currentFocus);
                     currentFocus?.clearFocus();
-                    }, 100)
+                    }, 0)
                     setTimeout(()=>{
                        let currentFocus = Application.android.startActivity?.getCurrentFocus();
                     showToast('test1' + currentFocus);
                     currentFocus?.clearFocus();
-                    }, 500)
+                    }, 100)
                 }
             }
     });
