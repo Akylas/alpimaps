@@ -382,8 +382,18 @@
             xAxis.labelCount = xLabelCount;
             
             const chartData = chartView.data;
+            let set: LineDataSet;
+            function updateSetColors() {
+                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
+                    set.lineWidth = 2;
+                    set.colors = profile.colors as any;
+                } else {
+                    set.lineWidth = 1;
+                    set.color = '#60B3FC';
+                }
+            }
             if (!chartData) {
-                const set = new LineDataSet(profileData, 'a', 'd', 'a');
+               set = new LineDataSet(profileData, 'a', 'd', 'a');
                 set.maxFilterNumber = ApplicationSettings.getNumber('chart_max_filter', 50);
                 set.useColorsForFill = true;
                 set.fillFormatter = {
@@ -403,29 +413,29 @@
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
                 set.mode = Mode.CUBIC_BEZIER;
-                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.lineWidth = 2;
-                    set.colors = profile.colors as any;
-                }
+                updateSetColors();
                 sets.push(set);
                 const lineData = new LineData(sets);
                 chartView.data = lineData;
             } else {
-                // console.log('clearing highlight1')
                 chartView.highlightValues(null);
-                const set = chartData.getDataSetByIndex(0);
-                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.lineWidth = 2;
-                    set.colors = profile.colors as any;
-                } else {
-                    set.lineWidth = 1;
-                    set.color = '#60B3FC';
-                }
+                set = chartData.getDataSetByIndex(0) as LineDataSet;
+                upupdateSetColors();
                 set.values = profileData;
                 set.notifyDataSetChanged();
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }
+            
+            if (showProfileGrades && profile.colors && profile.colors.length > 1) {
+                set.lineWidth = 1;
+                set.colors = profile.colors as any;
+            } else {
+                set.lineWidth = 1;
+                set.resetColors();
+                set.color = '#60B3FC';
+            }
+            
             leftAxis.removeAllLimitLines();
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
             limitLine.lineColor = colorOutline;
