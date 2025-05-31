@@ -385,10 +385,11 @@
             let set: LineDataSet;
             function updateSetColors() {
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.lineWidth = 2;
+                    set.lineWidth = 1;
                     set.colors = profile.colors as any;
                 } else {
                     set.lineWidth = 1;
+                    set.resetColors();
                     set.color = '#60B3FC';
                 }
             }
@@ -420,20 +421,11 @@
             } else {
                 chartView.highlightValues(null);
                 set = chartData.getDataSetByIndex(0) as LineDataSet;
-                upupdateSetColors();
+                updateSetColors();
                 set.values = profileData;
                 set.notifyDataSetChanged();
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
-            }
-            
-            if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                set.lineWidth = 1;
-                set.colors = profile.colors as any;
-            } else {
-                set.lineWidth = 1;
-                set.resetColors();
-                set.color = '#60B3FC';
             }
             
             leftAxis.removeAllLimitLines();
