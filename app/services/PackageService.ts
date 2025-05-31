@@ -60,16 +60,6 @@ class MathFilter {
     }
 }
 
-function dist2d(latlng1, latlng2) {
-    const lat1 = latlng1.lat * TO_RAD,
-        lat2 = latlng2.lat * TO_RAD,
-        sinDLat = Math.sin(((latlng2.lat - latlng1.lat) * TO_RAD) / 2),
-        sinDLon = Math.sin(((latlng2.lon - latlng1.lon) * TO_RAD) / 2),
-        a = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon,
-        c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS * c;
-}
-
 const VECTORTILESEARCH_OPTIONS = ['minZoom', 'maxZoom', 'maxResults', 'layers', 'preventDuplicates', 'sortByDistance'];
 
 // class WindowKalmanFilter extends MathFilter {
@@ -650,7 +640,7 @@ class PackageService extends Observable {
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
-            const deltaDistance = last ? dist2d(last, sample) : 0;
+            const deltaDistance = last ? computeDistanceBetween(last, sample) : 0;
             currentDistance += deltaDistance;
             
             
