@@ -677,6 +677,8 @@ class PackageService extends Observable {
             if (currentHeight < result.min[1]) {
                 result.min[1] = currentHeight;
             }
+            last = sample;
+            delete sample.tmpElevation;
             
             // ascent detection
             if (startIndex === null) {
@@ -742,8 +744,6 @@ class PackageService extends Observable {
                 highestPointIndex
               });
             }
-            last = sample;
-            delete sample.tmpElevation;
         }
         const colors = [];
         let grade;
