@@ -52,7 +52,7 @@
 					shield-name: @name;
 
 					[zoom>=10] {
-						shield-name: @name ? ([ele] ? @name + ' ' +[ele] + 'm': @name): '';
+						shield-name: @name ? ([ele] ? @name + '\n' +[ele] + 'm': @name): '';
 					}
 				}
 
