@@ -157,7 +157,7 @@
     "description": "Beschreibung",
     "description_required": "eine Beschreibung wird benötigt",
     "diamond": "Diamant",
-    "dirt": "natürlich",
+    "dirt": "Erde",
     "distance": "Entfernung",
     "diy": "Mach es selbst",
     "doctors": "Ärzte",
@@ -734,5 +734,6 @@
     "valhalla_online_url": "Valhalla-Server-URL",
     "city_min_zoom_desc": "Mindestzoomstufe, ab der die Beschriftung der Städte angezeigt werden soll",
     "city_min_zoom": "Mindestzoomstufe für Städte",
-    "navigation_position_offset": "vertikale Verschiebung der eigenen Position während der Navigation (in Prozent der Bildschirmhöhe)"
+    "navigation_position_offset": "vertikale Verschiebung der eigenen Position während der Navigation (in Prozent der Bildschirmhöhe)",
+    "altitude_short": "Höhe"
 }
