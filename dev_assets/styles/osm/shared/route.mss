@@ -33,10 +33,10 @@
             
 		}
         ['nuti::route_shields'>0][zoom<15][ref != null]::label{
-              [network=1][zoom>=6],
-              [network=2][class=bicycle][zoom>=8],
-              [network=2][zoom>=10],
-              [network=3][zoom>=11]{
+            [network=1][zoom>=6],
+            [network=2][class=bicycle][zoom>=8],
+            [network=2][zoom>=10],
+            [network=3][zoom>=11]{
                 shield-name: [ref];
                 shield-placement-priority: 20 - [network];
                 shield-size: @shield-size;
@@ -47,9 +47,8 @@
                 shield-face-name: @mont_bd;
                 shield-file: url(shields/route_shield.svg);
                 shield-fill: #000000;
-              }
             }
-			[ref !=null][zoom>=14],
+        }
 			[name !=null][zoom>=15] {
 				text-fill:@symbolColor;
 				[class=bicycle] {

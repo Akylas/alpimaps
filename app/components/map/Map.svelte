@@ -82,7 +82,8 @@
         showItemsLayer,
         itemLock,
         routeDashMinZoom,
-        immersive
+        immersive,
+        buildingZoom
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
@@ -1153,6 +1154,7 @@
     $: vectorTileDecoder && $rockPatternZoom > 0 && setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
     $: vectorTileDecoder && $screePatternZoom > 0 && setStyleParameter('scree_pattern_zoom', $screePatternZoom);
     $: vectorTileDecoder && $scrubPatternZoom > 0 && setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
+    $: vectorTileDecoder && $buildingZoom > 0 && setStyleParameter('building_zoom', $buildingZoom);
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('road_shields', $showRoadShields ? '1' : '0');
    // $: {
