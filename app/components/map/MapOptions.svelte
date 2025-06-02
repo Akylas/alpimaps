@@ -34,7 +34,8 @@
         showPolygonsBorder,
         showRoadShields,
         showRouteShields,
-        showItemsLayer
+        showItemsLayer,
+        buildingZoom
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -298,6 +299,22 @@
                     type: 'slider',
                     rightValue: () => $routeDashMinZoom,
                     currentValue: () => Math.max(0, $routeDashMinZoom)
+                },
+                {
+                    id: 'setting',
+                    mapStore: buildingZoom,
+                    key: 'buildingZoom',
+                    min: 0,
+                    max: 24,
+                    step: 1,
+                    formatter: (value) => value,
+                    transformValue: (value, item) => value,
+                    valueFormatter: (value, item) => value,
+                    title: lc('building_min_zoom'),
+                    description: lc('building_min_zoom'),
+                    type: 'slider',
+                    rightValue: () => $buildingZoom,
+                    currentValue: () => Math.max(0, $buildingZoom)
                 },
                 {
                     mapStore: showSubBoundaries,
