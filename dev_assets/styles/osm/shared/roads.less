@@ -266,6 +266,7 @@
 	}
 	[class=path][subclass=path][surface!=paved][zoom>=12]::casing1,
 	[class=path][subclass=pedestrian][zoom>=14]::casing,
+  [class=path][subclass=cycleway][zoom>=13]::casing,
 	[class=path][subclass!=path][zoom>=15]::casing,
 	[class=path][subclass=path][surface=paved][zoom>=15]::casing,
 	[class=path][brunnel=bridge][zoom>=16]::bridge1 {
@@ -283,11 +284,9 @@
 				}
 				casing/line-color: @path-casing;
 			}
-			[subclass=cycleway] {
-				[zoom>=13][@cycleway-fill!=0] {
+			[subclass=cycleway][zoom>=13][@cycleway-fill!=0] {
 					cycleway/line-color: @cycleway-fill;
 					cycleway/line-width: @path-width + @path-casing-width+ @cycleway-casing-width;
-				}
 			}
 			// line-width: @path-width + @path-casing-width;
 			// line-color: @path-casing;
