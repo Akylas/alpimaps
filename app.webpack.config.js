@@ -902,7 +902,7 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildExit: {
                     scripts: [
-                        `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
+                   //     `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
                         // `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
                         `cp dev_assets/styles/inner/fonts/osm.ttf ${join(dist, 'fonts')}`,
                         `cp dev_assets/styles/inner/fonts/osm.ttf dev_assets/styles/osm/fonts`
