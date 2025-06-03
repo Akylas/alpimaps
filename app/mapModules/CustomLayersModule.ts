@@ -19,7 +19,7 @@ import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
-import { preloading, showRoutes } from '~/stores/mapStore';
+import { preloading, showRoutes, clickHandlerLayerFilter } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -536,7 +536,8 @@ export default class CustomLayersModule extends MapModule {
                 layerBlendingSpeed: 3,
                 labelBlendingSpeed: 3,
                 opacity,
-                preloading: ApplicationSettings.getBoolean(`${id}_preloading`, false),
+                preloading: get(preloading),
+                clickHandlerLayerFilter: get(clickHandlerLayerFilter),
                 // tileCacheCapacity: 30 * 1024 * 1024,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 ...provider.layerOptions
@@ -563,7 +564,7 @@ export default class CustomLayersModule extends MapModule {
                               databasePath
                           })
                         : dataSource,
-                preloading: ApplicationSettings.getBoolean(`${id}_preloading`, false),
+                preloading: get(preloading),
                 zoomLevelBias,
                 // cacheSize,
                 opacity,
@@ -852,7 +853,13 @@ export default class CustomLayersModule extends MapModule {
             }
         })();
     }
-
+    updateClickHandlerLayerFilter() {
+        mapContext.getLayers().forEach((data) => {
+            if (data.layer instanceof VectorTileLayer) {
+                data.layer.clickHandlerLayerFilter = get(clickHandlerLayerFilter);
+            }
+        });
+    }
     reloadMapStyle() {
         mapContext.getLayers().forEach((data) => {
             if (data.layer instanceof VectorTileLayer) {
@@ -994,7 +1001,7 @@ export default class CustomLayersModule extends MapModule {
                     // clickHandlerLayerFilter: PRODUCTION ? undefined : '.*',
                     // clickHandlerLayerFilter: PRODUCTION ? '(.*::(icon|label)|waterway|transportation)' : '.*',
                     // clickHandlerLayerFilter: PRODUCTION ? '.*::(icon|label)' : '.*',
-                    clickHandlerLayerFilter: '(transportation_name|route|.*::(icon|label))',
+                    clickHandlerLayerFilter: get(clickHandlerLayerFilter),
                     tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                     visible: opacity !== 0
                 });

@@ -327,6 +327,20 @@
                         key: 'route_image_capture',
                         value: ApplicationSettings.getBoolean('route_image_capture', true),
                         title: lc('route_item_image_capture')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('click_handler_layer_filter'),
+                        description: () => get(clickHandlerLayerFilter),
+                        currentValue: () => get(clickHandlerLayerFilter),
+                        onUpdate: (key, value, defaultValue) => .getMapContext().mapModules.customLayers.updateClickHandlerLayerFilter(),
+                        mapStore: clickHandlerLayerFilter,
+                        valueType: 'string',
+                        textFieldProperties: {
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties
                     }
                 ];
             case 'geolocation':
@@ -989,10 +1003,19 @@
                         });
                         Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
-                            if (item.valueType === 'string') {
+                            if (item.mapStore) {
+                                (item.mapStore as Writable<any>).set(item.valueType === 'string' ? result.text : parseFloat(result.text));
+                            } else if (item.valueType === 'string') {
                                 ApplicationSettings.setString(item.key, result.text);
                             } else {
                                 ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
+                            }
+                            updateItem(item);
+                        } else if (result && !!result.result && result.text.length === 0) {
+                            if (item.mapStore) {
+                                item.mapStore?.reset?.();
+                            } else {
+                                ApplicationSettings.remove(item.key);
                             }
                             updateItem(item);
                         }
@@ -1008,7 +1031,7 @@
                                     value = Math.round(value / item.step) * item.step;
                                 }
                                 if (item.mapStore) {
-                                    (item.mapStore as Writable<boolean>).set(value);
+                                    (item.mapStore as Writable<any>).set(value);
                                 } else {
                                     if (item.valueType === 'string') {
                                         ApplicationSettings.setString(item.key, value + '');
