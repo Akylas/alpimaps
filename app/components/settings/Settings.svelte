@@ -24,7 +24,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
-    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress, clickHandlerLayerFilter } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -334,7 +334,7 @@
                         title: lc('click_handler_layer_filter'),
                         description: () => get(clickHandlerLayerFilter),
                         currentValue: () => get(clickHandlerLayerFilter),
-                        onUpdate: (key, value, defaultValue) => .getMapContext().mapModules.customLayers.updateClickHandlerLayerFilter(),
+                        onUpdate: (key, value, defaultValue) => getMapContext().mapModules.customLayers.updateClickHandlerLayerFilter(),
                         mapStore: clickHandlerLayerFilter,
                         valueType: 'string',
                         textFieldProperties: {
