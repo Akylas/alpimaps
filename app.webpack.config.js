@@ -894,7 +894,8 @@ module.exports = (env, params = {}) => {
                     ],
                     blocking: true,
                     parallel: false
-                }
+                },
+                safe: true
             })
         );
         config.plugins.unshift(
@@ -910,7 +911,8 @@ module.exports = (env, params = {}) => {
                     ],
                     blocking: true,
                     parallel: false
-                }
+                },
+                safe: true
             })
         );
     }
