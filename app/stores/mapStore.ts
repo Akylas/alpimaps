@@ -34,7 +34,7 @@ function settingsStore<T = any>(key, defaultValue: T) {
             updateMethod(key, v);
         }
     });
-    store.reset = () => {
+    (store as any).reset = () => {
         store.set(defaultValue);
     };
     return store;
