@@ -28,8 +28,15 @@ function settingsStore<T = any>(key, defaultValue: T) {
             ignoreUpdate = false;
             return;
         }
-        updateMethod(key, v);
+        if (v === defaultValue) {
+            ApplicationSettings.remove(key);
+        } else {
+            updateMethod(key, v);
+        }
     });
+    store.reset = () => {
+        store.set(defaultValue);
+    };
     return store;
 }
 
@@ -66,3 +73,4 @@ export const routeDashMinZoom = settingsStore('routeDashMinZoom', -1);
 export const immersive = settingsStore('immersive', false);
 export const showAscents = settingsStore('elevation_profile_show_ascents', true);
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
+export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
