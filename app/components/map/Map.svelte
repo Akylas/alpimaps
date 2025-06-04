@@ -1295,27 +1295,6 @@
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
         // TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, JSON.stringify(position), JSON.stringify(featurePosition), handledByModules);
         if (!handledByModules && clickType === ClickType.SINGLE) {
-            // if (showClickedFeatures) {
-            //     clickedFeatures.push({
-            //         featurePosition,
-            //         layer: featureLayerName,
-            //         data: featureData
-            //     });
-            // }
-
-            // if (
-            //     featureLayerName === 'transportation' ||
-            //     featureLayerName === 'transportation_name' ||
-            //     featureLayerName === 'waterway' ||
-            //     // featureLayerName === 'place' ||
-            //     featureLayerN    ame === 'contour' ||
-            //     featureLayerName === 'hillshade' ||
-            //     (featureLayerName === 'park' && !!featureGeometry['getHoles']) ||
-            //     ((featureLayerName === 'building' || featureLayerName === 'landcover' || featureLayerName === 'landuse') && !featureData.name)
-            // ) {
-            //     return false;
-            // }
-            // featureData.id = featureId;
             const currentProperties = $selectedItem?.properties;
             const currentGeometry = $selectedItem?.geometry;
             if (
@@ -1329,12 +1308,6 @@
                         currentGeometry.coordinates[1] === featurePosition.lat &&
                         currentGeometry.coordinates[0] === featurePosition.lon))
             ) {
-                // console.log(
-                //     'onVectorTileClicked ignoring already selected item',
-                //     featureData.name,
-                //     featurePosition,
-                //     $selectedItem
-                // );
                 didIgnoreAlreadySelected = true;
                 return false;
             }
@@ -1375,7 +1348,6 @@
                     properties: featureData,
                     geometry: {
                         type: 'Point',
-                        // coordinates: [featurePosition.lon, featurePosition.lat]
                         coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
