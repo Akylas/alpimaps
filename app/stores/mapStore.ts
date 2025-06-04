@@ -77,29 +77,35 @@ export const showGradeColors = settingsStore('elevation_profile_show_grade_color
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
 function nutiSettings(type, key) {
+    const defaultSettings = {
+        nutiProps,
+        key,
+        title: nutiProps.getTitle(key),
+        description: nutiProps.getTitle(key)
+    };
     switch(type) {
         case 'zoom': 
             return {
                 min: 0,
                 max: 24,
                 step: 1,
-                title: nutiProps.getTitle(key),
-                description: nutiProps.getTitle(key),
                 type: 'slider',
                 rightValue: () => nutiProps[key] ?? lc('notset'),
-                currentValue: () => Math.max(0, nutiProps[key] ?? -1)
+                currentValue: () => Math.max(0, nutiProps[key] ?? -1),
+                ...defaultSettings
             }
     }
 }
 
-const nutiPropsObj = new Observable();
-Object.assign(nutiPropsObj, {
+const nutiParams = {
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
         settingsOptionsType: 'zoom'
     }
-});
+};
+const nutiPropsObj = new Observable();
+Object.assign(nutiPropsObj, nutiParams);
 Object.keys(nutiPropsObj).forEach(key=>{
     const obj = nutiPropsObj[key]!
     const defaultValue = obj.defaultValue ?? null;
@@ -166,7 +172,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                   }
                   case 'getKeys':
                       return function() {
-                          return Object.keys(target);
+                          return Object.keys(nutiParams);
                       }
               default:
                   const orig = target[name];
