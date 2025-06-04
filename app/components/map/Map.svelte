@@ -1361,7 +1361,8 @@
                 return false;
             }
 
-            const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
+        //    const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
+            const isFeatureInteresting = !selectedRoutes;
             // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
