@@ -1,3 +1,4 @@
+import { lc } from '@nativescript-community/l'
 import { ApplicationSettings, Observable } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
@@ -75,7 +76,7 @@ export const showAscents = settingsStore('elevation_profile_show_ascents', true)
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
-const nutiSettings(type, key) {
+function nutiSettings(type, key) {
     switch(type) {
         case 'zoom': 
             return {
@@ -136,25 +137,38 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       target.notify({eventName:'change', object:this, key, value});
       return true;
   },
-  get: function (target, key) {
-      return target[key].value;
-  },
-  getTitle(key){
-      return nutiPropsObj[key].title;
-  },
-  getDescription(key){
-      return nutiPropsObj[key].title;
-  },
-  getKey(key){
-      return nutiPropsObj[key].key;
-  },
-  getDefaultValue(key){
-      return nutiPropsObj[key].defaultValue;
-  },
-  getSettingsOptions(key) {
-      return nutiSettings(nutiPropsObj[key].settingsOptionsType, key)
-  },
-  getKeys() {
-      retuen Object.keys(nutiPropsObj);
+  get(target: this, name, receiver) {
+      if(target[name] && typeof target[name] === 'object') {
+          return target[key].value;
+      } else {
+          switch(name) {
+              case 'getTitle':
+                  return function(key){
+                      return target[key].title;
+                  }
+              case 'getDescription':
+                  return function(key){
+                      return target[key].descriptiom               }
+              case 'getKey':
+                  return function(key){
+                      return target[key].key || key;
+                  }
+              case 'getDefaultValue':
+                  return function(key){
+                      return target[key].defaultValue;
+                  }
+                case 'getSettingsOptions':
+                  return function(key){
+                      return return nutiSettings(target[key].settingsOptionsType, key);
+                  }
+                  case 'getKeys':
+                      return function {
+                          return Object.keys(target);
+                      }
+              default:
+                  return Reflect.get(target, name, receiver);
+          }
+          
+      }
   }
-});
+}) as any;

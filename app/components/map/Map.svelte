@@ -1150,8 +1150,8 @@
     $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
-    nutiProps.on('change', event => {
-        showToast(JSON.stringify('nutiChange ' + event.key +' ' + event.value);
+    nutiProps.on('change', (event: any) => {
+        showToast('nutiChange ' + event.key +' ' + event.value);
         if (vectorTileDecoder) {
             setStyleParameter(event.key, event.value);
         }
