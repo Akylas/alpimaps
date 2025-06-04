@@ -13,7 +13,14 @@
 		inner/line-color: @river;
 		inner/line-width: @river-width;
 		inner/line-dasharray: @river-dasharray;
+    
+    when ([nuti::selected_id] ='' + [name] + [class])::selected {
+        inner/line-color: @river-selected;
+        inner/line-width: @river-width-selected;
+        inner/line-dasharray: @river-dasharray-selected;
+    }
 	}
+  
 	[class=stream][zoom>=12]{
 		inner/line-width: @stream-width;
 	}
