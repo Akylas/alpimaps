@@ -169,6 +169,10 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                           return Object.keys(target);
                       }
               default:
+                  const orig = target[prop];
+                  if (typeof orig === 'function') {
+                      return orig.bind(target);
+                  }           
                   return Reflect.get(target, name, receiver);
           }
           
