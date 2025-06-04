@@ -18,7 +18,6 @@
         "parking_pattern":"symbols/parking.png",
         "national_park_line_min_zoom":24,
         "park_line_min_zoom":24,
-        "river_min_zoom":4,
         "iceshelf_pattern_zoom":4,
         "iceshelf_pattern":"symbols/ice_sheet.png",
         "wetland_pattern_opacity":0.4,
@@ -29,6 +28,7 @@
         "cemetery_pattern":"symbols/grave_yard_generic.svg"
     },
     "nutiparameters": {
+        "river_min_zoom":4,
         "polygons_border": 0,
         "wetland_pattern_zoom":13,
         "rock_pattern_zoom":10,
