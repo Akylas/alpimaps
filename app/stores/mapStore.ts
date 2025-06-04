@@ -92,7 +92,8 @@ function nutiSettings(type, key) {
     }
 }
 
-const nutiPropsObj = new Observable({
+const nutiPropsObj = new Observable();
+Object.assign(nutiPropsObj, {
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
@@ -132,7 +133,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       if (value === obj.defaultValue) {
           ApplicationSettings.remove(settingKey);
       } else {
-          updateMethod(settingKey, value);
+          obj.updateMethod(settingKey, value);
       }
       target.notify({eventName:'change', object:this, key, value});
       return true;
@@ -162,7 +163,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                       return nutiSettings(target[key].settingsOptionsType, key);
                   }
                   case 'getKeys':
-                      return function {
+                      return function() {
                           return Object.keys(target);
                       }
               default:
