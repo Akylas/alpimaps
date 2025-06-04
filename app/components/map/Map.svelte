@@ -1495,6 +1495,7 @@
                     if(value != null) {
                         acc[key] = value;
                     }
+                    return acc;
                 }, {});
                 if (Object.keys(nutiPropsToApply).length > 0) {
                     showToast(JSON.stringify(nutiPropsToApply));
