@@ -35,7 +35,8 @@
         showRoadShields,
         showRouteShields,
         showItemsLayer,
-        buildingZoom
+        buildingZoom,
+        nutiProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -206,22 +207,6 @@
                 },
                 {
                     id: 'setting',
-                    mapStore: cityMinZoom,
-                    key: 'cityMinZoom',
-                    min: 0,
-                    max: 24,
-                    step: 1,
-                    formatter: (value) => value,
-                    transformValue: (value, item) => value,
-                    valueFormatter: (value, item) => value,
-                    title: lc('city_min_zoom'),
-                    description: lc('city_min_zoom_desc'),
-                    type: 'slider',
-                    rightValue: () => $cityMinZoom,
-                    currentValue: () => Math.max(0, $cityMinZoom)
-                },
-                {
-                    id: 'setting',
                     mapStore: forestPatternZoom,
                     key: 'forestPatternZoom',
                     min: 0,
@@ -352,7 +337,8 @@
                     value: $showRouteShields,
                     title: lc('show_route_shields')
                 }
-            );
+            ); 
+            newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)));
 
         }
         items = new ObservableArray(newItems);

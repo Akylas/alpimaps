@@ -1,4 +1,4 @@
-import { ApplicationSettings } from '@nativescript/core';
+import { ApplicationSettings, Observable } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
 
@@ -74,3 +74,87 @@ export const immersive = settingsStore('immersive', false);
 export const showAscents = settingsStore('elevation_profile_show_ascents', true);
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
+
+const nutiSettings(type, key) {
+    switch(type) {
+        case 'zoom': 
+            return {
+                min: 0,
+                max: 24,
+                step: 1,
+                title: nutiProps.getTitle(key),
+                description: nutiProps.getTitle(key),
+                type: 'slider',
+                rightValue: () => nutiProps[key] ?? lc('notset'),
+                currentValue: () => Math.max(0, nutiProps[key] ?? -1)
+            }
+    }
+}
+
+const nutiPropsObj = new Observable({
+    city_min_zoom: {
+        title: lc('city_min_zoom'),
+        description: lc('city_min_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    }
+});
+Object.keys(nutiPropsObj).forEach(k=>{
+    const obj = nutiPropsObj[k]!
+    const defaultValue = obj.defaultValue ?? null;
+    const tpof = typeof defaultValue;
+    let updateMethod;
+    let startValue;
+    switch (tpof) {
+        case 'boolean':
+            updateMethod = ApplicationSettings.setBoolean;
+            startValue = ApplicationSettings.getBoolean(key, defaultValue as boolean);
+            break;
+        case 'number':
+            updateMethod = ApplicationSettings.setNumber;
+            startValue = ApplicationSettings.getNumber(key, defaultValue as number);
+            break;
+
+        default:
+            updateMethod = ApplicationSettings.setString;
+            startValue = ApplicationSettings.getString(key, defaultValue as string);
+            break;
+    }
+    obj.value = startValue;
+    obj.updateMethod = updateMethod;
+    
+})
+export const nutiProps = new Proxy(nutiPropsObj, {
+  set: function (target, key, value) {
+      const obj = target[key];
+      const settingKey = obj.key || key;
+      obj.value = value;
+      if (value === obj.defaultValue) {
+          ApplicationSettings.remove(settingKey);
+      } else {
+          updateMethod(settingKey, value);
+      }
+      target.notify({eventName:'change', object:this, key, value});
+      return true;
+  },
+  get: function (target, key) {
+      return target[key].value;
+  },
+  getTitle(key){
+      return nutiPropsObj[key].title;
+  },
+  getDescription(key){
+      return nutiPropsObj[key].title;
+  },
+  getKey(key){
+      return nutiPropsObj[key].key;
+  },
+  getDefaultValue(key){
+      return nutiPropsObj[key].defaultValue;
+  },
+  getSettingsOptions(key) {
+      return nutiSettings(nutiPropsObj[key].settingsOptionsType, key)
+  },
+  getKeys() {
+      retuen Object.keys(nutiPropsObj);
+  }
+});
