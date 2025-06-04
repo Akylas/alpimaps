@@ -1358,7 +1358,7 @@
                         coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
-                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop', setMapSelected: /park|river|waterway/.test(featureLayerName) });
+                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop', setMapSelected: /park|water_name|waterway/.test(featureLayerName) });
             }
             unFocusSearch();
             // if (isFeatureInteresting && showClickedFeatures) {
