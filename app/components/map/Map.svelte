@@ -83,13 +83,14 @@
         itemLock,
         routeDashMinZoom,
         immersive,
-        buildingZoom
+        buildingZoom,
+        nutiProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { showError } from '@shared/utils/showError';
-    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showSliderPopover, showToolTip } from '~/utils/ui';
+    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showToast, showSliderPopover, showToolTip } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
@@ -1149,7 +1150,13 @@
     $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
-    $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
+    nutiProps.on('change', event => {
+        showToast(JSON.stringify('nutiChange ' + event.key +' ' + event.value);
+        if (vectorTileDecoder) {
+            setStyleParameter(event.key, event.value);
+        }
+    });
+ //   $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
     $: vectorTileDecoder && $forestPatternZoom > 0 && setStyleParameter('forest_pattern_zoom', $forestPatternZoom);
     $: vectorTileDecoder && $rockPatternZoom > 0 && setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
     $: vectorTileDecoder && $screePatternZoom > 0 && setStyleParameter('scree_pattern_zoom', $screePatternZoom);
@@ -1483,6 +1490,17 @@
             ApplicationSettings.setString('mapStyle', layerStyle);
             try {
                 vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+                const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
+                    const value = nutiProps[key];
+                    if(value != null) {
+                        acc[key] = value;
+                    }
+                }, {});
+                if (Object.keys(nutiPropsToApply).length > 0) {
+                    showToast(JSON.stringify(nutiPropsToApply));
+                    vectorTileDecoder.setJSONStyleParameters(nutiPropsToApply);
+                }
+                
             } catch(error) {
                 vectorTileDecoder = null;
                 showError(error);
