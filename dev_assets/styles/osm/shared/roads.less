@@ -284,7 +284,7 @@
 				}
 				casing/line-color: @path-casing;
 			}
-			[subclass=cycleway][zoom>=13][@cycleway-fill!=0] {
+			[subclass=cycleway][@cycleway-fill!=0] {
 					cycleway/line-color: @cycleway-fill;
 					cycleway/line-width: @path-width + @path-casing-width+ @cycleway-casing-width;
 			}
@@ -307,9 +307,8 @@
 				[sac_scale>0]{
 					line-dasharray: @path-dasharray;
 				}
-				[subclass=cycleway][zoom>=13] {
+				[subclass=cycleway] {
 						line-color: @cycleway-inner-fill;
-						// line-width: @path-width;
 				}
 				// [brunnel=tunnel][zoom>=14], [subclass=corridor] {
 				// 	line-opacity: 0.5;
