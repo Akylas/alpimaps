@@ -119,7 +119,7 @@
                                 if (item.mapStore) {
                                     (item.mapStore as Writable<boolean>).set(value);
                                 } else if (item.nutiProps) {
-                                    (item.nutiProps[item.key] = value;
+                                    item.nutiProps[item.key] = value;
                                 } else {
                                     if (item.valueType === 'string') {
                                         ApplicationSettings.setString(item.key, value + '');
