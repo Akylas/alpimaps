@@ -118,6 +118,8 @@
                                 }
                                 if (item.mapStore) {
                                     (item.mapStore as Writable<boolean>).set(value);
+                                } else if (item.nutiProps) {
+                                    (item.nutiProps[item.key] = value;
                                 } else {
                                     if (item.valueType === 'string') {
                                         ApplicationSettings.setString(item.key, value + '');
@@ -338,8 +340,11 @@
                     title: lc('show_route_shields')
                 }
             ); 
-            newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)));
-
+            try {
+                newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)));
+            } catch(error){
+                showError(error);
+            }         
         }
         items = new ObservableArray(newItems);
     }
