@@ -90,6 +90,7 @@
 // @water_stroke: darken(@water, 0%);
 // @river: linear([view::zoom], (8, darken(@water, 20%)), (9, @water));
 @river: darken(@water, 30%);
+@river-selected: darken(@water, 60%);
 @waterway: darken(@water, 30%);
 @river_polygon: @water;
 
@@ -290,8 +291,10 @@
 @waterway_label_spacing: 10;
 
 @river-width: linear([view::zoom], (8, 0.9), (15, 2), (16, 4));
+@river-width-selected: 4;
 @waterway-dasharray: 5, 2;
 @river-dasharray: @waterway-dasharray;
+@river-dasharray-selected: 5, 2;
 @canal_width: linear([view::zoom], (13, 0.9), (14, 1.3), (15, 2));
 @stream-width: @canal_width;
 
