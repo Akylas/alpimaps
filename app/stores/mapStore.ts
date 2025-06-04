@@ -99,8 +99,8 @@ const nutiPropsObj = new Observable({
         settingsOptionsType: 'zoom'
     }
 });
-Object.keys(nutiPropsObj).forEach(k=>{
-    const obj = nutiPropsObj[k]!
+Object.keys(nutiPropsObj).forEach(key=>{
+    const obj = nutiPropsObj[key]!
     const defaultValue = obj.defaultValue ?? null;
     const tpof = typeof defaultValue;
     let updateMethod;
@@ -137,9 +137,9 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       target.notify({eventName:'change', object:this, key, value});
       return true;
   },
-  get(target: this, name, receiver) {
+  get(target, name, receiver) {
       if(target[name] && typeof target[name] === 'object') {
-          return target[key].value;
+          return target[name].value;
       } else {
           switch(name) {
               case 'getTitle':
@@ -148,7 +148,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                   }
               case 'getDescription':
                   return function(key){
-                      return target[key].descriptiom               }
+                      return target[key].description;                     }
               case 'getKey':
                   return function(key){
                       return target[key].key || key;
@@ -159,7 +159,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                   }
                 case 'getSettingsOptions':
                   return function(key){
-                      return return nutiSettings(target[key].settingsOptionsType, key);
+                      return nutiSettings(target[key].settingsOptionsType, key);
                   }
                   case 'getKeys':
                       return function {
