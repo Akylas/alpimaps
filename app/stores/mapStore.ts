@@ -127,6 +127,7 @@ Object.keys(nutiPropsObj).forEach(key=>{
 })
 export const nutiProps = new Proxy(nutiPropsObj, {
   set: function (target, key, value) {
+      console.log('set', key, value);
       const obj = target[key];
       const settingKey = obj.key || key;
       obj.value = value;
@@ -139,6 +140,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       return true;
   },
   get(target, name, receiver) {
+      console.log('get', name);
       if(target[name] && typeof target[name] === 'object') {
           return target[name].value;
       } else {
