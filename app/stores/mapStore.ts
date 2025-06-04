@@ -78,6 +78,7 @@ export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', 
 
 function nutiSettings(type, key) {
     const defaultSettings = {
+        id: 'setting',
         nutiProps,
         key,
         title: nutiProps.getTitle(key),
