@@ -93,6 +93,9 @@ function nutiSettings(type, key) {
                 type: 'slider',
                 rightValue: () => nutiProps[key] ?? lc('notset'),
                 currentValue: () => Math.max(0, nutiProps[key] ?? -1),
+                formatter: (value) => value,
+                transformValue: (value, item) => value,
+                valueFormatter: (value, item) => value,
                 ...defaultSettings
             }
     }
