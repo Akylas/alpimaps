@@ -27,7 +27,6 @@
         "national_park_min_zoom":5,
         "national_park_line_min_zoom":8,
         "park_line_min_zoom":8,
-        "river_min_zoom":7,
         "wetland_pattern":"symbols/wetland.png",
         "military_pattern_opacity":1,
         "military_pattern_zoom":13,
@@ -45,6 +44,7 @@
         "orchard_pattern":"symbols/orchard.png"
     },
     "nutiparameters": {
+        "river_min_zoom":7,
         "road_shields": 1,
         "scree_pattern_zoom":13,
         "rock_pattern_zoom":13,

@@ -273,7 +273,7 @@
 }
 
 #waterway[class=riverbank][zoom>=13],
-#waterway[class=river][zoom>=$river_min_zoom],
+#waterway[class=river][zoom>=@river_min_zoom],
 #waterway[class=stream][zoom>=13],
 #waterway[class=canal][zoom>=13],
 #waterway[class=ditch][zoom>=15],
@@ -281,13 +281,11 @@
 	::label {
 		text-name: @name;
 		text-face-name: @mont_md;
+    text-placement: line;
+    text-fill: @water_label;
 		[class=dam][class=weir] {
 			text-placement: point;
 			text-fill: @dam_casing;
-		}
-		[class!=dam][class!=weir] {
-			text-placement: line;
-			text-fill: @water_label;
 		}
 		text-halo-fill: @water_halo;
 		text-halo-radius: @water_halo_radius;
