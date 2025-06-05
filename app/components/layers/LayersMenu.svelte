@@ -13,7 +13,7 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { contourLinesOpacity, pitchEnabled, projectionModeSpherical, show3DBuildings, showContourLines } from '~/stores/mapStore';
+    import { pitchEnabled, projectionModeSpherical, nutiProps } from '~/stores/mapStore';
     import { showError } from '@shared/utils/showError';
     import { openLink, showSliderPopover } from '~/utils/ui/index.common';
     import { colors } from '~/variables';
@@ -176,6 +176,7 @@
             showError(error);
         }
     }
+    const nutiIconParams = ['contours', 'buildings']
 </script>
 
 <!-- on iOS the collectionview is applied a padding because of the safearea
@@ -269,18 +270,10 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         </collectionview>
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
-            {#if !!customLayers?.hasLocalData}
-                <IconButton
-                    isSelected={$showContourLines}
-                    onLongPress={setContoursOpacity}
-                    text="mdi-bullseye"
-                    toggable={true}
-                    tooltip={lc('show_contour_lines')}
-                    on:tap={() => showContourLines.set(!$showContourLines)} />
-            {/if}
-            {#if !!customLayers?.hasLocalData}
-                <IconButton isSelected={$show3DBuildings} text="mdi-domain" toggable={true} tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
-            {/if}
+            {#each nutiIconParams.map(key=>{...nutiProps.getSettingsOptions(key), id:key).filter(s=>s.visible?.() ?? true) as option}
+            {#let storeValue = item.store}
+            <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} onLongPress={option.onLongPress}/>
+        {/each}
             <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
             <!-- <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} /> -->
             <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
