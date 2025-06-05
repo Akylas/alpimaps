@@ -57,11 +57,6 @@
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
-        cityMinZoom,
-        forestPatternZoom,
-        rockPatternZoom,
-        scrubPatternZoom,
-        screePatternZoom,
         contourLinesOpacity,
         emphasisDrinkingWater,
         emphasisRails,
@@ -81,9 +76,7 @@
         showRouteShields,
         showItemsLayer,
         itemLock,
-        routeDashMinZoom,
         immersive,
-        buildingZoom,
         nutiProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
@@ -1156,12 +1149,6 @@
             setStyleParameter(event.key, event.value);
         }
     });
- //   $: vectorTileDecoder && $cityMinZoom > 0 && setStyleParameter('city_min_zoom', $cityMinZoom);
-    $: vectorTileDecoder && $forestPatternZoom > 0 && setStyleParameter('forest_pattern_zoom', $forestPatternZoom);
-    $: vectorTileDecoder && $rockPatternZoom > 0 && setStyleParameter('rock_pattern_zoom', $rockPatternZoom);
-    $: vectorTileDecoder && $screePatternZoom > 0 && setStyleParameter('scree_pattern_zoom', $screePatternZoom);
-    $: vectorTileDecoder && $scrubPatternZoom > 0 && setStyleParameter('scrub_pattern_zoom', $scrubPatternZoom);
-    $: vectorTileDecoder && $buildingZoom > 0 && setStyleParameter('building_zoom', $buildingZoom);
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('road_shields', $showRoadShields ? '1' : '0');
    // $: {
@@ -1174,7 +1161,6 @@
     $: vectorTileDecoder && setStyleParameter('show_routes', $showRoutes ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
     $: vectorTileDecoder && setStyleParameter('routes_type', $routesType + '');
-    $: vectorTileDecoder && $routeDashMinZoom > 0 && setStyleParameter('routes_dash_min_zoom', $routeDashMinZoom);
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
