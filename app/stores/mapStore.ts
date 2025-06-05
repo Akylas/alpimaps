@@ -2,6 +2,10 @@ import { lc } from '@nativescript-community/l'
 import { ApplicationSettings, Observable } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
+import { showError } from '@shared/utils/showError';
+import { showSliderPopover } from '~/utils/ui/index.common';
+import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+import { tryCatchFunction } from '@shared/utils/ui';
 
 function settingsStore<T = any>(key, defaultValue: T) {
     const tpof = typeof defaultValue;
@@ -128,7 +132,19 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-bullseye',
-        visible: (customLayers) => !!customLayers?.hasLocalData
+        visible: (customLayers) => !!customLayers?.hasLocalData,
+        onLongPress: tryCatchFunction(async (event) => {
+              await showSliderPopover({
+                  debounceDuration: 100,
+                  anchor: event.object,
+                  ...nutiProps.getSettingsOptions('contoursOpacity')
+                  vertPos: VerticalPosition.ABOVE,
+                  value: nutiProps['contoursOpacity'],
+                  onChange(value) {
+                      nutiProps['contoursOpacity'] = value;
+                  }
+              });
+        })
     },
     contoursOpacity: {
         title: lc('contour_lines_opacity'),
@@ -149,7 +165,16 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-routes',
-        visible: (customLayers) => !!customLayers?.hasRoute
+        visible: (customLayers) => !!customLayers?.hasRoute,
+        onLongPress: tryCatchFunction(async (event) => {
+                    const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
+                    await showPopover({
+                        view: component,
+                        anchor: event.object,
+                        vertPos: VerticalPosition.ALIGN_TOP,
+                        horizPos: HorizontalPosition.RIGHT
+                    });
+                })
     },
     routes_type: {
         icon: 'mdi-routes',
