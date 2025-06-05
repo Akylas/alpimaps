@@ -220,7 +220,7 @@
     </collectionview>
     
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
-        {#each nutiIconParams.map(key=>{...nutiProps.getSettingsOptions(key), id:key).filter(s=>s.visible?.() ?? true) as option}
+        {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key}).filter(s=>s.visible?.() ?? true) as option}
             {#let storeValue = item.store}
             <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} onLongPress={option.onLongPress}/>
         {/each}
