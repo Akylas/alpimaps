@@ -166,7 +166,7 @@ Object.keys(nutiParams).forEach(key=>{
             startValue = ApplicationSettings.getString(settingKey, defaultValue as string);
             break;
     }
-    console.log('startValue', key, value, settingKey);
+    console.log('startValue', key, startValue, settingKey);
     obj.value = startValue;
     obj.updateMethod = updateMethod;
     
