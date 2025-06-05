@@ -273,7 +273,7 @@ Map {
 		}
 	}
 }
-#building['mapnik::geometry_type'=3]['nuti::buildings'>0][zoom>='nuti::building_zoom'] {
+#building['mapnik::geometry_type'=3]['nuti::buildings'>0][zoom>='nuti::building_min_zoom'] {
   ['nuti::buildings'>1][hide_3d!=true][zoom>=16]::3d  {
       building-height: [render_height] ? [render_height] : 5;
       building-min-height: [render_min_height];

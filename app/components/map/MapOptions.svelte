@@ -13,21 +13,13 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import {
-        contourLinesOpacity,
-        emphasisDrinkingWater,
-        emphasisRails,
-        mapFontScale,
+        
         pitchEnabled,
         preloading,
         projectionModeSpherical,
         rotateEnabled,
-        show3DBuildings,
-        showContourLines,
-        showSubBoundaries,
+        
         showSlopePercentages,
-        showPolygonsBorder,
-        showRoadShields,
-        showRouteShields,
         showItemsLayer,
         nutiProps
     } from '~/stores/mapStore';
@@ -167,76 +159,6 @@
     function refresh() {
         const newItems = [];
         if (customLayers.hasLocalData) {
-            newItems.push(
-                {
-                    id: 'setting',
-                    key: 'mapFontScale',
-                    mapStore: mapFontScale,
-                    min: 0.5,
-                    max: 4,
-                    step: null,
-                    formatter: (value) => value,
-                    transformValue: (value, item) => value,
-                    valueFormatter: (value, item) => value.toFixed(2),
-                    title: lc('map_font_scale'),
-                    description: lc('map_font_scale_desc'),
-                    type: 'slider',
-                    rightValue: () => $mapFontScale.toFixed(2),
-                    currentValue: () => $mapFontScale
-                },
-                {
-                    id: 'setting',
-                    mapStore: contourLinesOpacity,
-                    key: 'contourLinesOpacity',
-                    min: 0,
-                    max: 1,
-                    step: null,
-                    formatter: (value) => value,
-                    transformValue: (value, item) => value,
-                    valueFormatter: (value, item) => value.toFixed(2),
-                    title: lc('contour_lines_opacity'),
-                    description: lc('contour_lines_opacity_desc'),
-                    type: 'slider',
-                    rightValue: () => $contourLinesOpacity.toFixed(2),
-                    currentValue: () => $contourLinesOpacity
-                },
-                {
-                    mapStore: showSubBoundaries,
-                    type: 'switch',
-                    value: $showSubBoundaries,
-                    title: lc('show_sub_boundaries')
-                },
-                {
-                    mapStore: emphasisDrinkingWater,
-                    type: 'switch',
-                    value: $emphasisDrinkingWater,
-                    title: lc('emphasis_drinking_water')
-                },
-                {
-                    mapStore: emphasisRails,
-                    type: 'switch',
-                    value: $emphasisRails,
-                    title: lc('emphasis_rail_tracks')
-                },
-                {
-                    mapStore: showPolygonsBorder,
-                    type: 'switch',
-                    value: $showPolygonsBorder,
-                    title: lc('show_polygone_border')
-                },
-                {
-                    mapStore: showRoadShields,
-                    type: 'switch',
-                    value: $showRoadShields,
-                    title: lc('show_road_shields')
-                },
-                {
-                    mapStore: showRouteShields,
-                    type: 'switch',
-                    value: $showRouteShields,
-                    title: lc('show_route_shields')
-                }
-            ); 
             try {
                 newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
             } catch(error){
@@ -279,6 +201,8 @@
         }
         return item.type || 'default';
     }
+    
+    const nutiIconParams = ['contours', 'buildings']
 </script>
 
 <gesturerootview height={350} rows="auto,*">
@@ -298,14 +222,12 @@
     </collectionview>
     
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
-        {#if !!customLayers?.hasLocalData}
-            <IconButton isSelected={$showContourLines} text="mdi-bullseye" toggable={true} tooltip={lc('show_contour_lines')} on:tap={() => showContourLines.set(!$showContourLines)} />
-        {/if}
+        {#each nutiIconParams.map(key=>{...nutiProps.getSettingsOptions(key), id:key).filter(s=>s.visible?.() ?? true) as option}
+            {#let storeValue = item.store}
+            <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} />
+        {/each}
         {#if !!customLayers?.hasTerrain}
             <IconButton isSelected={$showSlopePercentages} text="mdi-signal" toggable={true} tooltip={lc('show_percentage_slopes')} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
-        {/if}
-        {#if !!customLayers?.hasLocalData}
-            <IconButton isSelected={$show3DBuildings} text="mdi-domain" toggable={true} tooltip={lc('buildings_3d')} on:tap={() => show3DBuildings.set(!$show3DBuildings)} />
         {/if}
         <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
         <IconButton isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" toggable={true} tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
