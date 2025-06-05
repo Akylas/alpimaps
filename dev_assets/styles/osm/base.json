@@ -51,7 +51,7 @@
         "scrub_pattern_zoom":14,
         "forest_pattern_zoom":14,
         "wetland_pattern_zoom":13,
-        "building_zoom":14,
+        "building_min_zoom":14,
         "highlight_drinking_water": 0,
         "hide_admins": 0,
         "_fontscale": 1.0,

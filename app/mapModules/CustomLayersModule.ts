@@ -19,7 +19,7 @@ import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
-import { preloading, showRoutes, clickHandlerLayerFilter } from '~/stores/mapStore';
+import { preloading, clickHandlerLayerFilter } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -278,36 +278,6 @@ export default class CustomLayersModule extends MapModule {
             });
         }
     }
-    updateRouteLayer(oldRouteLayer) {
-        const newRouteLayer = this.createRouteLayer(oldRouteLayer.dataSource);
-        mapContext.replaceLayer(oldRouteLayer, newRouteLayer);
-    }
-    createRouteLayer(dataSource: TileDataSource<any, any>) {
-        const routeLayer = new VectorTileLayer({
-            dataSource,
-            // maxUnderzoomLevel: 0,
-            // maxOverzoomLevel: 0,
-            visibleZoomRange: [4, 24],
-            layerBlendingSpeed: 0,
-            // preloading: get(preloading),
-            visible: get(showRoutes),
-            clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
-            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-            labelRenderOrder: VectorTileRenderOrder.LAST,
-            decoder: mapContext.innerDecoder
-        });
-        mapContext.innerDecoder.once('change', () => {
-            this.updateRouteLayer(routeLayer);
-        });
-        routeLayer.setVectorTileEventListener<LatLonKeys>(
-            {
-                onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
-            },
-            mapContext.getProjection()
-        );
-        return routeLayer;
-    }
-
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
         const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.42);
         const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 0.22);
@@ -1028,26 +998,6 @@ export default class CustomLayersModule extends MapModule {
                     provider: { name }
                 });
                 mapContext.addLayer(layer, 'map');
-            }
-            if (routes.length) {
-                this.hasRoute = true;
-                DEV_LOG &&
-                    console.log(
-                        'routes',
-                        routes.map((s) => s.options.databasePath)
-                    );
-                if (routes.length > 1) {
-                    const dataSource = new MultiTileDataSource({
-                        // maxOpenedPackages: 1,
-                        // reorderingCache: false
-                    });
-                    routes.forEach((s) => dataSource.add(s));
-                    const layer = this.createRouteLayer(dataSource);
-                    mapContext.addLayer(layer, 'routes');
-                } else {
-                    const layer = this.createRouteLayer(routes[0]);
-                    mapContext.addLayer(layer, 'routes');
-                }
             }
             if (terrains.length) {
                 this.hasTerrain = true;
