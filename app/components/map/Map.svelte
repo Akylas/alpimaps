@@ -57,23 +57,12 @@
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
     import {
-        contourLinesOpacity,
-        emphasisDrinkingWater,
-        emphasisRails,
-        mapFontScale,
+        
         pitchEnabled,
         preloading,
         projectionModeSpherical,
         rotateEnabled,
-        routesType,
-        show3DBuildings,
-        showContourLines,
-        showRoutes,
-        showSlopePercentages,
-        showSubBoundaries,
-        showPolygonsBorder,
-        showRoadShields,
-        showRouteShields,
+        
         showItemsLayer,
         itemLock,
         immersive,
@@ -1136,21 +1125,12 @@
  //       }
 //    }
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
-    $: vectorTileDecoder && setStyleParameter('buildings', !!$show3DBuildings ? '2' : '1');
-    $: vectorTileDecoder && setStyleParameter('contours', $showContourLines ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('sub_boundaries', $showSubBoundaries ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('emphasis_rails', $emphasisRails ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('highlight_drinking_water', $emphasisDrinkingWater ? '1' : '0');
-    $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
-    $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
     nutiProps.on('change', (event: any) => {
         showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
         if (vectorTileDecoder) {
             setStyleParameter(event.key, event.nutiValue);
         }
     });
-    $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('road_shields', $showRoadShields ? '1' : '0');
    // $: {
      //   const visible = $showRoutes;
     //    getLayers('routes').forEach((l) => {
@@ -1158,9 +1138,6 @@
 //        });
   //      cartoMap?.requestRedraw();
  //   }
-    $: vectorTileDecoder && setStyleParameter('show_routes', $showRoutes ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
-    $: vectorTileDecoder && setStyleParameter('routes_type', $routesType + '');
     $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
@@ -2083,13 +2060,15 @@
     }
 
     let sideButtons = [];
-
+    const 
     function updateSideButtons() {
         sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
         sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
         // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
         sideButtons = sideButtons;
     }
+    let showRoutesProps = nutiProps.getProps('show_routes');
+    let showRoutes = showRoutesProps.store;
     $: {
         const newButtons: any[] = [
             {
@@ -2129,12 +2108,12 @@
                 })
             },
             {
-                text: 'mdi-routes',
+                text: showRoutesProps.icon,
                 id: 'routes',
-                tooltip: lc('show_routes'),
+                tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
-                visible: !!customLayersModule?.hasRoute,
-                onTap: () => showRoutes.set(!$showRoutes),
+                visible: showRoutesProps.visible(),
+                : () => nutiProps['show_routes'] = !nutiProps['show_routes'],
                 onLongPress: tryCatchFunction(async (event) => {
                     const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
                     await showPopover({

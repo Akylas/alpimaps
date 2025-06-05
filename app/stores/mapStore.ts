@@ -44,24 +44,16 @@ function settingsStore<T = any>(key, defaultValue: T) {
 export const watchingLocation = writable(false);
 export const queryingLocation = writable(false);
 export const projectionModeSpherical = settingsStore('showGlobe', false);
-export const show3DBuildings = settingsStore('show3DBuildings', false);
-export const showContourLines = settingsStore('showContourLines', true);
+
 export const showSlopePercentages = settingsStore('showSlopePercentages', false);
-export const showRoutes = settingsStore('showRoutes', false);
-export const contourLinesOpacity = settingsStore('contourLinesOpacity', -1);
-export const mapFontScale = settingsStore('mapFontScale', 1);
+
 export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
-export const routesType = settingsStore<RoutesType>('routes_type', 0);
+
 export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
 export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
-export const emphasisRails = settingsStore('emphasisRails', false);
-export const emphasisDrinkingWater = settingsStore('emphasisDrinkingWater', false);
-export const showSubBoundaries = settingsStore('showSubBoundaries', true);
-export const showPolygonsBorder  = settingsStore('showPolygonsBorder', true);
-export const showRoadShields = settingsStore('showRoadShields', true);
-export const showRouteShields = settingsStore('showRouteShields', false);
+
 export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
 export const immersive = settingsStore('immersive', false);
@@ -74,8 +66,7 @@ function nutiSettings(type, key) {
         id: 'setting',
         nutiProps,
         key,
-        title: nutiProps.getTitle(key),
-        description: nutiProps.getTitle(key)
+        ...nutiProps.getProps(key)
     };
     switch(type) {
         case 'zoom': 
@@ -95,7 +86,22 @@ function nutiSettings(type, key) {
             return {
                 type: 'switch',
                 value: nutiProps[key] ?? false,
-                nutiTransform: value => !!value ? '1' : '0'
+                nutiTransform: value => !!value ? '1' : '0',
+                ...defaultSettings
+            }
+        case 'number':
+            return {
+                min: 0,
+                max: 1,
+                step: null,
+                type: 'slider',
+                rightValue: () => nutiProps[key] != null ? nutiProps[key].toFixed(2) : lc('notset'),
+                currentValue: () => nutiProps[key],
+                formatter: (value) => value,
+                transformValue: (value, item) => value.toFixed(2),
+                valueFormatter: (value, item) => value.toFixed(2),
+                nutiTransform: value => value.toFixed(2),
+                ...defaultSettings
             }
     }
 }
@@ -109,6 +115,14 @@ const layersParams = {
     },
 }
 const nutiParams = {
+    _fontscale: {
+        title: lc('map_font_scale'),
+        description: lc('map_font_scale_desc'),
+        settingsOptionsType: 'number',
+        defaultValue: 1,
+        min: 0.5,
+        max: 4
+    },
     contours: {
         title: lc('show_contour_lines'),
         settingsOptionsType: 'boolean',
@@ -116,12 +130,64 @@ const nutiParams = {
         icon: 'mdi-bullseye',
         visible: (customLayers) => !!customLayers?.hasLocalData
     },
+    contoursOpacity: {
+        title: lc('contour_lines_opacity'),
+        description: lc('contour_lines_opacity_desc'),
+        settingsOptionsType: 'number',
+        defaultValue: null
+    },
+    buildings: {
+        title: lc('buildings_3d'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false,
+        icon: 'mdi-domain',
+        visible: (customLayers) => !!customLayers?.hasLocalData,
+        nutiTransform: value => !!value ? '2' : '1'
+    },
     show_routes: {
         title: lc('show_routes'),
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-routes',
         visible: (customLayers) => !!customLayers?.hasRoute
+    },
+    routes_type: {
+        icon: 'mdi-routes',
+        settingsOptionsType: 'number',
+        defaultValue: 0,
+        min: 0,
+        max: 2,
+        step: 1
+    },
+    polygons_border: {
+        title: lc('show_polygone_border'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false
+    },
+    road_shields: {
+        title: lc('show_road_shields'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    route_shields: {
+        title: lc('show_route_shields'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    sub_boundaries: {
+        title: lc('show_sub_boundaries'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    emphasis_rails: {
+        title: lc('emphasis_rail_tracks'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false
+    },
+    highlight_drinking_water: {
+        title: lc('emphasis_drinking_water'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false
     },
     city_min_zoom: {
         title: lc('city_min_zoom'),
@@ -196,6 +262,7 @@ Object.keys(nutiParams).forEach(key=>{
     }
     console.log('startValue', key, startValue, settingKey);
     obj.value = startValue;
+    obj.store = writable(startValue);
     obj.updateMethod = updateMethod;
     
 })
@@ -208,6 +275,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       const settingKey = obj.key || key;
       console.log('set', key, value, settingKey);
       obj.value = value;
+      obj.store.set(value);
       if (value == null || value === obj.defaultValue) {
           ApplicationSettings.remove(settingKey);
       } else {
@@ -236,6 +304,14 @@ export const nutiProps = new Proxy(nutiPropsObj, {
               case 'getDefaultValue':
                   return function(key){
                       return target[key].defaultValue;
+                  }
+              case 'getProps':
+                  return function(key){
+                      return target[key];
+                  }
+              case 'getNutiTransform':
+                  return function(key){
+                      return target[key].nutiTransform;
                   }
               case 'getNutiValue':
                   return function(key){

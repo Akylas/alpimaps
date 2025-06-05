@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
     import { RoutesType } from '~/mapModules/CustomLayersModule';
-    import { routesType } from '~/stores/mapStore';
+    import { nutiProps } from '~/stores/mapStore';
     import { colors, fonts } from '~/variables';
     import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
 </script>
@@ -10,13 +10,16 @@
     // let { colorSurfaceContainer } = $colors;
     // $: ({ colorSurfaceContainer } = $colors);
     // export let backgroundColor = colorSurfaceContainer;
+    function updateProp(value) {
+        nutiProps['routes_type'] = value;
+    }
 </script>
 
 <PopoverBackgroundView columns="auto">
     <!-- <gesturerootview columns="auto"> -->
     <stacklayout width="auto">
-        <checkbox boxType="circle" checked={$routesType === RoutesType.All} text={lc('all')} on:tap={(e) => routesType.set(RoutesType.All)} />
-        <checkbox boxType="circle" checked={$routesType === RoutesType.Bicycle} text={lc('bicycle')} on:tap={(e) => routesType.set(RoutesType.Bicycle)} />
-        <checkbox boxType="circle" checked={$routesType === RoutesType.Hiking} text={lc('hiking')} on:tap={(e) => routesType.set(RoutesType.Hiking)} />
+        <checkbox boxType="circle" checked={$routesType === RoutesType.All} text={lc('all')} on:tap={(e) => updateProp(RoutesType.All)} />
+        <checkbox boxType="circle" checked={$routesType === RoutesType.Bicycle} text={lc('bicycle')} on:tap={(e) => updateProp(RoutesType.Bicycle)} />
+        <checkbox boxType="circle" checked={$routesType === RoutesType.Hiking} text={lc('hiking')} on:tap={(e) => updateProp(RoutesType.Hiking)} />
     </stacklayout>
 </PopoverBackgroundView>
