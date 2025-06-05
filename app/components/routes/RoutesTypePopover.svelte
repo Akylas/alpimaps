@@ -13,6 +13,7 @@
     function updateProp(value) {
         nutiProps['routes_type'] = value;
     }
+    const routesType = nutiProps.getStore('routes_type');
 </script>
 
 <PopoverBackgroundView columns="auto">

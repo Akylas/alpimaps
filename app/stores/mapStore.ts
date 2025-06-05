@@ -1,4 +1,5 @@
-import { lc } from '@nativescript-community/l'
+import { lc } from '@nativescript-community/l';
+import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { ApplicationSettings, Observable } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
@@ -137,7 +138,7 @@ const nutiParams = {
               await showSliderPopover({
                   debounceDuration: 100,
                   anchor: event.object,
-                  ...nutiProps.getSettingsOptions('contoursOpacity')
+                  ...nutiProps.getSettingsOptions('contoursOpacity'),
                   vertPos: VerticalPosition.ABOVE,
                   value: nutiProps['contoursOpacity'],
                   onChange(value) {
@@ -337,6 +338,10 @@ export const nutiProps = new Proxy(nutiPropsObj, {
               case 'getNutiTransform':
                   return function(key){
                       return target[key].nutiTransform;
+                  }
+              case 'getStore':
+                  return function(key){
+                      return target[key].store;
                   }
               case 'getNutiValue':
                   return function(key){
