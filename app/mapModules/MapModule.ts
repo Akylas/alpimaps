@@ -24,7 +24,7 @@ import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
-import { routesType } from '~/stores/mapStore';
+//import { routesType } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { showSnack } from '~/utils/ui';
 // export interface IMapModule {
@@ -253,7 +253,7 @@ const mapContext: MapContext = {
             ApplicationSettings.setString('innerStyle', style);
             const oldDecoder = mapContext.innerDecoder;
             const decoder = (mapContext.innerDecoder = createTileDecoder('inner', style));
-            decoder.setStyleParameter('routes_type', get(routesType) + '');
+         //   decoder.setStyleParameter('routes_type', get(routesType) + '');
             oldDecoder.notify({ eventName: 'change' });
             oldDecoder?.dispose();
         }

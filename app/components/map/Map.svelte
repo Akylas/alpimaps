@@ -2114,15 +2114,7 @@
                 isSelected: $showRoutes,
                 visible: showRoutesProps.visible(),
                 onTap: () => nutiProps['show_routes'] = !nutiProps['show_routes'],
-                onLongPress: tryCatchFunction(async (event) => {
-                    const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
-                    await showPopover({
-                        view: component,
-                        anchor: event.object,
-                        vertPos: VerticalPosition.ALIGN_TOP,
-                        horizPos: HorizontalPosition.RIGHT
-                    });
-                })
+                onLongPress: showRoutesProps.onLongPress
             },
             // {
             //     text: 'mdi-speedometer',
