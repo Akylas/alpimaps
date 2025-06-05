@@ -213,7 +213,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       } else {
           obj.updateMethod(settingKey, value);
       }
-      target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ?? obj.nutiTransform(value) : value + ''});
+      target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
       return true;
   },
   get(target, name, receiver) {
