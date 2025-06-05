@@ -84,7 +84,7 @@ function nutiSettings(type, key) {
                 max: 24,
                 step: 1,
                 type: 'slider',
-                rightValue: () => nutiProps[key] ?? lc('notset'),
+                rightValue: () => nutiProps[key] != null &&  nutiProps[key] !== -1 ? nutiProps[key] : lc('notset'),
                 currentValue: () => Math.max(0, nutiProps[key] ?? -1),
                 formatter: (value) => value,
                 transformValue: (value, item) => value,
@@ -98,17 +98,20 @@ const nutiParams = {
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     building_min_zoom: {
         title: lc('building_min_zoom'),
         description: lc('building_min_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     routes_dash_min_zoom: {
         title: lc('routes_dash_min_zoom'),
         description: lc('routes_dash_min_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     building_zoom: {
         title: lc('building_zoom'),
@@ -118,29 +121,32 @@ const nutiParams = {
     scrub_pattern_zoom: {
         title: lc('scrub_pattern_zoom'),
         description: lc('scrub_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     scree_pattern_zoom: {
         title: lc('scree_pattern_zoom'),
         description: lc('scree_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     rock_pattern_zoom: {
         title: lc('rock_pattern_zoom'),
         description: lc('rock_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     },
     forest_pattern_zoom: {
         title: lc('forest_pattern_zoom'),
         description: lc('forest_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     }
     
 };
-const nutiPropsObj = new Observable();
-Object.assign(nutiPropsObj, nutiParams);
-Object.keys(nutiPropsObj).forEach(key=>{
-    const obj = nutiPropsObj[key]!
+Object.keys(nutiParams).forEach(key=>{
+    const obj = nutiParams[key];
+    const settingKey = obj.key || key;
     const defaultValue = obj.defaultValue ?? null;
     const tpof = typeof defaultValue;
     let updateMethod;
@@ -148,29 +154,33 @@ Object.keys(nutiPropsObj).forEach(key=>{
     switch (tpof) {
         case 'boolean':
             updateMethod = ApplicationSettings.setBoolean;
-            startValue = ApplicationSettings.getBoolean(key, defaultValue as boolean);
+            startValue = ApplicationSettings.getBoolean(settingKey, defaultValue as boolean);
             break;
         case 'number':
             updateMethod = ApplicationSettings.setNumber;
-            startValue = ApplicationSettings.getNumber(key, defaultValue as number);
+            startValue = ApplicationSettings.getNumber(settingKey, defaultValue as number);
             break;
 
         default:
             updateMethod = ApplicationSettings.setString;
-            startValue = ApplicationSettings.getString(key, defaultValue as string);
+            startValue = ApplicationSettings.getString(settingKey, defaultValue as string);
             break;
     }
+    console.log('startValue', key, value, settingKey);
     obj.value = startValue;
     obj.updateMethod = updateMethod;
     
 })
+const nutiPropsObj = new Observable();
+Object.assign(nutiPropsObj, nutiParams);
 export const nutiProps = new Proxy(nutiPropsObj, {
   set: function (target, key, value) {
-      console.log('set', key, value);
+      
       const obj = target[key];
       const settingKey = obj.key || key;
+      console.log('set', key, value, settingKey);
       obj.value = value;
-      if (value === obj.defaultValue) {
+      if (value == null || value === obj.defaultValue) {
           ApplicationSettings.remove(settingKey);
       } else {
           obj.updateMethod(settingKey, value);
