@@ -2113,7 +2113,7 @@
                 tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
                 visible: showRoutesProps.visible(),
-                : () => nutiProps['show_routes'] = !nutiProps['show_routes'],
+                onTap: () => nutiProps['show_routes'] = !nutiProps['show_routes'],
                 onLongPress: tryCatchFunction(async (event) => {
                     const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
                     await showPopover({
