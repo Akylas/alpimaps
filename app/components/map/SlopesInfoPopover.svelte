@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { RoutesType, SLOPE_COLORS, SLOPE_STEPS } from '~/mapModules/CustomLayersModule';
-    import { routesType } from '~/stores/mapStore';
+    import { SLOPE_COLORS, SLOPE_STEPS } from '~/mapModules/CustomLayersModule';
     import { colors, fontScale, fonts } from '~/variables';
     import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
     import { Paint } from '@nativescript-community/ui-canvas';

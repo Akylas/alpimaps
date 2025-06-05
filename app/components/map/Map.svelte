@@ -62,7 +62,7 @@
         preloading,
         projectionModeSpherical,
         rotateEnabled,
-        
+        showSlopePercentages,
         showItemsLayer,
         itemLock,
         immersive,
@@ -2060,7 +2060,6 @@
     }
 
     let sideButtons = [];
-    const 
     function updateSideButtons() {
         sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
         sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
