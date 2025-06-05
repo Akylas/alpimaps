@@ -12,13 +12,11 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import {
-        
+    import {      
         pitchEnabled,
         preloading,
         projectionModeSpherical,
-        rotateEnabled,
-        
+        rotateEnabled,      
         showSlopePercentages,
         showItemsLayer,
         nutiProps

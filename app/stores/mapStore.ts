@@ -289,6 +289,18 @@ Object.keys(nutiParams).forEach(key=>{
     console.log('startValue', key, startValue, settingKey);
     obj.value = startValue;
     obj.store = writable(startValue);
+    obj.store.ignoreUpdate = false;
+    obj.store.subscribe((v) => {
+        if (obj.store.ignoreUpdate) {
+            obj.store.ignoreUpdate = false;
+            return;
+        }
+        if (v === defaultValue) {
+            ApplicationSettings.remove(key);
+        } else {
+            updateMethod(key, v);
+        }
+    });
     obj.updateMethod = updateMethod;
     
 })
@@ -301,6 +313,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       const settingKey = obj.key || key;
       console.log('set', key, value, settingKey);
       obj.value = value;
+      obj.store.ignoreUpdate = true;
       obj.store.set(value);
       if (value == null || value === obj.defaultValue) {
           ApplicationSettings.remove(settingKey);
