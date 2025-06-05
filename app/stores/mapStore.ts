@@ -59,18 +59,11 @@ export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', 
 export const emphasisRails = settingsStore('emphasisRails', false);
 export const emphasisDrinkingWater = settingsStore('emphasisDrinkingWater', false);
 export const showSubBoundaries = settingsStore('showSubBoundaries', true);
-export const cityMinZoom = settingsStore('cityMinZoom', -1);
-export const forestPatternZoom = settingsStore('forestPatternZoom', -1);
-export const rockPatternZoom = settingsStore('rockPatternZoom', -1);
-export const screePatternZoom = settingsStore('screePatternZoom', -1);
-export const scrubPatternZoom = settingsStore('scrubPatternZoom', -1);
-export const buildingZoom = settingsStore('buildingZoom', -1);
 export const showPolygonsBorder  = settingsStore('showPolygonsBorder', true);
 export const showRoadShields = settingsStore('showRoadShields', true);
 export const showRouteShields = settingsStore('showRouteShields', false);
 export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
-export const routeDashMinZoom = settingsStore('routeDashMinZoom', -1);
 export const immersive = settingsStore('immersive', false);
 export const showAscents = settingsStore('elevation_profile_show_ascents', true);
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
@@ -105,6 +98,51 @@ const nutiParams = {
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    building_min_zoom: {
+        title: lc('building_min_zoom'),
+        description: lc('building_min_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    routes_dash_min_zoom: {
+        title: lc('routes_dash_min_zoom'),
+        description: lc('routes_dash_min_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    building_zoom: {
+        title: lc('building_zoom'),
+        description: lc('building_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    scrub_pattern_zoom: {
+        title: lc('scrub_pattern_zoom'),
+        description: lc('scrub_pattern_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    scree_pattern_zoom: {
+        title: lc('scree_pattern_zoom'),
+        description: lc('scree_pattern_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    rock_pattern_zoom: {
+        title: lc('rock_pattern_zoom'),
+        description: lc('rock_pattern_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    forest_pattern_zoom: {
+        title: lc('forest_pattern_zoom'),
+        description: lc('forest_pattern_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    scree_pattern_zoom: {
+        title: lc('scree_pattern_zoom'),
+        description: lc('scree_pattern_zoom_desc'),
+        settingsOptionsType: 'zoom'
+    },
+    scree_pattern_zoom: {
+        title: lc('scree_pattern_zoom'),
+        description: lc('scree_pattern_zoom_desc'),
         settingsOptionsType: 'zoom'
     }
 };
