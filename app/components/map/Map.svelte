@@ -1144,9 +1144,9 @@
     $: vectorTileDecoder && $contourLinesOpacity >= 0 && setStyleParameter('contoursOpacity', $contourLinesOpacity.toFixed(1));
     $: vectorTileDecoder && $mapFontScale > 0 && setStyleParameter('_fontscale', $mapFontScale.toFixed(2));
     nutiProps.on('change', (event: any) => {
-        showToast('nutiChange ' + event.key +' ' + event.value);
+        showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
         if (vectorTileDecoder) {
-            setStyleParameter(event.key, event.value);
+            setStyleParameter(event.key, event.nutiValue);
         }
     });
     $: vectorTileDecoder && setStyleParameter('polygons_border', $showPolygonsBorder ? '1' : '0');
@@ -1178,7 +1178,6 @@
         ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
         showHideKeepAwakeNotification(keepScreenAwake);
     }
-    // $: vectorTileDecoder && mapContext?.innerDecoder?.setStyleParameter('routes', $showRoutes ? '1' : '0');
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
 
     async function handleSelectedRoutes() {
@@ -1477,9 +1476,9 @@
             try {
                 vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
-                    const value = nutiProps[key];
+                    const value = nutiProps.getNutiValue(key);
                     if(value != null) {
-                        acc[key] = value + '';
+                        acc[key] = value;
                     }
                     return acc;
                 }, {});
