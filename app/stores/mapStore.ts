@@ -95,7 +95,7 @@ function nutiSettings(type, key) {
             return {
                 type: 'switch',
                 value: nutiProps[key] ?? false,
-                nutiTransform: value => !!value ?? '1' : '0'
+                nutiTransform: value => !!value ? '1' : '0'
             }
     }
 }
