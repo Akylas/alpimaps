@@ -242,7 +242,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
                       const obj = target[key];
                       const value = obj.value;
                       if (value != null) {
-                          return obj.nutiTransform ?? obj.nutiTransform(value) : value + '';
+                          return obj.nutiTransform ? obj.nutiTransform(value) : value + '';
                       }
                       return null;
                   }
