@@ -1479,7 +1479,7 @@
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
                     const value = nutiProps[key];
                     if(value != null) {
-                        acc[key] = value;
+                        acc[key] = value + '';
                     }
                     return acc;
                 }, {});
