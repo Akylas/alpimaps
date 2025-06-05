@@ -238,7 +238,7 @@
                 }
             ); 
             try {
-                newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)));
+                newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
             } catch(error){
                 showError(error);
             }         

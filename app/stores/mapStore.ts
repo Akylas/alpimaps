@@ -91,10 +91,38 @@ function nutiSettings(type, key) {
                 valueFormatter: (value, item) => value,
                 ...defaultSettings
             }
+        case 'boolean':
+            return {
+                type: 'switch',
+                value: nutiProps[key] ?? false,
+                nutiTransform: value => !!value ?? '1' : '0'
+            }
     }
 }
-
+const layersParams = {
+    showSlopePercentages: {
+        title: lc('show_percentage_slopes'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        icon: 'mdi-signal',
+        visible: (customLayers) => !!customLayers?.hasTerrain
+    },
+}
 const nutiParams = {
+    contours: {
+        title: lc('show_contour_lines'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        icon: 'mdi-bullseye',
+        visible: (customLayers) => !!customLayers?.hasLocalData
+    },
+    show_routes: {
+        title: lc('show_routes'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        icon: 'mdi-routes',
+        visible: (customLayers) => !!customLayers?.hasRoute
+    },
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
@@ -185,7 +213,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
       } else {
           obj.updateMethod(settingKey, value);
       }
-      target.notify({eventName:'change', object:this, key, value});
+      target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ?? obj.nutiTransform(value) : value + ''});
       return true;
   },
   get(target, name, receiver) {
@@ -208,6 +236,15 @@ export const nutiProps = new Proxy(nutiPropsObj, {
               case 'getDefaultValue':
                   return function(key){
                       return target[key].defaultValue;
+                  }
+              case 'getNutiValue':
+                  return function(key){
+                      const obj = target[key];
+                      const value = obj.value;
+                      if (value != null) {
+                          return obj.nutiTransform ?? obj.nutiTransform(value) : value + '';
+                      }
+                      return null;
                   }
                 case 'getSettingsOptions':
                   return function(key){
