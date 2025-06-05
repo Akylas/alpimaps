@@ -134,17 +134,8 @@ const nutiParams = {
         title: lc('forest_pattern_zoom'),
         description: lc('forest_pattern_zoom_desc'),
         settingsOptionsType: 'zoom'
-    },
-    scree_pattern_zoom: {
-        title: lc('scree_pattern_zoom'),
-        description: lc('scree_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
-    },
-    scree_pattern_zoom: {
-        title: lc('scree_pattern_zoom'),
-        description: lc('scree_pattern_zoom_desc'),
-        settingsOptionsType: 'zoom'
     }
+    
 };
 const nutiPropsObj = new Observable();
 Object.assign(nutiPropsObj, nutiParams);
