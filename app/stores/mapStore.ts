@@ -191,7 +191,7 @@ export const nutiProps = new Proxy(nutiPropsObj, {
   get(target, name, receiver) {
       console.log('get', name);
       if(target[name] && typeof target[name] === 'object') {
-          return target[name].value;
+          return target[name].value !== target[name].defaultValue ? target[name].value : null;
       } else {
           switch(name) {
               case 'getTitle':
