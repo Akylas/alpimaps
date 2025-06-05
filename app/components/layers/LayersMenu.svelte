@@ -35,23 +35,7 @@
     //     customSources = customLayers.customSources;
     // });
     onMount(() => {
-        customLayers = mapContext.mapModule('customLayers');
-        if (customLayers) {
-            // if (__IOS__) {
-            // setTimeout( () => {
-            // customSources = customLayers.customSources;
-            // }, 0);
-            // } else {
-            customSources = customLayers.customSources;
-            // }
-            // customSources.forEach((s) => {
-            //     const dataSource = s.layer.dataSource;
-            //     if (dataSource instanceof PersistentCacheTileDataSource) {
-            //         const databasePath = dataSource.options.databasePath;
-            //         console.log(databasePath, formatSize(File.fromPath(databasePath).size));
-            //     }
-            // });
-        }
+        customLayers = mapContext.mapModule('customLayers');  
     });
     onDestroy(() => {
         customLayers = null;
@@ -66,7 +50,6 @@
         }
     }
     function clearCache() {
-        // clearCache();
     }
     const updateItem = debounce(function (item: SourceItem) {
         customSources &&
@@ -109,15 +92,12 @@
         );
     }
     async function onItemReordered(e) {
-        DEV_LOG && console.log('onItemReordered');
         (e.view as ContentView).content.opacity = 1;
     }
     async function onItemReorderStarting(e) {
-        DEV_LOG && console.log('onItemReorderStarting');
         (e.view as ContentView).content.opacity = 0.6;
     }
     function onButtonLongPress(item, event: TouchGestureEventData) {
-        DEV_LOG && console.log('onButtonLongPress');
         collectionView.nativeView.startDragging(customSources.indexOf(item), event.getAllPointers()?.[0]);
     }
     function onLinkTap(e) {
@@ -146,29 +126,11 @@
         collectionView?.nativeView?.closeCurrentMenu();
     }
 
-    async function setContoursOpacity(event) {
-        try {
-            await showSliderPopover({
-                debounceDuration: 100,
-                step: null,
-                anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                value: $contourLinesOpacity,
-                onChange(value) {
-                    DEV_LOG && console.log('setContoursOpacity', value);
-                    $contourLinesOpacity = value;
-                }
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
     let reorderLongPressHandler;
     let reorderLongPressGesture;
 
     function onReorderButtonLoaded(event) {
         try {
-            DEV_LOG && console.log('onReorderButtonLoaded');
             reorderLongPressHandler = ReorderLongPressHandler.initWithOwner(new WeakRef(collectionView.nativeElement));
             reorderLongPressGesture = UILongPressGestureRecognizer.alloc().initWithTargetAction(reorderLongPressHandler, 'longPress');
             event.object.nativeViewProtected.addGestureRecognizer(reorderLongPressGesture);
@@ -275,9 +237,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
             <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} onLongPress={option.onLongPress}/>
         {/each}
             <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
-            <!-- <IconButton gray={true} isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} /> -->
             <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-            <!-- <IconButton gray={true} isSelected={$preloading} tooltip={lc('preloading')} text="mdi-map-clock" on:tap={() => preloading.set(!$preloading)} /> -->
         </stacklayout>
     </gridlayout>
 </gesturerootview>
