@@ -235,7 +235,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
             {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
            <StoreValue store={option.store} let:value>      
-              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.update(!value)} onLongPress={option.onLongPress}/>
+              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
             </StoreValue>
         {/each}
             <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
