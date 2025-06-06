@@ -270,6 +270,7 @@ function createStore(params){
     let notifyCallback;
     Object.keys(params).forEach(key=>{
         const obj = params[key];
+        const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
         const settingKey = obj.key || key;
         const defaultValue = obj.defaultValue ?? null;
         const tpof = typeof defaultValue;
@@ -295,7 +296,7 @@ function createStore(params){
         obj.store = writable(startValue);
         obj.store.ignoreUpdate = false;
         obj.store.subscribe((value) => {
-            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback);
+            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback, obj.nutiTransform);
             if (obj.store.ignoreUpdate) {
                 obj.store.ignoreUpdate = false;
                 return;
@@ -305,7 +306,7 @@ function createStore(params){
             } else {
                 updateMethod(key, value);
             }
-            notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+            notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
         });
         obj.updateMethod = updateMethod;
         
@@ -327,7 +328,7 @@ function createStore(params){
               } else {
                   obj.updateMethod(settingKey, value);
               }
-              notifyCallback?.({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+              notifyCallback?.({eventName:'change', object:this, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
           } catch (error) {
               showError(error)
           }
@@ -370,7 +371,8 @@ function createStore(params){
                           const obj = target[key];
                           const value = obj.value;
                           if (value != null) {
-                              return obj.nutiTransform ? obj.nutiTransform(value) : value + '';
+                              const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
+                              return nutiTransform ? nutiTransform(value) : value + '';
                           }
                           return null;
                       }
