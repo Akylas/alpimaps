@@ -226,17 +226,17 @@ function nutiTransformForType(type) {
         case 'zoom': 
             return null;
         case 'boolean':
-            return value => !!value ? '1' : '0'
+            return value => !!value ? '1' : '0';
         case 'number':
-            return value => value.toFixed(2)
+            return value => value.toFixed(2);
 }
 function nutiSettings(type, key, store) {
     const defaultSettings = {
         id: 'setting',
         nutiProps: store,
         key,
-        ...store.getProps(key),
-        nutiTransform: nutiTransformForType(type)
+        nutiTransform: nutiTransformForType(type),
+        ...store.getProps(key)
     };
     switch(type) {
         case 'zoom': 
@@ -303,7 +303,7 @@ function createStore(params){
         obj.store = writable(startValue);
         obj.store.ignoreUpdate = false;
         obj.store.subscribe((value) => {
-            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback, obj.nutiTransform);
+            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback);
             if (obj.store.ignoreUpdate) {
                 obj.store.ignoreUpdate = false;
                 return;
@@ -326,7 +326,7 @@ function createStore(params){
           try {
               const obj = target[key];
               const settingKey = obj.key || key;
-              const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
+              const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
               console.log('set', key, value, settingKey);
               obj.value = value;
               obj.store.ignoreUpdate = true;
@@ -379,7 +379,7 @@ function createStore(params){
                           const obj = target[key];
                           const value = obj.value;
                           if (value != null) {
-                              const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
+                              const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
                               return nutiTransform ? nutiTransform(value) : value + '';
                           }
                           return null;
@@ -402,9 +402,7 @@ function createStore(params){
               
           }
       }
-    }) as any;
-
-    
+    }) as any; 
 }
 export const nutiProps = createStore(nutiParams);
 export const layerProps = createStore(layersParams);
