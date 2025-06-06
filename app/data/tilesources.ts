@@ -222,6 +222,12 @@ export const data: { [k: string]: Provider } = {
         },
         attribution: '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         variants: {
+            Vector: {
+                'https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt',
+                sourceOptions: {
+                    maxZoom: 14
+                }
+            },
             BlackAndWhite: {
                 url: 'http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png',
                 sourceOptions: {
