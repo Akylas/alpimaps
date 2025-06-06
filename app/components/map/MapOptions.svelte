@@ -181,7 +181,11 @@
             checkboxTapTimer = null;
         }
         try {
-            if (item.mapStore) {
+            if (item.store) {
+                item.store.update(value);
+            } else if (item.nutiProps) {
+                item.nutiProps[item.key] = value;
+            } else if (item.mapStore) {
                 (item.mapStore as Writable<boolean>).set(value);
             } else {
                 ApplicationSettings.setBoolean(item.key || item.id, value);
