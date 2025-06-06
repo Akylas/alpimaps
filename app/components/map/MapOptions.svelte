@@ -8,6 +8,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { Writable } from 'svelte/store';
+    import StoreValue from '~/components/common/StoreValue.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -221,8 +222,9 @@
     
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
         {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.() ?? true) as option}
-            {@const storeValue = option.store}
-            <IconButton isSelected={storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.update(!storeValue)} onLongPress={option.onLongPress}/>
+            <StoreValue store={item.store} let:value> 
+              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.update(!value)} onLongPress={option.onLongPress}/>
+            </StoreValue>
         {/each}
         {#if !!customLayers?.hasTerrain}
             <IconButton isSelected={$showSlopePercentages} text="mdi-signal" toggable={true} tooltip={lc('show_percentage_slopes')} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
