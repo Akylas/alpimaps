@@ -118,6 +118,12 @@ const nutiParams = {
         visible: (customLayers) => !!customLayers?.hasLocalData,
         nutiTransform: value => !!value ? '2' : '1'
     },
+    building_min_zoom: {
+        title: lc('building_min_zoom'),
+        description: lc('building_min_zoom_desc'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
     show_routes: {
         title: lc('show_routes'),
         settingsOptionsType: 'boolean',
@@ -142,6 +148,17 @@ const nutiParams = {
         max: 2,
         step: 1
     },
+    route_shields: {
+        title: lc('show_route_shields'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    routes_dash_min_zoom: {
+        title: lc('routes_dash_min_zoom'),
+        description: lc('routes_dash_min_zoom_desc'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
     polygons_border: {
         title: lc('show_polygone_border'),
         settingsOptionsType: 'boolean',
@@ -152,11 +169,7 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
-    route_shields: {
-        title: lc('show_route_shields'),
-        settingsOptionsType: 'boolean',
-        defaultValue: true
-    },
+    
     sub_boundaries: {
         title: lc('show_sub_boundaries'),
         settingsOptionsType: 'boolean',
@@ -178,23 +191,8 @@ const nutiParams = {
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
-    building_min_zoom: {
-        title: lc('building_min_zoom'),
-        description: lc('building_min_zoom_desc'),
-        settingsOptionsType: 'zoom',
-        defaultValue: -1
-    },
-    routes_dash_min_zoom: {
-        title: lc('routes_dash_min_zoom'),
-        description: lc('routes_dash_min_zoom_desc'),
-        settingsOptionsType: 'zoom',
-        defaultValue: -1
-    },
-    building_zoom: {
-        title: lc('building_zoom'),
-        description: lc('building_zoom_desc'),
-        settingsOptionsType: 'zoom'
-    },
+    
+    
     scrub_pattern_zoom: {
         title: lc('scrub_pattern_zoom'),
         description: lc('scrub_pattern_zoom_desc'),
