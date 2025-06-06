@@ -66,50 +66,7 @@ export const showAscents = settingsStore('elevation_profile_show_ascents', true)
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
-function nutiSettings(type, key) {
-    const defaultSettings = {
-        id: 'setting',
-        nutiProps,
-        key,
-        ...nutiProps.getProps(key)
-    };
-    switch(type) {
-        case 'zoom': 
-            return {
-                min: 0,
-                max: 24,
-                step: 1,
-                type: 'slider',
-                rightValue: () => nutiProps[key] != null &&  nutiProps[key] !== -1 ? nutiProps[key] : lc('notset'),
-                currentValue: () => Math.max(0, nutiProps[key] ?? -1),
-                formatter: (value) => value,
-                transformValue: (value, item) => value,
-                valueFormatter: (value, item) => value,
-                ...defaultSettings
-            }
-        case 'boolean':
-            return {
-                type: 'switch',
-                value: nutiProps[key] ?? false,
-                nutiTransform: value => !!value ? '1' : '0',
-                ...defaultSettings
-            }
-        case 'number':
-            return {
-                min: 0,
-                max: 1,
-                step: null,
-                type: 'slider',
-                rightValue: () => nutiProps[key] != null ? nutiProps[key].toFixed(2) : lc('notset'),
-                currentValue: () => nutiProps[key],
-                formatter: (value) => value,
-                transformValue: (value, item) => value.toFixed(2),
-                valueFormatter: (value, item) => value.toFixed(2),
-                nutiTransform: value => value.toFixed(2),
-                ...defaultSettings
-            }
-    }
-}
+
 const layersParams = {
     showSlopePercentages: {
         title: lc('show_percentage_slopes'),
@@ -264,126 +221,179 @@ const nutiParams = {
     }
     
 };
-Object.keys(nutiParams).forEach(key=>{
-    const obj = nutiParams[key];
-    const settingKey = obj.key || key;
-    const defaultValue = obj.defaultValue ?? null;
-    const tpof = typeof defaultValue;
-    let updateMethod;
-    let startValue;
-    switch (tpof) {
-        case 'boolean':
-            updateMethod = ApplicationSettings.setBoolean;
-            startValue = ApplicationSettings.getBoolean(settingKey, defaultValue as boolean);
-            break;
-        case 'number':
-            updateMethod = ApplicationSettings.setNumber;
-            startValue = ApplicationSettings.getNumber(settingKey, defaultValue as number);
-            break;
 
-        default:
-            updateMethod = ApplicationSettings.setString;
-            startValue = ApplicationSettings.getString(settingKey, defaultValue as string);
-            break;
+function nutiSettings(type, key, store) {
+    const defaultSettings = {
+        id: 'setting',
+        nutiProps: store,
+        key,
+        ...store.getProps(key)
+    };
+    switch(type) {
+        case 'zoom': 
+            return {
+                min: 0,
+                max: 24,
+                step: 1,
+                type: 'slider',
+                rightValue: () => store[key] != null &&  store[key] !== -1 ? store[key] : lc('notset'),
+                currentValue: () => Math.max(0, store[key] ?? -1),
+                formatter: (value) => value,
+                transformValue: (value, item) => value,
+                valueFormatter: (value, item) => value,
+                ...defaultSettings
+            }
+        case 'boolean':
+            return {
+                type: 'switch',
+                value: store[key] ?? false,
+                nutiTransform: value => !!value ? '1' : '0',
+                ...defaultSettings
+            }
+        case 'number':
+            return {
+                min: 0,
+                max: 1,
+                step: null,
+                type: 'slider',
+                rightValue: () => store[key] != null ? store[key].toFixed(2) : lc('notset'),
+                currentValue: () => store[key],
+                formatter: (value) => value,
+                transformValue: (value, item) => value.toFixed(2),
+                valueFormatter: (value, item) => value.toFixed(2),
+                nutiTransform: value => value.toFixed(2),
+                ...defaultSettings
+            }
     }
-    console.log('startValue', key, startValue, settingKey);
-    obj.value = startValue;
-    obj.store = writable(startValue);
-    obj.store.ignoreUpdate = false;
-    obj.store.subscribe((value) => {
-        if (obj.store.ignoreUpdate) {
-            obj.store.ignoreUpdate = false;
-            return;
-        }
-        if (value === defaultValue) {
-            ApplicationSettings.remove(key);
-        } else {
-            updateMethod(key, value);
-        }
-       nutiProps?.notify({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
-    });
-    obj.updateMethod = updateMethod;
+}
+function createStore(params){
+    let notifyCallback;
+    Object.keys(params).forEach(key=>{
+        const obj = params[key];
+        const settingKey = obj.key || key;
+        const defaultValue = obj.defaultValue ?? null;
+        const tpof = typeof defaultValue;
+        let updateMethod;
+        let startValue;
+        switch (tpof) {
+            case 'boolean':
+                updateMethod = ApplicationSettings.setBoolean;
+                startValue = ApplicationSettings.getBoolean(settingKey, defaultValue as boolean);
+                break;
+            case 'number':
+                updateMethod = ApplicationSettings.setNumber;
+                startValue = ApplicationSettings.getNumber(settingKey, defaultValue as number);
+                break;
     
-})
-const nutiPropsObj = new Observable();
-Object.assign(nutiPropsObj, nutiParams);
-export const nutiProps = new Proxy(nutiPropsObj, {
-  set: function (target, key, value) {
-      try {
-          const obj = target[key];
-          const settingKey = obj.key || key;
-          console.log('set', key, value, settingKey);
-          obj.value = value;
-          obj.store.ignoreUpdate = true;
-          obj.store.set(value);
-          if (value == null || value === obj.defaultValue) {
-              ApplicationSettings.remove(settingKey);
+            default:
+                updateMethod = ApplicationSettings.setString;
+                startValue = ApplicationSettings.getString(settingKey, defaultValue as string);
+                break;
+        }
+        console.log('startValue', key, startValue, settingKey);
+        obj.value = startValue;
+        obj.store = writable(startValue);
+        obj.store.ignoreUpdate = false;
+        obj.store.subscribe((value) => {
+            if (obj.store.ignoreUpdate) {
+                obj.store.ignoreUpdate = false;
+                return;
+            }
+            if (value === defaultValue) {
+                ApplicationSettings.remove(key);
+            } else {
+                updateMethod(key, value);
+            }
+          notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+        });
+        obj.updateMethod = updateMethod;
+        
+    })
+    const propsObj = new Observable();
+    notifyCallback = propsObj.notify;
+    Object.assign(propsObj, params);
+    return new Proxy(nutiPropsObj, {
+      set: function (target, key, value) {
+          try {
+              const obj = target[key];
+              const settingKey = obj.key || key;
+              console.log('set', key, value, settingKey);
+              obj.value = value;
+              obj.store.ignoreUpdate = true;
+              obj.store.set(value);
+              if (value == null || value === obj.defaultValue) {
+                  ApplicationSettings.remove(settingKey);
+              } else {
+                  obj.updateMethod(settingKey, value);
+              }
+              notifyCallback?.({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+          } catch (error) {
+              showError(error)
+          }
+          return true;
+      },
+      get(target, name, receiver) {
+          if(target[name] && typeof target[name] === 'object') {
+              return target[name].value !== target[name].defaultValue ? target[name].value : null;
           } else {
-              obj.updateMethod(settingKey, value);
-          }
-          target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
-      } catch (error) {
-          showError(error)
-      }
-      return true;
-  },
-  get(target, name, receiver) {
-      if(target[name] && typeof target[name] === 'object') {
-          return target[name].value !== target[name].defaultValue ? target[name].value : null;
-      } else {
-          switch(name) {
-              case 'getTitle':
-                  return function(key){
-                      return target[key].title;
-                  }
-              case 'getDescription':
-                  return function(key){
-                      return target[key].description;                     }
-              case 'getKey':
-                  return function(key){
-                      return target[key].key || key;
-                  }
-              case 'getDefaultValue':
-                  return function(key){
-                      return target[key].defaultValue;
-                  }
-              case 'getProps':
-                  return function(key){
-                      return target[key];
-                  }
-              case 'getNutiTransform':
-                  return function(key){
-                      return target[key].nutiTransform;
-                  }
-              case 'getStore':
-                  return function(key){
-                      return target[key].store;
-                  }
-              case 'getNutiValue':
-                  return function(key){
-                      const obj = target[key];
-                      const value = obj.value;
-                      if (value != null) {
-                          return obj.nutiTransform ? obj.nutiTransform(value) : value + '';
+              switch(name) {
+                  case 'getTitle':
+                      return function(key){
+                          return target[key].title;
                       }
-                      return null;
-                  }
-                case 'getSettingsOptions':
-                  return function(key){
-                      return nutiSettings(target[key].settingsOptionsType, key);
-                  }
-                  case 'getKeys':
-                      return function() {
-                          return Object.keys(nutiParams);
+                  case 'getDescription':
+                      return function(key){
+                          return target[key].description;                     }
+                  case 'getKey':
+                      return function(key){
+                          return target[key].key || key;
                       }
-              default:
-                  const orig = target[name];
-                  if (typeof orig === 'function') {
-                      return orig.bind(target);
-                  }           
-                  return Reflect.get(target, name, receiver);
+                  case 'getDefaultValue':
+                      return function(key){
+                          return target[key].defaultValue;
+                      }
+                  case 'getProps':
+                      return function(key){
+                          return target[key];
+                      }
+                  case 'getNutiTransform':
+                      return function(key){
+                          return target[key].nutiTransform;
+                      }
+                  case 'getStore':
+                      return function(key){
+                          return target[key].store;
+                      }
+                  case 'getNutiValue':
+                      return function(key){
+                          const obj = target[key];
+                          const value = obj.value;
+                          if (value != null) {
+                              return obj.nutiTransform ? obj.nutiTransform(value) : value + '';
+                          }
+                          return null;
+                      }
+                    case 'getSettingsOptions':
+                      return function(key){
+                          return nutiSettings(target[key].settingsOptionsType, key, this);
+                      }
+                      case 'getKeys':
+                          return function() {
+                              return Object.keys(params);
+                          }
+                  default:
+                      const orig = target[name];
+                      if (typeof orig === 'function') {
+                          return orig.bind(target);
+                      }           
+                      return Reflect.get(target, name, receiver);
+              }
+              
           }
-          
       }
-  }
-}) as any;
+    }) as any;
+
+    
+}
+export const nutiProps = createStore(nutiParams);
+export const layerProps = createStore(layersParams);
