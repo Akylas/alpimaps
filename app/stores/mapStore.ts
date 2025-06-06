@@ -221,13 +221,22 @@ const nutiParams = {
     }
     
 };
-
+function nutiTransformForType(type) {
+    switch(type) {
+        case 'zoom': 
+            return null;
+        case 'boolean':
+            return value => !!value ? '1' : '0'
+        case 'number':
+            return value => value.toFixed(2)
+}
 function nutiSettings(type, key, store) {
     const defaultSettings = {
         id: 'setting',
         nutiProps: store,
         key,
-        ...store.getProps(key)
+        ...store.getProps(key),
+        nutiTransform: nutiTransformForType(type)
     };
     switch(type) {
         case 'zoom': 
@@ -247,7 +256,6 @@ function nutiSettings(type, key, store) {
             return {
                 type: 'switch',
                 value: store[key] ?? false,
-                nutiTransform: value => !!value ? '1' : '0',
                 ...defaultSettings
             }
         case 'number':
@@ -261,7 +269,6 @@ function nutiSettings(type, key, store) {
                 formatter: (value) => value,
                 transformValue: (value, item) => value,
                 valueFormatter: (value, item) => value.toFixed(2),
-                nutiTransform: value => value.toFixed(2),
                 ...defaultSettings
             }
     }
@@ -270,7 +277,7 @@ function createStore(params){
     let notifyCallback;
     Object.keys(params).forEach(key=>{
         const obj = params[key];
-        const nutiTransform = obj.nutiTransform || nutiSettings(obj.settingsOptionsType, key, null)?.nutiTransform;
+        const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
         const settingKey = obj.key || key;
         const defaultValue = obj.defaultValue ?? null;
         const tpof = typeof defaultValue;
