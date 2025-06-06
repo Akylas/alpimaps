@@ -295,6 +295,7 @@ function createStore(params){
         obj.store = writable(startValue);
         obj.store.ignoreUpdate = false;
         obj.store.subscribe((value) => {
+            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback);
             if (obj.store.ignoreUpdate) {
                 obj.store.ignoreUpdate = false;
                 return;
@@ -304,7 +305,7 @@ function createStore(params){
             } else {
                 updateMethod(key, value);
             }
-          notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+            notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
         });
         obj.updateMethod = updateMethod;
         
