@@ -223,12 +223,12 @@ const nutiParams = {
 };
 function nutiTransformForType(type) {
     switch(type) {
-        case 'zoom': 
-            return null;
         case 'boolean':
             return value => !!value ? '1' : '0';
         case 'number':
             return value => value.toFixed(2);
+        default:
+             return null;
 }
 function nutiSettings(type, key, store) {
     const defaultSettings = {
