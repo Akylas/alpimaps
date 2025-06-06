@@ -319,6 +319,7 @@ function createStore(params){
           try {
               const obj = target[key];
               const settingKey = obj.key || key;
+              const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
               console.log('set', key, value, settingKey);
               obj.value = value;
               obj.store.ignoreUpdate = true;
