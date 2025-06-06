@@ -223,7 +223,7 @@ export const data: { [k: string]: Provider } = {
         attribution: '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         variants: {
             Vector: {
-                'https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt',
+                url: 'https://vector.openstreetmap.org/shortbread_v1/{z}/{x}/{y}.mvt',
                 sourceOptions: {
                     maxZoom: 14
                 }
