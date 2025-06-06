@@ -238,9 +238,9 @@ function nutiSettings(type, key, store) {
                 type: 'slider',
                 rightValue: () => store[key] != null &&  store[key] !== -1 ? store[key] : lc('notset'),
                 currentValue: () => Math.max(0, store[key] ?? -1),
-                formatter: (value) => value,
+                formatter: (value) => value.toFixed(),
                 transformValue: (value, item) => value,
-                valueFormatter: (value, item) => value,
+                valueFormatter: (value, item) => value.toFixed(),
                 ...defaultSettings
             }
         case 'boolean':
@@ -259,7 +259,7 @@ function nutiSettings(type, key, store) {
                 rightValue: () => store[key] != null ? store[key].toFixed(2) : lc('notset'),
                 currentValue: () => store[key],
                 formatter: (value) => value,
-                transformValue: (value, item) => value.toFixed(2),
+                transformValue: (value, item) => value,
                 valueFormatter: (value, item) => value.toFixed(2),
                 nutiTransform: value => value.toFixed(2),
                 ...defaultSettings
@@ -310,7 +310,7 @@ function createStore(params){
         
     })
     const propsObj = new Observable();
-    notifyCallback = propsObj.notify;
+    notifyCallback = propsObj.notify.bind(propsObj);
     Object.assign(propsObj, params);
     return new Proxy(propsObj, {
       set: function (target, key, value) {
