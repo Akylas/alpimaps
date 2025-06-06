@@ -290,16 +290,17 @@ Object.keys(nutiParams).forEach(key=>{
     obj.value = startValue;
     obj.store = writable(startValue);
     obj.store.ignoreUpdate = false;
-    obj.store.subscribe((v) => {
+    obj.store.subscribe((value) => {
         if (obj.store.ignoreUpdate) {
             obj.store.ignoreUpdate = false;
             return;
         }
-        if (v === defaultValue) {
+        if (value === defaultValue) {
             ApplicationSettings.remove(key);
         } else {
-            updateMethod(key, v);
+            updateMethod(key, value);
         }
+        target.notify({eventName:'change', object:nutiPropsObj, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
     });
     obj.updateMethod = updateMethod;
     
@@ -308,23 +309,25 @@ const nutiPropsObj = new Observable();
 Object.assign(nutiPropsObj, nutiParams);
 export const nutiProps = new Proxy(nutiPropsObj, {
   set: function (target, key, value) {
-      
-      const obj = target[key];
-      const settingKey = obj.key || key;
-      console.log('set', key, value, settingKey);
-      obj.value = value;
-      obj.store.ignoreUpdate = true;
-      obj.store.set(value);
-      if (value == null || value === obj.defaultValue) {
-          ApplicationSettings.remove(settingKey);
-      } else {
-          obj.updateMethod(settingKey, value);
+      try {
+          const obj = target[key];
+          const settingKey = obj.key || key;
+          console.log('set', key, value, settingKey);
+          obj.value = value;
+          obj.store.ignoreUpdate = true;
+          obj.store.set(value);
+          if (value == null || value === obj.defaultValue) {
+              ApplicationSettings.remove(settingKey);
+          } else {
+              obj.updateMethod(settingKey, value);
+          }
+          target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+      } catch (error) {
+          showError(error)
       }
-      target.notify({eventName:'change', object:this, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
       return true;
   },
   get(target, name, receiver) {
-      console.log('get', name);
       if(target[name] && typeof target[name] === 'object') {
           return target[name].value !== target[name].defaultValue ? target[name].value : null;
       } else {
