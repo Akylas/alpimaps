@@ -312,7 +312,7 @@ function createStore(params){
     const propsObj = new Observable();
     notifyCallback = propsObj.notify;
     Object.assign(propsObj, params);
-    return new Proxy(nutiPropsObj, {
+    return new Proxy(propsObj, {
       set: function (target, key, value) {
           try {
               const obj = target[key];
