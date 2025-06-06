@@ -270,7 +270,7 @@ function createStore(params){
     let notifyCallback;
     Object.keys(params).forEach(key=>{
         const obj = params[key];
-        const nutiTransform = obj.nutiTransform || this.getSettingsOptions(key).nutiTransform;
+        const nutiTransform = obj.nutiTransform || nutiSettings(obj.settingsOptionsType, key, null)?.nutiTransform;
         const settingKey = obj.key || key;
         const defaultValue = obj.defaultValue ?? null;
         const tpof = typeof defaultValue;
