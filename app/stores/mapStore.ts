@@ -229,6 +229,7 @@ function nutiTransformForType(type) {
             return value => value.toFixed(2);
         default:
              return null;
+     }
 }
 function nutiSettings(type, key, store) {
     const defaultSettings = {
