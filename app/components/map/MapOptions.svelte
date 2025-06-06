@@ -182,7 +182,7 @@
         }
         try {
             if (item.store) {
-                item.store.update(value);
+                item.store.set(value);
             } else if (item.nutiProps) {
                 item.nutiProps[item.key] = value;
             } else if (item.mapStore) {
@@ -227,7 +227,7 @@
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
         {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
             <StoreValue store={option.store} let:value> 
-              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.update(!value)} onLongPress={option.onLongPress}/>
+              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
             </StoreValue>
         {/each}
         {#if !!customLayers?.hasTerrain}
