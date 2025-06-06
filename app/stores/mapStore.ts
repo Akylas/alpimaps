@@ -300,7 +300,7 @@ Object.keys(nutiParams).forEach(key=>{
         } else {
             updateMethod(key, value);
         }
-        target.notify({eventName:'change', object:nutiPropsObj, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
+        nutiProps.notify({eventName:'change', object:nutiProps, key, value, nutiValue: obj.nutiTransform ? obj.nutiTransform(value) : value + ''});
     });
     obj.updateMethod = updateMethod;
     
