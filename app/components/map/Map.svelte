@@ -2112,8 +2112,8 @@
                 id: 'routes',
                 tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
-                visible: showRoutesProps.visible(),
-                onTap: () => nutiProps['show_routes'] = !nutiProps['show_routes'],
+                visible: showRoutesProps.visible(customLayersModule),
+                onTap: () => $showRoutes = !$showRoutes,
                 onLongPress: showRoutesProps.onLongPress
             },
             // {

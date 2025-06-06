@@ -6,7 +6,7 @@
 			line-color: darken(@service-fill, 10%);
 			line-width: 0.5;
 		}
-	}
+	} 
 	[class=path],[class=transit],[class=rail]{
 		[subclass=platform][zoom>=17]  {
 			polygon-fill: @railway;
@@ -391,6 +391,7 @@
 			line-dasharray: @railway-track-line-dasharray;
       [subclass=tram] {
           line-dasharray: @tram-track-line-dasharray;
+          line-width: @tram-track-line-width;
       }
       ['nuti::emphasis_rails'=1][subclass=rail] {
           line-color:  darken(@railway-track-line, 30%);
