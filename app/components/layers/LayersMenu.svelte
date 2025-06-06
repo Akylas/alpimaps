@@ -233,8 +233,9 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
             {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.() ?? true) as option}
-            {#let storeValue = option.store}
-            <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} onLongPress={option.onLongPress}/>
+            {#let storeValue = option.store}      
+                <IconButton isSelected={$storeValue} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => nutiProps[option.id] = !nutiProps[option.id]} onLongPress={option.onLongPress}/>
+            {/let}
         {/each}
             <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
             <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
