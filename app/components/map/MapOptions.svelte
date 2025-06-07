@@ -18,9 +18,9 @@
         preloading,
         projectionModeSpherical,
         rotateEnabled,      
-        showSlopePercentages,
         showItemsLayer,
-        nutiProps
+        nutiProps,
+        layerProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
@@ -205,7 +205,8 @@
         return item.type || 'default';
     }
     
-    const nutiIconParams = ['contours', 'buildings']
+    const nutiIconParams = ['contours', 'buildings'];
+    const layerIconParams = ['showSlopePercentages'];
 </script>
 
 <gesturerootview height={350} rows="auto,*">
@@ -230,9 +231,11 @@
               <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
             </StoreValue>
         {/each}
-        {#if !!customLayers?.hasTerrain}
-            <IconButton isSelected={$showSlopePercentages} text="mdi-signal" toggable={true} tooltip={lc('show_percentage_slopes')} on:tap={() => showSlopePercentages.set(!$showSlopePercentages)} />
-        {/if}
+        {#each layerIconParams.map(key=>({...layerProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
+            <StoreValue store={option.store} let:value> 
+              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
+            </StoreValue>
+        {/each}
         <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
         <IconButton isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" toggable={true} tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
         <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />

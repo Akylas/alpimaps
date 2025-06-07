@@ -50,8 +50,6 @@ export const watchingLocation = writable(false);
 export const queryingLocation = writable(false);
 export const projectionModeSpherical = settingsStore('showGlobe', false);
 
-export const showSlopePercentages = settingsStore('showSlopePercentages', false);
-
 export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', false);
 export const pitchEnabled = settingsStore('mapPitchEnabled', false);
