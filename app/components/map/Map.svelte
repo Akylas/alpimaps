@@ -62,10 +62,10 @@
         preloading,
         projectionModeSpherical,
         rotateEnabled,
-        showSlopePercentages,
         showItemsLayer,
         itemLock,
         immersive,
+        layerProps,
         nutiProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
@@ -1132,6 +1132,18 @@
             setStyleParameter(event.key, event.nutiValue);
         }
     });
+    layerProps.on('change', (event: any) => {
+        switch(event.key) {
+            case 'showSlopePercentages': {
+                customLayersModule?.toggleHillshadeSlope(event.value);
+                break;
+            }
+            
+        }
+        if (vectorTileDecoder) {
+            setStyleParameter(event.key, event.nutiValue);
+        }
+    });
    // $: {
      //   const visible = $showRoutes;
     //    getLayers('routes').forEach((l) => {
@@ -1139,7 +1151,7 @@
 //        });
   //      cartoMap?.requestRedraw();
  //   }
-    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
+//    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
@@ -2069,6 +2081,8 @@
     }
     let showRoutesProps = nutiProps.getProps('show_routes');
     let showRoutes = showRoutesProps.store;
+    let showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
+    let showSlopePercentages = showSlopePercentagesProps.store;
     $: {
         const newButtons: any[] = [
             {
@@ -2087,25 +2101,13 @@
             //     onTap: () => showContourLines.set(!$showContourLines)
             // },
             {
-                text: 'mdi-signal',
+                text: showSlopePercentagesProps.icon,
                 id: 'slopes',
-                tooltip: lc('show_percentage_slopes'),
+                tooltip: showSlopePercentagesProps.title,
                 isSelected: $showSlopePercentages,
-                visible: !!customLayersModule?.hasTerrain,
-                onTap: () => showSlopePercentages.set(!$showSlopePercentages),
-                onLongPress: tryCatchFunction(async (event, button) => {
-                    if ($showSlopePercentages) {
-                        const component = (await import('~/components/map/SlopesInfoPopover.svelte')).default;
-                        await showPopover({
-                            view: component,
-                            anchor: event.object,
-                            vertPos: VerticalPosition.ALIGN_TOP,
-                            horizPos: HorizontalPosition.RIGHT
-                        });
-                    } else {
-                        showToolTip(button.tooltip);
-                    }
-                })
+                visible: showSlopePercentagesProps.visible(customLayersModule),
+                onTap: () => $showSlopePercentages =!$showSlopePercentages,
+                onLongPress: showSlopePercentagesProps.onLongPress
             },
             {
                 text: showRoutesProps.icon,
