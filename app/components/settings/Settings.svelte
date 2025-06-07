@@ -24,7 +24,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
-    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress, clickHandlerLayerFilter } from '~/stores/mapStore';
+    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress, clickHandlerLayerFilter, layerProps } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -118,16 +118,6 @@
                         title: lc('navigation_tilt'),
                         type: 'slider',
                         rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT)
-                    },
-                    {
-                        id: 'setting',
-                        key: 'route_click_radius',
-                        min: 5,
-                        max: 400,
-                        step: 1,
-                        title: lc('route_click_radius'),
-                        type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber('route_click_radius', 16)
                     },
                     {
                         id: 'setting',
@@ -342,7 +332,7 @@
                             autocorrect: false
                         } as TextFieldProperties
                     }
-                ];
+                ].concat(['clickRadius'].map(key=>({...layerProps.getSettingsOptions(key)})) as any);
             case 'geolocation':
                 const newItems = [];
                 const geoSettings = geoHandler.getWatchSettings();
@@ -1003,7 +993,9 @@
                         });
                         Utils.dismissSoftInput();
                         if (result && !!result.result && result.text.length > 0) {
-                            if (item.mapStore) {
+                            if (item.store) {
+                                item.store.set(item.valueType === 'string' ? result.text : parseFloat(result.text));
+                            } else if (item.mapStore) {
                                 (item.mapStore as Writable<any>).set(item.valueType === 'string' ? result.text : parseFloat(result.text));
                             } else if (item.valueType === 'string') {
                                 ApplicationSettings.setString(item.key, result.text);
@@ -1030,7 +1022,9 @@
                                 } else {
                                     value = Math.round(value / item.step) * item.step;
                                 }
-                                if (item.mapStore) {
+                                if (item.store) {
+                                    item.store.set(value);
+                                } else if (item.mapStore) {
                                     (item.mapStore as Writable<any>).set(value);
                                 } else {
                                     if (item.valueType === 'string') {

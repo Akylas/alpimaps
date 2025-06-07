@@ -1138,6 +1138,11 @@
                 customLayersModule?.toggleHillshadeSlope(event.value);
                 break;
             }
+            case default: {
+                customLayersModule?.updateVectorTileLayerProperty(event.key, event.value);
+                break;
+            }
+            
             
         }
         if (vectorTileDecoder) {
