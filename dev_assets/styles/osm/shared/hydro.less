@@ -1,4 +1,4 @@
-
+@featureId: [name]+[subclass];
 
 //river styling
 #waterway{
@@ -14,7 +14,7 @@
 		inner/line-width: @river-width;
 		inner/line-dasharray: @river-dasharray;
     
-    when ([nuti::selected_id] ='' + [name] + [class])::selected {
+    when ([nuti::selected_id] = @featureId)::selected {
         inner/line-color: @river-selected;
         inner/line-width: @river-width-selected;
         inner/line-dasharray: @river-dasharray-selected;
