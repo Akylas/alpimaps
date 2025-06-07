@@ -4,7 +4,7 @@ import { ApplicationSettings, Observable } from '@nativescript/core';
 import { get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
 import { showError } from '@shared/utils/showError';
-import { showSliderPopover } from '~/utils/ui/index.common';
+import { showSliderPopover, showToolTip } from '~/utils/ui';
 import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 import { tryCatchFunction } from '@shared/utils/ui';
 
@@ -73,7 +73,20 @@ const layersParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-signal',
-        visible: (customLayers) => !!customLayers?.hasTerrain
+        visible: (customLayers) => !!customLayers?.hasTerrain,
+        onLongPress: tryCatchFunction(async (event, button) => {
+                    if (layerProps['showSlopePercentages']) {
+                        const component = (await import('~/components/map/SlopesInfoPopover.svelte')).default;
+                        await showPopover({
+                            view: component,
+                            anchor: event.object,
+                            vertPos: VerticalPosition.ALIGN_TOP,
+                            horizPos: HorizontalPosition.RIGHT
+                        });
+                    } else {
+                        showToolTip(button.tooltip);
+                    }
+                })
     },
 }
 const nutiParams = {
@@ -146,7 +159,8 @@ const nutiParams = {
         defaultValue: 0,
         min: 0,
         max: 2,
-        step: 1
+        step: 1,
+        nutiTransform: value => value.toFixed(0)
     },
     route_shields: {
         title: lc('show_route_shields'),
