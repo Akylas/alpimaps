@@ -94,8 +94,6 @@
 @waterway: darken(@water, 30%);
 @river_polygon: @water;
 
-@river-width: linear([view::zoom], (8, 1), (15, 2), (16, 4));
-
 @aboriginal_label: #82643a;
 @national_park_label: rgb(99, 150, 65);
 @national_park_fill: linear([view::zoom], (6, fadeout(@n_park, 0.25)), (11, fadeout(@n_park, 1)));
@@ -293,8 +291,8 @@
 @waterway_label_dy: 0;
 @waterway_label_spacing: 10;
 
-@river-width: linear([view::zoom], (8, 0.9), (15, 2), (16, 4));
-@river-width-selected: 4;
+@river-width: linear([view::zoom], (8, 1), (15, 2), (16, 4));
+@river-width-selected: @river-width + 1;
 @waterway-dasharray: 5, 2;
 @river-dasharray: @waterway-dasharray;
 @river-dasharray-selected: 5, 2;
