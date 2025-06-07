@@ -39,7 +39,8 @@
     "clothes": "ropa",
     "coffee": "café",
     "color_theme": {
-        "default": "predeterminado"
+        "default": "predeterminado",
+        "title": "combinación de colores"
     },
     "construction": "construcción",
     "crane": "grúa",
@@ -74,5 +75,20 @@
     "entrance_alt1": "entrada",
     "location_notification": "búsqueda por GPS",
     "edit": "editar",
-    "ferry": "transbordador"
+    "ferry": "transbordador",
+    "beauty": "belleza",
+    "beverages": "bebidas",
+    "blood_bank": "banco de sangre",
+    "bookmaker": "casa de apuestas",
+    "buildings_3d": "edificios 3D",
+    "calibration_needed": "Gire el dispositivo haciendo ochos y lejos de objetos metálicos",
+    "camera_fov": "campo de visión de cámara",
+    "cancel": "cancelar",
+    "cant_delete_last_layer": "no se puede eliminar la última capa remanente",
+    "cave": "cueva",
+    "bus": "autobús",
+    "bicycle": "bicicleta",
+    "castle": "castillo",
+    "caution": "precaución",
+    "bus_stop": "parada de autobús"
 }
