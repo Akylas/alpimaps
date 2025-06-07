@@ -19,7 +19,7 @@ import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
-import { preloading, clickHandlerLayerFilter } from '~/stores/mapStore';
+import { preloading, clickHandlerLayerFilter, layerProps } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -506,6 +506,7 @@ export default class CustomLayersModule extends MapModule {
                 layerBlendingSpeed: 3,
                 labelBlendingSpeed: 3,
                 opacity,
+                clickRadius: layerProps['clickRadius'],
                 preloading: get(preloading),
                 clickHandlerLayerFilter: get(clickHandlerLayerFilter),
                 // tileCacheCapacity: 30 * 1024 * 1024,
@@ -830,6 +831,13 @@ export default class CustomLayersModule extends MapModule {
             }
         });
     }
+    updateVectorTileLayerProperty(key: string, value) {
+        mapContext.getLayers().forEach((data) => {
+            if (data.layer instanceof VectorTileLayer) {
+                data.layer[key] = value;
+            }
+        });
+    }
     reloadMapStyle() {
         mapContext.getLayers().forEach((data) => {
             if (data.layer instanceof VectorTileLayer) {
@@ -966,6 +974,7 @@ export default class CustomLayersModule extends MapModule {
                     labelRenderOrder: VectorTileRenderOrder.LAST,
                     opacity,
                     preloading: get(preloading),
+                    clickRadius: layerProps['clickRadius'],
                     tileCacheCapacity: 30 * 1024 * 1024,
                     decoder: mapContext.mapDecoder,
                     clickHandlerLayerFilter: get(clickHandlerLayerFilter),
