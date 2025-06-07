@@ -44,7 +44,7 @@
         "orchard_pattern":"symbols/orchard.png"
     },
     "nutiparameters": {
-        "river_min_zoom":7,
+        "river_label_min_zoom":7,
         "road_shields": 1,
         "scree_pattern_zoom":13,
         "rock_pattern_zoom":13,
