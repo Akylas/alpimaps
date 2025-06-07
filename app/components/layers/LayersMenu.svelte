@@ -30,13 +30,12 @@
     export let customLayers: CustomLayersModule = null;
     export let customSources: ObservableArray<SourceItem> = [] as any;
     const currentLegend: string = null;
-    // mapContext.onMapReady((view: CartoMap<LatLonKeys>) => {
-    //     customLayers = mapContext.mapModule('customLayers');
-    //     console.log('onMapready')
-    //     customSources = customLayers.customSources;
-    // });
+    
     onMount(() => {
         customLayers = mapContext.mapModule('customLayers');  
+        if (customLayers) {
+            customSources = customLayers.customSources;
+        }
     });
     onDestroy(() => {
         customLayers = null;
