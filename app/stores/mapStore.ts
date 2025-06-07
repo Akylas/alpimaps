@@ -321,6 +321,7 @@ function createStore(params){
                 obj.store.ignoreUpdate = false;
                 return;
             }
+            obj.value = value;
             if (value === defaultValue) {
                 ApplicationSettings.remove(key);
             } else {
