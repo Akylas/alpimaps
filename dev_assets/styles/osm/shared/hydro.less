@@ -14,7 +14,7 @@
 		inner/line-width: @river-width;
 		inner/line-dasharray: @river-dasharray;
     
-    when ([nuti::selected_id] ='' + [name] + [class])::selected {
+    when (@featureId = 'test')::selected {
         inner/line-color: @river-selected;
         inner/line-width: @river-width-selected;
         inner/line-dasharray: @river-dasharray-selected;
