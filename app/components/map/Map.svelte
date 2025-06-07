@@ -1138,7 +1138,7 @@
                 customLayersModule?.toggleHillshadeSlope(event.value);
                 break;
             }
-            case default: {
+            default: {
                 customLayersModule?.updateVectorTileLayerProperty(event.key, event.value);
                 break;
             }
