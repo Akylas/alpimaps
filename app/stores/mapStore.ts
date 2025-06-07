@@ -86,6 +86,15 @@ const layersParams = {
                     }
                 })
     },
+    clickRadius: {
+        title: lc('vector_element_click_radius'),
+        description: lc('vector_element_click_radius_desc'),
+        settingsOptionsType: 'number',
+        defaultValue: 4,
+        min: 1,
+        step: 1,
+        max: 400
+    },
 }
 const nutiParams = {
     _fontscale: {
@@ -203,7 +212,12 @@ const nutiParams = {
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
-    
+    river_label_min_zoom: {
+        title: lc('river_label_min_zoom'),
+        description: lc('river_label_min_zoom_desc'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
     
     scrub_pattern_zoom: {
         title: lc('scrub_pattern_zoom'),
