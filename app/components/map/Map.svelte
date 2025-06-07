@@ -1332,7 +1332,7 @@
                     handleSelectedRouteTimer = null;
                 }
                 const result: IItem = {
-                    properties: featureData,
+                    properties: { featureId , ...featureData},
                     geometry: {
                         type: 'Point',
                         coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
