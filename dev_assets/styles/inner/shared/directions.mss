@@ -1,6 +1,6 @@
 
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
-
+@id:[id];
 #directions {
 	['mapnik::geometry_type'=2] {
 		[class='waypointline'] {
@@ -22,7 +22,7 @@
 		[class !='waypointline'] {
 			when ([nuti::selected_id]=[id])::selected,
 			{
-				casing/line-color: [nuti::selected_id]=[id] ? [nuti::main_darker_color]: #787E7B;
+				casing/line-color: [nuti::selected_id]=@id ? [nuti::main_darker_color]: #787E7B;
 				casing/line-width: [class=auto] ? 7: 5;
 				casing/line-join: round;
 				casing/line-cap: round;
