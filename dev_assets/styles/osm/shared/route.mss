@@ -1,4 +1,5 @@
 @osm_id: [osmid] +'';
+@is_selected: [nuti::selected_id]=@osm_id;
 #route['nuti::show_routes'>0]['nuti::routes_type'=0],
 #route['nuti::show_routes'>0]['nuti::routes_type'=1][class=bicycle],
 #route['nuti::show_routes'>0]['nuti::routes_type'=2][class=hiking] {
@@ -19,12 +20,12 @@
 
 			line-join: round;
 			line-cap: round;
-			line-width: @route_width +(([osmid]+'')=[nuti::selected_id] ? 2 : 0);
+			line-width: @route_width +(@is_selected ? 2 : 0);
 			line-color: @symbolColor;
 			line-dasharray: @hiking_route_dasharray;
 
 			[class=bicycle] {
-				line-width: @biking_route_width +(([osmid]+'')=[nuti::selected_id] ? 2 : 0);
+				line-width: @biking_route_width +(@is_selected ? 2 : 0);
 				line-color: @biking_symbolColor;
 				[zoom>='nuti::routes_dash_min_zoom'] {
 					line-dasharray: @biking_route_dasharray;
@@ -42,8 +43,8 @@
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
-                shield-spacing: @shield-spacing;
-                shield-min-distance: @shield-margin;
+                shield-spacing: [nuti::road_shield_spacing];
+                shield-min-distance: [nuti::road_shield_min_dist];
                 shield-face-name: @mont_bd;
                 shield-file: url(shields/route_shield.svg);
                 shield-fill: #000000;
