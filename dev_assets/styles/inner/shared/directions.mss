@@ -1,6 +1,7 @@
 
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 @id:[id];
+@is_selected: [nuti::selected_id]=[id];
 #directions {
 	['mapnik::geometry_type'=2] {
 		[class='waypointline'] {
@@ -22,12 +23,12 @@
 		[class !='waypointline'] {
 			when ([nuti::selected_id]=[id])::selected,
 			{
-				casing/line-color: [nuti::selected_id]=@id ? [nuti::main_darker_color]: #787E7B;
+				casing/line-color:  @is_selected ? [nuti::main_darker_color]: #787E7B;
 				casing/line-width: [class=auto] ? 7: 5;
 				casing/line-join: round;
 				casing/line-cap: round;
 				casing/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-				line-color: [nuti::selected_id]=[id] ? [nuti::main_color]: ([style.color]? [style.color]:#ACB0AE);
+				line-color: @is_selected ? [nuti::main_color]: ([style.color]? [style.color]:#ACB0AE);
 				line-width: [class=auto] ? 5: 3;
 				line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
 				line-join: round;
@@ -38,7 +39,7 @@
 				marker-opacity: 0.6;
 				marker-width: 4;
 				marker-height: 4;
-				marker-fill: [nuti::selected_id]=[id] ? #B3CEFF: #ACB0AE;
+				marker-fill:  @is_selected ? #B3CEFF: #ACB0AE;
 			}
 		}
 	}
