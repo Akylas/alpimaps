@@ -1,4 +1,4 @@
-@name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
+
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 
 #directions {
