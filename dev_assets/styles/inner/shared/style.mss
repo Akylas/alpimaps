@@ -8,7 +8,7 @@
 @standard-halo-fill: #f2f5f888;
 @wrap_characters: '-_';
 
-@name: [name:[nuti::lang]] ? [name:[nuti::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
+@name: [name:[nuti::lang]] || [name_int] || [name:en] || [name] || [ref];
 
 @hiking_route_fill:[network] = 4 ? yellow:   [network] <= 3 ? red:   #8800ff;
 @hiking_route_dasharray: none;
