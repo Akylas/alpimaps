@@ -21,7 +21,7 @@
 		}
 
 		[class !='waypointline'] {
-			when (@is_selected)::selected,
+			when ([nuti::selected_id]=[id])::selected,
 			{
 				casing/line-color:  @is_selected ? [nuti::main_darker_color]: #787E7B;
 				casing/line-width: [class=auto] ? 7: 5;
