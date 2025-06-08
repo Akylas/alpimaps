@@ -32,9 +32,9 @@
 
 @shield-size: 8;
 @shield-line-spacing: -1.50; // -0.15 em
-@shield-spacing: 160;
+//@shield-spacing: 160;
 @shield-repeat-distance: 100;
-@shield-margin: 40;
+//@shield-margin: 40;
 @shield-clip: false;
 
 @pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));

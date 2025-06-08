@@ -174,6 +174,22 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
+    road_shield_min_dist: {
+        icon: 'mdi-arrow-collapse-all',
+        settingsOptionsType: 'number',
+        defaultValue: 40,
+        min: 0,
+        max: 200,
+        step: 1
+    },
+    road_shield_spacing: {
+        icon: 'mdi-arrow-expand-horizontal',
+        settingsOptionsType: 'number',
+        defaultValue: 100,
+        min: 0,
+        max: 200,
+        step: 1
+    },
     routes_dash_min_zoom: {
         title: lc('routes_dash_min_zoom'),
         description: lc('routes_dash_min_zoom_desc'),
