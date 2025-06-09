@@ -1,7 +1,7 @@
 @osm_id: [osmid] +'';
 @is_selected: [nuti::selected_id]=@osm_id;
 
-@shield_file: 'shields/route_shield_' + max(min(5, [ref].length), 2) + '.svg';
+@shield_file: 'shields/route_shield_' + max(min(5, length([ref])), 2) + '.svg';
 #route['nuti::show_routes'>0]['nuti::routes_type'=0],
 #route['nuti::show_routes'>0]['nuti::routes_type'=1][class=bicycle],
 #route['nuti::show_routes'>0]['nuti::routes_type'=2][class=hiking] {
