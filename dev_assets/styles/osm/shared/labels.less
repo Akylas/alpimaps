@@ -2,7 +2,7 @@
 @osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??[nuti::osm-symbol-dot];
 @featureId: [name]+[subclass];
 
-@shield_file: 'shields/road_shield_' + max(min(5, [ref].length), 2) + '.svg';
+@shield_file: 'shields/road_shield_' + max(min(5, length([ref])), 2) + '.svg';
 
 #landcover_name[class!=ice],
 #landuse_name
