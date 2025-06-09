@@ -180,7 +180,6 @@ const nutiParams = {
         defaultValue: true
     },
     road_shield_min_dist: {
-        icon: 'mdi-arrow-collapse-all',
         settingsOptionsType: 'number',
         defaultValue: 40,
         min: 0,
@@ -188,7 +187,6 @@ const nutiParams = {
         step: 1
     },
     road_shield_spacing: {
-        icon: 'mdi-arrow-expand-horizontal',
         settingsOptionsType: 'number',
         defaultValue: 100,
         min: 0,
