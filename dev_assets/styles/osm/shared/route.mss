@@ -1,5 +1,7 @@
 @osm_id: [osmid] +'';
 @is_selected: [nuti::selected_id]=@osm_id;
+
+@shield_file: 'shields/route_shield_' + max(min(5, [ref].length), 2) + '.svg';
 #route['nuti::show_routes'>0]['nuti::routes_type'=0],
 #route['nuti::show_routes'>0]['nuti::routes_type'=1][class=bicycle],
 #route['nuti::show_routes'>0]['nuti::routes_type'=2][class=hiking] {
@@ -46,7 +48,7 @@
                 shield-spacing: [nuti::road_shield_spacing];
                 shield-min-distance: [nuti::road_shield_min_dist];
                 shield-face-name: @mont_bd;
-                shield-file: url(shields/route_shield.svg);
+                shield-file: @shield_file;
                 shield-fill: #000000;
             }
         }
