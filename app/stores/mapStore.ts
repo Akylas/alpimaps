@@ -144,6 +144,11 @@ const nutiParams = {
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
+    road_shields: {
+        title: lc('show_road_shields'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
     show_routes: {
         title: lc('show_routes'),
         settingsOptionsType: 'boolean',
@@ -201,12 +206,6 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
-    road_shields: {
-        title: lc('show_road_shields'),
-        settingsOptionsType: 'boolean',
-        defaultValue: true
-    },
-    
     sub_boundaries: {
         title: lc('show_sub_boundaries'),
         settingsOptionsType: 'boolean',
