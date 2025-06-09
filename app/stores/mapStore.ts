@@ -128,7 +128,7 @@ const nutiParams = {
         title: lc('contour_lines_opacity'),
         description: lc('contour_lines_opacity_desc'),
         settingsOptionsType: 'number',
-        defaultValue: null
+        defaultValue: 1
     },
     buildings: {
         title: lc('buildings_3d'),
@@ -322,7 +322,7 @@ function createStore(params){
         const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
         const settingKey = obj.key || key;
         const defaultValue = obj.defaultValue ?? null;
-        const tpof = typeof defaultValue;
+        const tpof = obj.settingsOptionsType || typeof defaultValue;
         let updateMethod;
         let startValue;
         switch (tpof) {
@@ -331,6 +331,7 @@ function createStore(params){
                 startValue = ApplicationSettings.getBoolean(settingKey, defaultValue as boolean);
                 break;
             case 'number':
+            case 'zoom':
                 updateMethod = ApplicationSettings.setNumber;
                 startValue = ApplicationSettings.getNumber(settingKey, defaultValue as number);
                 break;
