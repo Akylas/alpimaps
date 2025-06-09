@@ -1127,7 +1127,7 @@
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     
     nutiProps.on('change', (event: any) => {
-       // showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
+       showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
         if (vectorTileDecoder) {
             setStyleParameter(event.key, event.nutiValue);
         }
