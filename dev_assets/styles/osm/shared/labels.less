@@ -2,6 +2,8 @@
 @osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??[nuti::osm-symbol-dot];
 @featureId: [name]+[subclass];
 
+@shield_file: 'shields/road_shield_' + max(min(5, [ref].length), 2) + '.svg';
+
 #landcover_name[class!=ice],
 #landuse_name
 {
@@ -367,7 +369,7 @@
       shield-spacing: [nuti::road_shield_spacing];
       shield-min-distance: [nuti::road_shield_min_dist];
       shield-face-name: @mont_bd;
-      shield-file: url(shields/road_shield.svg);
+      shield-file: @shield_file;
       shield-fill: #ffffff;
     }
   }
