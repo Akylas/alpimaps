@@ -180,6 +180,8 @@ const nutiParams = {
         defaultValue: true
     },
     road_shield_min_dist: {
+        title: lc('road_shield_min_dist'),
+        description: lc('road_shield_min_dist_desc'),
         settingsOptionsType: 'number',
         defaultValue: 40,
         min: 0,
@@ -187,6 +189,8 @@ const nutiParams = {
         step: 1
     },
     road_shield_spacing: {
+        title: lc('road_shield_spacing'),
+        description: lc('road_shield_spacing_desc'),
         settingsOptionsType: 'number',
         defaultValue: 100,
         min: 0,
