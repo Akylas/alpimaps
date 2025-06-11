@@ -63,7 +63,7 @@
 
 @step-casing: @pedestrian-casing;
 // @track-casing: lighten(#9b7057, @applied_eink_lighten);
-@cycleway-inner-fill: #0000ff;
+
 @bridleway-fill: lighten(green, @applied_eink_lighten);
 @aeroway-fill: lighten(#c7cce5, @applied_eink_lighten);
 @steps-tunnel-casing: lighten(#808080, @applied_eink_lighten);
@@ -381,3 +381,5 @@
 @biking_route_dasharray: 6, 6;
 @hiking_route_dasharray: 3, 3;
 
+@cycleway-inner-fill: @biking_route_fill;
+@cycleway-inner-dasharray: @biking_route_dasharray;
