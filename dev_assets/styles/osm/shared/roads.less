@@ -376,7 +376,12 @@
 		}
 		line-color:  @railway-line;
 		line-width: @railway-line-width;
-    ['nuti::emphasis_rails'=1][subclass=rail] {
+    
+    [service!=null] {
+        line-dasharray: @railway-service-line-dasharray;
+        line-width: @railway-service-line-width;
+    }
+    ['nuti::emphasis_rails'=1][subclass=rail][service=null] {
         line-color:  darken(@railway-line, 30%);
         line-width: @railway-line-width *1.5;
     }
@@ -393,7 +398,11 @@
           line-dasharray: @tram-track-line-dasharray;
           line-width: @tram-track-line-width;
       }
-      ['nuti::emphasis_rails'=1][subclass=rail] {
+      [service!=null] {
+          line-dasharray: @railway-service-track-line-dasharray;
+          line-width: @railway-service-track-line-width;
+      }
+      ['nuti::emphasis_rails'=1][subclass=rail][service=null] {
           line-color:  darken(@railway-track-line, 30%);
           line-width: (@railway-track-line-width * 2);
       }

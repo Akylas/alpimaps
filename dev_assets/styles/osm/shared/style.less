@@ -106,3 +106,10 @@
 @biking_symbolColor: @symbolColorPrep = 'white' ? @biking_route_fill : @symbolColorPrep = '' ? @biking_route_fill : @symbolColorPrep;
 @routeOffset: [network] > 2 ? 2- [network] : [network];
 
+@railway-line-width: linear([view::zoom], (8,	0.8), (16, 1));
+@railway-track-line-width: linear([view::zoom], (8,	1), (14,	2), (20, 5));
+@railway-track-line-dasharray: 0.5,30;
+@tram-track-line-dasharray: 0;
+@tram-track-line-width: 0;
+@railway-service-track-line-dasharray:@railway-track-line-dasharray;
+@railway-service-track-line-width:@railway-track-line-width / 2;
