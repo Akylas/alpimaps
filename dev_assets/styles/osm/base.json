@@ -63,7 +63,7 @@
         "contours": 1,
         "contoursOpacity": 0.4,
         "road_shield_min_dist": 40,
-        "road_shield_spacing": 100,
+        "road_shield_spacing": 10,
         "city_min_zoom": 4,
         "fallback_lang": "en",
         "route_shields": 0,
