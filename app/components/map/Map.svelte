@@ -1465,6 +1465,7 @@
             mapStyleLayer = array[1];
         }
         DEV_LOG && console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer, force);
+        showToast('setMapStyle ' + layerStyle);
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
