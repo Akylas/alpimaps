@@ -236,7 +236,7 @@ const mapContext: MapContext = {
                       basePack
                   })
                 : new DirAssetPackage({
-                      loadUsingNS: !PRODUCTION,
+                      loadUsingNS: true,
                       dirPath: stylePath
                       // loadAsset,
                       // getAssetNames: getAssetNamesWithMaterial
