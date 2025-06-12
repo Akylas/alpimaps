@@ -225,18 +225,19 @@ const mapContext: MapContext = {
     },
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
+        const stylePath = mapStyle.startsWith('/') ? mapStyle : ~/assets/styles/${mapStyle}`;
         mapContext.mapDecoder = new MBVectorTileDecoder({
             style: mapStyleLayer,
             liveReload: !PRODUCTION,
             pack: mapStyle.endsWith('.zip')
                 ? new ZippedAssetPackage({
                       liveReload: !PRODUCTION,
-                      zipPath: `~/assets/styles/${mapStyle}`,
+                      zipPath: stylePath,
                       basePack
                   })
                 : new DirAssetPackage({
                       loadUsingNS: !PRODUCTION,
-                      dirPath: `~/assets/styles/${mapStyle}`
+                      dirPath: stylePath
                       // loadAsset,
                       // getAssetNames: getAssetNamesWithMaterial
                   })
