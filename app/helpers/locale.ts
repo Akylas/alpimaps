@@ -263,7 +263,7 @@ export async function selectLanguage() {
 }
 export async function selectMapLanguage() {
     try {
-        const result = await internalSelectLanguage(ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
+        const result = await internalSelectLanguage(ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en')));
         if (result && result.data) {
             if (result.data === 'auto') {
                 ApplicationSettings.remove('map_language');
