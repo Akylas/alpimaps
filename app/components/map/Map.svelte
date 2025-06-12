@@ -73,7 +73,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { showError } from '@shared/utils/showError';
     import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showToast, showSliderPopover, showToolTip } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
+    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
@@ -1495,9 +1495,21 @@
         function filterEntity(e) {
             return !/(inner|admin|cleaned|base)/.test(e.name);
         }
+        async function getFolderEntities(folderPath) {
+            if (Folder.exists(folderPath)) {
+                return (await Folder.fromPath(folderPath).getEntities()).filter(filterEntity);
+            }
+            return [];
+        }
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = (await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
+        const entities = await Promise.all([
+            stylePath,
+            path.join(getDataFolder(), 'styles'),
+            path.join(getSavedMBTilesDir(), 'styles'),
+            '/storage/emulated/0/Documents/dev/alpimaps/dev_assets/styles'
+        ].map(getFolderEntities));
+ //       const entities = (await getFolderEntities())(await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
