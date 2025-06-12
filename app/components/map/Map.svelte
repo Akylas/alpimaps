@@ -1469,7 +1469,7 @@
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
             try {
-                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer, folderPath);
+                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
                     const value = nutiProps.getNutiValue(key);
                     if(value != null) {
