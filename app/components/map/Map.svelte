@@ -73,7 +73,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { showError } from '@shared/utils/showError';
     import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showToast, showSliderPopover, showToolTip } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
+    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
@@ -1469,7 +1469,7 @@
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
             try {
-                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+                vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer, folderPath);
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
                     const value = nutiProps.getNutiValue(key);
                     if(value != null) {
@@ -1495,8 +1495,9 @@
             return !/(inner|admin|cleaned|base)/.test(e.name);
         }
         const styles = [];
+        const defaultPath = 
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = (await Folder.fromPath(stylePath).getEntities()).filter(filterEntity);
+        const entities = (await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
@@ -1504,13 +1505,13 @@
                 styles.push(
                     ...subs
                         .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
-                        .map((s) => ({ name: s.name.split('.')[0], subtitle: e.name.toUpperCase(), data: e.name + '~' + s.name.split('.')[0] }))
+                        .map((s) => ({ name: s.name.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.name.split('.')[0] }))
                 );
             } else {
                 try {
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
                     // DEV_LOG && console.log('assetsNames', assetsNames);
-                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: e.name + '~' + s.split('.')[0] })));
+                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.split('.')[0] })));
                 } catch (error) {
                     console.error(error, error.stack);
                 }
