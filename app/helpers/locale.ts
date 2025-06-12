@@ -222,10 +222,9 @@ export function getLocaleDisplayName(locale?, canReturnEmpty = false) {
 export function getCurrentISO3Language() {
     return getISO3Language(lang);
 }
-async function internalSelectLanguage() {
+async function internalSelectLanguage(currentLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE)) {
     // try {
     const actions = SUPPORTED_LOCALES;
-    const currentLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
     let selectedIndex = -1;
     const options = [{ name: lc('auto'), data: 'auto' }].concat(actions.map((k) => ({ name: getLocaleDisplayName(k.replace('_', '-')), data: k }))).map((d, index) => {
         const selected = currentLanguage === d.data;
@@ -264,7 +263,7 @@ export async function selectLanguage() {
 }
 export async function selectMapLanguage() {
     try {
-        const result = await internalSelectLanguage();
+        const result = await internalSelectLanguage(ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
         if (result && result.data) {
             if (result.data === 'auto') {
                 ApplicationSettings.remove('map_language');

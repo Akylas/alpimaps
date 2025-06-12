@@ -1544,6 +1544,7 @@
                 value
             };
         });
+        showToast('selectStyle ' + selectedIndex ' ' +currentLayerStyle + '');
         const result = await showAlertOptionSelect(
             {
                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
