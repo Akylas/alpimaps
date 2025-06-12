@@ -1495,7 +1495,6 @@
             return !/(inner|admin|cleaned|base)/.test(e.name);
         }
         const styles = [];
-        const defaultPath = 
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
         const entities = (await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
         for (let index = 0; index < entities.length; index++) {
