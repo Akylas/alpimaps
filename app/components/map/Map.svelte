@@ -1503,12 +1503,12 @@
         }
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = await Promise.all([
+        const entities = (await Promise.all([
             stylePath,
             path.join(getDataFolder(), 'styles'),
             path.join(getSavedMBTilesDir(), 'styles'),
             '/storage/emulated/0/Documents/dev/alpimaps/dev_assets/styles'
-        ].map(getFolderEntities));
+        ].map(getFolderEntities))).flat();
  //       const entities = (await getFolderEntities())(await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
