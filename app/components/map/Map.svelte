@@ -1495,7 +1495,7 @@
         function filterEntity(e) {
             return !/(inner|admin|cleaned|base)/.test(e.name);
         }
-        async function getFolderEntities(folderPath) {
+        async function getFolderEntities(folderPath): any[] {
             if (Folder.exists(folderPath)) {
                 return (await Folder.fromPath(folderPath).getEntities()).filter(filterEntity);
             }
