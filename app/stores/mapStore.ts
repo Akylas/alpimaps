@@ -267,7 +267,7 @@ function nutiTransformForType(type) {
         case 'boolean':
             return value => !!value ? '1' : '0';
         case 'number':
-            return value => Math.round(value * 100) / 100;
+            return value => value.toFixed(2);
         default:
              return null;
      }
