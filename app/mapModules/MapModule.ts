@@ -225,7 +225,7 @@ const mapContext: MapContext = {
     },
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
-        const stylePath = mapStyle.startsWith('/') ? mapStyle : ~/assets/styles/${mapStyle}`;
+        const stylePath = mapStyle.startsWith('/') ? mapStyle : `~/assets/styles/${mapStyle}`;
         mapContext.mapDecoder = new MBVectorTileDecoder({
             style: mapStyleLayer,
             liveReload: !PRODUCTION,
