@@ -256,13 +256,15 @@ const mapContext: MapContext = {
         if (style !== currentValue) {
             ApplicationSettings.setString('innerStyle', style);
             const oldDecoder = mapContext.innerDecoder;
-            const decoder = (mapContext.innerDecoder = createTileDecoder('inner', style));
+            const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0,-1).concat('inner').join('/') : 'inner';
+            const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
          //   decoder.setStyleParameter('routes_type', get(routesType) + '');
             oldDecoder.notify({ eventName: 'change' });
             oldDecoder?.dispose();
         }
     },
-    innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
+    innerDecoder
+  //  innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
     focusOffset: { x: 0, y: 0 }
 } as any;
 
