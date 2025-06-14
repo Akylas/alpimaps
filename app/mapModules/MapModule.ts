@@ -26,7 +26,7 @@ import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 //import { routesType } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
-import { showSnack } from '~/utils/ui';
+import { showSnack, showToast } from '~/utils/ui';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
 //     onMapDestroyed();
@@ -47,9 +47,9 @@ const appPath = knownFolders.currentApp().path;
 const styleAssets = ['fonts/osm.ttf'];
 // console.log('styleAssets', styleAssets);
 
-function loadAsset(name) {
-    // console.log('loadAsset', name);
+function loadAsset(name) {  
     const filePath = path.join(appPath, name);
+    //DEV_LOG && console.log('loadAsset', name, filePath);
     if (File.exists(filePath)) {
         return new com.carto.core.BinaryData(File.fromPath(filePath).readSync());
     }
@@ -78,7 +78,7 @@ export interface MapContext {
     showMapOptions(event);
     setMapDefaultOptions(options);
     createMapDecoder(mapStyle, mapStyleLayer): MBVectorTileDecoder;
-    setInnerStyle(style: string);
+    setInnerStyle(style: string, mapStyle: string);
     mapModule<T extends keyof MapModules>(id: T): MapModules[T];
     onOtherAppTextSelected(callback: ContextCallback, once?: boolean);
     onMapReady(callback: ContextCallback, once?: boolean);
@@ -147,20 +147,23 @@ export interface MapModules {
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
     try {
-        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
+      //  DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
+      const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
+      const useZip = TEST_ZIP_STYLES || (!name.startsWith('/') || !Folder.exists(stylePath)); 
+      showToast('innerstyle '+ usezip + ' ' + stylePath);
         return new MBVectorTileDecoder({
             style,
             pack:
-                PRODUCTION || TEST_ZIP_STYLES
+                useZip
                     ? new ZippedAssetPackage({
                           liveReload: !PRODUCTION,
-                          zipPath: `~/assets/styles/${name}.zip`,
+                          zipPath: `${stylePath}.zip`,
                           basePack,
                           getAssetNames: getAssetNamesWithMaterial
                       })
                     : new DirAssetPackage({
-                          loadUsingNS: !PRODUCTION,
-                          dirPath: `~/assets/styles/${name}`
+                          loadUsingNS: true,
+                          dirPath: stylePath
                       // loadAsset,
                       // getAssetNames: getAssetNamesWithMaterial
                       })
@@ -242,12 +245,12 @@ const mapContext: MapContext = {
                       // getAssetNames: getAssetNamesWithMaterial
                   })
         });
-        mapContext.setInnerStyle(mapStyleLayer.indexOf('eink') !== -1 ? 'eink' : 'voyager');
+        mapContext.setInnerStyle(mapStyleLayer.indexOf('eink') !== -1 ? 'eink' : 'voyager', mapStyle);
         oldDecoder?.dispose();
         mapContext.runOnModules('vectorTileDecoderChanged', oldDecoder, mapContext.mapDecoder);
         return mapContext.mapDecoder;
     },
-    setInnerStyle(style: string) {
+    setInnerStyle(style: string, mapStyle: string) {
         const currentValue = ApplicationSettings.getString('innerStyle', 'voyager');
         DEV_LOG && console.log('setInnerStyle', currentValue, style);
         if (style !== currentValue) {

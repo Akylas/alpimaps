@@ -78,6 +78,7 @@
 		text-wrap-width: step([view::zoom], (1, 20), (2, 40));
 	}
 	[class=country][zoom>=2][zoom<=6]{
+    text-placement-priority: 28;
 		text-name: @name;
 		text-face-name: @mont_bd;
 		text-placement: nutibillboard;
@@ -154,7 +155,7 @@
 	}
 	
 	[class=village][zoom>=8][zoom<=16] {
-        text-placement-priority: 26;
+    text-placement-priority: 26;
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-placement: nutibillboard;

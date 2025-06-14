@@ -228,10 +228,10 @@
 @track_line_cap: butt;
 
 @railway: @pedestrian-polygon-fill;
-@railway-line: linear([view::zoom], (8, lighten(@railway-line-color, 60%)), (10, lighten(@railway-line-color, 50%)), (13, @railway-line-color));
+@railway-line: linear([view::zoom], (8, lighten(@railway-line-color, 20%)), (13, @railway-line-color));
 @railway-line-width: linear([view::zoom], (8, 1), (16, 2));
-@railway-track-line-width: linear([view::zoom], (8, 1.5), (14, 4), (20, 6));
-@railway-track-line-dasharray: 1, 30;
+@railway-track-line-width: linear([view::zoom], (8, 3.5), (14, 5), (20, 8));
+@railway-track-line-dasharray: 1, 20;
 @railway-track-line: @railway-line;
 @tram-track-line-dasharray: 0;
 
