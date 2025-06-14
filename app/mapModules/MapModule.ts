@@ -10,7 +10,7 @@ import { CartoMap, MapClickInfo, MapInteractionInfo, PanningMode } from '@native
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { Application, ApplicationSettings, File, Frame, Page, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, File, Folder,  Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
 import { NativeViewElementNode } from 'svelte-native/dom';
