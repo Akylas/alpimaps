@@ -150,7 +150,7 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
       //  DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
       const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
       const useZip = TEST_ZIP_STYLES || (!name.startsWith('/') || !Folder.exists(stylePath)); 
-      showToast('innerstyle '+ useZip + ' ' + stylePath);
+      showToast('createTileDecoder '+ useZip + ' ' + stylePath);
         return new MBVectorTileDecoder({
             style,
             pack:
@@ -253,7 +253,8 @@ const mapContext: MapContext = {
     setInnerStyle(style: string, mapStyle: string) {
         const currentValue = ApplicationSettings.getString('innerStyle', 'voyager');
         DEV_LOG && console.log('setInnerStyle', currentValue, style);
-        if (style !== currentValue) {
+   //     if (style !== currentValue) {
+            
             ApplicationSettings.setString('innerStyle', style);
             const oldDecoder = mapContext.innerDecoder;
             const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0,-1).concat('inner').join('/') : 'inner';
@@ -261,7 +262,7 @@ const mapContext: MapContext = {
          //   decoder.setStyleParameter('routes_type', get(routesType) + '');
             oldDecoder.notify({ eventName: 'change' });
             oldDecoder?.dispose();
-        }
+  //      }
     },
     innerDecoder
   //  innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
