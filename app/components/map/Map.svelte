@@ -565,7 +565,7 @@
     }
     function onColorsChange() {
         if (cartoMap) {
-            mapContext.innerDecoder.setJSONStyleParameters({
+            mapContext.innerDecoder?.setJSONStyleParameters({
                 main_color: $colors.colorPrimary,
                 main_darker_color: new Color($colors.colorPrimary).darken(10).hex
             });
@@ -695,7 +695,6 @@
             mapContext.setMapDefaultOptions(map.getOptions());
 
             cartoMap = map;
-            onColorsChange();
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
@@ -707,6 +706,7 @@
                 packageService.start();
                 transitService.start();
                 setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
+                onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
             if (addedLayers) {
