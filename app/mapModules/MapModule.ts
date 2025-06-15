@@ -264,7 +264,7 @@ const mapContext: MapContext = {
             oldDecoder?.dispose();
   //      }
     },
-    innerDecoder
+//    innerDecoder
   //  innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
     focusOffset: { x: 0, y: 0 }
 } as any;
