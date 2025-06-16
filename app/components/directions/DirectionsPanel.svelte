@@ -407,7 +407,7 @@
             type: 'Feature',
             properties: {
                 id,
-                showOnMap: false
+                showOnMap: false,
                 ...metaData
             },
             geometry: {
@@ -847,7 +847,7 @@
             }
             const startTime = Date.now();
             const id = Date.now();
-            const totalDist= route.totalDistance;
+            const totalDist= route.route.totalDistance;
             const stepDist = totalDist>30?10:(totalDist>10?5:1);
             const item: any = {
                 type: 'Feature',
@@ -1054,7 +1054,7 @@
         }
     }
     
-    function clearWayPoint(item) {
+    function toggleWayPointShowOnMap(item) {
         try {
             let index = -1;
             waypoints.some((d, i) => {
