@@ -7,12 +7,12 @@
             back/line-width: @bicycle_line_width + 2;
             back/line-join: round;
             back/line-cap: round;
-            back/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
+            back/line-opacity: @itemBackLineOpacity;
             line-color: @lineColor;
             line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
-            line-opacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
+            line-opacity: @itemLineOpacity;
             line-width: @bicycle_line_width;
 
             [class=pedestrian] {
@@ -36,8 +36,8 @@
         }
 
         ['nuti::hide_unselected'=0] {
-            back/line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
-            line-opacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
+            back/line-opacity: @itemSelectedBackLineOpacity;
+            line-opacity: @itemSelectedLineOpacity;
 
             [zoom>=13] {
                 marker-placement: line;
@@ -76,5 +76,37 @@
         when ([nuti::selected_id]=[id]) {
             text-size: ([style.iconSize] ? [style.iconSize]: @default_icon_size) + 10;
         }
+
+}
+
+
+#poi['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
+    text-placement: nutibillboard;
+		text-fill: @itemColor;
+		// text-width: 24;
+		text-allow-overlap: true;
+		text-clip: false;
+		text-name:'';
+		text-face-name: 'osm';
+		text-size: 30;
+		text-halo-fill: @standard-halo-fill;
+		text-halo-radius: @standard-halo-radius;
+		text-horizontal-alignment : middle;
+		text-vertical-alignment: bottom;
+		text-dx:-3;
+
+}
+
+#steps['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
+    text-placement: nutibillboard;
+		text-fill: @itemColor;
+		// text-width: 24;
+		text-allow-overlap: true;
+		text-clip: false;
+		text-name:[distanceFromStart];
+		text-face-name: @mont;
+		text-size: 14;
+		text-halo-fill: @standard-halo-fill;
+		text-halo-radius: @standard-halo-radius;
 
 }

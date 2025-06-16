@@ -49,3 +49,8 @@
 @non_editing_dash: none;
 
 @itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 140 ? #33333388 : #f2f5f888;
+
+@itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
+@itemBackLineOpacity: linear([view::zoom], (16, 1), (18, 0.3));
+@itemSelectedLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
+@itemSelectedBackLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));

@@ -81,7 +81,14 @@ export interface DirectionWayPoint {
         isStop: boolean;
         metaData: any;
         text: string;
+        showOnMap: boolean;
     };
+}
+
+export interface StepPoint {
+    geometry : Point,
+    distFromStart: number
+    distFromEnd: number;
 }
 export interface Route {
     osmid?: string;
@@ -90,6 +97,7 @@ export interface Route {
     costing_options?: any;
     totalTime?: number;
     totalDistance?: number;
+    steps?: StepPoint[]
 }
 
 export interface RouteStats {
