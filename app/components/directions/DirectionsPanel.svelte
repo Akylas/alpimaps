@@ -1226,6 +1226,13 @@
                             title: lc('auto_fetch_stats'),
                             subtitle: lc('auto_fetch_stats_desc'),
                             value: requestStats
+                        },
+                        {
+                            type: 'switch',
+                            id: 'route_compute_steps',
+                            title: lc('route_compute_steps'),
+                            subtitle: lc('route_compute_steps_desc'),
+                            value: ApplicationSettings.getBoolean('route_compute_steps', false)
                         }
                     ]
                 }
