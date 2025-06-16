@@ -147,7 +147,7 @@ export interface MapModules {
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
     try {
-      //  DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
+      DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
       const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
       const useZip = TEST_ZIP_STYLES || (!name.startsWith('/') || !Folder.exists(stylePath)); 
       showToast('createTileDecoder '+ useZip + ' ' + stylePath);
@@ -252,16 +252,19 @@ const mapContext: MapContext = {
     },
     setInnerStyle(style: string, mapStyle: string) {
         const currentValue = ApplicationSettings.getString('innerStyle', 'voyager');
-        DEV_LOG && console.log('setInnerStyle', currentValue, style);
+        
    //     if (style !== currentValue) {
             
             ApplicationSettings.setString('innerStyle', style);
             const oldDecoder = mapContext.innerDecoder;
             const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0,-1).concat('inner').join('/') : 'inner';
+            DEV_LOG && console.log('setInnerStyle', style, mapStyle, stylePath);
             const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
          //   decoder.setStyleParameter('routes_type', get(routesType) + '');
-            oldDecoder.notify({ eventName: 'change' });
-            oldDecoder?.dispose();
+            if (oldDecoder) {
+                oldDecoder.notify({ eventName: 'change' });
+                oldDecoder.dispose();
+            }
   //      }
     },
 //    innerDecoder
