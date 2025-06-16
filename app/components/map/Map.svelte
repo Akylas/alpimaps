@@ -807,6 +807,7 @@
             Object.assign(item.properties, updateProperties);
         }
         $selectedItem = item;
+        itemModule?.onItemSelected(item);
     }
     async function selectItem({
         forceZoomOut = false,
