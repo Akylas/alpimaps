@@ -438,7 +438,7 @@ export default class ItemsModule extends MapModule {
         }
     }
     onItemSelected(item: IItem) {
-        if (item.route) {
+        if (item?.route) {
             const features = [];
             item.route.waypoints.forEach(p=> {
                 if (p.properties.showOnMap) {
@@ -452,7 +452,7 @@ export default class ItemsModule extends MapModule {
                 }
                 if (item.route.steps) {
                     features.push(...item.route.steps.map(p=>({
-                        geometry: p.geop.geometry,
+                        geometry: p.geometry,
                         properties: {
                             class: 'step',
                             distFromStart: p.distFromStart,
@@ -466,10 +466,6 @@ export default class ItemsModule extends MapModule {
                     features:[]} );
         }
         
-    }
-    onItemUnselected() {
-        this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
-                    features:[]} );
     }
     async hideItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
