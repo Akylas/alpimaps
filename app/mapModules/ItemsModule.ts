@@ -450,7 +450,9 @@ export default class ItemsModule extends MapModule {
                         }
                     });
                 }
-                if (item.route.steps) {
+                
+            });
+            if (item.route.steps) {
                     features.push(...item.route.steps.map(p=>({
                         geometry: p.geometry,
                         properties: {
@@ -460,7 +462,8 @@ export default class ItemsModule extends MapModule {
                         }
                     })));
                 }
-            });
+            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
+                    features} );
         } else {
             this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
                     features:[]} );
