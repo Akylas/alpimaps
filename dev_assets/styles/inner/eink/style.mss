@@ -4,4 +4,6 @@
 @standard-halo-radius: 2;
 @standard-halo-fill: #ffffff;
 @itemContrastColor: #ffffff;
+@itemColor: #000;
+@lineColor: #000;
 

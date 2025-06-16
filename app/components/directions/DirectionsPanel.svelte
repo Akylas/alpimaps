@@ -44,6 +44,54 @@
         instructions?: RouteInstruction[];
         stats?: RouteStats;
     }
+    
+    /**
+    * Linear interpolation between two coordinates
+    */
+    function interpolate(coord1, coord2, t) {
+      return [
+        coord1[0] + (coord2[0] - coord1[0]) * t,
+        coord1[1] + (coord2[1] - coord1[1]) * t
+      ];
+    }
+    
+    /**
+    * Compute steps in one loop, assuming total length is known
+    * @param {Array<[number, number]>} coords - Array of [lon, lat]
+    * @param {number} stepKm - Step size (e.g. 1)
+    * @param {number} totalLengthKm - Total path length in km
+    * @returns {Array<{point: [number, number], distFromStart: number, distFromEnd: number}>}
+    */
+    function computeStepsOnePass(coords, stepKm, totalLengthKm) {
+      const steps = [];
+      let cumulative = 0;
+      let nextStepDist = 0;
+    
+      for (let i = 0; i < coords.length - 1 && nextStepDist <= totalLengthKm; i++) {
+        const a = coords[i];
+        const b = coords[i + 1];
+        const segLen = getDistance(a, b);
+    
+        while (nextStepDist <= cumulative + segLen) {
+          const t = (nextStepDist - cumulative) / segLen;
+          const point = interpolate(a, b, t);
+          steps.push({
+            geometry: {
+                type: 'Point',
+                coordinates : point
+            },
+            distFromStart: +nextStepDist.toFixed(3),
+            distFromEnd: +(totalLengthKm - nextStepDist).toFixed(3)
+          });
+          nextStepDist += stepKm;
+        }
+    
+        cumulative += segLen;
+      }
+    
+      return steps;
+    }
+    
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints) {
         const rInstructions = result.getInstructions();
@@ -359,6 +407,7 @@
             type: 'Feature',
             properties: {
                 id,
+                showOnMap: false
                 ...metaData
             },
             geometry: {
@@ -798,6 +847,8 @@
             }
             const startTime = Date.now();
             const id = Date.now();
+            const totalDist= route.totalDistance;
+            const stepDist = totalDist>30?10:(totalDist>10?5:1);
             const item: any = {
                 type: 'Feature',
                 _parsedRoute: route.route,
@@ -841,6 +892,9 @@
                     return { type: this.type, id: this.id, properties: this.properties, geometry: this.geometry, stats: this.stats, route: this.route, instructions: this.instructions };
                 }
             };
+            if (ApplicationSettings.getBoolean('route_compute_steps', false)) {
+                item.properties.route.steps = computeStepsOnePass(item.geometry.coordinates, stepDist, totalDist);
+            }
             if (editingItem) {
                 item.properties.editingId = editingItem.id;
                 // item.properties.id = editingItem.propertiesid;
@@ -996,6 +1050,25 @@
             }
         } catch (error) {
             console.error(error, error.stack);
+            showError(error);
+        }
+    }
+    
+    function clearWayPoint(item) {
+        try {
+            let index = -1;
+            waypoints.some((d, i) => {
+                if (d === item) {
+                    index = i;
+                    return true;
+                }
+                return false;
+            });
+            if (index >= 0) {
+                item.showOnMap = !item.showOnMap;
+                waypoints.setItem(index, item);
+            }
+        } catch (error) {
             showError(error);
         }
     }
@@ -1282,14 +1355,20 @@
                             borderColor="black"
                             borderRadius={8}
                             borderWidth={isEInk ? 1 : 0}
-                            columns=" *,auto"
+                            columns=" *,auto,auto"
                             height={30}
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
                             <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemTitle(item)} verticalTextAlignment="center" />
-
                             <IconButton
                                 col={1}
+                                color={buttonsColor}
+                                small={true}
+                                text="mdi-map"
+                                isSelected={item.showOnMap}
+                                on:tap={() => toggleWayPointShowOnMap(item)} />
+                            <IconButton
+                                col={2}
                                 color={buttonsColor}
                                 small={true}
                                 text="mdi-delete"

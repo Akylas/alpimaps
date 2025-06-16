@@ -154,6 +154,7 @@ export default class ItemsModule extends MapModule {
                     maxZoom: 24
                 });
                 this.localVectorDataSource.createLayer('items');
+                this.localVectorDataSource.createLayer('poi');
             }
             // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
             this.localVectorLayer = new VectorTileLayer({
@@ -435,6 +436,40 @@ export default class ItemsModule extends MapModule {
             await this.updateItem(item, { onMap: 1 }, false, false);
             this.addItemToLayer(item, true);
         }
+    }
+    onItemSelected(item: IItem) {
+        if (item.route) {
+            const features = [];
+            item.route.waypoints.forEach(p=> {
+                if (p.properties.showOnMap) {
+                    features.push({
+                        geometry:p.geometry,
+                        properties: {
+                            ...p.properties,
+                            class: 'waypoint'
+                        }
+                    });
+                }
+                if (item.route.steps) {
+                    features.push(...item.route.steps.map(p=>({
+                        geometry: p.geop.geometry,
+                        properties: {
+                            class: 'step',
+                            distFromStart: p.distFromStart,
+                            distFromEnd: p.distFromEnd
+                        }
+                    })));
+                }
+            });
+        } else {
+            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
+                    features:[]} );
+        }
+        
+    }
+    onItemUnselected() {
+        this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
+                    features:[]} );
     }
     async hideItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
