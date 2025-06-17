@@ -67,7 +67,7 @@
       const steps = [];
       let cumulative = 0;
       let nextStepDist = stepKm;
-    
+      const levels = [100, 50, 10, 5, 1];
       for (let i = 0; i < coords.length - 1 && nextStepDist <= totalLengthKm; i++) {
         const a = coords[i];
         const b = coords[i + 1];
@@ -81,6 +81,7 @@
                 type: 'Point',
                 coordinates: point
             },
+            level: levels.findIndex(l => num % l === 0) + 1,
             distFromStart: nextStepDist,
             distFromStartStr: (nextStepDist / 1000).toFixed(),
             distToEnd: (totalLengthKm - nextStepDist),

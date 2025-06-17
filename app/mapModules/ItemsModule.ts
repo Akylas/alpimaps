@@ -461,6 +461,7 @@ export default class ItemsModule extends MapModule {
                             class: 'step',
                             distFromStart: p.distFromStart,
                             distToEnd: p.distToEnd,
+                            level: p.level,
                             distFromStartStr: p.distFromStartStr,
                             distToEndStr: p.distToEndStr
                         }
