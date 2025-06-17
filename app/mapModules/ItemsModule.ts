@@ -438,6 +438,7 @@ export default class ItemsModule extends MapModule {
         }
     }
     onItemSelected(item: IItem) {
+        const startTime = Date.now();
         if (item?.route) {
             const features = [];
             item.route.waypoints.forEach(p=> {
@@ -462,8 +463,10 @@ export default class ItemsModule extends MapModule {
                         }
                     })));
                 }
+            DEV_LOG && console.log('updategeojson1', Date.now()- startTime);
             this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
                     features} );
+            DEV_LOG && console.log('updategeojson2', Date.now()- startTime);
         } else {
             this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
                     features:[]} );
