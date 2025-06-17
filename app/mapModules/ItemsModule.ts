@@ -463,14 +463,14 @@ export default class ItemsModule extends MapModule {
                         }
                     })));
                 }
-            DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps);
-            const str = JSON.stringify({type: 'FeatureCollection',
+            DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps?.length);
+            const data = ({type: 'FeatureCollection',
                     features}) ;
-            this.localVectorDataSource.setLayerGeoJSONString(2, str);
-            DEV_LOG && console.log('updategeojson2', Date.now()- startTime, str);
+            this.localVectorDataSource.setLayerGeoJSONString(2, data);
+            DEV_LOG && console.log('updategeojson2', Date.now()- startTime, JSON.stringify(data));
         } else {
-            this.localVectorDataSource.setLayerGeoJSONString(2, JSON.stringify({type: 'FeatureCollection',
-                    features:[]}) );
+            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
+                    features:[]} );
         }
         
     }
