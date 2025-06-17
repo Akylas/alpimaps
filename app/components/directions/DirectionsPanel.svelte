@@ -123,7 +123,7 @@
                         ...w,
                         properties:{
                             ...w.properties,
-                            index: isLocationOnPath( lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15)
+                            index: isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15)
                         }
                         
                     }
