@@ -82,6 +82,7 @@ export interface DirectionWayPoint {
         metaData: any;
         text: string;
         showOnMap: boolean;
+        index: number;
     };
 }
 
