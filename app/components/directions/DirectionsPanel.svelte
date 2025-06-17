@@ -81,7 +81,7 @@
                 type: 'Point',
                 coordinates: point
             },
-            level: levels.findIndex(l => num % l === 0) + 1,
+            level: levels.findIndex(l => (nextStepDist / 1000) % l === 0) + 1,
             distFromStart: nextStepDist,
             distFromStartStr: (nextStepDist / 1000).toFixed(),
             distToEnd: (totalLengthKm - nextStepDist),
