@@ -80,31 +80,30 @@
 }
 
 
-#poi['mapnik::geometry_type'=1] {
-    text-placement: nutibillboard;
-		text-fill: @itemColor;
-		text-allow-overlap: true;
-		text-clip: false;
-		text-name:'';
-		text-face-name: 'osm';
-		text-size: 30;
-		text-halo-fill: @standard-halo-fill;
-		text-halo-radius: @standard-halo-radius;
-		text-horizontal-alignment : middle;
-		text-vertical-alignment: bottom;
-		text-dx:-3;
-
-}
-
-#steps['mapnik::geometry_type'=1]{
-    text-placement: nutibillboard;
-		text-fill: @itemColor;
-		text-allow-overlap: true;
-		text-clip: false;
-		text-name:[distanceFromStart];
-		text-face-name: @mont;
-		text-size: 14;
-		text-halo-fill: @standard-halo-fill;
-		text-halo-radius: @standard-halo-radius;
-
+#poi {
+    [class=poi] {
+        text-placement: nutibillboard;
+        text-fill: @itemColor;
+        text-allow-overlap: true;
+        text-clip: false;
+        text-name:'';
+        text-face-name: 'osm';
+        text-size: 30;
+        text-halo-fill: @standard-halo-fill;
+        text-halo-radius: @standard-halo-radius;
+        text-horizontal-alignment : middle;
+        text-vertical-alignment: bottom;
+        text-dx:-3;
+    }
+    [class=steps] {
+        text-placement: nutibillboard;
+        text-fill: @itemColor;
+        text-allow-overlap: true;
+        text-clip: false;
+        text-name:[distanceFromStart];
+        text-face-name: @mont;
+        text-size: 14;
+        text-halo-fill: @standard-halo-fill;
+        text-halo-radius: @standard-halo-radius;
+    }
 }

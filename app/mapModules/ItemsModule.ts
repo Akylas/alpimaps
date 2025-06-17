@@ -464,12 +464,13 @@ export default class ItemsModule extends MapModule {
                     })));
                 }
             DEV_LOG && console.log('updategeojson1', Date.now()- startTime);
-            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
-                    features} );
-            DEV_LOG && console.log('updategeojson2', Date.now()- startTime);
+            const str = JSON.stringify({type: 'FeatureCollection',
+                    features}) ;
+            this.localVectorDataSource.setLayerGeoJSONString(2, str);
+            DEV_LOG && console.log('updategeojson2', Date.now()- startTime, str);
         } else {
-            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
-                    features:[]} );
+            this.localVectorDataSource.setLayerGeoJSONString(2, JSON.stringify({type: 'FeatureCollection',
+                    features:[]}) );
         }
         
     }
