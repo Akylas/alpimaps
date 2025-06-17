@@ -96,7 +96,7 @@
     }
     
 
-    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints) {
+    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints,positions) {
     DEV_LOG && console.log('routingResultToJSON', waypoints);
         const rInstructions = result.getInstructions();
         const instructions: RouteInstruction[] = [];
@@ -117,7 +117,19 @@
         }
         const route = {
             costing_options,
-            waypoints,
+            waypoints: waypoints['_array'].map(w=> {
+                if (w.properties.showOnMap) {
+                    return {
+                        ...w,
+                        properties:{
+                            ...w.properties,
+                            index: isLocationOnPath( lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15)
+                        }
+                        
+                    }
+                }
+                return {...w};
+            }),
             totalTime: result.getTotalTime(),
             totalDistance: result.getTotalDistance()
         } as Route;
@@ -825,7 +837,7 @@
                 DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
                 positions = result.getPoints();
                 startTime = Date.now();
-                route = routingResultToJSON(result, costing_options, waypoints.toJSON().slice(0));
+                route = routingResultToJSON(result, costing_options, waypoints.toJSON().slice(0), positions);
                 DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
                 if (requestStats) {
                     route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
@@ -904,7 +916,7 @@
                 // item.properties.id = editingItem.propertiesid;
             }
             features.push(item);
-            DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms');
+            DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms', JSON.stringify(route.waypoints));
             return item as ItemFeature;
         }
     }

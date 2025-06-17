@@ -168,7 +168,7 @@
             dataSet.valueTextColor = colorOnSurface;
         }
     });
-    export function hilghlightPathIndex(params:{onPathIndex: number, remainingDistance: number, remainingTime: number, dplus?: number, dmin?: number}, highlight?: Highlight<Entry>, sendEvent = true) {
+    export function hilghlightPathIndex(params:{onPathIndex: number, remainingDistance: number, remainingDistanceToStep: number, remainingTime: number, dplus?: number, dmin?: number}, highlight?: Highlight<Entry>, sendEvent = true) {
         if (!chart) {
             return;
         }

@@ -286,11 +286,15 @@
                 const positions = packageService.getRouteItemPoses(routeItem);
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
-                let remainingDistance: number, remainingTime: number;
+                let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
                 // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(routeItem.instructions));
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
+                    const stepIndex = route.waypoints.filter(w=>w.properties.showOnMap).find(w=> w.properties.index > onPathIndex)?.properties.index;
+                    if (stepIndex >= 0) {
+                        remainingDistanceToStep = remainingDistance - distanceToEnd(stepIndex, positions);
+                    }
                     if (!highlight && routeItem.instructions && updateNavigationInstruction) {
                         let routeInstruction;
                         for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
@@ -319,10 +323,10 @@
 
                 if (updateGraph && graphAvailable) {
                     if (elevationChart) {
-                        elevationChart.hilghlightPathIndex({onPathIndex, remainingDistance, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin}, highlight, false);
+                        elevationChart.hilghlightPathIndex({onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin}, highlight, false);
                     } else {
                         // chart must be loading
-                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingTime, highlight , dplus: profile?.dplus, dmin: profile?.dmin};
+                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, highlight , dplus: profile?.dplus, dmin: profile?.dmin};
                     }
                 }
             } else if (updateNavigationInstruction) {

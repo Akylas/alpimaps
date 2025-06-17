@@ -64,7 +64,14 @@
         }
         if(event.remainingDistance) {
             nString3 = createNativeAttributedString({
-                spans: [
+                spans:(event.remainingDistanceToStep? [{
+                        fontFamily: $fonts.mdi,
+                        color: colorPrimary,
+                        text: 'mdi-map-marker'
+                    },
+                    {
+                        text: ' ' + formatDistance(event.remainingDistanceToStep)
+                    }] : []).concat([
                     {
                         fontFamily: $fonts.mdi,
                         color: colorPrimary,
@@ -73,19 +80,21 @@
                     {
                         text: ' ' + formatDistance(event.remainingDistance)
                     }
-                ].concat(isNaN(event.remainingTime) ? [] : [
-                    {
-                        text: '\n'
-                    },
-                    {
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-timer-outline'
-                    },
-                    {
-                        text: ' ' + convertDurationSeconds(event.remainingTime)
-                    }
-                ] as any).concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
+                ] as any)
+             //   .concat(isNaN(event.remainingTime) ? [] : [
+             //       {
+             //           text: '\n'
+             //       },
+             //       {
+             //           fontFamily: $fonts.mdi,
+             //           color: colorPrimary,
+             //           text: 'mdi-timer-outline'
+             //       },
+             //       {
+             //           text: ' ' + convertDurationSeconds(event.remainingTime)
+             //       }
+             //   ] as any)
+                .concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
                     {
                         text: '\n'
                     },
