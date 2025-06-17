@@ -464,8 +464,8 @@ export default class ItemsModule extends MapModule {
                     })));
                 }
             DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps?.length);
-            const data = ({type: 'FeatureCollection',
-                    features}) ;
+            const data = {type: 'FeatureCollection',
+                    features} ;
             this.localVectorDataSource.setLayerGeoJSONString(2, data);
             DEV_LOG && console.log('updategeojson2', Date.now()- startTime, JSON.stringify(data));
         } else {
