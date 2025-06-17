@@ -63,6 +63,7 @@
     * @returns {Array<{point: [number, number], distFromStart: number, distFromEnd: number}>}
     */
     function computeStepsOnePass(coords, stepKm, totalLengthKm) {
+      const startTime = Date.now();
       const steps = [];
       let cumulative = 0;
       let nextStepDist = 0;
@@ -88,7 +89,7 @@
     
         cumulative += segLen;
       }
-    
+      DEV_LOG && console.log('computesteps', Date.now()- startTime);
       return steps;
     }
     
