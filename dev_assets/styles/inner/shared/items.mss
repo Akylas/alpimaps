@@ -80,10 +80,9 @@
 }
 
 
-#poi['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
+#poi['mapnik::geometry_type'=1] {
     text-placement: nutibillboard;
 		text-fill: @itemColor;
-		// text-width: 24;
 		text-allow-overlap: true;
 		text-clip: false;
 		text-name:'';
@@ -97,10 +96,9 @@
 
 }
 
-#steps['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
+#steps['mapnik::geometry_type'=1]{
     text-placement: nutibillboard;
 		text-fill: @itemColor;
-		// text-width: 24;
 		text-allow-overlap: true;
 		text-clip: false;
 		text-name:[distanceFromStart];

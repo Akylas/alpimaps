@@ -2,6 +2,8 @@
     "layers": [
         "lines",
         "stops",
+        "poi",
+        "steps",
         "items",
         "directions",
         "search"

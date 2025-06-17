@@ -66,7 +66,7 @@
       const startTime = Date.now();
       const steps = [];
       let cumulative = 0;
-      let nextStepDist = 0;
+      let nextStepDist = stepKm;
     
       for (let i = 0; i < coords.length - 1 && nextStepDist <= totalLengthKm; i++) {
         const a = coords[i];
@@ -79,14 +79,13 @@
           steps.push({
             geometry: {
                 type: 'Point',
-                coordinates : point
+                coordinates: point
             },
-            distFromStart: +nextStepDist.toFixed(3),
-            distFromEnd: +(totalLengthKm - nextStepDist).toFixed(3)
+            distFromStart: +nextStepDist,
+            distFromEnd: +(totalLengthKm - nextStepDist)
           });
           nextStepDist += stepKm;
         }
-    
         cumulative += segLen;
       }
       DEV_LOG && console.log('computesteps', Date.now()- startTime);
@@ -849,7 +848,7 @@
             const startTime = Date.now();
             const id = Date.now();
             const totalDist= route.route.totalDistance;
-            const stepDist = totalDist>30?10:(totalDist>10?5:1);
+            const stepDist = totalDist>30000?10000:(totalDist>10000?5000:1000);
             const item: any = {
                 type: 'Feature',
                 _parsedRoute: route.route,
