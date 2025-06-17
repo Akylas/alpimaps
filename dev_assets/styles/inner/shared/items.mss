@@ -92,10 +92,10 @@
         shield-clip: false;
     }
     [class=step][zoom<16] {
-    [zoom>=6][level=1],
-    [zoom>=8][level=2],
-    [zoom>=9][level=3],
-    [zoom>=10][level=4]
+    [zoom>=6][level<=1],
+    [zoom>=7][level<=2],
+    [zoom>=9][level<=3],
+    [zoom>=10][level<=4]
     [zoom>=11] {
     
     //    text-placement: nutibillboard;       
