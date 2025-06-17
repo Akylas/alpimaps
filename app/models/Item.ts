@@ -91,6 +91,7 @@ export interface StepPoint {
     distToEnd: number;
     distFromStartStr: string;
     distToEndStr: string;
+    level:number;
 }
 export interface Route {
     osmid?: string;
