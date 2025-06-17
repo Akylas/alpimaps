@@ -81,29 +81,25 @@
 
 
 #poi {
-    [class=poi] {
-        text-placement: nutibillboard;
-        text-fill: @itemColor;
-        text-allow-overlap: true;
-        text-clip: false;
-        text-name:'';
-        text-face-name: 'osm';
-        text-size: 30;
-        text-halo-fill: @standard-halo-fill;
-        text-halo-radius: @standard-halo-radius;
-        text-horizontal-alignment : middle;
-        text-vertical-alignment: bottom;
-        text-dx:-3;
+    [class=waypoint] {
+        
+        
+        shield-name: '';
+      shield-size: 8;
+      shield-face-name: 'osm';
+      shield-file: 'shields/poi_shield.svg';
+      shield-fill: #ffffff;
+      shield-allow-overlap: true;
+        shield-clip: false;
     }
-    [class=steps] {
-        text-placement: nutibillboard;
-        text-fill: @itemColor;
-        text-allow-overlap: true;
-        text-clip: false;
-        text-name:[distanceFromStart];
-        text-face-name: @mont;
-        text-size: 14;
-        text-halo-fill: @standard-halo-fill;
-        text-halo-radius: @standard-halo-radius;
+    [class=step] {
+    //    text-placement: nutibillboard;       
+        shield-name: [distFromStartStr];
+      shield-size: 8;
+      shield-face-name: @mont;
+      shield-file: 'shields/poi_shield.svg';
+      shield-fill: #ffffff;
+      shield-allow-overlap: true;
+        shield-clip: false;
     }
 }
