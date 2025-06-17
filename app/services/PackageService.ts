@@ -848,7 +848,7 @@ class PackageService extends Observable {
                 }
                 const elevations = await this.getElevations(positions);
                 const result = this.computeProfileFromHeights(positions, elevations);
-                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms', JSON.stringify(result));
+                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
                 return result;
             } else {
                 const startTime = Date.now();
@@ -869,9 +869,9 @@ class PackageService extends Observable {
                         positions = positions.flatten();
                     }
                 }
-                DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
+            //    DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
                 const webResult = await networkService.getValhallaElevationProfile(positions);
-                DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
+               // DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
                 const result = this.computeProfileFromHeights(
                     positions,
                     webResult.range_height.map((e) => e[1])
