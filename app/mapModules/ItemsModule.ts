@@ -460,7 +460,9 @@ export default class ItemsModule extends MapModule {
                         properties: {
                             class: 'step',
                             distFromStart: p.distFromStart,
-                            distFromEnd: p.distFromEnd
+                            distToEnd: p.distToEnd,
+                            distFromStartStr: p.distFromStartStr,
+                            distToEndStr: p.distToEndStr
                         }
                     })));
                 }
