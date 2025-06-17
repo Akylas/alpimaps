@@ -206,12 +206,11 @@ export default class ItemsModule extends MapModule {
     }
     setLayerGeoJSONString() {
         this.getOrCreateLocalVectorLayer();
-        const str = JSON.stringify({
+        // DEV_LOG && console.log('updateGeoJSONLayer', str);
+        this.getLocalVectorDataSource().setLayerGeoJSONString(1, {
             type: 'FeatureCollection',
             features: this.currentItems.map((item) => ({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }))
         });
-        // DEV_LOG && console.log('updateGeoJSONLayer', str);
-        this.getLocalVectorDataSource().setLayerGeoJSONString(1, str);
     }
     async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true, updatePicture = true) {
         item = await this.itemRepository.updateItem(item as Item, data);
@@ -445,6 +444,7 @@ export default class ItemsModule extends MapModule {
                 if (p.properties.showOnMap) {
                     features.push({
                         geometry:p.geometry,
+                        type: 'Feature', 
                         properties: {
                             ...p.properties,
                             class: 'waypoint'
@@ -456,6 +456,7 @@ export default class ItemsModule extends MapModule {
             if (item.route.steps) {
                     features.push(...item.route.steps.map(p=>({
                         geometry: p.geometry,
+                        type: 'Feature', 
                         properties: {
                             class: 'step',
                             distFromStart: p.distFromStart,
@@ -466,10 +467,10 @@ export default class ItemsModule extends MapModule {
             DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps?.length);
             const data = {type: 'FeatureCollection',
                     features} ;
-            this.localVectorDataSource.setLayerGeoJSONString(2, data);
+            this.getLocalVectorDataSource().setLayerGeoJSONString(2, data);
             DEV_LOG && console.log('updategeojson2', Date.now()- startTime, JSON.stringify(data));
         } else {
-            this.localVectorDataSource.setLayerGeoJSONString(2, {type: 'FeatureCollection',
+            this.getLocalVectorDataSource().setLayerGeoJSONString(2, {type: 'FeatureCollection',
                     features:[]} );
         }
         
