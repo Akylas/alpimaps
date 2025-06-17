@@ -88,7 +88,9 @@ export interface DirectionWayPoint {
 export interface StepPoint {
     geometry : Point,
     distFromStart: number
-    distFromEnd: number;
+    distToEnd: number;
+    distFromStartStr: string;
+    distToEndStr: string;
 }
 export interface Route {
     osmid?: string;
