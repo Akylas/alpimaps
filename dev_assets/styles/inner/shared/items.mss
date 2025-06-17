@@ -81,22 +81,27 @@
 
 
 #poi {
-    [class=waypoint] {
-        
-        
+    [class=waypoint] {     
         shield-name: '';
-      shield-size: 8;
+      shield-size: 10;
       shield-face-name: 'osm';
+      shield-dx: -1;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
         shield-clip: false;
     }
-    [class=step] {
+    [class=step][zoom<16] {
+    [zoom>=6][level=1],
+    [zoom>=8][level=2],
+    [zoom>=9][level=3],
+    [zoom>=10][level=4]
+    [zoom>=11]
+    
     //    text-placement: nutibillboard;       
         shield-name: [distFromStartStr];
       shield-size: 8;
-      shield-face-name: @mont;
+      shield-face-name: @mont_bd;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
