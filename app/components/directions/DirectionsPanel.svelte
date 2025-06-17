@@ -94,6 +94,7 @@
     
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints) {
+    DEV_LOG && console.log('routingResultToJSON', waypoints);
         const rInstructions = result.getInstructions();
         const instructions: RouteInstruction[] = [];
         // const positions = getPointsFromResult(result);
@@ -893,7 +894,7 @@
                 }
             };
             if (ApplicationSettings.getBoolean('route_compute_steps', false)) {
-                item.properties.route.steps = computeStepsOnePass(item.geometry.coordinates, stepDist, totalDist);
+                route.route.steps = computeStepsOnePass(item.geometry.coordinates, stepDist, totalDist);
             }
             if (editingItem) {
                 item.properties.editingId = editingItem.id;
@@ -1065,7 +1066,7 @@
                 return false;
             });
             if (index >= 0) {
-                item.showOnMap = !item.showOnMap;
+                item.properties.showOnMap = !item.properties.showOnMap;
                 waypoints.setItem(index, item);
             }
         } catch (error) {
