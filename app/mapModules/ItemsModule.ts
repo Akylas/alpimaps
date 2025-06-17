@@ -463,7 +463,7 @@ export default class ItemsModule extends MapModule {
                         }
                     })));
                 }
-            DEV_LOG && console.log('updategeojson1', Date.now()- startTime);
+            DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps);
             const str = JSON.stringify({type: 'FeatureCollection',
                     features}) ;
             this.localVectorDataSource.setLayerGeoJSONString(2, str);
