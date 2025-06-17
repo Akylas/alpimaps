@@ -81,8 +81,10 @@
                 type: 'Point',
                 coordinates: point
             },
-            distFromStart: +nextStepDist,
-            distFromEnd: +(totalLengthKm - nextStepDist)
+            distFromStart: nextStepDist,
+            distFromStartStr: (nextStepDist / 1000).toFixed(),
+            distToEnd: (totalLengthKm - nextStepDist),
+            distToEndStr: ((totalLengthKm - nextStepDist) /1000).toFixed()
           });
           nextStepDist += stepKm;
         }
