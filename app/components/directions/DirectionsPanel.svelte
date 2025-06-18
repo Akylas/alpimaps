@@ -6,6 +6,7 @@
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import { showSliderPopover, showSnack } from '~/utils/ui';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -916,7 +917,7 @@
                 // item.properties.id = editingItem.propertiesid;
             }
             features.push(item);
-            DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms', JSON.stringify(route.waypoints));
+            DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms', JSON.stringify(route.route.waypoints));
             return item as ItemFeature;
         }
     }
