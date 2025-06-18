@@ -118,7 +118,7 @@
         }
         const route = {
             costing_options,
-            waypoints: waypoints['_array'].map(w=> {
+            waypoints: waypoints.map(w=> {
                 if (w.properties.showOnMap) {
                     return {
                         ...w,
