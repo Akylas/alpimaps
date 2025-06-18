@@ -120,7 +120,7 @@
             costing_options,
             waypoints: waypoints.map(w=> {
                 if (w.properties.showOnMap) {
-                    w.properties.index = isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15);
+                    w.properties.index = isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 50);
                 }
                 return w;
             }),
@@ -1382,7 +1382,7 @@
                                 color={buttonsColor}
                                 small={true}
                                 text="mdi-map"
-                                isSelected={item.showOnMap}
+                                isSelected={item.properties.showOnMap}
                                 on:tap={() => toggleWayPointShowOnMap(item)} />
                             <IconButton
                                 col={2}
