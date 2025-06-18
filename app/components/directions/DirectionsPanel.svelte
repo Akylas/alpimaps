@@ -120,16 +120,9 @@
             costing_options,
             waypoints: waypoints.map(w=> {
                 if (w.properties.showOnMap) {
-                    return {
-                        ...w,
-                        properties:{
-                            ...w.properties,
-                            index: isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15)
-                        }
-                        
-                    }
+                    w.properties.index = isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 15);
                 }
-                return {...w};
+                return w;
             }),
             totalTime: result.getTotalTime(),
             totalDistance: result.getTotalDistance()
