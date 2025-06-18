@@ -415,22 +415,28 @@
                 delete item.properties.style;
             }
             DEV_LOG && console.log('updateEditedItem1', item.id, editingItem.id, !!editingItem.profile, !!editingItem.stats);
-            if (editingItem.profile) {
+            let needsChartUpdate = false;
+            if (editingItem.profile && ! ApplicationSettings.getBoolean('auto_fetch_profile', false)) {
                 const profile = await packageService.getElevationProfile(item);
+                needsChartUpdate = true;
                 item['_parsedProfile'] = profile;
             }
-            if (editingItem.stats) {
+            if (editingItem.stats && !ApplicationSettings.getBoolean('auto_fetch_stats', false)) {
                 const projection = mapContext.getProjection();
                 const stats = await packageService.fetchStats({ item, projection });
                 item['_parsedStats'] = stats;
+                needsChartUpdate = true;
             }
             item = await itemsModule.updateItem(item, undefined, true, false);
             mapContext.selectItem({ item, isFeatureInteresting: true, peek: true, preventZoom: false });
-            updateGraphAvailable();
-            updateSteps();
-            if (elevationChart && graphAvailable) {
-                elevationChart.updateChartData();
+            if (needsChartUpdate) {
+                updateGraphAvailable();
+                updateSteps();
+                if (elevationChart && graphAvailable) {
+                    elevationChart.updateChartData();
+                }
             }
+            
             if (isRoute) {
                 await mapContext.mapModules.directionsPanel.cancel(false);
             }
@@ -507,7 +513,7 @@
             updateEditedItem();
             return;
         }
-        DEV_LOG && console.log('saveItem', item);
+       // DEV_LOG && console.log('saveItem', item);
         try {
             updatingItem = true;
             await mapContext.saveItem(mapContext.getSelectedItem());
