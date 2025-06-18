@@ -71,6 +71,9 @@
                     },
                     {
                         text: ' ' + formatDistance(event.remainingDistanceToStep)
+                    },
+                    {
+                        text: '\n'
                     }] : []).concat([
                     {
                         fontFamily: $fonts.mdi,
