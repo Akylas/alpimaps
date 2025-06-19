@@ -473,6 +473,8 @@
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
+                        c.drawCircle(x, y, 8, waypointsBackPaint);
+                        c.drawText('', x, y, waypointsPaint);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
                         c.translate(x, y - 14);
@@ -486,7 +488,7 @@
                 const positions = packageService.getRouteItemPoses(it);
                 it.route.waypoints.forEach(p=> {
                     if (p.properties.showOnMap && p.properties.index > 0) {
-                        limitLine = new LimitLine(profileData[p.properties.index].d, '');
+                        limitLine = new LimitLine(profileData[p.properties.index].d, ' ');
                         limitLine.lineColor = colorOutline;
                         limitLine.enableDashedLine(6, 3, 0);
                         limitLine.lineWidth = 0.5;
