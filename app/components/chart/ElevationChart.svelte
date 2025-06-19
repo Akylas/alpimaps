@@ -331,7 +331,7 @@
                 chartView.dragEnabled = true;
                 chartView.clipHighlightToContent = false;
                 chartView.zoomedPanWith2Pointers = true;
-                chartView.clipDataToContent = false;
+                chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
                 chartView.setExtraOffsets(0, 24, 10, 10);
@@ -348,6 +348,7 @@
                 xAxis.textColor = colorOnSurface;
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
+                xAxis.drawLimitLinesBehindData = false;
                 xAxis.valueFormatter = {
                     getAxisLabel: (value) => formatDistance(value, xinterval < 1000 ? 1 : 0)
                 };
@@ -473,8 +474,8 @@
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x, y - 10, 6, waypointsBackPaint);
-                        c.drawText('', x, y - 10 + 1, waypointsPaint);
+                        c.drawCircle(x + 3, y - 14, 6, waypointsBackPaint);
+                        c.drawText('', x + 3, y - 14 - 1, waypointsPaint);
                         paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
@@ -496,8 +497,8 @@
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         
-                            c.drawCircle(x, y, 6, waypointsBackPaint);
-                            c.drawText('', x, y + 1, waypointsPaint);
+                            c.drawCircle(x - 3, y - 8, 6, waypointsBackPaint);
+                            c.drawText('', x - 3, y - 8 - 1, waypointsPaint);
                             
                         }
                         xAxis.addLimitLine(limitLine);
