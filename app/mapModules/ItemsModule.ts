@@ -481,7 +481,7 @@ export default class ItemsModule extends MapModule {
                         properties: {
                             class: 'waypoint',
                             icon: '',
-                            iconDx: 0,
+                            iconDx: 1,
                             iconDy: -1
                         }
                     });
