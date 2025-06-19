@@ -467,6 +467,24 @@ export default class ItemsModule extends MapModule {
                         }
                     })));
                 }
+              if (item.profile?.ascents?.length > 0) {
+                  const positions = item.geometry?.['coordinates'];
+                  item.profile.ascents.forEach(a => {
+                      const actualIndex = Math.max(0, Math.min(a.highestPointIndex, positions.length - 1));
+                      const position = positions[actualIndex];
+                      features.push({
+                        geometry: {
+                            type: 'Point',
+                            coordinates: position
+                        },
+                        type: 'Feature', 
+                        properties: {
+                            class: 'waypoint',
+                            icon: ''
+                        }
+                    });
+                  })
+              }
             DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps?.length);
             const data = {type: 'FeatureCollection',
                     features} ;
