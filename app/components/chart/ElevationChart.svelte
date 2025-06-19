@@ -22,6 +22,7 @@
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
+    let { colorOnSurface, colorOutline, colorOutlineVariant, colorOnPrimary, colorPrimary } = $colors;
     $: ({ colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
     
     const xintervals = [1, 2, 5, 10, 20, 50, 100];
@@ -38,6 +39,15 @@
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(10);
     
+    const waypointsBackPaint = new Paint();
+    waypointsBackPaint.setColor(colorPrimary);
+    
+    const waypointsPaint = new Paint();
+    waypointsPaint.fontFamily = 'osm';
+    waypointsPaint.setColor(colorOnPrimary);
+    waypointsPaint.setTextSize(8);
+    waypointsPaint.setTextAlign(Align.CENTER);
+    
     const nstringPaint = new Paint();
     nstringPaint.setColor('#aaa');
     nstringPaint.setStrokeWidth(1);
@@ -45,6 +55,7 @@
 
     export let item: Item;
     export let showAscents = true;
+    export let showWaypoints = true;
     let chart: NativeViewElementNode<LineChart>;
     export let showProfileGrades = true;
 
@@ -469,6 +480,26 @@
                     }
                     xAxis.addLimitLine(limitLine);
               });
+            }
+            if (showWaypoints) {
+                const positions = packageService.getRouteItemPoses(it);
+                it.route.waypoints.forEach(p=> {
+                    if (p.properties.showOnMap && p.properties.index > 0) {
+                        limitLine = new LimitLine(profileData[p.properties.index].d, '');
+                        limitLine.lineColor = colorOutline;
+                        limitLine.enableDashedLine(6, 3, 0);
+                        limitLine.lineWidth = 0.5;
+                        limitLine.ensureVisible = true;
+                        limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
+                        
+                            c.drawCircle(x, y, 8, waypointsBackPaint);
+                            c.drawText('', x, y, waypointsPaint);
+                            
+                        }
+                        xAxis.addLimitLine(limitLine);
+                    }
+                    
+                });
             }
             
 

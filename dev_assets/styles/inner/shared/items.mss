@@ -1,5 +1,7 @@
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 
+@osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??[nuti::osm-marker];
+
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
         when ([nuti::selected_id] !=[id]) {
@@ -82,9 +84,9 @@
 
 #poi {
     [class=waypoint] {     
-        shield-name: '';
+      shield-name:  [style.icon] ? [style.icon] : @osm_icon;
       shield-size: 10;
-      shield-face-name: 'osm';
+      shield-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
       shield-dx: -1;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
