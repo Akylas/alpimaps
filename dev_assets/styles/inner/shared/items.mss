@@ -84,11 +84,12 @@
 
 #poi {
     [class=waypoint] {     
+      shield-placement: nutibillboard;
       shield-name:  [style.icon] ?? [icon] ?? @osm_icon;
       shield-size: 10;
       shield-face-name: [style.mapFontFamily] ?? 'osm';
       shield-dx:[style.iconDx] ?? [iconDx] ?? -1;
-        shield-dy:[style.iconDy] ?? [iconDy] ??0;
+      shield-dy:[style.iconDy] ?? [iconDy] ??0;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
@@ -101,6 +102,7 @@
     [zoom>=9][level<=3],
     [zoom>=10][level<=4]
     [zoom>=11] {
+      shield-placement: nutibillboard;
       shield-name: [distFromStartStr];
       shield-size: 8;
       shield-face-name: @mont_bd;
