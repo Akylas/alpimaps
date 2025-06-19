@@ -331,7 +331,7 @@
                 chartView.dragEnabled = true;
                 chartView.clipHighlightToContent = false;
                 chartView.zoomedPanWith2Pointers = true;
-                chartView.clipDataToContent = true;
+                chartView.clipDataToContent = false;
 
                 chartView.minOffset = 0;
                 chartView.setExtraOffsets(0, 24, 10, 10);
@@ -473,8 +473,9 @@
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x, y, 8, waypointsBackPaint);
-                        c.drawText('', x, y, waypointsPaint);
+                        c.drawCircle(x, y - 10, 6, waypointsBackPaint);
+                        c.drawText('', x, y - 10 + 1, waypointsPaint);
+                        paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
                         c.translate(x, y - 14);
@@ -495,8 +496,8 @@
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         
-                            c.drawCircle(x, y, 8, waypointsBackPaint);
-                            c.drawText('', x, y, waypointsPaint);
+                            c.drawCircle(x, y, 6, waypointsBackPaint);
+                            c.drawText('', x, y + 1, waypointsPaint);
                             
                         }
                         xAxis.addLimitLine(limitLine);

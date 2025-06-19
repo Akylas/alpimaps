@@ -61,22 +61,22 @@
 }
 
 #items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
-        text-fill: [style.color] ? [style.color] : @itemColor;
+        text-fill: [style.color] ?? @itemColor;
         text-placement: nutibillboard;
-        text-name: [style.icon] ? [style.icon] : '';
+        text-name: [style.icon] ?? '';
         text-allow-overlap: true;
         text-clip: false;
-        text-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
+        text-face-name: [style.mapFontFamily] ?? 'osm';
         text-size: (([style.iconSize] ? [style.iconSize]: @default_icon_size) + 5) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
         text-halo-fill: @itemContrastColor;
         text-halo-radius: @standard-halo-radius;
-        text-horizontal-alignment: [style.horizontalAlignment] ? [style.horizontalAlignment] : middle;
+        text-horizontal-alignment: [style.horizontalAlignment] ??middle;
         text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : bottom;
-        text-dx:[style.iconDx] ? [style.iconDx] :@default_icon_dx;
-        text-dy:[style.iconDy] ? [style.iconDy] :0;
+        text-dx:[style.iconDx] ?? @default_icon_dx;
+        text-dy:[style.iconDy] ?? 0;
         text-placement-priority: 27;
         when ([nuti::selected_id]=[id]) {
-            text-size: ([style.iconSize] ? [style.iconSize]: @default_icon_size) + 10;
+            text-size: ([style.iconSize] ?? @default_icon_size) + 10;
         }
 
 }
@@ -86,11 +86,13 @@
     [class=waypoint] {     
       shield-name:  [style.icon] ?? [icon] ?? @osm_icon;
       shield-size: 10;
-      shield-face-name: [style.mapFontFamily] ? [style.mapFontFamily] : 'osm';
-      shield-dx: -1;
+      shield-face-name: [style.mapFontFamily] ?? 'osm';
+      shield-dx:[style.iconDx] ?? [iconDx] ?? -1;
+        shield-dy:[style.iconDy] ?? [iconDy] ??0;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
+      shield-placement-priority: 26;
         shield-clip: false;
     }
     [class=step][zoom<16] {
@@ -99,15 +101,14 @@
     [zoom>=9][level<=3],
     [zoom>=10][level<=4]
     [zoom>=11] {
-    
-    //    text-placement: nutibillboard;       
-        shield-name: [distFromStartStr];
+      shield-name: [distFromStartStr];
       shield-size: 8;
       shield-face-name: @mont_bd;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
         shield-clip: false;
+        shield-placement-priority: 37;
         }
     }
 }
