@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { MapBounds } from '@nativescript-community/ui-carto/core';
