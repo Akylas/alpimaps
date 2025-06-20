@@ -1435,7 +1435,7 @@
         // });
     }
 
-    function setStyleParameter(key: string, value: string | number, decoder) {
+    function setStyleParameter(key: string, value: string | number, decoder?) {
         decoder = decoder || mapContext.mapDecoder;
         // DEV_LOG && console.log('setStyleParameter', key, value);
         decoder?.setStyleParameter(key, value + '');
