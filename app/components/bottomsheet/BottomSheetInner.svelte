@@ -39,7 +39,7 @@
     import { compareArrays } from '~/utils/utils';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import dayjs from 'dayjs';
-    import { itemLock, showGradeColors, showAscents } from '~/stores/mapStore';
+    import { itemLock, showGradeColors, showAscents, chartShowWaypoints } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
@@ -993,6 +993,12 @@
                         title: lc('show_elevation_profile_ascents')
                     },
                     {
+                        type: 'switch',
+                        store: chartShowWaypoints,
+                        value: get(chartShowWaypoints),
+                        title: lc('chart_show_waypoints')
+                    },
+                    {
                         type: 'slider',
                         title: lc('elevation_profile_smooth_window'),
                         icon: 'mdi-window-closed-variant',
@@ -1129,7 +1135,7 @@
             </stacklayout>
         </scrollview>
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
-        <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} showAscents={$showAscents} showProfileGrades={$showGradeColors}/>
+        <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} showAscents={$showAscents} showProfileGrades={$showGradeColors} chartShowWaypoints={chartShowWaypoints}/>
         <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
             <IconButton
                 fontSize={20}

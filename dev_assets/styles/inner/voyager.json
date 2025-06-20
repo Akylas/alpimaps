@@ -16,6 +16,7 @@
         "shared/search.mss"
     ],
     "nutiparameters": {
+        "items_show_km_shields": 1,
         "lang": "en",
         "fallback_lang": "en",
         "hide_unselected": 0,
@@ -26,7 +27,7 @@
         "main_color": "#60A5F4",
         "main_darker_color": "#287bda",
         "selected_osmid": -1,
-         "osm-border_control": "\uea8f",
+       "osm-border_control": "\uea8f",
         "osm-collecting": "\uea86",
         "osm-droplet": "\uea94",
         "osm-frame": "\uea87",
