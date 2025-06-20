@@ -364,7 +364,7 @@ function createStore(params){
             } else {
                 updateMethod(key, value);
             }
-            notifyCallback?.({eventName:'change', object:nutiProps, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
+            notifyCallback?.({eventName:'change', object:nutiProps, ...obj, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
         });
         obj.updateMethod = updateMethod;
         
@@ -387,7 +387,7 @@ function createStore(params){
               } else {
                   obj.updateMethod(settingKey, value);
               }
-              notifyCallback?.({eventName:'change', object:this, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
+              notifyCallback?.({eventName:'change', object:this, ...obj, nutiValue: nutiTransform ? nutiTransform(value) : value + ''});
           } catch (error) {
               showError(error)
           }
