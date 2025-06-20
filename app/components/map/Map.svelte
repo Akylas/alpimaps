@@ -1128,7 +1128,7 @@
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     
     nutiProps.on('change', (event: any) => {
-        setStyleParameter(event.key, event.nutiValue, event.inner ? mapContext.innerDecoder : undefined);
+        setStyleParameter(event.key, event.nutiValue);
     });
     innerNutiProps.on('change', (event: any) => {
         setStyleParameter(event.key, event.nutiValue, mapContext.innerDecoder);
@@ -1435,7 +1435,8 @@
         // });
     }
 
-    function setStyleParameter(key: string, value: string | number, decoder = mapContext.mapDecoder ) {
+    function setStyleParameter(key: string, value: string | number, decoder) {
+        decoder = decoder || mapContext.mapDecoder;
         // DEV_LOG && console.log('setStyleParameter', key, value);
         decoder?.setStyleParameter(key, value + '');
     }
