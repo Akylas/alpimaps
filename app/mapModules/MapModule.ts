@@ -26,6 +26,7 @@ import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 //import { routesType } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
+import { innerNutiProps } from '~/stores/mapStore';
 import { showSnack, showToast } from '~/utils/ui';
 // export interface IMapModule {
 //     onMapReady(mapView: CartoMap<LatLonKeys>);
@@ -260,6 +261,17 @@ const mapContext: MapContext = {
             const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0,-1).concat('inner').join('/') : 'inner';
             DEV_LOG && console.log('setInnerStyle', style, mapStyle, stylePath);
             const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
+            const nutiPropsToApply = innerNutiProps.getKeys().reduce((acc, key) => {
+                    const value = innerutiProps.getNutiValue(key);
+                    if(value != null) {
+                        acc[key] = value;
+                    }
+                    return acc;
+                }, {});
+                if (Object.keys(nutiPropsToApply).length > 0) {
+                //    showToast(JSON.stringify(nutiPropsToApply));
+                    decoder.setJSONStyleParameters(nutiPropsToApply);
+                }
          //   decoder.setStyleParameter('routes_type', get(routesType) + '');
             if (oldDecoder) {
                 oldDecoder.notify({ eventName: 'change' });
