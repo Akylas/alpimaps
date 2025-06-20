@@ -86,7 +86,7 @@
     [class=waypoint] {     
    //   shield-placement: nutibillboard;
       shield-name:  [style.icon] ?? [icon] ?? @osm_icon;
-      shield-size: 10  * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1);
+      shield-size: 10  * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
       shield-face-name: [style.mapFontFamily] ?? 'osm';
       shield-dx:[style.iconDx] ?? [iconDx] ?? -1;
       shield-dy:[style.iconDy] ?? [iconDy] ??0;
@@ -104,7 +104,7 @@
     [zoom>=11] {
      // shield-placement: nutibillboard;
       shield-name: [distFromStartStr];
-      shield-size: 8  * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1);
+      shield-size: 8  * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
       shield-face-name: @mont_bd;
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
