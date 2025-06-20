@@ -20,6 +20,7 @@
         rotateEnabled,      
         showItemsLayer,
         nutiProps,
+        innerNutiProps,
         layerProps
     } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
@@ -162,6 +163,7 @@
         if (customLayers.hasLocalData) {
             try {
                 newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
+                newItems.push(...innerNutiProps.getKeys().map(key => innerNutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
             } catch(error){
                 showError(error);
             }         
