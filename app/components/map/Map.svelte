@@ -1129,9 +1129,9 @@
     
     nutiProps.on('change', (event: any) => {
      //  showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
-        if (vectorTileDecoder) {
-            setStyleParameter(event.key, event.nutiValue);
-        }
+        //if (vectorTileDecoder) {
+            setStyleParameter(event.key, event.nutiValue, event.inner ? mapContext.innerDecoder : undefined);
+        //}
     });
     layerProps.on('change', (event: any) => {
         switch(event.key) {
@@ -1145,9 +1145,6 @@
             }
             
             
-        }
-        if (vectorTileDecoder) {
-            setStyleParameter(event.key, event.nutiValue);
         }
     });
    // $: {
@@ -1438,9 +1435,9 @@
         // });
     }
 
-    function setStyleParameter(key: string, value: string | number) {
+    function setStyleParameter(key: string, value: string | number, decoder = mapContext.mapDecoder ) {
         // DEV_LOG && console.log('setStyleParameter', key, value);
-        mapContext.mapDecoder?.setStyleParameter(key, value + '');
+        decoder?.setStyleParameter(key, value + '');
     }
 
     function handleNewLanguage(newLang) {
