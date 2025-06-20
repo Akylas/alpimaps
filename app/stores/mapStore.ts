@@ -61,6 +61,7 @@ export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
 export const immersive = settingsStore('immersive', false);
 export const showAscents = settingsStore('elevation_profile_show_ascents', true);
+export const chartShowWaypoints = settingsStore('chart_show_waypoints', true);
 export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
@@ -97,6 +98,12 @@ const layersParams = {
     },
 }
 const nutiParams = {
+    items_show_km_shields : {
+        title: lc('items_show_km_shields'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        inner: true
+    },
     _fontscale: {
         title: lc('map_font_scale'),
         description: lc('map_font_scale_desc'),
