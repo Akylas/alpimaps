@@ -1128,10 +1128,10 @@
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
     
     nutiProps.on('change', (event: any) => {
-     //  showToast('nutiChange ' + event.key +' ' + event.value + ' ' + event.nutiValue);
-        //if (vectorTileDecoder) {
-            setStyleParameter(event.key, event.nutiValue, event.inner ? mapContext.innerDecoder : undefined);
-        //}
+        setStyleParameter(event.key, event.nutiValue, event.inner ? mapContext.innerDecoder : undefined);
+    });
+    innerNutiProps.on('change', (event: any) => {
+        setStyleParameter(event.key, event.nutiValue, mapContext.innerDecoder);
     });
     layerProps.on('change', (event: any) => {
         switch(event.key) {

@@ -97,13 +97,15 @@ const layersParams = {
         max: 400
     },
 }
-const nutiParams = {
+const innerNutiParams = {
     items_show_km_shields : {
         title: lc('items_show_km_shields'),
         settingsOptionsType: 'boolean',
         defaultValue: true,
         inner: true
-    },
+    }
+}
+const nutiParams = {
     _fontscale: {
         title: lc('map_font_scale'),
         description: lc('map_font_scale_desc'),
@@ -456,4 +458,5 @@ function createStore(params){
     }) as any; 
 }
 export const nutiProps = createStore(nutiParams);
+export const innerNutiProps = createStore(innerNutiParams);
 export const layerProps = createStore(layersParams);
