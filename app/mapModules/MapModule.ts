@@ -262,7 +262,7 @@ const mapContext: MapContext = {
             DEV_LOG && console.log('setInnerStyle', style, mapStyle, stylePath);
             const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
             const nutiPropsToApply = innerNutiProps.getKeys().reduce((acc, key) => {
-                    const value = innerutiProps.getNutiValue(key);
+                    const value = innerNutiProps.getNutiValue(key);
                     if(value != null) {
                         acc[key] = value;
                     }
