@@ -110,7 +110,7 @@
       shield-fill: #ffffff;
       shield-allow-overlap: true;
         shield-clip: false;
-        shield-placement-priority: 37;
+        shield-placement-priority: 25;
         }
     }
 }
