@@ -93,7 +93,7 @@
       shield-file: 'shields/poi_shield.svg';
       shield-fill: #ffffff;
       shield-allow-overlap: true;
-      shield-placement-priority: 26;
+      shield-placement-priority: -1;
         shield-clip: false;
     }
     ['nuti::items_show_km_shields'=1][class=step][zoom<16] {
@@ -110,7 +110,7 @@
       shield-fill: #ffffff;
       shield-allow-overlap: true;
         shield-clip: false;
-        shield-placement-priority: 25;
+        shield-placement-priority: -1;
         }
     }
 }
