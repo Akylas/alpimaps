@@ -1,10 +1,10 @@
 {
     "layers": [
         "lines",
-        "stops",
-        "poi",
         "items",
         "directions",
+        "stops",
+        "poi",
         "search"
     ],
     "styles": [

@@ -372,42 +372,59 @@
 	[class=rail][brunnel=tunnel]::casing,
 	[class=transit][brunnel!=tunnel]::transit, 
 	[class=transit][brunnel=tunnel]::casing {
-		[brunnel=bridge][zoom>=15] {
-			line-color: @railway-bridge-casing;
-		}
-		line-color:  @railway-line;
-		line-width: @railway-line-width;
+    [subclass=tram]['nuti::show_tram'=1],
+    [subclass!=tram][subclass!=subway],
+    [subclass=subway]['nuti::show_underground'=1],
+    [level<=0]['nuti::show_underground'=1] {
     
-    [service!=null] {
-        line-dasharray: @railway-service-line-dasharray;
-        line-width: @railway-service-line-width;
-    }
-    ['nuti::emphasis_rails'=1][subclass=rail][service=null] {
-        line-color:  darken(@railway-line, 30%);
-        line-width: @railway-line-width *1.5;
-    }
-    
-		[brunnel=tunnel][zoom>=14] {
-			line-dasharray: 5,3;
-		}
-
-		::inner {
-			line-color: @railway-track-line;
-			line-width: @railway-track-line-width;
-			line-dasharray: @railway-track-line-dasharray;
-      [subclass=tram] {
-          line-dasharray: @tram-track-line-dasharray;
-          line-width: @tram-track-line-width;
-      }
+		  [brunnel=bridge][zoom>=15] {
+			  line-color: @railway-bridge-casing;
+		  }
+		  line-color:  @railway-line;
+		  line-width: @railway-line-width;
+      
       [service!=null] {
-          line-dasharray: @railway-service-track-line-dasharray;
-          line-width: @railway-service-track-line-width;
+          line-dasharray: @railway-service-line-dasharray;
+          line-width: @railway-service-line-width;
       }
       ['nuti::emphasis_rails'=1][subclass=rail][service=null] {
-          line-color:  darken(@railway-track-line, 30%);
-          line-width: (@railway-track-line-width * 2);
+          line-color:  darken(@railway-line, 30%);
+          line-width: @railway-line-width *1.5;
       }
-		}
+      
+		  [brunnel=tunnel][zoom>=14] {
+			  line-dasharray: 5,3;
+		  }
+      [subclass=tram]['nuti::show_tram'=0],
+      [subclass=subway]['nuti::show_underground'=0],
+      [level<=0]['nuti::show_underground'=0]{
+          line-width:0;
+      }
+  
+		  ::inner {
+			  line-color: @railway-track-line;
+			  line-width: @railway-track-line-width;
+			  line-dasharray: @railway-track-line-dasharray;
+        [subclass=tram] {
+            line-dasharray: @tram-track-line-dasharray;
+            line-width: @tram-track-line-width;
+        }
+
+        [subclass=tram]['nuti::show_tram'=0],
+        [subclass=subway]['nuti::show_underground'=0],
+        [level<=0]['nuti::show_underground'=0]{
+            line-width:0;
+        }
+        [service!=null] {
+            line-dasharray: @railway-service-track-line-dasharray;
+            line-width: @railway-service-track-line-width;
+        }
+        ['nuti::emphasis_rails'=1][subclass=rail][service=null] {
+            line-color:  darken(@railway-track-line, 30%);
+            line-width: (@railway-track-line-width * 2);
+        }
+		  }
+    }
 	}
 	[class=track]::casing,
 	[class=track][brunnel=bridge][zoom>=16]::bridge2{

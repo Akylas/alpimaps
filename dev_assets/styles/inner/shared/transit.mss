@@ -81,7 +81,7 @@
                 text-feature-id: @transitShieldeatureId;
                 text-size: @transit_route_text_width + 5;
                 text-name: '' + ntime('', max(length(@transitLineName) - 2, 0)) + '';
-                text-face-name: 'osm';
+                text-face-name: @osm;
             }
         }
     }
