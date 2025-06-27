@@ -1,5 +1,3 @@
-
-// @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 @id:[id];
 @is_selected: [nuti::selected_id]=[id];
 #directions {
@@ -46,13 +44,11 @@
 
 	['mapnik::geometry_type'=1] {
 		text-placement: nutibillboard;
-		// text-file: url('symbols/pin.svg');
 		text-fill: [isStart] ? 'green': ([isStop] ? 'red' : 'blue');
-		// text-width: 24;
 		text-allow-overlap: true;
 		text-clip: false;
 		text-name:[isStop]? '' : '';
-		text-face-name: 'osm';
+		text-face-name: @osm;
 		text-size: [isStop]?26:30;
 		text-halo-fill: @standard-halo-fill;
 		text-halo-radius: @standard-halo-radius;

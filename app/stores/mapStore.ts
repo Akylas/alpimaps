@@ -222,6 +222,16 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
+    show_underground:{
+        title: lc('show_underground_transports'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false
+    },
+    show_tram:{
+        title: lc('show_tram_lines'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
     emphasis_rails: {
         title: lc('emphasis_rail_tracks'),
         settingsOptionsType: 'boolean',

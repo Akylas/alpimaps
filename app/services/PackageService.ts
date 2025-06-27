@@ -514,7 +514,7 @@ class PackageService extends Observable {
                         return;
                     }
                     // console.log('gotElevation', result);
-                    resolve(Math.max(0, Math.round(result)));
+                    resolve(Math.max(-100, Math.round(result)));
                 });
             });
         }

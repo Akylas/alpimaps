@@ -160,7 +160,7 @@ export default class ItemsModule extends MapModule {
             this.localVectorLayer = new VectorTileLayer({
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
+                labelRenderOrder: VectorTileRenderOrder.LAYER,
                 clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 dataSource: this.localVectorDataSource,
                 decoder: mapContext.innerDecoder

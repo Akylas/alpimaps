@@ -2,7 +2,7 @@
 	['mapnik::geometry_type'=1] {
 		text-placement: point;
 		text-name: ;
-		text-face-name: 'osm';
+		text-face-name: @osm;
 		text-fill: [style.color] ? [style.color] : red;
 		text-horizontal-alignment:middle;
 		text-vertical-alignment:middle;
