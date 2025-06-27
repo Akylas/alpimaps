@@ -4,6 +4,8 @@
 @mont_bd: @font_face + ' Bold';
 @mont_it: @font_face + ' Medium Italic';
 
+@osm: 'osm';
+
 @standard-halo-radius: 2;
 @standard-halo-fill: #f2f5f888;
 @wrap_characters: '-_';
