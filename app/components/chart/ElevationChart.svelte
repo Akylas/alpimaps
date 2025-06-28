@@ -341,7 +341,7 @@
 
                 leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
                 leftAxis.ensureLastLabel = true;
-                leftAxis.drawLimitLinesBehindData = false;
+                leftAxis.drawLimitLinesBehindData = true;
 
                 xAxis.position = XAxisPosition.TOP;
                 xAxis.labelTextAlign = Align.CENTER;
@@ -349,7 +349,7 @@
                 xAxis.textColor = colorOnSurface;
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
-                xAxis.drawLimitLinesBehindData = false;
+                xAxis.drawLimitLinesBehindData = true;
                 xAxis.valueFormatter = {
                     getAxisLabel: (value) => formatDistance(value, xinterval < 1000 ? 1 : 0)
                 };
@@ -471,16 +471,16 @@
                     limitLine.lineColor = colorOutline;
                     limitLine.enableDashedLine(6, 3, 0);
                     limitLine.lineWidth = 0.5;
-                    limitLine.textSize = 9;
+                    limitLine.textSize = 7;
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x + 5, y - 11, 6, waypointsBackPaint);
-                        c.drawText('', x + 5, y - 11 - 1, waypointsPaint);
-                        paint.setTextAlign(Align.CENTER);
+                        c.drawCircle(x + 5, y - 5, 6, waypointsBackPaint);
+                        c.drawText('', x + 5, y - 5 +1, waypointsPaint);
+                     //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
-                        c.translate(x, y - 14);
+                        c.translate(x, y - 8);
                         staticLayout.draw(c);
                         c.restore();
                     }
@@ -498,8 +498,8 @@
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         
-                            c.drawCircle(x - 5, y - 5, 6, waypointsBackPaint);
-                            c.drawText('', x - 5, y - 5 - 1, waypointsPaint);
+                            c.drawCircle(x - 5, y +2, 6, waypointsBackPaint);
+                            c.drawText('', x - 5, y +2 - 1, waypointsPaint);
                             
                         }
                         xAxis.addLimitLine(limitLine);
