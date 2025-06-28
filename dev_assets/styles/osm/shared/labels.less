@@ -478,8 +478,6 @@
 	}
 }
 #poi[class=campsite][zoom>=10],#aerodrome_label[class!=international][zoom>=13],#aerodrome_label[class=international]  {
-//	[rank<=15],
-//	[zoom>=14] {
 		::icon {
 			text-placement: nutibillboard;
             #poi {     
@@ -494,9 +492,12 @@
 			text-size: @poi_icon_width;
 			text-fill: @poi-campsite-fill;
 			text-allow-overlap-same-feature-id: true;
-            #aerodrome_label {
-                text-name:  [nuti::osm-airport];
-            }
+      #aerodrome_label {
+          text-name:  [nuti::osm-airport];
+      }
+      [class=campsite]['nuti::campsite_allow_overlap'=1] {
+          text-allow-overlap: true;
+      }
 		}
 		::label[zoom>=17] {
 			text-name: @name;
@@ -515,8 +516,8 @@
 			text-fill: darken(@poi-campsite-fill, 30%);
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
+      
 		}
-//	}
 }
 
 #poi[class=spring][zoom>=12] {
