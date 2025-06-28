@@ -120,7 +120,7 @@
           }
                     ::label {
             text-name:  [style.icon] ?? [icon] ?? @osm_icon;
-      text-size:([iconSize]?? 10) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
+      text-size:([iconSize]?? 14) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
       text-face-name: [style.mapFontFamily] ?? 'osm';
       text-dx:[style.iconDx] ?? [iconDx] ?? 0;
       text-dy:[style.iconDy] ?? [iconDy] ?? 0;
