@@ -109,6 +109,9 @@
       text-face-name: [style.mapFontFamily] ?? 'osm';
       text-dx:[style.iconDx] ?? [iconDx] ?? 0;
       text-dy:[style.iconDy] ?? [iconDy] ?? 0;
+            text-horizontal-alignment: [style.horizontalAlignment] ??middle;
+            text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : middle;
+      
             text-feature-id: @waypointId;
             text-placement-priority: 9;
             text-placement: nutibillboard;   
