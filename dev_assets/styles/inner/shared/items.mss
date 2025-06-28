@@ -95,7 +95,7 @@
             text-name: [distFromStartStr];
             text-placement-priority: 9;
             text-face-name: @mont_bd;
-         //   text-placement: nutibillboard;
+            text-placement: nutibillboard;
             text-size: 8 * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));      
             text-fill: #ffffff;
             text-halo-fill: #000000;
@@ -103,27 +103,10 @@
         }
     }
         [class=waypoint] {
-          ::label {
-            text-name:  [style.icon] ?? [icon] ?? @osm_icon;
-      text-size:([iconSize]?? 10) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
-      text-face-name: [style.mapFontFamily] ?? 'osm';
-      text-dx:[style.iconDx] ?? [iconDx] ?? 0;
-      text-dy:[style.iconDy] ?? [iconDy] ?? 0;
-            text-horizontal-alignment: [style.horizontalAlignment] ??middle;
-            text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : middle;
-      
-            text-feature-id: @waypointId;
-            text-placement-priority: 9;
-            text-placement: nutibillboard;   
-            text-fill: #ffffff;
-            text-allow-overlap: true;
-            text-same-feature-id-dependent: true;
-            text-clip: false;
-          //  text-allow-overlap-same-feature-id: true;
-          }     
+
           ::icon {
             text-placement: nutibillboard;
-            text-placement-priority: 10;
+            text-placement-priority: 90;
             text-name: [nuti::osm-circle];
             text-feature-id: @waypointId;
             text-size: 20* linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
@@ -135,6 +118,24 @@
             text-allow-overlap: true;
             text-clip: false;
           }
+                    ::label {
+            text-name:  [style.icon] ?? [icon] ?? @osm_icon;
+      text-size:([iconSize]?? 10) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
+      text-face-name: [style.mapFontFamily] ?? 'osm';
+      text-dx:[style.iconDx] ?? [iconDx] ?? 0;
+      text-dy:[style.iconDy] ?? [iconDy] ?? 0;
+            text-horizontal-alignment: [style.horizontalAlignment] ??middle;
+            text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : middle;
+      
+            text-feature-id: @waypointId;
+            text-placement-priority: 90;
+            text-placement: nutibillboard;   
+            text-fill: #ffffff;
+            text-allow-overlap: true;
+            text-same-feature-id-dependent: true;
+            text-clip: false;
+          //  text-allow-overlap-same-feature-id: true;
+          }     
         
     }
 }
