@@ -17,6 +17,7 @@ import { File, Folder, path } from '@nativescript/core/file-system';
 import { get } from 'svelte/store';
 import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
+import { isEInk } from '~/helpers/theme';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
 import { preloading, clickHandlerLayerFilter, layerProps } from '~/stores/mapStore';
@@ -503,8 +504,8 @@ export default class CustomLayersModule extends MapModule {
                 labelRenderOrder: VectorTileRenderOrder.LAST,
                 decoder: mapContext.mapDecoder,
                 visible: opacity !== 0,
-                layerBlendingSpeed: 3,
-                labelBlendingSpeed: 3,
+                layerBlendingSpeed: isEInk ? 0 : 3,
+                labelBlendingSpeed: isEInk ? 0 : 3,
                 opacity,
                 clickRadius: layerProps['clickRadius'],
                 preloading: get(preloading),
