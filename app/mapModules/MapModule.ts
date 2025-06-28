@@ -151,7 +151,7 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
       DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
       const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
       const useZip = TEST_ZIP_STYLES || (!name.startsWith('/') || !Folder.exists(stylePath)); 
-      showToast('createTileDecoder '+ useZip + ' ' + stylePath);
+  //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
         return new MBVectorTileDecoder({
             style,
             pack:
