@@ -440,6 +440,7 @@ export default class ItemsModule extends MapModule {
         const startTime = Date.now();
         if (item?.route) {
             const features = [];
+            DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
             item.route.waypoints.forEach(p=> {
                 if (p.properties.showOnMap) {
                     features.push({
