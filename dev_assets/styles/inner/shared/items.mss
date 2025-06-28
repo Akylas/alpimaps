@@ -1,8 +1,8 @@
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
 
 @osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??'';
-@stepId: 'step-' +[distFromStartStr];
-@waypointId: 'wp-' +[name];
+@stepId: 173716 + [distFromStartStr];
+@waypointId: 'wp-' +[id];
 
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
@@ -92,39 +92,17 @@
         [zoom>=9][level<=3],
         [zoom>=10][level<=4]
         [zoom>=11] {  
-          ::label1 {
             text-name: [distFromStartStr];
-            text-feature-id: @stepId;
-        //    text-placement-priority: 9;
+            text-placement-priority: 9;
             text-face-name: @mont_bd;
             text-placement: nutibillboard;
             text-size: 8 * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));      
             text-fill: #ffffff;
-         //   text-allow-overlap: true;
-            text-same-feature-id-dependent: true;
-        //    text-clip: false;
-            text-allow-overlap-same-feature-id: true;
-          }     
-          ::icon1 {
-            text-placement: nutibillboard;
-          //  text-placement-priority: 9;
-            text-name: [nuti::osm-circle];
-            text-feature-id: @stepId;
-            text-size: 20* linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
-            text-face-name: @osm;
-            text-halo-fill: @standard-halo-fill;
-            text-halo-radius: @standard-halo-radius;
-            text-fill: @itemColor;
-        //    text-allow-overlap: true;
-        //    text-clip: false;
-            text-allow-overlap-same-feature-id: true;
-            
-          }
-    
+            text-halo-fill: #000000;
+            text-halo-radius: @standard-halo-radius;  
         }
     }
-        [class=waypoint] {     
-                  
+        [class=waypoint] {
           ::label {
             text-name:  [style.icon] ?? [icon] ?? @osm_icon;
       text-size:([iconSize]?? 14) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
@@ -132,17 +110,17 @@
       text-dx:[style.iconDx] ?? [iconDx] ?? 0;
       text-dy:[style.iconDy] ?? [iconDy] ?? 0;
             text-feature-id: @waypointId;
-         //   text-placement-priority: 9;
+            text-placement-priority: 9;
             text-placement: nutibillboard;   
             text-fill: #ffffff;
-         //   text-allow-overlap: true;
+            text-allow-overlap: true;
             text-same-feature-id-dependent: true;
-        //    text-clip: false;
-            text-allow-overlap-same-feature-id: true;
+            text-clip: false;
+          //  text-allow-overlap-same-feature-id: true;
           }     
           ::icon {
             text-placement: nutibillboard;
-          //  text-placement-priority: 9;
+            text-placement-priority: 10;
             text-name: [nuti::osm-circle];
             text-feature-id: @waypointId;
             text-size: 20* linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
@@ -150,9 +128,9 @@
             text-halo-fill: @standard-halo-fill;
             text-halo-radius: @standard-halo-radius;
             text-fill: @itemColor;
-            text-allow-overlap-same-feature-id: true;
-        //    text-allow-overlap: true;
-        //    text-clip: false;
+          //  text-allow-overlap-same-feature-id: true;
+            text-allow-overlap: true;
+            text-clip: false;
           }
         
     }

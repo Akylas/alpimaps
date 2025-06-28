@@ -44,6 +44,7 @@
         "orchard_pattern":"symbols/orchard.png"
     },
     "nutiparameters": {
+        "campsite_allow_overlap":1,
         "show_tram": 1,
         "show_underground": 0,
         "river_label_min_zoom":7,

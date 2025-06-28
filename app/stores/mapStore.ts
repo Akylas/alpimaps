@@ -242,6 +242,11 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
+    campsite_allow_overlap: {
+        title: lc('campsite_allow_overlap'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
