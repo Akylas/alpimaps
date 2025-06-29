@@ -726,5 +726,6 @@
     "share_gpx": "分享 GPX",
     "city_min_zoom": "城市最小缩放级别",
     "emphasis_drinking_water": "强调饮用水和泉水",
-    "city_min_zoom_desc": "显示城市标签的最小缩放级别"
+    "city_min_zoom_desc": "显示城市标签的最小缩放级别",
+    "altitude_short": "高度"
 }
