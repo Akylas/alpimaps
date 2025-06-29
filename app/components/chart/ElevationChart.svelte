@@ -388,13 +388,14 @@
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
+            leftAxis.textSize = 9;
             
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6; 
             xinterval = closestUpper( xintervals, totalDistance / xLabelCount / 1000)* 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
-            
+            xAxis.textSize = 9;
             const chartData = chartView.data;
             let set: LineDataSet;
             function updateSetColors() {
@@ -448,6 +449,7 @@
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = -1;
+            limitLine.textSize = 9;
             limitLine.textColor= colorOnSurface;
            // limitLine.ensureVisible = true;
             limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
@@ -458,6 +460,7 @@
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = 1;
+            limitLine.textSize = 9;
             limitLine.textColor= colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
@@ -471,13 +474,14 @@
                     limitLine.lineColor = colorOutline;
                     limitLine.enableDashedLine(6, 3, 0);
                     limitLine.lineWidth = 0.5;
-                   // limitLine.textSize = 7;
+                    limitLine.textSize = 7;
                     limitLine.xOffset = 0;
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x + 5, y - 4, 6, waypointsBackPaint);
-                        c.drawText('', x + 5, y - 3 +1, waypointsPaint);
+                        c.drawCircle(x + 5, y - 2, 6, waypointsBackPaint);
+                        waypointsPaint.textSize = 7;
+                        c.drawText('', x + 5, y - 1 +1, waypointsPaint);
                      //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
@@ -500,7 +504,8 @@
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         
                             c.drawCircle(x - 5, y +2, 6, waypointsBackPaint);
-                            c.drawText('', x - 5, y +5 - 1, waypointsPaint);
+                            waypointsPaint.textSize = 8;
+                            c.drawText('', x - 5, y +6 - 1, waypointsPaint);
                             
                         }
                         xAxis.addLimitLine(limitLine);
