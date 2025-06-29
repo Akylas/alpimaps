@@ -396,6 +396,7 @@
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             xAxis.textSize = 9;
+            xAxis.clipLimitLinesToContent = false;
             const chartData = chartView.data;
             let set: LineDataSet;
             function updateSetColors() {
@@ -503,9 +504,9 @@
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         
-                            c.drawCircle(x - 5, y +2, 6, waypointsBackPaint);
+                            c.drawCircle(x - 5, y +0, 6, waypointsBackPaint);
                             waypointsPaint.textSize = 8;
-                            c.drawText('', x - 5, y +6 - 1, waypointsPaint);
+                            c.drawText('', x - 5, y +4 - 1, waypointsPaint);
                             
                         }
                         xAxis.addLimitLine(limitLine);
