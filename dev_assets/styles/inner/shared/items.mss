@@ -104,7 +104,7 @@
           ::icon {
             text-placement: nutibillboard;
             text-placement-priority: 9;
-            text-name: [nuti::osm-circle];
+            text-name: '';
          //   text-feature-id: @waypointId;
             text-size: 20* linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
             text-face-name: @osm;
