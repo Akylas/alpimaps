@@ -40,7 +40,8 @@ export function osmicon(values: string[] | string, canReturnUndefined = true) {
             return result;
         }
     }
-    return canReturnUndefined ? undefined : values[0];
+    return values[0];
+ //   return canReturnUndefined ? undefined : values[0];
 }
 
 export function formatSize(diskSize) {
