@@ -16,6 +16,10 @@ import { showError } from '@shared/utils/showError';
 import type { Feature, FeatureCollection, Point as GeometryPoint, LineString } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
+
+import { osmicon } from '~/helpers/formatter';
+import { formatter } from '~/mapModules/ItemFormatter';
+    
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
 import { maxAgeMonth, networkService } from '~/services/NetworkService';
@@ -448,7 +452,8 @@ export default class ItemsModule extends MapModule {
                         type: 'Feature', 
                         properties: {
                             ...p.properties,
-                            class: 'waypoint'
+                            class: 'waypoint',
+                            icon: osmicon(formatter.geItemIcon(p))
                         }
                     });
                 }
