@@ -1,8 +1,6 @@
 // @markerOverlap: [nuti::selected_id] = [id] ? false : true;
-
-@osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??'';
 @stepId: 173716 + [distFromStartStr];
-@waypointId: 'wp-' +[id];
+@waypointId: 84732 +[id];
 
 #items['mapnik::geometry_type'=2] {
     ['nuti::hide_unselected'=0] {
@@ -103,12 +101,11 @@
         }
     }
         [class=waypoint] {
-
           ::icon {
             text-placement: nutibillboard;
-            text-placement-priority: 90;
+            text-placement-priority: 9;
             text-name: [nuti::osm-circle];
-            text-feature-id: @waypointId;
+         //   text-feature-id: @waypointId;
             text-size: 20* linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
             text-face-name: @osm;
             text-halo-fill: @standard-halo-fill;
@@ -118,21 +115,21 @@
             text-allow-overlap: true;
             text-clip: false;
           }
-                    ::label {
-            text-name:  [style.icon] ?? [icon] ?? @osm_icon;
-      text-size:([iconSize]?? 14) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
-      text-face-name: [style.mapFontFamily] ?? 'osm';
-      text-dx:[style.iconDx] ?? [iconDx] ?? 0;
-      text-dy:[style.iconDy] ?? [iconDy] ?? 0;
+          ::label {
+            text-name:  [style.icon] ?? [icon] ?? '';
+            text-size:([iconSize]?? 14) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1)); 
+            text-face-name: [style.mapFontFamily] ?? 'osm';
+            text-dx:[style.iconDx] ?? [iconDx] ?? 0;
+            text-dy:[style.iconDy] ?? [iconDy] ?? 0;
             text-horizontal-alignment: [style.horizontalAlignment] ??middle;
-            text-vertical-alignment: [style.verticalAlignment] ? [style.verticalAlignment] : middle;
+            text-vertical-alignment: [style.verticalAlignment] ?? middle;
       
-            text-feature-id: @waypointId;
-            text-placement-priority: 90;
+      //      text-feature-id: @waypointId;
+          text-placement-priority: 9;
             text-placement: nutibillboard;   
             text-fill: #ffffff;
             text-allow-overlap: true;
-            text-same-feature-id-dependent: true;
+          //  text-same-feature-id-dependent: true;
             text-clip: false;
           //  text-allow-overlap-same-feature-id: true;
           }     
