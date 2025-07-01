@@ -25,7 +25,7 @@ const distancePreset = {
 // };
 
 export const osmIcons = require('~/osm_icons.json');
-export function osmicon(values: string[] | string, canReturnUndefined = false) {
+export function osmicon(values: string[] | string, canReturnUndefined = true) {
     if (!values) {
         return undefined;
     }
