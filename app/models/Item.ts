@@ -72,9 +72,50 @@ export interface RouteProfile {
     colors?: { d: number; color: string }[];
     ascents: AscentSegment[]
 }
+
+export interface Address {
+    country?: string;
+    country_code?: string;
+    name?: string;
+    city?: string;
+    county?: string;
+    state?: string;
+    neighbourhood?: string;
+    postcode?: string;
+    street?: string;
+    houseNumber?: string;
+    getCategories?: Function;
+}
+
+export interface ItemProperties {
+    [k: string]: any;
+    name?: string;
+    osm_value?: string;
+    osm_key?: string;
+    class?: string;
+    layer?: string;
+    rank?: number;
+    extent?: string | [number, number, number, number];
+    provider?: 'photon' | 'here' | 'carto';
+    categories?: string[];
+    address?: Address;
+
+    route?: {
+        type?: ValhallaProfile;
+        subtype?: string;
+        totalTime?: number;
+        totalDistance?: number;
+    };
+    profile?: {
+        dplus?: any;
+        dmin?: any;
+    };
+    zoomBounds?: MapBounds<LatLonKeys>;
+}
+
 export interface DirectionWayPoint {
     geometry: Point;
-    properties: {
+    properties: ItemProperties & {
         id: string;
         color: string;
         isStart: boolean;
@@ -117,45 +158,7 @@ export interface RouteStats {
     }[];
 }
 
-export interface Address {
-    country?: string;
-    country_code?: string;
-    name?: string;
-    city?: string;
-    county?: string;
-    state?: string;
-    neighbourhood?: string;
-    postcode?: string;
-    street?: string;
-    houseNumber?: string;
-    getCategories?: Function;
-}
 
-export interface ItemProperties {
-    [k: string]: any;
-    name?: string;
-    osm_value?: string;
-    osm_key?: string;
-    class?: string;
-    layer?: string;
-    rank?: number;
-    extent?: string | [number, number, number, number];
-    provider?: 'photon' | 'here' | 'carto';
-    categories?: string[];
-    address?: Address;
-
-    route?: {
-        type?: ValhallaProfile;
-        subtype?: string;
-        totalTime?: number;
-        totalDistance?: number;
-    };
-    profile?: {
-        dplus?: any;
-        dmin?: any;
-    };
-    zoomBounds?: MapBounds<LatLonKeys>;
-}
 
 export class Group {
     public readonly id!: string;
