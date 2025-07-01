@@ -289,7 +289,7 @@
 @water_halo: @standard-halo-fill;
 @water_halo_radius: @standard-halo-radius;
 @waterway_label_dy: 0;
-@waterway_label_spacing: 10;
+@waterway_label_spacing: linear([view::zoom], (12,5), (17, 100), (19, 160));
 
 @river-width: linear([view::zoom], (8, 1), (15, 2), (16, 4));
 @river-width-selected: @river-width + 1;
