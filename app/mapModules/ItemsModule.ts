@@ -453,7 +453,7 @@ export default class ItemsModule extends MapModule {
                         properties: {
                             ...p.properties,
                             class: 'waypoint',
-                            icon: p.properties.style?.icon ?? osmicon(formatter.geItemIcon(p))
+                            icon: p.properties.style?.icon ?? osmicon(formatter.geItemIcon(p), true)
                         }
                     });
                 }
