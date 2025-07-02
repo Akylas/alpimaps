@@ -480,9 +480,9 @@
                     limitLine.textColor= colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x + 5, y - 2, 6, waypointsBackPaint);
+                        c.drawCircle(x + 5, y - 4, 6, waypointsBackPaint);
                         waypointsPaint.textSize = 7;
-                        c.drawText('', x + 5, y - 1 +1, waypointsPaint);
+                        c.drawText('', x + 5, y - 3 +1, waypointsPaint);
                      //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
