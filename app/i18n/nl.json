@@ -677,7 +677,7 @@
     "phone": "telefoon",
     "website": "website",
     "wikidata": "wikidata",
-    "americanaosm_presentation_detailed": "Alpimaps gebruikt %1$s als standaard vector-gegevensbronnen. In eerste instantie bood AlpiMaps een gratis gegevensbron aan die iedereen kon gebruiken. Helaas werd de limiet snel overschreden, dus heb ik hem moeten sluiten.\nNu deel ik in plaats daarvan hoe je gratis gegevensbron kunt opzetten en in de app kunt gebruiken. Lees de %2$s voor instructies. Nadat je dat hebt gedaan, kun je hier de URL instellen. Tot die tijd worden OpenstreetMap-rastertegels gebruikt als standaard gegevensbron.",
+    "americanaosm_presentation_detailed": "Alpimaps gebruikt %1$s als standaard vector-gegevensbronnen. In eerste instantie bood AlpiMaps een gratis gegevensbron aan die iedereen kon gebruiken. Helaas werd de limiet snel overschreden, dus heb ik hem moeten sluiten.\nNu deel ik in plaats daarvan hoe je gratis gegevensbron kunt opzetten en in de app kunt gebruiken. Lees de %2$s voor instructies. Nadat je dat hebt gedaan, kun je hier de URL instellen. Tot die tijd worden OpenstreetMap-rastertegels gebruikt als standaard gegevensbron",
     "auto_black": "Gebruik volledig zwart voor auto-donkere modus",
     "cache_only_mode": "alleen-cache-modus",
     "confirm_area_download": "Weet je zeker dat je de tegels voor het hele zichtbare gebied wilt downloaden? Afhankelijk van de huidige zoom kan het veel data kosten",
