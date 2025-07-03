@@ -103,5 +103,5 @@
     "americanaosm_url": "URL de instância AmericanaOSM",
     "attraction": "atração",
     "attributions": "atribuições",
-    "americanaosm_presentation_detailed": "O AlpiMaps usa %1$s como fonte de dados padrão do Vector. No início, o AlpiMaps estava fornecendo uma instância gratuita para todos compartilharem. No entanto, rapidamente ultrapassei o limite e tive que fechá-la.\n Portanto, agora, em vez disso, compartilho como criar sua própria instância gratuita e usá-la no aplicativo. Leia os %2$s para obter instruções. Se você já fez isso, pode definir o URL aqui. Até que você faça isso, os blocos rasterizados do OpenstreetMap serão usados como fonte padrão"
+    "americanaosm_presentation_detailed": "O AlpiMaps usa %1$s como fonte de dados padrão do Vector. No início, o AlpiMaps estava fornecendo uma instância gratuita para todos compartilharem. No entanto, rapidamente ultrapassei o limite e tive que fechá-la.\nPortanto, agora, em vez disso, compartilho como criar sua própria instância gratuita e usá-la no aplicativo. Leia os %2$s para obter instruções. Se você já fez isso, pode definir o URL aqui. Até que você faça isso, os blocos rasterizados do OpenstreetMap serão usados como fonte padrão"
 }
