@@ -200,7 +200,7 @@
     "third_parties": "bibliotecas de terceiros",
     "tobacco": "tabáco",
     "americanaosm_presentation": "Fonte de dados predefinida de AmericanaOSM",
-    "americanaosm_presentation_detailed": "O AlpiMaps usa %1$s como fonte de dados padrão do Vector. No início, o AlpiMaps estava fornecendo uma instância gratuita para todos partilharem. No entanto, rapidamente ultrapassei o limite e tive que fechá-la.\n Portanto, agora, em vez disso, partilho como criar a sua própria instância gratuita e usá-la na app. Leia os %2$s para obter instruções. Se já o fez, pode definir o URL aqui. Até que o faça, os blocos rasterizados do OpenstreetMap serão usados como fonte padrão",
+    "americanaosm_presentation_detailed": "O AlpiMaps usa %1$s como fonte de dados padrão do Vector. No início, o AlpiMaps estava fornecendo uma instância gratuita para todos partilharem. No entanto, rapidamente ultrapassei o limite e tive que fechá-la.\nPortanto, agora, em vez disso, partilho como criar a sua própria instância gratuita e usá-la na app. Leia os %2$s para obter instruções. Se já o fez, pode definir o URL aqui. Até que o faça, os blocos rasterizados do OpenstreetMap serão usados como fonte padrão",
     "click_to_set_key": "clique para definir a sua chave",
     "community_centre": "centro comunitário",
     "clear_cache": "Limpar o cache",
