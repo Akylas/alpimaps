@@ -702,7 +702,7 @@
     "offline_routing": "Offline-Routenplanung",
     "emphasis_rail_tracks": "Gewichtete Schienenwege",
     "offline_routing_bicycle_max_distance": "Erlaubte Maximaldistanz beim Berechnen von Fahrradrouten im Offlinemodus",
-    "americanaosm_presentation_detailed": "AlpiMaps nutzt %1$ als Standard-Vektor-Kartenquelle. Zu Beginn stellte AlpiMaps dazu eine kostenfreie Instanz für alle zur Verfügung. Die Zugriffe überschritten allerdings schnell das Limit, weshalb ich mich entschied diese zu schließen. Deshalb erkläre ich jetzt, wie man seine eigene Instanz erstellt und in der App verwendet. Lesen Sie sich %2$s für Erklärungen durch. Wenn Sie die Instanz bereits aufgesetzt haben, können Sie hier die URL einsetzen. Bis dahin werden OpenstreetMap-Rasterkarten genutzt als Standard genutzt.",
+    "americanaosm_presentation_detailed": "AlpiMaps nutzt %1$ als Standard-Vektor-Kartenquelle. Zu Beginn stellte AlpiMaps dazu eine kostenfreie Instanz für alle zur Verfügung. Die Zugriffe überschritten allerdings schnell das Limit, weshalb ich mich entschied diese zu schließen.\nDeshalb erkläre ich jetzt, wie man seine eigene Instanz erstellt und in der App verwendet. Lesen Sie sich %2$s für Erklärungen durch. Wenn Sie die Instanz bereits aufgesetzt haben, können Sie hier die URL einsetzen. Bis dahin werden OpenstreetMap-Rasterkarten genutzt als Standard genutzt",
     "select_color_theme": "Wählen Sie ein Farbthema aus",
     "timeout_error": "Die Anfrage hat ihre Zeit überschritten. Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es dann noch einmal.",
     "outline": "Kontur",
