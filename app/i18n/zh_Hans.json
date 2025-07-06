@@ -709,7 +709,7 @@
         "bigtip_desc": "敬请期待新功能！",
         "bigtip": "非常好的赞助",
         "largetip": "一杯啤酒",
-        "largertip": "一品拖",
+        "largertip": "一品脱",
         "largetip_desc": "放松一下，继续工作！",
         "largertip_desc": "想法正在流动起来！",
         "mediumtip": "一大杯咖啡",
@@ -728,5 +728,6 @@
     "emphasis_drinking_water": "强调饮用水和泉水",
     "city_min_zoom_desc": "显示城市标签的最小缩放级别",
     "altitude_short": "高度",
-    "saved": "已保存：%1$s"
+    "saved": "已保存：%1$s",
+    "thank_you": "谢谢您！"
 }
