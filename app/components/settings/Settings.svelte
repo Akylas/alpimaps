@@ -180,6 +180,13 @@
                         key: 'list_longpress_camera',
                         value: ApplicationSettings.getBoolean('list_longpress_camera', false),
                         title: lc('longpress_list_open_camera')
+                    },
+                    {
+                        
+                        type: 'switch',
+                        key: 'url_use_inapp_browser',
+                        value: ApplicationSettings.getBoolean('url_use_inapp_browser', false),
+                        title: lc('url_use_inapp_browser')
                     }
                 ].concat(__ANDROID__ ? [{
                         type: 'switch',

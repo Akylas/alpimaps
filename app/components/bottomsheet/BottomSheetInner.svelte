@@ -14,7 +14,7 @@
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { Application, ApplicationSettings, Color } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { debounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -149,16 +149,26 @@
             console.error(error, error.stack);
         }
     }
+    function openURL(url) {
+        const useInAppBrowser = ApplicationSettings. getBoolean("url_use_inapp_browser", true);
+        if (useInAppBrowser) {
+            openLink(url);
+        } else {
+            Utils.openUrl(url);
+        }
+        
+    }
+    
     function openWikipedia() {
         try {
             const props = item && item.properties;
             DEV_LOG && console.log('openWikipedia', props.wikipedia);
             if (props?.wikipedia) {
                 const url = `https://en.wikipedia.org/wiki/${props.wikipedia}`;
-                openLink(url);
+                openURL(url);
             } else if (props?.name) {
                 const url = `https://en.wikipedia.org/wiki/Special:Search?search=${props.name}`;
-                openLink(url);
+                openURL(url);
             }
         } catch (error) {
             showError(error);
@@ -168,7 +178,7 @@
         try {
             if (item && !itemIsRoute) {
                 const geometry = item.geometry as Point;
-                openLink(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().zoom)}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
+                openURL(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().zoom)}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
             }
         } catch (error) {
             showError(error);
@@ -205,7 +215,7 @@
             console.error(err, err.stack);
             if (query) {
                 const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
-                openLink(url);
+                openURL(url);
             }
         }
     }
