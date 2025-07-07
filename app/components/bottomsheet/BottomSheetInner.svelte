@@ -32,7 +32,7 @@
     import { computeDistanceBetween } from '~/utils/geo';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { hideLoading, openLink, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
+    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -148,15 +148,6 @@
         } catch (error) {
             console.error(error, error.stack);
         }
-    }
-    function openURL(url) {
-        const useInAppBrowser = ApplicationSettings. getBoolean("url_use_inapp_browser", true);
-        if (useInAppBrowser) {
-            openLink(url);
-        } else {
-            Utils.openUrl(url);
-        }
-        
     }
     
     function openWikipedia() {

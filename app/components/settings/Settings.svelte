@@ -185,7 +185,7 @@
                         
                         type: 'switch',
                         key: 'url_use_inapp_browser',
-                        value: ApplicationSettings.getBoolean('url_use_inapp_browser', false),
+                        value: ApplicationSettings.getBoolean('url_use_inapp_browser', true),
                         title: lc('url_use_inapp_browser')
                     }
                 ].concat(__ANDROID__ ? [{
