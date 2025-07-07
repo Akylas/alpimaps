@@ -14,7 +14,7 @@
     import { networkService } from '~/services/NetworkService';
     import { showError } from '@shared/utils/showError';
     import { share } from '@akylas/nativescript-app-utils/share';
-    import { openLink } from '~/utils/ui/index.common';
+    import { openURL } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, actionBarHeight, colors, fonts } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import JsonViewer from './JSONViewer.svelte';
@@ -335,7 +335,7 @@
         try {
             switch (listItem.id) {
                 case 'website':
-                    await openLink(listItem.subtitle);
+                    await openURL(listItem.subtitle);
                     break;
                 case 'phone':
                     openUrl('tel:' + listItem.subtitle);
@@ -346,13 +346,13 @@
                     });
                     break;
                 case 'wikipedia':
-                    await openLink(`https://en.wikipedia.org/wiki/${listItem.subtitle}`);
+                    await openURL(`https://en.wikipedia.org/wiki/${listItem.subtitle}`);
                     break;
                 case 'wikidata':
-                    await openLink(`https://www.wikidata.org/wiki/${listItem.subtitle}`);
+                    await openURL(`https://www.wikidata.org/wiki/${listItem.subtitle}`);
                     break;
                 case 'mapillary':
-                    await openLink(`https://www.mapillary.com/app/?pKey=${listItem.subtitle}&focus=photo`);
+                    await openURL(`https://www.mapillary.com/app/?pKey=${listItem.subtitle}&focus=photo`);
                     break;
                 default:
                     if (listItem.expandable) {
@@ -402,7 +402,7 @@
                 case 'operator':
                 case 'wikidata':
                     if (listItem.wikidata) {
-                        await openLink(`https://www.wikidata.org/wiki/${listItem.wikidata}`);
+                        await openURL(`https://www.wikidata.org/wiki/${listItem.wikidata}`);
                     }
                     break;
                 case 'phone':

@@ -3,12 +3,12 @@ import { lc } from '@nativescript-community/l';
 import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { AlertOptions, Application, GridLayout, View } from '@nativescript/core';
+import { AlertOptions, Application, GridLayout, Utils, View } from '@nativescript/core';
 import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
 import { tryCatchFunction } from '@shared/utils/ui';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
-import { hideLoading, showSnack, showToast } from '@shared/utils/ui';
+import { hideLoading, openLink, showSnack, showToast } from '@shared/utils/ui';
 import { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
 import { get } from 'svelte/store';
@@ -17,6 +17,15 @@ import { Group } from '~/models/Item';
 import { colors, fontScale, screenWidthDips } from '~/variables';
 
 export * from '@shared/utils/ui';
+
+export async function openURL(url) {
+    const useInAppBrowser = ApplicationSettings. getBoolean("url_use_inapp_browser", true);
+    if (useInAppBrowser) {
+       return openLink(url);
+    } else {
+        Utils.openUrl(url);
+    }     
+}
 
 export async function promptForGroup(defaultGroup: string, groups?: Group[]): Promise<string> {
     const TagView = (await import('~/components/common/TagView.svelte')).default;
