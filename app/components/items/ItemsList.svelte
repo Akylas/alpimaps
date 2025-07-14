@@ -781,7 +781,7 @@ LEFT JOIN  (
     $: actionBarLabelColor = isEInk ? colorOnSurface : colorOnPrimary;
 </script>
 
-<page bind:this={page} actionBarHidden={true} statusBarColor={colorPrimary} statusBarStyle="dark" on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} actionBarHidden={true} class="themedPage" on:navigatedTo={onNavigatedTo}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
