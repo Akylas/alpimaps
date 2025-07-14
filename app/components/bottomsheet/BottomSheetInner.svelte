@@ -290,9 +290,9 @@
                 let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
                 
-                    const testPosition = (positions.get(onPathIndex));
+                    const testPosition: any = (positions.get(onPathIndex));
                     DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(location), JSON.stringify(testPosition));
-                    selectItem({ item: { geometry: { type: 'Point', coordinates: [testPosition.lon, testPosition.lat] }, properties: {} }, isFeatureInteresting: false });
+                    mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [testPosition.lon, testPosition.lat] }, properties: {} }, isFeatureInteresting: false });
                     
                     
                     remainingDistance = distanceToEnd(onPathIndex, positions);
