@@ -103,6 +103,16 @@ frame {
 //     }
 // }
 
+.themedPage {
+        status-bar-color: var(--colorPrimary);
+        status-bar-style: dark;
+
+     .ns-eink & {
+         status-bar-style: light;
+         status-bar-color: white;
+     }
+}
+
 
 page {
     status-bar-style: light;
