@@ -288,8 +288,13 @@
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
                 const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
                 let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
-                // DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(routeItem.instructions));
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
+                
+                    const testPosition = (positions.get(onPathIndex));
+                    DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(location), JSON.stringify(testPosition));
+                    selectItem({ item: { geometry: { type: 'Point', coordinates: [testPosition.lon, testPosition.lat] }, properties: {} }, isFeatureInteresting: false });
+                    
+                    
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
                     const stepIndex = route.waypoints.filter(w=>w.properties.showOnMap).find(w=> w.properties.index > onPathIndex)?.properties?.index;
