@@ -305,7 +305,7 @@
                         onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
                     } else {
                     const positions = (item as any).geometry?.['coordinates'];
-        const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
+        const actualIndex = Math.max(0, Math.min(onPathIndex, positions.length - 1));
         const position = positions[actualIndex];
         DEV_LOG && console.log(' highlight test', JSON.stringify(position));
                     }
