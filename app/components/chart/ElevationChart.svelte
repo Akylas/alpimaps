@@ -120,7 +120,7 @@
         const positions = item.geometry?.['coordinates'];
         const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
         const position = positions[actualIndex];
-        // DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
+        DEV_LOG && console.log('onChartHighlight', entryIndex, position, shouldSelectItem);
 
         if (position) {
             if (event.highlight) {
@@ -136,7 +136,7 @@
                     preventZoom: false
                 });
             } else {
-                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
+                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
             }
         }
         // if (DEV_LOG) {
