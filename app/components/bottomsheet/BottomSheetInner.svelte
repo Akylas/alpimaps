@@ -292,7 +292,7 @@
                 
                     const testPosition: any = (positions.get(onPathIndex));
                     DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(location), JSON.stringify(testPosition));
-                    mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [testPosition.lon, testPosition.lat] }, properties: {} }, isFeatureInteresting: false });
+                    mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [testPosition.lon, testPosition.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
                     
                     
                     remainingDistance = distanceToEnd(onPathIndex, positions);
