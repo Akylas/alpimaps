@@ -135,8 +135,6 @@
                     zoomDuration: 100,
                     preventZoom: false
                 });
-            } else {
-                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
             }
         }
         // if (DEV_LOG) {
@@ -308,6 +306,7 @@
         const actualIndex = Math.max(0, Math.min(onPathIndex, positions.length - 1));
         const position = positions[actualIndex];
         DEV_LOG && console.log(' highlight test', JSON.stringify(position));
+        mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
                     }
                 }
             }
