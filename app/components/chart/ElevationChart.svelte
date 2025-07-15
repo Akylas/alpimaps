@@ -136,7 +136,7 @@
                     preventZoom: false
                 });
             } else {
-                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
+                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
             }
         }
         // if (DEV_LOG) {
