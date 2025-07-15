@@ -194,7 +194,7 @@
             return;
         }
         const nChart = chart?.nativeView;
-        // DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, JSON.stringify(highlight), nChart);
+       DEV_LOG && console.log('hilghlightPathIndex', !!item, onPathIndex, remainingDistance, remainingTime, JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
             if (nChart) {
@@ -294,14 +294,21 @@
                     dataSet.ignoreFiltered = true;
                     const item = profileData[onPathIndex];
                     dataSet.ignoreFiltered = false;
-                    // DEV_LOG && console.log('highlight', onPathIndex, item.d, JSON.stringify(item));
+                     DEV_LOG && console.log('highlight', onPathIndex, sendEvent, item.d, JSON.stringify(item));
                     const highlight = {
                         dataSetIndex: 0,
                         entryIndex: onPathIndex,
                         entry: item
                     };
                     nChart.highlightValues([highlight]);
-                    sendEvent && onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
+                    if (sendEvent) {
+                        onChartHighlight({ eventName: 'highlight', highlight, object: nChart } as any);
+                    } else {
+                    const positions = item.geometry?.['coordinates'];
+        const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
+        const position = positions[actualIndex];
+        DEV_LOG && console.log(' highlight test', JSON.stringify(position));
+                    }
                 }
             }
             if (nChart && nChart.data) {
