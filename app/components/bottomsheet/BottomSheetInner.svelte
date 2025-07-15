@@ -289,12 +289,6 @@
                 const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
                 let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
-                
-                    const testPosition: any = (positions.get(onPathIndex));
-                    DEV_LOG && console.log('updateRouteItemWithPosition onPathIndex', onPathIndex, JSON.stringify(location), JSON.stringify(fromNativeMapPos(testPosition)));
-              
-                    
-                    
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
                     const stepIndex = route.waypoints.filter(w=>w.properties.showOnMap).find(w=> w.properties.index > onPathIndex)?.properties?.index;
