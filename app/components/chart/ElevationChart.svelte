@@ -114,7 +114,8 @@
         if (!item) {
             return;
         }
-        const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
+     //    const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
+        const shouldSelectItem = true;
         const entryIndex = event.highlight.entryIndex;
         const positions = item.geometry?.['coordinates'];
         const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
