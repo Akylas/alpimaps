@@ -114,8 +114,8 @@
         if (!item) {
             return;
         }
-     //    const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
-        const shouldSelectItem = true;
+         const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
+       // const shouldSelectItem = true;
         const entryIndex = event.highlight.entryIndex;
         const positions = item.geometry?.['coordinates'];
         const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
@@ -135,6 +135,8 @@
                     zoomDuration: 100,
                     preventZoom: false
                 });
+            } else {
+                mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected:false, peek:false });
             }
         }
         // if (DEV_LOG) {
