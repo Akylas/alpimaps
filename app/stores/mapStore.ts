@@ -247,6 +247,11 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
+    show_caravan_site: {
+        title: lc('show_caravan_site'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
     city_min_zoom: {
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),

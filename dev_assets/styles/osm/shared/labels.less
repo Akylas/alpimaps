@@ -477,7 +477,10 @@
 		}
 	}
 }
-#poi[class=campsite][zoom>=10],#aerodrome_label[class!=international][zoom>=13],#aerodrome_label[class=international]  {
+#poi[class=campsite][subclass!=caravan_site][zoom>=10],
+#poi[class=campsite][subclass=caravan_site]['nuti::show_caravan_site'=1][zoom>=10],
+#aerodrome_label[class!=international][zoom>=13],
+#aerodrome_label[class=international]  {
 		::icon {
 			text-placement: nutibillboard;
             #poi {     

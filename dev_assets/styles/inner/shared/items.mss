@@ -60,7 +60,7 @@
     }
 }
 
-#items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0] {
+#items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0][zoom>=5] {
         text-fill: [style.color] ?? @itemColor;
         text-placement: nutibillboard;
         text-name: [style.icon] ?? '';
