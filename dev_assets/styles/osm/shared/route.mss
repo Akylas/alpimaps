@@ -35,13 +35,13 @@
 			}
             
 		}
-        ['nuti::route_shields'>0][zoom<15][ref != null]::label{
+        ['nuti::route_shields'>0][zoom<15][ref != null]{
             [network=1][zoom>=6],
             [network=2][class=bicycle][zoom>=8],
             [network=2][zoom>=10],
             [network=3][zoom>=11]{
                 shield-name: [ref];
-                shield-placement-priority: 20 - [network];
+                shield-placement-priority: 25 - [network] - length([ref])/10;
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
