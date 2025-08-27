@@ -151,24 +151,24 @@
     let items: ObservableArray<any>;
     function refresh() {
         const newItems = [];
-        if (customLayers.hasLocalData) {
-            try {
-                newItems.push(
-                    ...nutiProps
-                        .getKeys()
-                        .map((key) => nutiProps.getSettingsOptions(key))
-                        .filter((s) => !s.icon)
-                );
-                newItems.push(
-                    ...innerNutiProps
-                        .getKeys()
-                        .map((key) => innerNutiProps.getSettingsOptions(key))
-                        .filter((s) => !s.icon)
-                );
-            } catch (error) {
-                showError(error);
-            }
+        // if (customLayers.hasLocalData) {
+        try {
+            newItems.push(
+                ...nutiProps
+                    .getKeys()
+                    .map((key) => nutiProps.getSettingsOptions(key))
+                    .filter((s) => !s.icon)
+            );
+            newItems.push(
+                ...innerNutiProps
+                    .getKeys()
+                    .map((key) => innerNutiProps.getSettingsOptions(key))
+                    .filter((s) => !s.icon)
+            );
+        } catch (error) {
+            showError(error);
         }
+        // }
         items = new ObservableArray(newItems);
     }
     onServiceLoaded((handler: GeoHandler) => {
