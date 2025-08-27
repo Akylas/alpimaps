@@ -45,60 +45,56 @@
         instructions?: RouteInstruction[];
         stats?: RouteStats;
     }
-    
-    /**
-    * Linear interpolation between two coordinates
-    */
-    function interpolate(coord1, coord2, t) {
-      return [
-        coord1[0] + (coord2[0] - coord1[0]) * t,
-        coord1[1] + (coord2[1] - coord1[1]) * t
-      ];
-    }
-    
-    /**
-    * Compute steps in one loop, assuming total length is known
-    * @param {Array<[number, number]>} coords - Array of [lon, lat]
-    * @param {number} stepKm - Step size (e.g. 1)
-    * @param {number} totalLengthKm - Total path length in km
-    * @returns {Array<{point: [number, number], distFromStart: number, distFromEnd: number}>}
-    */
-    function computeStepsOnePass(coords, stepKm, totalLengthKm) {
-      const startTime = Date.now();
-      const steps = [];
-      let cumulative = 0;
-      let nextStepDist = stepKm;
-      const levels = [100, 50, 10, 5, 1];
-      for (let i = 0; i < coords.length - 1 && nextStepDist <= totalLengthKm; i++) {
-        const a = coords[i];
-        const b = coords[i + 1];
-        const segLen = getDistance(a, b);
-    
-        while (nextStepDist <= cumulative + segLen) {
-          const t = (nextStepDist - cumulative) / segLen;
-          const point = interpolate(a, b, t);
-          steps.push({
-            geometry: {
-                type: 'Point',
-                coordinates: point
-            },
-            level: levels.findIndex(l => (nextStepDist / 1000) % l === 0) + 1,
-            distFromStart: nextStepDist,
-            distFromStartStr: (nextStepDist / 1000).toFixed(),
-            distToEnd: (totalLengthKm - nextStepDist),
-            distToEndStr: ((totalLengthKm - nextStepDist) /1000).toFixed()
-          });
-          nextStepDist += stepKm;
-        }
-        cumulative += segLen;
-      }
-      DEV_LOG && console.log('computesteps', Date.now()- startTime);
-      return steps;
-    }
-    
 
-    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints,positions) {
-    DEV_LOG && console.log('routingResultToJSON', waypoints);
+    /**
+     * Linear interpolation between two coordinates
+     */
+    function interpolate(coord1, coord2, t) {
+        return [coord1[0] + (coord2[0] - coord1[0]) * t, coord1[1] + (coord2[1] - coord1[1]) * t];
+    }
+
+    /**
+     * Compute steps in one loop, assuming total length is known
+     * @param {Array<[number, number]>} coords - Array of [lon, lat]
+     * @param {number} stepKm - Step size (e.g. 1)
+     * @param {number} totalLengthKm - Total path length in km
+     * @returns {Array<{point: [number, number], distFromStart: number, distFromEnd: number}>}
+     */
+    function computeStepsOnePass(coords, stepKm, totalLengthKm) {
+        const startTime = Date.now();
+        const steps = [];
+        let cumulative = 0;
+        let nextStepDist = stepKm;
+        const levels = [100, 50, 10, 5, 1];
+        for (let i = 0; i < coords.length - 1 && nextStepDist <= totalLengthKm; i++) {
+            const a = coords[i];
+            const b = coords[i + 1];
+            const segLen = getDistance(a, b);
+
+            while (nextStepDist <= cumulative + segLen) {
+                const t = (nextStepDist - cumulative) / segLen;
+                const point = interpolate(a, b, t);
+                steps.push({
+                    geometry: {
+                        type: 'Point',
+                        coordinates: point
+                    },
+                    level: levels.findIndex((l) => (nextStepDist / 1000) % l === 0) + 1,
+                    distFromStart: nextStepDist,
+                    distFromStartStr: (nextStepDist / 1000).toFixed(),
+                    distToEnd: totalLengthKm - nextStepDist,
+                    distToEndStr: ((totalLengthKm - nextStepDist) / 1000).toFixed()
+                });
+                nextStepDist += stepKm;
+            }
+            cumulative += segLen;
+        }
+        DEV_LOG && console.log('computesteps', Date.now() - startTime);
+        return steps;
+    }
+
+    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints, positions) {
+        DEV_LOG && console.log('routingResultToJSON', waypoints);
         const rInstructions = result.getInstructions();
         const instructions: RouteInstruction[] = [];
         // const positions = getPointsFromResult(result);
@@ -118,7 +114,7 @@
         }
         const route = {
             costing_options,
-            waypoints: waypoints.map(w=> {
+            waypoints: waypoints.map((w) => {
                 if (w.properties.showOnMap) {
                     w.properties.index = isLocationOnPath({ lat: w.geometry.coordinates[1], lon: w.geometry.coordinates[0] }, positions, false, true, 50);
                 }
@@ -520,7 +516,7 @@
                 waypoints.push(...actualWaypoints);
                 nbWayPoints = waypoints.length;
                 features.splice(0, features.length);
-                features.push(...(actualWaypoints as any));
+                features.push(...actualWaypoints);
                 updateWayPointLines();
                 setLayerGeoJSONString();
             }
@@ -857,8 +853,8 @@
             }
             const startTime = Date.now();
             const id = Date.now();
-            const totalDist= route.route.totalDistance;
-            const stepDist = totalDist>30000?10000:(totalDist>10000?5000:1000);
+            const totalDist = route.route.totalDistance;
+            const stepDist = totalDist > 30000 ? 10000 : totalDist > 10000 ? 5000 : 1000;
             const item: any = {
                 type: 'Feature',
                 _parsedRoute: route.route,
@@ -1063,7 +1059,7 @@
             showError(error);
         }
     }
-    
+
     function toggleWayPointShowOnMap(item) {
         try {
             let index = -1;
@@ -1377,19 +1373,8 @@
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
                             <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemTitle(item)} verticalTextAlignment="center" />
-                            <IconButton
-                                col={1}
-                                color={buttonsColor}
-                                small={true}
-                                text="mdi-map"
-                                isSelected={item.properties.showOnMap}
-                                on:tap={() => toggleWayPointShowOnMap(item)} />
-                            <IconButton
-                                col={2}
-                                color={buttonsColor}
-                                small={true}
-                                text="mdi-delete"
-                                on:tap={() => clearWayPoint(item)} />
+                            <IconButton col={1} color={buttonsColor} isSelected={item.properties.showOnMap} small={true} text="mdi-map" on:tap={() => toggleWayPointShowOnMap(item)} />
+                            <IconButton col={2} color={buttonsColor} small={true} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </canvaslabel>
                 </Template>

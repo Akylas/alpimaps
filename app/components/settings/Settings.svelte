@@ -1,4 +1,4 @@
-  <script context="module" lang="ts">
+<script context="module" lang="ts">
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
@@ -24,7 +24,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
-    import { immersive, useOfflineGeocodeAddress, useSystemGeocodeAddress, clickHandlerLayerFilter, layerProps } from '~/stores/mapStore';
+    import { clickHandlerLayerFilter, immersive, layerProps, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         ALERT_OPTION_MAX_HEIGHT,
         DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -175,25 +175,29 @@
             case 'general':
                 return [
                     {
-                        
                         type: 'switch',
                         key: 'list_longpress_camera',
                         value: ApplicationSettings.getBoolean('list_longpress_camera', false),
                         title: lc('longpress_list_open_camera')
                     },
                     {
-                        
                         type: 'switch',
                         key: 'url_use_inapp_browser',
                         value: ApplicationSettings.getBoolean('url_use_inapp_browser', true),
                         title: lc('url_use_inapp_browser')
                     }
-                ].concat(__ANDROID__ ? [{
-                        type: 'switch',
-                        mapStore: immersive,
-                        value: get(immersive),
-                        title: lc('immersive_mode')
-                    }] as any : []);
+                ].concat(
+                    __ANDROID__
+                        ? ([
+                              {
+                                  type: 'switch',
+                                  mapStore: immersive,
+                                  value: get(immersive),
+                                  title: lc('immersive_mode')
+                              }
+                          ] as any)
+                        : []
+                );
             case 'address':
                 return [
                     {
@@ -269,7 +273,8 @@
                     }
                 ];
             case 'charts':
-                return [{
+                return [
+                    {
                         id: 'setting',
                         type: 'prompt',
                         title: lc('chart_max_filter'),
@@ -296,7 +301,8 @@
                             autocorrect: false
                         } as TextFieldProperties,
                         rightValue: () => ApplicationSettings.getNumber('chart_elevation_min_range', 250)
-                    }];
+                    }
+                ];
             case 'offline_data':
                 return [
                     {
@@ -339,7 +345,7 @@
                             autocorrect: false
                         } as TextFieldProperties
                     }
-                ].concat(['clickRadius'].map(key=>({...layerProps.getSettingsOptions(key)})) as any);
+                ].concat(['clickRadius'].map((key) => ({ ...layerProps.getSettingsOptions(key) })) as any);
             case 'geolocation':
                 const newItems = [];
                 const geoSettings = geoHandler.getWatchSettings();
@@ -353,39 +359,43 @@
                         id: 'setting'
                     });
                 });
-                newItems.push({
-                    type: 'switch',
-                    key: 'show_accuracy_marker',
-                    value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
-                    title: lc('show_accuracy_marker')
-                },
-                {
-                    type: 'switch',
-                    key: 'draw_onroute_live_data',
-                    value: ApplicationSettings.getBoolean('draw_onroute_live_data', false),
-                    title: lc('draw_onroute_live_data')
-                });
-                if (__ANDROID__ && Device.model === 'HLTE556N') {
-                    newItems.push({
+                newItems.push(
+                    {
                         type: 'switch',
-                        key: 'a9_background_location_screenrefresh',
-                        value: ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false),
-                        title: lc('a9_refresh_screen_on_location')
+                        key: 'show_accuracy_marker',
+                        value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
+                        title: lc('show_accuracy_marker')
                     },
                     {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('a9_background_location_screenrefresh_delay'),
-                        key: 'a9_background_location_screenrefresh_delay',
-                        valueType: 'number',
-                        default: 100,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100)
-                    });
+                        type: 'switch',
+                        key: 'draw_onroute_live_data',
+                        value: ApplicationSettings.getBoolean('draw_onroute_live_data', false),
+                        title: lc('draw_onroute_live_data')
+                    }
+                );
+                if (__ANDROID__ && Device.model === 'HLTE556N') {
+                    newItems.push(
+                        {
+                            type: 'switch',
+                            key: 'a9_background_location_screenrefresh',
+                            value: ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false),
+                            title: lc('a9_refresh_screen_on_location')
+                        },
+                        {
+                            id: 'setting',
+                            type: 'prompt',
+                            title: lc('a9_background_location_screenrefresh_delay'),
+                            key: 'a9_background_location_screenrefresh_delay',
+                            valueType: 'number',
+                            default: 100,
+                            textFieldProperties: {
+                                keyboardType: 'number',
+                                autocapitalizationType: 'none',
+                                autocorrect: false
+                            } as TextFieldProperties,
+                            rightValue: () => ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100)
+                        }
+                    );
                 }
                 return newItems;
             case 'api_keys':

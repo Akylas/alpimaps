@@ -56,25 +56,21 @@
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import {
-        
-        pitchEnabled,
-        preloading,
-        projectionModeSpherical,
-        rotateEnabled,
-        showItemsLayer,
-        itemLock,
-        immersive,
-        layerProps,
-        nutiProps,
-        innerNutiProps
-    } from '~/stores/mapStore';
+    import { immersive, innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { showError } from '@shared/utils/showError';
-    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack, showToast, showSliderPopover, showToolTip } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout, askForScheduleAlarmPermission } from '~/utils/utils';
+    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSliderPopover, showSnack, showToast, showToolTip } from '~/utils/ui';
+    import {
+        askForScheduleAlarmPermission,
+        clearTimeout,
+        disableShowWhenLockedAndTurnScreenOn,
+        enableShowWhenLockedAndTurnScreenOn,
+        getDataFolder,
+        getSavedMBTilesDir,
+        setTimeout
+    } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
@@ -115,7 +111,7 @@
     let steps;
     let topTranslationY;
     let networkConnected = false;
-    const itemLoading = false;  
+    const itemLoading = false;
 
     let projection: Projection = new EPSG4326();
     const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
@@ -448,36 +444,34 @@
             startStopWebServer();
         }
     }
-    
+
     let toggleSystemBarsWithWindowCompat;
     if (__ANDROID__) {
-         toggleSystemBarsWithWindowCompat = function(show = true) {
-        const activity = Application.android.startActivity;
-    if (!activity) return;
+        toggleSystemBarsWithWindowCompat = function (show = true) {
+            const activity = Application.android.startActivity;
+            if (!activity) return;
 
-    const window = activity.getWindow();
-    const decorView = window.getDecorView();
+            const window = activity.getWindow();
+            const decorView = window.getDecorView();
 
-    const WindowCompat = androidx.core.view.WindowCompat;
-    const WindowInsetsControllerCompat = androidx.core.view.WindowInsetsControllerCompat;
-    const WindowInsetsCompat = androidx.core.view.WindowInsetsCompat;
+            const WindowCompat = androidx.core.view.WindowCompat;
+            const WindowInsetsControllerCompat = androidx.core.view.WindowInsetsControllerCompat;
+            const WindowInsetsCompat = androidx.core.view.WindowInsetsCompat;
 
-    // Make content extend into system windows
-    WindowCompat.setDecorFitsSystemWindows(window, false);
+            // Make content extend into system windows
+            WindowCompat.setDecorFitsSystemWindows(window, false);
 
-    const controller = new WindowInsetsControllerCompat(window, decorView);
-    if (show) {
-        controller.show(WindowInsetsCompat.Type.systemBars());
-    } else {
-        controller.hide(WindowInsetsCompat.Type.systemBars());
+            const controller = new WindowInsetsControllerCompat(window, decorView);
+            if (show) {
+                controller.show(WindowInsetsCompat.Type.systemBars());
+            } else {
+                controller.hide(WindowInsetsCompat.Type.systemBars());
 
-    // Set behavior to allow swipe to show bars temporarily
-    controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                // Set behavior to allow swipe to show bars temporarily
+                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        };
     }
-    
-}
-    }
-    
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
@@ -487,9 +481,9 @@
         }
         customLayersModule = new CustomLayersModule();
         customLayersModule.once('ready', onLayersReady);
-        
+
         itemModule = new ItemsModule();
-        
+
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => cartoMap,
@@ -561,7 +555,7 @@
     });
     $: {
         if (__ANDROID__) {
-                toggleSystemBarsWithWindowCompat?.(!$immersive);
+            toggleSystemBarsWithWindowCompat?.(!$immersive);
         }
     }
     function onColorsChange() {
@@ -673,7 +667,7 @@
     }, 500);
 
     let appUrlRegistered = false;
-    
+
     async function onMainMapReady(e) {
         try {
             // if (!PRODUCTION) {
@@ -860,7 +854,7 @@
                     (async () => {
                         TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
                         if (setMapSelected) {
-                            selectedMapId = (route.osmid  || props.osmid || props.id || (props.name + props.class)) + '';
+                            selectedMapId = (route.osmid || props.osmid || props.id || props.name + props.class) + '';
                             mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
                             const styleParameters = {};
                             styleParameters['selected_osmid'] = '0';
@@ -870,7 +864,7 @@
                         } else {
                             if (selectedMapId) {
                                 mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
-                              selectedMapId = null;
+                                selectedMapId = null;
                             }
                             // selected_osmid is for routes
                             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
@@ -1076,7 +1070,7 @@
     }
     export function unselectItem(updateBottomSheet = true, forceUnlock = false) {
         // TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
-        
+
         if ($itemLock) {
             if (forceUnlock) {
                 $itemLock = false;
@@ -1112,22 +1106,22 @@
         }
     }
 
-//    $: {
-//        try {
-//            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
-//        } catch (error) {
- //           console.error(error, error.stack);
- //       }
-//    }
-//    $: {
-//        try {
-//            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
- //       } catch (error) {
-//            console.error(error, error.stack);
- //       }
-//    }
+    //    $: {
+    //        try {
+    //            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
+    //        } catch (error) {
+    //           console.error(error, error.stack);
+    //       }
+    //    }
+    //    $: {
+    //        try {
+    //            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
+    //       } catch (error) {
+    //            console.error(error, error.stack);
+    //       }
+    //    }
     $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
-    
+
     nutiProps.on('change', (event: any) => {
         console.log('nutichange', event.key, event.nutiValue);
         setStyleParameter(event.key, event.nutiValue);
@@ -1136,7 +1130,7 @@
         setStyleParameter(event.key, event.nutiValue, mapContext.innerDecoder);
     });
     layerProps.on('change', (event: any) => {
-        switch(event.key) {
+        switch (event.key) {
             case 'showSlopePercentages': {
                 customLayersModule?.toggleHillshadeSlope(event.value);
                 break;
@@ -1145,18 +1139,16 @@
                 customLayersModule?.updateVectorTileLayerProperty(event.key, event.value);
                 break;
             }
-            
-            
         }
     });
-   // $: {
-     //   const visible = $showRoutes;
+    // $: {
+    //   const visible = $showRoutes;
     //    getLayers('routes').forEach((l) => {
- //           l.layer.visible = visible;
-//        });
-  //      cartoMap?.requestRedraw();
- //   }
-//    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
+    //           l.layer.visible = visible;
+    //        });
+    //      cartoMap?.requestRedraw();
+    //   }
+    //    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
@@ -1280,7 +1272,19 @@
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
         const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
-        // TEST_LOG && console.log('onVectorTileClicked', clickType, featureLayerName, featureId, featureData.class, featureData.subclass, featureData, JSON.stringify(position), JSON.stringify(featurePosition), handledByModules);
+        DEV_LOG &&
+            console.log(
+                'onVectorTileClicked',
+                clickType,
+                featureLayerName,
+                featureId,
+                featureData.class,
+                featureData.subclass,
+                featureData,
+                JSON.stringify(position),
+                JSON.stringify(featurePosition),
+                handledByModules
+            );
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const currentProperties = $selectedItem?.properties;
             const currentGeometry = $selectedItem?.geometry;
@@ -1321,7 +1325,7 @@
                 return false;
             }
 
-        //    const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
+            //    const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
             const isFeatureInteresting = !selectedRoutes;
             // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
@@ -1332,13 +1336,18 @@
                     handleSelectedRouteTimer = null;
                 }
                 const result: IItem = {
-                    properties: { featureId , ...featureData},
+                    properties: { featureId, ...featureData },
                     geometry: {
                         type: 'Point',
                         coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
-                selectItem({ item: result, isFeatureInteresting, showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop', setMapSelected: /park|water_name|waterway/.test(featureLayerName) });
+                selectItem({
+                    item: result,
+                    isFeatureInteresting,
+                    showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop',
+                    setMapSelected: /park|water_name|waterway/.test(featureLayerName)
+                });
             }
             unFocusSearch();
             // if (isFeatureInteresting && showClickedFeatures) {
@@ -1466,7 +1475,7 @@
             mapStyleLayer = array[1];
         }
         DEV_LOG && console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer, force);
-      //  showToast('setMapStyle ' + layerStyle);
+        //  showToast('setMapStyle ' + layerStyle);
         if (layerStyle !== currentLayerStyle || !!force) {
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
@@ -1474,16 +1483,16 @@
                 vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
                     const value = nutiProps.getNutiValue(key);
-                    if(value != null) {
+                    if (value != null) {
                         acc[key] = value;
                     }
                     return acc;
                 }, {});
                 if (Object.keys(nutiPropsToApply).length > 0) {
-                //    showToast(JSON.stringify(nutiPropsToApply));
+                    //    showToast(JSON.stringify(nutiPropsToApply));
                     vectorTileDecoder.setJSONStyleParameters(nutiPropsToApply);
                 }
-            } catch(error) {
+            } catch (error) {
                 vectorTileDecoder = null;
                 showError(error);
             }
@@ -1504,13 +1513,12 @@
         }
         const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
-        const entities = (await Promise.all([
-            stylePath,
-            path.join(getDataFolder(), 'styles'),
-            path.join(getSavedMBTilesDir(), 'styles'),
-            '/storage/emulated/0/Documents/dev/alpimaps/dev_assets/styles'
-        ].map(getFolderEntities))).flat();
- //       const entities = (await getFolderEntities())(await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
+        const entities = (
+            await Promise.all(
+                [stylePath, path.join(getDataFolder(), 'styles'), path.join(getSavedMBTilesDir(), 'styles'), '/storage/emulated/0/Documents/dev/alpimaps/dev_assets/styles'].map(getFolderEntities)
+            )
+        ).flat();
+        //       const entities = (await getFolderEntities())(await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
             if (Folder.exists(e.path)) {
@@ -1524,7 +1532,11 @@
                 try {
                     const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
                     // DEV_LOG && console.log('assetsNames', assetsNames);
-                    styles.push(...assetsNames.filter((s) => s.endsWith('.xml')).map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.split('.')[0] })));
+                    styles.push(
+                        ...assetsNames
+                            .filter((s) => s.endsWith('.xml'))
+                            .map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.split('.')[0] }))
+                    );
                 } catch (error) {
                     console.error(error, error.stack);
                 }
@@ -1545,7 +1557,7 @@
                 value
             };
         });
-      //  showToast('selectStyle ' + selectedIndex + ' ' +currentLayerStyle + '');
+        //  showToast('selectStyle ' + selectedIndex + ' ' +currentLayerStyle + '');
         const result = await showAlertOptionSelect(
             {
                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
@@ -1731,13 +1743,9 @@
         item = await itemsModule.saveItem(item);
         if (item.route) {
             mapContext.mapModules.directionsPanel.cancel(false);
-            
         }
-    //    if (item.route) {
-           await itemsModule.takeItemPicture(item);
-  //      } else {
-            mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
-  //      }
+        await itemsModule.takeItemPicture(item);
+        mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
     });
 
     async function showHideKeepAwakeNotification(value: boolean) {
@@ -2098,10 +2106,10 @@
         // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
         sideButtons = sideButtons;
     }
-    let showRoutesProps = nutiProps.getProps('show_routes');
-    let showRoutes = showRoutesProps.store;
-    let showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
-    let showSlopePercentages = showSlopePercentagesProps.store;
+    const showRoutesProps = nutiProps.getProps('show_routes');
+    const showRoutes = showRoutesProps.store;
+    const showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
+    const showSlopePercentages = showSlopePercentagesProps.store;
     $: {
         const newButtons: any[] = [
             {
@@ -2125,7 +2133,7 @@
                 tooltip: showSlopePercentagesProps.title,
                 isSelected: $showSlopePercentages,
                 visible: showSlopePercentagesProps.visible(customLayersModule),
-                onTap: () => $showSlopePercentages =!$showSlopePercentages,
+                onTap: () => ($showSlopePercentages = !$showSlopePercentages),
                 onLongPress: showSlopePercentagesProps.onLongPress
             },
             {
@@ -2134,7 +2142,7 @@
                 tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
                 visible: showRoutesProps.visible(customLayersModule),
-                onTap: () => $showRoutes = !$showRoutes,
+                onTap: () => ($showRoutes = !$showRoutes),
                 onLongPress: showRoutesProps.onLongPress
             },
             // {
@@ -2147,7 +2155,7 @@
                 isSelected: keepScreenAwake,
                 tooltip: lc('keep_screen_awake'),
                 selectedColor: colorError,
-                onLongPress: () => keepScreenAwakeFullBrightness = !keepScreenAwakeFullBrightness,
+                onLongPress: () => (keepScreenAwakeFullBrightness = !keepScreenAwakeFullBrightness),
                 onTap: switchKeepAwake
             },
             {

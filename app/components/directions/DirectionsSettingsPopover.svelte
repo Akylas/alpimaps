@@ -30,7 +30,7 @@
         if (onOptionChange) {
             settings = onOptionChange(value);
         }
-        options = [...options] // we want svelte to trigger ui change
+        options = [...options]; // we want svelte to trigger ui change
     }
     function onActualReset() {
         if (onReset) {
@@ -48,7 +48,7 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} rows="auto,*,auto" columns="*" width="95%">
+<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width="95%">
     {#if options}
         <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
             {#each options as option, index}

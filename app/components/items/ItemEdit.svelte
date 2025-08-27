@@ -230,13 +230,13 @@
                     itemIconSize = value;
                     const style = getUpdateStyle();
                     if (value === 0) {
-                       style['iconSize'] = null;
+                        style['iconSize'] = null;
                     } else {
                         style['iconSize'] = value;
-                    }                 
+                    }
                 }
             });
-        } catch(error) {
+        } catch (error) {
             showError(error);
         }
     }
@@ -418,7 +418,7 @@
     }
 </script>
 
-<page actionBarHidden={true} class="themedPage">
+<page class="themedPage" actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
             <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
@@ -511,11 +511,11 @@
                     margin="0 4 0 4"
                     padding={5}
                     rippleColor={itemColor}
+                    text={(itemIconSize || '?') + 'px'}
                     textAlignment="center"
                     verticalAlignment="middle"
                     width={50}
-                    on:tap={setCustomIconSize}
-                    text={(itemIconSize || '?') + 'px'}>
+                    on:tap={setCustomIconSize}>
                     <cspan text={itemIconSize || '?'} />
                     <cspan fontSize={12} text={'\n' + 'px'} />
                 </label>

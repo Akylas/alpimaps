@@ -10,7 +10,7 @@ import { CartoMap, MapClickInfo, MapInteractionInfo, PanningMode } from '@native
 import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
 import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { Application, ApplicationSettings, File, Folder,  Frame, Page, knownFolders, path } from '@nativescript/core';
+import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
 import { NativeViewElementNode } from 'svelte-native/dom';
@@ -48,9 +48,9 @@ const appPath = knownFolders.currentApp().path;
 const styleAssets = ['fonts/osm.ttf'];
 // console.log('styleAssets', styleAssets);
 
-function loadAsset(name) {  
+function loadAsset(name) {
     const filePath = path.join(appPath, name);
-    //DEV_LOG && console.log('loadAsset', name, filePath);
+    //DEV_LOG && console.log('loadAsset', name, fil ePath);
     if (File.exists(filePath)) {
         return new com.carto.core.BinaryData(File.fromPath(filePath).readSync());
     }
@@ -148,28 +148,27 @@ export interface MapModules {
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
     try {
-      DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
-      const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
-      const useZip = TEST_ZIP_STYLES || (!name.startsWith('/') || !Folder.exists(stylePath)); 
-  //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
+        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
+        const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
+        const useZip = TEST_ZIP_STYLES || !name.startsWith('/') || !Folder.exists(stylePath);
+        //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
         return new MBVectorTileDecoder({
             style,
-            pack:
-                useZip
-                    ? new ZippedAssetPackage({
-                          liveReload: !PRODUCTION,
-                          zipPath: `${stylePath}.zip`,
-                          basePack,
-                          getAssetNames: getAssetNamesWithMaterial
-                      })
-                    : new DirAssetPackage({
-                          loadUsingNS: true,
-                          dirPath: stylePath
+            pack: useZip
+                ? new ZippedAssetPackage({
+                      liveReload: !PRODUCTION,
+                      zipPath: `${stylePath}.zip`,
+                      basePack,
+                      getAssetNames: getAssetNamesWithMaterial
+                  })
+                : new DirAssetPackage({
+                      loadUsingNS: true,
+                      dirPath: stylePath
                       // loadAsset,
                       // getAssetNames: getAssetNamesWithMaterial
-                      })
+                  })
         });
-    } catch(error) {
+    } catch (error) {
         showError(error);
     }
 }
@@ -253,34 +252,34 @@ const mapContext: MapContext = {
     },
     setInnerStyle(style: string, mapStyle: string) {
         const currentValue = ApplicationSettings.getString('innerStyle', 'voyager');
-        
-   //     if (style !== currentValue) {
-            
-            ApplicationSettings.setString('innerStyle', style);
-            const oldDecoder = mapContext.innerDecoder;
-            const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0,-1).concat('inner').join('/') : 'inner';
-            DEV_LOG && console.log('setInnerStyle', style, mapStyle, stylePath);
-            const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
-            const nutiPropsToApply = innerNutiProps.getKeys().reduce((acc, key) => {
-                    const value = innerNutiProps.getNutiValue(key);
-                    if(value != null) {
-                        acc[key] = value;
-                    }
-                    return acc;
-                }, {});
-                if (Object.keys(nutiPropsToApply).length > 0) {
-                //    showToast(JSON.stringify(nutiPropsToApply));
-                    decoder.setJSONStyleParameters(nutiPropsToApply);
-                }
-         //   decoder.setStyleParameter('routes_type', get(routesType) + '');
-            if (oldDecoder) {
-                oldDecoder.notify({ eventName: 'change' });
-                oldDecoder.dispose();
+
+        //     if (style !== currentValue) {
+
+        ApplicationSettings.setString('innerStyle', style);
+        const oldDecoder = mapContext.innerDecoder;
+        const stylePath = mapStyle.startsWith('/') ? mapStyle.split('/').slice(0, -1).concat('inner').join('/') : 'inner';
+        DEV_LOG && console.log('setInnerStyle', style, mapStyle, stylePath);
+        const decoder = (mapContext.innerDecoder = createTileDecoder(stylePath, style));
+        const nutiPropsToApply = innerNutiProps.getKeys().reduce((acc, key) => {
+            const value = innerNutiProps.getNutiValue(key);
+            if (value != null) {
+                acc[key] = value;
             }
-  //      }
+            return acc;
+        }, {});
+        if (Object.keys(nutiPropsToApply).length > 0) {
+            //    showToast(JSON.stringify(nutiPropsToApply));
+            decoder.setJSONStyleParameters(nutiPropsToApply);
+        }
+        //   decoder.setStyleParameter('routes_type', get(routesType) + '');
+        if (oldDecoder) {
+            oldDecoder.notify({ eventName: 'change' });
+            oldDecoder.dispose();
+        }
+        //      }
     },
-//    innerDecoder
-  //  innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
+    //    innerDecoder
+    //  innerDecoder: createTileDecoder('inner', ApplicationSettings.getString('innerStyle', 'voyager')),
     focusOffset: { x: 0, y: 0 }
 } as any;
 

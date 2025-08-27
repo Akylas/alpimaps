@@ -292,12 +292,11 @@
     }
     async function onListItemLongPress() {
         try {
-            if(ApplicationSettings.getBoolean('list_longpress_camera', false)) {
+            if (ApplicationSettings.getBoolean('list_longpress_camera', false)) {
                 const intent = new android.content.Intent('android.media.action.STILL_IMAGE_CAMERA_SECURE');
-                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);                
+                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
                 Utils.android.getApplicationContext().startActivity(intent);
             }
-            
         } catch (error) {
             showError(error);
         }
@@ -331,12 +330,12 @@
         isVisible={$watchingLocation && !$queryingLocation}
         marginBottom={16}
         row={2}
-        text={$navigationModeStore ? "mdi-navigation" : "mdi-navigation-outline"}
+        text={$navigationModeStore ? 'mdi-navigation' : 'mdi-navigation-outline'}
         verticalAlignment="bottom"
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
     <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
-        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress}/>
+        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />
         <mdbutton class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 

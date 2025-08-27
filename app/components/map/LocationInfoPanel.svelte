@@ -232,7 +232,7 @@
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
-    backgroundColor={ isEInk ? "#ffffff66" : "#00000077" }
+    backgroundColor={isEInk ? '#ffffff66' : '#00000077'}
     borderRadius={30}
     columns="auto,*,auto"
     height={60}
@@ -241,7 +241,15 @@
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <canvaslabel bind:this={firstCanvas} backgroundColor={ isEInk ? null : "#000000aa" } borderColor={colorPrimary} borderRadius={30} borderWidth={4} color={ isEInk ? "black" : "white" } height={60} width={60}>
+        <canvaslabel
+            bind:this={firstCanvas}
+            backgroundColor={isEInk ? null : '#000000aa'}
+            borderColor={colorPrimary}
+            borderRadius={30}
+            borderWidth={4}
+            color={isEInk ? 'black' : 'white'}
+            height={60}
+            width={60}>
             <cspan
                 fontSize={22}
                 fontWeight="bold"
@@ -251,21 +259,26 @@
                 verticalAlignment="middle" />
             <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
         </canvaslabel>
-        <canvaslabel col={1} color={ isEInk ? "#000" : "#fff" } marginLeft={5}>
-            <cspan color={isEInk ? "#000" : colorPrimary} fontSize={10} text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'} verticalAlignment="top" paddingTop={4} />
+        <canvaslabel col={1} color={isEInk ? '#000' : '#fff'} marginLeft={5}>
+            <cspan
+                color={isEInk ? '#000' : colorPrimary}
+                fontSize={10}
+                paddingTop={4}
+                text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
+                verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
                 <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
                 <cspan fontSize={12} text=" m" />
             </cgroup>
         </canvaslabel>
-    {#if hasBarometer}
-        <canvaslabel col={1} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'} color={ isEInk ? "#000" : "#fff" }>
-            <cspan fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
-        </canvaslabel>
-        <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapse'}>
-            <IconButton small={true} text="mdi-gauge" white={!isEInk} on:tap={switchBarometer} />
-            <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={!isEInk} on:tap={getNearestAirportPressure} />
-        </stacklayout>
-    {/if}
+        {#if hasBarometer}
+            <canvaslabel col={1} color={isEInk ? '#000' : '#fff'} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'}>
+                <cspan fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
+            </canvaslabel>
+            <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapse'}>
+                <IconButton small={true} text="mdi-gauge" white={!isEInk} on:tap={switchBarometer} />
+                <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={!isEInk} on:tap={getNearestAirportPressure} />
+            </stacklayout>
+        {/if}
     {/if}
 </gridlayout>
