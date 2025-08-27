@@ -224,7 +224,7 @@
         topItemsToDraw = toDraw;
     }
     const itemsModule = mapContext.mapModule('items');
-    
+
     const topProps = ['population', 'wheelchair', 'atm', 'change_machine', 'copy_facility', 'stamping_machine', 'currency', 'ele', 'currency:XLT', 'cuisine'];
 
     let loading = false;
@@ -429,7 +429,7 @@
     <gridlayout columns="auto,*,auto" rows={`${$actionBarHeight}`} {...$$restProps} color={colorOnSurface}>
         <!-- <label id="title" fontSize={40} text={itemIcon} fontFamily={itemIconFontFamily} verticalTextAlignment="center" /> -->
         <IconButton fontFamily="osm" text={osmicon(formatter.geItemIcon(item))} />
-        <label id="title" col={1} fontSize={18} fontWeight="bold" text={formatter.getItemTitle(item) || '' } verticalTextAlignment="center" maxFontSize={18} autoFontSize={true}/>
+        <label id="title" autoFontSize={true} col={1} fontSize={18} fontWeight="bold" maxFontSize={18} text={formatter.getItemTitle(item) || ''} verticalTextAlignment="center" />
         <stacklayout col={2} orientation="horizontal">
             <IconButton isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
             <IconButton text="mdi-autorenew" on:tap={() => refresh(true)} />

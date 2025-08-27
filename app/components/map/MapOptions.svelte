@@ -13,16 +13,7 @@
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import {      
-        pitchEnabled,
-        preloading,
-        projectionModeSpherical,
-        rotateEnabled,      
-        showItemsLayer,
-        nutiProps,
-        innerNutiProps,
-        layerProps
-    } from '~/stores/mapStore';
+    import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import { colors } from '~/variables';
@@ -162,11 +153,21 @@
         const newItems = [];
         if (customLayers.hasLocalData) {
             try {
-                newItems.push(...nutiProps.getKeys().map(key => nutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
-                newItems.push(...innerNutiProps.getKeys().map(key => innerNutiProps.getSettingsOptions(key)).filter(s=>!s.icon));
-            } catch(error){
+                newItems.push(
+                    ...nutiProps
+                        .getKeys()
+                        .map((key) => nutiProps.getSettingsOptions(key))
+                        .filter((s) => !s.icon)
+                );
+                newItems.push(
+                    ...innerNutiProps
+                        .getKeys()
+                        .map((key) => innerNutiProps.getSettingsOptions(key))
+                        .filter((s) => !s.icon)
+                );
+            } catch (error) {
                 showError(error);
-            }         
+            }
         }
         items = new ObservableArray(newItems);
     }
@@ -208,7 +209,7 @@
         }
         return item.type || 'default';
     }
-    
+
     const nutiIconParams = ['contours', 'buildings'];
     const layerIconParams = ['showSlopePercentages'];
 </script>
@@ -228,16 +229,16 @@
             ></ListItemAutoSize>
         </Template>
     </collectionview>
-    
+
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
-        {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
-            <StoreValue store={option.store} let:value> 
-              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
+        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+            <StoreValue store={option.store} let:value>
+                <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
             </StoreValue>
         {/each}
-        {#each layerIconParams.map(key=>({...layerProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
-            <StoreValue store={option.store} let:value> 
-              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
+        {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+            <StoreValue store={option.store} let:value>
+                <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
             </StoreValue>
         {/each}
         <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
