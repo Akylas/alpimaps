@@ -15,7 +15,7 @@
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { convertDurationSeconds, formatDistance, convertElevation } from '~/helpers/formatter';
+    import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
     import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -23,32 +23,31 @@
     import { showError } from '@shared/utils/showError';
     import { colors, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    let { colorOnSurface, colorOutline, colorOutlineVariant, colorOnPrimary, colorPrimary } = $colors;
-    $: ({ colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
-    
+    let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+
     const xintervals = [1, 2, 5, 10, 20, 50, 100];
     function closestUpper(arr: number[], target: number): number | undefined {
-      return arr.filter(x => x >= target).sort((a, b) => a - b)[0];
+        return arr.filter((x) => x >= target).sort((a, b) => a - b)[0];
     }
-
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
-    
+
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(10);
-    
+
     const waypointsBackPaint = new Paint();
     waypointsBackPaint.setColor(colorPrimary);
-    
+
     const waypointsPaint = new Paint();
     waypointsPaint.fontFamily = 'osm';
     waypointsPaint.setColor(colorOnPrimary);
     waypointsPaint.setTextSize(8);
     waypointsPaint.setTextAlign(Align.CENTER);
-    
+
     const nstringPaint = new Paint();
     nstringPaint.setColor('#aaa');
     nstringPaint.setStrokeWidth(1);
@@ -70,7 +69,7 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined)){
+    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined)) {
         updateChartData(item);
     }
     let onChartDataUpdateCallbacks = [];
@@ -114,8 +113,8 @@
         if (!item) {
             return;
         }
-         const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
-       // const shouldSelectItem = true;
+        const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
+        // const shouldSelectItem = true;
         const entryIndex = event.highlight.entryIndex;
         const positions = item.geometry?.['coordinates'];
         const actualIndex = Math.max(0, Math.min(entryIndex, positions.length - 1));
@@ -181,7 +180,11 @@
             dataSet.valueTextColor = colorOnSurface;
         }
     });
-    export function hilghlightPathIndex(params:{onPathIndex: number, remainingDistance: number, remainingDistanceToStep: number, remainingTime: number, dplus?: number, dmin?: number}, highlight?: Highlight<Entry>, sendEvent = true) {
+    export function hilghlightPathIndex(
+        params: { onPathIndex: number; remainingDistance: number; remainingDistanceToStep: number; remainingTime: number; dplus?: number; dmin?: number },
+        highlight?: Highlight<Entry>,
+        sendEvent = true
+    ) {
         if (!chart) {
             return;
         }
@@ -192,7 +195,7 @@
             return;
         }
         const nChart = chart?.nativeView;
-       DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
+        DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
             if (nChart) {
@@ -231,25 +234,29 @@
                         text: '~' + (itemData.g || 0).toFixed() + '% '
                     }
                 ];
-                if (!isNaN(itemData.dp) && (params.dplus - itemData.dp > 0)) {
-                    spans.push({
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-arrow-top-right'
-                    },
-                    {
-                        text: convertElevation(params.dplus - itemData.dp) + ' '
-                    });
+                if (!isNaN(itemData.dp) && params.dplus - itemData.dp > 0) {
+                    spans.push(
+                        {
+                            fontFamily: $fonts.mdi,
+                            color: colorPrimary,
+                            text: 'mdi-arrow-top-right'
+                        },
+                        {
+                            text: convertElevation(params.dplus - itemData.dp) + ' '
+                        }
+                    );
                 }
                 if (!isNaN(itemData.dm) && Math.abs(params.dmin - itemData.dm) > 0) {
-                    spans.push({
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-arrow-bottom-right'
-                    },
-                    {
-                        text: convertElevation(-(params.dmin - itemData.dm)) + ' '
-                    });
+                    spans.push(
+                        {
+                            fontFamily: $fonts.mdi,
+                            color: colorPrimary,
+                            text: 'mdi-arrow-bottom-right'
+                        },
+                        {
+                            text: convertElevation(-(params.dmin - itemData.dm)) + ' '
+                        }
+                    );
                 }
                 if (!isNaN(params.remainingTime)) {
                     spans.unshift(
@@ -292,7 +299,7 @@
                     dataSet.ignoreFiltered = true;
                     const entry = profileData[onPathIndex];
                     dataSet.ignoreFiltered = false;
-                     DEV_LOG && console.log('highlight', onPathIndex, sendEvent, entry.d, JSON.stringify(entry));
+                    DEV_LOG && console.log('highlight', onPathIndex, sendEvent, entry.d, JSON.stringify(entry));
                     const highlight = {
                         dataSetIndex: 0,
                         entryIndex: onPathIndex,
@@ -377,25 +384,25 @@
                 chartView.resetZoom();
             }
             const deltaA = profile.max[1] - profile.min[1];
-            let spaceMin = 50;
+            const spaceMin = 50;
             let spaceMax = 0;
             const chartElevationMinRange = ApplicationSettings.getNumber('chart_elevation_min_range', 250);
             if (deltaA < chartElevationMinRange) {
-             //   const space = (chartElevationMinRange - deltaA) / 2;
-            //    spaceMin += space;
+                //   const space = (chartElevationMinRange - deltaA) / 2;
+                //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
             }
-            const labelCount = 5; 
+            const labelCount = 5;
             const interval = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / 100) * 100;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
             leftAxis.textSize = 9;
-            
+
             const totalDistance = it.route.totalDistance;
-            const xLabelCount = 6; 
-            xinterval = closestUpper( xintervals, totalDistance / xLabelCount / 1000)* 1000;
+            const xLabelCount = 6;
+            xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             xAxis.textSize = 9;
@@ -413,7 +420,7 @@
                 }
             }
             if (!chartData) {
-               set = new LineDataSet(profileData, 'a', 'd', 'a');
+                set = new LineDataSet(profileData, 'a', 'd', 'a');
                 set.maxFilterNumber = ApplicationSettings.getNumber('chart_max_filter', 50);
                 set.useColorsForFill = true;
                 set.fillFormatter = {
@@ -439,14 +446,14 @@
                 chartView.data = lineData;
             } else {
                 chartView.highlightValues(null);
-                set = chartData.getDataSetByIndex(0) as LineDataSet;
+                set = chartData.getDataSetByIndex(0);
                 updateSetColors();
                 set.values = profileData;
                 set.notifyDataSetChanged();
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
             }
-            
+
             leftAxis.removeAllLimitLines();
             let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
             limitLine.lineColor = colorOutline;
@@ -454,51 +461,51 @@
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = -1;
             limitLine.textSize = 9;
-            limitLine.textColor= colorOnSurface;
-           // limitLine.ensureVisible = true;
+            limitLine.textColor = colorOnSurface;
+            // limitLine.ensureVisible = true;
             limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             leftAxis.addLimitLine(limitLine);
-            
+
             limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = 1;
             limitLine.textSize = 9;
-            limitLine.textColor= colorOnSurface;
+            limitLine.textColor = colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
-            
+
             xAxis.removeAllLimitLines();
             if (showAscents) {
                 profile.ascents.forEach((ascent: AscentSegment) => {
                     const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
-            
+
                     limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
                     limitLine.lineColor = colorOutline;
                     limitLine.enableDashedLine(6, 3, 0);
                     limitLine.lineWidth = 0.5;
                     limitLine.textSize = 7;
                     limitLine.xOffset = 0;
-                    limitLine.textColor= colorOnSurface;
+                    limitLine.textColor = colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         c.drawCircle(x + 5, y - 6, 6, waypointsBackPaint);
                         waypointsPaint.textSize = 7;
-                        c.drawText('', x + 5, y - 5 +1, waypointsPaint);
-                     //   paint.setTextAlign(Align.CENTER);
+                        c.drawText('', x + 5, y - 5 + 1, waypointsPaint);
+                        //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
                         c.translate(x, y - 3);
                         staticLayout.draw(c);
                         c.restore();
-                    }
+                    };
                     xAxis.addLimitLine(limitLine);
-              });
+                });
             }
             if (showWaypoints) {
                 const positions = packageService.getRouteItemPoses(it);
-                it.route.waypoints.forEach(p=> {
+                it.route.waypoints.forEach((p) => {
                     if (p.properties.showOnMap && p.properties.index > 0) {
                         limitLine = new LimitLine(profileData[p.properties.index].d, ' ');
                         limitLine.lineColor = colorOutline;
@@ -506,18 +513,14 @@
                         limitLine.lineWidth = 0.5;
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        
-                            c.drawCircle(x - 5, y +0, 6, waypointsBackPaint);
+                            c.drawCircle(x - 5, y + 0, 6, waypointsBackPaint);
                             waypointsPaint.textSize = 8;
-                            c.drawText('', x - 5, y +4 - 1, waypointsPaint);
-                            
-                        }
+                            c.drawText('', x - 5, y + 4 - 1, waypointsPaint);
+                        };
                         xAxis.addLimitLine(limitLine);
                     }
-                    
                 });
             }
-            
 
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
