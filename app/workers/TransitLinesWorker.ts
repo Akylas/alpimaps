@@ -42,6 +42,7 @@ class TransitLinesWorker extends BaseWorker {
                         const f = features[index];
                         const key = f.properties.id.replace('_', ':');
                         const d = metroDataJSON[key];
+                        DEV_LOG && console.log('test', f.properties.id, key, !!d);
                         if (d) {
                             Object.assign(f.properties, {
                                 route_id: f.properties.id,
