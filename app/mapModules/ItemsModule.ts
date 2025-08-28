@@ -19,7 +19,7 @@ import { get } from 'svelte/store';
 
 import { osmicon } from '~/helpers/formatter';
 import { formatter } from '~/mapModules/ItemFormatter';
-    
+
 import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
 import { maxAgeMonth, networkService } from '~/services/NetworkService';
@@ -183,8 +183,8 @@ export default class ItemsModule extends MapModule {
             }
         }
     }
-    setVisibility(value: boolean){
-        if (this.localVectorLayer){
+    setVisibility(value: boolean) {
+        if (this.localVectorLayer) {
             this.localVectorLayer.visible = value;
         }
     }
@@ -445,11 +445,11 @@ export default class ItemsModule extends MapModule {
         if (item?.route) {
             const features = [];
             DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
-            item.route.waypoints.forEach(p=> {
+            item.route.waypoints.forEach((p) => {
                 if (p.properties.showOnMap) {
                     features.push({
-                        geometry:p.geometry,
-                        type: 'Feature', 
+                        geometry: p.geometry,
+                        type: 'Feature',
                         properties: {
                             ...p.properties,
                             class: 'waypoint',
@@ -457,12 +457,12 @@ export default class ItemsModule extends MapModule {
                         }
                     });
                 }
-                
             });
             if (item.route.steps) {
-                    features.push(...item.route.steps.map(p=>({
+                features.push(
+                    ...item.route.steps.map((p) => ({
                         geometry: p.geometry,
-                        type: 'Feature', 
+                        type: 'Feature',
                         properties: {
                             class: 'step',
                             distFromStart: p.distFromStart,
@@ -471,19 +471,20 @@ export default class ItemsModule extends MapModule {
                             distFromStartStr: p.distFromStartStr,
                             distToEndStr: p.distToEndStr
                         }
-                    })));
-                }
-              if (item.profile?.ascents?.length > 0) {
-                  const positions = item.geometry?.['coordinates'];
-                  item.profile.ascents.forEach(a => {
-                      const actualIndex = Math.max(0, Math.min(a.highestPointIndex, positions.length - 1));
-                      const position = positions[actualIndex];
-                      features.push({
+                    }))
+                );
+            }
+            if (item.profile?.ascents?.length > 0) {
+                const positions = item.geometry?.['coordinates'];
+                item.profile.ascents.forEach((a) => {
+                    const actualIndex = Math.max(0, Math.min(a.highestPointIndex, positions.length - 1));
+                    const position = positions[actualIndex];
+                    features.push({
                         geometry: {
                             type: 'Point',
                             coordinates: position
                         },
-                        type: 'Feature', 
+                        type: 'Feature',
                         properties: {
                             class: 'waypoint',
                             icon: '',
@@ -492,18 +493,15 @@ export default class ItemsModule extends MapModule {
                             iconDy: 0
                         }
                     });
-                  })
-              }
-            DEV_LOG && console.log('updategeojson1', Date.now()- startTime, item.route.steps?.length);
-            const data = {type: 'FeatureCollection',
-                    features} ;
+                });
+            }
+            DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
+            const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setLayerGeoJSONString(2, data);
-            DEV_LOG && console.log('updategeojson2', Date.now()- startTime, JSON.stringify(data));
+            DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
-            this.getLocalVectorDataSource().setLayerGeoJSONString(2, {type: 'FeatureCollection',
-                    features:[]} );
+            this.getLocalVectorDataSource().setLayerGeoJSONString(2, { type: 'FeatureCollection', features: [] });
         }
-        
     }
     async hideItem(item: IItem) {
         if (item === mapContext.getSelectedItem()) {
@@ -581,7 +579,6 @@ export default class ItemsModule extends MapModule {
                     // restore everyting
                     mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
                     if (restore) {
-                
                         if (oldItem) {
                             mapContext.selectItem({ item: oldItem, isFeatureInteresting: true, preventZoom: true });
                         }
