@@ -122,7 +122,7 @@ module.exports = (env, params = {}) => {
         fork = true,
         buildpeakfinder,
         build3dmap,
-        buildstyle = true,
+        buildstyle = false,
         report,
         disableoffline = false,
         busSupport = true,
@@ -135,7 +135,7 @@ module.exports = (env, params = {}) => {
         theme = 'auto',
         adhoc
     } = env;
-    console.log('env', playStoreBuild, env);
+    // console.log('env', playStoreBuild, env);
     env.appPath = appPath;
     env.appResourcesPath = appResourcesPath;
     env.appComponents = env.appComponents || [];
