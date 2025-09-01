@@ -76,6 +76,7 @@
     $: ({ colorBackground, colorError, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
+    const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
     const KEEP_AWAKE_KEY = '_keep_awake';
@@ -700,7 +701,7 @@
             tryCatch(async () => {
                 packageService.start();
                 transitService.start();
-                setMapStyle(ApplicationSettings.getString('mapStyle', PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm'), true);
+                setMapStyle(ApplicationSettings.getString('mapStyle', DEFAULT_STYLE), true);
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
@@ -1477,6 +1478,12 @@
         DEV_LOG && console.log('setMapStyle', layerStyle, currentLayerStyle, mapStyle, mapStyleLayer, force);
         //  showToast('setMapStyle ' + layerStyle);
         if (layerStyle !== currentLayerStyle || !!force) {
+            const isZip = mapStyle.endsWith('.zip');
+            const stylePath = mapStyle.startsWith('/') ? mapStyle : `~/assets/styles/${mapStyle}`;
+            DEV_LOG && console.log('stylePath', stylePath, isZip, stylePath.startsWith('~/assets/'));
+            if (!stylePath.startsWith('~/assets/') && ((isZip && !File.exists(stylePath)) || (!isZip && !Folder.exists(stylePath)))) {
+                return setMapStyle(DEFAULT_STYLE, true);
+            }
             currentLayerStyle = layerStyle;
             ApplicationSettings.setString('mapStyle', layerStyle);
             try {
