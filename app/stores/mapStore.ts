@@ -368,12 +368,10 @@ function createStore(params) {
                 startValue = ApplicationSettings.getString(settingKey, defaultValue as string);
                 break;
         }
-        console.log('startValue', key, startValue, settingKey);
         obj.value = startValue;
         obj.store = writable(startValue);
         obj.store.ignoreUpdate = false;
         obj.store.subscribe((value) => {
-            console.log('store update', key, value, obj.store.ignoreUpdate, !!notifyCallback);
             if (obj.store.ignoreUpdate) {
                 obj.store.ignoreUpdate = false;
                 return;
