@@ -2,7 +2,7 @@ import { File } from '@nativescript/core';
 import { gpx } from '@tmcw/togeojson';
 import { Feature, LineString } from 'geojson';
 import { toXML } from 'jstoxml';
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 import { getBoundsAndDistance } from '~/helpers/geolib';
 import { IItem } from '~/models/Item';
 
