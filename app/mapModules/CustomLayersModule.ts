@@ -20,7 +20,7 @@ import { l, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { packageService } from '~/services/PackageService';
-import { preloading, clickHandlerLayerFilter, layerProps } from '~/stores/mapStore';
+import { clickHandlerLayerFilter, layerProps, preloading } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -919,7 +919,7 @@ export default class CustomLayersModule extends MapModule {
                     const sources = subentities.filter((s) => s.path.endsWith('.mbtiles'));
                     const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
                     this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
-                    
+
                     DEV_LOG &&
                         console.log(
                             'sources',
@@ -947,9 +947,10 @@ export default class CustomLayersModule extends MapModule {
 
             if (worldMbtilesEntity) {
                 const datasource: TileDataSource<any, any> = this.createMergeDataSource(
-                            [worldMbtilesEntity, worldRouteMbtilesEntity].filter(s=>!!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                            mbTilesSourceGenerator,
-                            undefined);
+                    [worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                    mbTilesSourceGenerator,
+                    undefined
+                );
                 mbtiles.push(datasource);
             }
 
