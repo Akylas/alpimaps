@@ -128,7 +128,7 @@
     let focused = false;
     let searchResultsCount;
     $: searchResultsVisible = focused && searchResultsCount > 0;
-    $: DEV_LOG && console.log('searchResultsVisible', searchResultsVisible, focused, searchResultsCount);
+    // $: DEV_LOG && console.log('searchResultsVisible', searchResultsVisible, focused, searchResultsCount);
     // $: {
     //     if (nGridLayout) {
     //         animateView(nGridLayout, { elevation: $currentTheme !== 'dark' && !isEInk && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25 }, 100);
@@ -240,15 +240,14 @@
                 const latlong = _query.split(':')[1].split(',').map(parseFloat) as [number, number];
                 if (latlong[0] !== 0 || latlong[1] !== 0) {
                     getMapContext().selectItem({
-                            item: {
-                                properties: {
-                                },
-                                geometry: {
-                                    coordinates: latlong
-                                } as any
-                            },
-                            isFeatureInteresting: true
-                        });
+                        item: {
+                            properties: {},
+                            geometry: {
+                                coordinates: latlong
+                            } as any
+                        },
+                        isFeatureInteresting: true
+                    });
                 }
                 return;
             }
@@ -461,11 +460,11 @@
     bind:this={gridLayout}
     id="search"
     {...$$restProps}
-    backgroundColor={(!isEInk || focused) ? colorWidgetBackground : 'transparent'}
+    backgroundColor={!isEInk || focused ? colorWidgetBackground : 'transparent'}
+    borderColor="#00000066"
+    borderWidth={isEInk && !focused ? 1 : 0}
     columns="auto,*,auto,auto,auto,auto"
-    elevation={$currentTheme !== 'dark' && !isEInk && focused ? 6 : 0} 
-    borderColor='#00000066'
-    borderWidth={(isEInk && !focused) ? 1 : 0}
+    elevation={$currentTheme !== 'dark' && !isEInk && focused ? 6 : 0}
     rows="auto,auto"
     on:tap={() => {}}>
     <IconButton gray={true} text="mdi-magnify" on:tap={showSearchOptions} />
