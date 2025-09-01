@@ -64,7 +64,7 @@
     let filter: string = null;
 
     // technique for only specific properties to get updated on store change
-    $: ({ colorOutline, colorOnSurface } = $colors);
+    $: ({ colorOnSurface, colorOutline } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -203,7 +203,7 @@
 <gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,auto,*" {...$$restProps}>
         {#if title}
-            <label class="actionBarTitle" fontWeight="bold" margin="10 10 0 10" text={title} />
+            <label class="actionBarTitle" color={colorOnSurface} fontWeight="bold" margin="10 10 0 10" text={title} />
         {/if}
         {#if showFilter}
             <gridlayout borderColor={colorOutline} margin="10 10 0 10" row={1}>
