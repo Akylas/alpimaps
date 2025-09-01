@@ -14,3 +14,9 @@ repositories {
 //       enabled = false
 //     }
 // }
+
+// configurations.all {
+//         resolutionStrategy {
+//             force 'androidx.baselineprofile:androidx.baselineprofile.gradle.plugin:1.4.0'
+//         }
+//     }

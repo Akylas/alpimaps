@@ -11,8 +11,8 @@ android {
   defaultConfig {  
     multiDexEnabled false
     minSdkVersion 21
-    versionCode 274
-    versionName "2.9.1"
+    versionCode 275
+    versionName "2.9.2"
 
     // if (project.hasProperty('resConfigs')) {
     //   def resConfigs = project.findProperty('resConfigs')
@@ -141,14 +141,14 @@ task createProguard {
         }
     }
 }
-project.tasks.configureEach {
-    if (name =~ /buildMetadata/) {
-        it.finalizedBy(createProguard)
+tasks.configureEach({ DefaultTask currentTask ->
+    if (currentTask =~ /buildMetadata/) {
+        currentTask.finalizedBy(createProguard)
     }
-    if (name =~ /minify(Debug|Release)WithR8/) {
-        it.dependsOn(createProguard)
+    if (currentTask =~ /minify.*WithR8/) {
+        currentTask.dependsOn(createProguard)
     }
-}
+})
 
 
 android.applicationVariants.all { variant ->
@@ -182,7 +182,7 @@ dependencies {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }
-    implementation "androidx.profileinstaller:profileinstaller:1.3.1"
+    implementation "androidx.profileinstaller:profileinstaller:1.4.1"
     baselineProfile project(':baselineprofile')
     // implementation project(':carto-mobile-sdk')
 }
