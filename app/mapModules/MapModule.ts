@@ -228,11 +228,12 @@ const mapContext: MapContext = {
     },
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
+        const isZip = mapStyle.endsWith('.zip');
         const stylePath = mapStyle.startsWith('/') ? mapStyle : `~/assets/styles/${mapStyle}`;
         mapContext.mapDecoder = new MBVectorTileDecoder({
             style: mapStyleLayer,
             liveReload: !PRODUCTION,
-            pack: mapStyle.endsWith('.zip')
+            pack: isZip
                 ? new ZippedAssetPackage({
                       liveReload: !PRODUCTION,
                       zipPath: stylePath,
