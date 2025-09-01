@@ -39,11 +39,11 @@
 }
 
 %mdi {
-    font-family: $mdiFontFamily;
+    font-family: var(--mdiFontFamily);
 }
 
 %alpimaps {
-    font-family: $appFontFamily;
+    font-family: var(--appFontFamily);
 }
 
 %icon-btn {
@@ -136,7 +136,6 @@ canvaslabel,
 label {
     color: var(--colorOnBackground);
 }
-
 
 .textRipple {
     ripple-color: var(--colorOnBackground);
