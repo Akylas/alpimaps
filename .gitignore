@@ -23,7 +23,6 @@ app/**/*.js
 *.xcframework
 
 # NativeScript Template
-*.js.map
 !webpack.config.js
 
 # Logs
@@ -78,7 +77,6 @@ vendor
 build
 /vendor
 .cxx
-/fastlane/report.xml
 *.pem
 
 #alpimaps
@@ -105,3 +103,4 @@ tesseract/**/*
 !tesseract/**/README.md
 /webpdfviewer/**/*.css
 /app/assets/**/*.html
+/dev_assets/styles/base/fonts/materialdesignicons-webfont.ttf
