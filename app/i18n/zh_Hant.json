@@ -362,5 +362,7 @@
     "altitude_short": "高度",
     "dirt": "泥土",
     "saved": "已儲存：%1$s",
-    "thank_you": "謝謝您！"
+    "thank_you": "謝謝您！",
+    "app_generate_date_presentation": "Alpi Maps 的核心功能在於運用離線生成的數據。多項應用功能（包含高程剖面、坡度等級、地形斜率、路線統計、離線路由/地理編碼）皆需依賴這些生成數據才能運作。您是否想瞭解如何於Github產生這些數據？",
+    "ENE": "ENE"
 }
