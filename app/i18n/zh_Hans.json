@@ -718,7 +718,7 @@
         "smalltip_desc": "一切都有助于晚上工作！"
     },
     "threed_map": "3D地图",
-    "copied_to_clipboard": "已复制到剪切板",
+    "copied_to_clipboard": "已复制到剪切板：%1$s",
     "missing_location_permission": "没有位置权限",
     "export_geoson": "导出 GeoJSON",
     "export_gpx": "导出 GPX",
@@ -729,5 +729,6 @@
     "city_min_zoom_desc": "显示城市标签的最小缩放级别",
     "altitude_short": "高度",
     "saved": "已保存：%1$s",
-    "thank_you": "谢谢您！"
+    "thank_you": "谢谢您！",
+    "navigation_position_offset": "导航时位置的垂直偏移量（占屏幕高度的百分比）"
 }
