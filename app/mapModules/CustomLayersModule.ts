@@ -256,24 +256,25 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    createOrderedMBTilesDataSource(sources: string[]) {
+    createOrderedMBTilesDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
         if (sources.length === 0) {
             return null;
         }
         if (sources.length === 1) {
-            return new MBTilesTileDataSource({
-                databasePath: sources[0]
-            });
+            if (sources[0] instanceof TileDataSource) {
+                return sources[0];
+            }
+            return dataSourceGenerator(sources[0], minZoom);
         } else {
-            const dataSources = sources
-                .map(
-                    (s) =>
-                        new MBTilesTileDataSource({
-                            databasePath: s
-                        })
-                )
-                .reverse();
-
+            const dataSources = sources.map((s) => (s instanceof TileDataSource ? s : dataSourceGenerator(s, minZoom)));
+            // const dataSources = sources
+            //     .map(
+            //         (s) =>
+            //             new MBTilesTileDataSource({
+            //                 databasePath: s
+            //             })
+            //     )
+            //     .reverse();
             return new OrderedTileDataSource({
                 dataSources
             });
@@ -899,19 +900,15 @@ export default class CustomLayersModule extends MapModule {
         try {
             const context: android.app.Activity = __ANDROID__ && Application.android.startActivity;
             const entities = listFolder(directory);
-            let worldMbtiles: MBTilesTileDataSource;
 
-            const routes = [];
             const terrains = [];
             const mbtiles = [];
-            const worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
-            // const worldMbtilesEntity = undefined;
+            let worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
             const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
-            this.hasRoute = this.hasRoute || !!worldRouteMbtilesEntity;
-            const worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
+            let worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
             const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
-            DEV_LOG && console.log('loadLocalMbtiles', JSON.stringify(folders));
+            // DEV_LOG && console.log('loadLocalMbtiles', JSON.stringify(folders));
             for (let i = 0; i < folders.length; i++) {
                 const f = folders[i];
                 const subentities = listFolder(f.path);
@@ -945,28 +942,41 @@ export default class CustomLayersModule extends MapModule {
                 }
             }
 
-            if (worldMbtilesEntity) {
+            if (worldMbtilesEntity && mbtiles.length === 0) {
                 const datasource: TileDataSource<any, any> = this.createMergeDataSource(
                     [worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
                     mbTilesSourceGenerator,
                     undefined
                 );
                 mbtiles.push(datasource);
+                this.hasRoute = this.hasRoute || !!worldRouteMbtilesEntity;
+                worldMbtilesEntity = null;
             }
 
-            if (worldTerrainMbtilesEntity) {
+            if (worldTerrainMbtilesEntity && terrains.length === 0) {
                 terrains.push(
                     new MBTilesTileDataSource({
                         databasePath: getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)
                     })
                 );
+                worldTerrainMbtilesEntity = null;
             }
+
             if (mbtiles.length) {
                 this.hasLocalData = true;
                 const name = 'Local';
-                const dataSource = new MultiTileDataSource();
+                let dataSource: TileDataSource<any, any> = new MultiTileDataSource();
                 DEV_LOG && console.log('mbtiles', JSON.stringify(mbtiles.map((s) => s?.options.databasePath)), get(preloading));
-                mbtiles.forEach((s) => dataSource.add(s));
+                mbtiles.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
+
+                if (worldMbtilesEntity) {
+                    const worldDataSource: TileDataSource<any, any> = this.createMergeDataSource(
+                        [worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                        mbTilesSourceGenerator,
+                        undefined
+                    );
+                    dataSource = this.createOrderedMBTilesDataSource([worldDataSource, dataSource], mbTilesSourceGenerator);
+                }
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
                 const layer = new VectorTileLayer({
@@ -1014,8 +1024,20 @@ export default class CustomLayersModule extends MapModule {
                 this.hasTerrain = true;
                 const name = 'Hillshade';
                 const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
-                const dataSource = new MultiTileDataSource();
-                terrains.forEach((s) => dataSource.add(s));
+                let dataSource: TileDataSource<any, any> = new MultiTileDataSource();
+                terrains.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
+                if (worldTerrainMbtilesEntity) {
+                    dataSource = this.createOrderedMBTilesDataSource(
+                        [
+                            new MBTilesTileDataSource({
+                                databasePath: getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)
+                            }),
+                            dataSource
+                        ],
+                        mbTilesSourceGenerator
+                    );
+                }
+
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 const data = {
                     name,
