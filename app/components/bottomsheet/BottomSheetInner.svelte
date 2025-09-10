@@ -37,13 +37,23 @@
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import {
+        ALERT_OPTION_MAX_HEIGHT,
+        DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+        DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+        DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
+        DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
+        SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+        SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+        SETTINGS_ELEVATION_PROFILE_FILTER_STEP,
+        SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW
+    } from '~/utils/constants';
     import dayjs from 'dayjs';
-    import { itemLock, showGradeColors, showAscents, chartShowWaypoints } from '~/stores/mapStore';
+    import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
-    const PROFILE_HEIGHT = 150;
+    const PROFILE_HEIGHT = 155;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 86;
@@ -149,7 +159,7 @@
             console.error(error, error.stack);
         }
     }
-    
+
     function openWikipedia() {
         try {
             const props = item && item.properties;
@@ -279,7 +289,7 @@
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
-            if (routeItem?.route) { 
+            if (routeItem?.route) {
                 const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
                 // const props = routeItem.properties;
                 const route = routeItem.route;
@@ -291,7 +301,7 @@
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
                     remainingDistance = distanceToEnd(onPathIndex, positions);
                     remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
-                    const stepIndex = route.waypoints.filter(w=>w.properties.showOnMap).find(w=> w.properties.index > onPathIndex)?.properties?.index;
+                    const stepIndex = route.waypoints.filter((w) => w.properties.showOnMap).find((w) => w.properties.index > onPathIndex)?.properties?.index;
                     if (stepIndex >= 0) {
                         remainingDistanceToStep = remainingDistance - distanceToEnd(stepIndex, positions);
                     }
@@ -323,10 +333,10 @@
 
                 if (updateGraph && graphAvailable) {
                     if (elevationChart) {
-                        elevationChart.hilghlightPathIndex({onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin}, highlight, false);
+                        elevationChart.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight, false);
                     } else {
                         // chart must be loading
-                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, highlight , dplus: profile?.dplus, dmin: profile?.dmin};
+                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, highlight, dplus: profile?.dplus, dmin: profile?.dmin };
                     }
                 }
             } else if (updateNavigationInstruction) {
@@ -416,7 +426,7 @@
             }
             DEV_LOG && console.log('updateEditedItem1', item.id, editingItem.id, !!editingItem.profile, !!editingItem.stats);
             let needsChartUpdate = false;
-            if (editingItem.profile && ! ApplicationSettings.getBoolean('auto_fetch_profile', false)) {
+            if (editingItem.profile && !ApplicationSettings.getBoolean('auto_fetch_profile', false)) {
                 const profile = await packageService.getElevationProfile(item);
                 needsChartUpdate = true;
                 item['_parsedProfile'] = profile;
@@ -436,7 +446,7 @@
                     elevationChart.updateChartData();
                 }
             }
-            
+
             if (isRoute) {
                 await mapContext.mapModules.directionsPanel.cancel(false);
             }
@@ -513,7 +523,7 @@
             updateEditedItem();
             return;
         }
-       // DEV_LOG && console.log('saveItem', item);
+        // DEV_LOG && console.log('saveItem', item);
         try {
             updatingItem = true;
             await mapContext.saveItem(mapContext.getSelectedItem());
@@ -660,7 +670,7 @@
             updatingItem = false;
         }
     }
-    
+
     async function openWeather() {
         if (__ANDROID__) {
             try {
@@ -962,25 +972,26 @@
 
         return result;
     }
-    
+
     async function showElevationProfileSettings(event) {
         try {
             await showPopoverMenu({
-               // debounceDuration: 0,
+                // debounceDuration: 0,
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
                 props: {
-                     width: screenWidthDips * 0.8,
-                     autoSizeListItem: true,
-                     onCheckBox: (item, value, event) => {
+                    width: screenWidthDips * 0.8,
+                    autoSizeListItem: true,
+                    onCheckBox: (item, value, event) => {
                         if (item.store) {
                             (item.store as Writable<boolean>).set(value);
                         } else {
                             ApplicationSettings.setBoolean(item.key || item.id, value);
-                        }         
-                    },
-                },   
-                options: [{
+                        }
+                    }
+                },
+                options: [
+                    {
                         type: 'switch',
                         store: showGradeColors,
                         value: get(showGradeColors),
@@ -1004,11 +1015,11 @@
                         icon: 'mdi-window-closed-variant',
                         min: 0,
                         max: 50,
-                        defaultValue: 3,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
                         step: 1,
-                        value: ApplicationSettings.getNumber('elevation_profile_smooth_window', 3),
-                        onChange: debounce((value) => {
-                            ApplicationSettings.setNumber('elevation_profile_smooth_window', value);
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, value);
                         }, 10)
                     },
                     {
@@ -1017,11 +1028,11 @@
                         icon: 'mdi-filter',
                         min: 0,
                         max: 50,
-                        defaultValue: 10,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
                         step: 1,
-                        value: ApplicationSettings.getNumber('elevation_profile_filter_step', 10),
-                        onChange: debounce((value) => {
-                            ApplicationSettings.setNumber('elevation_profile_filter_step', value);
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, value);
                         }, 10)
                     },
                     {
@@ -1029,12 +1040,12 @@
                         title: lc('elevation_profile_ascents_min_gain'),
                         icon: 'mdi-trending-up',
                         min: 0,
-                        max: 200,
-                        defaultValue: 10,
-                        step: 1,
-                        value: ApplicationSettings.getNumber('elevation_profile_ascents_min_gain', 10),
-                        onChange: debounce((value) => {
-                            ApplicationSettings.setNumber('elevation_profile_ascents_min_gain', value);
+                        step: 20,
+                        max: 1000,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN, DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN, value);
                         }, 10)
                     },
                     {
@@ -1042,17 +1053,17 @@
                         title: lc('elevation_profile_ascents_dip_tolerance'),
                         icon: 'mdi-transfer-down',
                         min: 0,
-                        max: 200,
-                        defaultValue: 10,
-                        step: 1,
-                        value: ApplicationSettings.getNumber('elevation_profile_ascents_dip_tolerance', 10),
-                        onChange: debounce((value) => {
-                            ApplicationSettings.setNumber('elevation_profile_ascents_dip_tolerance', value);
+                        max: 1000,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+                        step: 20,
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE, DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE, value);
                         }, 10)
                     }
                 ]
             });
-        } catch(error) {
+        } catch (error) {
             showError(error);
         }
     }
@@ -1071,37 +1082,50 @@
             <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
                 <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
             </BottomSheetInfoView>
-            <IconButton prop:leftDrawer backgroundColor={isEInk ? 'white' : colorError} color={ isEInk ? "black" : "white"} height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')} width={60} on:tap={deleteItem} />
+            <IconButton
+                prop:leftDrawer
+                backgroundColor={isEInk ? 'white' : colorError}
+                color={isEInk ? 'black' : 'white'}
+                height="100%"
+                shape="none"
+                text="mdi-trash-can"
+                tooltip={lc('delete')}
+                width={60}
+                on:tap={deleteItem} />
 
             <stacklayout prop:rightDrawer orientation="horizontal">
-            <IconButton
-                
-                backgroundColor={isEInk ? 'white' :  new Color(colorPrimary).setAlpha(180).hex}
-                color={ isEInk ? "black" : "white"}
-                height="100%"
-                shape="none"
-                text="mdi-crosshairs-gps"
-                width={60}
-                on:tap={zoomToItem} />
-              <IconButton
-                
-                backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
-                color={ isEInk ? "black" : "white"}
-                height="100%"
-                shape="none"
-                text={$itemLock ? "mdi-lock-off-outline" : "mdi-lock-outline" }
-                width={60}
-                on:tap={() => $itemLock = !$itemLock} />
-             </stacklayout>
+                <IconButton
+                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                    color={isEInk ? 'black' : 'white'}
+                    height="100%"
+                    shape="none"
+                    text="mdi-crosshairs-gps"
+                    width={60}
+                    on:tap={zoomToItem} />
+                <IconButton
+                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                    color={isEInk ? 'black' : 'white'}
+                    height="100%"
+                    shape="none"
+                    text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
+                    width={60}
+                    on:tap={() => ($itemLock = !$itemLock)} />
+            </stacklayout>
         </swipemenu>
 
         <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                <IconButton isVisible={!!item} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} onLongPress={()=>openOpenStreetMap()} />
+                <IconButton isVisible={!!item} onLongPress={() => openOpenStreetMap()} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
 
                 <!-- {#if packageService.hasElevation()} -->
-                <IconButton isVisible={itemIsRoute && itemCanQueryProfile} rounded={false} text="mdi-chart-areaspline" tooltip={lc('elevation_profile')} on:tap={() => getProfile()} onLongPress={event=>showElevationProfileSettings(event)} />
+                <IconButton
+                    isVisible={itemIsRoute && itemCanQueryProfile}
+                    onLongPress={(event) => showElevationProfileSettings(event)}
+                    rounded={false}
+                    text="mdi-chart-areaspline"
+                    tooltip={lc('elevation_profile')}
+                    on:tap={() => getProfile()} />
                 <!-- {/if} -->
                 <!-- {#if packageService.offlineRoutingSearchService()} -->
                 <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
@@ -1117,7 +1141,7 @@
                     on:tap={() => searchWeb()} />
                 <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
                 {#if networkService.canCheckWeather}
-                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} onLongPress={()=>openWeather()}/>
+                    <IconButton isVisible={!itemIsRoute} onLongPress={() => openWeather()} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
                 {/if}
                 <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
                 {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
@@ -1135,7 +1159,16 @@
             </stacklayout>
         </scrollview>
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
-        <ElevationChart bind:this={elevationChart} colSpan={2} {item} row={2} visibility={graphAvailable ? 'visible' : 'collapse'} on:highlight={onChartHighlight} showAscents={$showAscents} showProfileGrades={$showGradeColors} chartShowWaypoints={chartShowWaypoints}/>
+        <ElevationChart
+            bind:this={elevationChart}
+            {chartShowWaypoints}
+            colSpan={2}
+            {item}
+            row={2}
+            showAscents={$showAscents}
+            showProfileGrades={$showGradeColors}
+            visibility={graphAvailable ? 'visible' : 'collapse'}
+            on:highlight={onChartHighlight} />
         <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
             <IconButton
                 fontSize={20}

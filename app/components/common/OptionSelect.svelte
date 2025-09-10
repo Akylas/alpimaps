@@ -286,7 +286,7 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    <switch id="checkbox" checked={item.value} col={2} marginLeft={10} on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>
             </Template>
             <Template key="righticon" let:item>
@@ -354,7 +354,7 @@
                 </svelte:component>
             </Template>
             <Template key="slider" let:item>
-                <SettingsSlider {...item} onChange={(value, event) => onChange?.(item, value, event)} />
+                <SettingsSlider {fontSize} {...item} onChange={(value, event) => (item.onChange || onChange)?.(item, value, event)} />
             </Template>
             <Template let:item>
                 <svelte:component
