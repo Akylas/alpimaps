@@ -104,3 +104,4 @@ tesseract/**/*
 /webpdfviewer/**/*.css
 /app/assets/**/*.html
 /dev_assets/styles/base/fonts/materialdesignicons-webfont.ttf
+/app/assets/peakfinder/index.html
