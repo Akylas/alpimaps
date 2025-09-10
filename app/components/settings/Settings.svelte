@@ -1306,7 +1306,7 @@
             </Template> -->
         </collectionview>
         <CActionBar canGoBack title={title || $slc('settings')}>
-            {#each actionBarButtons as button}
+            {#each actionBarButtons as button (button.id)}
                 <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
             {/each}
         </CActionBar>
