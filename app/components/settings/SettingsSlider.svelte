@@ -3,7 +3,7 @@
 <script context="module" lang="ts">
     import { Paint } from '@nativescript-community/ui-canvas';
     import { showError } from '@shared/utils/showError';
-    import { colors, fonts } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { l } from '~/helpers/locale';
@@ -16,6 +16,9 @@
     export let icon: string = null;
     export let title: string = null;
     export let subtitle: string = null;
+    export let fontSize = 16;
+    export let subtitleFontSize = 14;
+    export let valueFontSize = 14;
     export let min = 0;
     export let max = 1;
     export let step = null;
@@ -35,24 +38,24 @@
     async function promptForValue(event) {
         try {
             const result = await prompt({
-                title: title,
+                title,
                 message: subtitle,
                 okButtonText: l('save'),
                 cancelButtonText: l('cancel'),
                 autoFocus: true,
                 textFieldProperties: {
-                keyboardType: 'number',
+                    keyboardType: 'number',
                     autocapitalizationType: 'none',
                     autocorrect: false
                 } as TextFieldProperties,
-                defaultText: actualValue + '',
+                defaultText: actualValue + ''
             });
             Utils.dismissSoftInput();
             if (result && !!result.result && result.text.length > 0) {
                 value = parseInt(result.text, 10);
                 onChange?.(value);
             }
-        } catch(error) {
+        } catch (error) {
             showError(error);
         }
     }
@@ -100,12 +103,19 @@
 <gridlayout {...$$restProps} columns="auto,*,auto" height="auto" padding="10 10 10 10" rows="auto,auto, auto">
     <!-- <canvasview bind:this={canvas} on:draw={onDraw} /> -->
 
-    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
-    <label col={1} color={colorOnSurface} fontSize={15} padding="0 10 0 0" text={title} textWrap={true} verticalTextAlignment="center" />
-    <label col={1} color={colorOnSurfaceVariant} fontSize={14} row={1} text={subtitle} verticalTextAlignment="center" visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapse'} />
-    <label col={2} color={colorOnSurface} fontSize={15} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" on:tap={promptForValue}/>
-    <label col={2} color={colorOnSurface} fontSize={15} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
-    <label color={colorOnSurface} fontSize={15} row={2} text={formatter(min)} verticalTextAlignment="center" />
+    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={24 * $fontScale} marginRight={8} text={icon} verticalTextAlignment="center" visibility={icon ? 'visible' : 'collapse'} />
+    <label col={1} color={colorOnSurface} fontSize={fontSize * $fontScale} padding="0 10 0 0" text={title} textWrap={true} verticalTextAlignment="center" />
+    <label
+        col={1}
+        color={colorOnSurfaceVariant}
+        fontSize={subtitleFontSize * $fontScale}
+        row={1}
+        text={subtitle}
+        verticalTextAlignment="center"
+        visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapse'} />
+    <label col={2} color={colorOnSurface} fontSize={valueFontSize * $fontScale} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" on:tap={promptForValue} />
+    <label col={2} color={colorOnSurface} fontSize={valueFontSize * $fontScale} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
+    <label color={colorOnSurface} fontSize={valueFontSize * $fontScale} row={2} text={formatter(min)} verticalTextAlignment="center" />
     <slider
         col={1}
         color={actualValue === defaultValue ? colorSecondary : colorPrimary}

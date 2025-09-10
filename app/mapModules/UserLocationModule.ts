@@ -168,19 +168,18 @@ export default class UserLocationModule extends MapModule {
             const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
             if (accuracyMarkerEnabled) {
                 this.accuracyMarker = new Polygon<LatLonKeys>({
-                  positions: this.getCirclePoints(position),
-                  styleBuilder: {
-                      size: 16,
-                      color: new Color(70, 14, 122, 254),
-                      lineStyleBuilder: {
-                          color: new Color(150, 14, 122, 254),
-                          width: 1
-                      }
-                  }
-              });
-              this.localBackVectorDataSource.add(this.accuracyMarker);
+                    positions: this.getCirclePoints(position),
+                    styleBuilder: {
+                        size: 16,
+                        color: new Color(70, 14, 122, 254),
+                        lineStyleBuilder: {
+                            color: new Color(150, 14, 122, 254),
+                            width: 1
+                        }
+                    }
+                });
+                this.localBackVectorDataSource.add(this.accuracyMarker);
             }
-            
 
             this.userBackMarker = new Point<LatLonKeys>({
                 position: posWithoutAltitude,
@@ -226,13 +225,12 @@ export default class UserLocationModule extends MapModule {
             // }
             this.userBackMarker.position = newPos;
             this.userMarker.position = newPos;
-            if (this.accuracyMarker){
+            if (this.accuracyMarker) {
                 this.accuracyMarker.positions = this.getCirclePoints(newPos);
                 this.accuracyMarker.visible = accuracy > 20;
             } else {
                 this.userMarker.size = accuracySize;
             }
-            
         }
         this.lastUserLocation = position;
         const inBackground = getBGServiceInstance().appInBackground;
@@ -242,9 +240,9 @@ export default class UserLocationModule extends MapModule {
         if (__ANDROID__ && inBackground) {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
-                const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', "com.akylas.A9_REFRESH_SCREEN"));       
-                broadcastIntent.putExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay',100));   
-                const context = Utils.android.getApplicationContext();            
+                const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', 'com.akylas.A9_REFRESH_SCREEN'));
+                broadcastIntent.putExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100));
+                const context = Utils.android.getApplicationContext();
                 context.sendBroadcast(broadcastIntent);
             }
         }
@@ -320,11 +318,11 @@ export default class UserLocationModule extends MapModule {
         this.geoHandler.stopWatch();
         watchingLocation.set(false);
         queryingLocation.set(false);
-      //  if (!queryingLocation) {
-       //     showSnack({
-       //         message: lc('stopped_watching_location')
-      //      });
-   //   }
+        //  if (!queryingLocation) {
+        //     showSnack({
+        //         message: lc('stopped_watching_location')
+        //      });
+        //   }
     }
     async askUserLocation() {
         await this.geoHandler.enableLocation();

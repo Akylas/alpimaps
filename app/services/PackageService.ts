@@ -629,21 +629,20 @@ class PackageService extends Observable {
         let descent = 0;
         let lastAlt;
         const avgs = [];
-        
+
         const ascents: AscentSegment[] = [];
         let startIndex: number | null = null;
         let highestElevation = -Infinity;
         let highestPointIndex = -1;
         let currentMinSincePeak = Infinity;
         let inBetweenAscent = false;
-  
+
         for (let i = 0; i < nbPoints; i++) {
             const sample = profile[i];
 
             const deltaDistance = last ? computeDistanceBetween(last, sample) : 0;
             currentDistance += deltaDistance;
-            
-            
+
             if (i >= 1) {
                 const diff = sample.tmpElevation - lastAlt;
                 const rdiff = Math.round(diff);
@@ -659,7 +658,7 @@ class PackageService extends Observable {
             }
             currentHeight = Math.round(sample.altitude);
             const avg = Math.round(sample.tmpElevation);
-            
+
             function getElevation(index) {
                 return Math.round(profile[index].altitude);
             }
@@ -679,23 +678,23 @@ class PackageService extends Observable {
             }
             last = sample;
             delete sample.tmpElevation;
-            
+
             // ascent detection
             if (startIndex === null) {
-              startIndex = i;
-              highestElevation = elevation;
-              highestPointIndex = i;
-              currentMinSincePeak = elevation;
-              continue;
+                startIndex = i;
+                highestElevation = elevation;
+                highestPointIndex = i;
+                currentMinSincePeak = elevation;
+                continue;
             }
 
             // Update the highest point in the current segment
             if (elevation > highestElevation) {
-              highestElevation = elevation;
-              highestPointIndex = i;
-              currentMinSincePeak = elevation;
-              inBetweenAscent = false;
-            } else if (inBetweenAscent){
+                highestElevation = elevation;
+                highestPointIndex = i;
+                currentMinSincePeak = elevation;
+                inBetweenAscent = false;
+            } else if (inBetweenAscent) {
                 startIndex = i;
                 highestElevation = elevation;
                 highestPointIndex = i;
@@ -705,44 +704,44 @@ class PackageService extends Observable {
 
             // Track the lowest point after the peak
             if (i > highestPointIndex) {
-              currentMinSincePeak = Math.min(currentMinSincePeak, elevation);
+                currentMinSincePeak = Math.min(currentMinSincePeak, elevation);
             }
 
             const dipFromPeak = highestElevation - currentMinSincePeak;
 
             if (dipFromPeak > ascentsDipTolerance) {
-            // Too much dip – end current ascent if gain is enough
-              const gain = highestElevation - getElevation(startIndex);
-              if (gain >= ascentsMinGain) {
-                ascents.push({
-                  startIndex,
-                  endIndex: highestPointIndex,
-                  gain,
-                  highestElevation,
-                  highestPointIndex
-                });
-              }
+                // Too much dip – end current ascent if gain is enough
+                const gain = highestElevation - getElevation(startIndex);
+                if (gain >= ascentsMinGain) {
+                    ascents.push({
+                        startIndex,
+                        endIndex: highestPointIndex,
+                        gain,
+                        highestElevation,
+                        highestPointIndex
+                    });
+                }
 
-              // Start a new potential ascent from current point
-              startIndex = i;
-              highestElevation = elevation;
-              highestPointIndex = i;
-              currentMinSincePeak = elevation;
-              inBetweenAscent = true;
-              continue;
+                // Start a new potential ascent from current point
+                startIndex = i;
+                highestElevation = elevation;
+                highestPointIndex = i;
+                currentMinSincePeak = elevation;
+                inBetweenAscent = true;
+                continue;
             }
 
             // End the ascent if it's the last point
             const isLast = i === nbPoints - 1;
             const gain = highestElevation - getElevation(startIndex);
             if (isLast && gain >= ascentsMinGain) {
-              ascents.push({
-                startIndex,
-                endIndex: highestPointIndex,
-                gain,
-                highestElevation,
-                highestPointIndex
-              });
+                ascents.push({
+                    startIndex,
+                    endIndex: highestPointIndex,
+                    gain,
+                    highestElevation,
+                    highestPointIndex
+                });
             }
         }
         const colors = [];
@@ -784,7 +783,7 @@ class PackageService extends Observable {
                 gradesCounter = 0;
                 colors.push({
                     d: lastIndex,
-                  //  g: avgGrade,
+                    //  g: avgGrade,
                     color: getGradeColor(Math.abs(avgGrade))
                 });
                 for (let j = lastIndex; j <= i; j++) {
@@ -798,7 +797,7 @@ class PackageService extends Observable {
             const avgGrade = gradeSum / gradesCounter;
             colors.push({
                 d: result.data.length - 1,
-               // g: avgGrade,
+                // g: avgGrade,
                 color: getGradeColor(avgGrade)
             });
         }
@@ -869,9 +868,9 @@ class PackageService extends Observable {
                         positions = positions.flatten();
                     }
                 }
-            //    DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
+                //    DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
                 const webResult = await networkService.getValhallaElevationProfile(positions);
-               // DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
+                // DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
                 const result = this.computeProfileFromHeights(
                     positions,
                     webResult.range_height.map((e) => e[1])
@@ -977,7 +976,7 @@ class PackageService extends Observable {
                 } else if (key === 'secondary' || key === 'tertiary' || key === 'unclassified' || key === 'service_road' || key === 'pedestrian_crossing') {
                     key = 'road';
                 } else if (key === 'motorway' || key === 'trunk' || key === 'primary') {
-                  //  key = 'highway';
+                    //  key = 'highway';
                 }
                 stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
                 key = edge.surface;
