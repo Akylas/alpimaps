@@ -19,12 +19,12 @@ import { colors, fontScale, screenWidthDips } from '~/variables';
 export * from '@shared/utils/ui';
 
 export async function openURL(url) {
-    const useInAppBrowser = ApplicationSettings. getBoolean("url_use_inapp_browser", true);
+    const useInAppBrowser = ApplicationSettings.getBoolean('url_use_inapp_browser', true);
     if (useInAppBrowser) {
-       return openLink(url);
+        return openLink(url);
     } else {
         Utils.openUrl(url);
-    }     
+    }
 }
 
 export async function promptForGroup(defaultGroup: string, groups?: Group[]): Promise<string> {
@@ -121,14 +121,14 @@ export async function showPopoverMenu<T = any>({
             ),
             ...(props || {})
         },
-            onDismiss:()=>{
-                if (__ANDROID__) {
-                    setTimeout(()=>{
-                    let currentFocus = Application.android.startActivity?.getCurrentFocus();
+        onDismiss: () => {
+            if (__ANDROID__) {
+                setTimeout(() => {
+                    const currentFocus = Application.android.startActivity?.getCurrentFocus();
                     currentFocus?.clearFocus();
-                    }, 0);
-                }
+                }, 0);
             }
+        }
     });
     return result;
 }
