@@ -7,6 +7,16 @@ import { showError } from '@shared/utils/showError';
 import { showSliderPopover, showToolTip } from '~/utils/ui';
 import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
 import { tryCatchFunction } from '@shared/utils/ui';
+import {
+    DEFAULT_SHOW_ELEVATION_PROFILE_ASCENTS,
+    DEFAULT_SHOW_ELEVATION_PROFILE_GRADE_COLORS,
+    DEFAULT_SHOW_ELEVATION_PROFILE_WAYPOINTS,
+    SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+    SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+    SETTINGS_SHOW_ELEVATION_PROFILE_ASCENTS,
+    SETTINGS_SHOW_ELEVATION_PROFILE_GRADE_COLORS,
+    SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS
+} from '~/utils/constants';
 
 function settingsStore<T = any>(key, defaultValue: T) {
     const tpof = typeof defaultValue;
@@ -60,9 +70,9 @@ export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', 
 export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);
 export const immersive = settingsStore('immersive', false);
-export const showAscents = settingsStore('elevation_profile_show_ascents', true);
-export const chartShowWaypoints = settingsStore('chart_show_waypoints', true);
-export const showGradeColors = settingsStore('elevation_profile_show_grade_colors', true);
+export const showAscents = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_ASCENTS, DEFAULT_SHOW_ELEVATION_PROFILE_ASCENTS);
+export const chartShowWaypoints = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS, DEFAULT_SHOW_ELEVATION_PROFILE_WAYPOINTS);
+export const showGradeColors = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_GRADE_COLORS, DEFAULT_SHOW_ELEVATION_PROFILE_GRADE_COLORS);
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
 const layersParams = {
