@@ -41,7 +41,7 @@
     "dependencies": {
         "@akylas/address-formatter": "5.3.1",
         "@akylas/kiss-orm": "2.1.11",
-        "@akylas/nativescript": "8.8.11",
+        "@akylas/nativescript": "8.9.6",
         "@akylas/nativescript-app-tools": "file:tools",
         "@akylas/nativescript-app-utils": "2.2.7",
         "@akylas/nativescript-inapp-purchase": "0.0.4",
@@ -139,16 +139,19 @@
         "@types/offscreencanvas": "^2019.7.3",
         "@types/suncalc": "^1.9.2",
         "@types/three": "^0.171.0",
+        "ajv": "^6.12.5",
+        "ajv-keywords": "^3.5.2",
         "fast-xml-parser": "^5.2.5",
         "merge-properties-files": "^1.1.6",
-        "mini-css-extract-plugin": "^2.9.2",
+        "mini-css-extract-plugin": "^2.9.4",
         "svelte-loader": "3.2.4",
         "swc-loader": "^0.2.6",
-        "webpack-shell-plugin-next": "^2.3.2"
+        "webpack-shell-plugin-next": "^2.3.3"
     },
     "resolutions": {
         "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-carto": "portal:../ui-carto/packages/ui-carto"
+        "@nativescript-community/ui-carto": "portal:../ui-carto/packages/ui-carto",
+        "@nativescript-community/ui-chart": "portal:/home/mguillon/dev/nativescript/ui-chart/packages/ui-chart"
     },
     "workspaces": [
         "./",
@@ -156,5 +159,5 @@
         "./peakfinder",
         "./geo-three"
     ],
-    "packageManager": "yarn@4.3.1"
+    "packageManager": "yarn@4.9.4"
 }
