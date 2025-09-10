@@ -21,7 +21,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
     import { showError } from '@shared/utils/showError';
-    import { colors, fonts } from '~/variables';
+    import { colors, fontScale, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
@@ -384,7 +384,7 @@
                 chartView.resetZoom();
             }
             const deltaA = profile.max[1] - profile.min[1];
-            const spaceMin = 50;
+            const spaceMin = 100;
             let spaceMax = 0;
             const chartElevationMinRange = ApplicationSettings.getNumber('chart_elevation_min_range', 250);
             if (deltaA < chartElevationMinRange) {
@@ -398,14 +398,14 @@
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
-            leftAxis.textSize = 9;
+            leftAxis.textSize = 9 * $fontScale;
 
             const totalDistance = it.route.totalDistance;
             const xLabelCount = 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
-            xAxis.textSize = 9;
+            xAxis.textSize = 9 * $fontScale;
             xAxis.clipLimitLinesToContent = false;
             const chartData = chartView.data;
             let set: LineDataSet;
@@ -460,7 +460,7 @@
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = -1;
-            limitLine.textSize = 9;
+            limitLine.textSize = 9 * $fontScale;
             limitLine.textColor = colorOnSurface;
             // limitLine.ensureVisible = true;
             limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
@@ -471,27 +471,26 @@
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             limitLine.yOffset = 1;
-            limitLine.textSize = 9;
+            limitLine.textSize = 9 * $fontScale;
             limitLine.textColor = colorOnSurface;
             limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
 
             xAxis.removeAllLimitLines();
-            if (showAscents) {
+            if (showAscents && profile.ascents) {
                 profile.ascents.forEach((ascent: AscentSegment) => {
                     const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
-
                     limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
                     limitLine.lineColor = colorOutline;
                     limitLine.enableDashedLine(6, 3, 0);
                     limitLine.lineWidth = 0.5;
-                    limitLine.textSize = 7;
+                    limitLine.textSize = 7 * $fontScale;
                     limitLine.xOffset = 0;
                     limitLine.textColor = colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                         c.drawCircle(x + 5, y - 6, 6, waypointsBackPaint);
-                        waypointsPaint.textSize = 7;
+                        waypointsPaint.textSize = 7 * $fontScale;
                         c.drawText('', x + 5, y - 5 + 1, waypointsPaint);
                         //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
@@ -503,8 +502,7 @@
                     xAxis.addLimitLine(limitLine);
                 });
             }
-            if (showWaypoints) {
-                const positions = packageService.getRouteItemPoses(it);
+            if (showWaypoints && it.route.waypoints) {
                 it.route.waypoints.forEach((p) => {
                     if (p.properties.showOnMap && p.properties.index > 0) {
                         limitLine = new LimitLine(profileData[p.properties.index].d, ' ');
@@ -514,7 +512,7 @@
                         limitLine.ensureVisible = true;
                         limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
                             c.drawCircle(x - 5, y + 0, 6, waypointsBackPaint);
-                            waypointsPaint.textSize = 8;
+                            waypointsPaint.textSize = 8 * $fontScale;
                             c.drawText('', x - 5, y + 4 - 1, waypointsPaint);
                         };
                         xAxis.addLimitLine(limitLine);
