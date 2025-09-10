@@ -734,5 +734,13 @@
     "city_min_zoom_desc": "niveau de zoom minimum à partir duquel commencer à afficher les étiquettes des villes",
     "navigation_position_offset": "décalage vertical de votre position pendant la navigation (pourcentage de la hauteur de l'écran)",
     "navigation_tilt": "Inclinaison de la carte à appliquer en mode navigation",
-    "altitude_short": "alt"
+    "altitude_short": "alt",
+    "building_min_zoom": "bâtiments zoom minimum",
+    "building_min_zoom_desc": "zoom minimum pour afficher les bâtiments",
+    "campsite_allow_overlap": "autoriser le chevauchement des icônes de camping",
+    "chart_show_waypoints": "afficher les points de cheminement",
+    "elevation_profile_ascents_dip_tolerance": "ascension calcul descente tolérance",
+    "elevation_profile_ascents_min_gain": "les ascensions calculent le gain minimum",
+    "elevation_profile_filter_step": "étape de filtrage du profil d'élévation",
+    "elevation_profile_smooth_window": "profil d'élévation taille de fenêtre lisse"
 }
