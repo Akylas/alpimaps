@@ -246,7 +246,7 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
 export function startRefreshAlarm() {
     const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
     const interval = ApplicationSettings.getNumber('refreshAlarmInterval', 0);
-    DEV_LOG && console.log("startRefreshAlarm", enabled, interval);
+    DEV_LOG && console.log('startRefreshAlarm', enabled, interval);
     if (!enabled && interval > 0) {
         ApplicationSettings.setBoolean('refreshAlarmEnabled', true);
         scheduleRefreshAlarm();
@@ -254,15 +254,15 @@ export function startRefreshAlarm() {
 }
 export function stopRefreshAlarm() {
     const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
-    DEV_LOG && console.log("stopRefreshAlarm", enabled);
+    DEV_LOG && console.log('stopRefreshAlarm', enabled);
     if (enabled) {
         ApplicationSettings.setBoolean('refreshAlarmEnabled', false);
     }
     if (pendingAlarmIntent !== null) {
         const context = Utils.android.getApplicationContext();
         const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
-       alarmManager.cancel(pendingAlarmIntent);
-       pendingAlarmIntent = null; 
+        alarmManager.cancel(pendingAlarmIntent);
+        pendingAlarmIntent = null;
     }
 }
 
@@ -276,7 +276,7 @@ export async function askForScheduleAlarmPermission() {
     if (alarmManager.canScheduleExactAlarms()) {
         return true;
     }
-    
+
     const activity = Application.android.startActivity;
     return new Promise<boolean>((resolve, reject) => {
         const REQUEST_CODE = 6647;
@@ -293,9 +293,9 @@ export async function askForScheduleAlarmPermission() {
 }
 
 let pendingAlarmIntent;
-export function scheduleRefreshAlarm(){
+export function scheduleRefreshAlarm() {
     const enabled = ApplicationSettings.getBoolean('refreshAlarmEnabled', false);
-    DEV_LOG && console.log("scheduleRefreshAlarm", enabled);
+    DEV_LOG && console.log('scheduleRefreshAlarm', enabled);
     if (enabled) {
         const context = Utils.android.getApplicationContext();
         // Reschedule the alarm
@@ -304,20 +304,16 @@ export function scheduleRefreshAlarm(){
         if (pendingAlarmIntent !== null) {
             alarmManager.cancel(pendingAlarmIntent);
         }
-       
+
         pendingAlarmIntent = android.app.PendingIntent.getBroadcast(
             context,
             0,
             new android.content.Intent(context, java.lang.Class.forName(__APP_ID__ + '.RefreshAlarmReceiver')),
             android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE
         );
-        
+
         // Reschedule using setExactAndAllowWhileIdle
-        alarmManager.setExactAndAllowWhileIdle(
-            android.app.AlarmManager.RTC_WAKEUP,
-            triggerAtMillis,
-            pendingAlarmIntent
-        );
+        alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingAlarmIntent);
     }
 }
 
