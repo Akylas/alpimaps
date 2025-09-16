@@ -6,8 +6,8 @@ import type { Geometry, Point } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 // import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
-const extend = require('just-extend');
-
+// const extend = require('just-extend');
+import extend from 'just-extend';
 const sql = SqlQuery.createFromTemplateString;
 
 export function toJSONStringified(item: Partial<Item>) {
@@ -56,11 +56,11 @@ export interface RouteInstruction {
 }
 
 export interface AscentSegment {
-  startIndex: number;
-  endIndex: number;
-  gain: number;
-  highestElevation: number;
-  highestPointIndex: number;
+    startIndex: number;
+    endIndex: number;
+    gain: number;
+    highestElevation: number;
+    highestPointIndex: number;
 }
 
 export interface RouteProfile {
@@ -68,9 +68,9 @@ export interface RouteProfile {
     min: [number, number];
     dplus?: any;
     dmin?: any;
-    data: { d: number; a: number; g?: number, dp?: number, dm?: number }[];
+    data: { d: number; a: number; g?: number; dp?: number; dm?: number }[];
     colors?: { d: number; color: string }[];
-    ascents: AscentSegment[]
+    ascents: AscentSegment[];
 }
 
 export interface Address {
@@ -128,12 +128,12 @@ export interface DirectionWayPoint {
 }
 
 export interface StepPoint {
-    geometry : Point,
-    distFromStart: number
+    geometry: Point;
+    distFromStart: number;
     distToEnd: number;
     distFromStartStr: string;
     distToEndStr: string;
-    level:number;
+    level: number;
 }
 export interface Route {
     osmid?: string;
@@ -142,7 +142,7 @@ export interface Route {
     costing_options?: any;
     totalTime?: number;
     totalDistance?: number;
-    steps?: StepPoint[]
+    steps?: StepPoint[];
 }
 
 export interface RouteStats {
@@ -157,8 +157,6 @@ export interface RouteStats {
         id: string;
     }[];
 }
-
-
 
 export class Group {
     public readonly id!: string;
