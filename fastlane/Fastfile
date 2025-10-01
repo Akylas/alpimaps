@@ -585,7 +585,7 @@ platform :android do
         sh("npm", "run", "build.android.production.fdroid.sentry")
       elsif (options[:logging] == true)
         sh("npm", "run", "build.android.production.fdroid.logging")
-      else
+      else 
         sh("npm", "run", "build.android.production.fdroid")
       end
     else
