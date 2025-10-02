@@ -227,7 +227,7 @@ if (__ANDROID__) {
 
 export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = ApplicationSettings.getString(SETTINGS_COLOR_THEME, DEFAULT_COLOR_THEME) as ColorThemes, force = false) {
     try {
-        DEV_LOG && console.log('updateThemeColors', theme, colorTheme);
+        // DEV_LOG && console.log('updateThemeColors', theme, colorTheme);
         const currentColors = get(colors);
         let rootView = Application.getRootView();
         if (rootView?.parent) {
@@ -294,7 +294,7 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
         });
         colors.set(currentColors);
         Application.notify({ eventName: 'colorsChange', colors: currentColors });
-        DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
+        // DEV_LOG && console.log('changed colors', rootView, JSON.stringify(currentColors));
         rootView?._onCssStateChange();
         const rootModalViews = rootView?._getRootModalViews();
         rootModalViews.forEach((rootModalView) => rootModalView._onCssStateChange());
