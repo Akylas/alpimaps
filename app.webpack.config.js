@@ -2,7 +2,7 @@ const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
 const { readFileSync, readdirSync, existsSync, mkdirSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-const { basename, dirname, join, relative, resolve } = require('path');
+const { basename, dirname, join, relative, resolve, isAbsolute } = require('path');
 const nsWebpack = require('@akylas/nativescript-webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -176,6 +176,8 @@ module.exports = (env, params = {}) => {
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
+    const isIOS = platform === 'ios';
+    const isAndroid = platform === 'android';
 
     if (profile) {
         const StatsPlugin = require('stats-webpack-plugin');
@@ -411,7 +413,7 @@ module.exports = (env, params = {}) => {
     if (platform === 'android') {
         const gradlePath = resolve(projectRoot, appResourcesPath, 'Android/app.gradle');
         const gradleData = readFileSync(gradlePath, 'utf8');
-        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+)"/)[1];
+        appVersion = gradleData.match(/versionName "((?:[0-9]+\.?)+(?:-(?:[a-z]|[A-Z])+)?)"/)[1];
         buildNumber = gradleData.match(/versionCode ([0-9]+)/)[1];
     } else if (platform === 'ios') {
         const plistPath = resolve(projectRoot, appResourcesPath, 'iOS/Info.plist');
@@ -421,10 +423,8 @@ module.exports = (env, params = {}) => {
     }
 
     const package = require('./package.json');
-    const isIOS = platform === 'ios';
-    const isAndroid = platform === 'android';
-    const APP_STORE_ID = process.env.IOS_APP_ID;
     const CUSTOM_URL_SCHEME = 'alpimaps';
+    const APP_STORE_ID = process.env.IOS_APP_ID;
     const defines = {
         PRODUCTION: !!production,
         process: 'global.process',
@@ -718,7 +718,7 @@ module.exports = (env, params = {}) => {
 
     config.plugins.unshift(
         new webpack.ProvidePlugin({
-            svN: '~/svelteNamespace'
+            svN: '@shared/svelteNamespace'
         })
     );
 
@@ -737,7 +737,16 @@ module.exports = (env, params = {}) => {
     );
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.map((l) => l.replace('_', '-').toLowerCase()).join('|')}).\js`)));
 
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
+    config.optimization.splitChunks.cacheGroups.defaultVendor.test = function (module) {
+        const absPath = module.resource;
+        if (absPath) {
+            const relativePath = relative(projectRoot, absPath);
+            return absPath.indexOf('node_modules') !== -1 || !(relativePath && !relativePath.startsWith('..') && !isAbsolute(relativePath));
+        }
+        return false;
+    };
+
     config.plugins.push(new IgnoreNotFoundExportPlugin());
 
     const nativescriptReplace = '(NativeScript[\\/]dist[\\/]packages[\\/]core|@nativescript/core|@akylas/nativescript)';
@@ -748,7 +757,7 @@ module.exports = (env, params = {}) => {
             }
         })
     );
-    if (fork) {
+    if (fork && production) {
         if (!accessibility) {
             config.plugins.push(
                 new webpack.NormalModuleReplacementPlugin(/accessibility$/, (resource) => {
@@ -902,7 +911,7 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildExit: {
                     scripts: [
-                   //     `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
+                        //     `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
                         // `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
                         `cp dev_assets/styles/inner/fonts/osm.ttf ${join(dist, 'fonts')}`,
                         `cp dev_assets/styles/inner/fonts/osm.ttf dev_assets/styles/osm/fonts`

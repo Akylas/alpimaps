@@ -13,6 +13,7 @@ import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
+import { init as sharedInit } from '@shared/index';
 import { svelteNative } from 'svelte-native';
 import { FrameElement, PageElement, registerElement, registerNativeViewElement } from 'svelte-native/dom';
 import Map from '~/components/map/Map.svelte';
@@ -126,29 +127,7 @@ try {
         bgService.stop();
     });
 
-    if (!PRODUCTION && DEV_LOG) {
-        Page.on('navigatingTo', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'to', event.object, event.isBackNavigation);
-        });
-        Page.on('showingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
-        });
-        Frame.on('showingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'MODAL', event.object, event.isBackNavigation);
-        });
-        Frame.on('closingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
-        });
-        Page.on('closingModally', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING MODAL', event.object, event.isBackNavigation);
-        });
-        GestureRootView.on('shownInBottomSheet', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'BOTTOMSHEET', event.object, event.isBackNavigation);
-        });
-        GestureRootView.on('closedBottomSheet', (event: NavigatedData) => {
-            DEV_LOG && console.info('NAVIGATION', 'CLOSING BOTTOMSHEET', event.object, event.isBackNavigation);
-        });
-    }
+    sharedInit();
 
     svelteNative(Map, {});
 } catch (error) {

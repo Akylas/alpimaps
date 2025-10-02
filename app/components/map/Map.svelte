@@ -1,4 +1,4 @@
-<script lang="ts">
+<script context="module" lang="ts">
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
@@ -20,7 +20,7 @@
     import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
@@ -28,8 +28,8 @@
     import { Screen } from '@nativescript/core/platform';
     import { debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
+    import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { writable } from 'svelte/store';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -60,26 +60,24 @@
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { showError } from '@shared/utils/showError';
-    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSliderPopover, showSnack, showToast, showToolTip } from '~/utils/ui';
-    import {
-        askForScheduleAlarmPermission,
-        clearTimeout,
-        disableShowWhenLockedAndTurnScreenOn,
-        enableShowWhenLockedAndTurnScreenOn,
-        getDataFolder,
-        getSavedMBTilesDir,
-        setTimeout
-    } from '~/utils/utils';
+    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
+    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
     import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
-    $: ({ colorBackground, colorError, colorPrimary } = $colors);
-    $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
+
+    const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
+
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
 
     const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
     const KEEP_AWAKE_KEY = '_keep_awake';
+</script>
+
+<script lang="ts">
+    $: ({ colorBackground, colorError, colorPrimary } = $colors);
+    $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
+
     let defaultLiveSync = global.__onLiveSync;
 
     let page: NativeViewElementNode<Page>;
@@ -133,7 +131,7 @@
     let ignoreNextMapClick = false;
 
     let fetchingTransitLines = false;
-    let showTransitLines = false;
+    let showingTransitLines = false;
     let showAdmins = false;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
@@ -234,44 +232,56 @@
             addLayer(transitVectorTileLayer, 'transit');
         }
     }
-    $: {
-        if (showTransitLines) {
-            // const pos = cartoMap.focusPos;
-            tryCatch(
-                async () => {
-                    if (!transitVectorTileLayer && !fetchingTransitLines) {
-                        fetchingTransitLines = true;
 
-                        const result = await transitService.getTransitLines();
-                        if (!transitVectorTileDataSource) {
-                            transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                                // simplifyTolerance: 0,
-                                minZoom: 0,
-                                maxZoom: 24
-                            });
-                            transitVectorTileDataSource.createLayer('routes');
-                        }
-                        transitVectorTileDataSource.setLayerGeoJSONString(1, result);
-                        if (!transitVectorTileLayer) {
-                            createTransitLayer();
-                        }
-                        // if (!transitVectorTileLayer) {
-                        // } else {
-                        //     transitVectorTileLayer.visible = true;
-                        // }
-                    } else if (transitVectorTileLayer) {
-                        transitVectorTileLayer.visible = true;
+    function showTransitLines() {
+        // const pos = cartoMap.focusPos;
+        tryCatch(
+            async () => {
+                if (!transitVectorTileLayer && !fetchingTransitLines) {
+                    fetchingTransitLines = true;
+
+                    const result = await transitService.getTransitLines();
+                    if (!transitVectorTileDataSource) {
+                        transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
+                            // simplifyTolerance: 0,
+                            minZoom: 0,
+                            maxZoom: 24
+                        });
+                        transitVectorTileDataSource.createLayer('routes');
                     }
-                },
-                () => {
-                    showTransitLines = false;
-                },
-                () => {
-                    fetchingTransitLines = false;
+                    transitVectorTileDataSource.setLayerGeoJSONString(1, result);
+                    if (!transitVectorTileLayer) {
+                        createTransitLayer();
+                    }
+                    // if (!transitVectorTileLayer) {
+                    // } else {
+                    //     transitVectorTileLayer.visible = true;
+                    // }
+                } else if (transitVectorTileLayer) {
+                    transitVectorTileLayer.visible = true;
                 }
-            );
-        } else if (transitVectorTileLayer) {
+            },
+            () => {
+                // eslint-disable-next-line svelte/infinite-reactive-loop
+                showingTransitLines = false;
+            },
+            () => {
+                fetchingTransitLines = false;
+            }
+        );
+    }
+    function hideTransitLines() {
+        if (transitVectorTileLayer) {
             transitVectorTileLayer.visible = false;
+        }
+    }
+
+    $: {
+        if (showingTransitLines) {
+            // eslint-disable-next-line svelte/infinite-reactive-loop
+            showTransitLines();
+        } else {
+            hideTransitLines();
         }
     }
 
@@ -339,46 +349,65 @@
             //     }
             // }
             TEST_LOG && console.log('Got the following appURL', link);
-            if (link.startsWith('geo')) {
-                const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
-                const loaded = !!cartoMap;
-                if (latlong[0] !== 0 || latlong[1] !== 0) {
-                    if (loaded) {
-                        cartoMap.setFocusPos({ lat: latlong[0], lon: latlong[1] }, 0);
-                    } else {
-                        // happens before map ready
-                        ApplicationSettings.setString('mapFocusPos', `{"lat":${latlong[0]},"lon":${latlong[1]}}`);
+            const loaded = !!cartoMap;
+            const isGeoUrl = link.startsWith('geo:');
+            let locationMatch = isGeoUrl ? null : link.match(GEO_TEXT_REGEXP);
+            let query: string;
+            if (isGeoUrl || locationMatch) {
+                let pos: MapPos<LatLonKeys>;
+                let posName: string;
+                let searchQuery: string;
+                if (isGeoUrl) {
+                    const latlong = link.split(':')[1].split(',').map(parseFloat) as [number, number];
+                    if (latlong[0] !== 0 || latlong[1] !== 0) {
+                        pos = { lat: latlong[0], lon: latlong[1] };
+                    }
+                    const params = parseUrlQueryParameters(link);
+                    if (params.hasOwnProperty('z')) {
+                        const zoom = parseFloat(params.z);
+                        if (loaded) {
+                            cartoMap.setZoom(zoom, 0);
+                        } else {
+                            ApplicationSettings.setNumber('mapZoom', zoom);
+                        }
+                    }
+                    if (params.q) {
+                        locationMatch = params.q.match(GEO_TEXT_REGEXP);
+                        if (!locationMatch && !pos) {
+                            query = params.q;
+                        }
                     }
                 }
-                const params = parseUrlQueryParameters(link);
-                if (params.hasOwnProperty('z')) {
-                    const zoom = parseFloat(params.z);
-                    if (loaded) {
-                        cartoMap.setZoom(zoom, 0);
-                    } else {
-                        ApplicationSettings.setNumber('mapZoom', zoom);
+                if (locationMatch) {
+                    pos = { lat: parseFloat(locationMatch[2]), lon: parseFloat(locationMatch[1]) };
+                    if (locationMatch[3]) {
+                        posName = decodeURIComponent(locationMatch[3]).replace(/\+/g, ' ');
                     }
                 }
-                if (params.q) {
-                    const geoTextRegexp = /([\d\.-]+),([\d\.-]+)\((.*?)\)/;
-                    const query = params.q;
-                    const match = query.match(geoTextRegexp);
-                    const actualQuery = decodeURIComponent(query).replace(/\+/g, ' ');
-                    if (match) {
+                if (pos) {
+                    const item = {
+                        properties: {
+                            name: posName
+                        },
+                        geometry: {
+                            coordinates: [pos.lon, pos.lat]
+                        } as any
+                    };
+                    if (loaded) {
+                        ApplicationSettings.remove('selectPosOnLoad');
+                        cartoMap.setFocusPos(pos, 0);
                         selectItem({
-                            item: {
-                                properties: {
-                                    name: actualQuery
-                                },
-                                geometry: {
-                                    coordinates: [parseFloat(match[2]), parseFloat(match[1])]
-                                } as any
-                            },
+                            item,
                             isFeatureInteresting: true
                         });
                     } else {
-                        searchView.searchForQuery(actualQuery);
+                        // happens before map ready
+                        ApplicationSettings.setString('mapFocusPos', JSON.stringify(pos));
+                        ApplicationSettings.setString('selectPosOnLoad', JSON.stringify(item));
                     }
+                }
+                if (searchQuery) {
+                    query = decodeURIComponent(searchQuery).replace(/\+/g, ' ');
                 }
             } else if (/(http(s?):\/\/)?((maps\.google\..*?\/)|((www\.)?google\..*?\/maps\/)|(goo.gl\/maps\/)).*/.test(link)) {
                 const params = parseUrlQueryParameters(link);
@@ -417,7 +446,16 @@
                 showLoading();
                 await itemModule.importGeoJSONFile(link);
             } else {
-                searchView.searchForQuery(link);
+                query = decodeURIComponent(link).replace(/\+/g, ' ');
+            }
+            if (query) {
+                if (loaded) {
+                    ApplicationSettings.remove('searchOnLoad');
+                    searchView.searchForQuery(query);
+                } else {
+                    ApplicationSettings.setString('searchOnLoad', query);
+                }
+                searchView.searchForQuery(query);
             }
         },
         undefined,
@@ -692,6 +730,7 @@
 
             cartoMap = map;
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
+
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
             cartoMap.setFocusPos(pos, 0);
@@ -727,6 +766,19 @@
                         onAppUrl(current);
                     });
                 }
+            }
+            const selectItemOnLoad = JSON.parse(ApplicationSettings.getString('selectPosOnLoad')) as IItem;
+            if (selectItemOnLoad) {
+                ApplicationSettings.remove('selectPosOnLoad');
+                selectItem({
+                    item: selectItemOnLoad,
+                    isFeatureInteresting: true
+                });
+            }
+            const searchOnLoad = ApplicationSettings.getString('searchOnLoad');
+            if (searchOnLoad) {
+                ApplicationSettings.remove('searchOnLoad');
+                searchView.searchForQuery(searchOnLoad);
             }
         } catch (error) {
             console.error(error, error.stack);
@@ -2186,7 +2238,7 @@
                                               icon: 'mdi-bus-marker',
                                               id: 'transit_lines',
                                               title: lc('show_transit_lines'),
-                                              color: showTransitLines ? colorPrimary : undefined
+                                              color: showingTransitLines ? colorPrimary : undefined
                                           }
                                       ]
                                     : []
@@ -2227,9 +2279,11 @@
                                 if (result) {
                                     switch (result.id) {
                                         case 'transit_lines':
-                                            showTransitLines = !showTransitLines;
+                                            // eslint-disable-next-line svelte/infinite-reactive-loop
+                                            showingTransitLines = !showTransitLines;
                                             break;
                                         case 'show_admin_regions':
+                                            // eslint-disable-next-line svelte/infinite-reactive-loop
                                             showAdmins = !showAdmins;
                                             break;
                                     }
@@ -2243,6 +2297,7 @@
             });
         }
 
+        // eslint-disable-next-line svelte/infinite-reactive-loop
         sideButtons = newButtons;
     }
     function onDirectionsCancel() {
