@@ -909,7 +909,7 @@
                 canvas.drawRect(x, 35, rigthX, 75, barPaint);
                 x = rigthX;
                 text = lc(s.id);
-                text2 = formatDistance(s.dist * 1000, s.dist < 1 ? 0 : 1);
+                text2 = formatDistance(s.dist * 1000);
                 canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
                 nString = createNativeAttributedString({
                     spans: [
