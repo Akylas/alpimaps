@@ -2394,7 +2394,7 @@
         </bottomsheet>
 
         {#if __IOS__}
-            <absolutelayout backgroundColor={colorBackground} height={windowInsetBottom} verticalAlignment="bottom" />
+            <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={1} verticalAlignment="bottom" />
         {/if}
     </gridlayout>
 </page>

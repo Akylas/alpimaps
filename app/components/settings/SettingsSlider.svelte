@@ -123,7 +123,6 @@
         minValue={min}
         row={2}
         stepSize={step}
-        trackBackgroundColor="#aaaaaa88"
         value={actualValue}
         verticalAlignment="bottom"
         on:valueChange={onValueChange} />
