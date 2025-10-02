@@ -767,14 +767,16 @@
                     });
                 }
             }
-            const selectItemOnLoad = JSON.parse(ApplicationSettings.getString('selectPosOnLoad')) as IItem;
-            if (selectItemOnLoad) {
-                ApplicationSettings.remove('selectPosOnLoad');
-                selectItem({
-                    item: selectItemOnLoad,
-                    isFeatureInteresting: true
-                });
-            }
+            try {
+                const selectItemOnLoad = JSON.parse(ApplicationSettings.getString('selectPosOnLoad')) as IItem;
+                if (selectItemOnLoad) {
+                    ApplicationSettings.remove('selectPosOnLoad');
+                    selectItem({
+                        item: selectItemOnLoad,
+                        isFeatureInteresting: true
+                    });
+                }
+            } catch (error) {}
             const searchOnLoad = ApplicationSettings.getString('searchOnLoad');
             if (searchOnLoad) {
                 ApplicationSettings.remove('searchOnLoad');
