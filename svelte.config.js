@@ -24,6 +24,8 @@ module.exports = {
     preprocess: [
         sveltePreprocess({
             replace: [
+                [/WITH_PEAK_FINDER/g, true],
+                [/WITH_3D_MAP/g, true],
                 [/PRODUCTION/g, !!webpack_env.production],
                 [/__ANDROID__/g, !!webpack_env.android],
                 [/__IOS__/g, !!webpack_env.ios]
