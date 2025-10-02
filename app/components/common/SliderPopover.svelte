@@ -17,6 +17,6 @@
     export let valueFormatter = (value) => value.toFixed(1);
 </script>
 
-<PopoverBackgroundView rows="auto"  {...$$restProps}>
+<PopoverBackgroundView rows="auto" {...$$restProps}>
     <SettingsSlider {formatter} {icon} {max} {min} {onChange} {step} {title} {value} {valueFormatter} />
 </PopoverBackgroundView>

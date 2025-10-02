@@ -339,6 +339,7 @@
     function getRouteDataSource() {
         if (!_routeDataSource) {
             _routeDataSource = new GeoJSONVectorTileDataSource({
+                defaultLayerBuffer: 0,
                 simplifyTolerance: 2,
                 minZoom: 0,
                 maxZoom: 24
@@ -398,9 +399,6 @@
                     w.properties.isStop = false;
                     waypoints.setItem(index, w);
                 }
-                // if (w.properties) {
-                //     w.properties.color = index === 0 ? 'green' : index === waypoints.length - 1 ? 'red' : 'blue';
-                // }
             });
             setLayerGeoJSONString();
             show();
@@ -460,7 +458,6 @@
         });
     }
     export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
-        DEV_LOG && console.log('addInternalStartPoint');
         const firstPoint = waypoints.getItem(0);
         if (firstPoint?.properties.isStart) {
             firstPoint.properties.isStart = false;
@@ -490,7 +487,6 @@
 
     function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
         const lastPoint = waypoints.getItem(waypoints.length - 1);
-        // DEV_LOG && console.log('addInternalStopPoint', position, lastPoint?.properties);
         if (lastPoint.geometry.coordinates[0] === position.lon && lastPoint.geometry.coordinates[1] === position.lat) {
             return;
         }
@@ -982,14 +978,13 @@
     }
     function setLayerGeoJSONString() {
         ensureRouteLayer();
-        // if (__IOS__ && firstUpdate) {
-        //     firstUpdate = false;
-        //     return setTimeout(setLayerGeoJSONString, 10);
-        // }
-        _routeDataSource.setLayerGeoJSONString(1, {
-            type: 'FeatureCollection',
-            features
-        });
+        // TODO: fix the timeout should not be needed, but without the first setLayerGeoJSONString wont show anything
+        setTimeout(() => {
+            _routeDataSource.setLayerGeoJSONString(1, {
+                type: 'FeatureCollection',
+                features
+            });
+        }, 0);
     }
     function clearRouteDatasource() {
         if (_routeDataSource) {
@@ -1139,7 +1134,6 @@
     }
 
     async function setSliderCostingOptions(key: string, event, options: any = profileCostingOptions) {
-        DEV_LOG && console.log('setSliderCostingOptions', key);
         try {
             if (options === profileCostingOptions) {
                 options = profileCostingOptions[profile];
@@ -1183,15 +1177,12 @@
     function onItemReordered(e) {
         (e.view as ContentView).content.animate({ opacity: 1, duration: 150 });
         // we need to reset waypoints isStart / isStop
-        const oldIndex = e.index;
-        const newIndex = e.data.targetIndex;
         const length = waypoints.length;
         waypoints.forEach((item, index) => {
             item.properties.isStart = index === 0;
             item.properties.isStop = index === length - 1;
             waypoints.setItem(index, item);
         });
-        DEV_LOG && console.log('onItemReordered', oldIndex, newIndex);
         updateWayPointLines();
         setLayerGeoJSONString();
     }
@@ -1323,15 +1314,14 @@
                 <!-- <IconButton white={true} text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
             </stacklayout>
             <IconButton
-                backgroundColor="white"
+                backgroundColor={isEInk ? 'white' : undefined}
                 colSpan={2}
-                color="black"
                 horizontalAlignment="right"
-                isSelected={nbWayPoints > 1}
+                isEnabled={nbWayPoints > 1}
                 isVisible={!loading}
                 marginRight={10}
-                rippleColor="black"
-                selectedColor={colorPrimary}
+                rippleColor={isEInk ? 'black' : 'white'}
+                color={isEInk ? 'black' : 'white'}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
                 on:longPress={() => computeRoutes(true)} />

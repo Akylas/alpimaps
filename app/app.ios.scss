@@ -14,20 +14,25 @@ mdbutton {
     ios-a11y-adjusts-font-size: true;
 }
 
+
+mdslider {
+    track-fill-color: var(--colorPrimary);
+}
+
 mdcardview {
     // material3 basic design
     shape: medium;
 }
 
 .floating-btn {
-    shape: medium;
     elevation: 2;
 }
+
 .small-floating-btn {
-    shape: medium;
+    shape: small;
     elevation: 2;
 }
 
 mdtextfield[variant=none] {
-    padding:0;
+    padding: 0;
 }
