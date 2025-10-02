@@ -151,7 +151,7 @@ export async function selectColorTheme() {
 const AppCompatDelegate = __ANDROID__ ? androidx.appcompat.app.AppCompatDelegate : undefined;
 export function applyTheme(theme: Themes) {
     try {
-        DEV_LOG && console.log('applyTheme', theme);
+        // DEV_LOG && console.log('applyTheme', theme);
         switch (theme) {
             case 'auto':
                 Theme.setMode(Theme.Auto);
@@ -220,7 +220,7 @@ export function getRealTheme(th = theme) {
             console.error('getRealTheme', err, err.stack);
         }
     }
-    DEV_LOG && console.log('getRealTheme', theme, th);
+    // DEV_LOG && console.log('getRealTheme', theme, th);
     return th;
 }
 
@@ -235,7 +235,7 @@ export function getRealThemeAndUpdateColors() {
 
 export function toggleForceDarkMode() {
     forceDarkMode.set(!get(forceDarkMode));
-    DEV_LOG && console.log('toggleForceDarkMode', get(forceDarkMode));
+    // DEV_LOG && console.log('toggleForceDarkMode', get(forceDarkMode));
     const realTheme = getRealTheme(theme);
     applyTheme(realTheme);
     updateThemeColors(realTheme);
