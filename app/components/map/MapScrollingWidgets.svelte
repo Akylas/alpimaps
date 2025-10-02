@@ -304,7 +304,7 @@
     }
 </script>
 
-<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="auto,*,auto" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
     <stacklayout id="stack1" col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton
             id="directions"
