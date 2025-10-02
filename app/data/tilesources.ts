@@ -210,6 +210,17 @@ export const data: { [k: string]: Provider } = {
             clickHandlerLayerFilter: '.*::(icon|label)'
         }
     },
+    OpenFreeMap: {
+        url: 'https://tiles.openfreemap.org/planet/latest/{z}/{x}/{y}.pbf',
+        attribution:
+            '<a href="https://openfreemap.org/">OpenFreeMap</a><a href="https://www.openmaptiles.org/">© OpenMapTiles</a> Data from <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        sourceOptions: {
+            maxZoom: 14,
+            httpHeaders: {
+                'User-Agent': 'AlpiMaps'
+            }
+        }
+    },
     OpenStreetMap: {
         url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
         legend: 'https://www.openstreetmap.org/key.html',
