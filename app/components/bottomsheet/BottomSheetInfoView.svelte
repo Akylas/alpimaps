@@ -1,4 +1,4 @@
-  <script context="module" lang="ts">
+<script context="module" lang="ts">
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
@@ -21,7 +21,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorPrimary, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
@@ -55,61 +55,71 @@
     let nString;
     let nString2;
     let nString3;
-    
+
     const itemsModule = getMapContext().mapModule('items');
     itemsModule.on('user_onroute_data', (event: any) => {
         if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false)) {
             nString3 = null;
             return;
         }
-        if(event.remainingDistance) {
+        if (event.remainingDistance) {
             nString3 = createNativeAttributedString({
-                spans:(event.remainingDistanceToStep? [{
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-map-marker'
-                    },
-                    {
-                        text: ' ' + formatDistance(event.remainingDistanceToStep)
-                    },
-                    {
-                        text: '\n'
-                    }] : []).concat([
-                    {
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-flag-checkered'
-                    },
-                    {
-                        text: ' ' + formatDistance(event.remainingDistance)
-                    }
-                ] as any)
-             //   .concat(isNaN(event.remainingTime) ? [] : [
-             //       {
-             //           text: '\n'
-             //       },
-             //       {
-             //           fontFamily: $fonts.mdi,
-             //           color: colorPrimary,
-             //           text: 'mdi-timer-outline'
-             //       },
-             //       {
-             //           text: ' ' + convertDurationSeconds(event.remainingTime)
-             //       }
-             //   ] as any)
-                .concat((!isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0) ? [
-                    {
-                        text: '\n'
-                    },
-                    {
-                        fontFamily: $fonts.mdi,
-                        color: colorPrimary,
-                        text: 'mdi-arrow-top-right'
-                    },
-                    {
-                        text: ' ' + convertElevation(event.dplus - event.itemData.dp)
-                    }
-                ] as any : [])
+                spans: (event.remainingDistanceToStep
+                    ? [
+                          {
+                              fontFamily: $fonts.mdi,
+                              color: colorPrimary,
+                              text: 'mdi-map-marker'
+                          },
+                          {
+                              text: ' ' + formatDistance(event.remainingDistanceToStep)
+                          },
+                          {
+                              text: '\n'
+                          }
+                      ]
+                    : []
+                )
+                    .concat([
+                        {
+                            fontFamily: $fonts.mdi,
+                            color: colorPrimary,
+                            text: 'mdi-flag-checkered'
+                        },
+                        {
+                            text: ' ' + formatDistance(event.remainingDistance)
+                        }
+                    ] as any)
+                    //   .concat(isNaN(event.remainingTime) ? [] : [
+                    //       {
+                    //           text: '\n'
+                    //       },
+                    //       {
+                    //           fontFamily: $fonts.mdi,
+                    //           color: colorPrimary,
+                    //           text: 'mdi-timer-outline'
+                    //       },
+                    //       {
+                    //           text: ' ' + convertDurationSeconds(event.remainingTime)
+                    //       }
+                    //   ] as any)
+                    .concat(
+                        !isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0
+                            ? ([
+                                  {
+                                      text: '\n'
+                                  },
+                                  {
+                                      fontFamily: $fonts.mdi,
+                                      color: colorPrimary,
+                                      text: 'mdi-arrow-top-right'
+                                  },
+                                  {
+                                      text: ' ' + convertElevation(event.dplus - event.itemData.dp)
+                                  }
+                              ] as any)
+                            : []
+                    )
             });
         } else {
             nString3 = null;
@@ -304,7 +314,7 @@
                 iconPaint.color = iconColor || colorOnSurface;
                 canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop, iconPaint);
             }
-            
+
             propsPaint.setTextAlign(Align.LEFT);
             propsPaint.color = colorOnSurface;
             if (nString) {
@@ -322,7 +332,7 @@
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            
+
             if (nString3) {
                 propsPaint.textSize = 11;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
@@ -330,7 +340,6 @@
                 canvas.translate(paddingLeft, paddingTop);
                 staticLayout.draw(canvas);
                 canvas.restore();
-                
             }
             propsPaint.textSize = 13;
             if (item.properties?.['opening_hours']) {
