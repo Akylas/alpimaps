@@ -1093,8 +1093,9 @@
                 width={60}
                 on:tap={deleteItem} />
 
-            <stacklayout prop:rightDrawer orientation="horizontal">
+            <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
                 <IconButton
+                    id="locate"
                     backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
                     color={isEInk ? 'black' : 'white'}
                     height="100%"
@@ -1103,6 +1104,7 @@
                     width={60}
                     on:tap={zoomToItem} />
                 <IconButton
+                    id="lock"
                     backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
                     color={isEInk ? 'black' : 'white'}
                     height="100%"

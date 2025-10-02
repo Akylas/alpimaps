@@ -11,8 +11,8 @@
 </script>
 
 <script lang="ts">
-    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors);
     export let isVisible = true;
     export let isHidden = false;
     export let white = false;
@@ -40,7 +40,7 @@
 
     // let actualColor = null;
     // $: actualColor = white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant : color;
-    $: actualColor = !isEnabled ? colorOnSurfaceVariant : color || (white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant : colorOnSurface);
+    $: actualColor = !isEnabled ? colorOnSurfaceVariant2 : color || (white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant2 : colorOnSurface);
     $: actualLongPress =
         onLongPress || tooltip
             ? (event) => {
