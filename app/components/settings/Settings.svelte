@@ -400,10 +400,10 @@
                 return newItems;
             case 'api_keys':
                 const tokenSettings = [
-                    {
-                        type: 'html',
-                        description: getMapContext().mapModules.customLayers.americanaOSMHTML
-                    }
+                    // {
+                    //     type: 'html',
+                    //     description: getMapContext().mapModules.customLayers.americanaOSMHTML
+                    // }
                 ] as any[];
                 Object.keys(customLayers.tokenKeys).forEach((k) => {
                     tokenSettings.push({
