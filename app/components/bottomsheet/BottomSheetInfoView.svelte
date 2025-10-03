@@ -8,16 +8,17 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fonts } from '~/variables';
+    import { colors, fontScale, fonts, onFontScaleChanged } from '~/variables';
     import SymbolShape from '../common/SymbolShape';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { onThemeChanged } from '~/helpers/theme';
 
     const propsPaint = new Paint();
     propsPaint.textSize = 13;
     propsPaint.setTextAlign(Align.LEFT);
 
     const iconPaint = new Paint();
-    iconPaint.setTextAlign(Align.LEFT);
+    iconPaint.setTextAlign(Align.CENTER);
 </script>
 
 <script lang="ts">
@@ -37,8 +38,8 @@
     export let props2Bottom = 18;
     export let iconColor = null;
     export let iconSize = 24;
-    export let iconLeft = 5;
-    export let iconTop = 42;
+    export let iconLeft = 15;
+    export let iconTop = 30;
     export let showIcon = true;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
@@ -55,6 +56,12 @@
     let nString;
     let nString2;
     let nString3;
+
+    function redrawIcon() {
+        canvas?.nativeView?.invalidate();
+    }
+    onFontScaleChanged(redrawIcon);
+    onThemeChanged(redrawIcon);
 
     const itemsModule = getMapContext().mapModule('items');
     itemsModule.on('user_onroute_data', (event: any) => {
@@ -186,7 +193,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertValueToUnit(route.totalDistance || itemProps.distance * 1000, UNITS.DistanceKm).join(' ')}` + ' '
+                        text: `${formatDistance(route.totalDistance || itemProps.distance * 1000)}` + ' '
                     }
                 );
             }
@@ -309,40 +316,42 @@
                 onDraw({ canvas, object });
             }
             if (showIcon && itemIcon && !actualShowSymbol) {
-                iconPaint.textSize = iconSize;
+                const fontSize = iconSize * $fontScale;
+                iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || colorOnSurface;
-                canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop, iconPaint);
+                canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
             }
 
             propsPaint.setTextAlign(Align.LEFT);
             propsPaint.color = colorOnSurface;
             if (nString) {
+                propsPaint.textSize = 13 * $fontScale;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom);
+                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom * Math.sqrt($fontScale));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
             if (nString2) {
-                propsPaint.textSize = 14;
+                propsPaint.textSize = 14 * $fontScale;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft, paddingTop + h - props2Bottom);
+                canvas.translate(paddingLeft, paddingTop + h - props2Bottom * Math.sqrt($fontScale));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
 
             if (nString3) {
-                propsPaint.textSize = 11;
+                propsPaint.textSize = 11 * $fontScale;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop);
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            propsPaint.textSize = 13;
             if (item.properties?.['opening_hours']) {
+                propsPaint.textSize = 13 * $fontScale;
                 const data = openingHoursText(item);
                 propsPaint.color = data.color;
                 propsPaint.setTextAlign(Align.RIGHT);
@@ -355,7 +364,9 @@
                     left: paddingLeft + symbolLeft,
                     top: paddingTop + symbolTop,
                     color: itemProps?.color || colorOnSurface,
-                    symbol: formatter.getSymbol(itemProps)
+                    symbol: formatter.getSymbol(itemProps),
+                    scale: $fontScale,
+                    maxFontSize: 18
                 });
             }
         } catch (err) {
@@ -372,9 +383,9 @@
             color={colorOnSurface}
             disableCss={true}
             flexGrow={1}
-            fontSize={18}
+            fontSize={18 * $fontScale}
             fontWeight="bold"
-            maxFontSize={18}
+            maxFontSize={16}
             {selectable}
             text={itemTitle}
             textWrap={true}
@@ -385,7 +396,7 @@
                 disableCss={true}
                 flexGrow={1}
                 flexShrink={0}
-                fontSize={13}
+                fontSize={13 * $fontScale}
                 maxLines={2}
                 {selectable}
                 text={itemSubtitle}

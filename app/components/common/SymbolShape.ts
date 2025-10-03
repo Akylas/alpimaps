@@ -1,5 +1,5 @@
 import { Align, Canvas, Direction, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-import Shape, { colorProperty, lengthProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
+import Shape, { colorProperty, lengthProperty, numberProperty, stringProperty } from '@nativescript-community/ui-canvas/shapes/shape';
 import { Color, CoreTypes, Length, PercentLength, Utils } from '@nativescript/core';
 import { osmicon } from '~/helpers/formatter';
 
@@ -16,6 +16,8 @@ textpaint.setTextAlign(Align.CENTER);
 const path = new Path();
 
 export default class SymbolShape extends Shape {
+    @numberProperty scale = 1;
+    @numberProperty maxFontSize = 18;
     @stringProperty symbol: string;
     @colorProperty({ nonPaintProp: true }) color: Color;
     @lengthProperty left = CoreTypes.zeroLength;
@@ -27,11 +29,13 @@ export default class SymbolShape extends Shape {
             left: this.left,
             top: this.top,
             color: this.color,
-            symbol: this.symbol
+            scale: this.scale,
+            symbol: this.symbol,
+            maxFontSize: this.maxFontSize
         });
     }
 
-    static drawSymbolOnCanvas(canvas: Canvas, args: { symbol; left; top; width; height; color }) {
+    static drawSymbolOnCanvas(canvas: Canvas, args: { symbol; left; top; width; height; color; scale; maxFontSize }) {
         const availableWidth = Utils.layout.toDevicePixels(canvas.getWidth());
         const availableHeight = Utils.layout.toDevicePixels(canvas.getHeight());
         const width = Utils.layout.toDeviceIndependentPixels(PercentLength.toDevicePixels(args.width, 0, availableWidth));
@@ -101,7 +105,7 @@ export default class SymbolShape extends Shape {
                         canvas.drawText(text, left + width / 2, height / 2 + top + 7, textpaint);
                     } else {
                         const delta = Math.min(Math.max(text.length - 3, 0), 3);
-                        const fontSize = 18 - 2 * delta;
+                        const fontSize = Math.max((18 - 2 * delta) * args.scale, args.maxFontSize);
                         textpaint.setTextSize(fontSize);
 
                         const staticLayout = new StaticLayout(text, textpaint, width, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
