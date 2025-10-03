@@ -1,6 +1,7 @@
 <script context="module" lang="ts">
     import { GetMoonIlluminationResult, GetTimesResult, getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
     // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
+    import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { CanvasLabel } from '@nativescript-community/ui-canvaslabel/canvaslabel.common';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
@@ -11,23 +12,21 @@
     import { LineDataSet } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
-    import { ViewPortHandler } from '@nativescript-community/ui-chart/utils/ViewPortHandler';
+    import { Color } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import dayjs, { Dayjs } from 'dayjs';
+    import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import type { GeoLocation } from '~/handlers/GeoHandler';
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { formatTime, getLocalTime, lc } from '~/helpers/locale';
-    import { showError } from '@shared/utils/showError';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { packageService } from '~/services/PackageService';
     import { PI_DIV2, TO_DEG, TO_RAD } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
+    import { clearInterval } from '~/utils/utils/index.ios';
     import { colors, fonts } from '~/variables';
     import CompassView from '../compass/CompassView.svelte';
-    import { packageService } from '~/services/PackageService';
-    import { onDestroy } from 'svelte';
-    import { clearInterval } from '~/utils/utils/index.ios';
-    import { createNativeAttributedString } from '@nativescript-community/text';
-    import { onThemeChanged } from '~/helpers/theme';
-    import { Color } from '@nativescript/core';
 
     const nightPaint = new Paint();
     nightPaint.color = '#00000099';
@@ -458,7 +457,7 @@
     }
 </script>
 
-<gesturerootview columns="3*,4*" rows={'auto,50,200,50,200'}>
+<gesturerootview columns="3*,4*" rows="auto,50,200,50,200">
     {#if name}
         <gridlayout borderBottomColor={colorOutline} borderBottomWidth={1} colSpan={2} columns="*,130" height={50}>
             <label marginLeft={16} verticalTextAlignment="center">
