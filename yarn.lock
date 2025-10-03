@@ -43,7 +43,7 @@ __metadata:
 
 "@akylas/nativescript-app-tools@file:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 1.0.0
-  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=8c3d5f&locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@akylas/nativescript-app-tools@file:tools#tools::hash=748424&locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@dotenvx/dotenvx": "npm:1.49.1"
     "@nativescript-community/fontmin": "npm:0.9.11"
@@ -97,7 +97,7 @@ __metadata:
     typescript: "npm:5.9.2"
     typescript-eslint: "npm:8.44.0"
     webpack-bundle-analyzer: "npm:4.10.2"
-  checksum: 10/7ff6b76f6693544622b8ef6720c6f88044bfa319ae238a5500087f27c4b84fe8a6b8a2aba9837c6d8d0d9c14c1d41d953561bc215f505b9a5574f0d04cbf65c7
+  checksum: 10/689c926c75e5c34c7be50bcc2830869f405bf30183db77647cdd6dfb8e34ad1174f44807b846f698010bf9cc5444401f145087d56de1aff5eb4a68ba3403022a
   languageName: node
   linkType: hard
 
@@ -14283,7 +14283,7 @@ __metadata:
     "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
     "@nativescript-community/ui-carto": "npm:1.8.21"
     "@nativescript-community/ui-chart": "npm:2.0.26"
-    "@nativescript-community/ui-checkbox": "npm:2.0.13"
+    "@nativescript-community/ui-checkbox": "npm:2.0.14"
     "@nativescript-community/ui-collectionview": "npm:6.0.8"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.8"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
