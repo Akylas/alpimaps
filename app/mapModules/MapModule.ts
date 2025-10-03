@@ -148,10 +148,10 @@ export interface MapModules {
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
     try {
-        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES);
-        const stylePath = name.startsWith('/') ? name : `~/assets/styles/${name}`;
-        const useZip = TEST_ZIP_STYLES || !name.startsWith('/') || !Folder.exists(stylePath);
+        const stylePath = name.startsWith('/') ? name : `${knownFolders.currentApp().path}/assets/styles/${name}`;
+        const useZip = TEST_ZIP_STYLES || !Folder.exists(stylePath);
         //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
+        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES, stylePath, Folder.exists(stylePath), useZip);
         return new MBVectorTileDecoder({
             style,
             pack: useZip

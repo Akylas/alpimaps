@@ -23,6 +23,7 @@ app/**/*.js
 *.xcframework
 
 # NativeScript Template
+*.js.map
 !webpack.config.js
 
 # Logs
@@ -77,6 +78,7 @@ vendor
 build
 /vendor
 .cxx
+/fastlane/report.xml
 *.pem
 
 #alpimaps

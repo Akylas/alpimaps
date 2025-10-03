@@ -361,7 +361,7 @@
                 xAxis.drawMarkTicks = true;
                 xAxis.drawLimitLinesBehindData = false;
                 xAxis.valueFormatter = {
-                    getAxisLabel: (value) => formatDistance(value, xinterval < 1000 ? 1 : 0)
+                    getAxisLabel: (value) => formatDistance(value)
                 };
 
                 chartView.customRenderer = {
@@ -376,7 +376,7 @@
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
-                        c.drawText(formatDistance(h.entry['d'], xinterval < 1000 ? 1 : 0), x + 6, 23, highlightPaint);
+                        c.drawText(formatDistance(h.entry['d']), x + 6, 23, highlightPaint);
                     }
                 };
             } else {

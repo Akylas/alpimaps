@@ -10,7 +10,7 @@ import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nati
 import { CartoMap } from '@nativescript-community/ui-carto/ui';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
+import { alert, confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
@@ -710,19 +710,18 @@ export default class CustomLayersModule extends MapModule {
     }
 
     get defaultOnlineSource() {
-        if (this.tokenKeys.americanaosm) {
-            return 'americanaosm';
-        } else {
-            return 'openstreetmap';
-        }
+        // if (this.tokenKeys.americanaosm) {
+        //     return 'americanaosm';
+        // } else {
+        return 'openfreemap';
+        // }
     }
-
-    get americanaOSMHTML() {
-        return lc(
-            'americanaosm_presentation_detailed',
-            ...['<a href="https://tile.ourmap.us">AmericanaOSM</a>', `<a href="https://github.com/Akylas/alpimaps/?tab=readme-ov-file#default-vector-americanosm-map">${lc('tutorial')}</a>`]
-        );
-    }
+    // get americanaOSMHTML() {
+    //     return lc(
+    //         'americanaosm_presentation_detailed',
+    //         ...['<a href="https://tile.ourmap.us">AmericanaOSM</a>', `<a href="https://github.com/Akylas/alpimaps/?tab=readme-ov-file#default-vector-americanosm-map">${lc('tutorial')}</a>`]
+    //     );
+    // }
 
     onMapReady(mapView: CartoMap<LatLonKeys>) {
         super.onMapReady(mapView);
@@ -752,44 +751,51 @@ export default class CustomLayersModule extends MapModule {
                     }
 
                     const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
-                    const showAmericanaOSMPresentation = ApplicationSettings.getBoolean('showAmericanaOSMPresentation', true);
-                    if (showAmericanaOSMPresentation) {
-                        const currentIndex = savedSources.indexOf('americanaosm');
-                        DEV_LOG && console.log('savedSources', currentIndex, savedSources);
-                        if (currentIndex !== -1) {
-                            savedSources.splice(currentIndex, 1);
-                            ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
+                    const showOpenFreeMapPresentation = ApplicationSettings.getBoolean('showOpenFreeMapPresentation', true);
+                    if (showOpenFreeMapPresentation) {
+                        if ((savedSources.indexOf('openstreetmap') !== -1 || savedSources.indexOf('americanaosm') !== -1) && savedSources.indexOf('openfreemap') !== -1) {
+                            ApplicationSettings.setBoolean('showOpenFreeMapPresentation', false);
+                            await alert({
+                                title: lc('app.name'),
+                                message: lc('openfreemap_presentation'),
+                                okButtonText: lc('ok')
+                            });
                         }
-                        const { colorOnSurfaceVariant } = get(colors);
-                        const promptResult = await prompt({
-                            title: lc('app.name'),
-                            // message: lc('americanaosm_presentation'),
-                            okButtonText: lc('save'),
-                            cancelButtonText: lc('cancel'),
-                            defaultText: this.tokenKeys['americanaosm'],
-                            textFieldProperties: {
-                                variant: 'outline',
-                                hint: lc('americanaosm_url'),
-                                margin: 10,
-                                width: { unit: '%', value: 100 }
-                            },
-                            view: createView(
-                                Label,
-                                {
-                                    padding: '10 20 0 20',
-                                    textWrap: true,
-                                    color: colorOnSurfaceVariant as any,
-                                    html: this.americanaOSMHTML
-                                },
-                                {
-                                    linkTap: (e) => openLink(e.link)
-                                }
-                            )
-                        });
-                        if (promptResult.result && promptResult?.text.length > 0) {
-                            this.saveToken('americanaosm', promptResult.text);
-                        }
-                        ApplicationSettings.setBoolean('showAmericanaOSMPresentation', false);
+                        // const currentIndex = savedSources.indexOf('openfreemap');
+                        // DEV_LOG && console.log('savedSources', currentIndex, savedSources);
+                        // if (currentIndex !== -1) {
+                        //     savedSources.splice(currentIndex, 1);
+                        //     ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
+                        // }
+                        // const { colorOnSurfaceVariant } = get(colors);
+                        // const promptResult = await prompt({
+                        //     title: lc('app.name'),
+                        //     // message: lc('americanaosm_presentation'),
+                        //     okButtonText: lc('save'),
+                        //     cancelButtonText: lc('cancel'),
+                        //     defaultText: this.tokenKeys['americanaosm'],
+                        //     textFieldProperties: {
+                        //         variant: 'outline',
+                        //         hint: lc('americanaosm_url'),
+                        //         margin: 10,
+                        //         width: { unit: '%', value: 100 }
+                        //     },
+                        //     view: createView(
+                        //         Label,
+                        //         {
+                        //             padding: '10 20 0 20',
+                        //             textWrap: true,
+                        //             color: colorOnSurfaceVariant as any,
+                        //             html: this.americanaOSMHTML
+                        //         },
+                        //         {
+                        //             linkTap: (e) => openLink(e.link)
+                        //         }
+                        //     )
+                        // });
+                        // if (promptResult.result && promptResult?.text.length > 0) {
+                        //     this.saveToken('americanaosm', promptResult.text);
+                        // }
                     }
                     if (this.customSources.length === 0 && savedSources.length === 0) {
                         savedSources.push(this.defaultOnlineSource);

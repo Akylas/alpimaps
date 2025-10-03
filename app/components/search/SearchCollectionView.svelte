@@ -182,7 +182,7 @@
                 lon: options.location && options.location.lon,
                 lang: actualLang,
                 limit: 40,
-                bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
+                // bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
             }
         });
         return arraySortOn(
