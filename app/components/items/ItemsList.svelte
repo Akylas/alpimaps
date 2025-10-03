@@ -11,7 +11,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
-    import { UNITS, convertElevation, convertValueToUnit, osmicon } from '~/helpers/formatter';
+    import { UNITS, convertElevation, convertValueToUnit, formatDistance, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
     import { colorTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -20,7 +20,7 @@
     import { isServiceStarted, onServiceStarted } from '~/services/BgService.common';
     import { onBackButton, showSnack } from '~/utils/ui';
     import { hideLoading, promptForGroup, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fontScale, fonts, windowInset } from '~/variables';
     import BottomSheetInfoView from '../bottomsheet/BottomSheetInfoView.svelte';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -641,7 +641,7 @@ LEFT JOIN  (
                     color: colorOnSurfaceVariant
                 },
                 {
-                    text: `${convertValueToUnit(item.totalDistance, UNITS.DistanceKm).join(' ')}` + ' '
+                    text: `${formatDistance(item.totalDistance)}` + ' '
                 }
             );
         }
@@ -825,7 +825,7 @@ LEFT JOIN  (
                     marginLeft={60}
                     opacity={item.onMap || 0.6}
                     padding="4 0 2 10"
-                    propsBottom={34}
+                    propsBottom={20 * $fontScale}
                     propsLeft={60}
                     rightTextPadding={40}
                     rippleColor={colorPrimary}

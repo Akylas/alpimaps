@@ -6,23 +6,22 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { navigate } from '@shared/utils/svelte/ui';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import ScaleView from '~/components/map/ScaleView.svelte';
-    import { convertDistance } from '~/helpers/formatter';
+    import { formatDistance } from '~/helpers/formatter';
     import { onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule, { navigationModeStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-    import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
     import { openLink } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
-    import MapResultPager from '../search/MapResultPager.svelte';
 
     let { colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors;
     $: ({ colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors);
@@ -195,9 +194,9 @@
             staticLayout.draw(canvas);
             canvas.restore();
             if (navigationInstructions.distanceToNextInstruction > 0) {
-                const data = convertDistance(navigationInstructions.distanceToNextInstruction);
+                const data = formatDistance(navigationInstructions.distanceToNextInstruction);
                 textPaint.setTextSize(11);
-                canvas.drawText(`${data.value.toFixed(data.unit === 'm' ? 0 : 1)} ${data.unit}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
+                canvas.drawText(`${data}`, 14, h / 2 + staticLayout.getHeight() / 2 + 15, textPaint);
             }
 
             // textPaint.setTextSize(13);
