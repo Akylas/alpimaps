@@ -2178,6 +2178,7 @@
                 text: 'mdi-fullscreen',
                 id: 'immersive',
                 tooltip: lc('immersive_mode'),
+                visible: __ANDROID__,
                 isSelected: $immersive,
                 onTap: () => immersive.set(!$immersive)
             },
@@ -2365,7 +2366,6 @@
             on:stepIndexChange={onStepIndexChanged}>
             <gridlayout bind:this={widgetsHolder} height="100%" isPassThroughParentEnabled={true} width="100%">
                 <ButtonBar
-                    id="mapButtonsNew"
                     buttonSize={40}
                     buttons={sideButtons}
                     color={isEInk ? '#aaa' : '#666'}
