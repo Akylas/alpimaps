@@ -68,6 +68,8 @@
     <true/>
     <key>UISupportsDocumentBrowser</key>
     <true/>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
     <key>LSMinimumSystemVersion</key>
