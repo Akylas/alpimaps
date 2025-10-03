@@ -9,6 +9,7 @@
     import type { NativeViewElementNode } from 'svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
+    import { UNITS, convertValueToUnit } from '~/helpers/formatter';
     import { l, lc, lu } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -226,6 +227,8 @@
             loadedListeners.forEach((listener) => listener());
         }
     }
+    $: speedFormatted = convertValueToUnit(currentLocation?.speed, UNITS.SpeedKm);
+    $: altitudeFormatted = convertValueToUnit(shownAltitude, UNITS.Meters);
 </script>
 
 <gridlayout
@@ -250,14 +253,8 @@
             color={isEInk ? 'black' : 'white'}
             height={60}
             width={60}>
-            <cspan
-                fontSize={22}
-                fontWeight="bold"
-                paddingBottom={3}
-                text={currentLocation && currentLocation.speed !== undefined ? (currentLocation.speed * 3.6).toFixed() : ''}
-                textAlignment="center"
-                verticalAlignment="middle" />
-            <cspan fontSize={10} paddingTop={12} text={'km/h'} textAlignment="center" verticalAlignment="middle" />
+            <cspan fontSize={22} fontWeight="bold" paddingBottom={3} text={speedFormatted[0]} textAlignment="center" verticalAlignment="middle" />
+            <cspan fontSize={10} paddingTop={12} text={speedFormatted[1]} textAlignment="center" verticalAlignment="middle" />
         </canvaslabel>
         <canvaslabel col={1} color={isEInk ? '#000' : '#fff'} marginLeft={5}>
             <cspan
@@ -267,8 +264,8 @@
                 text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
                 verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
-                <cspan fontSize={20} fontWeight="bold" text={shownAltitude} />
-                <cspan fontSize={12} text=" m" />
+                <cspan fontSize={20} fontWeight="bold" text={altitudeFormatted[0] ??'-'} />
+                <cspan fontSize={12} text={` ${altitudeFormatted[1]}`} />
             </cgroup>
         </canvaslabel>
         {#if hasBarometer}

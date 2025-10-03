@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { Screen } from '@nativescript/core/platform';
-    import { convertDistance } from '~/helpers/formatter';
+    import { formatDistance } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
     import { getMapContext } from '~/mapModules/MapModule';
 
@@ -27,8 +26,8 @@
         }
         const newMpp = getMetersPerPixel(cartoMap.focusPos, zoom);
         const metersPerCM = PX_PER_CM * newMpp;
-        const data = convertDistance(metersPerCM);
-        scaleText = `${data.value.toFixed(data.value < 10 ? 1 : 0)} ${data.unit} (${zoom.toFixed(1)})`;
+        const data = formatDistance(metersPerCM);
+        scaleText = `${data} (${zoom.toFixed(1)})`;
         // });
     }
     mapContext.onMapReady(() => {
