@@ -2,28 +2,28 @@
     import { MapBounds } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
+    import { CartoMap } from '@nativescript-community/ui-carto/ui';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { Color, File, ObservableArray, Utils, View } from '@nativescript/core';
+    import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { goBack } from '@shared/utils/svelte/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
+    import CActionBar from '~/components/common/CActionBar.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import TagView from '~/components/common/TagView.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
-    import { showError } from '@shared/utils/showError';
-    import { goBack } from '@shared/utils/svelte/ui';
+    import { showSliderPopover } from '~/utils/ui';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
-    import CActionBar from '~/components/common/CActionBar.svelte';
-    import IconButton from '~/components/common/IconButton.svelte';
-    import TagView from '~/components/common/TagView.svelte';
-    import { showSliderPopover } from '~/utils/ui';
 
     $: ({ colorBackground, colorOnPrimary, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     export let item: Item;
@@ -133,7 +133,7 @@
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: 6,
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 dataSource: vectorTileDataSource,
                 decoder: getMapContext().innerDecoder
             });
@@ -153,11 +153,11 @@
         }
 
         if (itemIsRoute) {
-            if (item.image_path && (!item.image_path || !File.exists(item.image_path))) {
-                const module = mapContext.mapModules['items'];
-                item.image_path = module.getItemImagePath();
-                module.takeItemPicture(item, true);
-            }
+            // if (item.image_path && (!item.image_path || !File.exists(item.image_path))) {
+            //     const module = mapContext.mapModules['items'];
+            //     item.image_path = module.getItemImagePath();
+            //     module.takeItemPicture(item, true);
+            // }
             // TODO: update image if there is none (testing file existence?)
             const margin = Utils.layout.toDevicePixels(20);
             const screenBounds = {
@@ -185,7 +185,11 @@
     }
 
     function getUpdateStyle() {
-        return (updatedProperties['style'] = updatedProperties['style'] || item.properties.style || {});
+        let style = updatedProperties['style'];
+        if (!style) {
+            updatedProperties['style'] = style = {};
+        }
+        return style;
     }
     async function pickOptionColor(color: Color | string) {
         try {
@@ -194,7 +198,6 @@
                 return;
             }
             const style = getUpdateStyle();
-            DEV_LOG && console.log('pickOptionColor', updatedProperties);
             style['color'] = newColor.hex;
             updatePreview();
         } catch (err) {
@@ -224,8 +227,13 @@
                 anchor: event.object,
                 value: itemIconSize || 0,
                 step: 1,
-                min: 0,
-                max: 30,
+                min: 10,
+                max: 100,
+                debounceDuration: 100,
+                vertPos: VerticalPosition.BELOW,
+                title: lc('icon_size'),
+                icon: 'mdi-format-size',
+                valueFormatter: (v) => v.toFixed(),
                 onChange(value) {
                     itemIconSize = value;
                     const style = getUpdateStyle();
@@ -234,6 +242,7 @@
                     } else {
                         style['iconSize'] = value;
                     }
+                    updatePreview();
                 }
             });
         } catch (error) {
@@ -441,82 +450,20 @@
         </canvaslabel>
         {#if !itemIsRoute}
             <gridlayout columns="auto,auto,auto,auto" height={50} horizontalAlignment="left" margin={5} row={1} verticalAlignment="bottom">
-                <label
-                    backgroundColor={colorBackground}
-                    borderColor={colorOnSurfaceVariant}
-                    borderRadius={4}
-                    borderWidth={1}
-                    elevation={2}
-                    fontSize={22}
-                    height={50}
-                    margin="0 4 0 4"
-                    padding={5}
-                    rippleColor={itemColor}
-                    textAlignment="center"
-                    verticalAlignment="middle"
-                    visibility={itemUsingDefault ? 'collapse' : 'visible'}
-                    width={50}
-                    on:tap={setDefaultIcon}>
-                    <cspan color={itemColor} fontFamily={$fonts.mdi} text="mdi-map-marker" />
+                <label class="itemEditButton" rippleColor={itemColor} visibility={itemUsingDefault ? 'collapse' : 'visible'} on:tap={setDefaultIcon}>
+                    <cspan color={itemColor} fontFamily={$fonts.mdi} fontSize={22} text="mdi-map-marker" />
                     <cspan fontSize={12} text={'\n' + lc('marker')} />
                 </label>
-                <label
-                    backgroundColor={colorBackground}
-                    borderColor={colorOnSurfaceVariant}
-                    borderRadius={4}
-                    borderWidth={1}
-                    col={1}
-                    elevation={2}
-                    fontSize={20}
-                    height={50}
-                    margin="0 4 0 4"
-                    padding={5}
-                    rippleColor={itemColor}
-                    textAlignment="center"
-                    verticalAlignment="middle"
-                    visibility={itemUsingOsm ? 'collapse' : 'visible'}
-                    width={50}
-                    on:tap={setOSMIcon}>
-                    <cspan color={itemColor} fontFamily="osm" text={osmIcon} />
+                <label class="itemEditButton" col={1} visibility={itemUsingOsm ? 'collapse' : 'visible'} on:tap={setOSMIcon}>
+                    <cspan color={itemColor} fontFamily="osm" fontSize={20} lineHeight={22} text={osmIcon} />
                     <cspan fontSize={12} text={'\n' + lc('osm')} />
                 </label>
-                <label
-                    backgroundColor={colorBackground}
-                    borderColor={colorOnSurfaceVariant}
-                    borderRadius={4}
-                    borderWidth={1}
-                    col={2}
-                    elevation={2}
-                    fontSize={itemUsingMdi ? 22 : 18}
-                    height={50}
-                    margin="0 4 0 4"
-                    padding={5}
-                    rippleColor={itemColor}
-                    textAlignment="center"
-                    verticalAlignment="middle"
-                    width={50}
-                    on:tap={selectCustomIcon}>
-                    <cspan color={itemColor} fontFamily={itemIconFontFamily} text={itemIcon} />
+                <label class="itemEditButton" col={2} rippleColor={itemColor} on:tap={selectCustomIcon}>
+                    <cspan color={itemColor} fontFamily={itemIconFontFamily} fontSize={itemUsingMdi ? 22 : 18} lineHeight={22} text={itemIcon} />
                     <cspan fontSize={12} text={'\n' + lc('custom')} />
                 </label>
-                <label
-                    backgroundColor={colorBackground}
-                    borderColor={colorOnSurfaceVariant}
-                    borderRadius={4}
-                    borderWidth={1}
-                    col={3}
-                    elevation={2}
-                    fontSize={16}
-                    height={50}
-                    margin="0 4 0 4"
-                    padding={5}
-                    rippleColor={itemColor}
-                    text={(itemIconSize || '?') + 'px'}
-                    textAlignment="center"
-                    verticalAlignment="middle"
-                    width={50}
-                    on:tap={setCustomIconSize}>
-                    <cspan text={itemIconSize || '?'} />
+                <label class="itemEditButton" col={3} rippleColor={itemColor} on:tap={setCustomIconSize}>
+                    <cspan fontSize={14} lineHeight={22} text={itemIconSize || '?'} />
                     <cspan fontSize={12} text={'\n' + 'px'} />
                 </label>
             </gridlayout>

@@ -364,3 +364,17 @@ label {
     vertical-text-alignment: center;
     vertical-alignment: center;
 }
+
+.itemEditButton {
+    text-wrap: true;
+    background-color: var(--colorBackground);
+    border-color: var(--colorOnSurfaceVariant);
+    border-radius: 4;
+    border-width: 1;
+    elevation: 2;
+    height: 50;
+    margin: 0 4 0 4;
+    text-align: center;
+    vertical-text-alignment: middle;
+    width: 50;
+}
