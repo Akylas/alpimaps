@@ -190,6 +190,10 @@ source .env.ci
 Then "source" the file in the terminal so that variable are exported and available to nativescript cli.
 I use dotenv plugin for zsh which automatically loads the `.env` file
 
+### dependencies
+
+You need to install a few dependencies. The easiest way is to run the `./scripts/ci.prepare.sh` script
+
 ### Building
 
 Now that all is setup and that you prepared the 3rd party libraries you can actually build and run the app:

@@ -909,7 +909,7 @@
                 canvas.drawRect(x, 35, rigthX, 75, barPaint);
                 x = rigthX;
                 text = lc(s.id);
-                text2 = formatDistance(s.dist * 1000, s.dist < 1 ? 0 : 1);
+                text2 = formatDistance(s.dist * 1000);
                 canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
                 nString = createNativeAttributedString({
                     spans: [
@@ -1093,8 +1093,9 @@
                 width={60}
                 on:tap={deleteItem} />
 
-            <stacklayout prop:rightDrawer orientation="horizontal">
+            <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
                 <IconButton
+                    id="locate"
                     backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
                     color={isEInk ? 'black' : 'white'}
                     height="100%"
@@ -1103,6 +1104,7 @@
                     width={60}
                     on:tap={zoomToItem} />
                 <IconButton
+                    id="lock"
                     backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
                     color={isEInk ? 'black' : 'white'}
                     height="100%"
