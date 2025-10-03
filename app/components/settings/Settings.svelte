@@ -21,6 +21,7 @@
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
+    import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
@@ -35,10 +36,12 @@
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
         DEFAULT_VALHALLA_ONLINE_URL,
+        SETTINGS_IMPERIAL,
         SETTINGS_NAVIGATION_POSITION_OFFSET,
         SETTINGS_NAVIGATION_TILT,
         SETTINGS_TILE_SERVER_AUTO_START,
         SETTINGS_TILE_SERVER_PORT,
+        SETTINGS_UNITS,
         SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
         SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
         SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
@@ -48,7 +51,7 @@
     import { showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts, imperial, unitsSettings, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 
@@ -86,6 +89,40 @@
 
     function getSubSettings(id: string): any[] {
         switch (id) {
+            case 'units':
+                return [
+                    {
+                        type: 'switch',
+                        id: SETTINGS_IMPERIAL,
+                        title: lc('imperial_units'),
+                        description: lc('imperial_units_desc'),
+                        value: $imperial
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('custom_units')
+                    },
+                    {
+                        id: 'store_setting',
+                        store: unitsSettings,
+                        storeKey: SETTINGS_UNITS,
+                        key: UNIT_FAMILIES.Distance,
+                        valueType: 'string',
+                        title: lc('distance'),
+                        rightValue: () => unitsSettings[UNIT_FAMILIES.Distance],
+                        values: [UNITS.Kilometers, UNITS.Miles, UNITS.Meters, UNITS.Feet, UNITS.Inch].map((u) => ({ title: u, value: u }))
+                    },
+                    {
+                        id: 'store_setting',
+                        store: unitsSettings,
+                        storeKey: SETTINGS_UNITS,
+                        key: UNIT_FAMILIES.Speed,
+                        valueType: 'string',
+                        title: lc('speed'),
+                        rightValue: () => unitsSettings[UNIT_FAMILIES.Speed],
+                        values: [UNITS.SpeedKm, UNITS.SpeedM, UNITS.MPH, UNITS.FPH, UNITS.Knot].map((u) => ({ title: u, value: u }))
+                    }
+                ];
             case 'directions':
                 return [
                     {
@@ -496,7 +533,7 @@
                     },
                     {
                         type: 'switch',
-                        id: 'auto_black',
+                        key: 'auto_black',
                         title: lc('auto_black'),
                         value: ApplicationSettings.getBoolean('auto_black', false)
                     },
@@ -1137,14 +1174,22 @@
             if (item.mapStore) {
                 (item.mapStore as Writable<boolean>).set(value);
             } else {
-                ApplicationSettings.setBoolean(item.key || item.id, value);
+                setTimeout(
+                    () => {
+                        ApplicationSettings.setBoolean(item.key || item.id, value);
+                    },
+                    // we delay a little bit on IOS, because if the change
+                    // will trigger a collectionview refresh
+                    // we might end up with wrong switch state (animation duration?)
+                    __IOS__ ? 100 : 0
+                );
             }
         } catch (error) {
             console.error(error, error.stack);
         }
     }
     function refreshCollectionView() {
-        collectionView?.nativeView.refresh();
+        collectionView?.nativeView.refreshVisibleItems();
         //     console.log('refreshCollectionView');
         // const nativeView = collectionView?.nativeView;
         //     if (nativeView) {
@@ -1213,12 +1258,12 @@
             </Template>
             <Template key="switch" let:item>
                 <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} ios:backgroundColor={colorPrimary} />
+                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="checkbox" let:item>
                 <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={1} marginLeft={10} on:checkedChange={(e) => onCheckBox(item, e)} />
+                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e)} />
                 </ListItemAutoSize>
             </Template>
             <Template key="leftIcon" let:item>

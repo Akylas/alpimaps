@@ -4,8 +4,11 @@ import { Application, ApplicationSettings, Color, Frame, InitRootViewEventData, 
 import { getCurrentFontScale } from '@nativescript/core/accessibility/font-scale';
 import { get, writable } from 'svelte/store';
 import { ColorThemes, Themes, getRealTheme, getRealThemeAndUpdateColors, theme } from './helpers/theme';
-import { DEFAULT_COLOR_THEME, SETTINGS_COLOR_THEME } from './utils/constants';
+import { DEFAULT_COLOR_THEME, SETTINGS_COLOR_THEME, SETTINGS_FONTSCALE, SETTINGS_IMPERIAL, SETTINGS_UNITS } from './utils/constants';
 import { start as startThemeHelper, useDynamicColors } from '~/helpers/theme';
+import { DEFAULT_IMPERIAL_UINTS, DEFAULT_METRIC_UINTS } from './helpers/units';
+import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
+import { prefs } from '~/services/preferences';
 
 export const colors = writable({
     colorPrimary: '',
@@ -64,7 +67,50 @@ export const isRTL = writable(false);
 
 function updateSystemFontScale(value) {
     fontScale.set(value);
+    globalObservable.notify({ eventName: SETTINGS_FONTSCALE, data: get(fontScale) });
 }
+
+export let imperialUnits = ApplicationSettings.getBoolean(SETTINGS_IMPERIAL, false);
+export const imperial = writable(imperialUnits);
+export const onUnitsChanged = createGlobalEventListener(SETTINGS_UNITS);
+export const onFontScaleChanged = createGlobalEventListener(SETTINGS_FONTSCALE);
+function getUintSettingsData() {
+    const defaultData = imperialUnits ? DEFAULT_IMPERIAL_UINTS : DEFAULT_METRIC_UINTS;
+    const unitsSettingsStr = ApplicationSettings.getString(SETTINGS_UNITS);
+
+    const newData = JSON.parse(unitsSettingsStr || JSON.stringify(defaultData));
+    Object.keys(defaultData).forEach((k) => {
+        if (!newData[k]) {
+            newData[k] = defaultData[k];
+        }
+    });
+    // ApplicationSettings.setString(SETTINGS_UNITS, JSON.stringify(newData));
+    return newData;
+}
+export const unitsSettings = getUintSettingsData();
+export const unitsSettingsStore = writable(unitsSettings);
+
+function notifyUnits() {
+    globalObservable.notify({ eventName: SETTINGS_UNITS, data: unitsSettings });
+}
+
+function updateUnits() {
+    Object.assign(unitsSettings, getUintSettingsData());
+    unitsSettingsStore.set(unitsSettings);
+    DEV_LOG && console.log('updateUnits', unitsSettings);
+    notifyUnits();
+}
+prefs.on(`key:${SETTINGS_IMPERIAL}`, () => {
+    imperialUnits = ApplicationSettings.getBoolean(SETTINGS_IMPERIAL);
+    imperial.set(imperialUnits);
+    DEV_LOG && console.log(`key:${SETTINGS_IMPERIAL}`, imperialUnits);
+    ApplicationSettings.remove(SETTINGS_UNITS);
+    updateUnits();
+});
+prefs.on(`key:${SETTINGS_UNITS}`, () => {
+    DEV_LOG && console.warn(`key:${SETTINGS_UNITS}`, imperialUnits);
+    updateUnits();
+});
 
 function updateRootCss() {
     let rootView = Application.getRootView();
