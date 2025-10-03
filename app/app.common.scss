@@ -87,10 +87,9 @@ mdtextfield[variant=fill] {
 }
 
 checkbox {
+    margin-left: 10;
     color: var(--colorOnSurface);
     fill-color: var(--colorPrimary);
-    on-check-color: var(--colorOnPrimary);
-    on-tint-color: var(--colorPrimary);
 }
 
 frame {
@@ -108,13 +107,13 @@ frame {
 // }
 
 .themedPage {
-        status-bar-color: var(--colorPrimary);
-        status-bar-style: dark;
+    status-bar-color: var(--colorPrimary);
+    status-bar-style: dark;
 
-     .ns-eink & {
-         status-bar-style: light;
-         status-bar-color: white;
-     }
+    .ns-eink & {
+        status-bar-style: light;
+        status-bar-color: white;
+    }
 }
 
 

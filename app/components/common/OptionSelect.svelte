@@ -265,7 +265,6 @@
                         boxType={item.boxType}
                         checked={item.value}
                         col={item.boxType === 'circle' ? 0 : 2}
-                        ios:marginRight={10}
                         verticalAlignment="center"
                         on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>
@@ -286,7 +285,7 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={2} marginLeft={10} on:checkedChange={(e) => onCheckedChanged(item, e)} />
+                    <switch id="checkbox" checked={item.value} col={2} horizontalAlignment="right" marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckedChanged(item, e)} />
                 </svelte:component>
             </Template>
             <Template key="righticon" let:item>
