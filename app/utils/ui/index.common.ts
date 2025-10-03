@@ -182,6 +182,7 @@ export async function showSliderPopover({
         horizPos,
         vertPos,
         props: {
+            elevation: __ANDROID__ ? 3 : 0,
             title,
             icon,
             min,
@@ -223,6 +224,7 @@ export async function showSlidersPopover({
         horizPos,
         vertPos,
         props: {
+            elevation: __ANDROID__ ? 3 : 0,
             width,
             items
         }

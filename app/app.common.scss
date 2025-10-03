@@ -63,6 +63,10 @@
     @extend %alpimaps;
 }
 
+mdslider {
+    track-background-color: #aaaaaa88;
+}
+
 mdtextfield[variant=outline],
 mdtextfield[variant=fill] {
     color: var(--colorOnSurface);
@@ -240,7 +244,7 @@ label {
 .small-floating-btn {
     @extend %mdi;
     @extend .buttontext;
-    shape: medium;
+    shape: small;
     elevation: 3;
     dynamic-elevation-offset: 3;
     font-size: 24;

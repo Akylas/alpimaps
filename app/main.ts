@@ -11,7 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application } from '@nativescript/core';
+import { Application, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
 import { init as sharedInit } from '@shared/index';
 import { svelteNative } from 'svelte-native';
@@ -86,7 +86,7 @@ try {
 
     // DrawerElement.register();
 
-    // Trace.addCategories(Trace.categories.NativeLifecycle);
+    // Trace.addCategories(Trace.categories.Layout);
     // Trace.addCategories(Trace.categories.Transition);
     // Trace.addCategories(Trace.categories.Animation);
     // Trace.addCategories(ChartTraceCategory);
@@ -109,6 +109,11 @@ try {
     themer.createShape('medium', {
         cornerFamily: 'rounded' as any,
         cornerSize: 12
+    });
+
+    themer.createShape('small', {
+        cornerFamily: 'rounded' as any,
+        cornerSize: 8
     });
 
     // we need to instantiate it to "start" it

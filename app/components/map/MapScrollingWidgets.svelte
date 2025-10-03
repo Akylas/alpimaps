@@ -275,6 +275,7 @@
             label.color = colorOnSurface as any;
             label.linkColor = colorPrimary;
             label.html = attributions.join('<br/>');
+            label.textWrap = true;
             label.on('linkTap', (e) => openLink(e['link']));
             return alert({
                 title: lc('attributions'),
@@ -303,17 +304,18 @@
     }
 </script>
 
-<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="60,*,70" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
-    <stacklayout col={2} padding={2} row={2} verticalAlignment="bottom">
+<gridlayout bind:this={gridLayout} id="scrollingWidgets" {...$$restProps} columns="auto,*,auto" isPassThroughParentEnabled={true} {isUserInteractionEnabled} rows="auto,*,auto,auto">
+    <stacklayout id="stack1" col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton
             id="directions"
             class="small-floating-btn btn-themed"
             col={2}
+            horizontalAlignment="center"
             rowSpan={2}
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <mdcardview id="location" class={` ${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdcardview id="location" class={`${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 class={`mdi ${locationButtonLabelClass}`}
                 color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
@@ -333,10 +335,10 @@
         text={$navigationModeStore ? 'mdi-navigation' : 'mdi-navigation-outline'}
         verticalAlignment="bottom"
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
-    <stacklayout horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
+    <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
-        <mdbutton class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />
-        <mdbutton class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
+        <mdbutton id="list" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />
+        <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
     <ScaleView col={1} horizontalAlignment="right" marginBottom={8} row={2} verticalAlignment="bottom" />
@@ -375,7 +377,7 @@
         marginBottom={24}
         rowSpan={3}
         verticalAlignment="bottom"
-        visibility={'collapse'}
+        visibility="collapse"
         width="70%"
         on:swipe={() => (navigationInstructions = null)}
         on:draw={drawNavigationInstruction} />
