@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { ClusterElementBuilder } from '@nativescript-community/ui-carto/layers/cluster';
-    import { ClusteredVectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
+    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
@@ -18,7 +17,6 @@
     import { actionBarButtonHeight, colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
 
     let { colorOnSurface, colorWidgetBackground } = $colors;
     $: ({ colorOnSurface, colorWidgetBackground } = $colors);
@@ -93,7 +91,7 @@
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
                 labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: 6,
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 dataSource: getSearchDataSource(),
                 decoder: mapContext.innerDecoder
             });
