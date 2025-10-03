@@ -5,7 +5,8 @@
     import { ContentView, GridLayout, TouchGestureEventData } from '@nativescript/core';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
-    import { debounce, throttle } from '@nativescript/core/utils';
+    import { debounce } from '@nativescript/core/utils';
+    import { showError } from '@shared/utils/showError';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
@@ -14,12 +15,10 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { pitchEnabled, projectionModeSpherical, nutiProps } from '~/stores/mapStore';
-    import { showError } from '@shared/utils/showError';
-    import { openLink, showSliderPopover } from '~/utils/ui/index.common';
+    import { nutiProps, pitchEnabled, projectionModeSpherical } from '~/stores/mapStore';
+    import { openLink } from '~/utils/ui/index.common';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
     import ReorderLongPressHandler from './ReorderLongPressHandler';
     $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -30,9 +29,9 @@
     export let customLayers: CustomLayersModule = null;
     export let customSources: ObservableArray<SourceItem> = [] as any;
     const currentLegend: string = null;
-    
+
     onMount(() => {
-        customLayers = mapContext.mapModule('customLayers');  
+        customLayers = mapContext.mapModule('customLayers');
         if (customLayers) {
             customSources = customLayers.customSources;
         }
@@ -49,8 +48,7 @@
             showError(error);
         }
     }
-    function clearCache() {
-    }
+    function clearCache() {}
     const updateItem = debounce(function (item: SourceItem) {
         customSources &&
             customSources.some((d, index) => {
@@ -138,7 +136,7 @@
             showError(error);
         }
     }
-    const nutiIconParams = ['contours', 'buildings']
+    const nutiIconParams = ['contours', 'buildings'];
 </script>
 
 <!-- on iOS the collectionview is applied a padding because of the safearea
@@ -232,11 +230,11 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         </collectionview>
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
-            {#each nutiIconParams.map(key=>({...nutiProps.getSettingsOptions(key), id:key})).filter(s=>s.visible?.(customLayers) ?? true) as option}
-           <StoreValue store={option.store} let:value>      
-              <IconButton isSelected={value} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} onLongPress={option.onLongPress}/>
-            </StoreValue>
-        {/each}
+            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+                <StoreValue store={option.store} let:value>
+                    <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
+                </StoreValue>
+            {/each}
             <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
             <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
         </stacklayout>
