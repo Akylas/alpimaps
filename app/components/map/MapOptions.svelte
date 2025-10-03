@@ -151,6 +151,7 @@
     let items: ObservableArray<any>;
     function refresh() {
         const newItems = [];
+        console.log('refresh');
         // if (customLayers.hasLocalData) {
         try {
             newItems.push(
@@ -169,6 +170,7 @@
             showError(error);
         }
         // }
+        console.log('refresh1', newItems);
         items = new ObservableArray(newItems);
     }
     onServiceLoaded((handler: GeoHandler) => {
@@ -200,14 +202,11 @@
         }
     }
     function itemTemplateSelector(item, index, items) {
-        if (item.type === 'prompt') {
-            return 'default';
+        if (item.type === 'switch' || item.type === 'sectionheader') {
+            return item.type;
         }
 
-        if (item.icon) {
-            return 'leftIcon';
-        }
-        return item.type || 'default';
+        return 'default';
     }
 
     const nutiIconParams = ['contours', 'buildings'];
@@ -221,12 +220,16 @@
         </Template>
         <Template key="switch" let:item>
             <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                <switch id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e)} />
+                <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
             </ListItemAutoSize>
         </Template>
         <Template let:item>
-            <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} rightValue={item.rightValue} showBottomLine={false} on:tap={(event) => onTap(item, event)}
-            ></ListItemAutoSize>
+            <ListItemAutoSize
+                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
+                leftIcon={item.icon}
+                rightValue={item.rightValue}
+                showBottomLine={false}
+                on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
         </Template>
     </collectionview>
 
