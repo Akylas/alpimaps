@@ -99,7 +99,6 @@
         col={mainCol}
         color={item.titleColor || item.color || colorOnSurface}
         disableCss={true}
-        fontSize={fontSize * $fontScale}
         {fontWeight}
         html={item.html}
         paddingBottom={addedPadding}
@@ -110,7 +109,7 @@
         verticalTextAlignment="center"
         {...item.titleProps || $$restProps?.titleProps}
         use:conditionalEvent={{ condition: !!(item.onLinkTap || onLinkTap), event: 'linkTap', callback: item.onLinkTap || onLinkTap }}>
-        <cspan text={item.title || item.name} />
+        <cspan fontSize={fontSize * $fontScale} text={item.title || item.name} />
         <cspan color={item.subtitleColor || colorOnSurfaceVariant} fontSize={(item.subtitleFontSize || subtitleFontSize) * $fontScale} text={item.subtitle ? '\n' + item.subtitle : null} />
     </label>
 

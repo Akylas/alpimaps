@@ -205,7 +205,7 @@
                 canvas.translate(centerCanvas[0], centerCanvas[1]);
                 canvas.drawCircle(0, 0, 5, paint);
                 const distance = getDistanceSimple(center, location);
-                const text = formatter.getItemTitle(item) + ' ' + formatDistance(distance, distance < 1000 ? 0 : 1);
+                const text = formatter.getItemTitle(item) + ' ' + formatDistance(distance);
                 const staticLayout = new StaticLayout(text, textPaint, radius, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 const textW = Math.min(Utils.calcTextSize(textPaint, text).width, staticLayout.getWidth());
                 const textH = staticLayout.getHeight();

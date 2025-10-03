@@ -57,9 +57,8 @@ export function convertDistance(meters) {
     return humanUnit(meters, distancePreset);
 }
 
-export function formatDistance(meters, fractionDigits = 1) {
-    const data = convertDistance(meters);
-    return `${data.value.toFixed(fractionDigits)} ${data.unit}`;
+export function formatDistance(meters) {
+    return convertValueToUnit(meters, UNITS.DistanceKm).join(' ');
 }
 export function convertElevation(meters) {
     return convertValueToUnit(meters, UNITS.Distance).join(' ');
