@@ -946,7 +946,7 @@ module.exports = (env, params = {}) => {
                     project: process.env.SENTRY_PROJECT,
                     authToken: process.env.SENTRY_AUTH_TOKEN,
                     release: {
-                        name: `${appId}@${appVersion}+${buildNumber}`,
+                        name: `${appId}@${platform}${isAndroid ? (playStoreBuild ? '.playstore' : '.fdroid') : ''}@${appVersion}+${buildNumber}`,
                         dist: `${buildNumber}.${platform}${isAndroid ? (playStoreBuild ? '.playstore' : '.fdroid') : ''}`,
                         setCommits: {
                             auto: true,
