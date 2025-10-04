@@ -398,7 +398,7 @@
         // Your logic here
         return item.type;
     }
-    $: callJSFunction('setSettings', 'secondsInDay', secondsInDay);
+    callJSFunction('setSettings', 'secondsInDay', secondsInDay);
 
     $: currentAltitude = position.altitude;
     $: updateElevation(currentAltitude);
