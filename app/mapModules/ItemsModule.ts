@@ -535,8 +535,8 @@ export default class ItemsModule extends MapModule {
             await this.itemRepository.delete(item as Item);
         }
     }
-    async takeItemPicture(item, restore = false) {
-        if (!ApplicationSettings.getBoolean('route_image_capture', true)) {
+    async takeItemPicture(item: IItem, restore = false) {
+        if (!item.route || !ApplicationSettings.getBoolean('route_image_capture', true)) {
             return;
         }
         // console.log('takeItemPicture', new Error().stack);
