@@ -51,7 +51,7 @@
     import { showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
-    import { colors, fonts, imperial, unitsSettings, windowInset } from '~/variables';
+    import { colors, fonts, imperial, onFontScaleChanged, unitsSettings, windowInset } from '~/variables';
     import CActionBar from '../common/CActionBar.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 
@@ -1200,6 +1200,10 @@
         //     });
         //     }
     }
+    export const refreshVisibleItems = () => {
+        collectionView?.nativeView?.refreshVisibleItems();
+    };
+    onFontScaleChanged(refreshVisibleItems);
     onThemeChanged(refreshCollectionView);
     onLanguageChanged((value, event) => {
         if (event.clock_24 !== true) {
