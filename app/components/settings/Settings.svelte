@@ -1213,7 +1213,7 @@
     onMapLanguageChanged(refresh);
 </script>
 
-<page actionBarHidden={true}>
+<page actionBarHidden={true} android:statusBarColor={colorPrimary}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template key="sectionheader" let:item>
