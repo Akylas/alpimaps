@@ -202,11 +202,14 @@
         }
     }
     function itemTemplateSelector(item, index, items) {
-        if (item.type === 'switch' || item.type === 'sectionheader') {
-            return item.type;
+        if (item.type === 'prompt') {
+            return 'default';
         }
 
-        return 'default';
+        if (item.icon) {
+            return 'leftIcon';
+        }
+        return item.type || 'default';
     }
 
     const nutiIconParams = ['contours', 'buildings'];
