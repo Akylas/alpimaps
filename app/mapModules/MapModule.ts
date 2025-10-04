@@ -149,9 +149,9 @@ export interface MapModules {
 export function createTileDecoder(name: string, style: string = 'voyager') {
     try {
         const stylePath = name.startsWith('/') ? name : `${knownFolders.currentApp().path}/assets/styles/${name}`;
-        const useZip = TEST_ZIP_STYLES || !Folder.exists(stylePath);
+        const useZip = PRODUCTION || TEST_ZIP_STYLES || !Folder.exists(stylePath);
         //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
-        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES, stylePath, Folder.exists(stylePath), useZip, basePack);
+        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES, stylePath, Folder.exists(stylePath), useZip);
         return new MBVectorTileDecoder({
             style,
             pack: useZip
@@ -230,22 +230,25 @@ const mapContext: MapContext = {
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
         const isZip = mapStyle.endsWith('.zip');
-        const stylePath = mapStyle.startsWith('/') ? mapStyle : `~/assets/styles/${mapStyle}`;
+        const stylePath = mapStyle.startsWith('/') ? mapStyle : `${knownFolders.currentApp().path}/assets/styles/${mapStyle}`;
+
+        const useZip = isZip || !Folder.exists(stylePath);
         mapContext.mapDecoder = new MBVectorTileDecoder({
             style: mapStyleLayer,
             liveReload: !PRODUCTION,
-            pack: isZip
-                ? new ZippedAssetPackage({
-                      liveReload: !PRODUCTION,
-                      zipPath: stylePath,
-                      basePack
-                  })
-                : new DirAssetPackage({
-                      loadUsingNS: true,
-                      dirPath: stylePath
-                      // loadAsset,
-                      // getAssetNames: getAssetNamesWithMaterial
-                  })
+            pack:
+                isZip || useZip
+                    ? new ZippedAssetPackage({
+                          liveReload: !PRODUCTION,
+                          zipPath: isZip ? stylePath : `${stylePath}.zip`,
+                          basePack
+                      })
+                    : new DirAssetPackage({
+                          loadUsingNS: true,
+                          dirPath: stylePath
+                          // loadAsset,
+                          // getAssetNames: getAssetNamesWithMaterial
+                      })
         });
         mapContext.setInnerStyle(mapStyleLayer.indexOf('eink') !== -1 ? 'eink' : 'voyager', mapStyle);
         oldDecoder?.dispose();
