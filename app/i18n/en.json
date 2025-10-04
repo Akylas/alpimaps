@@ -401,7 +401,7 @@
     "light": "light",
     "lighthouse": "lighthouse",
     "lines": "lines",
-    "list_used_third_parties": "list used third parties",
+    "list_used_third_parties": "List used third party libraries",
     "loading": "loading",
     "location_distance_from_route": "current location max distance from route",
     "location_distance_from_route_desc": "when looking if your current location is on the route, this is the max possible distance. Using high values result in less precise position in chart",
