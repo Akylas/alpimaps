@@ -151,7 +151,7 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
         const stylePath = name.startsWith('/') ? name : `${knownFolders.currentApp().path}/assets/styles/${name}`;
         const useZip = TEST_ZIP_STYLES || !Folder.exists(stylePath);
         //    showToast('createTileDecoder '+ useZip + ' ' + stylePath);
-        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES, stylePath, Folder.exists(stylePath), useZip);
+        DEV_LOG && console.log('createTileDecoder', name, style, PRODUCTION, TEST_ZIP_STYLES, stylePath, Folder.exists(stylePath), useZip, basePack);
         return new MBVectorTileDecoder({
             style,
             pack: useZip
@@ -162,6 +162,7 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
                       getAssetNames: getAssetNamesWithMaterial
                   })
                 : new DirAssetPackage({
+                      basePack,
                       loadUsingNS: true,
                       dirPath: stylePath
                       // loadAsset,
