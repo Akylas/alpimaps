@@ -907,15 +907,6 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 19
         }
     },
-    '4umaps': {
-        category: 'europe,topo',
-        url: 'http://4umaps.eu/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} <a href="http://4umaps.eu">4umaps</a>',
-        sourceOptions: {
-            minZoom: 1,
-            maxZoom: 15
-        }
-    },
     // 'slopes > 30%': {
     //     category: 'europe',
     //     url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
