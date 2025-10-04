@@ -549,7 +549,7 @@ export default class ItemsModule extends MapModule {
             oldItem = mapContext.getSelectedItem();
             mapBounds = mapContext.getMap().getMapBounds();
         }
-        if (File.exists(item.image_path)) {
+        if (item.image_path && File.exists(item.image_path)) {
             // we need to evict from image cache
             getImagePipeline().evictFromCache(item.image_path);
         }
