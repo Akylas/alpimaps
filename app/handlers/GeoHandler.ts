@@ -135,6 +135,7 @@ export class GeoHandler extends Handler {
                 this.startWatch();
             }
         }
+        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground);
         if (!this.currentSession && this.isWatching()) {
             if (this.stopGpsBackground) {
                 this.wasWatchingBeforePause = true;
@@ -148,7 +149,7 @@ export class GeoHandler extends Handler {
                         this.stopWatch();
                         this.startWatch({
                             minimumUpdateTime: backgroundUpdateTime
-                        })
+                        });
                     }
                     (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
                 }
@@ -404,11 +405,7 @@ export class GeoHandler extends Handler {
                 description: lc('gps_desired_accuracy_desc'),
                 default: desiredAccuracy,
                 value: () => ApplicationSettings.getNumber('gps_desired_accuracy', desiredAccuracy),
-                formatter: __ANDROID__
-                    ? formatDistance
-                    : (k) => {
-                          return this.IOS_ACCURACIES[k];
-                      },
+                formatter: __ANDROID__ ? formatDistance : (k) => this.IOS_ACCURACIES[k],
                 type: __ANDROID__ ? 'prompt' : undefined,
                 values: __IOS__
                     ? Object.keys(this.IOS_ACCURACIES)

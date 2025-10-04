@@ -2338,11 +2338,11 @@
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
     ios:iosIgnoreSafeArea={false}
+    {keepScreenAwake}
+    screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
     android:statusBarColor={directionsPanelVisible ? colorPrimary : 'transparent'}
-    {keepScreenAwake}
-    screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
