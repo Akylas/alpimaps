@@ -84,6 +84,7 @@
     let widgetsHolder: NativeViewElementNode<GridLayout>;
     let cartoMap: CartoMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
+    let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
     let bottomSheetInner: BottomSheetInner;
     let mapScrollingWidgets: MapScrollingWidgets;
@@ -640,7 +641,7 @@
                 data.cancel = true;
                 if (searchView && searchView.hasFocus()) {
                     searchView.unfocus();
-                } else if (directionsPanel && directionsPanel.isVisible()) {
+                } else if (directionsPanelVisible) {
                     directionsPanel.cancel();
                 } else if (bottomSheetStepIndex !== 0) {
                     bottomSheetStepIndex = 0;
@@ -2177,6 +2178,7 @@
                 text: 'mdi-fullscreen',
                 id: 'immersive',
                 tooltip: lc('immersive_mode'),
+                visible: __ANDROID__,
                 isSelected: $immersive,
                 onTap: () => immersive.set(!$immersive)
             },
@@ -2336,7 +2338,7 @@
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
     ios:iosIgnoreSafeArea={false}
-    ios:statusBarStyle="light"
+    ios:statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
     {keepScreenAwake}
     screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
@@ -2364,7 +2366,6 @@
             on:stepIndexChange={onStepIndexChanged}>
             <gridlayout bind:this={widgetsHolder} height="100%" isPassThroughParentEnabled={true} width="100%">
                 <ButtonBar
-                    id="mapButtonsNew"
                     buttonSize={40}
                     buttons={sideButtons}
                     color={isEInk ? '#aaa' : '#666'}
@@ -2432,6 +2433,7 @@
                     paddingTop={windowInsetTop}
                     verticalAlignment="top"
                     width="100%"
+                    bind:visible={directionsPanelVisible}
                     bind:translationY={topTranslationY}
                     on:cancel={onDirectionsCancel} />
                 {#if mapResultPagerLaoded}

@@ -99,7 +99,6 @@
         use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 {:else}
     <mdbutton
-        borderRadius={shape || rounded ? null : borderRadius}
         color={isSelected ? selectedColor || colorPrimary : actualColor}
         disableCss={true}
         {fontFamily}
@@ -110,6 +109,7 @@
         {text}
         variant="text"
         visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
+        {...borderRadius && !(shape || rounded) ? { borderRadius } : {}}
         {...$$restProps}
         fontSize={fontSize ? fontSize : small ? 16 : 24}
         height={height || size}

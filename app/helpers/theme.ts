@@ -263,9 +263,11 @@ export function start() {
         DEV_LOG && console.log('key:auto_black', theme, autoDarkToBlack);
         if (theme === 'auto') {
             const realTheme = getRealTheme(theme);
-            currentTheme.set(realTheme);
-            updateThemeColors(realTheme, colorTheme);
-            globalObservable.notify({ eventName: 'theme', data: realTheme });
+            if (realTheme !== get(currentTheme)) {
+                currentTheme.set(realTheme);
+                updateThemeColors(realTheme, colorTheme);
+                globalObservable.notify({ eventName: 'theme', data: realTheme });
+            }
         }
     });
 
