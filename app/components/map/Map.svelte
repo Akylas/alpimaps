@@ -2338,8 +2338,9 @@
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
     ios:iosIgnoreSafeArea={false}
-    ios:statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
+    statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
+    android:statusBarColor={directionsPanelVisible ? colorPrimary : 'transparent'}
     {keepScreenAwake}
     screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     on:navigatingTo={onNavigatingTo}
