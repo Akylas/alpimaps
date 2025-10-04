@@ -1804,9 +1804,9 @@
         const itemsModule = mapContext.mapModule('items');
         item = await itemsModule.saveItem(item);
         if (item.route) {
-            mapContext.mapModules.directionsPanel.cancel(false);
+            await mapContext.mapModules.directionsPanel.cancel(false);
+            await itemsModule.takeItemPicture(item);
         }
-        await itemsModule.takeItemPicture(item);
         mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
     });
 
