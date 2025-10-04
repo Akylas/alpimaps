@@ -18,6 +18,7 @@ import MapModule, { getMapContext } from './MapModule';
 import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 import { DEFAULT_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_TILT, SETTINGS_NAVIGATION_POSITION_OFFSET, SETTINGS_NAVIGATION_TILT } from '~/utils/constants';
 import { screenHeightDips } from '~/variables';
+import { request } from '@nativescript-community/perms';
 
 const LOCATION_ANIMATION_DURATION = 300;
 
@@ -302,6 +303,9 @@ export default class UserLocationModule extends MapModule {
     async startWatchLocation() {
         if (get(watchingLocation) || !this.geoHandler) {
             return;
+        }
+        if (__ANDROID__ && !this.geoHandler.stopGpsBackground) {
+            await request('notification');
         }
         await this.geoHandler.enableLocation();
         await this.geoHandler.startWatch();

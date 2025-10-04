@@ -312,6 +312,8 @@
     "globe": "globe",
     "globe_mode": "globe mode",
     "golf": "golf",
+    "gps_background_update_minTime": "min GPS update time while in background",
+    "gps_background_update_minTime_desc": "minimum update time between GPS update while in background",
     "gps_desired_accuracy": "accuracy",
     "gps_desired_accuracy_desc": "Specifies desired accuracy in meters",
     "gps_not_authorized": "AlpiMaps does not have permission to use the GPS",
