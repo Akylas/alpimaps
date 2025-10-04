@@ -19,8 +19,8 @@
 <PopoverBackgroundView columns="auto">
     <!-- <gesturerootview columns="auto"> -->
     <stacklayout width="auto">
-        <checkbox boxType="circle" checked={$routesType === RoutesType.All} text={lc('all')} on:tap={(e) => updateProp(RoutesType.All)} />
-        <checkbox boxType="circle" checked={$routesType === RoutesType.Bicycle} text={lc('bicycle')} on:tap={(e) => updateProp(RoutesType.Bicycle)} />
-        <checkbox boxType="circle" checked={$routesType === RoutesType.Hiking} text={lc('hiking')} on:tap={(e) => updateProp(RoutesType.Hiking)} />
+        <checkbox checked={$routesType === RoutesType.All} text={lc('all')} on:tap={(e) => updateProp(RoutesType.All)} />
+        <checkbox checked={$routesType === RoutesType.Bicycle} text={lc('bicycle')} on:tap={(e) => updateProp(RoutesType.Bicycle)} />
+        <checkbox checked={$routesType === RoutesType.Hiking} text={lc('hiking')} on:tap={(e) => updateProp(RoutesType.Hiking)} />
     </stacklayout>
 </PopoverBackgroundView>

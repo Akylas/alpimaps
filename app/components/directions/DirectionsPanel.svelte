@@ -598,9 +598,8 @@
         translationY = 0;
         return nView.animate(params);
     }
-    export function isVisible() {
-        return translationY > 0;
-    }
+    export let visible = false;
+    $: visible = translationY > 0;
     export async function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
         addInternalStartPoint(position, metaData);
     }
@@ -1316,12 +1315,12 @@
             <IconButton
                 backgroundColor={isEInk ? 'white' : undefined}
                 colSpan={2}
+                color={isEInk ? 'black' : 'white'}
                 horizontalAlignment="right"
                 isEnabled={nbWayPoints > 1}
                 isVisible={!loading}
                 marginRight={10}
                 rippleColor={isEInk ? 'black' : 'white'}
-                color={isEInk ? 'black' : 'white'}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()}
                 on:longPress={() => computeRoutes(true)} />

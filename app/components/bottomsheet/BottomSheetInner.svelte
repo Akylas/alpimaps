@@ -163,12 +163,11 @@
     function openWikipedia() {
         try {
             const props = item && item.properties;
-            DEV_LOG && console.log('openWikipedia', props.wikipedia);
             if (props?.wikipedia) {
-                const url = `https://en.wikipedia.org/wiki/${props.wikipedia}`;
+                const url = `https://wikipedia.org/wiki/${props.wikipedia}`;
                 openURL(url);
             } else if (props?.name) {
-                const url = `https://en.wikipedia.org/wiki/Special:Search?search=${props.name}`;
+                const url = `https://wikipedia.org/wiki/Special:Search?search=${props.name}`;
                 openURL(url);
             }
         } catch (error) {
@@ -213,9 +212,9 @@
                 }
             }
         } catch (err) {
-            console.error(err, err.stack);
+            // console.error(err, err.stack);
             if (query) {
-                const url = `https://duckduckgo.com/?kae=d&ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
+                const url = `https://duckduckgo.com/?ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
                 openURL(url);
             }
         }
