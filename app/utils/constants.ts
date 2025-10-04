@@ -2,6 +2,9 @@ import { Screen } from '@nativescript/core';
 
 export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
 
+export const SETTINGS_IMPERIAL = 'imperial';
+export const SETTINGS_UNITS = 'units';
+export const SETTINGS_FONTSCALE = 'fontscale';
 export const SETTINGS_LANGUAGE = 'language';
 export const SETTINGS_MAP_FONT_SCALE = 'map_font_scale';
 export const SETTINGS_COLOR_THEME = 'color_theme';

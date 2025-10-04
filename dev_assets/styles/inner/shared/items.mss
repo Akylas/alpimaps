@@ -63,10 +63,10 @@
 #items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0][zoom>=5] {
         text-fill: [style.color] ?? @itemColor;
         text-placement: nutibillboard;
-        text-name: [style.icon] ?? '';
+        text-name: [style.icon] ?? '';
         text-allow-overlap: true;
         text-clip: false;
-        text-face-name: [style.mapFontFamily] ?? 'osm';
+        text-face-name: [style.mapFontFamily] ?? @osm;
         text-size: (([style.iconSize] ? [style.iconSize]: @default_icon_size) + 5) * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));
         text-halo-fill: @itemContrastColor;
         text-halo-radius: @standard-halo-radius;
