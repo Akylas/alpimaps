@@ -330,7 +330,6 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
                 currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).lighten(10).hex;
                 currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).lighten(20).hex;
             } else {
-
                 currentColors.colorSurfaceTint = new Color(currentColors.colorPrimary).darken(10).hex;
                 currentColors.colorSurfaceContainerHigh = new Color(currentColors.colorSurfaceContainer).darken(10).hex;
                 currentColors.colorSurfaceContainerHighest = new Color(currentColors.colorSurfaceContainer).darken(20).hex;
