@@ -37,6 +37,7 @@ module.exports = (env, params = {}) => {
                 build3dmap: true,
                 buildpeakfinder: true,
                 production: env.production !== false,
+                buildstyle: true,
                 sentry: true,
                 uploadSentry: true,
                 testlog: true,
