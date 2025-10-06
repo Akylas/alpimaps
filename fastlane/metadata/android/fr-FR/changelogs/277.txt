@@ -1,0 +1,16 @@
+Features:
+- immersive mode
+- ascent detection in elevation profile
+- moved to OpenFreeMap instead of AmericanaOSM
+
+Bug fixes:
+- long press awake button to toggle full brightness
+- lower min zoom while watching location
+- another geo settings fix
+- more style options
+- improved navigation mode
+- new screen off auto refresh featurefor Hisense A9
+- allow to have different gps update time in background
+- setting to disable accuracy marker
+- setting to change elevation chart filter number
+- allow to 
