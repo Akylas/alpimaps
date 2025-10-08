@@ -955,7 +955,7 @@ module.exports = (env, params = {}) => {
                             ignoreMissing: true
                         },
                         create: true,
-                        cleanArtifacts: true
+                        cleanArtifacts: false
                     },
                     // debug: true,
                     sourcemaps: {
