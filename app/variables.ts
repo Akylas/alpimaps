@@ -63,10 +63,14 @@ export const screenWidthDips = Screen.mainScreen.widthDIPs;
 // export const navigationBarHeight = writable(0);
 
 export const fontScale = writable(1);
+export const fontScaleMaxed = writable(1);
 export const isRTL = writable(false);
 
+const MAXMAX_FONT_SCALE = 3;
+
 function updateSystemFontScale(value) {
-    fontScale.set(value);
+    fontScale.set(Math.min(value, MAXMAX_FONT_SCALE));
+    fontScaleMaxed.set(Math.min(value, 2));
     globalObservable.notify({ eventName: SETTINGS_FONTSCALE, data: get(fontScale) });
 }
 
@@ -287,7 +291,7 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
         if (__ANDROID__) {
             const activity = Application.android.startActivity;
             // we also update system font scale so that our UI updates correcly
-            fontScale.set(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
+            updateSystemFontScale(Utils.android.getApplicationContext().getResources().getConfiguration().fontScale);
             Object.keys(currentColors).forEach((c) => {
                 if (c.endsWith('Disabled')) {
                     return;

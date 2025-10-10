@@ -5,7 +5,7 @@
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { isEInk } from '~/helpers/theme';
     import { showToolTip } from '~/utils/ui';
-    import { actionBarButtonHeight, colors, fonts } from '~/variables';
+    import { actionBarButtonHeight, colors, fontScaleMaxed, fonts } from '~/variables';
 
     const iconPaints: { [k: string]: Paint } = {};
 </script>
@@ -35,6 +35,7 @@
     export let shape = null;
     export let height = null;
     export let width = null;
+    export let maxFontScale = null;
 
     let canvas: NativeViewElementNode<CanvasView>;
 
@@ -81,6 +82,7 @@
         staticLayout.draw(canvas);
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
+    $: actualMaxFontScale = maxFontScale ?? Math.min($fontScaleMaxed, 1.4);
 </script>
 
 {#if __ANDROID__}
@@ -111,11 +113,11 @@
         visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
         {...borderRadius && !(shape || rounded) ? { borderRadius } : {}}
         {...$$restProps}
-        fontSize={fontSize ? fontSize : small ? 16 : 24}
-        height={height || size}
-        width={width || size}
+        fontSize={(fontSize ? fontSize : small ? 16 : 24) * actualMaxFontScale}
+        height={(height || size) * actualMaxFontScale}
+        width={(width || size) * actualMaxFontScale}
         on:tap
         on:loaded
         on:longPress={actualLongPress}
-        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} /> --> />
+        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 {/if}
