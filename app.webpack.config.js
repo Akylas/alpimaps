@@ -954,7 +954,7 @@ module.exports = (env, params = {}) => {
                                 ignoreMissing: true
                             },
                             create: true,
-                            cleanArtifacts: true
+                            cleanArtifacts: false
                         },
                         sourcemaps: {
                             rewriteSources: (source, map) => source.replace('webpack:///', 'webpack://'),
