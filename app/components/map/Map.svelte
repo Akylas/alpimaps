@@ -2047,7 +2047,7 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs - 100
+                    maxHeight: Screen.mainScreen.heightDIPs - 300
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {

@@ -5,7 +5,7 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { onThemeChanged } from '~/helpers/theme';
-    import { colors, fonts } from '~/variables';
+    import { colors, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SettingsSlider from '../settings/SettingsSlider.svelte';
     import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
@@ -48,7 +48,7 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width="95%">
+<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width={screenWidthDips * 0.7} {...$$restProps}>
     {#if options}
         <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
             {#each options as option, index}
@@ -61,7 +61,12 @@
             {/each}
         </stacklayout>
     {/if}
-    <collectionview bind:this={collectionView} height={Math.min(300, settings.length * 80)} itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')} items={settings} row={1}>
+    <collectionview
+        bind:this={collectionView}
+        height={Math.min(screenHeightDips * 0.6, settings.length * 80)}
+        itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')}
+        items={settings}
+        row={1}>
         <Template let:item>
             <SettingsSlider
                 borderBottomColor={colorOutlineVariant}
@@ -102,10 +107,9 @@
             variant="text"
             verticalTextAlignment="center"
             android:padding="8 4 0 4"
-            ios:paddingTop={0}
             on:tap={onActualReset}>
-            <span fontFamily={$fonts.mdi} fontSize={20} text="mdi-cancel" verticalAlignment="middle" />
-            <span text={lc('reset_settings')} verticalAlignment="middle" />
+            <cspan fontFamily={$fonts.mdi} fontSize={20} text="mdi-cancel" verticalAlignment="middle" />
+            <cspan fontSize={16} text={lc('reset_settings')} verticalAlignment="middle" />
         </mdbutton>
     {/if}
 </PopoverBackgroundView>
