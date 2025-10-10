@@ -316,6 +316,7 @@
             on:tap={startDirections} />
         <mdcardview id="location" class={`${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
+                ios:iosAccessibilityMaxFontScale={2}
                 class={`mdi ${locationButtonLabelClass}`}
                 color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
                 text="mdi-crosshairs-gps"

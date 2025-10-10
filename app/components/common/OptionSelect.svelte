@@ -15,7 +15,7 @@
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import SettingsSlider from '~/components/settings/SettingsSlider.svelte';
     import { lc } from '~/helpers/locale';
-    import { colors, fontScale, fonts } from '~/variables';
+    import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
     export interface OptionType extends IListItem {
         subtitle?: string;
         isPick?: boolean;
@@ -323,9 +323,10 @@
                     on:tap={(event) => onTap(item, event)}>
                     <label
                         col={0}
+                        ios:class="ignoreA11yFontScale"
                         color={item.color || colorOnSurface}
                         fontFamily={$fonts.mdi}
-                        fontSize={(item.iconFontSize || iconFontSize) * $fontScale}
+                        fontSize={(item.iconFontSize || iconFontSize) * $fontScaleMaxed}
                         paddingLeft="8"
                         text={item.icon}
                         verticalAlignment="center"
