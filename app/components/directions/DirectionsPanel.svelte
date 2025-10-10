@@ -31,7 +31,7 @@
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '@shared/utils/showError';
     import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fontScale, fontScaleMaxed, fonts, windowInset } from '~/variables';
     import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
@@ -1090,12 +1090,16 @@
                     }
                 }));
             }
+            DEV_LOG && console.log('showProfileSettings', event.object);
             const SliderPopover = (await import('~/components/directions/DirectionsSettingsPopover.svelte')).default;
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
                 vertPos: VerticalPosition.ALIGN_TOP,
                 props: {
+                    borderRadius: 10,
+                    elevation: __ANDROID__ ? 3 : 0,
+                    margin: 4,
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
                     onCheckBox: (item, value) => {
                         item.onChange(value);
@@ -1293,7 +1297,7 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" class="directionsPanel" translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} columns="*,40" rows="50,auto,auto" on:tap={() => {}}>
+        <gridlayout bind:this={gridLayout} columns={`*,${40 * $fontScaleMaxed}`} rows={`${50 * $fontScaleMaxed},auto,auto`} on:tap={() => {}}>
             <IconButton color={buttonsColor} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
                 <IconButton color={profileColor(profile, 'auto')} text="mdi-car" on:tap={() => setProfile('auto')} />
@@ -1328,27 +1332,36 @@
             <collectionview
                 bind:this={collectionView}
                 animateItemUpdate={true}
-                height={COLLECTIONVIEW_HEIGHT}
+                colSpan={2}
+                height={COLLECTIONVIEW_HEIGHT * $fontScaleMaxed}
                 itemIdGenerator={(item, i) => item.properties.id}
                 items={waypoints}
+                paddingRight={40}
                 reorderEnabled={true}
                 reorderLongPressEnabled={true}
                 row={1}
-                rowHeight={36}
+                rowHeight={36 * $fontScaleMaxed}
                 on:itemReorderStarting={onItemReorderStarting}
                 on:itemReordered={onItemReordered}>
                 <Template let:item>
-                    <canvaslabel color={buttonsColor} fontSize={15} paddingLeft={10}>
-                        <cspan fontFamily={$fonts.mdi} fontSize={14} paddingTop={-2} text="mdi-dots-vertical" verticalAlignment="top" visibility={item.properties.isStart ? 'hidden' : 'visible'} />
+                    <canvaslabel color={buttonsColor} paddingLeft={10}>
                         <cspan
                             fontFamily={$fonts.mdi}
-                            fontSize={14}
+                            fontSize={14 * $fontScaleMaxed}
+                            paddingTop={-2}
+                            text="mdi-dots-vertical"
+                            verticalAlignment="top"
+                            visibility={item.properties.isStart ? 'hidden' : 'visible'} />
+                        <cspan
+                            fontFamily={$fonts.mdi}
+                            fontSize={14 * $fontScaleMaxed}
                             paddingBottom={-2}
                             text="mdi-dots-vertical"
                             verticalAlignment="bottom"
                             visibility={item.properties.isStop ? 'hidden' : 'visible'} />
                         <cspan
                             fontFamily={$fonts.mdi}
+                            fontSize={15 * $fontScaleMaxed}
                             text={item.properties.isStop ? 'mdi-flag-checkered' : item.properties.isStart ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'}
                             verticalAlignment="middle" />
 
@@ -1358,17 +1371,34 @@
                             borderRadius={8}
                             borderWidth={isEInk ? 1 : 0}
                             columns=" *,auto,auto"
-                            height={30}
+                            height={30 * $fontScaleMaxed}
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
-                            <label color={buttonsColor} fontSize={15} lineBreak="end" marginLeft={15} maxLines={1} text={formatter.getItemTitle(item)} verticalTextAlignment="center" />
+                            <label
+                                ios:class="ignoreA11yFontScale"
+                                color={buttonsColor}
+                                fontSize={15 * $fontScaleMaxed}
+                                lineBreak="end"
+                                marginLeft={15}
+                                maxLines={1}
+                                text={formatter.getItemTitle(item)}
+                                verticalTextAlignment="center" />
                             <IconButton col={1} color={buttonsColor} isSelected={item.properties.showOnMap} small={true} text="mdi-map" on:tap={() => toggleWayPointShowOnMap(item)} />
                             <IconButton col={2} color={buttonsColor} small={true} text="mdi-delete" on:tap={() => clearWayPoint(item)} />
                         </gridlayout>
                     </canvaslabel>
                 </Template>
             </collectionview>
-            <IconButton col={1} color={buttonsColor} height={40} isEnabled={nbWayPoints > 1} row={1} text="mdi-swap-vertical" on:tap={() => reversePoints()} />
+            <IconButton
+                col={1}
+                color={buttonsColor}
+                height={40}
+                horizontalAlignment="right"
+                isEnabled={nbWayPoints > 1}
+                maxFontScale={1}
+                row={1}
+                text="mdi-swap-vertical"
+                on:tap={() => reversePoints()} />
             <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 {#if profile === 'auto' || profile === 'motorcycle'}
                     <IconButton

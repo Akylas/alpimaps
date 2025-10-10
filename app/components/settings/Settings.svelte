@@ -1247,14 +1247,14 @@
                         {/if}
                     </gridlayout>
 
-                    <gridlayout columns="*,auto,*" marginTop={20} paddingLeft={16} paddingRight={16} row={1} verticalAlignment="center">
-                        <image borderRadius={25} col={1} height={50} horizontalAlignment="center" marginBottom={20} src="res://icon" width={50} />
+                    <gridlayout marginTop={20} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center">
+                        <image borderRadius={25} col={1} height={50} horizontalAlignment="center" src="res://icon" width={50} />
                         <label
-                            col={1}
                             fontSize={13}
+                            horizontalAlignment="center"
                             marginTop={4}
+                            row={1}
                             text={version}
-                            verticalAlignment="bottom"
                             on:longPress={(event) => onLongPress({ id: 'version' }, event)}
                             on:touch={(e) => onTouch(item, e)} />
                     </gridlayout>
