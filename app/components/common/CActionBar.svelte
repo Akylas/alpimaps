@@ -2,7 +2,7 @@
     import { CoreTypes, Frame } from '@nativescript/core';
     import { onMount } from 'svelte';
     import { closeModal, goBack } from '@shared/utils/svelte/ui';
-    import { actionBarHeight, colors, windowInset } from '~/variables';
+    import { actionBarHeight, colors, fontScale, windowInset } from '~/variables';
     import { showError } from '@shared/utils/showError';
     $: ({ colorOnSurface } = $colors);
     $: ({ top: windowInsetTop } = $windowInset);
@@ -67,8 +67,12 @@
     <label
         id="actionBarTitle"
         class="actionBarTitle"
+        autoFontSize={true}
         col={1}
         colSpan={3}
+        maxFontSize={20 * $fontScale}
+        maxLines={2}
+        minFontSize={12 * $fontScale}
         text={title || ''}
         textAlignment="left"
         verticalTextAlignment="center"

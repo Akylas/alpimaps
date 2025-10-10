@@ -2,7 +2,7 @@
     import { Canvas, CanvasView } from '@nativescript-community/ui-canvas';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { conditionalEvent } from '@shared/utils/svelte/ui';
-    import { colors, fontScale, fonts } from '~/variables';
+    import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
     import { ListItem } from './ListItem';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
     const dispatch = createEventDispatcher();
@@ -32,13 +32,13 @@
     {...$$restProps}>
     <canvaslabel col={mainCol} color={item.color || color || colorOnSurface} on:draw={onDraw}>
         <cgroup paddingBottom={item.subtitle ? 10 : 0} verticalAlignment="middle">
-            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScale} paddingLeft="8" text={item.icon} visibility={item.icon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
+            <cspan fontFamily={leftIconFonFamily} fontSize={iconFontSize * $fontScaleMaxed} paddingLeft="8" text={item.icon} visibility={item.icon ? 'visible' : 'hidden'} width={iconFontSize * 2} />
         </cgroup>
-        <cgroup paddingLeft={(item.icon ? 38 : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
-            <cspan fontSize={(item.fontSize || fontSize) * $fontScale} {fontWeight} text={item.title || item.name} />
+        <cgroup paddingLeft={(item.icon ? 38 * $fontScaleMaxed : 0) + extraPaddingLeft} textAlignment="left" verticalAlignment="middle">
+            <cspan fontSize={(item.fontSize || fontSize) * $fontScaleMaxed} {fontWeight} text={item.title || item.name} />
             <cspan
                 color={item.subtitleColor || subtitleColor || colorOnSurfaceVariant}
-                fontSize={(item.subtitleFontSize || subtitleFontSize) * $fontScale}
+                fontSize={(item.subtitleFontSize || subtitleFontSize) * $fontScaleMaxed}
                 text={item.subtitle ? '\n' + item.subtitle : ''}
                 visibility={item.subtitle ? 'visible' : 'hidden'} />
         </cgroup>

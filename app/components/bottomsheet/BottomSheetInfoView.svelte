@@ -8,7 +8,7 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fontScale, fonts, onFontScaleChanged } from '~/variables';
+    import { colors, fontScaleMaxed, fonts, onFontScaleChanged } from '~/variables';
     import SymbolShape from '../common/SymbolShape';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onThemeChanged } from '~/helpers/theme';
@@ -316,7 +316,7 @@
                 onDraw({ canvas, object });
             }
             if (showIcon && itemIcon && !actualShowSymbol) {
-                const fontSize = iconSize * $fontScale;
+                const fontSize = iconSize * $fontScaleMaxed;
                 iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || colorOnSurface;
@@ -326,24 +326,24 @@
             propsPaint.setTextAlign(Align.LEFT);
             propsPaint.color = colorOnSurface;
             if (nString) {
-                propsPaint.textSize = 13 * $fontScale;
+                propsPaint.textSize = 13 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom * Math.sqrt($fontScale));
+                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
             if (nString2) {
-                propsPaint.textSize = 14 * $fontScale;
+                propsPaint.textSize = 14 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft, paddingTop + h - props2Bottom * Math.sqrt($fontScale));
+                canvas.translate(paddingLeft, paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
 
             if (nString3) {
-                propsPaint.textSize = 11 * $fontScale;
+                propsPaint.textSize = 11 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
                 canvas.translate(paddingLeft, paddingTop);
@@ -351,7 +351,7 @@
                 canvas.restore();
             }
             if (item.properties?.['opening_hours']) {
-                propsPaint.textSize = 13 * $fontScale;
+                propsPaint.textSize = 13 * $fontScaleMaxed;
                 const data = openingHoursText(item);
                 propsPaint.color = data.color;
                 propsPaint.setTextAlign(Align.RIGHT);
@@ -365,7 +365,7 @@
                     top: paddingTop + symbolTop,
                     color: itemProps?.color || colorOnSurface,
                     symbol: formatter.getSymbol(itemProps),
-                    scale: $fontScale,
+                    scale: $fontScaleMaxed,
                     maxFontSize: 18
                 });
             }
@@ -383,7 +383,7 @@
             color={colorOnSurface}
             disableCss={true}
             flexGrow={1}
-            fontSize={18 * $fontScale}
+            fontSize={18 * $fontScaleMaxed}
             fontWeight="bold"
             maxFontSize={16}
             {selectable}
@@ -396,7 +396,7 @@
                 disableCss={true}
                 flexGrow={1}
                 flexShrink={0}
-                fontSize={13 * $fontScale}
+                fontSize={13 * $fontScaleMaxed}
                 maxLines={2}
                 {selectable}
                 text={itemSubtitle}
