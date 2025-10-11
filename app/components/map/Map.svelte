@@ -2047,7 +2047,7 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs - 300
+                    maxHeight: Screen.mainScreen.heightDIPs - 100
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
@@ -2342,7 +2342,7 @@
     screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
-    android:statusBarColor={directionsPanelVisible ? colorPrimary : 'transparent'}
+    android:statusBarColor={directionsPanelVisible ? (isEInk ? 'white' : colorPrimary) : 'transparent'}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
