@@ -153,7 +153,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
-                <!-- <swipemenu
+                <swipemenu
                     id={item.name}
                     closeAnimationDuration={100}
                     gestureHandlerOptions={{
@@ -164,7 +164,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                     leftSwipeDistance={item.local ? 0.0001 : 130}
                     openAnimationDuration={100}
                     startingSide={item.startingSide}
-                    translationFunction={drawerTranslationFunction}> -->
+                    translationFunction={drawerTranslationFunction}>
                     <gridlayout
                         prop:mainContent
                         backgroundColor={colorBackground}
@@ -211,7 +211,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                             on:loaded={onReorderButtonLoaded} />
                         <progress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
-                    <!-- <mdbutton
+                    <mdbutton
                         prop:leftDrawer
                         id="deleteBtn"
                         class="icon-btn"
@@ -224,8 +224,8 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                         variant="text"
                         verticalTextAlignment="middle"
                         width={60}
-                        on:tap={() => deleteSource(item)} /> -->
-                <!-- </swipemenu> -->
+                        on:tap={() => deleteSource(item)} />
+                </swipemenu>
             </Template>
         </collectionview>
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
