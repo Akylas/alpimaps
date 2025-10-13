@@ -26,7 +26,7 @@
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
-    import { debounce } from '@nativescript/core/utils';
+    import { SDK_VERSION, debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
@@ -2047,7 +2047,7 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs - 300
+                    maxHeight: Screen.mainScreen.heightDIPs - 100
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
@@ -2342,7 +2342,7 @@
     screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
     statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
-    android:statusBarColor={directionsPanelVisible ? colorPrimary : 'transparent'}
+    android:statusBarColor={directionsPanelVisible ? (isEInk ? 'white' : colorPrimary) : 'transparent'}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
@@ -2453,8 +2453,8 @@
                 bind:steps />
         </bottomsheet>
 
-        {#if __IOS__}
-            <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={1} verticalAlignment="bottom" />
+        {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
+            <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={__IOS__ ? 1 : windowInsetBottom} verticalAlignment="bottom" />
         {/if}
     </gridlayout>
 </page>

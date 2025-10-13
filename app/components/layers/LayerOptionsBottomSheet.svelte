@@ -18,13 +18,14 @@
     import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
     import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
+    import { GestureRootView } from '@nativescript-community/gesturehandler';
 
     const mapContext = getMapContext();
     let scrollView;
     const devMode = mapContext.mapModule('customLayers').devMode;
     export let item: SourceItem;
 
-    $: downloadable = item.provider.downloadable || !PRODUCTION || this.devMode;
+    $: downloadable = item.provider.downloadable || devMode;
     $: cacheable = item.provider.cacheable || !PRODUCTION;
     $: persistent = item.layer.dataSource instanceof PersistentCacheTileDataSource;
     $: cacheOnlyMode = persistent && (item.layer.dataSource as PersistentCacheTileDataSource).cacheOnlyMode;
@@ -109,8 +110,9 @@
                     const view = createView(ScrollView, {
                         height: ALERT_OPTION_MAX_HEIGHT - 80
                     });
-                    const stackLayout = createView(StackLayout, {
-                        padding: 10
+                    const stackLayout = createView(GestureRootView, {
+                        padding: 10,
+                        rows: 'auto,auto'
                     });
                     const SettingsSlider = (await import('~/components/settings/SettingsSlider.svelte')).default;
                     const cartoMap = mapContext.getMap();
@@ -125,6 +127,7 @@
                         value: Math.round(cartoMap.getZoom())
                     });
                     const maxSliderInstance = resolveComponentElement(SettingsSlider, {
+                        row: 1,
                         title: lc('max_zoom'),
                         subtitle: lc('dowload_area_maxzoom'),
                         icon: 'mdi-chevron-up',
