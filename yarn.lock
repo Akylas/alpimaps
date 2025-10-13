@@ -2409,10 +2409,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/text@npm:1.6.16":
-  version: 1.6.16
-  resolution: "@nativescript-community/text@npm:1.6.16"
-  checksum: 10/71a3481b5cacae14baff593613b5148860d4e795196182171c50d54a9a306de6c8a5485dae9759854e01fc7a45402b8a6081039d2d14db22b51fd2fec4c7f1ed
+"@nativescript-community/text@npm:1.6.17, @nativescript-community/text@npm:^1.6.15":
+  version: 1.6.17
+  resolution: "@nativescript-community/text@npm:1.6.17"
+  checksum: 10/f3f5ecbf756ec9af04be996ab4423a5ebe781f1b069b924083784add2903c0366d8403c46153b1663fa01bbf4bf2828e0c293cbc4dfe6bc5d7c319ad11d439d4
   languageName: node
   linkType: hard
 
@@ -2420,13 +2420,6 @@ __metadata:
   version: 1.6.6
   resolution: "@nativescript-community/text@npm:1.6.6"
   checksum: 10/75504a5491cf111e6d3b6fb26c6d05f7e4a00b2513e8e67b4ff68adb2ace7b1fa436556ae77cb8dec8ebe852823ffc0c546ca5e469c40508babad31db5303018
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/text@npm:^1.6.15":
-  version: 1.6.15
-  resolution: "@nativescript-community/text@npm:1.6.15"
-  checksum: 10/57de7a9cf0fef01eeab18981b3467af7ee01b96ad64066a895b1b49ae802056ba4883c93f9371a3a89ebc25e0b92fa14ab432459a4c370738fc55de8d399ad9d
   languageName: node
   linkType: hard
 
@@ -2485,23 +2478,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.12":
-  version: 6.0.12
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.12"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.13":
+  version: 6.0.13
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.13"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.12"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.13"
     "@nativescript-community/ui-drawer": "npm:^0.1.31"
-  checksum: 10/fec796acc8cbc79b0be0963082746992fb02ebe890ce3b2637897ba1d4649978769d531fca57bd2b2adcde1bb2fc0d42124b2c07301b9b3821e0d850c1d4a89f
+  checksum: 10/20945ed1ed021c71a4c48d32bb6a6363a1d58bf28d11bfca0d5cf19032e3122be1d6758490e31c0c1e8547e5ec7589dbc1a5092e51e39b2c4826ade0c6052d26
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.12, @nativescript-community/ui-collectionview@npm:^6.0.12":
-  version: 6.0.12
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.12"
+"@nativescript-community/ui-collectionview@npm:6.0.13, @nativescript-community/ui-collectionview@npm:^6.0.13":
+  version: 6.0.13
+  resolution: "@nativescript-community/ui-collectionview@npm:6.0.13"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/7cf832868579c6ab42b2d02a32a600262749fdae08c9b91c3ea73a4fb75107cfdef4e4771a985d5149b6e19af4d99e11e94f0351c945b23eb53fcc3debc839f8
+  checksum: 10/022a84b7e0571fc4aa6a83f341815ddba900d4c38a9f4c2b18a6be434dd5747dcea404c90e3eb6152c2214d8cec567cdd634a442a90439ccec5a81039bda62f2
   languageName: node
   linkType: hard
 
@@ -2530,12 +2523,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-label@npm:1.3.40":
-  version: 1.3.40
-  resolution: "@nativescript-community/ui-label@npm:1.3.40"
+"@nativescript-community/ui-label@npm:1.3.41":
+  version: 1.3.41
+  resolution: "@nativescript-community/ui-label@npm:1.3.41"
   dependencies:
     "@nativescript-community/text": "npm:^1.6.15"
-  checksum: 10/88c0a8777cda024b44ebdf160d128101e326add9baff59dfccc07b88a1d9abf8f138aa3d296a24f3de273397edc99f726684c87698226d8286b5aeb8195f4293
+  checksum: 10/d536fa107fda253ee450a1c9fc22ab11965f62bbaab8c9ec39d7c7e954d3270fe2053742f5e0f2414c830aac662ee292a26fa5592305dc31da7e8dcefb49f372
   languageName: node
   linkType: hard
 
@@ -3205,9 +3198,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-darwin@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-darwin@npm:2.56.0"
+"@sentry/cli-darwin@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-darwin@npm:2.56.1"
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -3219,9 +3212,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-linux-arm64@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-linux-arm64@npm:2.56.0"
+"@sentry/cli-linux-arm64@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-linux-arm64@npm:2.56.1"
   conditions: (os=linux | os=freebsd | os=android) & cpu=arm64
   languageName: node
   linkType: hard
@@ -3233,9 +3226,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-linux-arm@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-linux-arm@npm:2.56.0"
+"@sentry/cli-linux-arm@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-linux-arm@npm:2.56.1"
   conditions: (os=linux | os=freebsd | os=android) & cpu=arm
   languageName: node
   linkType: hard
@@ -3247,9 +3240,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-linux-i686@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-linux-i686@npm:2.56.0"
+"@sentry/cli-linux-i686@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-linux-i686@npm:2.56.1"
   conditions: (os=linux | os=freebsd | os=android) & (cpu=x86 | cpu=ia32)
   languageName: node
   linkType: hard
@@ -3261,9 +3254,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-linux-x64@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-linux-x64@npm:2.56.0"
+"@sentry/cli-linux-x64@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-linux-x64@npm:2.56.1"
   conditions: (os=linux | os=freebsd | os=android) & cpu=x64
   languageName: node
   linkType: hard
@@ -3275,9 +3268,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-win32-arm64@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-win32-arm64@npm:2.56.0"
+"@sentry/cli-win32-arm64@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-win32-arm64@npm:2.56.1"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
@@ -3289,9 +3282,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-win32-i686@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-win32-i686@npm:2.56.0"
+"@sentry/cli-win32-i686@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-win32-i686@npm:2.56.1"
   conditions: os=win32 & (cpu=x86 | cpu=ia32)
   languageName: node
   linkType: hard
@@ -3303,9 +3296,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli-win32-x64@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli-win32-x64@npm:2.56.0"
+"@sentry/cli-win32-x64@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli-win32-x64@npm:2.56.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -3350,18 +3343,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/cli@npm:2.56.0":
-  version: 2.56.0
-  resolution: "@sentry/cli@npm:2.56.0"
+"@sentry/cli@npm:2.56.1":
+  version: 2.56.1
+  resolution: "@sentry/cli@npm:2.56.1"
   dependencies:
-    "@sentry/cli-darwin": "npm:2.56.0"
-    "@sentry/cli-linux-arm": "npm:2.56.0"
-    "@sentry/cli-linux-arm64": "npm:2.56.0"
-    "@sentry/cli-linux-i686": "npm:2.56.0"
-    "@sentry/cli-linux-x64": "npm:2.56.0"
-    "@sentry/cli-win32-arm64": "npm:2.56.0"
-    "@sentry/cli-win32-i686": "npm:2.56.0"
-    "@sentry/cli-win32-x64": "npm:2.56.0"
+    "@sentry/cli-darwin": "npm:2.56.1"
+    "@sentry/cli-linux-arm": "npm:2.56.1"
+    "@sentry/cli-linux-arm64": "npm:2.56.1"
+    "@sentry/cli-linux-i686": "npm:2.56.1"
+    "@sentry/cli-linux-x64": "npm:2.56.1"
+    "@sentry/cli-win32-arm64": "npm:2.56.1"
+    "@sentry/cli-win32-i686": "npm:2.56.1"
+    "@sentry/cli-win32-x64": "npm:2.56.1"
     https-proxy-agent: "npm:^5.0.0"
     node-fetch: "npm:^2.6.7"
     progress: "npm:^2.0.3"
@@ -3386,7 +3379,7 @@ __metadata:
       optional: true
   bin:
     sentry-cli: bin/sentry-cli
-  checksum: 10/6ed494c6c21c7da53c71ae9ca6b26d49efa29b12707019b6460653cc9e0087412df57e49f2a3d56fbef5d8d0bb64fa23b066d1d7307af7f1093d8804137875cb
+  checksum: 10/d2729286d2904de0448bfc72e003bd9b76af6b7fe502bc53344048b95dfece75565a15fa74dcb0e9fa71c39a5786e361f083d7be6bf17bab8a14d137394e5c54
   languageName: node
   linkType: hard
 
@@ -14375,18 +14368,18 @@ __metadata:
     "@nativescript-community/sentry": "npm:4.6.44"
     "@nativescript-community/sqlite": "npm:3.5.1"
     "@nativescript-community/systemui": "npm:1.1.24"
-    "@nativescript-community/text": "npm:1.6.16"
+    "@nativescript-community/text": "npm:1.6.17"
     "@nativescript-community/ui-canvas": "npm:4.6.43"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
     "@nativescript-community/ui-carto": "npm:1.8.21"
     "@nativescript-community/ui-chart": "npm:2.0.26"
     "@nativescript-community/ui-checkbox": "npm:2.0.16"
-    "@nativescript-community/ui-collectionview": "npm:6.0.12"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.12"
+    "@nativescript-community/ui-collectionview": "npm:6.0.13"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.13"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
     "@nativescript-community/ui-drawer": "npm:0.1.31"
     "@nativescript-community/ui-image": "npm:4.6.2"
-    "@nativescript-community/ui-label": "npm:1.3.40"
+    "@nativescript-community/ui-label": "npm:1.3.41"
     "@nativescript-community/ui-lottie": "npm:5.0.11"
     "@nativescript-community/ui-material-activityindicator": "npm:7.2.78"
     "@nativescript-community/ui-material-bottomsheet": "npm:7.2.78"
@@ -14412,7 +14405,7 @@ __metadata:
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:8.9.9"
     "@nativescript/email": "npm:^2.1.0"
-    "@sentry/cli": "npm:2.56.0"
+    "@sentry/cli": "npm:2.56.1"
     "@swc/core": "npm:1.6.13"
     "@tmcw/togeojson": "npm:7.1.2"
     "@types/geojson": "npm:^7946.0.14"
