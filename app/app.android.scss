@@ -9,3 +9,7 @@ page {
         navigation-bar-style: dark;
     }
 }
+
+.ignoreA11yFontScale {
+    android-a11y-adjusts-font-size: false;
+}
