@@ -385,7 +385,7 @@
             flexGrow={1}
             fontSize={18 * $fontScaleMaxed}
             fontWeight="bold"
-            maxFontSize={16}
+            maxFontSize={18 * $fontScaleMaxed}
             {selectable}
             text={itemTitle}
             textWrap={true}
