@@ -292,3 +292,10 @@ export function setCustomCssRootClass(className, oldClassName?) {
         removeCssClass(rootView, oldClassName);
     }
 }
+
+export function ellipsiseString(str: string, length: number, ellipsiseString = '...') {
+    if (str.length > length) {
+        return str.substring(0, length - ellipsiseString.length) + ellipsiseString;
+    }
+    return str;
+}
