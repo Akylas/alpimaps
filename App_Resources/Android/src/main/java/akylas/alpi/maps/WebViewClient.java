@@ -107,7 +107,7 @@ public class WebViewClient extends android.webkit.WebViewClient {
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-        Log.d("JS", "WebViewClient shouldInterceptRequest " + request.getUrl() + " " + request.getMethod());
+        // Log.d("JS", "WebViewClient shouldInterceptRequest " + request.getUrl() + " " + request.getMethod());
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return new WebResourceResponse("text/plain", "utf-8", 204, "No Content", headers, null);
         }
@@ -271,7 +271,7 @@ public class WebViewClient extends android.webkit.WebViewClient {
                 return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
             }
         }
-        Log.d("JS", "WebViewClient raster " + imageFormat + " " +headers);
+        // Log.d("JS", "WebViewClient raster " + imageFormat + " " +headers);
         return new WebResourceResponse(imageFormat(imageFormat), "utf-8", 200, "OK", headers, targetStream);
     }
 
