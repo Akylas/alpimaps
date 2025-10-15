@@ -494,10 +494,10 @@ export default class ItemsModule extends MapModule {
                     });
                 });
             }
-            DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
+            // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setLayerGeoJSONString(2, data);
-            DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
+            // DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
             this.getLocalVectorDataSource().setLayerGeoJSONString(2, { type: 'FeatureCollection', features: [] });
         }
