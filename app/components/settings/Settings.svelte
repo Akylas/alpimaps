@@ -1170,9 +1170,6 @@
     }
 
     function onCheckBox(item, value, event) {
-        if (item.value === value) {
-            return;
-        }
         item.value = value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
@@ -1282,7 +1279,7 @@
                     mainCol={1}
                     showBottomLine={false}
                     on:tap={(event) => onTap(item, event)}>
-                    <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+                    <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
                 </ListItemAutoSize>
             </Template>
             <Template let:item>
