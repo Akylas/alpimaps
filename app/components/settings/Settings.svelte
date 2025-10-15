@@ -59,6 +59,9 @@
 </script>
 
 <script lang="ts">
+    import SettingsCheckbox from './SettingsCheckbox.svelte';
+    import SettingsSwitch from './SettingsSwitch.svelte';
+
     let { colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
@@ -1072,20 +1075,26 @@
                             value: (item.currentValue || item.rightValue)?.(),
                             ...item,
                             onChange(value) {
-                                if (item.transformValue) {
-                                    value = item.transformValue(value, item);
-                                } else {
-                                    value = Math.round(value / item.step) * item.step;
+                                if (value !== null) {
+                                    if (item.transformValue) {
+                                        value = item.transformValue(value, item);
+                                    } else {
+                                        value = Math.round(value / item.step) * item.step;
+                                    }
                                 }
                                 if (item.store) {
                                     item.store.set(value);
                                 } else if (item.mapStore) {
                                     (item.mapStore as Writable<any>).set(value);
                                 } else {
-                                    if (item.valueType === 'string') {
-                                        ApplicationSettings.setString(item.key, value + '');
+                                    if (value === null) {
+                                        ApplicationSettings.remove(item.key);
                                     } else {
-                                        ApplicationSettings.setNumber(item.key, value);
+                                        if (item.valueType === 'string') {
+                                            ApplicationSettings.setString(item.key, value + '');
+                                        } else {
+                                            ApplicationSettings.setNumber(item.key, value);
+                                        }
                                     }
                                 }
                                 updateItem(item);
@@ -1261,14 +1270,10 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
-                </ListItemAutoSize>
+                <SettingsSwitch fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} on:tap={(event) => onTap(item, event)} {onCheckBox}/>
             </Template>
             <Template key="checkbox" let:item>
-                <ListItemAutoSize fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                    <checkbox id="checkbox" checked={item.value} col={1} on:checkedChange={(e) => onCheckBox(item, e)} />
-                </ListItemAutoSize>
+                <SettingsCheckbox fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} on:tap={(event) => onTap(item, event)} {onCheckBox}/>
             </Template>
             <Template key="leftIcon" let:item>
                 <ListItemAutoSize
