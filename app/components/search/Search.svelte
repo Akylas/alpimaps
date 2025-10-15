@@ -286,7 +286,7 @@
             clearTimeout(searchAsTypeTimer);
             searchAsTypeTimer = null;
         }
-        console.log('unfocus', animating);
+        // console.log('unfocus', animating);
         if (!animating) {
             textField.nativeView.clearFocus();
         }
