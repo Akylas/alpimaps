@@ -288,7 +288,8 @@
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
-            if (routeItem?.route) {
+            // ignore routes from osm
+            if (routeItem?.route && !routeItem?.route.osmid) {
                 const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
                 // const props = routeItem.properties;
                 const route = routeItem.route;
