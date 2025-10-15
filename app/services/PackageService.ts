@@ -838,7 +838,7 @@ class PackageService extends Observable {
 
     getRouteItemPoses(item: Item) {
         const geometry = this.getRouteItemGeometry(item) as any as LineGeometry<LatLonKeys>;
-        return geometry.getPoses();
+        return geometry?.getPoses();
     }
     getItemCenter(item: Item) {
         if (!!item?.route) {
