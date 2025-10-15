@@ -14,9 +14,9 @@
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showPopoverMenu } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
-    import SearchCollectionView from './SearchCollectionView.svelte';
+    import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips } from '~/variables';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
 
     let { colorOnSurface, colorWidgetBackground } = $colors;
     $: ({ colorOnSurface, colorWidgetBackground } = $colors);
@@ -436,7 +436,10 @@
                 horizPos: HorizontalPosition.ALIGN_LEFT,
                 anchor: event.object,
                 props: {
-                    // autoSizeListItem: true,
+                    autoSizeListItem: true,
+                    fontWeight: 'normal',
+                    maxHeight: screenHeightDips - 200,
+                    rowHeight: 84 * Math.sqrt($fontScaleMaxed), // just for measure
                     onCheckBox(item, value) {
                         ApplicationSettings.setBoolean(item.id, value);
                     }
