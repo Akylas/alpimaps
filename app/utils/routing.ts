@@ -1,3 +1,4 @@
+import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { ApplicationSettings, Color } from '@nativescript/core';
 
 export const valhallaSettingIcon = {
@@ -11,7 +12,31 @@ export const valhallaSettingIcon = {
     avoid_bad_surfaces: 'mdi-texture-box',
     step_penalty: 'mdi-stairs',
     use_tracks: 'mdi-shoe-print',
-    'use_ferry': 'mdi-ferry'
+    use_ferry: 'mdi-ferry'
+};
+
+export const Profiles: {[key in 'auto' | 'bicycle' | 'pedestrian' | 'motorcycle'] : {icon:string, fontFamily?:string}} = {auto:{
+        icon:'mdi-car',
+    }, 
+    // car:{
+    //     icon:'mdi-car',
+    // },
+    motorcycle:{
+        icon:'mdi-motorbike',
+    },
+    pedestrian:{
+        icon:'alpimaps-directions_walk',
+        fontFamily:'app',
+    },bicycle: {
+        icon:'alpimaps-touring',
+        fontFamily:'app',
+    }
+    // ,bus: {
+    //     icon:'mdi-bus',
+    //     fontFamily:'app',
+    // },truck: {
+    //     icon:'mdi-truck',
+    // }
 };
 
 export function valhallaSettingColor(key: string, profile: string, options: any, baseColor = 'white') {
@@ -25,7 +50,7 @@ export function valhallaSettingColor(key: string, profile: string, options: any,
             return new Color(baseColor).setAlpha(((index + 1) / settings.length) * 255).hex;
         } else {
             const min = Math.max(0, settings.min);
-            const max = Math.min(1, settings.max); 
+            const max = Math.min(1, settings.max);
             const value = Math.min(Math.max(options[key], 0), 1);
             let perc = ((value || min) - min) / (max - min);
             if (key.endsWith('_factor') || key.endsWith('_penalty')) {
@@ -51,6 +76,10 @@ export const valhallaSettings = {
     walking_speed: {
         min: 1,
         max: 20
+    },
+    cycling_speed: {
+        min: 1,
+        max: 100
     }
 };
 export function getValhallaSettings(key, value) {
@@ -92,11 +121,12 @@ export function removeSavedProfile(profile: string, key: string) {
     return ApplicationSettings.remove(`profile_${profile}_${key}`);
 }
 export function savedProfile(profile: string, key: string, value) {
+    // DEV_LOG && console.log('savedProfile', profile, key, value);
     return ApplicationSettings.setString(`profile_${profile}_${key}`, JSON.stringify(value));
 }
 export const defaultProfileCostingOptions = {
     pedestrian: {
-        driveway_factor: 200,
+        driveway_factor: 20,
         walkway_factor: 0.8,
         use_tracks: 1,
         sidewalk_factor: 10
