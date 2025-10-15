@@ -30,8 +30,8 @@
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '@shared/utils/showError';
-    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fontScale, fontScaleMaxed, fonts, windowInset } from '~/variables';
+    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, Profiles, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
+    import { colors, fontScale, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
@@ -193,6 +193,7 @@
 
     function resetProfileSettings(profile: ValhallaProfile) {
         profileCostingOptions[profile] = { ...defaultProfileCostingOptions[profile] };
+        DEV_LOG && console.log('resetProfileSettings', profile, JSON.stringify(profileCostingOptions[profile]));
         removeSavedProfile(profile, 'default');
     }
 
@@ -308,9 +309,6 @@
     //         console.error(key, error);
     //     }
     // }
-    function profileColor(currentP, p) {
-        return currentP === p ? buttonsColor : buttonsColorAlpha;
-    }
 
     function setProfile(p: ValhallaProfile) {
         profile = p;
@@ -1080,18 +1078,28 @@
             function generateSettings() {
                 return profile_used_settings.map((key) => ({
                     title: lc(key),
-                    defaultValue: valhallaSettingsDefaultValue(profile, key),
+                    defaultValue: defaultProfileCostingOptions[profile][key] ?? valhallaSettingsDefaultValue(profile, key),
                     value: profileCostingOptions[profile][key],
                     ...getValhallaSettings(key, profileCostingOptions[profile][key]),
                     onChange(value) {
-                        profileCostingOptions[profile][key] = value;
+                        if (value !== null) {
+                            profileCostingOptions[profile][key] = value;
+                        } else {
+                            delete profileCostingOptions[profile][key];
+                        }
                         profileCostingOptions = profileCostingOptions; // for svelte to see the update
                         saveProfileSettings(profile);
                     }
                 }));
             }
-            DEV_LOG && console.log('showProfileSettings', event.object);
             const SliderPopover = (await import('~/components/directions/DirectionsSettingsPopover.svelte')).default;
+
+            const options = (profile === 'bicycle' ? ['enduro', 'road', 'normal', 'gravel', 'mountain'] : profile === 'pedestrian' ? ['normal', 'mountainairing', 'running'] : ['normal']).map((key) => ({
+                value: key,
+                fontFamily:Profiles[profile].fontFamily ? $fonts[Profiles[profile].fontFamily]:undefined,
+                text: formatter.getRouteIcon(profile, key)
+            }));
+            const settings = generateSettings();
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -1102,6 +1110,7 @@
                     margin: 4,
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
                     onCheckBox: (item, value) => {
+                        DEV_LOG && console.log('onCheckBox', item, new Error().stack, value);
                         item.onChange(value);
                     },
                     onOptionChange: (value) => {
@@ -1124,11 +1133,8 @@
                         resetProfileSettings(profile);
                         return generateSettings();
                     },
-                    settings: generateSettings(),
-                    options: (profile === 'bicycle' ? ['enduro', 'road', 'normal', 'gravel', 'mountain'] : ['normal', 'mountainairing', 'running']).map((key) => ({
-                        value: key,
-                        text: formatter.getRouteIcon(profile, key)
-                    }))
+                    settings,
+                    options
                 }
             });
         } catch (error) {
@@ -1149,7 +1155,11 @@
                 ...settings,
                 value: options[key],
                 onChange(value) {
-                    options[key] = value;
+                    if (value !== null) {
+                        options[key] = value;
+                    } else {
+                        delete options[key];
+                    }
                     profileCostingOptions = profileCostingOptions; // for svelte to see the update
                     saveProfileSettings(profile);
                 },
@@ -1196,6 +1206,29 @@
     async function showMoreOptions(event) {
         try {
             const SliderPopover = (await import('~/components/directions/DirectionsSettingsPopover.svelte')).default;
+            const settings = [
+                {
+                    type: 'switch',
+                    id: 'auto_fetch_profile',
+                    title: lc('auto_fetch_profile'),
+                    subtitle: lc('auto_fetch_profile_desc'),
+                    value: requestProfile
+                },
+                {
+                    type: 'switch',
+                    id: 'auto_fetch_stats',
+                    title: lc('auto_fetch_stats'),
+                    subtitle: lc('auto_fetch_stats_desc'),
+                    value: requestStats
+                },
+                {
+                    type: 'switch',
+                    id: 'route_compute_steps',
+                    title: lc('route_compute_steps'),
+                    subtitle: lc('route_compute_steps_desc'),
+                    value: ApplicationSettings.getBoolean('route_compute_steps', false)
+                }
+            ];
             await showPopover({
                 view: SliderPopover,
                 anchor: event.object,
@@ -1212,29 +1245,7 @@
                                 break;
                         }
                     },
-                    settings: [
-                        {
-                            type: 'switch',
-                            id: 'auto_fetch_profile',
-                            title: lc('auto_fetch_profile'),
-                            subtitle: lc('auto_fetch_profile_desc'),
-                            value: requestProfile
-                        },
-                        {
-                            type: 'switch',
-                            id: 'auto_fetch_stats',
-                            title: lc('auto_fetch_stats'),
-                            subtitle: lc('auto_fetch_stats_desc'),
-                            value: requestStats
-                        },
-                        {
-                            type: 'switch',
-                            id: 'route_compute_steps',
-                            title: lc('route_compute_steps'),
-                            subtitle: lc('route_compute_steps_desc'),
-                            value: ApplicationSettings.getBoolean('route_compute_steps', false)
-                        }
-                    ]
+                    settings
                 }
             });
         } catch (error) {
@@ -1293,6 +1304,12 @@
         buttonsColor = isEInk ? 'black' : 'white';
         refreshCollectionView();
     });
+
+    const profiles = Object.keys(Profiles).map(k=>({
+...Profiles[k],
+fontFamily:Profiles[k].fontFamily ? $fonts[Profiles[k].fontFamily] : undefined,
+id:k
+    }))
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" class="directionsPanel" translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
@@ -1300,21 +1317,10 @@
         <gridlayout bind:this={gridLayout} columns={`*,${40 * $fontScaleMaxed}`} rows={`${50 * $fontScaleMaxed},auto,auto`} on:tap={() => {}}>
             <IconButton color={buttonsColor} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
-                <IconButton color={profileColor(profile, 'auto')} text="mdi-car" on:tap={() => setProfile('auto')} />
-                <IconButton color={profileColor(profile, 'motorcycle')} text="mdi-motorbike" on:tap={() => setProfile('motorcycle')} />
-                <IconButton
-                    color={profileColor(profile, 'pedestrian')}
-                    fontFamily={$fonts.app}
-                    onLongPress={(event) => showProfileSettings('pedestrian', event)}
-                    text={pedestrianIcon}
-                    on:tap={() => setProfile('pedestrian')} />
-                <IconButton
-                    color={profileColor(profile, 'bicycle')}
-                    fontFamily={$fonts.app}
-                    onLongPress={(event) => showProfileSettings('bicycle', event)}
-                    text={bicycleIcon}
-                    on:tap={() => setProfile('bicycle')} />
-                <!-- <IconButton white={true} text="mdi-bus" on:tap={() => setProfile('bus')} color={profileColor(profile, 'bus')} /> -->
+                {#each profiles as profileBtn}
+                <IconButton backgroundColor={(profile === profileBtn.id ? buttonsColor : (isEInk ?'white' : colorPrimary))} color={(profile === profileBtn.id ? (isEInk? 'white' : colorPrimary) : buttonsColor)} text={profileBtn.icon} on:tap={() => setProfile(profileBtn.id)} {...(profileBtn.fontFamily ? {fontFamily:profileBtn.fontFamily}:{})} 
+                    onLongPress={(event) => showProfileSettings(profileBtn.id, event)}/>
+                {/each}
             </stacklayout>
             <IconButton
                 backgroundColor={isEInk ? 'white' : undefined}
@@ -1375,7 +1381,7 @@
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
                             <label
-                                ios:class="ignoreA11yFontScale"
+                                class="ignoreA11yFontScale"
                                 color={buttonsColor}
                                 fontSize={15 * $fontScaleMaxed}
                                 lineBreak="end"

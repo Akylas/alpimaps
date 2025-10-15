@@ -1,7 +1,9 @@
+import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { formatAddress } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
+import { Profiles } from '~/utils/routing';
 const mapContext = getMapContext();
 
 export default class ItemFormatter {
@@ -112,19 +114,19 @@ export default class ItemFormatter {
         }
     }
 
-    getRouteIcon(type, subtype) {
-        if (type === 'pedestrian') {
-            switch (subtype) {
+    getRouteIcon(type: ValhallaProfile, subtype) {
+        switch (type) {
+            case 'pedestrian':
+                switch (subtype) {
                 case 'mountainairing':
                     return 'alpimaps-mountainairing';
                 case 'running':
                     return 'alpimaps-running';
                 default:
-                    return 'alpimaps-directions_walk';
+                    return Profiles[type].icon;
             }
-        }
-        if (type === 'bicycle') {
-            switch (subtype) {
+            case 'bicycle':
+                switch (subtype) {
                 case 'enduro':
                     return 'alpimaps-enduro';
                 case 'gravel':
@@ -134,8 +136,10 @@ export default class ItemFormatter {
                 case 'mountain':
                     return 'alpimaps-mountain-biking';
                 default:
-                    return 'alpimaps-touring';
+                    return Profiles[type].icon;
             }
+            default:
+                    return Profiles[type].icon;
         }
     }
 }
