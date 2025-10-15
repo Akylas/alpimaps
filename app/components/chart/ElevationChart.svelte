@@ -353,7 +353,7 @@
                 leftAxis.ensureLastLabel = true;
                 leftAxis.drawLimitLinesBehindData = false;
 
-                xAxis.position = XAxisPosition.TOP;
+                xAxis.position = XAxisPosition.BOTTOM;
                 xAxis.labelTextAlign = Align.CENTER;
                 xAxis.ensureLastLabel = true;
                 xAxis.textColor = colorOnSurface;
@@ -393,7 +393,8 @@
                 spaceMax += chartElevationMinRange - deltaA;
             }
             const labelCount = 5;
-            const interval = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / 100) * 100;
+            const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
+            const interval = Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / step) * step;
             leftAxis.forcedInterval = interval;
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
