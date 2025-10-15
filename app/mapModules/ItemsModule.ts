@@ -443,21 +443,23 @@ export default class ItemsModule extends MapModule {
         const startTime = Date.now();
         if (item?.route) {
             const features = [];
-            DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
-            item.route.waypoints.forEach((p) => {
-                if (p.properties.showOnMap) {
-                    features.push({
-                        geometry: p.geometry,
-                        type: 'Feature',
-                        properties: {
-                            ...p.properties,
-                            class: 'waypoint',
-                            icon: p.properties.style?.icon ?? osmicon(formatter.geItemIcon(p), true)
-                        }
-                    });
-                }
-            });
-            if (item.route.steps) {
+            if (item.route.waypoints?.length > 0) {
+                DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
+                item.route.waypoints.forEach((p) => {
+                    if (p.properties.showOnMap) {
+                        features.push({
+                            geometry: p.geometry,
+                            type: 'Feature',
+                            properties: {
+                                ...p.properties,
+                                class: 'waypoint',
+                                icon: p.properties.style?.icon ?? osmicon(formatter.geItemIcon(p), true)
+                            }
+                        });
+                    }
+                });
+            }
+            if (item.route.steps?.length > 0) {
                 features.push(
                     ...item.route.steps.map((p) => ({
                         geometry: p.geometry,
