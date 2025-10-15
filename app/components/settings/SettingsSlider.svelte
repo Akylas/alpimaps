@@ -3,11 +3,12 @@
 <script context="module" lang="ts">
     import { Paint } from '@nativescript-community/ui-canvas';
     import { showError } from '@shared/utils/showError';
-    import { colors, fontScale, fonts } from '~/variables';
+    import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
     import { TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { l } from '~/helpers/locale';
     import { Utils } from '@nativescript/core';
+    import IconButton from '~/components/common/IconButton.svelte';
 </script>
 
 <script lang="ts">
@@ -22,11 +23,14 @@
     export let min = 0;
     export let max = 1;
     export let step = null;
-    export let value = 0;
+    export let value;
     export let defaultValue = 0;
     export let onChange = null;
+    export let showResetButton = true;
     export let formatter = (value) => value + '';
     export let valueFormatter = (value) => value.toFixed(1);
+
+
     // let canvas: NativeViewElementNode<CanvasView>;
     let actualValue;
     $: actualValue = value ?? defaultValue;
@@ -114,16 +118,18 @@
         verticalTextAlignment="center"
         visibility={subtitle && subtitle.length > 0 ? 'visible' : 'collapse'} />
     <label col={2} color={colorOnSurface} fontSize={valueFontSize * $fontScale} text={valueFormatter(actualValue)} textAlignment="right" verticalTextAlignment="center" on:tap={promptForValue} />
-    <label col={2} color={colorOnSurface} fontSize={valueFontSize * $fontScale} row={2} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
-    <label color={colorOnSurface} fontSize={valueFontSize * $fontScale} row={2} text={formatter(min)} verticalTextAlignment="center" />
-    <slider
-        col={1}
-        color={actualValue === defaultValue ? colorSecondary : colorPrimary}
-        maxValue={max}
-        minValue={min}
-        row={2}
-        stepSize={step}
-        value={actualValue}
-        verticalAlignment="bottom"
-        on:valueChange={onValueChange} />
+    <gridLayout colSpan={3} columns="auto,*,auto,auto" row={2}>
+        <label col={2} color={colorOnSurface} fontSize={valueFontSize * $fontScale} text={formatter(max)} textAlignment="right" verticalTextAlignment="center" />
+        <label color={colorOnSurface} fontSize={valueFontSize * $fontScale} text={formatter(min)} verticalTextAlignment="center" />
+        <slider
+            col={1}
+            color={actualValue === defaultValue ? colorSecondary : colorPrimary}
+            maxValue={max}
+            minValue={min}
+            stepSize={step}
+            value={actualValue}
+            verticalAlignment="bottom"
+            on:valueChange={onValueChange} />
+        <IconButton col={3} color={colorPrimary} isVisible={showResetButton} marginLeft={10} small={true} text="mdi-restore" verticalTextAlignment="center" on:tap={(e) => (value = defaultValue)} />
+    </gridLayout>
 </gridlayout>

@@ -100,7 +100,6 @@ export async function showPopoverMenu<T = any>({
             fontWeight: 500,
             backgroundColor: colorSurfaceContainer,
             containerColumns: 'auto',
-            rowHeight: !!props?.autoSizeListItem ? null : rowHeight,
             height: Math.min(rowHeight * options.length, props?.maxHeight ?? 300),
             width: Math.min(200 * scale, screenWidthDips * 0.9),
             options,
@@ -120,7 +119,8 @@ export async function showPopoverMenu<T = any>({
                 undefined,
                 hideLoading
             ),
-            ...(props || {})
+            ...(props || {}),
+            rowHeight: !!props?.autoSizeListItem ? null : rowHeight
         },
         onDismiss: () => {
             if (__ANDROID__) {
@@ -154,6 +154,7 @@ export async function showSliderPopover({
     step = 1,
     title,
     value,
+    defaultValue,
     valueFormatter,
     vertPos = VerticalPosition.CENTER,
     width = 0.8 * screenWidthDips
@@ -171,6 +172,7 @@ export async function showSliderPopover({
     vertPos?;
     width?;
     value?;
+    defaultValue?;
     onChange?;
 }) {
     const component = (await import('~/components/common/SliderPopover.svelte')).default;
@@ -193,6 +195,7 @@ export async function showSliderPopover({
             formatter,
             valueFormatter,
             value,
+            defaultValue,
             onChange: debounceDuration ? debounce(onChange, debounceDuration) : onChange
         }
 
