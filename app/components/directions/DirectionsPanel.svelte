@@ -35,7 +35,7 @@
     import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
-    import { promiseSeq } from '~/utils/utils';
+    import { ellipsiseString, promiseSeq } from '~/utils/utils';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
@@ -829,7 +829,7 @@
                     route.profile = await packageService.getElevationProfile(null, positions);
                 }
             } catch (error) {
-                showError(error, { forcedMessage: 'error computing route: ' + error, showAsSnack: true });
+                showError(error, { forcedMessage: 'error computing route: ' + ellipsiseString(error.message, 30), showAsSnack: true });
                 console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(customOptions));
                 return;
             }
