@@ -28,6 +28,8 @@
 </script>
 
 <script lang="ts">
+    import SettingsSwitch from '../settings/SettingsSwitch.svelte';
+
     let { colorOnBackground, colorOutlineVariant } = $colors;
     $: ({ colorOnBackground, colorOutlineVariant } = $colors);
     const customLayers: CustomLayersModule = getMapContext().mapModule('customLayers');
@@ -165,13 +167,13 @@
                 ...nutiProps
                     .getKeys()
                     .map((key) => nutiProps.getSettingsOptions(key))
-                    .filter((s) => (!s.icon || typeof s.defaultValue !== 'boolean') && s.title)
+                    .filter((s) => s.showAsIcon !== true)
             );
             newItems.push(
                 ...innerNutiProps
                     .getKeys()
                     .map((key) => innerNutiProps.getSettingsOptions(key))
-                    .filter((s) => (!s.icon || typeof s.defaultValue !== 'boolean') && s.title)
+                    .filter((s) => s.showAsIcon !== true)
             );
         } catch (error) {
             showError(error);
@@ -183,11 +185,7 @@
         refresh();
     });
 
-    function onCheckBox(item, event) {
-        if (item.value === event.value) {
-            return;
-        }
-        const value = event.value;
+    function onCheckBox(item, value, event) {
         item.value = value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
@@ -211,10 +209,6 @@
         if (item.type === 'prompt') {
             return 'default';
         }
-
-        if (item.icon) {
-            return 'leftIcon';
-        }
         return item.type || 'default';
     }
 
@@ -228,9 +222,19 @@
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
+            <SettingsSwitch
+                checkboxProps={{ col: 2 }}
+                columns="auto,*,auto"
+                fontSize={20}
+                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
+                mainCol={1}
+                {onCheckBox}
+                on:tap={(event) => onTap(item, event)}>
+                <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+            </SettingsSwitch>
+            <!-- <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
                 <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
-            </ListItemAutoSize>
+            </ListItemAutoSize> -->
         </Template>
         <Template let:item>
             <ListItemAutoSize
@@ -241,7 +245,7 @@
                 rightValue={item.rightValue}
                 showBottomLine={false}
                 on:tap={(event) => onTap(item, event)}>
-                <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+                <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
             </ListItemAutoSize>
         </Template>
         <!-- <Template let:item>

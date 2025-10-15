@@ -79,6 +79,7 @@ const layersParams = {
     showSlopePercentages: {
         title: lc('show_percentage_slopes'),
         settingsOptionsType: 'boolean',
+        showAsIcon: true,
         defaultValue: true,
         icon: 'mdi-signal',
         visible: (customLayers) => !!customLayers?.hasTerrain,
@@ -130,6 +131,7 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-bullseye',
+        showAsIcon: true,
         visible: (customLayers) => !!customLayers?.hasLocalData,
         onLongPress: tryCatchFunction(async (event) => {
             await showSliderPopover({
@@ -154,6 +156,7 @@ const nutiParams = {
     buildings: {
         title: lc('buildings_3d'),
         settingsOptionsType: 'boolean',
+        showAsIcon: true,
         defaultValue: false,
         icon: 'mdi-domain',
         visible: (customLayers) => !!customLayers?.hasLocalData,
@@ -191,6 +194,7 @@ const nutiParams = {
     routes_type: {
         icon: 'mdi-routes',
         settingsOptionsType: 'number',
+        showAsIcon: true,
         defaultValue: 0,
         min: 0,
         max: 2,
