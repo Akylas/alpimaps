@@ -547,7 +547,6 @@ export default class CustomLayersModule extends MapModule {
         } else {
             const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
             const cacheable = provider.cacheable || !PRODUCTION;
-            DEV_LOG && console.log('createDataSourceAndMapLayer', cacheable, downloadable);
             layer = new RasterTileLayer({
                 dataSource:
                     cacheable !== false || downloadable
