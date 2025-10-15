@@ -322,8 +322,8 @@
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
                     <label
+                        class="ignoreA11yFontScale"
                         col={0}
-                        ios:class="ignoreA11yFontScale"
                         color={item.color || colorOnSurface}
                         fontFamily={$fonts.mdi}
                         fontSize={(item.iconFontSize || iconFontSize) * $fontScaleMaxed}
