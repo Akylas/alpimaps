@@ -2284,7 +2284,7 @@
                                     switch (result.id) {
                                         case 'transit_lines':
                                             // eslint-disable-next-line svelte/infinite-reactive-loop
-                                            showingTransitLines = !showTransitLines;
+                                            showingTransitLines = !showingTransitLines;
                                             break;
                                         case 'show_admin_regions':
                                             // eslint-disable-next-line svelte/infinite-reactive-loop
