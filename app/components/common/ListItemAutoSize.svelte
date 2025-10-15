@@ -114,7 +114,7 @@
     </label>
 
     <label
-        col={1}
+        col={mainCol + 1}
         color={item.subtitleColor}
         disableCss={true}
         fontSize={(item.rightValueFontSize || subtitleFontSize) * $fontScale}
