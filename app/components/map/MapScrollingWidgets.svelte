@@ -21,7 +21,7 @@
     import { RouteInstruction, RoutingAction } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { openLink } from '~/utils/ui';
-    import { colors, fonts } from '~/variables';
+    import { colors, fontScaleMaxed, fonts } from '~/variables';
 
     let { colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors;
     $: ({ colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurfaceContainer } = $colors);
@@ -316,9 +316,10 @@
             on:tap={startDirections} />
         <mdcardview id="location" class={`${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
-                ios:iosAccessibilityMaxFontScale={2}
+                ios:iosAccessibilityAdjustsFontSize={false}
                 class={`mdi ${locationButtonLabelClass}`}
                 color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
+                fontSize={24 * $fontScaleMaxed}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
                 verticalAlignment="middle" />
