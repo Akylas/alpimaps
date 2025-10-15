@@ -39,7 +39,7 @@
     export let width: string | number = '*';
     export let containerColumns: string = '*';
     export let autoSizeListItem: boolean = false;
-    export let fontWeight = 'bold';
+    export let fontWeight = 'normal';
     export let options: OptionType[] | ObservableArray<OptionType>;
     export let onClose = null;
     export let selectedIndex = -1;
@@ -68,7 +68,7 @@
 
     function updateFiltered(filter) {
         if (filter) {
-            filteredOptions = options.filter((d) => d.name.indexOf(filter) !== -1);
+            filteredOptions = options.filter((d) => (d.name || d.title).indexOf(filter) !== -1);
         } else {
             filteredOptions = options;
         }
@@ -234,7 +234,7 @@
                     }} />
             </gridlayout>
         {/if}
-        <collectionView
+        <collectionview
             {autoSize}
             {estimatedItemSize}
             {isScrollEnabled}
@@ -243,6 +243,7 @@
             row={2}
             {rowHeight}
             on:dataPopulated={onDataPopulated}
+            ios:autoReloadItemOnLayout={true}
             ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
@@ -349,7 +350,15 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <image borderRadius={4} marginBottom={5} marginRight={10} marginTop={5} src={item.image} />
+                    <image
+                        aspectRatio={1}
+                        borderRadius={4}
+                        headers={item.imageHeaders}
+                        marginBottom={5}
+                        marginRight={10}
+                        marginTop={5}
+                        src={item.image}
+                        visibility={item.image ? 'visible' : 'collapse'} />
                 </svelte:component>
             </Template>
             <Template key="slider" let:item>
@@ -372,6 +381,6 @@
                     on:tap={(event) => onTap(item, event)}>
                 </svelte:component>
             </Template>
-        </collectionView>
+        </collectionview>
     </gridlayout>
 </gesturerootview>

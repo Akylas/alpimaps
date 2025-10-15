@@ -13,7 +13,7 @@ export interface ProviderOptions extends DataProviderOptions {
 }
 export interface Provider {
     tokenKey?: TOKENS | TOKENS[];
-    url?: string | string[] | Function;
+    url?: string;
     type?: string;
     urlOptions?: ProviderOptions;
     name?: string;
@@ -102,7 +102,6 @@ export const data: { [k: string]: Provider } = {
         category: 'france',
         legend: 'https://data.geopf.fr/annexes/ressources/legendes/{variant}-legend.png',
         url: ' https://data.geopf.fr/wmts?LAYER={variant}&apikey={ign}&FORMAT={format}&SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&STYLE={style}&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
-        cacheable: true,
         urlOptions: {
             variant: 'GEOGRAPHICALGRIDSYSTEMS.MAPS.BDUNI.J1',
             format: 'image/jpeg',
@@ -287,11 +286,11 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 15
         }
     },
-    Lonvia: {
+    'Waymarked Trails': {
         category: 'topo',
         url: 'http://tile.waymarkedtrails.org/{variant}/{z}/{x}/{y}.png',
         isOverlay: true,
-        attribution: 'Map data: {attribution.OpenStreetMap}, <Overlay from hiking.waymarkedtrails.org, <a href="https://hiking.waymarkedtrails.org/help/acknowledgements"> Terms of Use</a> )',
+        attribution: 'Map data: {attribution.OpenStreetMap}, <Overlay from waymarkedtrails.org, <a href="https://hiking.waymarkedtrails.org/help/acknowledgements"> Terms of Use</a> )',
         sourceOptions: {
             maxZoom: 15
         },
@@ -299,17 +298,11 @@ export const data: { [k: string]: Provider } = {
             HikingRoutes: {
                 urlOptions: {
                     variant: 'hiking'
-                    //     gridSource:'https://hiking.waymarkedtrails.org/api/tiles/{z}/{x}/{y}.json',
-                    //     gridMinZoom:12,
-                    //     gridMaxZoom:12
                 }
             },
             CycleRoutes: {
                 urlOptions: {
                     variant: 'cycling'
-                    // gridSource:'https://cycling.waymarkedtrails.org/api/tiles/{z}/{x}/{y}.json',
-                    // gridMinZoom:12,
-                    // gridMaxZoom:12
                 }
             },
             hillshading: {
@@ -728,24 +721,6 @@ export const data: { [k: string]: Provider } = {
             }
         }
     },
-    // Acetate: {
-    //     url: "http://a{s}.acetate.geoiq.com/tiles/{variant}/{z}/{x}/{y}.png",
-    //     urlOptions: {
-    //         attribution: "&copy;2012 Esri & Stamen, Data from OSM and Natural Earth",
-    //         subdomains: "0123",
-    //         minZoom: 2,
-    //         maxZoom: 17,
-    //         variant: "acetate-base"
-    //     },
-    //     variants: {
-    //         terrain: "terrain",
-    //         all: "acetate-hillshading",
-    //         foreground: "acetate-fg",
-    //         roads: "acetate-roads",
-    //         labels: "acetate-labels",
-    //         hillshading: "hillshading"
-    //     }
-    // },
     FreeMapSK: {
         category: 'slovenia',
         url: 'http://{s}.freemap.sk/T/{z}/{x}/{y}.jpeg',
@@ -817,6 +792,7 @@ export const data: { [k: string]: Provider } = {
         urlOptions: {
             format: 'jpg',
             // time: '',
+            maxZoom: 8,
             variant: 'VIIRS_CityLights_2012',
             tilematrixset: 'GoogleMapsCompatible_Level'
         },
@@ -827,6 +803,7 @@ export const data: { [k: string]: Provider } = {
                     maxZoom: 7
                 },
                 urlOptions: {
+                    maxZoom: 7,
                     variant: 'MODIS_Terra_Land_Surface_Temp_Day',
                     format: 'png'
                 }
@@ -845,6 +822,7 @@ export const data: { [k: string]: Provider } = {
                     maxZoom: 6
                 },
                 urlOptions: {
+                    maxZoom: 6,
                     variant: 'MODIS_Terra_Aerosol',
                     format: 'png'
                 }
@@ -874,8 +852,11 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 16
         },
         variants: {
-            Streets: {
-                url: 'http://{s}.tile.geofabrik.de/549e80f319af070f8ea8d0f149a149c2/{z}/{x}/{y}.png'
+            English: {
+                url: 'http://{s}.tile.geofabrik.de/2b232a218fc74caab0859632066bb003/{z}/{x}/{y}.png'
+            },
+            German: {
+                url: 'http://{s}.tile.geofabrik.de/23228979966ae9040ceb0597251e12a2/{z}/{x}/{y}.png'
             },
             Topo: {
                 category: 'topo',
@@ -899,53 +880,8 @@ export const data: { [k: string]: Provider } = {
             maxZoom: 19
         }
     },
-    Alltrails: {
-        category: 'topo',
-        url: 'http://alltrails.com/tiles/alltrailsOutdoors/{z}/{x}/{y}.png',
-        attribution: '{attribution.OpenStreetMap} <a href="http://alltrails.com">Alltrails</a>',
-        sourceOptions: {
-            maxZoom: 19
-        }
-    },
-    // 'slopes > 30%': {
-    //     category: 'europe',
-    //     url: 'http://www.skitrack.fr/cgi-bin/mapserv.fcgi?map=/srv/d_vttrack/vttrack/skitrack/mapserver/WMS-{variant}.map&SERVICE=WMS&VERSION=1.1.1&LAYERS=slope&FORMAT={format}&TRANSPARENT=true&REQUEST=GetMap&STYLES=&SRS=EPSG%3A900913&BBOX={bbox}&WIDTH=512&HEIGHT=512',
-    //     isOverlay: true,
-    //     attribution: '{attribution.OpenStreetMap} <a href="http://maptoolkit.net/">Maptoolkit</a>',
-    //     layerOptions: {
-    //         zoomLevelBias: 0
-    //     },
-    //     devHidden: true,
-    //     sourceOptions: {
-    //         maxZoom: 15
-    //     },
-    //     urlOptions: {
-    //         format: 'image/png'
-    //     },
-    //     variants: {
-    //         IGN: {
-    //             urlOptions: {
-    //                 variant: 'slopeIGN75'
-    //             }
-    //         },
-    //         aster: {
-    //             urlOptions: {
-    //                 variant: 'slope-aster'
-    //             }
-    //         }
-    //     }
-    //     // },
-    //     // 'piemonte': {
-    //     //     category: 'italie',
-    //     //     url: '//www.webgis.csi.it/cataloghiradex_f/cataloghi_TMS/sfondi/sfondo_europa_piemonte/{z}/{x}/{y}.png',
-    //     //     urlOptions: {
-    //     //         attribution: 'http://www.regione.piemonte.it/sentgis/jsp/cartografia/mappa.do',
-    //     //         forceHTTP: true,
-    //     //         maxZoom: 18
-    //     //     }
-    // },
     USGS: {
-        url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}',
+        url: 'http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{z}/{y}/{x}',
         attribution:
             'USGS The National Map. The National Boundaries Dataset, National Elevation Dataset, Geographic Names Information System, National Hydrography Dataset, National Land Cover Database, National Structures Dataset, and National Transportation Dataset; U.S. Census Bureau - TIGER/Line; HERE Road Data. USGS MapServer'
     }
