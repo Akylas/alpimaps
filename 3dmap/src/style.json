@@ -21,6 +21,12 @@
             "tileSize": 256,
             "maxzoom":12
         },
+        "terrain": {
+            "type": "raster-dem",
+            "tiles": ["http://127.0.0.1:8080?source=height&x={x}&y={y}&z={z}"],
+            "tileSize": 256,
+            "maxzoom":12
+        },
         "routes": {
             "type": "vector",
             "tiles": ["http://127.0.0.1:8080?source=routes&x={x}&y={y}&z={z}"],
@@ -37,7 +43,7 @@
         "sky-horizon-blend": 1,
         "fog-ground-blend": 1
     },
-    "terrain":{"source": "hillshading", "exaggeration": 1},
+    "terrain":{"source": "terrain", "exaggeration": 1},
     "glyphs": "./fonts/{fontstack}/{range}.pbf",
     "sprite": "http://127.0.0.1/sprite",
     "layers": [
