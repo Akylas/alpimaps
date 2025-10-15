@@ -22,4 +22,5 @@
 
 <ListItemAutoSize fontSize={16} {item} leftIcon={item.icon} {...$$restProps} on:tap>
     <checkbox id="checkbox" checked={item.value} {...checkboxProps ?? {}} on:checkedChange={onCheckChanged} use:conditionalEvent={{ condition: onCheckBoxTap, event: 'tap', callback: onCheckTap }} />
+    <slot />
 </ListItemAutoSize>

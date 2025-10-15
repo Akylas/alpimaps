@@ -1112,7 +1112,6 @@
                     margin: 4,
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
                     onCheckBox: (item, value) => {
-                        DEV_LOG && console.log('onCheckBox', item, new Error().stack, value);
                         item.onChange(value);
                     },
                     onOptionChange: (value) => {
