@@ -272,7 +272,7 @@ public class WebViewClient extends android.webkit.WebViewClient {
             }
         }
         // Log.d("JS", "WebViewClient raster " + imageFormat + " " +headers);
-        return new WebResourceResponse(imageFormat(imageFormat), "utf-8", 200, "OK", headers, targetStream);
+        return new WebResourceResponse(getMimeType(imageFormat), "utf-8", 200, "OK", headers, targetStream);
     }
 
     @Override
