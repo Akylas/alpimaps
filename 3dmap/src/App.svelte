@@ -44,7 +44,7 @@
             zoom: options.zoom,
             pitch: options.pitch,
             bearing: options.bearing,
-            maxPitch: 90
+            maxPitch: 85
         });
         map.on('styledata', () => {
             const languageFieldName = `name:${options.language}`;

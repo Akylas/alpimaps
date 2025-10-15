@@ -41,11 +41,13 @@ import com.carto.core.MapBounds;
 
 public class WebViewClient extends android.webkit.WebViewClient {
     static final String AUTHORITY = "127.0.0.1:8080";
+    static final String THREED_MAP_MAPPING = "http://127.0.0.1/3dmap";
 
-    // static final Map<String, String> headers = Map.of(
-    //     "access-control-allow-origin", "*",
-    //     "content-encoding", "gzip"
-    // );
+    static final Map<String, String> headers = Map.of(
+        "Access-Control-Allow-Headers", "*",
+        "Access-Control-Allow-Origin", "*",
+        "Access-Control-Allow-Methods", "DELETE, GET, POST, PUT, OPTIONS"
+    );
     
     android.webkit.WebViewClient originalClient;
 
@@ -105,6 +107,10 @@ public class WebViewClient extends android.webkit.WebViewClient {
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+        Log.d("JS", "WebViewClient shouldInterceptRequest " + request.getUrl() + " " + request.getMethod());
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return new WebResourceResponse("text/plain", "utf-8", 204, "No Content", headers, null);
+        }
         WebResourceResponse response = shouldInterceptRequest(view, request.getUrl());
         if (response != null) {
             return response;
@@ -112,22 +118,81 @@ public class WebViewClient extends android.webkit.WebViewClient {
         return super.shouldInterceptRequest(view, request);
     }
 
-    public WebResourceResponse shouldInterceptRequest(WebView view, Uri uri) {
+    private String getMimeType(String extension) {
+        if (extension == null) return "application/octet-stream";
 
+        switch (extension) {
+            case "html":
+            case "htm":
+                return "text/html";
+            case "js":
+                return "application/javascript";
+            case "json":
+                return "application/json";
+            case "css":
+                return "text/css";
+            case "png":
+                return "image/png";
+            case "jpg":
+            case "jpeg":
+                return "image/jpeg";
+            case "pbf":
+                return "application/x-protobuf";
+            case "woff":
+                return "font/woff";
+            case "woff2":
+                return "font/woff2";
+            default:
+                return "application/octet-stream";
+        }
+    }
+    private String getMimeTypeFromPath(String path) {
+        String extension = null;
+        if (path != null) {
+            int lastDot = path.lastIndexOf('.');
+            if (lastDot != -1 && lastDot < path.length() - 1) {
+                extension = path.substring(lastDot + 1).toLowerCase();
+            }
+        }
+
+        return getMimeType(extension);
+    }
+    public WebResourceResponse shouldInterceptRequest(WebView view, Uri uri) {
         String server = uri.getAuthority();
+
+        String protocol = uri.getScheme();           // e.g., "http"
+        String host = uri.getHost();               // e.g., "127.0.0.1"
+        int port = uri.getPort();                  // e.g., 8080, -1 if default
+        String path = uri.getPath();               // e.g., "/map.html"
+
+        String baseUrl;
+        if (port == -1) {
+            baseUrl = protocol + "://" + host + path;
+        } else {
+            baseUrl = protocol + "://" + host + ":" + port + path;
+        }
+        
         if (!server.equals(AUTHORITY)) {
-            if (localResources.containsKey(uri.toString())) {
+            if (baseUrl.startsWith(THREED_MAP_MAPPING) && localResources.containsKey(THREED_MAP_MAPPING)) {
                 try {
-                    java.io.FileInputStream stream = new java.io.FileInputStream(new java.io.File(localResources.get(uri.toString())));
-                    return new WebResourceResponse("application/octet-stream", "binary", stream);
+                    java.io.FileInputStream stream = new java.io.FileInputStream(new java.io.File(baseUrl.replace(THREED_MAP_MAPPING, localResources.get(THREED_MAP_MAPPING))));
+                    String mimeType = getMimeTypeFromPath(path);
+                    return new WebResourceResponse(mimeType, mimeType.equals("application/octet-stream") ? "binary": "utf-8", 200, "OK", headers, stream);
+                } catch(Exception exception) {
+                    return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
+                }
+            } else if (localResources.containsKey(baseUrl)) {
+                try {
+                    java.io.FileInputStream stream = new java.io.FileInputStream(new java.io.File(localResources.get(baseUrl)));
+                    String mimeType = getMimeTypeFromPath(path);
+
+                    return new WebResourceResponse(mimeType, mimeType.equals("application/octet-stream") ? "binary": "utf-8", 200, "OK", headers, stream);
                 } catch(Exception exception) {
                     return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
                 }
             }
             return null;
         }
-        String path = uri.getPath();
-        String protocol = uri.getScheme();
         Set<String> args = uri.getQueryParameterNames();
         final String source = uri.getQueryParameter("source");
         final String imageFormat = args.contains("format") ? uri.getQueryParameter("format") : "png";
@@ -152,13 +217,13 @@ public class WebViewClient extends android.webkit.WebViewClient {
                 dataSource = peaksDataSource;
                 break;
         }
-        if (dataSource == null) {
-            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("source not found".getBytes(StandardCharsets.UTF_8)));
-        }
 
         int z = Integer.parseInt(uri.getQueryParameter("z"));
         int x = Integer.parseInt(uri.getQueryParameter("x"));
         int y = Integer.parseInt(uri.getQueryParameter("y"));
+        if (dataSource == null) {
+            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("source not found".getBytes(StandardCharsets.UTF_8)));
+        }
 
 
         if (source.equals("peaks")) {
@@ -182,9 +247,9 @@ public class WebViewClient extends android.webkit.WebViewClient {
                 searchRequest.setFilterExpression("layer::name='mountain_peak'");
                 VectorTileFeatureCollection result = searchService.findFeatures(searchRequest);
     
-                return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(geojsonWriter.writeFeatureCollection(result).getBytes(StandardCharsets.UTF_8)));
+                return new WebResourceResponse("text/plain", "utf-8", 200, "OK", headers, new ByteArrayInputStream(geojsonWriter.writeFeatureCollection(result).getBytes(StandardCharsets.UTF_8)));
             } catch(Exception exception) {
-                return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
+                return new WebResourceResponse("text/plain", "utf-8", 200, "OK", headers, new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
             }
             
         }
@@ -201,12 +266,13 @@ public class WebViewClient extends android.webkit.WebViewClient {
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
         if (source.equals("data") || source.equals("routes") || source.equals("contours")) {
             try {
-                return new WebResourceResponse("application/x-protobuf", "utf-8", new GZIPInputStream(targetStream));
+                return new WebResourceResponse("application/x-protobuf", "utf-8", 200, "OK", headers, new GZIPInputStream(targetStream));
             } catch(Exception exception) {
                 return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
             }
         }
-        return new WebResourceResponse("image/" + imageFormat, "utf-8", targetStream);
+        Log.d("JS", "WebViewClient raster " + imageFormat + " " +headers);
+        return new WebResourceResponse(imageFormat(imageFormat), "utf-8", 200, "OK", headers, targetStream);
     }
 
     @Override
