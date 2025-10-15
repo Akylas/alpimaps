@@ -323,7 +323,6 @@
                     on:tap={(event) => onTap(item, event)}>
                     <label
                         class="ignoreA11yFontScale"
-                        col={0}
                         color={item.color || colorOnSurface}
                         fontFamily={$fonts.mdi}
                         fontSize={(item.iconFontSize || iconFontSize) * $fontScaleMaxed}
@@ -350,7 +349,7 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <image borderRadius={4} col={0} marginBottom={5} marginRight={10} marginTop={5} src={item.image} />
+                    <image borderRadius={4} marginBottom={5} marginRight={10} marginTop={5} src={item.image} />
                 </svelte:component>
             </Template>
             <Template key="slider" let:item>
