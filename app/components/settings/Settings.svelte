@@ -647,19 +647,15 @@
                           ]
                         : ([] as any)
                 )
-                .concat(
-                    packageService.localVectorTileLayer
-                        ? [
-                              {
-                                  id: 'sub_settings',
-                                  icon: 'mdi-database',
-                                  title: lc('offline_data'),
-                                  description: lc('offline_data_settings'),
-                                  options: () => getSubSettings('offline_data')
-                              }
-                          ]
-                        : ([] as any)
-                )
+                .concat([
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-database',
+                        title: lc('offline_data'),
+                        description: lc('offline_data_settings'),
+                        options: () => getSubSettings('offline_data')
+                    }
+                ] as any[])
                 .concat([
                     {
                         id: 'sub_settings',
