@@ -47,7 +47,7 @@ export function formatSize(diskSize) {
 }
 
 export function formatDistance(meters) {
-    return formatValue(meters, UNITS.Kilometers);
+    return formatValue(meters, meters < 1000 ? UNITS.Meters:UNITS.Kilometers);
 }
 export function convertElevation(meters) {
     return formatValue(meters, UNITS.Meters);
