@@ -42,7 +42,6 @@ declare const AVWX_API_KEY: string;
 declare const TNS_ENV: string;
 declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;
-declare const TEST_LOG: boolean;
 declare const PRODUCTION: boolean;
 declare const __DISABLE_OFFLINE__: boolean;
 declare const WITH_BUS_SUPPORT: boolean;

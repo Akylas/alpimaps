@@ -196,7 +196,7 @@ export class GeoHandler extends Handler {
     }
 
     onGPSStateChange(e: GPSEvent) {
-        TEST_LOG && console.log('GPS state change', e.data);
+        DEV_LOG && console.log('GPS state change', e.data);
         const enabled = (this.gpsEnabled = e.data.enabled);
         if (!enabled) {
             this.stopSession();
@@ -343,7 +343,7 @@ export class GeoHandler extends Handler {
     }
     @bind
     onLocationError(err: Error) {
-        TEST_LOG && console.log(' location error: ', err);
+        DEV_LOG && console.log(' location error: ', err);
         this.currentWatcher && this.currentWatcher(err);
     }
     async startWatch(opts?: Partial<GeolocationOptions>) {
@@ -357,7 +357,7 @@ export class GeoHandler extends Handler {
             skipPermissionCheck: true,
             ...opts
         };
-        TEST_LOG && console.log('startWatch', JSON.stringify(options));
+        DEV_LOG && console.log('startWatch', JSON.stringify(options));
 
         if (__IOS__) {
             geolocation.iosChangeLocManager.showsBackgroundLocationIndicator = true;
@@ -442,7 +442,7 @@ export class GeoHandler extends Handler {
     }
 
     stopWatch() {
-        TEST_LOG && console.log('stopWatch', this.watchId);
+        DEV_LOG && console.log('stopWatch', this.watchId);
         if (this.watchId) {
             if (__ANDROID__) {
                 (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
