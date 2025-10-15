@@ -164,7 +164,6 @@
     });
     function onTextFieldLoaded(event: EventData) {
         setTimeout(() => {
-            DEV_LOG && console.log('onTextFieldLoaded', autofocus);
             if (autofocus) {
                 (event.object as TextField).requestFocus();
             } else {
