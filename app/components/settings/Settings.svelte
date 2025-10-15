@@ -1169,11 +1169,10 @@
         return item.type || 'default';
     }
 
-    function onCheckBox(item, event) {
-        if (item.value === event.value) {
+    function onCheckBox(item, value, event) {
+        if (item.value === value) {
             return;
         }
-        const value = event.value;
         item.value = value;
         if (checkboxTapTimer) {
             clearTimeout(checkboxTapTimer);
@@ -1270,10 +1269,10 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <SettingsSwitch fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} on:tap={(event) => onTap(item, event)} {onCheckBox}/>
+                <SettingsSwitch fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
             </Template>
             <Template key="checkbox" let:item>
-                <SettingsCheckbox fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} on:tap={(event) => onTap(item, event)} {onCheckBox}/>
+                <SettingsCheckbox fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
             </Template>
             <Template key="leftIcon" let:item>
                 <ListItemAutoSize
