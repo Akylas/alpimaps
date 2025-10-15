@@ -30,7 +30,7 @@
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
     import { showError } from '@shared/utils/showError';
-    import { defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, Profiles, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
+    import { Profiles, defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fontScale, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
     import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
@@ -1094,11 +1094,13 @@
             }
             const SliderPopover = (await import('~/components/directions/DirectionsSettingsPopover.svelte')).default;
 
-            const options = (profile === 'bicycle' ? ['enduro', 'road', 'normal', 'gravel', 'mountain'] : profile === 'pedestrian' ? ['normal', 'mountainairing', 'running'] : ['normal']).map((key) => ({
-                value: key,
-                fontFamily:Profiles[profile].fontFamily ? $fonts[Profiles[profile].fontFamily]:undefined,
-                text: formatter.getRouteIcon(profile, key)
-            }));
+            const options = (profile === 'bicycle' ? ['enduro', 'road', 'normal', 'gravel', 'mountain'] : profile === 'pedestrian' ? ['normal', 'mountainairing', 'running'] : ['normal']).map(
+                (key) => ({
+                    value: key,
+                    fontFamily: Profiles[profile].fontFamily ? $fonts[Profiles[profile].fontFamily] : undefined,
+                    text: formatter.getRouteIcon(profile, key)
+                })
+            );
             const settings = generateSettings();
             await showPopover({
                 view: SliderPopover,
@@ -1305,11 +1307,11 @@
         refreshCollectionView();
     });
 
-    const profiles = Object.keys(Profiles).map(k=>({
-...Profiles[k],
-fontFamily:Profiles[k].fontFamily ? $fonts[Profiles[k].fontFamily] : undefined,
-id:k
-    }))
+    const profiles = Object.keys(Profiles).map((k) => ({
+        ...Profiles[k],
+        fontFamily: Profiles[k].fontFamily ? $fonts[Profiles[k].fontFamily] : undefined,
+        id: k
+    }));
 </script>
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" class="directionsPanel" translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
@@ -1318,8 +1320,13 @@ id:k
             <IconButton color={buttonsColor} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
             <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
                 {#each profiles as profileBtn}
-                <IconButton backgroundColor={(profile === profileBtn.id ? buttonsColor : (isEInk ?'white' : colorPrimary))} color={(profile === profileBtn.id ? (isEInk? 'white' : colorPrimary) : buttonsColor)} text={profileBtn.icon} on:tap={() => setProfile(profileBtn.id)} {...(profileBtn.fontFamily ? {fontFamily:profileBtn.fontFamily}:{})} 
-                    onLongPress={(event) => showProfileSettings(profileBtn.id, event)}/>
+                    <IconButton
+                        backgroundColor={profile === profileBtn.id ? buttonsColor : isEInk ? 'white' : colorPrimary}
+                        color={profile === profileBtn.id ? (isEInk ? 'white' : colorPrimary) : buttonsColor}
+                        text={profileBtn.icon}
+                        on:tap={() => setProfile(profileBtn.id)}
+                        {...profileBtn.fontFamily ? { fontFamily: profileBtn.fontFamily } : {}}
+                        onLongPress={(event) => showProfileSettings(profileBtn.id, event)} />
                 {/each}
             </stacklayout>
             <IconButton
