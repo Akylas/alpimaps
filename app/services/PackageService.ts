@@ -35,10 +35,18 @@ import { Application, ApplicationSettings } from '@akylas/nativescript';
 import { get } from 'svelte/store';
 import { useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
 import {
+    DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+    DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+    DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
+    DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
     DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
     DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
     DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
     DEFAULT_VALHALLA_ONLINE_URL,
+    SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
+    SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
+    SETTINGS_ELEVATION_PROFILE_FILTER_STEP,
+    SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW,
     SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
     SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
     SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
@@ -589,10 +597,10 @@ class PackageService extends Observable {
     // }
 
     computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
-        const smoothWindow = ApplicationSettings.getNumber('elevation_profile_smooth_window', 3);
-        const filterStep = ApplicationSettings.getNumber('elevation_profile_filter_step', 10);
-        const ascentsMinGain = ApplicationSettings.getNumber('elevation_profile_ascents_min_gain', 10);
-        const ascentsDipTolerance = ApplicationSettings.getNumber('elevation_profile_ascents_dip_tolerance', 10);
+        const smoothWindow = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW);
+        const filterStep = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP);
+        const ascentsMinGain = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN, DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN);
+        const ascentsDipTolerance = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE, DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE);
         let last: { lat: number; lon: number; altitude: number; tmpElevation?: number },
             currentHeight,
             currentDistance = 0;
