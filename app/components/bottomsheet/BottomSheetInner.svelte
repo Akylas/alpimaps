@@ -258,7 +258,7 @@
                 itemIsRoute = !!item?.route;
                 itemIsEditingItem = !!item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemCanBeEdited = !!item && !!item.id && !itemIsEditingItem;
-                itemCanBeAdded = !!item && (!item.id || !!itemIsEditingItem);
+                itemCanBeAdded = !!item && ((!item.id && !item.route?.osmid) || !!itemIsEditingItem);
                 itemIsBusStop = !!item && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
