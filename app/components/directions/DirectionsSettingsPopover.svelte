@@ -5,17 +5,20 @@
     import { Template } from 'svelte-native/components';
     import { NativeViewElementNode } from 'svelte-native/dom';
     import { onThemeChanged } from '~/helpers/theme';
-    import { colors, fonts, screenHeightDips, screenWidthDips } from '~/variables';
+    import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SettingsSlider from '../settings/SettingsSlider.svelte';
     import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 </script>
 
 <script lang="ts">
+    import SettingsSwitch from '../settings/SettingsSwitch.svelte';
+
     let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorWidgetBackground } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorWidgetBackground } = $colors);
     // export let name: string = ull;
-    export let options: { text; value }[] = null;
+    export let options: { text; value; fontFamily }[] = null;
     export let settings: any[] = null;
     export let color = new Color(colorOnSurface);
     export let currentOption = null;
@@ -35,6 +38,7 @@
     function onActualReset() {
         if (onReset) {
             settings = onReset();
+            DEV_LOG && console.log('onActualReset', JSON.stringify(settings));
         }
     }
     $: color = new Color(colorOnSurface);
@@ -48,14 +52,14 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width={screenWidthDips * 0.7} {...$$restProps}>
+<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width={Math.min(screenWidthDips * 0.7 * $fontScaleMaxed, screenWidthDips * 0.9)} {...$$restProps}>
     {#if options}
         <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
             {#each options as option, index}
                 <IconButton
                     backgroundColor={currentOption === option.value ? color : 'transparent'}
                     color={currentOption === option.value ? inversedColor : color}
-                    fontFamily={$fonts.app}
+                    fontFamily={option.fontFamily ?? $fonts.mdi}
                     text={option.text}
                     on:tap={() => onActualOptionChanged(option.value)} />
             {/each}
@@ -63,38 +67,15 @@
     {/if}
     <collectionview
         bind:this={collectionView}
-        height={Math.min(screenHeightDips * 0.6, settings.length * 80)}
+        height={Math.min(80 * $fontScaleMaxed * settings.length, screenHeightDips - 200)}
         itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')}
         items={settings}
         row={1}>
         <Template let:item>
-            <SettingsSlider
-                borderBottomColor={colorOutlineVariant}
-                borderBottomWidth={1}
-                icon={item.icon}
-                max={item.max}
-                min={item.min}
-                onChange={item.onChange}
-                step={item.step}
-                title={item.title}
-                value={item.value} />
+            <SettingsSlider borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {...item} />
         </Template>
         <Template key="switch" let:item>
-            <gridlayout columns="*, auto" padding="0 10 0 10">
-                <stacklayout verticalAlignment="middle">
-                    <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={2} text={item.title} textWrap={true} verticalTextAlignment="top" />
-                    <label
-                        color={colorOnSurfaceVariant}
-                        fontSize={14}
-                        lineBreak="end"
-                        maxLines={2}
-                        text={item.subtitle}
-                        verticalTextAlignment="top"
-                        visibility={item.subtitle && item.subtitle.length > 0 ? 'visible' : 'collapse'} />
-                </stacklayout>
-                <switch checked={item.value} col={1} marginLeft={10} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                <absoluteLayout backgroundColor={colorOutlineVariant} colSpan={2} height={1} verticalAlignment="bottom" />
-            </gridlayout>
+            <SettingsSwitch borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {item} {onCheckBox} />
         </Template>
     </collectionview>
     {#if onReset}
