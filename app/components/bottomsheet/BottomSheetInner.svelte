@@ -736,8 +736,8 @@
                 page: component,
                 props: {
                     position,
-                    pitch: 45,
-                    zoom: mapContext.getMap().zoom,
+                    pitch: 70,
+                    zoom: 13,
                     bearing: mapContext.getMap().bearing
                 }
             });
