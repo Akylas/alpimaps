@@ -31,6 +31,7 @@ import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
+import { SilentError } from '@shared/utils/error';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -365,6 +366,25 @@ export default class CustomLayersModule extends MapModule {
         ApplicationSettings.setString(key + 'Token', value);
         this.tokenKeys[key] = value;
     }
+
+    getTestImageAndHeaders(provider: Provider) {
+        let url = provider.url;
+        if (provider.tokenKey) {
+            const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
+            const needsToSet = tokens.map((s) => this.tokenKeys[s]).some((s) => s === undefined);
+            if (needsToSet) {
+                return null;
+            }
+            tokens.forEach((tok) => {
+                let toReplace = this.tokenKeys[tok];
+                if (tok === 'americanaosm' && toReplace.indexOf('{x}') === -1) {
+                    toReplace = toReplace + '/planet/{z}/{x}/{y}.mvt';
+                }
+                url = url.replace(`{${tok}}`, toReplace);
+            });
+        }
+        return { url: templateString(url, { s: 'a', x: '528', y: '367', z: '10', ...provider.urlOptions }), headers: provider.sourceOptions?.httpHeaders };
+    }
     async createDataSourceAndMapLayer(id: string, provider: Provider) {
         const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
@@ -394,7 +414,7 @@ export default class CustomLayersModule extends MapModule {
         const idForPath = id.replaceAll(/[\\\?\*<":>\+\[\]\s\t\n\.]+/g, '_');
         const databasePath = File.fromPath(path.join(rasterCachePath.path, idForPath)).path;
         const legend = provider.legend;
-        let url = provider.url as string | string[];
+        let url = provider.url;
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
             const needsToSet = tokens.map((s) => this.tokenKeys[s]).some((s) => s === undefined);
@@ -423,7 +443,8 @@ export default class CustomLayersModule extends MapModule {
                     }
                 }
             }
-            tokens.forEach((tok) => {
+            for (let index = 0; index < tokens.length; index++) {
+                const tok = tokens[index];
                 if (!this.tokenKeys[tok]) {
                     showSnack({ message: lc('missing_api_token') });
                     return;
@@ -432,30 +453,30 @@ export default class CustomLayersModule extends MapModule {
                 if (tok === 'americanaosm' && toReplace.indexOf('{x}') === -1) {
                     toReplace = toReplace + '/planet/{z}/{x}/{y}.mvt';
                 }
-                if (Array.isArray(url)) {
-                    url = url.map((u) => u.replace(`{${tok}}`, toReplace));
-                } else {
-                    url = url.replace(`{${tok}}`, toReplace);
-                }
-            });
+                // if (Array.isArray(url)) {
+                //     url = url.map((u) => u.replace(`{${tok}}`, toReplace));
+                // } else {
+                url = url.replace(`{${tok}}`, toReplace);
+                // }
+            }
         }
-        let dataSource: TileDataSource<any, any>;
+        // let dataSource: TileDataSource<any, any>;
         let vectorDataSource = false;
-        if (Array.isArray(url)) {
-            vectorDataSource = url[0].indexOf('.mvt') >= 0 || url[0].indexOf('.pbf') >= 0;
-            const generator = (s, minZoom) =>
-                new HTTPTileDataSource({
-                    url: s,
-                    ...provider.sourceOptions
-                });
-            dataSource = this.createMergeDataSource(url, generator);
-        } else {
-            vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
-            dataSource = new HTTPTileDataSource({
-                url,
-                ...provider.sourceOptions
-            });
-        }
+        // if (Array.isArray(url)) {
+        //     vectorDataSource = url[0].indexOf('.mvt') >= 0 || url[0].indexOf('.pbf') >= 0;
+        //     const generator = (s, minZoom) =>
+        //         new HTTPTileDataSource({
+        //             url: s,
+        //             ...provider.sourceOptions
+        //         });
+        //     dataSource = this.createMergeDataSource(url, generator);
+        // } else {
+        vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
+        const dataSource = new HTTPTileDataSource({
+            url,
+            ...provider.sourceOptions
+        });
+        // }
         // if (provider.cacheable !== false) {
         //     Object.assign(options, {
         //         cacheSize: {
@@ -633,7 +654,8 @@ export default class CustomLayersModule extends MapModule {
             }
             if (typeof variant === 'string') {
                 provider.urlOptions = {
-                    variant
+                    variant,
+                    ...provider.urlOptions
                 };
             } else {
                 provider.url = variant.url || provider.url;
@@ -642,8 +664,8 @@ export default class CustomLayersModule extends MapModule {
                 provider.layerOptions = { ...provider.layerOptions, ...variant.layerOptions };
                 provider.urlOptions = { variant: variantName, ...provider.urlOptions, ...variant.urlOptions };
             }
-        } else if (typeof provider.url === 'function') {
-            provider.url = provider.url(parts.splice(1, parts.length - 1).join('.'));
+            // } else if (typeof provider.url === 'function') {
+            // provider.url = provider.url(parts.splice(1, parts.length - 1).join('.'));
         }
         if (!provider.url) {
             return;
@@ -654,14 +676,12 @@ export default class CustomLayersModule extends MapModule {
         //     // provider.url = forceHTTP ? 'http:' : 'https:' + provider.url;
         // }
         if (provider.urlOptions) {
-            if (typeof provider.url === 'string') {
-                provider.url = templateString(provider.url, provider.urlOptions);
-                if (provider.url.indexOf('{variant}') >= 0) {
-                    return;
-                }
-            } else if (Array.isArray(provider.url)) {
-                provider.url.map((url) => templateString(url, provider.urlOptions));
+            provider.url = templateString(provider.url, provider.urlOptions);
+            if (provider.url.indexOf('{variant}') >= 0) {
+                return;
             }
+        } else if (provider.url.indexOf('{variant}') >= 0) {
+            return;
         }
         // replace attribution placeholders with their values from toplevel provider attribution,
         // recursively
@@ -674,7 +694,6 @@ export default class CustomLayersModule extends MapModule {
             });
         };
         provider.attribution = attributionReplacer(getProviderAttribution(provider));
-
         // Compute final options combining provider options with any user overrides
         if (this.isOverlay(arg, provider)) {
             this.overlayProviders[id] = provider;
@@ -1224,7 +1243,11 @@ export default class CustomLayersModule extends MapModule {
                 rowHeight: 56,
                 options: Object.keys(this.baseProviders)
                     .sort()
-                    .map((s) => ({ name: s, isPick: false, data: this.baseProviders[s] }))
+                    .map((s) => {
+                        const p = this.baseProviders[s];
+                        const data = this.getTestImageAndHeaders(p);
+                        return { type: 'image', title: s, isPick: false, data: this.baseProviders[s], image: data?.url, imageHeaders: data?.headers };
+                    })
             }
         });
         const result = Array.isArray(results) ? results[0] : results;
@@ -1235,7 +1258,7 @@ export default class CustomLayersModule extends MapModule {
             const savedSources: (string | Provider)[] = JSON.parse(ApplicationSettings.getString('added_providers', '[]'));
             const layerIndex = savedSources.findIndex((s) => (typeof s === 'string' ? s : s?.id) === name);
             if (layerIndex !== -1) {
-                throw new Error(lc('data_source_already_added', name));
+                throw new SilentError({ message: lc('data_source_already_added', name), showAsSnack: true });
             }
             // if (result.isPick) {
             //     provider.name = File.fromPath(provider.url).name;
@@ -1243,7 +1266,9 @@ export default class CustomLayersModule extends MapModule {
             //     provider.type = 'orux';
             // }
             const data = await this.createDataSourceAndMapLayer(provider.id || result.name, provider);
-            this.addDataSource(data);
+            if (data) {
+                this.addDataSource(data);
+            }
         }
     }
 

@@ -176,15 +176,16 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                         rows="*">
                         <stacklayout verticalAlignment="center">
                             <label
+                                ios:class="ignoreA11yFontScale"
                                 color={item.layer.opacity === 0 ? colorOnSurfaceVariant : colorOnSurface}
-                                fontSize={13}
+                                fontSize={13 * $fontScaleMaxed}
                                 fontWeight="bold"
                                 lineBreak="end"
                                 maxLines={2}
                                 text={item.name.toUpperCase()} />
                             <label
                                 color={colorOnSurfaceVariant}
-                                fontSize={11}
+                                fontSize={11 * $fontScaleMaxed}
                                 html={item.provider.attribution}
                                 linkColor={colorPrimary}
                                 maxLines={2}
