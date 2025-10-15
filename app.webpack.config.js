@@ -465,8 +465,7 @@ module.exports = (env, params = {}) => {
         STORE_LINK: `"${isAndroid ? `https://play.google.com/store/apps/details?id=${appId}` : `https://itunes.apple.com/app/id${APP_STORE_ID}`}"`,
         STORE_REVIEW_LINK: `"${isIOS ? `https://itunes.apple.com/app/id${APP_STORE_ID}?action=write-review` : `market://details?id=${appId}`}"`,
         SPONSOR_URL: '"https://github.com/sponsors/farfromrefug"',
-        DEV_LOG: !!devlog,
-        TEST_LOG: !!devlog || !!testlog
+        DEV_LOG: !!devlog
     };
     try {
         const keys = process.env.API_KEYS ? JSON.parse(process.env.API_KEYS) : require(resolve(__dirname, 'API_KEYS'));

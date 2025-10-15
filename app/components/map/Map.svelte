@@ -349,7 +349,7 @@
             //         }
             //     }
             // }
-            TEST_LOG && console.log('Got the following appURL', link);
+            DEV_LOG && console.log('Got the following appURL', link);
             const loaded = !!cartoMap;
             const isGeoUrl = link.startsWith('geo:');
             let locationMatch = isGeoUrl ? null : link.match(GEO_TEXT_REGEXP);
@@ -830,7 +830,7 @@
 
     function onMainMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
         const { clickType, position } = e.data;
-        // TEST_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
+        // DEV_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
         // handleClickedFeatures(position);
         if (ignoreNextMapClick) {
             ignoreNextMapClick = false;
@@ -892,7 +892,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                // TEST_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
+                // DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
@@ -908,7 +908,7 @@
                 }
                 if (setSelected && route) {
                     (async () => {
-                        TEST_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
+                        // DEV_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
                         if (setMapSelected) {
                             selectedMapId = (route.osmid || props.osmid || props.id || props.name + props.class) + '';
                             mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
@@ -1125,7 +1125,7 @@
         // DEV_LOG && console.log('zoomToItem done ');
     }
     export function unselectItem(updateBottomSheet = true, forceUnlock = false) {
-        // TEST_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
+        // DEV_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
 
         if ($itemLock) {
             if (forceUnlock) {
@@ -1417,7 +1417,7 @@
     }
     function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
         const { clickType, element, elementPos, metaData, position } = data;
-        TEST_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
+        DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
                 metaData[k] = JSON.parse(metaData[k]);
@@ -1454,7 +1454,7 @@
     }
     function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
         const { clickType, featureData, featurePosition, position } = data;
-        TEST_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
+        DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
             return false;
@@ -1471,7 +1471,7 @@
         if (!!featureData.instruction) {
             return true;
         }
-        TEST_LOG && console.log('onVectorTileElementClicked', clickType, JSON.stringify(position), JSON.stringify(featurePosition), featureData.id, handledByModules, $selectedItem?.id);
+        DEV_LOG && console.log('onVectorTileElementClicked', clickType, JSON.stringify(position), JSON.stringify(featurePosition), featureData.id, handledByModules, $selectedItem?.id);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             const item: IItem = feature;
             // }
@@ -1489,7 +1489,7 @@
     }
     function unFocusSearch() {
         // executeOnMainThread(function () {
-        // TEST_LOG && console.log('unFocusSearch', searchView?.hasFocus());
+        // DEV_LOG && console.log('unFocusSearch', searchView?.hasFocus());
         if (searchView?.hasFocus()) {
             searchView.unfocus();
         }
@@ -1497,7 +1497,7 @@
     }
     function clearSearch() {
         // executeOnMainThread(function () {
-        // TEST_LOG && console.log('unFocusSearch', searchView?.hasFocus());
+        // DEV_LOG && console.log('unFocusSearch', searchView?.hasFocus());
         searchView?.clearSearch();
         // });
     }

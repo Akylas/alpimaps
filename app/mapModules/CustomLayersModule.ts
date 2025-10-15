@@ -1084,7 +1084,7 @@ export default class CustomLayersModule extends MapModule {
     }
 
     async downloadDataSource({ dataSource, maxZoom, minZoom, provider }: { dataSource: TileDataSource<any, any>; provider: Provider; minZoom?; maxZoom? }) {
-        TEST_LOG && console.log('downloadDataSource', dataSource.constructor.name, provider, minZoom, maxZoom);
+        DEV_LOG && console.log('downloadDataSource', dataSource.constructor.name, provider, minZoom, maxZoom);
         try {
             if (this.currentlyDownloadind) {
                 return;
@@ -1105,7 +1105,7 @@ export default class CustomLayersModule extends MapModule {
                             projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
                         );
 
-                        TEST_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, cartoMap.getZoom(), zoom);
+                        DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, cartoMap.getZoom(), zoom);
                         dataSource.startDownloadArea(bounds, minZoom ?? cartoMap.getZoom(), zoom, {
                             onDownloadCompleted: () => {
                                 DEV_LOG && console.log('onDownloadCompleted');
