@@ -1371,6 +1371,7 @@
                         properties: {
                             ...featureData
                         },
+                        _nativeGeometry: featureGeometry,
                         route: {
                             osmid: featureData.osmid || featureData.ref || featureData.name
                         },
