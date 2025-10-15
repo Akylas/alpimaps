@@ -16,7 +16,7 @@
     import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
-    import { colors } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     export interface MapOptionType {
@@ -28,8 +28,8 @@
 </script>
 
 <script lang="ts">
-    let { colorOutlineVariant } = $colors;
-    $: ({ colorOutlineVariant } = $colors);
+    let { colorOnBackground, colorOutlineVariant } = $colors;
+    $: ({ colorOnBackground, colorOutlineVariant } = $colors);
     const customLayers: CustomLayersModule = getMapContext().mapModule('customLayers');
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
 
@@ -82,27 +82,35 @@
                             updateItem(item);
                         }
                     } else if (item.type === 'slider') {
+                        DEV_LOG && console.log('showSliderPopover', item.title, item.icon, item.currentValue(), item.defaultValue);
                         await showSliderPopover({
                             anchor: event.object,
                             value: item.currentValue(),
                             ...item,
                             onChange(value) {
-                                if (item.transformValue) {
-                                    value = item.transformValue(value, item);
-                                } else {
-                                    value = Math.round(value / item.step) * item.step;
+                                DEV_LOG && console.log('onChange1', value, !!item.nutiProps);
+                                if (value !== null) {
+                                    if (item.transformValue) {
+                                        value = item.transformValue(value, item);
+                                    } else {
+                                        value = Math.round(value / item.step) * item.step;
+                                    }
                                 }
                                 if (item.store) {
                                     item.store.set(value);
                                 } else if (item.mapStore) {
-                                    (item.mapStore as Writable<boolean>).set(value);
+                                    (item.mapStore as Writable<any>).set(value);
                                 } else if (item.nutiProps) {
                                     item.nutiProps[item.key] = value;
                                 } else {
-                                    if (item.valueType === 'string') {
-                                        ApplicationSettings.setString(item.key, value + '');
+                                    if (value === null) {
+                                        ApplicationSettings.remove(item.key);
                                     } else {
-                                        ApplicationSettings.setNumber(item.key, value);
+                                        if (item.valueType === 'string') {
+                                            ApplicationSettings.setString(item.key, value + '');
+                                        } else {
+                                            ApplicationSettings.setNumber(item.key, value);
+                                        }
                                     }
                                 }
                                 updateItem(item);
@@ -151,26 +159,24 @@
     let items: ObservableArray<any>;
     function refresh() {
         const newItems = [];
-        console.log('refresh');
         // if (customLayers.hasLocalData) {
         try {
             newItems.push(
                 ...nutiProps
                     .getKeys()
                     .map((key) => nutiProps.getSettingsOptions(key))
-                    .filter((s) => !s.icon)
+                    .filter((s) => (!s.icon || typeof s.defaultValue !== 'boolean') && s.title)
             );
             newItems.push(
                 ...innerNutiProps
                     .getKeys()
                     .map((key) => innerNutiProps.getSettingsOptions(key))
-                    .filter((s) => !s.icon)
+                    .filter((s) => (!s.icon || typeof s.defaultValue !== 'boolean') && s.title)
             );
         } catch (error) {
             showError(error);
         }
         // }
-        console.log('refresh1', newItems);
         items = new ObservableArray(newItems);
     }
     onServiceLoaded((handler: GeoHandler) => {
@@ -228,12 +234,24 @@
         </Template>
         <Template let:item>
             <ListItemAutoSize
+                columns="auto,*,auto"
+                fontSize={20}
+                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
+                mainCol={1}
+                rightValue={item.rightValue}
+                showBottomLine={false}
+                on:tap={(event) => onTap(item, event)}>
+                <label col={0} color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
+            </ListItemAutoSize>
+        </Template>
+        <!-- <Template let:item>
+            <ListItemAutoSize
                 item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                 leftIcon={item.icon}
                 rightValue={item.rightValue}
                 showBottomLine={false}
                 on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
-        </Template>
+        </Template> -->
     </collectionview>
 
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">

@@ -109,6 +109,7 @@ const layersParams = {
 const innerNutiParams = {
     items_show_km_shields: {
         title: lc('items_show_km_shields'),
+        icon: 'mdi-shield',
         settingsOptionsType: 'boolean',
         defaultValue: true,
         inner: true
@@ -119,6 +120,7 @@ const nutiParams = {
         title: lc('map_font_scale'),
         description: lc('map_font_scale_desc'),
         settingsOptionsType: 'number',
+        icon: 'mdi-format-size',
         defaultValue: 1,
         min: 0.5,
         max: 4
@@ -144,6 +146,7 @@ const nutiParams = {
     },
     contoursOpacity: {
         title: lc('contour_lines_opacity'),
+        icon: 'mdi-bullseye',
         description: lc('contour_lines_opacity_desc'),
         settingsOptionsType: 'number',
         defaultValue: 1
@@ -157,12 +160,14 @@ const nutiParams = {
         nutiTransform: (value) => (!!value ? '2' : '1')
     },
     building_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
         title: lc('building_min_zoom'),
         description: lc('building_min_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
     road_shields: {
+        icon: 'mdi-shield',
         title: lc('show_road_shields'),
         settingsOptionsType: 'boolean',
         defaultValue: true
@@ -194,10 +199,12 @@ const nutiParams = {
     },
     route_shields: {
         title: lc('show_route_shields'),
+        icon: 'mdi-shield',
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
     road_shield_min_dist: {
+        icon: 'mdi-map-marker-distance',
         title: lc('road_shield_min_dist'),
         description: lc('road_shield_min_dist_desc'),
         settingsOptionsType: 'number',
@@ -207,6 +214,7 @@ const nutiParams = {
         step: 1
     },
     road_shield_spacing: {
+        icon: 'mdi-map-marker-distance',
         title: lc('road_shield_spacing'),
         description: lc('road_shield_spacing_desc'),
         settingsOptionsType: 'number',
@@ -216,52 +224,62 @@ const nutiParams = {
         step: 1
     },
     routes_dash_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
         title: lc('routes_dash_min_zoom'),
         description: lc('routes_dash_min_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
     polygons_border: {
+        icon: 'mdi-vector-polygon',
         title: lc('show_polygone_border'),
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
     sub_boundaries: {
+        icon: 'mdi-vector-polygon',
         title: lc('show_sub_boundaries'),
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
     show_underground: {
+        icon: 'mdi-subway',
         title: lc('show_underground_transports'),
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
     show_tram: {
+        icon: 'mdi-tram',
         title: lc('show_tram_lines'),
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
     emphasis_rails: {
+        icon: 'mdi-train',
         title: lc('emphasis_rail_tracks'),
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
     highlight_drinking_water: {
+        icon: 'mdi-water-pump',
         title: lc('emphasis_drinking_water'),
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
     campsite_allow_overlap: {
+        icon: 'mdi-tent',
         title: lc('campsite_allow_overlap'),
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
     show_caravan_site: {
+        icon: 'mdi-caravan',
         title: lc('show_caravan_site'),
         settingsOptionsType: 'boolean',
         defaultValue: true
     },
     city_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
         title: lc('city_min_zoom'),
         description: lc('city_min_zoom_desc'),
         settingsOptionsType: 'zoom',
@@ -269,6 +287,7 @@ const nutiParams = {
     },
     river_label_min_zoom: {
         title: lc('river_label_min_zoom'),
+        icon: 'mdi-plus-minus-variant',
         description: lc('river_label_min_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
@@ -276,24 +295,28 @@ const nutiParams = {
 
     scrub_pattern_zoom: {
         title: lc('scrub_pattern_zoom'),
+        icon: 'mdi-plus-minus-variant',
         description: lc('scrub_pattern_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
     scree_pattern_zoom: {
         title: lc('scree_pattern_zoom'),
+        icon: 'mdi-plus-minus-variant',
         description: lc('scree_pattern_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
     rock_pattern_zoom: {
         title: lc('rock_pattern_zoom'),
+        icon: 'mdi-plus-minus-variant',
         description: lc('rock_pattern_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
     },
     forest_pattern_zoom: {
         title: lc('forest_pattern_zoom'),
+        icon: 'mdi-plus-minus-variant',
         description: lc('forest_pattern_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
