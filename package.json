@@ -68,7 +68,7 @@
         "@nativescript-community/text": "1.6.17",
         "@nativescript-community/ui-canvas": "4.6.43",
         "@nativescript-community/ui-canvaslabel": "1.2.46",
-        "@nativescript-community/ui-carto": "1.8.21",
+        "@nativescript-community/ui-carto": "2.0.0",
         "@nativescript-community/ui-chart": "2.0.26",
         "@nativescript-community/ui-checkbox": "2.0.16",
         "@nativescript-community/ui-collectionview": "6.0.13",
@@ -148,8 +148,7 @@
         "webpack-shell-plugin-next": "2.3.3"
     },
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "@nativescript-community/ui-carto": "portal:../ui-carto/packages/ui-carto"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
     },
     "workspaces": [
         "./",
