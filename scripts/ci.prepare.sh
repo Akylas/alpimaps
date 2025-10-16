@@ -33,11 +33,11 @@ echo "FLAVOR    = $(dirname $0)"
 
 ## NOT needed anymore, the plugin handles it
 
-# if [[ -z "${CARTO_SDK_VERSION}" ]]; then
-#   CARTO_SDK_VERSION="v5.0.0-rc.7"
-# else
-#   CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
-# fi
+if [[ -z "${CARTO_SDK_VERSION}" ]]; then
+  CARTO_SDK_VERSION="v5.0.0"
+else
+  CARTO_SDK_VERSION="${CARTO_SDK_VERSION}"
+fi
 
 
 # git clone --recurse-submodules https://github.com/nativescript-community/ui-carto.git
@@ -45,15 +45,15 @@ echo "FLAVOR    = $(dirname $0)"
 if [ "$PLATFORM" = "android" ]; then
   sudo apt-get -y install fontforge
   # wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar
-  # wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_linux.zip 
+  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_linux.zip 
 #   mv carto-mobile-sdk-android-$CARTO_SDK_VERSION.aar ./ui-carto/packages/ui-carto/platforms/android
   unzip -o -d ./ ./css2xml_linux.zip
 else
   brew install fontforge
 #   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
 #   unzip -o -d ./ui-carto/packages/ui-carto/platforms/ios carto-mobile-sdk-ios-$CARTO_SDK_VERSION.zip
-#   wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_macos.zip 
-#   unzip -o -d ./ ./css2xml_macos.zip
+  wget https://github.com/Akylas/mobile-sdk/releases/download/v$CARTO_SDK_VERSION/css2xml_macos.zip 
+  unzip -o -d ./ ./css2xml_macos.zip
 fi
 
 # cd ui-carto
