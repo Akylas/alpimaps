@@ -3530,11 +3530,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-carto@portal:../ui-carto/packages/ui-carto::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nativescript-community/ui-carto@portal:../ui-carto/packages/ui-carto::locator=root-workspace-0b6124%40workspace%3A."
+"@nativescript-community/ui-carto@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@nativescript-community/ui-carto@npm:2.0.0"
+  checksum: 10/c7b6d7f06b51e38e41f29c8c3679b723381a9c2bdab32495a8eef288a21c58f5dea955bbd57ec8698ca387191460ae39c21fd4f919866fa24eec71d98c536ae3
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nativescript-community/ui-chart@npm:2.0.26":
   version: 2.0.26
@@ -15729,7 +15730,7 @@ __metadata:
     "@nativescript-community/text": "npm:1.6.17"
     "@nativescript-community/ui-canvas": "npm:4.6.43"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.46"
-    "@nativescript-community/ui-carto": "npm:1.8.21"
+    "@nativescript-community/ui-carto": "npm:2.0.0"
     "@nativescript-community/ui-chart": "npm:2.0.26"
     "@nativescript-community/ui-checkbox": "npm:2.0.16"
     "@nativescript-community/ui-collectionview": "npm:6.0.13"
