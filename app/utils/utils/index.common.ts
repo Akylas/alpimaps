@@ -79,7 +79,7 @@ export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { i
     //     }
     //     return result;
     // } else {
-    const docFolder = Folder.fromPath(folderPath);
+    const docFolder = Folder.fromPath(folderPath, false);
     return docFolder.getEntitiesSync().map((f) => {
         f['isFolder'] = Folder.exists(f.path);
         return f as any;
