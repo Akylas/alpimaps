@@ -374,11 +374,16 @@
     "information": "information",
     "interior_decoration": "interior decoration",
     "internet_cafe": "internet cafe",
-    "ios.info.plist": {
-        "NSCameraUsageDescription": "«Alpi Maps» can use your camera for the peak finder feature",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on the map",
-        "NSLocationAlwaysUsageDescription": "«Alpi Maps» use your GPS location to display it on the map",
-        "NSLocationWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on the map"
+    "ios": {
+        "info": {
+            "plist": {
+                "NSCameraUsageDescription": "«Alpi Maps» can use your camera for the peak finder feature",
+                "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on the map",
+                "NSLocationAlwaysUsageDescription": "«Alpi Maps» use your GPS location to display it on the map",
+                "NSLocationWhenInUseUsageDescription": "«Alpi Maps» use your GPS location to display it on the map",
+                "NSMotionUsageDescription": "«Alpi Maps» use your your motion sensors for the compass feature"
+            }
+        }
     },
     "item_now_hidden": "item is now hidden from the map",
     "item_now_visible": "item is now visible on the map",
