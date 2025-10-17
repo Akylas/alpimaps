@@ -6,7 +6,7 @@
     import type { ApplicationEventData, GridLayout } from '@nativescript/core';
     import { Application } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import type { NativeViewElementNode } from 'svelte-native/dom';
+    import type { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { UNITS, convertValueToUnit } from '~/helpers/formatter';
