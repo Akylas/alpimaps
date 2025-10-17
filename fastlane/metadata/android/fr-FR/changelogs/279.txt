@@ -1,0 +1,5 @@
+Bug fixes:
+- some direction panel fixes and improvements
+- item info view wrong title size
+- some fixes around data sources (addition, search, options...)
+- chart fix on axis
