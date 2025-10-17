@@ -8,8 +8,8 @@
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import deburr from 'deburr';
     import type { Point as GeoJSONPoint } from 'geojson';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getBoundsOfDistance, getDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';

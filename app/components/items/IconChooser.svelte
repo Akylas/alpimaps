@@ -6,8 +6,8 @@
     import { Utils } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import { onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { osmIcons } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';

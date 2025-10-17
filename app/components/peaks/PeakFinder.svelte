@@ -13,8 +13,8 @@
     import { debounce } from '@nativescript/core/utils';
     import dayjs from 'dayjs';
     import type { Feature } from 'geojson';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
     import { showError } from '@shared/utils/showError';

@@ -2,7 +2,7 @@
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { TextField, Utils } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { lc } from '~/helpers/locale';
     import { showError } from '@shared/utils/showError';

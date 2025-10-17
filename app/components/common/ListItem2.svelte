@@ -2,7 +2,7 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import dayjs from 'dayjs';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
     import { formatTime, lc } from '~/helpers/locale';
     import { colors, fonts } from '~/variables';
