@@ -7,7 +7,7 @@
     import { showError } from '@shared/utils/showError';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc, slc } from '~/helpers/locale';
     import { currentTheme, isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';

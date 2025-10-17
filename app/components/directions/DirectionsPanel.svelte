@@ -15,8 +15,8 @@
     import type { Feature, Point } from 'geojson';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { onDestroy } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';

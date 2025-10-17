@@ -2,7 +2,7 @@
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { Color } from '@nativescript/core';
     import { conditionalEvent } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { isEInk } from '~/helpers/theme';
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fontScaleMaxed, fonts } from '~/variables';

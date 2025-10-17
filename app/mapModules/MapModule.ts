@@ -13,7 +13,7 @@ import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
-import { NativeViewElementNode } from 'svelte-native/dom';
+import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
 import type MapResultPager from '~/components/search/MapResultPager.svelte';
