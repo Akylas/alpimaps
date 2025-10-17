@@ -1,14 +1,25 @@
 {
-    "dirt": "土壌",
-    "saved": "保存されました：％1$s",
-    "thank_you": "ありがとうございます！",
     "E": "東",
     "ENE": "東北東",
-    "S": "南",
-    "SE": "北南",
-    "N": "北",
     "ESE": "東南東",
+    "N": "北",
     "NE": "北東",
     "NNE": "北北東",
-    "NNW": "北北西"
+    "NNW": "北北西",
+    "S": "南",
+    "SE": "北南",
+    "dirt": "土壌",
+    "ios": {
+        "info": {
+            "plist": {
+                "NSCameraUsageDescription": "«Alpi Maps» はカメラをピークファインダー機能に使用できます",
+                "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» は、GPS 位置情報を使用して地図上に表示します",
+                "NSLocationAlwaysUsageDescription": "«Alpi Maps» は、GPS 位置情報を使用して地図上に表示します",
+                "NSLocationWhenInUseUsageDescription": "«Alpi Maps» は、GPS 位置情報を使用して地図上に表示します",
+                "NSMotionUsageDescription": "«Alpi Maps» コンパス機能にモーションセンサーを使用します"
+            }
+        }
+    },
+    "saved": "保存されました：％1$s",
+    "thank_you": "ありがとうございます！"
 }
