@@ -1,1 +1,13 @@
-{}
+{
+    "ios": {
+        "info": {
+            "plist": {
+                "NSCameraUsageDescription": "«Alpi Maps» може використовувати вашу камеру для функції пошуку вершин",
+                "NSLocationAlwaysAndWhenInUseUsageDescription": "«Alpi Maps» використовує ваше GPS-місцезнаходження для відображення на карті",
+                "NSLocationAlwaysUsageDescription": "«Alpi Maps» використовує ваше GPS-місцезнаходження для відображення на карті",
+                "NSLocationWhenInUseUsageDescription": "«Alpi Maps» використовує ваше GPS-місцезнаходження для відображення на карті",
+                "NSMotionUsageDescription": "«Alpi Maps» використовує ваші датчики руху для функції компаса"
+            }
+        }
+    }
+}
