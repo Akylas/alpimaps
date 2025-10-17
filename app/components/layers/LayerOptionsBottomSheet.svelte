@@ -15,7 +15,7 @@
     import IconButton from '../common/IconButton.svelte';
     import { createView } from '~/utils/ui';
     $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
-    import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+    import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
     import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { GestureRootView } from '@nativescript-community/gesturehandler';

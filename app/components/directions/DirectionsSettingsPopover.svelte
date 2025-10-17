@@ -2,8 +2,8 @@
     import { lc } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Color } from '@nativescript/core';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { onThemeChanged } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';

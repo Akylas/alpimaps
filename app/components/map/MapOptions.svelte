@@ -5,8 +5,8 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable } from 'svelte/store';
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';

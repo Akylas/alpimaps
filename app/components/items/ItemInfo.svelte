@@ -4,8 +4,8 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Color, LayoutBase, ObservableArray, View } from '@nativescript/core';
     import { compose } from '@nativescript/email';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { convertElevation, getAddress, openingHoursText, osmicon } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';

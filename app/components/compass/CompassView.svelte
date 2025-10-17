@@ -8,7 +8,7 @@
     import dayjs, { Dayjs } from 'dayjs';
     import { GetMoonPositionResult, GetSunPositionResult, getMoonPosition, getPosition } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
-    import type { NativeViewElementNode } from 'svelte-native/dom';
+    import type { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/compass/SmoothCompassBehavior';
     import { formatDistance } from '~/helpers/formatter';
     import { getBearing, getDistanceSimple } from '~/helpers/geolib';

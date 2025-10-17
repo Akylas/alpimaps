@@ -2530,6 +2530,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nativescript-community/svelte-native@npm:1.0.30":
+  version: 1.0.30
+  resolution: "@nativescript-community/svelte-native@npm:1.0.30"
+  peerDependencies:
+    "@nativescript/core": 8.9.9
+    svelte: 4.2.20
+  checksum: 10/416551a5c6907c330a18d12536a549fb2688d2b6a5585c2b743e3364a4131b039fe865c9454ef226bc1da717eca4c81abf1fd30250df54c8af51248a8ce81dfc
+  languageName: node
+  linkType: hard
+
 "@nativescript-community/systemui@npm:1.1.24":
   version: 1.1.24
   resolution: "@nativescript-community/systemui@npm:1.1.24"
@@ -14167,6 +14177,7 @@ __metadata:
     "@nativescript-community/sensors": "npm:1.4.0"
     "@nativescript-community/sentry": "npm:4.6.44"
     "@nativescript-community/sqlite": "npm:3.5.1"
+    "@nativescript-community/svelte-native": "npm:1.0.30"
     "@nativescript-community/systemui": "npm:1.1.24"
     "@nativescript-community/text": "npm:1.6.17"
     "@nativescript-community/ui-canvas": "npm:4.6.43"
@@ -14239,7 +14250,6 @@ __metadata:
     stream: "npm:0.0.3"
     suncalc: "npm:^1.9.0"
     svelte-loader: "npm:3.2.4"
-    svelte-native: "npm:1.0.29"
     swc-loader: "npm:0.2.6"
     three: "npm:0.134.0"
     timers: "npm:0.1.1"
@@ -15346,16 +15356,6 @@ __metadata:
   peerDependencies:
     svelte: ^3.37.0
   checksum: 10/5f8306714ede6bb45a8d8a0762d4499ab64c6052d7d515978f14c87aef5456408292f0e6789d1549447e48c6b5615dc6833abda26145a60067c56f784e11fe5e
-  languageName: node
-  linkType: hard
-
-"svelte-native@npm:1.0.29":
-  version: 1.0.29
-  resolution: "svelte-native@npm:1.0.29"
-  peerDependencies:
-    "@nativescript/core": ^8.5.9
-    svelte: ^4.2.8
-  checksum: 10/70fa94f87d38cd4a3e581aef12c2945974b6aee52330dd34cc6b20b47ae41cef1b5e6b8d75887a7df32d5a5b73618a5cc601e73652dde9046a88495b4abab9ea
   languageName: node
   linkType: hard
 
