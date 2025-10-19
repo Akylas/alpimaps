@@ -758,5 +758,7 @@
     "wikipedia": "Wikipedia",
     "wilderness_hut": "Wildnis-Hütte",
     "windmill": "Windmühle",
-    "wireframe": "Drahtgitter"
+    "wireframe": "Drahtgitter",
+    "a9_background_location_screenrefresh_delay": "Bildschirmaktualisierungsverzögerung",
+    "a9_refresh_screen_on_location": "Bildschirm bei Standortaktualisierung aktualisieren"
 }
