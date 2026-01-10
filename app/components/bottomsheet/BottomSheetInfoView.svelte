@@ -2,7 +2,7 @@
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, formatDistance, openingHoursText, osmicon } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';

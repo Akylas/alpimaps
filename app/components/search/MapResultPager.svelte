@@ -5,8 +5,8 @@
     import { GridLayout, ObservableArray } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
 
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { convertElevation, formatDistance, getAddress, openingHoursText, osmicon } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';

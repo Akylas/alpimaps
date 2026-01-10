@@ -14,7 +14,7 @@
     import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
     import { getBounds } from '~/helpers/geolib';
     import { onThemeChanged } from '~/helpers/theme';

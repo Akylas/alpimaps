@@ -50,7 +50,7 @@
 <script lang="ts">
     import { Align, Canvas, CanvasView, Paint, Path, Style } from '@nativescript-community/ui-canvas';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { get } from 'svelte/store';
     import { listenForGpsStatus, stopListenForGpsStatus } from '~/handlers/GeoHandler';
     import { getMapContext } from '~/mapModules/MapModule';

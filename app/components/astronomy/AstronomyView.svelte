@@ -16,7 +16,7 @@
     import { showError } from '@shared/utils/showError';
     import dayjs, { Dayjs } from 'dayjs';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { GeoLocation } from '~/handlers/GeoHandler';
     import { CompassInfo, getCompassInfo } from '~/helpers/geolib';
     import { formatTime, getLocalTime, lc } from '~/helpers/locale';

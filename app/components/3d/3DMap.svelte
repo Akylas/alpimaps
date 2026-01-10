@@ -3,7 +3,7 @@
     import { LoadEventData, Page, knownFolders, path } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     // import type { Feature } from 'geojson';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lang } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import { packageService } from '~/services/PackageService';

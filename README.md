@@ -146,7 +146,7 @@ If you use those data, they will automatically be loaded on start and enable a t
 
 ## Screenshots
 
-| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en_US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en_US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en_US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en_US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en_US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en_US.png" width=276> |
+| <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/4_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/5_en-US.png" width=276> | <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/6_en-US.png" width=276> |
 
 ### Having issues, suggestions and feedback?
 

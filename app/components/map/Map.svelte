@@ -33,7 +33,7 @@
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import BottomSheetInner from '~/components/bottomsheet/BottomSheetInner.svelte';
     import ButtonBar from '~/components/common/ButtonBar.svelte';
     import DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';

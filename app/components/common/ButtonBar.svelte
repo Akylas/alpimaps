@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { AbsoluteLayout } from '@nativescript/core';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fonts } from '~/variables';
 

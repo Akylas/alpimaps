@@ -10,7 +10,7 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import ScaleView from '~/components/map/ScaleView.svelte';
     import { formatDistance } from '~/helpers/formatter';

@@ -10,7 +10,7 @@ import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
 import { hideLoading, openLink, showSnack, showToast } from '@shared/utils/ui';
 import { ComponentProps } from 'svelte';
-import { ComponentInstanceInfo, resolveComponentElement } from 'svelte-native/dom';
+import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import { Group } from '~/models/Item';
