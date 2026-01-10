@@ -5,8 +5,8 @@
     import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { ObservableArray, Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '~/components/common/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';

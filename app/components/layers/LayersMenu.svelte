@@ -8,8 +8,8 @@
     import { debounce } from '@nativescript/core/utils';
     import { showError } from '@shared/utils/showError';
     import { onDestroy, onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { onThemeChanged } from '~/helpers/theme';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';

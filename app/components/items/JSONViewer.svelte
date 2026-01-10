@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Label } from '@nativescript-community/ui-label';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     let textview: NativeViewElementNode<Label>;
     export let jsonText;
     let htmlStr;

@@ -3,8 +3,8 @@
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { onMount } from 'svelte';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { TransitRoute, transitService } from '~/services/TransitService';

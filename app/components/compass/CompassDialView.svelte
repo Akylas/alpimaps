@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Paint, Path, Rect, Style } from '@nativescript-community/ui-canvas';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lu } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { TO_RAD } from '~/utils/geo';

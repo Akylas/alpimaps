@@ -15,8 +15,8 @@
     import { Sentry } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
-    import { Template } from 'svelte-native/components';
-    import { NativeViewElementNode } from 'svelte-native/dom';
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
