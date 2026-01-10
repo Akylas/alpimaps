@@ -308,7 +308,7 @@
     "gps_update_distance": "distance de mise à jour",
     "gps_update_distance_desc": "Mettre à jour le filtre de distance en mètres. \nSpécifie la fréquence de mise à jour",
     "gps_update_minTime": "intervalle de mises à jour",
-    "gps_update_minTime_desc": "Intervalle de temps minimum entre les mises à jour de l'emplacement, en millisecondes",
+    "gps_update_minTime_desc": "Intervalle de temps minimum entre les mises à jour de l'emplacement, en secondes",
     "gpx": "GPX",
     "gravel": "gravillon",
     "greengrocer": "marchand de légumes",
