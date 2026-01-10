@@ -64,6 +64,7 @@
         "@nativescript-community/sensors": "1.4.0",
         "@nativescript-community/sentry": "4.6.44",
         "@nativescript-community/sqlite": "3.5.1",
+        "@nativescript-community/svelte-native": "1.0.30",
         "@nativescript-community/systemui": "1.1.24",
         "@nativescript-community/text": "1.6.17",
         "@nativescript-community/ui-canvas": "4.6.43",
@@ -125,7 +126,6 @@
         "stats.js": "0.17.0",
         "stream": "0.0.3",
         "suncalc": "^1.9.0",
-        "svelte-native": "1.0.29",
         "three": "0.134.0",
         "timers": "0.1.1"
     },
@@ -148,7 +148,8 @@
         "webpack-shell-plugin-next": "2.3.3"
     },
     "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core"
+        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
+        "svelte-check@npm:4.3.1": "patch:svelte-check@npm%3A4.3.1#~/.yarn/patches/svelte-check-npm-4.3.1-7aa559b153.patch"
     },
     "workspaces": [
         "./",
@@ -156,5 +157,5 @@
         "./peakfinder",
         "./geo-three"
     ],
-    "packageManager": "yarn@4.9.4"
+    "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b"
 }
