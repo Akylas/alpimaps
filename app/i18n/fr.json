@@ -775,5 +775,13 @@
     "wikipedia": "wikipedia",
     "wilderness_hut": "cabane en pleine nature",
     "windmill": "moulin à vent",
-    "wireframe": "maquette filaire"
+    "wireframe": "maquette filaire",
+    "a9_background_location_screenrefresh_delay": "délai de mise à jour de l'écran",
+    "a9_refresh_screen_on_location": "mettre à jour l'écran en cas de mise à jour de la localisation",
+    "behavior": "comportement",
+    "behavior_settings": "paramètres généraux des fonctionnalités de l'application",
+    "charts": "graphiques",
+    "charts_settings": "paramètres liés aux graphiques",
+    "click_handler_layer_filter": "regex pour définir les éléments cliquables de la carte",
+    "custom_units": "unités personnalisées"
 }
