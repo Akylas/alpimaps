@@ -19,10 +19,13 @@
 
  ## Installation
 
-<!-- [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/com.machiav3lli.backup/) -->
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height="80">](https://apt.izzysoft.de/packages/akylas.alpi.maps)
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on PlayStore" height="80">](https://play.google.com/store/apps/details?id=akylas.alpi.maps)
-[<img src="badge_github.png" alt="Get it on GitHub" height="80">](https://github.com/Akylas/alpimaps/releases)
+<div align="center">
+
+|  ||
+|:-:|:-:|
+|[<img src="https://izzyondroid.org/assets/static/IzzyOnDroidButtonGreyBorder_nofont.png" alt="Get it on IzzyOnDroid" style="height:50px">](https://apt.izzysoft.de/packages/akylas.alpi.maps)|[<img src="https://raw.githubusercontent.com/pioug/google-play-badges/refs/heads/main/svg/en.svg" alt="Get it on PlayStore" style="height:50px">](https://play.google.com/store/apps/details?id=akylas.alpi.maps)|
+|[<img src="https://raw.githubusercontent.com/Akylas/OSS-DocumentScanner/main/graphics/badge_github.png" alt="Get it on GitHub" style="height:50px">](https://github.com/Akylas/alpimaps/releases)|<div><a href="https://apps.apple.com/fr/app/alpimaps/id1045609978"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1496188800" alt="Download on the App Store" style="height:58px"></a></div>|
+</div>
 <div>
 
 #### AppVerifier hashes 
