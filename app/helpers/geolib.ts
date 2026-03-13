@@ -504,62 +504,6 @@ export function isPointInsideBounds(latlng, mapBounds) {
 }
 
 /**
- * Pre calculate the polygon coords, to speed up the point inside check.
- * Use this function before calling isPointInsideWithPreparedPolygon()
- * @see          Algorythm from http://alienryderflex.com/polygon/
- * @param        array       array with coords e.g. [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- */
-function preparePolygonForIsPointInsideOptimized(coords) {
-    let ci, cj;
-    for (let i = 0, j = coords.length - 1; i < coords.length; i++) {
-        ci = coords(coords[i]);
-        cj = coords(coords[j]);
-        if (cj.longitude === ci.longitude) {
-            coords[i].constant = ci.latitude;
-            coords[i].multiple = 0;
-        } else {
-            coords[i].constant = ci.latitude - (ci.longitude * cj.latitude) / (cj.longitude - ci.longitude) + (ci.longitude * ci.latitude) / (cj.longitude - ci.longitude);
-
-            coords[i].multiple = (cj.latitude - ci.latitude) / (cj.longitude - ci.longitude);
-        }
-
-        j = i;
-    }
-}
-
-/**
- * Checks whether a point is inside of a polygon or not.
- * "This is useful if you have many points that need to be tested against the same (static) polygon."
- * Please call the function preparePolygonForIsPointInsideOptimized() with the same coords object before using this function.
- * Note that the polygon coords must be in correct order!
- *
- * @see          Algorythm from http://alienryderflex.com/polygon/
- *
- * @param     object      coordinate to check e.g. {latitude: 51.5023, longitude: 7.3815}
- * @param     array       array with coords e.g. [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return        bool        true if the coordinate is inside the given polygon
- */
-export function isPointInsideWithPreparedPolygon(point, coords) {
-    let flgPointInside = false,
-        ci,
-        cj;
-    const y = longitude(point);
-    const x = latitude(point);
-
-    for (let i = 0, j = coords.length - 1; i < coords.length; i++) {
-        ci = coords(coords[i]);
-        cj = coords(coords[j]);
-        if ((ci.longitude < y && cj.longitude >= y) || (cj.longitude < y && ci.longitude >= y)) {
-            flgPointInside = y * coords[i].multiple + coords[i].constant < x !== flgPointInside;
-        }
-
-        j = i;
-    }
-
-    return flgPointInside;
-}
-
-/**
  * Shortcut for isPointInside()
  */
 export function isInside(latlng, coords) {
