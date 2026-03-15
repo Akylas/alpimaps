@@ -52,5 +52,8 @@
         "a11y-mouse-events-have-key-events": "ignore",
         "a11y-missing-content": "ignore",
         "illegal-attribute-character": "ignore"
-    }
+    },
+    "i18n-ally-next.localesPaths": [
+        "app/i18n",
+    ]
 }

@@ -321,7 +321,7 @@
     "gps_update_distance": "update distance",
     "gps_update_distance_desc": "Update distance filter in meters. Specifies how often to update",
     "gps_update_minTime": "updates interval",
-    "gps_update_minTime_desc": "Minimum time interval between location updates, in milliseconds",
+    "gps_update_minTime_desc": "Minimum time interval between location updates, in seconds",
     "gpx": "GPX",
     "gravel": "gravel",
     "greengrocer": "greengrocer",
