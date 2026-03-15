@@ -117,5 +117,7 @@
     </array>
     <key>NSCameraUsageDescription</key>
     <string>«Alpi Maps» can use your camera for the peak finder feature</string>
+    <key>NSMotionUsageDescription</key>
+    <string>«Alpi Maps» use your your motion sensors for the compass feature</string>
   </dict>
 </plist>
