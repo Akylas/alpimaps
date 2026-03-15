@@ -737,5 +737,7 @@
     "wikipedia": "维基百科",
     "wilderness_hut": "荒野小屋",
     "windmill": "风车",
-    "wireframe": "线框图"
+    "wireframe": "线框图",
+    "a9_background_location_screenrefresh_delay": "屏幕刷新延迟",
+    "custom_units": "自定义单位"
 }

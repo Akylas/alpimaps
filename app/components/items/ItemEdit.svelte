@@ -137,7 +137,7 @@
                 dataSource: vectorTileDataSource,
                 decoder: getMapContext().innerDecoder
             });
-            vectorTileLayer.setVectorTileEventListener(this);
+            // vectorTileLayer.setVectorTileEventListener(this);
             cartoMap.addLayer(vectorTileLayer);
 
             if (cartoMap.getMeasuredWidth()) {
