@@ -1,4 +1,4 @@
-import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils';
+import { getWorkerContextValue, setWorkerContextValue } from '@akylas/nativescript-app-utils/worker';
 import { WorkerEventType } from '@akylas/nativescript-app-utils/worker/BaseWorker';
 
 export function prepareWorker(worker) {
