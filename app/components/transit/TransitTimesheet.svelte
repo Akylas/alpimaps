@@ -13,7 +13,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '@shared/utils/error';
+    import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '~/utils/ui';
