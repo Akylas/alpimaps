@@ -710,6 +710,7 @@
 
     async function onMainMapReady(e) {
         try {
+            // addedLayers = [];
             // if (!PRODUCTION) {
             //     await new Promise((resolve) => setTimeout(resolve, 1000));
             // }
@@ -738,6 +739,12 @@
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
             DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, addedLayers.length, theme);
+            if (addedLayers) {
+                Object.values(addedLayers).forEach((d) => {
+                    addLayer(d.layer, d.layerId, true);
+                });
+            }
+
             tryCatch(async () => {
                 packageService.start();
                 transitService.start();
@@ -745,11 +752,6 @@
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
-            if (addedLayers) {
-                Object.values(addedLayers).forEach((d) => {
-                    addLayer(d.layer, d.layerId, true);
-                });
-            }
             //in case it is created before (clicked as soon as the UI is shown)
             if (transitVectorTileLayer) {
                 addLayer(transitVectorTileLayer, 'transit');
