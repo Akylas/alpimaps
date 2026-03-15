@@ -140,17 +140,12 @@
         "@types/offscreencanvas": "^2019.7.3",
         "@types/suncalc": "^1.9.2",
         "@types/three": "0.171.0",
-        "fast-xml-parser": "^5.3.0",
+        "fast-xml-parser": "5.5.5",
         "merge-properties-files": "^1.1.6",
         "mini-css-extract-plugin": "^2.9.4",
         "svelte-loader": "3.2.4",
         "swc-loader": "0.2.6",
         "webpack-shell-plugin-next": "2.3.3"
-    },
-    "resolutions": {
-        "@akylas/nativescript": "portal:../NativeScript/dist/packages/core",
-        "svelte-check@npm:4.3.1": "patch:svelte-check@npm%3A4.3.1#~/.yarn/patches/svelte-check-npm-4.3.1-7aa559b153.patch",
-        "@nativescript-community/l": "portal:/Volumes/dev/nativescript/l/plugin"
     },
     "workspaces": [
         "./",
