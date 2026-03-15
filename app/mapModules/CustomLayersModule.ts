@@ -31,7 +31,7 @@ import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
-import { SilentError } from '@shared/utils/error';
+import { SilentError } from '@akylas/nativescript-app-utils/error';
 const mapContext = getMapContext();
 
 export enum RoutesType {

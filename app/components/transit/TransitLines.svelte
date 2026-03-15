@@ -8,7 +8,7 @@
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { MetroRoute, transitService } from '~/services/TransitService';
-    import { NoNetworkError } from '@shared/utils/error';
+    import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { fonts, windowInset } from '~/variables';

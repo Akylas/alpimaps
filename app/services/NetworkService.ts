@@ -4,7 +4,7 @@ import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
 import dayjs from 'dayjs';
-import { HTTPError, TimeoutError } from '@shared/utils/error';
+import { HTTPError, TimeoutError } from '@akylas/nativescript-app-utils/error';
 import { createGlobalEventListener, globalObservable } from '@shared/utils/svelte/ui';
 import { getDataFolder } from '~/utils/utils';
 import { DEFAULT_VALHALLA_ONLINE_URL, SETTINGS_VALHALLA_ONLINE_URL } from '~/utils/constants';
