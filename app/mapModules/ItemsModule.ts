@@ -35,19 +35,16 @@ let writer: GeoJSONGeometryWriter<LatLonKeys>;
 
 const TAG = '[ItemsModule]';
 
-// var osmOverpassUrls = [
-//     // 'http://this.openstreetmap.fr/oapi/',
-//     'http://overpass-api.de/api/',
-//     'https://maps.mail.ru/osm/tools/overpass/api/',
-//     'https://overpass.openstreetmap.ru/api/',
-//     'https://overpass.osm.ch/api/',
-//     // 'http://overpass.osm.rambler.ru/cgi/'
-// ];
-// var index = 0;
+const osmOverpassUrls = [
+    // 'https://overpass.private.coffee/api/',
+    'http://overpass-api.de/api/'
+    // 'https://overpass.osm.ch/api/'
+];
+let index = 0;
 function overpassAPIURL() {
-    return 'http://overpass-api.de/api/';
-    // index = (index + 1) % osmOverpassUrls.length;
-    // return osmOverpassUrls[index];
+    // return 'http://overpass-api.de/api/';
+    index = (index + 1) % osmOverpassUrls.length;
+    return osmOverpassUrls[index];
 }
 
 export interface ItemFeature extends Feature {
