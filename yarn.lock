@@ -2622,10 +2622,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-carto@npm:2.0.4":
-  version: 2.0.4
-  resolution: "@nativescript-community/ui-carto@npm:2.0.4"
-  checksum: 10/8c2a7d368b2c640bb65a85abdf5d2737d5e005892ec1a7bcbfcf50a8b22d1399e2984cfef8044462fbe1cc20ac3143decee3a452dd3446b78393ae35200316b1
+"@nativescript-community/ui-carto@npm:2.0.5":
+  version: 2.0.5
+  resolution: "@nativescript-community/ui-carto@npm:2.0.5"
+  checksum: 10/288cf3cae2e6c70942e32ddac85c382ff88b8084743ea514da8460a72cfa073e082afd4989ba848acb7500cef803bd55ff285ce183311b45d0a6f756bd73c31d
   languageName: node
   linkType: hard
 
@@ -14613,7 +14613,7 @@ __metadata:
     "@nativescript-community/text": "npm:1.6.23"
     "@nativescript-community/ui-canvas": "npm:4.6.46"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.49"
-    "@nativescript-community/ui-carto": "npm:2.0.4"
+    "@nativescript-community/ui-carto": "npm:2.0.5"
     "@nativescript-community/ui-chart": "npm:2.0.26"
     "@nativescript-community/ui-checkbox": "npm:2.0.18"
     "@nativescript-community/ui-collectionview": "npm:6.0.17"
