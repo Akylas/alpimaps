@@ -1,0 +1,5 @@
+Bug fixes:
+- GPS Updates interval is in seconds and not ms
+- monochrome icon
+- bug fixes
+- Translations update
