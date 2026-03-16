@@ -56,7 +56,7 @@
               }
             : null;
     $: refresh(text);
-    $: refresh(color);
+    $: refresh(actualColor);
     $: refresh(isSelected);
 
     function refresh(...args) {
