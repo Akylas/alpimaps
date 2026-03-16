@@ -379,7 +379,7 @@
         if (collapseButton instanceof LayoutBase) {
             collapseButton = collapseButton.getViewById('rightButton');
         }
-        DEV_LOG && console.log('expandItem', collapseButton, listItem.expanded);
+        // DEV_LOG && console.log('expandItem', collapseButton, listItem.expanded);
         listItem.expanded = !listItem.expanded;
         collapseButton.animate({
             duration: 200,
