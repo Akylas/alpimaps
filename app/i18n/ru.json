@@ -739,5 +739,18 @@
     "wikipedia": "wikipedia",
     "wilderness_hut": "хижина в дикой природе",
     "windmill": "ветряная мельница",
-    "wireframe": "каркас"
+    "wireframe": "каркас",
+    "a9_background_location_screenrefresh_delay": "задержка обновления экрана",
+    "behavior": "поведение",
+    "building_min_zoom": "минимальное приближение зданий",
+    "building_min_zoom_desc": "минимальное приближение для отображения зданий",
+    "campsite_allow_overlap": "разрешить перекрытие для иконок кемпинга",
+    "chart_elevation_min_range": "минимальная дальность подъема (эквивалент показанной высоты мин.)",
+    "chart_max_filter": "максимальный фильтр для упрощения графика",
+    "chart_show_waypoints": "показать путевые точки",
+    "charts": "графики",
+    "charts_settings": "настройки связанные с графиками",
+    "custom_units": "пользовательские значения",
+    "draw_onroute_live_data": "нарисовать лайв данные для текущего маршрута (оставшееся расстояние, перепад высот,... до следующей путевой точки)",
+    "elevation_profile_filter_step": "шаг фильтра профиля высоты"
 }
