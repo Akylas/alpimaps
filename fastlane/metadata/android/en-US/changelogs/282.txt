@@ -1,0 +1,3 @@
+Bug fixes:
+- rollback android.permission.READ_PHONE_STATE being added
+- Translations update
