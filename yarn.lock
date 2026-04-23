@@ -6048,10 +6048,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:0.8.11, @xmldom/xmldom@npm:^0.8.8":
-  version: 0.8.11
-  resolution: "@xmldom/xmldom@npm:0.8.11"
-  checksum: 10/f6d6ffdf71cf19d9b3c10e978fad40d2f85453bf5b2aa05be8aa0c5ad13f84690c3153316729213cc652d06ec12c605ddb0aa03886f1d73d51b974b4105d31e3
+"@xmldom/xmldom@npm:0.8.13, @xmldom/xmldom@npm:^0.8.8":
+  version: 0.8.13
+  resolution: "@xmldom/xmldom@npm:0.8.13"
+  checksum: 10/291633c5ea5cd781bf084a4419cdd89fe24a680793eb7b26943afebe307c8d17e04c1048f70463fe791010efae715f29f08f5b7ca2d6a77eee1e016b6e7b4fbf
   languageName: node
   linkType: hard
 
@@ -16140,7 +16140,7 @@ __metadata:
     "@types/offscreencanvas": "npm:^2019.7.3"
     "@types/suncalc": "npm:^1.9.2"
     "@types/three": "npm:0.171.0"
-    "@xmldom/xmldom": "npm:0.8.11"
+    "@xmldom/xmldom": "npm:0.8.13"
     additween: "npm:3.0.0"
     alpimaps-non-playstore: "portal:plugin_non_playstore"
     camera-controls: "npm:1.33.1"
