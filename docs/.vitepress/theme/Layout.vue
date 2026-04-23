@@ -13,6 +13,8 @@ const { frontmatter } = useData()
           src="/featureGraphic.png"
           alt="AlpiMaps — Maps for real outdoor adventures"
           loading="eager"
+          width="1024"
+          height="500"
         />
       </div>
     </template>

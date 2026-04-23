@@ -1,4 +1,12 @@
-/* Brand colors matching featureGraphic.png blue palette */
+/* ================================================================
+   AlpiMaps – custom VitePress theme
+   Palette extracted from featureGraphic.png:
+     deep navy  #0d2f5e   mid blue  #1565c0
+     brand blue #1e72ce   sky blue  #42a5f5
+     pale sky   #90caf9   white     #ffffff
+   ================================================================ */
+
+/* ── Brand tokens ─────────────────────────────────────────────── */
 :root {
   --vp-c-brand-1: #1e72ce;
   --vp-c-brand-2: #1a65bc;
@@ -14,6 +22,10 @@
   --vp-button-brand-active-border: transparent;
   --vp-button-brand-active-text: #ffffff;
   --vp-button-brand-active-bg: #1558ac;
+
+  /* gradient hero text */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #ffffff 0%, #90caf9 60%, #42a5f5 100%);
 }
 
 .dark {
@@ -21,29 +33,290 @@
   --vp-c-brand-2: #4a97d8;
   --vp-c-brand-3: #3a87cc;
   --vp-c-brand-soft: rgba(91, 168, 229, 0.16);
+
+  --vp-home-hero-name-background: linear-gradient(135deg, #ffffff 0%, #90caf9 70%, #5ba8e5 100%);
 }
 
-/* Full-width feature graphic banner */
+/* ── Keyframes ────────────────────────────────────────────────── */
+@keyframes heroGlow {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes bannerReveal {
+  from { opacity: 0; transform: scaleY(0.96); }
+  to   { opacity: 1; transform: scaleY(1);    }
+}
+
+/* ── Feature-graphic banner (constrained height) ─────────────── */
 .feature-graphic-banner {
   width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  /* negative margin trick to break out of VitePress container */
+  margin-left: calc(50% - 50vw);
   line-height: 0;
   overflow: hidden;
+  transform-origin: top center;
+  animation: bannerReveal 0.7s ease both;
 }
 
 .feature-graphic-banner img {
   width: 100%;
-  height: auto;
+  /* responsive height: 200 px on mobile → max 400 px on wide screens */
+  height: clamp(200px, 32vw, 400px);
   display: block;
   object-fit: cover;
+  object-position: center top;
 }
 
-/* Remove default hero padding when full-width graphic is present */
-.VPHome .VPHero {
-  padding-top: 48px;
+/* ── Hero section – animated blue gradient background ─────────── */
+.VPHero {
+  background: linear-gradient(
+    145deg,
+    #0d2f5e  0%,
+    #1565c0 30%,
+    #1e72ce 55%,
+    #2a90e0 70%,
+    #1e72ce 85%,
+    #1565c0 100%
+  ) !important;
+  background-size: 400% 400% !important;
+  animation: heroGlow 14s ease infinite !important;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Tighten the gap between the banner and the hero text */
+/* Subtle topographic-contour overlay (matches graphic) */
+.VPHero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-radial-gradient(
+      ellipse at 70% 35%,
+      transparent 0,
+      transparent 50px,
+      rgba(255,255,255,0.03) 50px,
+      rgba(255,255,255,0.03) 52px
+    ),
+    repeating-radial-gradient(
+      ellipse at 70% 35%,
+      transparent 0,
+      transparent 80px,
+      rgba(255,255,255,0.025) 80px,
+      rgba(255,255,255,0.025) 82px
+    ),
+    repeating-radial-gradient(
+      ellipse at 70% 35%,
+      transparent 0,
+      transparent 115px,
+      rgba(255,255,255,0.02) 115px,
+      rgba(255,255,255,0.02) 117px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hero container sits above the overlay */
 .VPHero .container {
-  padding-top: 0;
+  position: relative;
+  z-index: 1;
 }
+
+/* Hero text colors on the blue background */
+.VPHero .name,
+.VPHero .clip {
+  background: var(--vp-home-hero-name-background) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+.VPHero .text {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.VPHero .tagline {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Fade-in entrance for hero content */
+.VPHero .main {
+  animation: fadeSlideUp 0.85s ease both;
+}
+
+/* ── Hero action buttons ─────────────────────────────────────── */
+.VPHero .actions .action .VPButton.brand {
+  background: #ffffff !important;
+  color: #1565c0 !important;
+  border-color: transparent !important;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.VPHero .actions .action .VPButton.brand:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.45);
+}
+
+.VPHero .actions .action .VPButton.alt {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.VPHero .actions .action .VPButton.alt:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+/* ── Feature cards (glass morphism, blue tint) ───────────────── */
+.VPFeatures .VPFeature {
+  background: rgba(30, 114, 206, 0.07) !important;
+  border: 1px solid rgba(30, 114, 206, 0.2) !important;
+  border-radius: 14px !important;
+  transition:
+    transform     0.3s ease,
+    box-shadow    0.3s ease,
+    background    0.3s ease,
+    border-color  0.3s ease !important;
+  animation: fadeSlideUp 0.65s ease both;
+}
+
+/* Staggered card entrance */
+.VPFeatures .VPFeature:nth-child(1) { animation-delay: 0.05s; }
+.VPFeatures .VPFeature:nth-child(2) { animation-delay: 0.10s; }
+.VPFeatures .VPFeature:nth-child(3) { animation-delay: 0.15s; }
+.VPFeatures .VPFeature:nth-child(4) { animation-delay: 0.20s; }
+.VPFeatures .VPFeature:nth-child(5) { animation-delay: 0.25s; }
+.VPFeatures .VPFeature:nth-child(6) { animation-delay: 0.30s; }
+.VPFeatures .VPFeature:nth-child(7) { animation-delay: 0.35s; }
+.VPFeatures .VPFeature:nth-child(8) { animation-delay: 0.40s; }
+.VPFeatures .VPFeature:nth-child(9) { animation-delay: 0.45s; }
+
+.VPFeatures .VPFeature:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 14px 36px rgba(30, 114, 206, 0.22) !important;
+  background: rgba(30, 114, 206, 0.14) !important;
+  border-color: rgba(30, 114, 206, 0.4) !important;
+}
+
+/* Feature icon glow on hover */
+.VPFeatures .VPFeature .icon {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.VPFeatures .VPFeature:hover .icon {
+  transform: scale(1.18);
+  filter: drop-shadow(0 0 8px rgba(30, 114, 206, 0.55));
+}
+
+/* Feature title: brand color */
+.VPFeatures .VPFeature .title {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ── Dark mode card adjustments ─────────────────────────────── */
+.dark .VPFeatures .VPFeature {
+  background: rgba(30, 114, 206, 0.1) !important;
+  border-color: rgba(91, 168, 229, 0.2) !important;
+}
+
+.dark .VPFeatures .VPFeature:hover {
+  background: rgba(30, 114, 206, 0.2) !important;
+  border-color: rgba(91, 168, 229, 0.4) !important;
+  box-shadow: 0 14px 36px rgba(30, 114, 206, 0.3) !important;
+}
+
+.dark .VPFeatures .VPFeature .title {
+  color: #5ba8e5 !important;
+}
+
+/* ── Navigation bar ─────────────────────────────────────────── */
+.VPNav {
+  background: rgba(13, 47, 94, 0.9) !important;
+  backdrop-filter: blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
+  border-bottom: 1px solid rgba(30, 114, 206, 0.3) !important;
+}
+
+.dark .VPNav {
+  background: rgba(5, 18, 42, 0.92) !important;
+  border-bottom-color: rgba(91, 168, 229, 0.2) !important;
+}
+
+/* Nav site title */
+.VPNavBarTitle .title {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Nav menu links */
+.VPNavBarMenuLink,
+.VPNavBarMenuGroup > .button {
+  color: rgba(255, 255, 255, 0.82) !important;
+  transition: color 0.2s ease !important;
+}
+
+.VPNavBarMenuLink:hover,
+.VPNavBarMenuGroup > .button:hover,
+.VPNavBarMenuLink.active {
+  color: #90caf9 !important;
+}
+
+/* Nav social link icons */
+.VPSocialLink svg {
+  fill: rgba(255, 255, 255, 0.8);
+  transition: fill 0.2s ease;
+}
+
+.VPSocialLink:hover svg {
+  fill: #90caf9;
+}
+
+/* ── Sidebar active link accent ─────────────────────────────── */
+.VPSidebarItem.is-active > .item .link .text {
+  color: var(--vp-c-brand-1) !important;
+}
+
+/* ── Inline link colors ──────────────────────────────────────── */
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration-color: rgba(30, 114, 206, 0.35);
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.vp-doc a:hover {
+  color: #42a5f5;
+  text-decoration-color: rgba(66, 165, 245, 0.6);
+}
+
+/* ── Download badges ─────────────────────────────────────────── */
+.download-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 24px 0;
+}
+
+.download-badges img {
+  height: 50px;
+  width: auto;
+  border-radius: 8px;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.download-badges img:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 8px 22px rgba(30, 114, 206, 0.35);
+}
+
