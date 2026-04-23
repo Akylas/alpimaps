@@ -1262,15 +1262,14 @@
                 </gridlayout>
             </Template>
             <Template key="switch" let:item>
-                <SettingsSwitch fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
+                <SettingsSwitch item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
             </Template>
             <Template key="checkbox" let:item>
-                <SettingsCheckbox fontSize={20} item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
+                <SettingsCheckbox item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
             </Template>
             <Template key="leftIcon" let:item>
                 <ListItemAutoSize
                     columns="auto,*,auto"
-                    fontSize={20}
                     item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                     mainCol={1}
                     showBottomLine={false}
@@ -1280,7 +1279,6 @@
             </Template>
             <Template let:item>
                 <ListItemAutoSize
-                    fontSize={20}
                     item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                     showBottomLine={false}
                     on:tap={(event) => onTap(item, event)}
@@ -1289,7 +1287,6 @@
             </Template>
             <Template key="html" let:item>
                 <ListItemAutoSize
-                    fontSize={20}
                     item={{ ...item, title: getTitle(item), html: getSubtitle(item) }}
                     showBottomLine={false}
                     on:tap={(event) => onTap(item, event)}
