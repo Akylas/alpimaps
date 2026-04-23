@@ -11,7 +11,7 @@ import { install as installBottomSheets } from '@nativescript-community/ui-mater
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import installWebRTC from '@nativescript-community/ui-webview-rtc';
-import { Application, Trace } from '@nativescript/core';
+import { Application, ApplicationSettings, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
 import { init as sharedInit } from '@shared/index';
 import { svelteNative } from '@nativescript-community/svelte-native';
@@ -21,9 +21,13 @@ import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '@shared/utils/sentry';
 import { NestedScrollView } from './NestedScrollView';
+import { SETTINGS_ENABLE_CRASH_REPORT } from '~/utils/constants';
 
 try {
-    startSentry();
+    const shouldEnableSentry = ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD);
+    if (shouldEnableSentry) {
+        startSentry();
+    }
     installGestures(true);
     installMixins();
     installBottomSheets();
