@@ -17,9 +17,9 @@
     export let showBottomLine: boolean = false;
     // export let iconFontSize: number = 24;
     export let item: ListItem;
-    export let fontSize: number = 17;
+    export let fontSize: number = 21;
     export let fontWeight: any = 'normal';
-    export let subtitleFontSize: number = 14;
+    export let subtitleFontSize: number = 15;
     export let columns: string = '*,auto';
     export let mainCol = 0;
     export let onLinkTap: (event) => void = null;
