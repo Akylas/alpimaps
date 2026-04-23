@@ -103,7 +103,7 @@
         "@nativescript/appavailability": "2.0.0",
         "@nativescript/email": "^2.1.0",
         "@tmcw/togeojson": "7.1.2",
-        "@xmldom/xmldom": "0.8.11",
+        "@xmldom/xmldom": "0.8.13",
         "additween": "3.0.0",
         "alpimaps-non-playstore": "portal:plugin_non_playstore",
         "camera-controls": "1.33.1",
