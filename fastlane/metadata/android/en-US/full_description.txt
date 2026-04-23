@@ -1,50 +1,26 @@
-<i>Alpi Maps</i> is an outdoor companion app
+AlpiMaps is the map app for real outdoor adventures — built for hikers, cyclists, travelers and explorers who need reliable maps, navigation and terrain tools whether they’re online or deep in the backcountry.
 
-<b>Map features:</b>
+Everything works online or offline Download map packs to your device or stream maps when you have a connection — AlpiMaps keeps the same powerful features available either way: maps, search, routing, elevation, statistics, 3D terrain and more.
 
-- enjoy more that 50 different map styles
-- enjoy more that 20 different map overlay styles like ski trails
-- enable / disable HD map for each style
-- combine map styles with opacity to create your own map
-- enjoy Google Maps style, traffic layers and buildings
-- enjoy rotating and tilting map
-- use the Google Maps gestures you love so much like the double tap and drag to zoom!
-- see slopes percentages (based on hill-shading data source offline/online)
+Top features
 
-<b>GPS features:</b>
+* Truly offline navigation: turn-by-turn directions for walking, cycling and driving — online or offline.
+* Route planning & road stats: build routes, save routes and get detailed stats (distance, ascent/descent, surfaces and grades) so you can plan rides and hikes with confidence.
+* Advanced elevation & 3D terrain: elevation profiles, hillshade and terrarium/3D terrain views so you can see the landscape before you go.
+* Offline search & place lookup: find towns, trails and POIs even with no mobile signal.
+* Peak finder & compass: identify nearby peaks, get bearings and distances, and use a compass that can aim at selected locations.
+* GPS satellites view: check satellite signal and status for better GPS troubleshooting and performance.
+* Astronomy tools: sun & moon info, local time at any location, daylight times and other handy astronomy data for planning trips.
+* Map interaction & customization: inspect points/lines/polygons, toggle map rotation and pitch, enable/disable layers and choose map styles.
+* Work with map packs or create your own: offline maps work with generated custom map data with the AlpiMaps data generator (see on Github) — then add them to the app to unlock richer offline features.
+* Privacy-first & battery-friendly: use offline data to keep everything local, and tune GPS frequency/accuracy to save battery on long trips.
 
-- follow your location on the map
-- choose wether to follow your location or only query your location when needed for the lowest battery consumption
-- choose the accuracy of the GPS for even lower battery consumption
-- access useful information about your position like altitude, orientation, sunset, sunrise...
-- track your position on any computed itinerary to see where you are at
-- see where you are from any point on the map : distance, orientation and altitude
-- share your location with a screenshot of the map
-- get navigation directions
+Who it’s for
 
-<b>Markers features:</b>
+* Hikers and backcountry cyclists who need dependable offline maps and elevation tools.
+* Travelers who want offline navigation and searchable maps anywhere.
+* Outdoor planners and power users who want to create and customize map packs.
 
-- add a marker from any point on the map
-- find the altitude of any point on the map
+Get started Install AlpiMaps, choose an online provider to stream maps or add a downloaded map pack to enable full offline mode. For power users and tinkerers: learn how to create custom map packs with the AlpiMaps data generator (link in app documentation).
 
-<b>Offline features:</b>
-
-- everything map you see is cached. Prepare your hike in advance, look where you are going and access your maps offline while hiking.
-- every single marker and all its details are available offline
-- offline itinerary profile
-- get navigation directions of saved itineraries
-- use your phone airplane mode to make sure you don't sure too much battery (network search can drain your battery), and still access your data. 
-
-<b>Search features:</b>
-- Alpi Maps use the Here/Photon APIs to query data.
-- use the search as you type feature to quickly look for something in your markers or anywhere in the world
-- then use the search to look for businesses, restaurants, ... in the region you are currently seeing
-
-<b>Other features:</b>
-
-- Compass tool
-- Moon / Sun information tool
-- GPS Satellites testing tool (useful to understand why you get a slow GPS fix)
-- Altitude based pressure
-- View on lockscreen mode
-- Keep screen alive mode
+Download AlpiMaps and go explore — online when you want it, offline when it matters.
