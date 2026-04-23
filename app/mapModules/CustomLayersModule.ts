@@ -257,7 +257,7 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    createOrderedMBTilesDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
+    createOrderedTileDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
         if (sources.length === 0) {
             return null;
         }
@@ -281,12 +281,11 @@ export default class CustomLayersModule extends MapModule {
             });
         }
     }
-    createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}, terrarium = false) {
+    createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}) {
         const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.42);
         const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 0.22);
         const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
-        const decoder = terrarium ? new TerrariumElevationDataDecoder() : new MapBoxElevationDataDecoder();
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
         const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000aa'));
@@ -308,7 +307,7 @@ export default class CustomLayersModule extends MapModule {
                 break;
         }
         return new HillshadeRasterTileLayer({
-            decoder,
+            // decoder: new MapBoxElevationDataDecoder(),
             tileFilterMode,
             visibleZoomRange: [minVisibleZoom, maxVisibleZoom],
             contrast,
@@ -385,35 +384,11 @@ export default class CustomLayersModule extends MapModule {
         }
         return { url: templateString(url, { s: 'a', x: '528', y: '367', z: '10', ...provider.urlOptions }), headers: provider.sourceOptions?.httpHeaders };
     }
-    async createDataSourceAndMapLayer(id: string, provider: Provider) {
-        const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
-        // Apply zoom level bias to the raster layer.
-        // By default, bitmaps are upsampled on high-DPI screens.
-        // We will correct this by applying appropriate bias
-        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
-        const options = {
-            zoomLevelBias: {
-                min: 0,
-                max: 5
-            }
-        };
-
-        // if (provider.type === 'orux') {
-        //     dataSource = new OruxDBTileDataSource({
-        //         databasePath: provider.url as string
-        //     });
-        //     layer = new RasterTileLayer({
-        //         dataSource,
-        //         zoomLevelBias,
-        //         opacity,
-        //         visible: opacity !== 0
-        //     });
-        // } else {
+    async createDataSource(id: string, provider: Provider) {
         const rasterCachePath = Folder.fromPath(path.join(getDataFolder(), 'rastercache'));
         const idForPath = id.replaceAll(/[\\\?\*<":>\+\[\]\s\t\n\.]+/g, '_');
         const databasePath = File.fromPath(path.join(rasterCachePath.path, idForPath)).path;
-        const legend = provider.legend;
         let url = provider.url;
         if (provider.tokenKey) {
             const tokens = Array.isArray(provider.tokenKey) ? provider.tokenKey : [provider.tokenKey];
@@ -460,68 +435,71 @@ export default class CustomLayersModule extends MapModule {
                 // }
             }
         }
-        // let dataSource: TileDataSource<any, any>;
-        let vectorDataSource = false;
-        // if (Array.isArray(url)) {
-        //     vectorDataSource = url[0].indexOf('.mvt') >= 0 || url[0].indexOf('.pbf') >= 0;
-        //     const generator = (s, minZoom) =>
-        //         new HTTPTileDataSource({
-        //             url: s,
-        //             ...provider.sourceOptions
-        //         });
-        //     dataSource = this.createMergeDataSource(url, generator);
-        // } else {
-        vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
+        const vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
         const dataSource = new HTTPTileDataSource({
             url,
             ...provider.sourceOptions
         });
-        // }
-        // if (provider.cacheable !== false) {
-        //     Object.assign(options, {
-        //         cacheSize: {
-        //             min: 0,
-        //             max: 2048
-        //         }
-        //     });
-        // }
+
+        const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
+        const cacheable = provider.cacheable || !PRODUCTION;
         const cacheSize = ApplicationSettings.getNumber(`${id}_cacheSize`, 300);
-        let layer: TileLayer<any, any>;
-        if (provider.hillshade) {
-            Object.assign(options, HILLSHADE_OPTIONS);
-            layer = this.createHillshadeTileLayer(
-                id,
-                provider.cacheable !== false
+        return {
+            dataSource:
+                cacheable !== false || downloadable
                     ? new PersistentCacheTileDataSource({
                           dataSource,
+                          cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                           capacity: cacheSize * 1024 * 1024,
                           databasePath
                       })
                     : dataSource,
-                {
-                    zoomLevelBias,
-                    // cacheSize,
-                    opacity,
-                    tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
-                    visible: opacity !== 0,
-                    ...provider.layerOptions
-                },
-                provider.terrarium === true
-            );
+            vectorDataSource
+        };
+    }
+    async createDataSourceAndMapLayer(id: string, provider: Provider) {
+        const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
+
+        // Apply zoom level bias to the raster layer.
+        // By default, bitmaps are upsampled on high-DPI screens.
+        // We will correct this by applying appropriate bias
+        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
+        const options = {
+            zoomLevelBias: {
+                min: 0,
+                max: 5
+            }
+        };
+
+        // if (provider.type === 'orux') {
+        //     dataSource = new OruxDBTileDataSource({
+        //         databasePath: provider.url as string
+        //     });
+        //     layer = new RasterTileLayer({
+        //         dataSource,
+        //         zoomLevelBias,
+        //         opacity,
+        //         visible: opacity !== 0
+        //     });
+        // } else {
+        const { dataSource, vectorDataSource } = await this.createDataSource(id, provider);
+
+        let layer: TileLayer<any, any>;
+        if (provider.hillshade) {
+            Object.assign(options, HILLSHADE_OPTIONS);
+            layer = this.createHillshadeTileLayer(id, dataSource, {
+                zoomLevelBias,
+                opacity,
+                tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
+                visible: opacity !== 0,
+                ...provider.layerOptions
+            });
             if (!this.hillshadeLayer) {
                 this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
             }
         } else if (vectorDataSource) {
             layer = new VectorTileLayer({
-                dataSource:
-                    provider.cacheable !== false
-                        ? new PersistentCacheTileDataSource({
-                              dataSource,
-                              cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
-                              capacity: cacheSize * 1024 * 1024,
-                              databasePath
-                          })
-                        : dataSource,
+                dataSource,
                 zoomLevelBias: ApplicationSettings.getNumber(`${id}_zoomLevelBias`, 0),
                 labelRenderOrder: VectorTileRenderOrder.LAST,
                 decoder: mapContext.mapDecoder,
@@ -545,34 +523,22 @@ export default class CustomLayersModule extends MapModule {
                 // __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
             );
         } else {
-            const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
-            const cacheable = provider.cacheable || !PRODUCTION;
             layer = new RasterTileLayer({
-                dataSource:
-                    cacheable !== false || downloadable
-                        ? new PersistentCacheTileDataSource({
-                              dataSource,
-                              cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
-                              capacity: cacheSize * 1024 * 1024,
-                              databasePath
-                          })
-                        : dataSource,
+                dataSource,
                 preloading: get(preloading),
                 zoomLevelBias,
-                // cacheSize,
                 opacity,
                 // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
                 ...provider.layerOptions
             });
         }
-        // }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
         return {
             name: id,
             id,
-            legend,
+            legend: provider.legend,
             opacity,
             options,
             layer,
@@ -726,12 +692,20 @@ export default class CustomLayersModule extends MapModule {
             return data.layer.dataSource;
         }
     }
+    async createDataSourceFromId(s: string) {
+        await this.getSourcesLibrary();
+        const provider = this.baseProviders[s] || this.overlayProviders[s];
+        if (provider) {
+            const { dataSource } = await this.createDataSource(s, provider);
+            return dataSource;
+        }
+    }
 
-    get defaultOnlineSource() {
+    get defaultOnlineSources() {
         // if (this.tokenKeys.americanaosm) {
         //     return 'americanaosm';
         // } else {
-        return 'openfreemap';
+        return ['openfreemap', 'mapterhorn'];
         // }
     }
     // get americanaOSMHTML() {
@@ -816,8 +790,9 @@ export default class CustomLayersModule extends MapModule {
                         // }
                     }
                     if (this.customSources.length === 0 && savedSources.length === 0) {
-                        savedSources.push(this.defaultOnlineSource);
-                        ApplicationSettings.setString('added_providers', `["${this.defaultOnlineSource}"]`);
+                        const sources = this.defaultOnlineSources;
+                        savedSources.push(...sources);
+                        ApplicationSettings.setString('added_providers', JSON.stringify(sources));
                     }
                     if (savedSources.length > 0) {
                         await this.getSourcesLibrary();
@@ -999,7 +974,7 @@ export default class CustomLayersModule extends MapModule {
                         mbTilesSourceGenerator,
                         undefined
                     );
-                    dataSource = this.createOrderedMBTilesDataSource([worldDataSource, dataSource], mbTilesSourceGenerator);
+                    dataSource = this.createOrderedTileDataSource([worldDataSource, dataSource], mbTilesSourceGenerator);
                 }
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
                 // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
@@ -1051,16 +1026,19 @@ export default class CustomLayersModule extends MapModule {
                 let dataSource: TileDataSource<any, any> = new MultiTileDataSource();
                 terrains.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
                 if (worldTerrainMbtilesEntity) {
-                    dataSource = this.createOrderedMBTilesDataSource(
+                    dataSource = this.createOrderedTileDataSource(
                         [
+                            dataSource,
                             new MBTilesTileDataSource({
                                 databasePath: getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)
-                            }),
-                            dataSource
+                            })
                         ],
                         mbTilesSourceGenerator
                     );
                 }
+
+                // we add mapterhorn as fallback for regions without elevation or high zoom levels
+                dataSource = this.createOrderedTileDataSource([dataSource, await this.createDataSourceFromId('mapterhorn')], mbTilesSourceGenerator);
 
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 const data = {
@@ -1322,9 +1300,12 @@ export default class CustomLayersModule extends MapModule {
             savedSources.splice(index, 1);
             ApplicationSettings.setString('added_providers', JSON.stringify(savedSources));
             if (this.customSources.length === 0 && savedSources.length === 0) {
-                const provider = this.baseProviders[this.defaultOnlineSource];
-                const data = await this.createDataSourceAndMapLayer(provider.id, provider);
-                this.addDataSource(data);
+                const sources = this.defaultOnlineSources;
+                for (let i = 0; i < sources.length; i++) {
+                    const provider = this.baseProviders[sources[i]];
+                    const data = await this.createDataSourceAndMapLayer(provider.id, provider);
+                    this.addDataSource(data);
+                }
             }
         }
     }

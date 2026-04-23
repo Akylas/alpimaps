@@ -85,8 +85,21 @@ export const data: { [k: string]: Provider } = {
     ElevationTiles: {
         url: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png',
         hillshade: true,
-        terrarium: false,
-        isOverlay: true
+        isOverlay: true,
+        sourceOptions: {
+            encoding: 'terrarium',
+            maxZoom: 16
+        }
+    },
+    Mapterhorn: {
+        url: 'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp',
+        hillshade: true,
+        isOverlay: true,
+        attribution: '<a href="https://mapterhorn.com/attribution">Materhorn</a>',
+        sourceOptions: {
+            encoding: 'terrarium',
+            maxZoom: 16
+        }
     },
     // OpenSnowMap: {
     //     category: "ski",
