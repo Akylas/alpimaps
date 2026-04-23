@@ -2,12 +2,9 @@
 layout: home
 
 hero:
-  name: "Alpi Maps"
-  text: "Outdoor Maps & Navigation"
-  tagline: "Powerful maps for hikers, cyclists and explorers — everything works 100% offline or online."
-  image:
-    src: /featureGraphic.png
-    alt: Alpi Maps
+  name: "AlpiMaps"
+  text: "Maps for real outdoor adventures"
+  tagline: "Powerful features for hikers, cyclists and explorers — everything works 100% offline or online."
   actions:
     - theme: brand
       text: Get Started

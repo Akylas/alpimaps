@@ -1,0 +1,49 @@
+/* Brand colors matching featureGraphic.png blue palette */
+:root {
+  --vp-c-brand-1: #1e72ce;
+  --vp-c-brand-2: #1a65bc;
+  --vp-c-brand-3: #1558ac;
+  --vp-c-brand-soft: rgba(30, 114, 206, 0.14);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: #1e72ce;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: #1a65bc;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: #1558ac;
+}
+
+.dark {
+  --vp-c-brand-1: #5ba8e5;
+  --vp-c-brand-2: #4a97d8;
+  --vp-c-brand-3: #3a87cc;
+  --vp-c-brand-soft: rgba(91, 168, 229, 0.16);
+}
+
+/* Full-width feature graphic banner */
+.feature-graphic-banner {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  line-height: 0;
+  overflow: hidden;
+}
+
+.feature-graphic-banner img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+/* Remove default hero padding when full-width graphic is present */
+.VPHome .VPHero {
+  padding-top: 48px;
+}
+
+/* Tighten the gap between the banner and the hero text */
+.VPHero .container {
+  padding-top: 0;
+}

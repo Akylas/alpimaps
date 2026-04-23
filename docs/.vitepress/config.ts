@@ -1,16 +1,16 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Alpi Maps',
+  title: 'AlpiMaps',
   description: 'Powerful outdoor maps & navigation — everything works 100% offline or online',
   head: [
     ['link', { rel: 'icon', href: '/icon.png' }],
-    ['meta', { name: 'theme-color', content: '#2E7D32' }],
+    ['meta', { name: 'theme-color', content: '#1e72ce' }],
     ['meta', { property: 'og:image', content: '/featureGraphic.png' }],
   ],
   themeConfig: {
     logo: '/icon.png',
-    siteTitle: 'Alpi Maps',
+    siteTitle: 'AlpiMaps',
 
     nav: [
       { text: 'Home', link: '/' },
