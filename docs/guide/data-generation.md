@@ -1,0 +1,131 @@
+# Custom Data Generation
+
+The **AlpiMaps data generator** is an open-source tool that creates custom offline data packs for use with AlpiMaps. It processes raw OpenStreetMap data and elevation data into the optimised formats the app expects.
+
+👉 **Repository:** [https://github.com/Akylas/alpimaps_data_generator](https://github.com/Akylas/alpimaps_data_generator)
+
+## What the Generator Creates
+
+Running the generator for a region produces a set of files that together unlock the full AlpiMaps offline feature set:
+
+| Output file | Format | Enables in AlpiMaps |
+|---|---|---|
+| `<region>_full.mbtiles` | Vector MBTiles | Full offline vector map |
+| `<region>.etiles` | Elevation tiles | Hillshade, slopes, elevation queries, 3D terrain |
+| `<region>_contours.mbtiles` | Vector MBTiles | Contour lines overlay |
+| `<region>_routes.mbtiles` | Vector MBTiles | Hiking & cycling route overlay |
+| `<region>.vtiles` | Valhalla routing tiles | Offline turn-by-turn routing |
+| `nutigeodb.*` | NutiGeoDb | Offline geocoding & reverse geocoding |
+| `world.mbtiles` | Vector MBTiles | World-level map at low zooms |
+| `routes.mbtiles` | Vector MBTiles | World hiking/cycling routes |
+
+## Prerequisites
+
+The generator is a command-line tool. You will need:
+
+- **Docker** (recommended) — provides all dependencies in one container
+- Or: Python 3.10+, Node.js, and various GIS utilities installed separately
+
+Check the [generator repository README](https://github.com/Akylas/alpimaps_data_generator) for the exact requirements and up-to-date installation instructions.
+
+## Quick Start
+
+```bash
+# Clone the generator
+git clone https://github.com/Akylas/alpimaps_data_generator
+cd alpimaps_data_generator
+
+# (Using Docker)
+docker compose run --rm generator <region>
+```
+
+Replace `<region>` with the name of the area you want to generate (e.g. `france`, `switzerland`, `germany`).
+
+Refer to the generator documentation for:
+
+- Available pre-defined regions
+- How to define a custom bounding box
+- Configuration options (which output files to generate)
+- Hardware requirements (generation can require significant RAM and disk space)
+
+## Data Sources Used by the Generator
+
+| Data | Source |
+|---|---|
+| Map tiles | OpenStreetMap via Geofabrik extracts |
+| Elevation | SRTM / Copernicus DEM / AWS Terrain Tiles |
+| Routes | OpenStreetMap (hiking/cycling network tags) |
+| Routing graph | OpenStreetMap via Valhalla |
+| Geocoding | OpenStreetMap via Nominatim / NutiGeoDb pipeline |
+
+## Deploying Generated Data to Your Device
+
+Once generation is complete, copy the output files to your device:
+
+### Android
+
+1. Connect the device via USB or use a file manager app
+2. Create the `alpimaps_mbtiles` folder in device storage if it does not exist
+3. Copy the output files into the folder, maintaining the recommended structure:
+
+```
+alpimaps_mbtiles/
+├── world.mbtiles
+├── routes.mbtiles
+└── <region>/
+    ├── <region>_full.mbtiles
+    ├── <region>.etiles
+    ├── <region>_contours.mbtiles
+    ├── <region>_routes.mbtiles
+    ├── <region>.vtiles
+    └── nutigeodb.*
+```
+
+4. Launch AlpiMaps — the data is detected and loaded automatically on start
+
+### iOS
+
+1. Connect the device to a Mac or PC with iTunes / Finder
+2. Go to the AlpiMaps app under **File Sharing** in iTunes / Finder
+3. Copy the output files into the AlpiMaps Documents folder using the same folder structure
+
+Alternatively, use the **Files** app and copy files into the AlpiMaps folder in the "On My iPhone/iPad" section.
+
+## Changing the Data Path
+
+If you prefer to store data in a different location (e.g., SD card on Android):
+
+1. Move your data folder to the desired location
+2. In AlpiMaps: **Settings → Offline Data → Map Data Path** → select the new folder
+
+## File Size Estimates
+
+Sizes vary greatly by region density. As rough guidance:
+
+| Region | Full map | Elevation | Routes | Routing | Geocoding |
+|---|---|---|---|---|---|
+| Small country (~50k km²) | 1–3 GB | 500 MB | 100 MB | 200 MB | 50 MB |
+| Large country (~500k km²) | 5–15 GB | 2–5 GB | 300 MB | 1 GB | 200 MB |
+
+Total for a large country like France: **~20 GB** for the complete data set.
+
+> **Tip:** You do not need all file types. Start with `_full.mbtiles` for offline maps, add `.etiles` for elevation and `.vtiles` for offline routing as needed.
+
+## Custom Regions
+
+The generator supports arbitrary bounding boxes. Define a custom region by specifying a geographic bounding box (min/max latitude and longitude) in the generator configuration. See the [generator README](https://github.com/Akylas/alpimaps_data_generator) for the exact syntax.
+
+## Updating Data
+
+OpenStreetMap data changes continuously. Re-run the generator to update your data packs. The generator supports **incremental updates** for some file types — see the generator documentation for details.
+
+## Using Third-Party MBTiles
+
+AlpiMaps can load any valid MBTiles file, not just those generated by the AlpiMaps generator. However:
+
+- **Map tiles** from any source work as custom map layers
+- **Elevation features** (hillshade, slopes, profiles) require the `.etiles` format specific to the generator
+- **Offline routing** requires Valhalla-format `.vtiles`
+- **Offline geocoding** requires the NutiGeoDb format
+
+If you have existing MBTiles from another tool, add them as a custom layer via the Layers panel (tap **+** and browse to the file).
