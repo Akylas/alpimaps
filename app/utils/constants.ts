@@ -8,6 +8,7 @@ export const SETTINGS_FONTSCALE = 'fontscale';
 export const SETTINGS_LANGUAGE = 'language';
 export const SETTINGS_MAP_FONT_SCALE = 'map_font_scale';
 export const SETTINGS_COLOR_THEME = 'color_theme';
+export const SETTINGS_ENABLE_CRASH_REPORT = 'enable_crash_report';
 
 export const DEFAULT_LOCALE = 'auto';
 export const DEFAULT_COLOR_THEME = 'default';

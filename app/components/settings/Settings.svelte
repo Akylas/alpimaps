@@ -12,7 +12,7 @@
     import { TextView } from '@nativescript-community/ui-material-textview';
     import { ApplicationSettings, Device, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
     import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
-    import { Sentry } from '@shared/utils/sentry';
+    import { Sentry, startSentry, stopSentry } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { Template } from '@nativescript-community/svelte-native/components';
@@ -36,6 +36,7 @@
         DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
         DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
         DEFAULT_VALHALLA_ONLINE_URL,
+        SETTINGS_ENABLE_CRASH_REPORT,
         SETTINGS_IMPERIAL,
         SETTINGS_NAVIGATION_POSITION_OFFSET,
         SETTINGS_NAVIGATION_TILT,
@@ -126,6 +127,18 @@
                         values: [UNITS.SpeedKm, UNITS.SpeedM, UNITS.MPH, UNITS.FPH, UNITS.Knot].map((u) => ({ title: u, value: u }))
                     }
                 ];
+            case 'debugging':
+                return PLAY_STORE_BUILD
+                    ? [
+                          {
+                              type: 'switch',
+                              id: SETTINGS_ENABLE_CRASH_REPORT,
+                              title: lc('crash_report'),
+                              description: lc('crash_report_desc'),
+                              value: ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD)
+                          }
+                      ]
+                    : [];
             case 'directions':
                 return [
                     {
@@ -635,6 +648,19 @@
                     }
                 ] as any)
                 .concat(
+                    PLAY_STORE_BUILD
+                        ? ([
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-bug-outline',
+                                  title: lc('debugging'),
+                                  description: lc('debugging_settings_desc'),
+                                  options: () => getSubSettings('debugging')
+                              }
+                          ] as any[])
+                        : []
+                )
+                .concat(
                     packageService.offlineRoutingSearchService
                         ? [
                               {
@@ -748,14 +774,23 @@
         }
     }
     let checkboxTapTimer;
+    function clearCheckboxTimer() {
+        if (checkboxTapTimer) {
+            clearTimeout(checkboxTapTimer);
+            checkboxTapTimer = null;
+        }
+    }
     async function onTap(item, event) {
         try {
             if (item.type === 'checkbox' || item.type === 'switch') {
                 // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
                 const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
-                checkboxTapTimer = setTimeout(() => {
-                    checkboxView.checked = !checkboxView.checked;
-                }, 10);
+                if (checkboxView.isEnabled) {
+                    clearCheckboxTimer();
+                    checkboxTapTimer = setTimeout(() => {
+                        checkboxView.checked = !checkboxView.checked;
+                    }, 10);
+                }
                 return;
             }
             switch (item.id) {
@@ -1165,28 +1200,35 @@
         return item.type || 'default';
     }
 
-    function onCheckBox(item, value, event) {
-        item.value = value;
-        if (checkboxTapTimer) {
-            clearTimeout(checkboxTapTimer);
-            checkboxTapTimer = null;
+    let ignoreNextOnCheckBoxChange = false;
+    async function onCheckBox(item, event) {
+        if (ignoreNextOnCheckBoxChange || item.value === event.value) {
+            return;
         }
+        const value = event.value;
+        item.value = value;
+        clearCheckboxTimer();
+        DEV_LOG && console.log('onCheckBox', item.id, value);
         try {
-            if (item.mapStore) {
-                (item.mapStore as Writable<boolean>).set(value);
-            } else {
-                setTimeout(
-                    () => {
-                        ApplicationSettings.setBoolean(item.key || item.id, value);
-                    },
-                    // we delay a little bit on IOS, because if the change
-                    // will trigger a collectionview refresh
-                    // we might end up with wrong switch state (animation duration?)
-                    __IOS__ ? 100 : 0
-                );
+            ignoreNextOnCheckBoxChange = true;
+            switch (item.id) {
+                case SETTINGS_ENABLE_CRASH_REPORT: {
+                    ApplicationSettings.setBoolean(item.key || item.id, value);
+                    if (value) {
+                        startSentry();
+                    } else {
+                        stopSentry();
+                    }
+                    break;
+                }
+                default:
+                    ApplicationSettings.setBoolean(item.key || item.id, value);
+                    break;
             }
         } catch (error) {
-            console.error(error, error.stack);
+            showError(error);
+        } finally {
+            ignoreNextOnCheckBoxChange = false;
         }
     }
     function refreshCollectionView() {
