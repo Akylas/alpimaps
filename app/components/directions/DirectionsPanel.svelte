@@ -1336,10 +1336,10 @@
                 isEnabled={nbWayPoints > 1}
                 isVisible={!loading}
                 marginRight={10}
+                onLongPress={() => computeRoutes(true)}
                 rippleColor={isEInk ? 'black' : 'white'}
                 text="mdi-magnify"
-                on:tap={() => computeRoutes()}
-                on:longPress={() => computeRoutes(true)} />
+                on:tap={() => computeRoutes()} />
             <activityindicator busy={true} colSpan={2} color={buttonsColor} height={40} horizontalAlignment="right" marginRight={16} visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
                 bind:this={collectionView}
