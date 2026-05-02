@@ -1,32 +1,75 @@
 {
-    "terminal.integrated.env.osx": {
-        "SENTRY_PREFIX": "app:///",
-        "SENTRY_PROJECT": "alpimaps",
-        "SENTRY_ORG": "akylas",
-        "SENTRY_URL": "https://bugs.akylas.fr",
-        "SOURCEMAP_REL_DIR": "../../sourcemaps"
-    },
-    "terminal.integrated.env.linux": {
-        "SENTRY_PREFIX": "app:///",
-        "SENTRY_PROJECT": "alpimaps",
-        "SENTRY_ORG": "akylas",
-        "SENTRY_URL": "https://bugs.akylas.fr",
-        "SOURCEMAP_REL_DIR": "../../sourcemaps"
-    },
+    // Configure glob patterns for excluding files and folders.
     "files.exclude": {
-        "schema": true
+        "**/.bzr": true,
+        "**/.bzrmeta": true,
+        "**/.gradle": true,
+        "**/.DS_Store": true,
+        "**/.factorypath": true,
+        "**/.git": true,
+        "**/.metadata*": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.tags*": true,
+        "**/.tmp": true,
+        "**/.zip": true,
+        "**/tags": true,
+        "*compiled": true
+    },
+    "search.exclude": {
+        "**/pnpm-lock.yaml": true,
+        "**/yarn.lock": true,
+        "**/.metadata*": true,
+        "**/.tmp": true,
+        "**/.gradle": true,
+        "**/docs": true,
+        "**/*.log": true,
+        "**/*.svg": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/node_modules": true,
+        "downloaded": true,
+        "platforms": true
+    },
+    "files.watcherExclude": {
+        "**/pnpm-lock.yaml": true,
+        "**/vendor.js": true,
+        "**/bundle.js": true,
+        "**/.history": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/*.min.js": true,
+        "**/*.js.map": true,
+        "**/.gradle": true,
+        "**/.git": true,
+        "**/node_modules/**": true,
+        "**/.hg/store/**": true,
+        "platforms": true
     },
     "editor.snippetSuggestions": "top",
-    "i18n-ally.localesPaths": [
-        "app/i18n"
-    ],
-    "i18n-ally.keystyle": "nested",
     "less.validate": false,
-    "i18n-ally.sourceLanguage": "en",
-    "typescript.tsdk": "node_modules/typescript/lib",
-    "search.exclude": {
-        "app/**/*.js": true
-    },
+    "scss.lint.validProperties": [
+        "max-font-size",
+        "min-font-size",
+        "ios-a11y-adjusts-font-size",
+        "status-bar-style",
+        "navigation-bar-color",
+        "status-bar-color",
+        "ripple-color",
+        "stroke-color",
+        "fill-color",
+        "on-check-color",
+        "on-tint-color",
+        "shape",
+        "elevation",
+        "horizontal-align",
+        "horizontal-alignment",
+        "vertical-text-alignment",
+        "floating",
+        "vertical-alignment",
+        "placeholder-color",
+        "variant"
+    ],
     "svelte.plugin.svelte.compilerWarnings": {
         "missing-declaration": "ignore",
         "a11y-aria-attributes": "ignore",
@@ -54,7 +97,6 @@
         "illegal-attribute-character": "ignore"
     },
     "i18n-ally-next.localesPaths": [
-        "app/i18n",
-    ],
-    "i18n-ally-next.keystyle": "nested"
+        "app/i18n"
+    ]
 }
