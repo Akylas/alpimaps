@@ -1051,7 +1051,10 @@ class PackageService extends Observable {
         if (!this.mOnlineRoutingSearchService) {
             this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
                 customServiceURL: ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL) + '/{service}',
-                profile: 'pedestrian'
+                profile: 'pedestrian',
+                httpHeaders: {
+                    'X-Client-Id': 'AlpiMaps'
+                }
             });
         }
         return this.mOnlineRoutingSearchService;
