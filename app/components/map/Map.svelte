@@ -2088,17 +2088,39 @@
                             case 'import': {
                                 const result = await openFilePicker({
                                     documentTypes: ['com.akylas.gpx'],
-                                    mimeTypes: ['application/gpx+xml', 'application/json', 'application/geo+json'],
-                                    multipleSelection: false,
+                                    mimeTypes: ['*/*'],
+                                    multipleSelection: true,
                                     pickerMode: 0
                                 });
-                                const filePath = result.files[0];
-                                if (filePath && File.exists(filePath)) {
+                                DEV_LOG && console.log('selected', result.files);
+
+                                const geojsonFiles = [];
+                                const gpxFiles = [];
+                                const files = result.files?.filter((f) => {
+                                    let filePath = f;
+                                    if (__ANDROID__) {
+                                        filePath = akylas.alpi.maps.Utils.Companion.getFileNameSync(Utils.android.getApplicationContext(), f);
+                                    }
+                                    if (filePath.match(/(\.gpx)$/i)) {
+                                        gpxFiles.push(f);
+                                    } else if (filePath.match(/(\.geojson)$/i)) {
+                                        geojsonFiles.push(f);
+                                    }
+                                });
+                                DEV_LOG && console.log('fil?es', files);
+                                if (geojsonFiles?.length || gpxFiles?.length) {
                                     showLoading();
-                                    if (filePath.endsWith('gpx')) {
-                                        await getMapContext().mapModule('items').importGPXFile(filePath);
-                                    } else {
-                                        await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+                                    for (let index = 0; index < geojsonFiles.length; index++) {
+                                        const filePath = geojsonFiles[index];
+                                        if (filePath && File.exists(filePath)) {
+                                            await getMapContext().mapModule('items').importGeoJSONFile(filePath);
+                                        }
+                                    }
+                                    for (let index = 0; index < gpxFiles.length; index++) {
+                                        const filePath = gpxFiles[index];
+                                        if (filePath && File.exists(filePath)) {
+                                            await getMapContext().mapModule('items').importGPXFile(filePath);
+                                        }
                                     }
                                 }
                                 break;

@@ -79,51 +79,66 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:host="*" />
-                <data android:scheme="file" />
-
-                <data android:scheme="content" />
-                <data android:mimeType="*/*" />
-
-                <data android:pathPattern=".*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="http"/>
+                <data android:scheme="https"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:scheme="data"/>
+                <data android:host="*"/>
+                <data android:mimeType="application/vnd.google-earth.kml+xml"/>
+                <data android:mimeType="application/vnd.google-earth.kmz"/>
+                <data android:mimeType="application/gpx"/>
+                <data android:mimeType="application/gpx+xml"/>
+                <data android:mimeType="application/vnd.google-earth.kmz+xml"/>
+                <data android:mimeType="application/json"/>
+                <data android:mimeType="application/geo+json"/>
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:host="*" />
-                <data android:scheme="file" />
-
-                <data android:scheme="content" />
-                <data android:mimeType="*/*" />
-
-                <data android:pathPattern=".*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
-                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
-            </intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:scheme="data"/>
+                <data android:host="*"/>
+                <data android:mimeType="*/*"/>
+                <!-- See http://stackoverflow.com/questions/3400072/pathpattern-to-match-file-extension-does-not-work-if-a-period-exists-elsewhere-i -->
+                <data android:pathPattern="/.*\\.geojson" />
+                <data android:pathPattern="/.*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.geojson" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.GEOJSON" />
+                <data android:pathPattern="/.*\\.gpx" />
+                <data android:pathPattern="/.*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\.GPX" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.gpx" />
+                <data android:pathPattern="/.*\\..*\\..*\\..*\\..*\\..*\\..*\\..*\\.GPX" />
+            </intent-filter>  
 
             <intent-filter>
                 <action android:name="android.intent.action.PROCESS_TEXT" />
@@ -136,6 +151,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND_MULTIPLE"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="application/vnd.google-earth.kml+xml"/>
+                <data android:mimeType="application/vnd.google-earth.kmz"/>
+                <data android:mimeType="application/gpx"/>
+                <data android:mimeType="application/gpx+xml"/>
+                <data android:mimeType="application/vnd.google-earth.kmz+xml"/>
+            </intent-filter>
+
         </activity>
         <activity android:name="com.tns.ErrorReportActivity" android:exported="false" />
         <service android:name=".BgService" android:enabled="true" android:exported="false"
