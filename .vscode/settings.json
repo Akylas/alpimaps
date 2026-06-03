@@ -96,7 +96,41 @@
         "a11y-missing-content": "ignore",
         "illegal-attribute-character": "ignore"
     },
-    "i18n-ally-next.localesPaths": [
-        "app/i18n"
-    ]
+    "i18n-ally-next.localesPaths": ["app/i18n"],
+    "explorer.fileNesting.patterns": {
+        ".agent": ".agent, .claude, .cline, .codebuddy, .codex, .commandcode, .continue, .crush, .cursor, .factory, .gemini, .goose, .junie, .kilocode, .kiro, .kode, .mcpjam, .mux, .neovate, .opencode, .openhands, .pi, .pochi, .qoder, .qwen, .roo, .trae, .windsurf, .zencoder",
+        ".clang-tidy": ".clang-format, .clangd, compile_commands.json",
+        ".env": "*.env, .env.*, .envrc, env.d.ts",
+        ".prettierrc.js": ".prettierignore",
+        ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .lfsconfig, .mailmap, .git-blame*",
+        ".project": ".classpath",
+        "+layout.svelte": "+layout.ts,+layout.js,+layout.server.ts,+layout.server.js,+layout.gql",
+        "+page.svelte": "+page.server.ts,+page.server.js,+page.ts,+page.js,+page.gql",
+        "AGENTS.md": ".clinerules, .cursorrules, .replit.md, .windsurfrules, AGENT.md, CLAUDE.local.md, CLAUDE.md, GEMINI.md",
+        "gemfile": ".ruby-version, gemfile.lock",
+        "Gemfile": ".ruby-version, Gemfile.lock",
+        "Makefile": "*.mk",
+        "package.json": ".npm*, .nvmrc,bun.lock, bun.lockb, package-lock.json, pnpm*, yarn*, .yarn*",
+        "readme*": "AUTHORS, Authors, BACKERS*, Backers*, CHANGELOG*, CITATION*, CODEOWNERS, CODE_OF_CONDUCT*, CONTRIBUTING*, CONTRIBUTORS, CONTRIBUTORS.MD, CONTRIBUTORS.TXT, COPYING*, CREDITS, Changelog*, Citation*, Code_Of_Conduct*, Codeowners, Contributing*, Contributors, Contributors.md, Contributors.txt, Copying*, Credits, GOVERNANCE.MD, Governance.md, HISTORY.MD, History.md, LICENSE, LICENSE.MD, LICENSE.txt, License, License.md, License.txt, MAINTAINERS, Maintainers, README-*, README_*, RELEASE_NOTES*, ROADMAP.MD, Readme-*, Readme_*, Release_Notes*, Roadmap.md, SECURITY.MD, SPONSORS*, Security.md, Sponsors*, authors, backers*, changelog*, citation*, code_of_conduct*, codeowners, contributing*, contributors, contributors.md, contributors.txt, copying*, credits, governance.md, history.md, license, license.md, license.txt, maintainers, readme-*, readme_*, release_notes*, roadmap.md, security.md, sponsors*, COC.md",
+        "Readme*": "AUTHORS, Authors, BACKERS*, Backers*, CHANGELOG*, CITATION*, CODEOWNERS, CODE_OF_CONDUCT*, CONTRIBUTING*, CONTRIBUTORS, CONTRIBUTORS.MD, CONTRIBUTORS.TXT, COPYING*, CREDITS, Changelog*, Citation*, Code_Of_Conduct*, Codeowners, Contributing*, Contributors, Contributors.md, Contributors.txt, Copying*, Credits, GOVERNANCE.MD, Governance.md, HISTORY.MD, History.md, LICENSE, LICENSE.MD, LICENSE.txt, License, License.md, License.txt, MAINTAINERS, Maintainers, README-*, README_*, RELEASE_NOTES*, ROADMAP.MD, Readme-*, Readme_*, Release_Notes*, Roadmap.md, SECURITY.MD, SPONSORS*, Security.md, Sponsors*, authors, backers*, changelog*, citation*, code_of_conduct*, codeowners, contributing*, contributors, contributors.md, contributors.txt, copying*, credits, governance.md, history.md, license, license.md, license.txt, maintainers, readme-*, readme_*, release_notes*, roadmap.md, security.md, sponsors*, COC.md",
+        "README*": "AUTHORS, Authors, BACKERS*, Backers*, CHANGELOG*, CITATION*, CODEOWNERS, CODE_OF_CONDUCT*, CONTRIBUTING*, CONTRIBUTORS, CONTRIBUTORS.MD, CONTRIBUTORS.TXT, COPYING*, CREDITS, Changelog*, Citation*, Code_Of_Conduct*, Codeowners, Contributing*, Contributors, Contributors.md, Contributors.txt, Copying*, Credits, GOVERNANCE.MD, Governance.md, HISTORY.MD, History.md, LICENSE, LICENSE.MD, LICENSE.txt, License, License.md, License.txt, MAINTAINERS, Maintainers, README-*, README_*, RELEASE_NOTES*, ROADMAP.MD, Readme-*, Readme_*, Release_Notes*, Roadmap.md, SECURITY.MD, SPONSORS*, Security.md, Sponsors*, authors, backers*, changelog*, citation*, code_of_conduct*, codeowners, contributing*, contributors, contributors.md, contributors.txt, copying*, credits, governance.md, history.md, license, license.md, license.txt, maintainers, readme-*, readme_*, release_notes*, roadmap.md, security.md, sponsors*, COC.md",
+        "tauri.conf.json": "tauri.*.conf.json",
+        "tauri.conf.json5": "tauri.*.conf.json5",
+        "Tauri.toml": "Tauri.*.toml",
+        "tsconfig.json": "tsconfig*.tsbuildinfo, tsconfig.*.json",
+        "*.c": "$(capture).h",
+        "*.cc": "$(capture).hpp, $(capture).h, $(capture).hxx, $(capture).hh",
+        "*.component.ts": "$(capture).component.html, $(capture).component.spec.ts, $(capture).component.css, $(capture).component.scss, $(capture).component.sass, $(capture).component.less",
+        "*.cpp": "$(capture).hpp, $(capture).h, $(capture).hxx, $(capture).hh",
+        "*.css": "$(capture).css.map, $(capture).*.css",
+        "*.cxx": "$(capture).hpp, $(capture).h, $(capture).hxx, $(capture).hh",
+        "*.js": "$(capture).js.map, $(capture).*.js, $(capture)_*.js, $(capture).d.ts, $(capture).d.ts.map, $(capture).js.flow",
+        "*.jsx": "$(capture).js, $(capture).*.jsx, $(capture)_*.js, $(capture)_*.jsx, $(capture).css, $(capture).module.css, $(capture).less, $(capture).module.less, $(capture).module.less.d.ts, $(capture).scss, $(capture).module.scss, $(capture).module.scss.d.ts",
+        "*.md": "$(capture).*",
+        "*.mjs": "$(capture).mjs.map, $(capture).*.mjs, $(capture)_*.mjs",
+        "*.py": "$(capture).pyi",
+        "*.ts": "$(capture).js, $(capture).d.ts.map, $(capture).*.ts, $(capture)_*.js, $(capture)_*.ts",
+        "*.tsx": "$(capture).ts, $(capture).*.ts, $(capture).*.tsx, $(capture)_*.ts, $(capture)_*.tsx, $(capture).css, $(capture).module.css, $(capture).less, $(capture).module.less, $(capture).module.less.d.ts, $(capture).scss, $(capture).module.scss, $(capture).module.scss.d.ts, $(capture).css.ts",
+        "*.vue": "$(capture).*.ts, $(capture).*.js, $(capture).story.vue"
+    }
 }
