@@ -1023,7 +1023,9 @@ export default class CustomLayersModule extends MapModule {
                 this.hasTerrain = true;
                 const name = 'Hillshade';
                 const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
-                let dataSource: TileDataSource<any, any> = new MultiTileDataSource();
+                let dataSource: TileDataSource<any, any> = new MultiTileDataSource({
+                    // encoding: 'terrarium'
+                });
                 terrains.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
                 if (worldTerrainMbtilesEntity) {
                     dataSource = this.createOrderedTileDataSource(
@@ -1038,7 +1040,7 @@ export default class CustomLayersModule extends MapModule {
                 }
 
                 // we add mapterhorn as fallback for regions without elevation or high zoom levels
-                dataSource = this.createOrderedTileDataSource([dataSource, await this.createDataSourceFromId('mapterhorn')], mbTilesSourceGenerator);
+                dataSource = this.createOrderedTileDataSource([dataSource/* , await this.createDataSourceFromId('mapterhorn') */], mbTilesSourceGenerator);
 
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 const data = {
