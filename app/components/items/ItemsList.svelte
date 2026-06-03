@@ -276,7 +276,7 @@ LEFT JOIN  (
 
     async function deleteItem(item: CollectionItemOrGroup) {
         try {
-            DEV_LOG && console.log('deleteItem', item.type, item.id);
+            // DEV_LOG && console.log('deleteItem', item.type, item.id);
             if (item.type === 'group') {
                 // const groupKey = (item as CollectionGroup).name || 'none';
                 // const collapsed = (item as CollectionGroup).collapse;
@@ -293,24 +293,24 @@ LEFT JOIN  (
                 if (index !== -1) {
                     items.splice(index, 1);
                 }
-                DEV_LOG && console.log('deleteItem', item.id, (item as CollectionItem).groups?.length);
+                // DEV_LOG && console.log('deleteItem', item.id, (item as CollectionItem).groups?.length);
                 const itemGroup = (item as CollectionItem).groups?.[0] || 'none';
                 const group = groups[itemGroup];
                 const groupedForItem = groupedItems[itemGroup];
                 if (group && groupedForItem) {
                     const itemInGroupIndex = groupedForItem.findIndex((i) => i === item);
-                    DEV_LOG && console.log('itemInGroupIndex', groupedForItem.length, item.id, groupedForItem);
+                    // DEV_LOG && console.log('itemInGroupIndex', groupedForItem.length, item.id, groupedForItem);
                     if (itemInGroupIndex >= 0) {
                         groupedForItem.splice(itemInGroupIndex, 1);
                     }
                     const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
-                    DEV_LOG && console.log('deleteItem group', group, groupIndex, groupedForItem.length);
+                    // DEV_LOG && console.log('deleteItem group', group, groupIndex, groupedForItem.length);
                     if (groupIndex >= 0) {
                         const groupItem = items.getItem(groupIndex) as CollectionGroup;
-                        DEV_LOG && console.log('groupedForItem', groupedForItem);
+                        // DEV_LOG && console.log('groupedForItem', groupedForItem);
                         groupItem.count = groupedForItem.length;
                         updateGroupItemData(groupItem);
-                        DEV_LOG && console.log('update group', groupItem);
+                        // DEV_LOG && console.log('update group', groupItem);
                         items.setItem(groupIndex, groupItem);
                         if (__ANDROID__) {
                             const canvas: CanvasView = collectionView.nativeView.getViewForItemAtIndex(groupIndex).getViewById('canvas');
