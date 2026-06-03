@@ -13,6 +13,11 @@ declare namespace akylas {
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
             class RefreshAlarmReceiver extends globalAndroid.content.BroadcastReceiver {}
+            export namespace Utils {
+                class Companion {
+                    static getFileNameSync(arg0: globalAndroid.content.Context, f: string): string;
+                }
+            }
         }
     }
 }
