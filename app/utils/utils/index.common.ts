@@ -42,14 +42,14 @@ export function resetItemsDataFolder() {
     return getItemsDataFolder();
 }
 
-function getTreeUri(context, uri) {
-    let documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
-    if (android.provider.DocumentsContract.isDocumentUri(context, uri)) {
-        documentId = android.provider.DocumentsContract.getDocumentId(uri);
-    }
+// function getTreeUri(context, uri) {
+//     let documentId = android.provider.DocumentsContract.getTreeDocumentId(uri);
+//     if (android.provider.DocumentsContract.isDocumentUri(context, uri)) {
+//         documentId = android.provider.DocumentsContract.getDocumentId(uri);
+//     }
 
-    return android.provider.DocumentsContract.buildDocumentUriUsingTree(uri, documentId);
-}
+//     return android.provider.DocumentsContract.buildDocumentUriUsingTree(uri, documentId);
+// }
 
 export function listFolder(folderPath: string): (Partial<FileSystemEntity> & { isFolder: boolean })[] {
     // if (ANDROID_30) {
