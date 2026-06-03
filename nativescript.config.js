@@ -19,7 +19,15 @@ module.exports = {
         defaultLanguage: 'en'
     },
     ios: {
-        runtimePackageName: '@akylas/nativescript-ios-runtime'
+        runtimePackageName: '@akylas/nativescript-ios-runtime',
+        SPMPackages: [
+            {
+                name: 'carto-mobile-sdk',
+                libs: ['CartoMobileSDKCore'],
+                repositoryURL: 'https://github.com/Akylas/mobile-sdk-ios-swift.git',
+                version: '5.2.3'
+            }
+        ]
     },
     android: {
         runtimePackageName: '@akylas/nativescript-android-runtime',
