@@ -1,0 +1,8 @@
+Bug fixes:
+- allow disabling crash reports
+- direction search long press fix
+- valhalla online use X-Client-Id header
+- gpx import fix
+- local hillshade mbtiles use fix
+- crash while getting elevation profile
+- Translations update
