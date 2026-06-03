@@ -9,18 +9,19 @@ import { IItem } from '~/models/Item';
 export function importGPXToGeojson(filePath: string) {
     const str = File.fromPath(filePath).readTextSync();
 
-    const gpxDom = new DOMParser().parseFromString(str);
-    DEV_LOG && console.log('importGPXToGeojson', gpxDom);
+    const gpxDom = new DOMParser().parseFromString(str, 'application/xml');
     const featureCollection = gpx(gpxDom);
     const itemFeature = featureCollection.features[0] as Feature<LineString>;
+    DEV_LOG && console.log('importGPXToGeojson', gpxDom);
     return featureCollection.features.map((feature) => {
+        DEV_LOG && console.log('importGPXToGeojson', 'feature', feature.geometry.type);
         if (feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString') {
-            const profile = itemFeature.properties.type || 'pedestrian';
-            const data = getBoundsAndDistance(itemFeature.geometry.coordinates);
+            const profile = feature.properties.type || 'pedestrian';
+            const data = getBoundsAndDistance(feature.geometry.coordinates);
             return {
                 type: 'Feature',
                 properties: {
-                    ...itemFeature.properties,
+                    ...feature.properties,
                     class: profile,
                     zoomBounds: data.bounds,
                     route: {
@@ -30,10 +31,11 @@ export function importGPXToGeojson(filePath: string) {
                 route: {
                     totalDistance: data.distance
                 },
-                geometry: itemFeature.geometry
+                geometry: feature.geometry
             } as IItem;
         } else if (feature.geometry.type === 'Point') {
-            return itemFeature as IItem;
+            DEV_LOG && console.log('importGPXToGeojson point', JSON.stringify(feature));
+            return feature as IItem;
         }
     });
 }
