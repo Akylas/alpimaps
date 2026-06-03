@@ -1,4 +1,6 @@
 <script context="module" lang="ts">
+    import { Template } from '@nativescript-community/svelte-native/components';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType } from '@nativescript-community/ui-carto/core';
     import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
@@ -6,22 +8,23 @@
     import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
     import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
     import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
-    import { showSliderPopover, showSnack } from '~/utils/ui';
+    import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
+    import { isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
-    import { ApplicationSettings, Color, ContentView, Device, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
+    import { ApplicationSettings, Color, ContentView, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import type { Feature, Point } from 'geojson';
+    import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
+    import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
-    import { fullLangStore, lang, lc } from '~/helpers/locale';
+    import { fullLangStore, lc } from '~/helpers/locale';
+    import { Themes, isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
@@ -29,13 +32,10 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
-    import { showError } from '@shared/utils/showError';
     import { Profiles, defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
-    import { colors, fontScale, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips, windowInset } from '~/variables';
-    import { Themes, colorTheme, isEInk, onThemeChanged, theme } from '~/helpers/theme';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
+    import { showSliderPopover } from '~/utils/ui';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
+    import { colors, fontScaleMaxed, fonts } from '~/variables';
 
     const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
