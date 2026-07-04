@@ -747,5 +747,7 @@
     "building_min_zoom_desc": "显示建筑物的最小缩放级别",
     "campsite_allow_overlap": "允许营地图标重叠",
     "click_handler_layer_filter": "用于定义哪些地图项可以点击的正则表达式",
-    "draw_onroute_live_data": "绘制当前路线的实时数据（到下一个路点的剩余距离、高度等）"
+    "draw_onroute_live_data": "绘制当前路线的实时数据（到下一个路点的剩余距离、高度等）",
+    "charts": "图表",
+    "chart_show_waypoints": "显示航点"
 }
