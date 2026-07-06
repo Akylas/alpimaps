@@ -298,7 +298,7 @@
     "gps_update_distance": "更新的距离",
     "gps_update_distance_desc": "更新距离过滤器，单位为米。指定更新频率",
     "gps_update_minTime": "更新时间间隔",
-    "gps_update_minTime_desc": "位置更新之间的最小时间间隔，以毫秒为单位",
+    "gps_update_minTime_desc": "位置更新之间的最小时间间隔，以秒为单位",
     "gpx": "GPX",
     "gravel": "砾石",
     "greengrocer": "蔬果店",
