@@ -748,5 +748,15 @@
     "speedometer": "velocímetro",
     "stop_gps_background": "detener el GPS mientras está en segundo plano",
     "stop_gps_background_desc": "si desactivas esto, el GPS permanecerá activado en segundo plano mientras busca la ubicación",
-    "stop_tile_server": "servidor de mosaicos detenido"
+    "stop_tile_server": "servidor de mosaicos detenido",
+    "api_key_needed": "es necesaria una clave API para utilizar esa fuente, por favor establezca la clave \"%1$s\" aquí o en los ajustes",
+    "api_keys_settings": "Las claves de la API para servicios utilizados en conexión",
+    "chart_elevation_min_range": "intervalo de elevación mínima (equivalente a altura mín de diagrama mostrada)",
+    "chart_max_filter": "filtro máx para simplificar diagrama",
+    "dowload_area_maxzoom": "zoom máx para descargar mosaicos origen. El zoom máximo alto requiere muchos datos",
+    "dowload_area_minzoom": "zoom mín para descargar mosaicos desde",
+    "light": "claro",
+    "lighthouse": "faro",
+    "list_used_third_parties": "Listado utilizado en biblioteca de terceros",
+    "location_distance_from_route_desc": "al comprobar si su lugar actual se encuentra en la ruta, esta es la distancia máxima posible. El uso de valores altos da como resultado una posición menos precisa en el mapa"
 }
