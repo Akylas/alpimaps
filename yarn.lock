@@ -2638,11 +2638,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-carto@portal:../ui-carto/packages/ui-carto::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@nativescript-community/ui-carto@portal:../ui-carto/packages/ui-carto::locator=root-workspace-0b6124%40workspace%3A."
+"@nativescript-community/ui-carto@npm:2.1.0":
+  version: 2.1.0
+  resolution: "@nativescript-community/ui-carto@npm:2.1.0"
+  checksum: 10/9c8b9251248d2b449026d9847e73ed632d69fcf9f5ab4d3473d1624e1b40633051d67ee6a30fd65d0101a0cd44fd0e28faaf91406edbf951251dc8fedd503ad7
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nativescript-community/ui-chart@npm:2.0.29":
   version: 2.0.29
