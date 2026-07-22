@@ -44,7 +44,7 @@
         "@akylas/nativescript": "8.9.17",
         "@akylas/nativescript-app-tools": "portal:tools",
         "@akylas/nativescript-app-utils": "2.2.13",
-        "@akylas/nativescript-inapp-purchase": "0.0.4",
+        "@akylas/nativescript-inapp-purchase": "0.0.5",
         "@akylas/nativescript-inappbrowser": "3.1.8",
         "@mapbox/tilebelt": "2.0.3",
         "@mdi/font": "7.4.47",
