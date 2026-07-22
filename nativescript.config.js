@@ -42,6 +42,7 @@ module.exports = {
         codeCache: true,
         enableMultithreadedJavascript: false,
         handleTimeZoneChanges: true,
+        ignoredNativeDependencies: ['@akylas/nativescript-inapp-purchase'],
         ...(loggingEnabled
             ? {
                   forceLog: true,
