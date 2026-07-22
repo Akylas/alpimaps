@@ -112,10 +112,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-inapp-purchase@npm:0.0.4":
-  version: 0.0.4
-  resolution: "@akylas/nativescript-inapp-purchase@npm:0.0.4"
-  checksum: 10/b03783e49ced38964ef802cdfb8b88c533188771552cd4ccf4fab61d0af7242ca4d70ab274763df8e69b9f968b0c84321c73c07895c952362fd4e2a04a5b71fd
+"@akylas/nativescript-inapp-purchase@npm:0.0.5":
+  version: 0.0.5
+  resolution: "@akylas/nativescript-inapp-purchase@npm:0.0.5"
+  checksum: 10/e3f3706cc516a682161665c7072022bc978f02640f10d80d2b0f8cc2c653ce9ac76c301e7c5b83d2ee64485620925e5bfef1ff5afe106885df65920d47a26a63
   languageName: node
   linkType: hard
 
@@ -14592,7 +14592,7 @@ __metadata:
     "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "portal:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.13"
-    "@akylas/nativescript-inapp-purchase": "npm:0.0.4"
+    "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:8.9.6"
     "@akylas/nativescript-webpack": "npm:5.0.24"
