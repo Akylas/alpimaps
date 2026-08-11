@@ -4,11 +4,10 @@
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { GenericMapPos, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
@@ -29,7 +28,7 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '@shared/utils/showError';
-    import { computeDistanceBetween } from '~/utils/geo';
+    import { RouteProgress, computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
@@ -289,42 +288,31 @@
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
             // ignore routes from osm
-            if (routeItem?.route && !routeItem?.route.osmid) {
-                const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
-                // const props = routeItem.properties;
-                const route = routeItem.route;
+            if (isNavigableRoute(routeItem)) {
                 const profile = routeItem.profile;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
-                const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
-                let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
+                const onPathIndex = isLocationOnRoute(location, positions);
+                const computeInstruction = !highlight && !!routeItem.instructions && updateNavigationInstruction;
+                let progress: RouteProgress = { onPathIndex };
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
-                    remainingDistance = distanceToEnd(onPathIndex, positions);
-                    remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
-                    const stepIndex = route.waypoints.filter((w) => w.properties.showOnMap).find((w) => w.properties.index > onPathIndex)?.properties?.index;
-                    if (stepIndex >= 0) {
-                        remainingDistanceToStep = remainingDistance - distanceToEnd(stepIndex, positions);
-                    }
-                    if (!highlight && routeItem.instructions && updateNavigationInstruction) {
-                        let routeInstruction;
-                        for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
-                            const element = routeItem.instructions[index];
-                            if (element.index < onPathIndex) {
-                                break;
-                            }
-                            routeInstruction = element;
-                        }
-
-                        let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
-                        for (let index = onPathIndex; index < routeInstruction.index; index++) {
-                            distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
-                        }
-                        navigationInstructions = {
-                            instruction: routeInstruction,
-                            remainingDistance,
-                            distanceToNextInstruction,
-                            remainingTime
-                        };
+                    progress = computeRouteProgress({
+                        item: routeItem,
+                        location,
+                        positions,
+                        onPathIndex,
+                        computeRemaining: true,
+                        computeInstruction
+                    });
+                    if (computeInstruction) {
+                        navigationInstructions = progress.instruction
+                            ? {
+                                  instruction: progress.instruction,
+                                  remainingDistance: progress.remainingDistance,
+                                  distanceToNextInstruction: progress.distanceToNextInstruction,
+                                  remainingTime: progress.remainingTime
+                              }
+                            : null;
                         // DEV_LOG && console.log('navigationInstructions', JSON.stringify(navigationInstructions));
                     }
                 } else {
@@ -332,6 +320,7 @@
                 }
 
                 if (updateGraph && graphAvailable) {
+                    const { remainingDistance, remainingDistanceToStep, remainingTime } = progress;
                     if (elevationChart) {
                         elevationChart.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight, false);
                     } else {
