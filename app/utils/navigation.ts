@@ -6,6 +6,45 @@ import { computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
 
+/** how much road past the maneuver we want in frame when we zoom onto it */
+const MANEUVER_FRAME_RATIO = 1.4;
+
+export interface NavigationLookAheadOptions {
+    /** m/s */
+    speed: number;
+    distanceToNextInstruction?: number;
+    distanceToFollowingInstruction?: number;
+    lookAheadSeconds: number;
+    denseManeuverDistance: number;
+    minLookAhead: number;
+    maxLookAhead: number;
+}
+
+/**
+ * How many meters of road ahead the camera should frame.
+ *
+ * Three independent candidates, tightest wins:
+ * - speed, so a fast road is zoomed out;
+ * - proximity to the next maneuver, so approaching a turn zooms onto it whatever the speed;
+ * - maneuver density, so turn-after-turn on small roads stays close even at speed, which is
+ *   exactly when the user has the least time to read the map.
+ */
+export function computeNavigationLookAhead({
+    denseManeuverDistance,
+    distanceToFollowingInstruction,
+    distanceToNextInstruction,
+    lookAheadSeconds,
+    maxLookAhead,
+    minLookAhead,
+    speed
+}: NavigationLookAheadOptions) {
+    const fromSpeed = Math.max(speed, 0) * lookAheadSeconds;
+    const fromManeuver = distanceToNextInstruction >= 0 ? distanceToNextInstruction * MANEUVER_FRAME_RATIO : Infinity;
+    const clustered = distanceToNextInstruction >= 0 && distanceToFollowingInstruction >= 0 && distanceToFollowingInstruction < denseManeuverDistance;
+    const fromDensity = clustered ? distanceToNextInstruction + distanceToFollowingInstruction : Infinity;
+    return Math.min(Math.max(Math.min(fromSpeed, fromManeuver, fromDensity), minLookAhead), maxLookAhead);
+}
+
 export interface RouteProgress {
     /** index in the route polyline the location snapped to, -1 when off route */
     onPathIndex: number;

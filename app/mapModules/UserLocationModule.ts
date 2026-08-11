@@ -246,11 +246,18 @@ export default class UserLocationModule extends MapModule {
             }
         }
     }
+    /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
+    navigationZoom = 0;
+
     moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
             return;
         }
-        this.mapView.setZoom(Math.max(this.mapView.zoom, 10), duration);
+        if (this.navigationZoom > 0) {
+            this.mapView.setZoom(this.navigationZoom, duration);
+        } else {
+            this.mapView.setZoom(Math.max(this.mapView.zoom, 10), duration);
+        }
         if (this.navigationMode) {
             const options = mapContext.getMap().getOptions();
             options.setFocusPointOffset(
