@@ -39,6 +39,7 @@
     import DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
     import LocationInfoPanel from '~/components/map/LocationInfoPanel.svelte';
     import MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
+    import ManeuverView from '~/components/navigation/ManeuverView.svelte';
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
@@ -2420,6 +2421,7 @@
                     margin={10}
                     verticalAlignment="top"
                     android:marginTop={windowInsetTop + 10} />
+                <ManeuverView style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
                 <canvaslabel
                     class="mdi"
                     color={colorError}
@@ -2455,7 +2457,7 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} bind:navigationInstructions />
+                <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} />
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}
