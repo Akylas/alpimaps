@@ -51,6 +51,7 @@
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
+    import { navigationService } from '~/services/NavigationService';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -574,9 +575,11 @@
 
         onServiceLoaded((handler: GeoHandler) => {
             mapContext.runOnModules('onServiceLoaded', handler);
+            navigationService.onServiceLoaded(handler);
         });
         onServiceUnloaded((handler: GeoHandler) => {
             mapContext.runOnModules('onServiceUnloaded', handler);
+            navigationService.onServiceUnloaded();
         });
 
         Application.on('colorsChange', onColorsChange);
