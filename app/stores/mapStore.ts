@@ -17,44 +17,7 @@ import {
     SETTINGS_SHOW_ELEVATION_PROFILE_GRADE_COLORS,
     SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS
 } from '~/utils/constants';
-
-function settingsStore<T = any>(key, defaultValue: T) {
-    const tpof = typeof defaultValue;
-    let updateMethod;
-    let startValue;
-    switch (tpof) {
-        case 'boolean':
-            updateMethod = ApplicationSettings.setBoolean;
-            startValue = ApplicationSettings.getBoolean(key, defaultValue as boolean);
-            break;
-        case 'number':
-            updateMethod = ApplicationSettings.setNumber;
-            startValue = ApplicationSettings.getNumber(key, defaultValue as number);
-            break;
-
-        default:
-            updateMethod = ApplicationSettings.setString;
-            startValue = ApplicationSettings.getString(key, defaultValue as string);
-            break;
-    }
-    const store = writable<T>(startValue);
-    let ignoreUpdate = true;
-    store.subscribe((v) => {
-        if (ignoreUpdate) {
-            ignoreUpdate = false;
-            return;
-        }
-        if (v === defaultValue) {
-            ApplicationSettings.remove(key);
-        } else {
-            updateMethod(key, v);
-        }
-    });
-    (store as any).reset = () => {
-        store.set(defaultValue);
-    };
-    return store;
-}
+import { settingsStore } from '~/stores/settingsStore';
 
 export const watchingLocation = writable(false);
 export const queryingLocation = writable(false);
