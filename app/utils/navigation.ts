@@ -1,13 +1,47 @@
 import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
 import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
-import type { Item, RouteInstruction } from '~/models/Item';
+import { type Item, type RouteInstruction, RoutingAction } from '~/models/Item';
 import { computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
 
 /** how much road past the maneuver we want in frame when we zoom onto it */
 const MANEUVER_FRAME_RATIO = 1.4;
+
+export interface ManeuverIcon {
+    icon: string;
+    /** key into the `fonts` store, the alpimaps set only covers the common maneuvers */
+    font: 'app' | 'mdi';
+}
+
+/** Icon for a maneuver, shared by the maneuver banner and the navigation view so they cannot diverge. */
+export function getManeuverIcon(action: RoutingAction): ManeuverIcon {
+    switch (action) {
+        case RoutingAction.UTURN:
+            return { icon: 'alpimaps-u-turn', font: 'app' };
+        case RoutingAction.FINISH:
+            return { icon: 'alpimaps-flag-checkered', font: 'app' };
+        case RoutingAction.TURN_LEFT:
+            return { icon: 'alpimaps-left-turn-1', font: 'app' };
+        case RoutingAction.TURN_RIGHT:
+            return { icon: 'alpimaps-right-turn-1', font: 'app' };
+        case RoutingAction.ENTER_ROUNDABOUT:
+        case RoutingAction.STAY_ON_ROUNDABOUT:
+        case RoutingAction.LEAVE_ROUNDABOUT:
+            return { icon: 'alpimaps-roundabout', font: 'app' };
+        case RoutingAction.REACH_VIA_LOCATION:
+            return { icon: 'mdi-map-marker', font: 'mdi' };
+        case RoutingAction.GO_UP:
+            return { icon: 'mdi-arrow-up-bold', font: 'mdi' };
+        case RoutingAction.GO_DOWN:
+            return { icon: 'mdi-arrow-down-bold', font: 'mdi' };
+        case RoutingAction.WAIT:
+            return { icon: 'mdi-timer-sand', font: 'mdi' };
+        default:
+            return { icon: 'alpimaps-up-arrow', font: 'app' };
+    }
+}
 
 export interface NavigationLookAheadOptions {
     /** m/s */
