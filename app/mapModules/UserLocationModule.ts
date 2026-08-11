@@ -14,6 +14,7 @@ import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
+import { requestScreenRefresh } from '~/utils/screen';
 import MapModule, { getMapContext } from './MapModule';
 import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
 import { DEFAULT_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_TILT, SETTINGS_NAVIGATION_POSITION_OFFSET, SETTINGS_NAVIGATION_TILT } from '~/utils/constants';
@@ -241,10 +242,7 @@ export default class UserLocationModule extends MapModule {
         if (__ANDROID__ && inBackground) {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
-                const broadcastIntent = new android.content.Intent(ApplicationSettings.getString('refreshAlarmBroadcast', 'com.akylas.A9_REFRESH_SCREEN'));
-                broadcastIntent.putExtra('sleep_delay', ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100));
-                const context = Utils.android.getApplicationContext();
-                context.sendBroadcast(broadcastIntent);
+                requestScreenRefresh();
             }
         }
     }
