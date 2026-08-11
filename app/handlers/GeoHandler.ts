@@ -8,6 +8,7 @@ import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceCommon } from '~/services/BgService.common';
+import { DEFAULT_NAVIGATION_RECORD_TRACK, SETTINGS_NAVIGATION_RECORD_TRACK } from '~/utils/constants';
 import { Handler } from './Handler';
 
 let geolocation: GPS;
@@ -19,12 +20,26 @@ export const timeout = 20000;
 export const minimumUpdateTime = 0; // Should update every 1 second according ;
 export type GeoLocation = GenericGeoLocation<LatLonKeys>;
 
+/** meters: past this the fix is too vague to feed the session accumulators */
+const SESSION_MAX_ACCURACY = 30;
+/** m/s: below this the GPS considers us stopped, so distance must not grow */
+const SESSION_STOPPED_SPEED = 0.3;
+/** meters: fallback movement threshold when the fix carries no speed */
+const SESSION_MIN_DISTANCE = 2;
+/** meters: altimeter noise floor, below which a climb is not counted */
+const SESSION_ALTITUDE_THRESHOLD = 3;
+
 export interface Session {
     lastLoc: GeoLocation;
+    /** km/h */
     currentSpeed: number;
+    /** km/h */
     averageSpeed: number;
+    /** meters climbed */
     altitudeGain: number;
+    /** meters descended, stored as a positive magnitude */
     altitudeNegative: number;
+    /** meters */
     distance: number;
     startTime: Date;
     lastPauseTime: Date;
@@ -86,7 +101,15 @@ export class GeoHandler extends Handler {
     get stopGpsBackground() {
         return ApplicationSettings.getBoolean('stop_gps_background', true);
     }
+    get recordTrack() {
+        return ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
+    }
     gpsEnabled = true;
+
+    /** set by NavigationService: merged into the GPS watch options while navigating */
+    navigationWatchOptions: Partial<GeolocationOptions> = null;
+    /** set by NavigationService: navigation drives the watch itself, so the app going to background must not stop it */
+    keepWatchingInBackground = false;
 
     constructor(service: BgServiceCommon) {
         super(service);
@@ -105,6 +128,11 @@ export class GeoHandler extends Handler {
                 this.stopWatch();
                 this.startWatch();
             }
+        }
+
+        if (this.keepWatchingInBackground) {
+            // keep the navigation notification up, navigation restarts the watch at its foreground cadence
+            return;
         }
 
         if (!this.currentSession) {
@@ -135,7 +163,15 @@ export class GeoHandler extends Handler {
                 this.startWatch();
             }
         }
-        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground);
+        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground, this.keepWatchingInBackground);
+        if (this.keepWatchingInBackground) {
+            // navigation owns the watch cadence in background and restarts it itself; we only make sure
+            // the service stays in foreground so android does not reclaim it
+            if (__ANDROID__) {
+                (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
+            }
+            return;
+        }
         if (!this.currentSession && this.isWatching()) {
             if (this.stopGpsBackground) {
                 this.wasWatchingBeforePause = true;
@@ -355,6 +391,7 @@ export class GeoHandler extends Handler {
             onDeferred: this.onDeferred,
             nmeaAltitude: true,
             skipPermissionCheck: true,
+            ...this.navigationWatchOptions,
             ...opts
         };
         DEV_LOG && console.log('startWatch', JSON.stringify(options));
@@ -457,10 +494,27 @@ export class GeoHandler extends Handler {
         return !!this.watchId;
     }
 
+    /** Applies a change of `navigationWatchOptions` to an already running watch. */
+    async restartWatch() {
+        if (!this.isWatching()) {
+            return;
+        }
+        this.stopWatch();
+        await this.startWatch();
+        if (__ANDROID__ && this.keepWatchingInBackground && this.service.appInBackground) {
+            // stopWatch dropped the foreground notification, navigation still needs it
+            (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
+        }
+    }
+
     getDistance(loc1, loc2) {
         return Math.round(geolocation.distance(loc1, loc2) * 1000) / 1000;
     }
     updateSessionWithLoc(loc: GeoLocation) {
+        const session = this.currentSession;
+        if (!session || this.sessionState !== SessionState.RUNNING) {
+            return;
+        }
         if (this.lastLoc === null && loc) {
             this.notify({
                 eventName: SessionFirstPositionEvent,
@@ -468,20 +522,57 @@ export class GeoHandler extends Handler {
                 data: loc
             } as GPSEvent);
         }
+        const previousLoc = this.lastLoc;
         this.lastLoc = loc;
-        if (!this.lastAlt) {
-            this.lastAlt = loc.altitude;
+        session.lastLoc = loc;
+
+        // a fix we cannot trust would only add noise to every accumulator below
+        const accuracy = loc.horizontalAccuracy ?? 0;
+        if (previousLoc && accuracy <= SESSION_MAX_ACCURACY) {
+            const delta = this.getDistance(previousLoc, loc);
+            // GPS speed is doppler derived, so it tells us whether we are moving far more reliably than
+            // differencing two positions does. Only fall back to the distance when we have no speed.
+            const moving = loc.speed >= 0 ? loc.speed > SESSION_STOPPED_SPEED : delta > SESSION_MIN_DISTANCE;
+            if (moving) {
+                session.distance += delta;
+            }
         }
-        this.currentSession.lastLoc = loc;
-        const { android, ios, ...dataToStore } = loc;
-        this.currentSession.locs.push(dataToStore);
+
+        const altitude = loc.altitude;
+        if (altitude !== undefined && altitude !== null && !isNaN(altitude)) {
+            if (this.lastAlt === undefined || this.lastAlt === null) {
+                this.lastAlt = altitude;
+            } else {
+                const deltaAltitude = altitude - this.lastAlt;
+                // only commit a climb once it clears the altimeter noise, else a flat road accumulates gain
+                if (Math.abs(deltaAltitude) >= SESSION_ALTITUDE_THRESHOLD) {
+                    if (deltaAltitude > 0) {
+                        session.altitudeGain += deltaAltitude;
+                    } else {
+                        session.altitudeNegative -= deltaAltitude;
+                    }
+                    this.lastAlt = altitude;
+                }
+            }
+        }
+
+        session.currentSpeed = loc.speed >= 0 ? loc.speed * 3.6 : 0;
+        const elapsed = Date.now() - session.startTime.valueOf() - session.pauseDuration;
+        if (elapsed > 0) {
+            session.averageSpeed = Math.round((session.distance / elapsed) * 3600);
+        }
+
+        if (this.recordTrack) {
+            const { android, ios, ...dataToStore } = loc;
+            session.locs.push(dataToStore);
+        }
         this.notify({
             eventName: SessionUpdatedEvent,
             object: this,
-            data: this.currentSession
+            data: session
         } as SessionEventData);
         if (this.onUpdatedSession) {
-            this.onUpdatedSession(this.currentSession);
+            this.onUpdatedSession(session);
         }
     }
 
