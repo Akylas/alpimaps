@@ -20,6 +20,10 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
+    import { CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
+    import NavigationView, { NAVBAR_HEIGHT, NAVSTATS_HEIGHT } from '~/components/navigation/NavigationView.svelte';
+    import { navigationService } from '~/services/NavigationService';
+    import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
     import { langStore } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -32,7 +36,7 @@
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
     import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors } from '~/variables';
+    import { actionBarButtonHeight, colors, fontScaleMaxed } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
@@ -116,10 +120,12 @@
     });
 
     $: {
-        if (itemIsRoute && currentLocation) {
+        // during navigation the service already computed all of this, see highlightChartFromProgress
+        if (itemIsRoute && currentLocation && !$isNavigating) {
             updateRouteItemWithPosition(item, currentLocation);
         }
     }
+    $: console.log('isNavigating', $isNavigating);
     // $: {
     //     if (item) {
     //         console.log('selected item ', item.id, item.properties?.address, item.geometry);
@@ -283,6 +289,25 @@
         }
     }
     $: updateSelectedItem(item);
+    $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
+    // the bar is made of scaled text, so at a large font scale a fixed height would clip it
+    $: navViewHeight = Math.round((NAVBAR_HEIGHT + NAVSTATS_HEIGHT) * $fontScaleMaxed);
+    $: topViewHeight = $isNavigating ? navViewHeight : INFOVIEW_HEIGHT;
+    // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
+    $: if ($isNavigating && $navigationProgress && graphAvailable) {
+        highlightChartFromProgress($navigationProgress);
+    }
+    // the sheet must grow when the taller navigation view takes over, and shrink back after
+    $: if (topViewHeight) {
+        updateSteps();
+    }
+    let wasNavigating = false;
+    // the step list changes shape on both transitions, so put the sheet back on a known step
+    $: if (wasNavigating !== $isNavigating) {
+        wasNavigating = $isNavigating;
+        updateSteps();
+        mapContext.setBottomSheetStepIndex(1);
+    }
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
@@ -336,6 +361,24 @@
         }
     }
 
+    /** Feeds the elevation chart from the navigation service's progress, no second polyline walk. */
+    function highlightChartFromProgress(progress: RouteProgress) {
+        const profile = item?.profile;
+        const params = {
+            onPathIndex: progress.onPathIndex,
+            remainingDistance: progress.remainingDistance,
+            remainingDistanceToStep: progress.remainingDistanceToStep,
+            remainingTime: progress.remainingTime,
+            dplus: profile?.dplus,
+            dmin: profile?.dmin
+        };
+        if (elevationChart) {
+            elevationChart.hilghlightPathIndex(params, undefined, false);
+        } else {
+            chartLoadHighlightData = params;
+        }
+    }
+
     function onNewLocation(e: any) {
         currentLocation = e.data;
         // console.log('onNewLocation', currentLocation);
@@ -367,15 +410,35 @@
         instruction: RouteInstruction;
     };
 
+    async function startNavigation() {
+        try {
+            // the step index is set by the isNavigating watcher above, for both start and stop
+            await navigationService.start(item);
+        } catch (error) {
+            showError(error);
+        }
+    }
+
     function updateSteps() {
         if (!item) {
             steps = [0];
             return;
         }
-        let total = INFOVIEW_HEIGHT;
-        const result = [0, total];
-        total += 50;
-        result.push(total);
+        let total: number;
+        // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and gets
+        // stuck if it is missing. Dismissal during navigation is blocked in Map's onStepIndexChanged
+        const result = [0];
+        if ($isNavigating) {
+            // the whole navigation view is one step: the figures and the estimates below them belong
+            // together. No buttons row either, none of those actions apply to a route already running
+            total = navViewHeight;
+            result.push(total);
+        } else {
+            total = INFOVIEW_HEIGHT;
+            result.push(total);
+            total += 50;
+            result.push(total);
+        }
         if (graphAvailable) {
             total += PROFILE_HEIGHT;
             result.push(total);
@@ -1058,56 +1121,63 @@
     }
 </script>
 
-<gridlayout id="bottomSheetInner" {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<!-- transparent while navigating: the navigation view is a row of floating cards, the map shows between them -->
+<gridlayout
+    id="bottomSheetInner"
+    {...$$restProps}
+    backgroundColor={$isNavigating ? '#ffffff00' : colorWidgetBackground}
+    rows={`${topViewHeight},${$isNavigating ? 0 : 50},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`}
+    on:tap={() => {}}>
     {#if loaded}
-        <swipemenu
-            bind:this={swipemenu}
-            closeAnimationDuration={100}
-            height={INFOVIEW_HEIGHT}
-            leftSwipeDistance={0}
-            openAnimationDuration={100}
-            rightSwipeDistance={0}
-            translationFunction={drawerTranslationFunction}>
-            <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
-                <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
-            </BottomSheetInfoView>
-            <IconButton
-                prop:leftDrawer
-                backgroundColor={isEInk ? 'white' : colorError}
+        {#if $isNavigating}
+            <!-- while navigating the item view is replaced: the route is a given, what matters is what is left of it -->
+            <NavigationView height={navViewHeight} />
+        {:else}
+            <swipemenu
+                bind:this={swipemenu}
+                closeAnimationDuration={100}
+                height={INFOVIEW_HEIGHT}
+                leftSwipeDistance={0}
+                openAnimationDuration={100}
+                rightSwipeDistance={0}
+                translationFunction={drawerTranslationFunction}>
+                <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
+                    <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
+                </BottomSheetInfoView>
+                prop:leftDrawer backgroundColor={isEInk ? 'white' : colorError}
                 color={isEInk ? 'black' : 'white'}
-                height="100%"
-                shape="none"
-                text="mdi-trash-can"
-                tooltip={lc('delete')}
+                height="100%" shape="none" text="mdi-trash-can" tooltip={lc('delete')}
                 width={60}
                 on:tap={deleteItem} />
 
-            <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
-                <IconButton
-                    id="locate"
-                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
-                    color={isEInk ? 'black' : 'white'}
-                    height="100%"
-                    shape="none"
-                    text="mdi-crosshairs-gps"
-                    width={60}
-                    on:tap={zoomToItem} />
-                <IconButton
-                    id="lock"
-                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
-                    color={isEInk ? 'black' : 'white'}
-                    height="100%"
-                    shape="none"
-                    text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
-                    width={60}
-                    on:tap={() => ($itemLock = !$itemLock)} />
-            </stacklayout>
-        </swipemenu>
+                <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
+                    <IconButton
+                        id="locate"
+                        backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                        color={isEInk ? 'black' : 'white'}
+                        height="100%"
+                        shape="none"
+                        text="mdi-crosshairs-gps"
+                        width={60}
+                        on:tap={zoomToItem} />
+                    <IconButton
+                        id="lock"
+                        backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                        color={isEInk ? 'black' : 'white'}
+                        height="100%"
+                        shape="none"
+                        text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
+                        width={60}
+                        on:tap={() => ($itemLock = !$itemLock)} />
+                </stacklayout>
+            </swipemenu>
+        {/if}
 
-        <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
+        <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1} visibility={$isNavigating ? 'collapse' : 'visible'}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
                 <IconButton isVisible={!!item} onLongPress={() => openOpenStreetMap()} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
+                <IconButton isVisible={itemCanBeNavigated} rounded={false} text="mdi-navigation" tooltip={lc('start_navigation')} on:tap={startNavigation} />
 
                 <!-- {#if packageService.hasElevation()} -->
                 <IconButton
@@ -1152,15 +1222,26 @@
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart
             bind:this={elevationChart}
+            backgroundColor={colorWidgetBackground}
+            borderRadius={$isNavigating ? CARD_RADIUS : 0}
             {chartShowWaypoints}
             colSpan={2}
             {item}
+            margin={$isNavigating ? '4 8 0 8' : 0}
             row={2}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors}
             visibility={graphAvailable ? 'visible' : 'collapse'}
             on:highlight={onChartHighlight} />
-        <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
+        <canvasview
+            bind:this={statsCanvas}
+            backgroundColor={colorWidgetBackground}
+            borderRadius={$isNavigating ? CARD_RADIUS : 0}
+            colSpan={2}
+            margin={$isNavigating ? '4 8 0 8' : 0}
+            row={3}
+            visibility={statsAvailable ? 'visible' : 'collapse'}
+            on:draw={drawStats}>
             <IconButton
                 fontSize={20}
                 horizontalAlignment="right"

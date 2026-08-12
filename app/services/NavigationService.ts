@@ -15,23 +15,31 @@ import {
     navigationAutoPauseSpeed,
     navigationAutoZoom,
     navigationBackgroundUpdateInterval,
+    navigationBearingRefreshAngle,
+    navigationGpsUpdateDistance,
     navigationItem,
+    navigationLocation,
     navigationManeuverWakeDistance,
     navigationProgress,
     navigationRecordStats,
+    navigationScreenRefreshInterval,
     navigationSpeedDropWake,
     navigationSpeedDropWakeRatio,
     navigationState,
     navigationStats,
+    navigationTurnRefreshAngle,
+    navigationTurnRefreshDelay,
     navigationZoomDenseManeuverDistance,
     navigationZoomLookAhead,
+    navigationZoomManeuverVisibleDistance,
     navigationZoomMax,
     navigationZoomMaxLookAhead,
     navigationZoomMin,
     navigationZoomMinLookAhead
 } from '~/stores/navigationStore';
+import { watchingLocation } from '~/stores/mapStore';
 import { computeDistanceBetween } from '~/utils/geo';
-import { RouteProgress, computeNavigationLookAhead, computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
+import { RouteProgress, computeNavigationLookAhead, computeRouteProgress, isNavigableRoute, projectOnRoute } from '~/utils/navigation';
 import { requestScreenRefresh } from '~/utils/screen';
 
 const TAG = '[NavigationService]';
@@ -74,6 +82,16 @@ export class NavigationService extends Observable {
     private autoPaused = false;
     private arrived = false;
     private listening = false;
+    private lastOnPathIndex = -1;
+    private lastScreenRefresh = 0;
+    /** heading of the last fix, and the heading the map was last drawn at */
+    private lastBearing = -1;
+    private lastRefreshBearing = -1;
+    private delayedRefreshTimer;
+    /** a sharp maneuver we already announced, still owed a second refresh once it is behind us */
+    private pendingTurnRefreshIndex = -1;
+    /** so stopping navigation does not leave the gps running when it was off beforehand */
+    private wasWatchingBeforeStart = false;
 
     get state() {
         return get(navigationState);
@@ -118,7 +136,9 @@ export class NavigationService extends Observable {
         this.reset();
 
         const userLocationModule = this.userLocationModule;
-        // the user asked to navigate, so getting a location is part of the request
+        // the user asked to navigate, so getting a location is part of the request. Remember whether
+        // they were already watching, so stopping puts the gps back the way we found it
+        this.wasWatchingBeforeStart = get(watchingLocation);
         await userLocationModule.startWatchLocation();
         userLocationModule.navigationMode = true;
 
@@ -155,9 +175,18 @@ export class NavigationService extends Observable {
         this.reset();
         navigationItem.set(null);
         navigationProgress.set(null);
+        navigationLocation.set(null);
         navigationStats.set(null);
         this.setState(NavigationState.IDLE);
-        await this.geoHandler.restartWatch();
+        if (this.wasWatchingBeforeStart) {
+            // they were tracking before, so keep tracking, just back at their own gps settings
+            await this.geoHandler.restartWatch();
+        } else {
+            // navigation turned the gps on, so navigation turns it back off
+            DEV_LOG && console.log(TAG, 'stopping the watch, it was off before navigation started');
+            userLocationModule?.stopWatchLocation();
+        }
+        this.wasWatchingBeforeStart = false;
     }
 
     /**
@@ -217,6 +246,15 @@ export class NavigationService extends Observable {
         this.belowPauseSpeedSince = 0;
         this.autoPaused = false;
         this.arrived = false;
+        this.lastOnPathIndex = -1;
+        this.lastScreenRefresh = Date.now();
+        this.pendingTurnRefreshIndex = -1;
+        this.lastBearing = -1;
+        this.lastRefreshBearing = -1;
+        if (this.delayedRefreshTimer) {
+            clearTimeout(this.delayedRefreshTimer);
+            this.delayedRefreshTimer = null;
+        }
     }
 
     private setState(state: NavigationState) {
@@ -266,14 +304,16 @@ export class NavigationService extends Observable {
             this.geoHandler.navigationWatchOptions = null;
             return;
         }
+        const updateDistance = get(navigationGpsUpdateDistance);
         if (this.state === NavigationState.PAUSED) {
-            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: PAUSED_UPDATE_INTERVAL, updateDistance: 0 };
+            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: PAUSED_UPDATE_INTERVAL, updateDistance };
         } else if (this.appInBackground) {
-            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: get(navigationBackgroundUpdateInterval), updateDistance: 0 };
+            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: get(navigationBackgroundUpdateInterval), updateDistance };
         } else {
-            // in foreground the user's own gps settings apply
-            this.geoHandler.navigationWatchOptions = null;
+            // in foreground only the distance filter applies, the rate stays the user's own setting
+            this.geoHandler.navigationWatchOptions = updateDistance > 0 ? { updateDistance } : null;
         }
+        DEV_LOG && console.log(TAG, 'watch options', this.state, this.appInBackground, JSON.stringify(this.geoHandler.navigationWatchOptions));
     }
 
     private onLocation(event: any) {
@@ -281,6 +321,10 @@ export class NavigationService extends Observable {
             const location: GeoLocation = event.data;
             if (!location || !this.isNavigating) {
                 return;
+            }
+            navigationLocation.set(location);
+            if (location.bearing >= 0) {
+                this.lastBearing = location.bearing;
             }
             const speed = location.speed >= 0 ? location.speed : 0;
             this.speeds.push(speed);
@@ -315,15 +359,25 @@ export class NavigationService extends Observable {
     }
 
     private computeProgress(location: GeoLocation): RouteProgress {
-        const onPathIndex = isLocationOnRoute(location, this.positions);
-        if (onPathIndex === -1) {
-            return { onPathIndex };
+        // search a window ahead of where we were: progress along a route is monotonic, and a full scan
+        // can match the other leg of a switchback, which makes the distance to the maneuver grow
+        let projection = projectOnRoute(location, this.positions, { fromIndex: this.lastOnPathIndex });
+        if (!projection && this.lastOnPathIndex !== -1) {
+            // nothing in the window: we either left the route or rejoined it elsewhere, so look everywhere
+            projection = projectOnRoute(location, this.positions);
+            DEV_LOG && console.log(TAG, 'lost the route near', this.lastOnPathIndex, 'rescanned ->', projection?.index ?? 'off route');
         }
+        if (!projection) {
+            this.lastOnPathIndex = -1;
+            return { onPathIndex: -1 };
+        }
+        this.lastOnPathIndex = projection.index;
         return computeRouteProgress({
             item: this.item,
             location,
             positions: this.positions,
-            onPathIndex,
+            onPathIndex: projection.index,
+            distanceToOnPathIndex: projection.distanceToIndex,
             computeRemaining: true,
             computeInstruction: true
         });
@@ -355,27 +409,48 @@ export class NavigationService extends Observable {
 
     private updateZoom(progress: RouteProgress) {
         if (!get(navigationAutoZoom)) {
+            DEV_LOG && console.log(TAG, 'zoom: auto zoom disabled');
             return;
         }
-        const lookAhead = computeNavigationLookAheadFor(progress, this.medianSpeed());
+        const speed = this.medianSpeed();
+        const lookAhead = computeNavigationLookAheadFor(progress, speed);
         const zoom = this.zoomForLookAhead(lookAhead);
         if (zoom === null) {
+            DEV_LOG && console.log(TAG, 'zoom: could not measure the map', lookAhead);
             return;
         }
         const target = Math.min(Math.max(zoom, get(navigationZoomMin)), get(navigationZoomMax));
         const current = this.currentZoom || mapContext.getMap()?.zoom || target;
         const delta = target - current;
+        DEV_LOG &&
+            console.log(
+                TAG,
+                'zoom',
+                JSON.stringify({
+                    speed: Math.round(speed * 10) / 10,
+                    toNext: Math.round(progress.distanceToNextInstruction),
+                    toFollowing: Math.round(progress.distanceToFollowingInstruction),
+                    lookAhead: Math.round(lookAhead),
+                    raw: Math.round(zoom * 100) / 100,
+                    target: Math.round(target * 100) / 100,
+                    current: Math.round(current * 100) / 100,
+                    delta: Math.round(delta * 100) / 100,
+                    following: this.userLocationModule?.userFollow
+                })
+            );
         if (Math.abs(delta) < ZOOM_MIN_DELTA) {
             this.zoomOutHoldCount = 0;
             return;
         }
         if (delta < 0 && ++this.zoomOutHoldCount < ZOOM_OUT_HOLD_FIXES) {
+            DEV_LOG && console.log(TAG, 'zoom: holding zoom out', this.zoomOutHoldCount, '/', ZOOM_OUT_HOLD_FIXES);
             return;
         }
         this.zoomOutHoldCount = 0;
         this.currentZoom = target;
         const userLocationModule = this.userLocationModule;
         if (userLocationModule) {
+            DEV_LOG && console.log(TAG, 'zoom: applying', target);
             userLocationModule.navigationZoom = target;
         }
     }
@@ -421,34 +496,85 @@ export class NavigationService extends Observable {
         }
     }
 
+    /** Every screen refresh goes through here so there is one place to see why it did or did not fire. */
+    private refreshScreen(reason: string, delaySeconds = 0) {
+        this.lastScreenRefresh = Date.now();
+        this.lastRefreshBearing = this.lastBearing;
+        if (delaySeconds > 0) {
+            DEV_LOG && console.log(TAG, 'screen refresh in', delaySeconds + 's:', reason);
+            if (this.delayedRefreshTimer) {
+                clearTimeout(this.delayedRefreshTimer);
+            }
+            this.delayedRefreshTimer = setTimeout(() => {
+                this.delayedRefreshTimer = null;
+                // the bearing has settled by now, so the map is drawn pointing where we actually go
+                this.lastRefreshBearing = this.lastBearing;
+                DEV_LOG && console.log(TAG, 'screen refresh (delayed):', reason);
+                requestScreenRefresh();
+            }, delaySeconds * 1000);
+            return;
+        }
+        DEV_LOG && console.log(TAG, 'screen refresh:', reason);
+        requestScreenRefresh();
+    }
+
     /**
      * Waking the screen only makes sense when it is off, ie when the app is in background: that is
      * the whole point of the mode, not having to turn the phone on to know what comes next.
      */
     private checkWakeTriggers(progress: RouteProgress, speed: number) {
-        if (!__ANDROID__ || !this.appInBackground) {
+        if (!__ANDROID__) {
+            DEV_LOG && console.log(TAG, 'screen refresh skipped: not android');
             return;
         }
-        if (progress.instruction && progress.distanceToNextInstruction <= get(navigationManeuverWakeDistance)) {
+        if (!this.appInBackground) {
+            DEV_LOG && console.log(TAG, 'screen refresh skipped: app is in foreground, the screen is already on');
+            return;
+        }
+        const wakeDistance = get(navigationManeuverWakeDistance);
+        if (progress.instruction && progress.distanceToNextInstruction <= wakeDistance) {
             // one wake per maneuver, else it fires again on every fix as we close in
             if (progress.instructionIndex !== this.lastWokenInstructionIndex) {
                 this.lastWokenInstructionIndex = progress.instructionIndex;
-                requestScreenRefresh();
+                // a sharp turn changes what is ahead, so ask for a second refresh once it is behind us
+                this.pendingTurnRefreshIndex = Math.abs(progress.instruction.angle ?? 0) >= get(navigationTurnRefreshAngle) ? progress.instructionIndex : -1;
+                this.refreshScreen(`maneuver ${progress.instructionIndex} within ${Math.round(progress.distanceToNextInstruction)}m of ${wakeDistance}m`);
+                return;
             }
+        } else if (this.pendingTurnRefreshIndex >= 0 && progress.instructionIndex > this.pendingTurnRefreshIndex) {
+            // the sharp turn is done, but wait a moment: mid roundabout the heading is still swinging
+            const turnIndex = this.pendingTurnRefreshIndex;
+            this.pendingTurnRefreshIndex = -1;
+            this.refreshScreen(`sharp maneuver ${turnIndex} completed, new heading`, get(navigationTurnRefreshDelay));
             return;
         }
-        if (!get(navigationSpeedDropWake) || this.speeds.length < SPEED_WINDOW) {
-            return;
+
+        const bearingThreshold = get(navigationBearingRefreshAngle);
+        if (bearingThreshold > 0 && this.lastRefreshBearing >= 0 && this.lastBearing >= 0) {
+            const change = angleDifference(this.lastBearing, this.lastRefreshBearing);
+            if (change >= bearingThreshold) {
+                this.refreshScreen(`heading changed by ${Math.round(change)}° since the last refresh`);
+                return;
+            }
         }
-        const average = this.speeds.reduce((total, value) => total + value, 0) / this.speeds.length;
-        // slowing down usually means a maneuver is coming, but only when we were actually moving
-        if (average <= SPEED_DROP_MIN_AVERAGE || speed >= average * get(navigationSpeedDropWakeRatio)) {
-            return;
+
+        if (get(navigationSpeedDropWake) && this.speeds.length >= SPEED_WINDOW) {
+            const average = this.speeds.reduce((total, value) => total + value, 0) / this.speeds.length;
+            // slowing down usually means a maneuver is coming, but only when we were actually moving
+            if (average > SPEED_DROP_MIN_AVERAGE && speed < average * get(navigationSpeedDropWakeRatio)) {
+                const now = Date.now();
+                if (now - this.lastSpeedDropWake > SPEED_DROP_MIN_INTERVAL) {
+                    this.lastSpeedDropWake = now;
+                    this.refreshScreen(`speed dropped from ${average.toFixed(1)} to ${speed.toFixed(1)} m/s`);
+                    return;
+                }
+            }
         }
-        const now = Date.now();
-        if (now - this.lastSpeedDropWake > SPEED_DROP_MIN_INTERVAL) {
-            this.lastSpeedDropWake = now;
-            requestScreenRefresh();
+
+        // nothing eventful, but a long straight still needs the map to catch up now and then
+        const interval = get(navigationScreenRefreshInterval);
+        if (interval > 0 && Date.now() - this.lastScreenRefresh >= interval * 1000) {
+            this.refreshScreen(`periodic, ${interval}s elapsed`);
         }
     }
 
@@ -472,6 +598,12 @@ export class NavigationService extends Observable {
     }
 }
 
+/** Smallest angle between two headings, so 350° and 10° are 20° apart rather than 340°. */
+function angleDifference(a: number, b: number) {
+    const diff = Math.abs(a - b) % 360;
+    return diff > 180 ? 360 - diff : diff;
+}
+
 function computeNavigationLookAheadFor(progress: RouteProgress, speed: number) {
     return computeNavigationLookAhead({
         speed,
@@ -479,6 +611,7 @@ function computeNavigationLookAheadFor(progress: RouteProgress, speed: number) {
         distanceToFollowingInstruction: progress.distanceToFollowingInstruction,
         lookAheadSeconds: get(navigationZoomLookAhead),
         denseManeuverDistance: get(navigationZoomDenseManeuverDistance),
+        maneuverVisibleDistance: get(navigationZoomManeuverVisibleDistance),
         minLookAhead: get(navigationZoomMinLookAhead),
         maxLookAhead: get(navigationZoomMaxLookAhead)
     });
