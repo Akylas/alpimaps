@@ -21,23 +21,23 @@
 		[class !='waypointline'] {
 			when ([nuti::selected_id]=[id])::selected,
 			{
-				casing/line-color:  @is_selected ? [nuti::main_darker_color]: #787E7B;
-				casing/line-width: [class=auto] ? 7: 5;
+				casing/line-color:  @is_selected ? [nuti::main_darker_color]: @directions_casing_color;
+				casing/line-width: @directions_casing_width;
 				casing/line-join: round;
 				casing/line-cap: round;
-				casing/line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
-				line-color: @is_selected ? [nuti::main_color]: ([style.color]? [style.color]:#ACB0AE);
-				line-width: [class=auto] ? 5: 3;
-				line-opacity: linear([view::zoom], (16, 1), (18, 0.3));
+				casing/line-opacity: @directions_line_opacity;
+				line-color: @is_selected ? [nuti::main_color]: ([style.color]? [style.color]:@directions_line_color);
+				line-width: @directions_line_width;
+				line-opacity: @directions_line_opacity;
 				line-join: round;
 				line-cap: round;
 				marker-placement: line;
 				marker-type: arrow;
 				marker-line-width: 0;
-				marker-opacity: 0.6;
-				marker-width: 4;
-				marker-height: 4;
-				marker-fill:  @is_selected ? #B3CEFF: #ACB0AE;
+				marker-opacity: 0.9;
+				marker-width: @directions_arrow_size;
+				marker-height: @directions_arrow_size;
+				marker-fill:  @is_selected ? @directions_selected_arrow_color: @directions_arrow_color;
 			}
 		}
 	}
