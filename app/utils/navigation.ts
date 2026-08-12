@@ -1,13 +1,47 @@
 import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
 import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
+import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
 import { type Item, type RouteInstruction, RoutingAction } from '~/models/Item';
-import { computeDistanceBetween } from '~/utils/geo';
+import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
+/** how many segments ahead of the last known position we look for the user */
+export const DEFAULT_PROJECTION_WINDOW = 200;
 
 /** how much road past the maneuver we want in frame when we zoom onto it */
 const MANEUVER_FRAME_RATIO = 1.4;
+
+/**
+ * Value and unit kept apart so the UI can shrink the unit and let the number carry the emphasis.
+ * The formatter's own helpers return them already joined.
+ */
+export function splitDistance(meters: number): [number, string] {
+    return convertValueToUnit(meters, meters < 1000 ? UNITS.Meters : UNITS.Kilometers);
+}
+export function splitElevation(meters: number): [number, string] {
+    return convertValueToUnit(meters, UNITS.Meters);
+}
+/** takes km/h, the unit Session stores speeds in. Goes through the unit machinery so imperial works. */
+export function splitSpeed(speedKmh: number): [number, string] {
+    return convertValueToUnit(speedKmh, UNITS.SpeedKm);
+}
+export function formatSpeed(speedKmh: number) {
+    return formatValue(speedKmh, UNITS.SpeedKm);
+}
+
+export { formatDuration as formatNavigationDuration };
+
+/** Same split as the other figures, so the unit can be drawn smaller than the value. */
+export function splitDuration(seconds: number): [string, string] {
+    if (seconds >= 3600) {
+        return [convertDurationSeconds(seconds, 'H:mm'), 'h'];
+    }
+    if (seconds < 60) {
+        return [convertDurationSeconds(seconds, 's'), 's'];
+    }
+    return [convertDurationSeconds(seconds, 'm'), 'min'];
+}
 
 export interface ManeuverIcon {
     icon: string;
@@ -50,6 +84,8 @@ export interface NavigationLookAheadOptions {
     distanceToFollowingInstruction?: number;
     lookAheadSeconds: number;
     denseManeuverDistance: number;
+    /** past this the next maneuver is too far to be worth framing, and speed decides alone */
+    maneuverVisibleDistance: number;
     minLookAhead: number;
     maxLookAhead: number;
 }
@@ -57,26 +93,41 @@ export interface NavigationLookAheadOptions {
 /**
  * How many meters of road ahead the camera should frame.
  *
- * Three independent candidates, tightest wins:
- * - speed, so a fast road is zoomed out;
- * - proximity to the next maneuver, so approaching a turn zooms onto it whatever the speed;
- * - maneuver density, so turn-after-turn on small roads stays close even at speed, which is
- *   exactly when the user has the least time to read the map.
+ * Speed sets the baseline, then the next maneuver adjusts it in *either* direction:
+ * - it widens the view when the maneuver is further than the speed alone would show, so crawling up
+ *   a long straight does not sit at maximum zoom with the turn off screen;
+ * - it tightens the view on approach, so the turn is framed whatever the speed.
+ *
+ * Maneuver density only ever tightens: turn-after-turn on small roads must stay close even at speed,
+ * which is exactly when the user has the least time to read the map.
  */
 export function computeNavigationLookAhead({
     denseManeuverDistance,
     distanceToFollowingInstruction,
     distanceToNextInstruction,
     lookAheadSeconds,
+    maneuverVisibleDistance,
     maxLookAhead,
     minLookAhead,
     speed
 }: NavigationLookAheadOptions) {
-    const fromSpeed = Math.max(speed, 0) * lookAheadSeconds;
-    const fromManeuver = distanceToNextInstruction >= 0 ? distanceToNextInstruction * MANEUVER_FRAME_RATIO : Infinity;
-    const clustered = distanceToNextInstruction >= 0 && distanceToFollowingInstruction >= 0 && distanceToFollowingInstruction < denseManeuverDistance;
-    const fromDensity = clustered ? distanceToNextInstruction + distanceToFollowingInstruction : Infinity;
-    return Math.min(Math.max(Math.min(fromSpeed, fromManeuver, fromDensity), minLookAhead), maxLookAhead);
+    const hasManeuver = distanceToNextInstruction >= 0;
+    // the floor keeps a slow speed from collapsing the view onto the user's own dot
+    let lookAhead = Math.max(Math.max(speed, 0) * lookAheadSeconds, minLookAhead);
+
+    if (hasManeuver && distanceToNextInstruction <= maneuverVisibleDistance) {
+        // close enough to be worth showing: make sure it fits on screen, widening if we have to
+        lookAhead = Math.max(lookAhead, distanceToNextInstruction * MANEUVER_FRAME_RATIO);
+    }
+    if (hasManeuver) {
+        // never frame much more road than the maneuver itself once we are nearly on it
+        lookAhead = Math.min(lookAhead, Math.max(distanceToNextInstruction * MANEUVER_FRAME_RATIO, minLookAhead));
+    }
+    const clustered = hasManeuver && distanceToFollowingInstruction >= 0 && distanceToFollowingInstruction < denseManeuverDistance;
+    if (clustered) {
+        lookAhead = Math.min(lookAhead, distanceToNextInstruction + distanceToFollowingInstruction);
+    }
+    return Math.min(Math.max(lookAhead, minLookAhead), maxLookAhead);
 }
 
 export interface RouteProgress {
@@ -104,6 +155,81 @@ export interface ComputeRouteProgressOptions {
     onPathIndex: number;
     computeRemaining?: boolean;
     computeInstruction?: boolean;
+    /**
+     * meters from the user to `positions[onPathIndex]`, when the caller already projected the
+     * location onto the route. Without it we fall back to the straight line to that vertex, which
+     * overshoots whenever the user is not exactly on the polyline.
+     */
+    distanceToOnPathIndex?: number;
+}
+
+export interface RouteProjection {
+    /** index of the vertex the user is heading to, ie the end of the segment they are on */
+    index: number;
+    /** meters from the user to `positions[index]`, measured along the route */
+    distanceToIndex: number;
+    /** how far off the route the user is, to tell a real position from a rejoin */
+    distanceFromRoute: number;
+}
+
+/** Distance from a point to a segment, and how far along that segment the closest point sits. */
+function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, bLat: number, bLon: number) {
+    // at these distances a local flat approximation is exact enough and far cheaper than haversine
+    const cosLat = Math.cos(aLat * TO_RAD);
+    const bx = (bLon - aLon) * cosLat;
+    const by = bLat - aLat;
+    const px = (lon - aLon) * cosLat;
+    const py = lat - aLat;
+    const lengthSquared = bx * bx + by * by;
+    const ratio = lengthSquared <= 0 ? 0 : Math.min(Math.max((px * bx + py * by) / lengthSquared, 0), 1);
+    const dx = px - ratio * bx;
+    const dy = py - ratio * by;
+    const degreesToMeters = TO_RAD * EARTH_RADIUS;
+    return {
+        ratio,
+        distance: Math.sqrt(dx * dx + dy * dy) * degreesToMeters,
+        segmentLength: Math.sqrt(lengthSquared) * degreesToMeters
+    };
+}
+
+/**
+ * Projects a location onto the route, returning the closest segment rather than the first one within
+ * tolerance like `isLocationOnPath` does.
+ *
+ * That difference matters: where a route passes near itself (a switchback, an out and back), the first
+ * matching segment can belong to the other leg, the index then never advances, and the distance to the
+ * next maneuver *grows* as the user drives away from a vertex they already passed. Searching a window
+ * ahead of the last known index also makes progress monotonic and costs a few segments instead of all.
+ */
+export function projectOnRoute(
+    location: GenericMapPos<LatLonKeys>,
+    positions: MapPosVector<LatLonKeys>,
+    { fromIndex = -1, tolerance = DEFAULT_LOCATION_DISTANCE_FROM_ROUTE, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; tolerance?: number; window?: number } = {}
+): RouteProjection {
+    const size = positions.size();
+    if (size < 2) {
+        return null;
+    }
+    // one segment of slack behind, so a fix that lands just short of the last vertex still matches
+    const start = fromIndex >= 0 ? Math.max(0, fromIndex - 2) : 0;
+    const end = fromIndex >= 0 ? Math.min(size - 1, fromIndex + window) : size - 1;
+    let best: RouteProjection = null;
+    for (let index = start; index < end; index++) {
+        const from = positions.get(index);
+        const to = positions.get(index + 1);
+        const projection = projectOnSegment(location.lat, location.lon, from.getY(), from.getX(), to.getY(), to.getX());
+        if (!best || projection.distance < best.distanceFromRoute) {
+            best = {
+                index: index + 1,
+                distanceToIndex: (1 - projection.ratio) * projection.segmentLength,
+                distanceFromRoute: projection.distance
+            };
+        }
+    }
+    if (!best || best.distanceFromRoute > tolerance) {
+        return null;
+    }
+    return best;
 }
 
 /** Routes coming from OSM are not navigable: they have no instructions and no consistent direction. */
@@ -126,7 +252,7 @@ export function isLocationOnRoute(location: GenericMapPos<LatLonKeys>, positions
  * `computeRemaining` and `computeInstruction` are opt-in because both walk the polyline: on a long
  * imported track with no profile and no instructions there is nothing to compute and we must not pay for it.
  */
-export function computeRouteProgress({ computeInstruction, computeRemaining, item, location, onPathIndex, positions }: ComputeRouteProgressOptions): RouteProgress {
+export function computeRouteProgress({ computeInstruction, computeRemaining, distanceToOnPathIndex, item, location, onPathIndex, positions }: ComputeRouteProgressOptions): RouteProgress {
     const result: RouteProgress = { onPathIndex };
     if (onPathIndex === -1) {
         return result;
@@ -154,7 +280,7 @@ export function computeRouteProgress({ computeInstruction, computeRemaining, ite
         if (instructionIndex !== -1) {
             result.instructionIndex = instructionIndex;
             result.instruction = instructions[instructionIndex];
-            let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
+            let distanceToNextInstruction = distanceToOnPathIndex ?? computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
             for (let index = onPathIndex; index < result.instruction.index; index++) {
                 distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
             }

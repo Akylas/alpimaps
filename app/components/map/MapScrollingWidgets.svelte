@@ -12,9 +12,10 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import ScaleView from '~/components/map/ScaleView.svelte';
     import { getMapContext } from '~/mapModules/MapModule';
-    import UserLocationModule, { navigationModeStore } from '~/mapModules/UserLocationModule';
+    import UserLocationModule, { navigationModeStore, userFollowStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
+    import { isNavigationRunning, navigationHideChrome } from '~/stores/navigationStore';
     import { openLink } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
@@ -86,7 +87,15 @@
         attributionVisible = !devMode && e.needsAttribution;
     }
 
+    // while navigating the location button has one job left: bring the camera back after a pan
+    $: locationButtonVisible = !$isNavigationRunning || !$userFollowStore;
+
     function askUserLocation() {
+        if ($isNavigationRunning) {
+            // plain follow would lose the navigation tilt and offset, so re-engage the whole camera mode
+            userLocationModule.navigationMode = true;
+            return;
+        }
         return userLocationModule?.askUserLocation();
     }
     function onWatchLocation() {
@@ -209,7 +218,7 @@
             text="mdi-directions"
             visibility={selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <mdcardview id="location" class={`${locationButtonClass} floating-btn`} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdcardview id="location" class={`${locationButtonClass} floating-btn`} visibility={locationButtonVisible ? 'visible' : 'collapse'} on:tap={askUserLocation} on:longPress={onWatchLocation}>
             <label
                 ios:iosAccessibilityAdjustsFontSize={false}
                 class={`mdi ${locationButtonLabelClass}`}
@@ -225,13 +234,13 @@
         color={colorOnSurfaceVariant}
         horizontalAlignment="right"
         isSelected={$navigationModeStore}
-        isVisible={$watchingLocation && !$queryingLocation}
+        isVisible={$watchingLocation && !$queryingLocation && !$isNavigationRunning}
         marginBottom={16}
         row={2}
         text={$navigationModeStore ? 'mdi-navigation' : 'mdi-navigation-outline'}
         verticalAlignment="bottom"
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
-    <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom">
+    <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom" visibility={$isNavigationRunning && $navigationHideChrome ? 'collapse' : 'visible'}>
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
         <mdbutton id="list" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />
         <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />

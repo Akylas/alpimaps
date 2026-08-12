@@ -1,5 +1,6 @@
 import { derived, get, writable } from 'svelte/store';
-import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
+import type { GeoLocation } from '~/handlers/GeoHandler';
+import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
@@ -9,14 +10,20 @@ import {
     DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED,
     DEFAULT_NAVIGATION_AUTO_ZOOM,
     DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
-    DEFAULT_NAVIGATION_HIDE_SEARCH,
+    DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
+    DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
+    DEFAULT_NAVIGATION_HIDE_CHROME,
     DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
+    DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
+    DEFAULT_NAVIGATION_TURN_REFRESH_DELAY,
     DEFAULT_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
     DEFAULT_NAVIGATION_ZOOM_LOOK_AHEAD,
+    DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
     DEFAULT_NAVIGATION_ZOOM_MAX,
     DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ZOOM_MIN,
@@ -26,14 +33,20 @@ import {
     SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED,
     SETTINGS_NAVIGATION_AUTO_ZOOM,
     SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
-    SETTINGS_NAVIGATION_HIDE_SEARCH,
+    SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
+    SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
+    SETTINGS_NAVIGATION_HIDE_CHROME,
     SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
+    SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
+    SETTINGS_NAVIGATION_TURN_REFRESH_DELAY,
     SETTINGS_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
     SETTINGS_NAVIGATION_ZOOM_LOOK_AHEAD,
+    SETTINGS_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
     SETTINGS_NAVIGATION_ZOOM_MAX,
     SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ZOOM_MIN,
@@ -65,6 +78,8 @@ export const navigationState = writable<NavigationState>(NavigationState.IDLE);
 export const navigationItem = writable<IItem>(null);
 /** where the user is along `navigationItem`, null when off route or idle */
 export const navigationProgress = writable<RouteProgress>(null);
+/** last fix received while navigating, for the live speed and elevation readouts */
+export const navigationLocation = writable<GeoLocation>(null);
 /** null unless navigation_record_stats is on */
 export const navigationStats = writable<NavigationStats>(null);
 
@@ -74,12 +89,18 @@ export const isNavigationRunning = derived(navigationState, (state) => state ===
 export const navigationAutoZoom = settingsStore(SETTINGS_NAVIGATION_AUTO_ZOOM, DEFAULT_NAVIGATION_AUTO_ZOOM);
 export const navigationZoomLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM_LOOK_AHEAD, DEFAULT_NAVIGATION_ZOOM_LOOK_AHEAD);
 export const navigationZoomDenseManeuverDistance = settingsStore(SETTINGS_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE, DEFAULT_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE);
+export const navigationZoomManeuverVisibleDistance = settingsStore(SETTINGS_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE, DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE);
 export const navigationZoomMinLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD, DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD);
 export const navigationZoomMaxLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD, DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD);
 export const navigationZoomMin = settingsStore(SETTINGS_NAVIGATION_ZOOM_MIN, DEFAULT_NAVIGATION_ZOOM_MIN);
 export const navigationZoomMax = settingsStore(SETTINGS_NAVIGATION_ZOOM_MAX, DEFAULT_NAVIGATION_ZOOM_MAX);
 export const navigationBackgroundUpdateInterval = settingsStore(SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL, DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL);
+export const navigationGpsUpdateDistance = settingsStore(SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE, DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE);
 export const navigationManeuverWakeDistance = settingsStore(SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE, DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE);
+export const navigationScreenRefreshInterval = settingsStore(SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL, DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL);
+export const navigationTurnRefreshAngle = settingsStore(SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE, DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE);
+export const navigationTurnRefreshDelay = settingsStore(SETTINGS_NAVIGATION_TURN_REFRESH_DELAY, DEFAULT_NAVIGATION_TURN_REFRESH_DELAY);
+export const navigationBearingRefreshAngle = settingsStore(SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE, DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE);
 export const navigationSpeedDropWake = settingsStore(SETTINGS_NAVIGATION_SPEED_DROP_WAKE, DEFAULT_NAVIGATION_SPEED_DROP_WAKE);
 export const navigationSpeedDropWakeRatio = settingsStore(SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO, DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO);
 export const navigationAutoPause = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE, DEFAULT_NAVIGATION_AUTO_PAUSE);
@@ -87,7 +108,7 @@ export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_P
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
 export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
-export const navigationHideSearch = settingsStore(SETTINGS_NAVIGATION_HIDE_SEARCH, DEFAULT_NAVIGATION_HIDE_SEARCH);
+export const navigationHideChrome = settingsStore(SETTINGS_NAVIGATION_HIDE_CHROME, DEFAULT_NAVIGATION_HIDE_CHROME);
 
 export interface NavigationParam {
     key: string;
@@ -105,10 +126,11 @@ export interface NavigationParam {
     quick?: boolean;
 }
 
-const formatSeconds = (value: number) => convertDurationSeconds(value);
-const formatMilliseconds = (value: number) => convertDurationSeconds(value / 1000);
+const formatSeconds = (value: number) => formatDuration(value);
+const formatMilliseconds = (value: number) => formatDuration(value / 1000);
 const formatPercent = (value: number) => Math.round(value * 100) + '%';
-const formatSpeed = (value: number) => value.toFixed(1) + ' m/s';
+// auto pause speed is stored in m/s but shown in the user's own speed unit
+const formatSpeed = (value: number) => formatValue(value * 3.6, UNITS.SpeedKm);
 
 /**
  * Single source of truth for the navigation parameters: both the settings screen and the popover
@@ -148,6 +170,19 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         max: 1000,
         step: 50,
         formatter: formatDistance
+    },
+    {
+        key: SETTINGS_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
+        store: navigationZoomManeuverVisibleDistance,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
+        title: () => lc('navigation_zoom_maneuver_visible_distance'),
+        description: () => lc('navigation_zoom_maneuver_visible_distance_desc'),
+        min: 200,
+        max: 10000,
+        step: 100,
+        formatter: formatDistance,
+        quick: true
     },
     {
         key: SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
@@ -202,6 +237,69 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         max: 30000,
         step: 500,
         formatter: formatMilliseconds,
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
+        store: navigationGpsUpdateDistance,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
+        title: () => lc('navigation_gps_update_distance'),
+        description: () => lc('navigation_gps_update_distance_desc'),
+        min: 0,
+        max: 500,
+        step: 5,
+        formatter: formatDistance,
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
+        store: navigationScreenRefreshInterval,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
+        title: () => lc('navigation_screen_refresh_interval'),
+        description: () => lc('navigation_screen_refresh_interval_desc'),
+        min: 0,
+        max: 900,
+        step: 15,
+        formatter: formatDuration,
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
+        store: navigationTurnRefreshAngle,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
+        title: () => lc('navigation_turn_refresh_angle'),
+        description: () => lc('navigation_turn_refresh_angle_desc'),
+        min: 0,
+        max: 180,
+        step: 5,
+        formatter: (value) => value + '°'
+    },
+    {
+        key: SETTINGS_NAVIGATION_TURN_REFRESH_DELAY,
+        store: navigationTurnRefreshDelay,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_TURN_REFRESH_DELAY,
+        title: () => lc('navigation_turn_refresh_delay'),
+        description: () => lc('navigation_turn_refresh_delay_desc'),
+        min: 0,
+        max: 15,
+        step: 1,
+        formatter: formatSeconds
+    },
+    {
+        key: SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
+        store: navigationBearingRefreshAngle,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
+        title: () => lc('navigation_bearing_refresh_angle'),
+        description: () => lc('navigation_bearing_refresh_angle_desc'),
+        min: 0,
+        max: 180,
+        step: 5,
+        formatter: (value) => (value > 0 ? value + '°' : lc('disabled')),
         quick: true
     },
     {
@@ -285,12 +383,12 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         description: () => lc('navigation_record_track_desc')
     },
     {
-        key: SETTINGS_NAVIGATION_HIDE_SEARCH,
-        store: navigationHideSearch,
+        key: SETTINGS_NAVIGATION_HIDE_CHROME,
+        store: navigationHideChrome,
         type: 'boolean',
-        default: DEFAULT_NAVIGATION_HIDE_SEARCH,
-        title: () => lc('navigation_hide_search'),
-        description: () => lc('navigation_hide_search_desc'),
+        default: DEFAULT_NAVIGATION_HIDE_CHROME,
+        title: () => lc('navigation_hide_chrome'),
+        description: () => lc('navigation_hide_chrome_desc'),
         quick: true
     }
 ];
@@ -319,7 +417,9 @@ export function getNavigationSettingsOptions() {
                   step: param.step,
                   default: param.default,
                   currentValue: () => getStoreValue(param),
-                  rightValue: () => formatParamValue(param)
+                  rightValue: () => formatParamValue(param),
+                  // without this the slider popover shows the raw number while being dragged
+                  valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
               }
     );
 }
@@ -347,7 +447,8 @@ export function getNavigationQuickSettings() {
                   value: getStoreValue(param),
                   defaultValue: param.default,
                   onChange: (value) => param.store.set(value),
-                  valueFormatter: () => formatParamValue(param)
+                  // formats the value the slider is being dragged to, which the store does not hold yet
+                  valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
               }
     );
 }
