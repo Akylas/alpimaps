@@ -4,7 +4,7 @@ import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
-import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
+import { formatDistance, formatDuration } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceCommon } from '~/services/BgService.common';
@@ -434,7 +434,10 @@ export class GeoHandler extends Handler {
                 description: lc('gps_update_distance_desc'),
                 value: () => ApplicationSettings.getNumber('gps_update_distance', updateDistance),
                 default: updateDistance,
-                type: 'prompt',
+                type: 'slider',
+                min: 0,
+                max: 500,
+                step: 5,
                 formatter: formatDistance
             },
             gps_desired_accuracy: {
@@ -462,16 +465,22 @@ export class GeoHandler extends Handler {
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime),
-                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
-                    type: 'prompt'
+                    formatter: (milliseconds) => formatDuration(milliseconds / 1000),
+                    type: 'slider',
+                    min: 0,
+                    max: 300000,
+                    step: 1000
                 },
                 gps_background_update_minTime: {
                     title: lc('gps_background_update_minTime'),
                     description: lc('gps_background_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime),
-                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
-                    type: 'prompt'
+                    formatter: (milliseconds) => formatDuration(milliseconds / 1000),
+                    type: 'slider',
+                    min: 0,
+                    max: 300000,
+                    step: 1000
                 }
             });
         }
