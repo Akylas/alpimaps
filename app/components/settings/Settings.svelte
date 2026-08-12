@@ -409,6 +409,8 @@
                         key: k,
                         rightValue: value.formatter ? () => value.formatter(value.value()) : value.value,
                         currentValue: value.value,
+                        // without this a slider shows the raw number while being dragged
+                        valueFormatter: value.formatter,
                         ...value,
                         id: 'setting'
                     });
