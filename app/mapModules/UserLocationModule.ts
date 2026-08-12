@@ -24,6 +24,8 @@ import { request } from '@nativescript-community/perms';
 const LOCATION_ANIMATION_DURATION = 300;
 
 export const navigationModeStore = writable(false);
+/** whether the camera is still following the user: panning the map turns it off */
+export const userFollowStore = writable(false);
 
 // const NOTIFICATION_SERVICE = android.content.Context.NOTIFICATION_SERVICE;
 
@@ -44,6 +46,7 @@ export default class UserLocationModule extends MapModule {
     set userFollow(value: boolean) {
         if (value !== this.mUserFollow) {
             this.mUserFollow = value;
+            userFollowStore.set(value);
             if (!value) {
                 this.navigationMode = false;
             }
@@ -318,6 +321,7 @@ export default class UserLocationModule extends MapModule {
         watchingLocation.set(true);
         if (!get(queryingLocation)) {
             showSnack({
+                hideDelay: 1,
                 message: lc('watching_location')
             });
         }

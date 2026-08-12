@@ -39,7 +39,7 @@
     import DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
     import LocationInfoPanel from '~/components/map/LocationInfoPanel.svelte';
     import MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
-    import ManeuverView from '~/components/navigation/ManeuverView.svelte';
+    import ManeuverView, { MANEUVER_VIEW_HEIGHT } from '~/components/navigation/ManeuverView.svelte';
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
@@ -53,6 +53,7 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
+    import { isNavigating, isNavigationRunning, navigationHideChrome, navigationProgress } from '~/stores/navigationStore';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -1022,7 +1023,7 @@
                             if (!props.address?.['city']) {
                                 const r = await packageService.getItemAddress(item, projection);
                                 if (r && $selectedItem.geometry === item.geometry) {
-                                    DEV_LOG && console.log('found addresses', JSON.stringify(r));
+                                    // DEV_LOG && console.log('found addresses', JSON.stringify(r));
                                     toUpdate.address = r;
                                     // $selectedItem.properties.address = r;
                                     if (r.name && !$selectedItem.properties.name) {
@@ -1747,6 +1748,11 @@
     //     const result = mBottomSheetTranslation + $navigationBarHeight;
     //     return result;
     // }
+    /** the maneuver banner sits at the very top, so everything anchored there has to move down under it */
+    $: navigationTopOffset = $isNavigationRunning && !!$navigationProgress?.instruction ? MANEUVER_VIEW_HEIGHT : 0;
+    // while running, the map is what the user needs: pausing brings the whole interface back
+    $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
+
     let scrollingWidgetsOpacity = 1;
     let mapTranslation = 0;
     // function topSheetTranslationFunction(maxTranslation, translation, progress) {
@@ -2356,6 +2362,11 @@
         }
     }
     function onStepIndexChanged(e) {
+        // step 0 is the closed state; while navigating the bar has to stay, it is the only way back out
+        if ($isNavigating && e.value === 0) {
+            bottomSheetStepIndex = 1;
+            return;
+        }
         if (e.value !== bottomSheetStepIndex) {
             bottomSheetStepIndex = e.value;
         }
@@ -2386,6 +2397,7 @@
             on:mapClicked={onMainMapClicked}
             on:layoutChanged={reportFullyDrawn} />
         <bottomsheet
+            backgroundColor={$isNavigating ? 'transparent' : undefined}
             marginBottom={windowInsetBottom}
             marginLeft={windowInsetLeft}
             marginRight={windowInsetRight}
@@ -2402,7 +2414,7 @@
                     gray={true}
                     horizontalAlignment="left"
                     marginLeft={5}
-                    marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
+                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top" />
 
                 <LocationInfoPanel
@@ -2410,8 +2422,9 @@
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     marginLeft={40}
-                    marginTop={90}
-                    verticalAlignment="top" />
+                    marginTop={90 + navigationTopOffset}
+                    verticalAlignment="top"
+                    visibility={hideChromeForNavigation ? 'collapse' : 'visible'} />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -2420,6 +2433,7 @@
                     item={$selectedItem}
                     margin={10}
                     verticalAlignment="top"
+                    visibility={hideChromeForNavigation ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
                 <ManeuverView style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
                 <canvaslabel
@@ -2438,8 +2452,8 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    android:marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
-                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
+                    android:marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
                     visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
