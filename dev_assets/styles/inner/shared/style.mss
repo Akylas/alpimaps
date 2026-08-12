@@ -54,5 +54,18 @@
 
 @itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
 @itemBackLineOpacity: linear([view::zoom], (16, 1), (18, 0.3));
-@itemSelectedLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
-@itemSelectedBackLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
+// a selected route is the one you are following: it must stay readable at navigation zooms,
+// where the generic item fade would drop it to 0.3
+@itemSelectedLineOpacity: linear([view::zoom], (13, 1), (18, 0.9));
+@itemSelectedBackLineOpacity: linear([view::zoom], (13, 1), (18, 0.9));
+
+// directions are the computed navigation route. Kept as variables so the eink theme can raise
+// their contrast, and barely faded at high zoom for the same reason as the selected item above
+@directions_casing_color: #787E7B;
+@directions_line_color: #ACB0AE;
+@directions_arrow_color: #ACB0AE;
+@directions_selected_arrow_color: #B3CEFF;
+@directions_line_opacity: linear([view::zoom], (16, 1), (18, 0.9));
+@directions_casing_width: [class=auto] ? 9 : 7;
+@directions_line_width: [class=auto] ? 6 : 4;
+@directions_arrow_size: 5;
