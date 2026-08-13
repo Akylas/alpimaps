@@ -13,15 +13,19 @@ import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
+import type { Point as GeoJSONPoint } from 'geojson';
 import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
+import type MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
 import type MapResultPager from '~/components/search/MapResultPager.svelte';
 import { GeoHandler } from '~/handlers/GeoHandler';
 import { colorTheme, isEInk } from '~/helpers/theme';
 import type CustomLayersModule from '~/mapModules/CustomLayersModule';
 import type ItemsModule from '~/mapModules/ItemsModule';
 import type UserLocationModule from '~/mapModules/UserLocationModule';
+import type { MapModuleHook, MapModuleHooks, MapModules } from '~/mapModules/registry';
+import { getMapModule, getMapModules, registerMapModule, runOnModules, runOnModulesOnMainThread } from '~/mapModules/registry';
 import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 //import { routesType } from '~/stores/mapStore';
@@ -40,7 +44,9 @@ import { showSnack, showToast } from '~/utils/ui';
 //     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
 //     onSelectedItem?(item: IItem, oldItem: IItem);
 // }
-export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit' | 'admin';
+import type { AddedLayer, LayerType } from '~/mapModules/layerStack';
+
+export type { AddedLayer, LayerType };
 
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
@@ -72,7 +78,8 @@ const basePack = new ZippedAssetPackage({
 });
 
 export interface MapContext {
-    mapModules: MapModules;
+    /** Read-only: register via `registerMapModule`, not by assigning here. */
+    readonly mapModules: MapModules;
     innerDecoder: MBVectorTileDecoder;
     mapDecoder: MBVectorTileDecoder;
     showMapMenu(event);
@@ -92,6 +99,7 @@ export interface MapContext {
     onVectorElementClicked(callback: ContextCallback<VectorElementEventData<LatLonKeys>>, once?: boolean);
     onVectorTileClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
     onVectorTileElementClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
+    onRasterTileClicked(callback: ContextCallback<RasterTileClickInfo<LatLonKeys>>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
@@ -108,42 +116,50 @@ export interface MapContext {
         zoomDuration?: number;
         preventZoom?: boolean;
         forceZoomOut?: boolean;
-    }) => void;
-    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
+    }) => Promise<void>;
+    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; duration?: number; forceZoomOut?: boolean }) => void;
     unselectItem: (updateBottomSheet?: boolean, forceUnlock?: boolean) => void;
     selectStyle: () => Promise<void>;
     unFocusSearch: () => void;
-    showMapResultsPager: (items: IItem[]) => void;
+    showMapResultsPager: (items: IItem<GeoJSONPoint>[]) => void;
     clearSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
     setSelectedItem: (item: IItem) => void;
     saveItem: (item?: IItem, peek?: boolean) => Promise<void>;
     getEditingItem: () => IItem;
-    getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
-    addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
+    getLayers: (layerId?: LayerType) => AddedLayer[];
+    addLayer: (layer: Layer<any, any>, layerId: LayerType, force?: boolean) => void;
     insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;
-    removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
+    removeLayer: (layer: Layer<any, any>, layerId?: LayerType) => void;
     moveLayer: (layer: Layer<any, any>, newIndex: number) => void;
     getLayerIndex: (layer: Layer<any, any>) => number;
-    replaceLayer: (oldLayer: Layer<any, any>, layer: Layer<any, any>) => number;
+    replaceLayer: (oldLayer: Layer<any, any>, layer: Layer<any, any>) => void;
     getLayerTypeFirstIndex: (layerId: LayerType) => number;
     vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     vectorTileElementClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
     rasterTileClicked: (data: RasterTileClickInfo<LatLonKeys>) => boolean;
     // getCurrentLayer(): VectorTileLayer;
-    runOnModulesOnMainThread(functionName: string, ...args);
-    runOnModules(functionName: string, ...args);
+    runOnModulesOnMainThread<K extends MapModuleHook>(hook: K, ...args: MapModuleHooks[K]): void;
+    runOnModules<K extends MapModuleHook>(hook: K, ...args: MapModuleHooks[K]): unknown;
     focusOffset: { x: number; y: number };
 }
 
-export interface MapModules {
-    customLayers: CustomLayersModule;
-    directionsPanel: DirectionsPanel;
-    mapResultsPager: MapResultPager;
-    userLocation: UserLocationModule;
-    items: ItemsModule;
+/**
+ * The built-in modules. `MapModules` itself lives in the registry and is open for augmentation, so a
+ * feature declares its own key from its own file instead of editing this one.
+ */
+declare module '~/mapModules/registry' {
+    interface MapModules {
+        customLayers: CustomLayersModule;
+        directionsPanel: DirectionsPanel;
+        /** Registers only its hooks, not the component: nothing reads it back out of the registry. */
+        mapResultsPager: Pick<MapResultPager, 'onVectorTileClicked' | 'onVectorElementClicked'>;
+        mapScrollingWidgets: MapScrollingWidgets;
+        userLocation: UserLocationModule;
+        items: ItemsModule;
+    }
 }
 
 export function createTileDecoder(name: string, style: string = 'voyager') {
@@ -177,7 +193,10 @@ export function createTileDecoder(name: string, style: string = 'voyager') {
 export function onNetworkChanged(callback: (theme) => void) {}
 
 const mapContext: MapContext = {
-    mapModules: {},
+    /** Live view of the registry — never a snapshot, so lazily mounted modules appear once they register. */
+    get mapModules() {
+        return getMapModules() as unknown as MapModules;
+    },
     setMapDefaultOptions(options) {
         options.setLayersLabelsProcessedInReverseOrder(true);
         options.setSeamlessPanning(false);
@@ -202,31 +221,9 @@ const mapContext: MapContext = {
     onVectorElementClicked: createGlobalEventListener('onVectorElementClicked'),
     onVectorTileElementClicked: createGlobalEventListener('onVectorTileElementClicked'),
     onRasterTileClicked: createGlobalEventListener('onRasterTileClicked'),
-    mapModule<T extends keyof MapModules>(id: T) {
-        return mapContext.mapModules && mapContext.mapModules[id];
-    },
-    runOnModulesOnMainThread(functionName: string, ...args) {
-        executeOnMainThread(() => {
-            this.runOnModules(functionName, ...args);
-        });
-    },
-    runOnModules(functionName: string, ...args) {
-        let result = Object.values(mapContext.mapModules).some((m) => {
-            if (m && m[functionName]) {
-                const result = (m[functionName] as Function).call(m, ...args);
-                if (result) {
-                    return result;
-                }
-                return false;
-            }
-        });
-        if (!result) {
-            const event: any = { eventName: functionName, data: args };
-            globalObservable.notify(event);
-            result = event.result;
-        }
-        return result;
-    },
+    mapModule: getMapModule,
+    runOnModulesOnMainThread,
+    runOnModules,
     createMapDecoder(mapStyle, mapStyleLayer) {
         const oldDecoder = mapContext.mapDecoder;
         const isZip = mapStyle.endsWith('.zip');
@@ -388,4 +385,10 @@ export default abstract class MapModule extends Observable /*  implements IMapMo
     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
     onVectorTileElementClicked?(data: VectorTileEventData<LatLonKeys>);
     onSelectedItem?(item: IItem, oldItem: IItem);
+    // dispatched by the map but historically absent from this list, because the dispatcher took a
+    // plain string and so nothing ever checked the two against each other
+    onMapIdle?(e: unknown);
+    onMapStable?(e: unknown);
+    reloadMapStyle?();
+    vectorTileDecoderChanged?(oldDecoder: MBVectorTileDecoder, newDecoder: MBVectorTileDecoder);
 }
