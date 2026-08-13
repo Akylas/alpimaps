@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { RoutesType } from '~/mapModules/CustomLayersModule';
     import { nutiProps } from '~/stores/mapStore';
-    import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import SettingsCheckbox from '../settings/SettingsCheckbox.svelte';
 </script>
 

@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { colors } from '~/variables';
     import SettingsSlider from '../settings/SettingsSlider.svelte';
-    import PopoverBackgroundView from './PopoverBackgroundView.svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
 </script>
 
 <script lang="ts">
