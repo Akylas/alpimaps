@@ -8,7 +8,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { userFollowStore } from '~/mapModules/UserLocationModule';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigationRunning } from '~/stores/navigationStore';
+    import { isNavigationRunning, navigationDetour, navigationOriginalItem } from '~/stores/navigationStore';
     import { colors } from '~/variables';
 
     $: ({ colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
@@ -30,6 +30,15 @@
     async function togglePause() {
         try {
             await navigationService.toggle();
+        } catch (error) {
+            showError(error);
+        }
+    }
+    // a reroute can be taken back for as long as it lasts, not just while a snack is on screen
+    $: rerouted = !!$navigationDetour || !!$navigationOriginalItem;
+    function undoReroute() {
+        try {
+            navigationService.undoReroute();
         } catch (error) {
             showError(error);
         }
@@ -60,6 +69,10 @@
     <!-- only there once the user has panned away, so it does not take room the rest of the time -->
     <NavigationCard height={BUTTON_SIZE} marginRight={8} visibility={$userFollowStore ? 'collapse' : 'visible'} width={BUTTON_SIZE}>
         <IconButton color={colorPrimary} size={BUTTON_SIZE} text="mdi-crosshairs-gps" tooltip={lc('recenter_navigation')} on:tap={followUserAgain} />
+    </NavigationCard>
+    <!-- only while a reroute is in effect: it is the way back to the route the user actually picked -->
+    <NavigationCard height={BUTTON_SIZE} marginRight={8} visibility={rerouted ? 'visible' : 'collapse'} width={BUTTON_SIZE}>
+        <IconButton color={colorOnSurfaceVariant} size={BUTTON_SIZE} text="mdi-undo-variant" tooltip={lc('navigation_undo_reroute')} on:tap={undoReroute} />
     </NavigationCard>
     <NavigationCard height={BUTTON_SIZE} width={BUTTON_SIZE}>
         <IconButton

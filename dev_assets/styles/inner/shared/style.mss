@@ -73,3 +73,17 @@
 @directions_casing_width: [class=auto] ? linear([view::zoom], (10, 8), (16, 16), (18, 22)) : linear([view::zoom], (10, 6), (16, 13), (18, 18));
 @directions_line_width: [class=auto] ? linear([view::zoom], (10, 5), (16, 11), (18, 15)) : linear([view::zoom], (10, 4), (16, 9), (18, 12));
 @directions_arrow_size: linear([view::zoom], (14, 5), (18, 9));
+
+// the navigation layer, ie the route actually being followed. Same widths as a computed route, so
+// entering navigation does not resize the line under the user, but its own colours and dashes
+@nav_casing_color: @directions_casing_color;
+@nav_line_color: [nuti::main_color];
+@nav_arrow_color: @directions_selected_arrow_color;
+@nav_detour_color: [nuti::main_darker_color];
+@nav_detour_dash: 18, 10;
+@nav_connector_color: [nuti::main_darker_color];
+@nav_connector_width: linear([view::zoom], (10, 2), (16, 4));
+@nav_connector_dash: 2, 8;
+@nav_original_color: #787E7B;
+@nav_original_width: linear([view::zoom], (10, 2), (16, 3));
+@nav_original_dash: 8, 6;
