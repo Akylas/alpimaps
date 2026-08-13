@@ -210,12 +210,12 @@
         style['fontFamily'] = 'osm';
         style['mapFontFamily'] = 'osm';
         style['icon'] = osmIcon;
-        console.log('setOSMIcon', updatedProperties);
+        DEV_LOG && console.log('setOSMIcon', updatedProperties);
         updatePreview();
     }
     function setDefaultIcon() {
         const style = getUpdateStyle();
-        console.log('setDefaultIcon', updatedProperties);
+        DEV_LOG && console.log('setDefaultIcon', updatedProperties);
         style['fontFamily'] = $fonts.mdi;
         style['mapFontFamily'] = MATERIAL_MAP_FONT_FAMILY;
         style['icon'] = 'mdi-map-marker';
@@ -267,7 +267,7 @@
             });
             const result = Array.isArray(results) ? results[0] : results;
             if (result) {
-                console.log('result', result, updatedProperties);
+                DEV_LOG && console.log('result', result, updatedProperties);
                 const style = getUpdateStyle();
                 style['fontFamily'] = result.fontFamily;
                 itemUsingMdi = result.fontFamily === $fonts.mdi;
@@ -408,11 +408,11 @@
                 const toAdd = { ...result.tags, osmid: result.id };
                 Object.keys(toAdd).forEach((k) => {
                     const value = toAdd[k];
-                    console.log('test new prop', k, value);
+                    DEV_LOG && console.log('test new prop', k, value);
                     if (k.indexOf(':') === -1 && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
                         updatedProperties[k] = value;
                         if (!itemProperties[k] && propsToFilter.indexOf(k) === -1) {
-                            console.log('adding new prop', k, value);
+                            DEV_LOG && console.log('adding new prop', k, value);
                             //new prop
                             items.splice(items.length - 2, 0, { name: lc(k), id: k, value });
                         }

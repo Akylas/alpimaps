@@ -4,8 +4,8 @@
     import { conditionalEvent } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { isEInk } from '~/helpers/theme';
-    import { showToolTip } from '~/utils/ui';
     import { actionBarButtonHeight, colors, fontScaleMaxed, fonts } from '~/variables';
+    import { showToolTip } from '@shared/utils/ui';
 
     const iconPaints: { [k: string]: Paint } = {};
 </script>
