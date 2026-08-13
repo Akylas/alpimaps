@@ -51,6 +51,7 @@ export const SETTINGS_NAVIGATION_HIDE_CHROME = 'navigation_hide_chrome';
 export const SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
 export const SETTINGS_NAVIGATION_SHOW_SURFACE = 'navigation_show_surface';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
+export const SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD = 'navigation_grade_look_ahead';
 export const SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT = 'navigation_chart_current_ascent';
 export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
 
@@ -61,6 +62,10 @@ export const SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS = 'chart_show_waypoints';
 export const SETTINGS_SHOW_ELEVATION_PROFILE_GRADE_COLORS = 'show_elevation_profile_grade_colors';
 export const SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN = 'elevation_profile_ascents_min_gain';
 export const SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE = 'elevation_profile_ascents_dip_tolerance';
+export const SETTINGS_ELEVATION_PROFILE_GRADE_STEP = 'elevation_profile_grade_step';
+export const SETTINGS_ELEVATION_PROFILE_GRADE_SMOOTH = 'elevation_profile_grade_smooth';
+export const SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE = 'elevation_profile_grade_baseline';
+export const SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION = 'elevation_profile_grade_min_section';
 
 export const DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN = 250000;
 export const DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE = 500000;
@@ -107,6 +112,8 @@ export const DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART = true;
 export const DEFAULT_NAVIGATION_SHOW_SURFACE = true;
 /** meters of road ahead the surface widget covers, so the bar has a readable scale */
 export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
+/** meters of road the live grade averages over: the single point value is too twitchy to read */
+export const DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD = 100;
 /** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
 export const DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT = true;
 export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
@@ -118,3 +125,11 @@ export const DEFAULT_SHOW_ELEVATION_PROFILE_WAYPOINTS = true;
 export const DEFAULT_SHOW_ELEVATION_PROFILE_GRADE_COLORS = true;
 export const DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN = 100;
 export const DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE = 80;
+/**
+ * Grade windows, all in meters. They are what decides how sharp the profile reads: the DEM resolves
+ * around 30 m, so differentiating over less than that returns terrain noise, not slope.
+ */
+export const DEFAULT_ELEVATION_PROFILE_GRADE_STEP = 10;
+export const DEFAULT_ELEVATION_PROFILE_GRADE_SMOOTH = 60;
+export const DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE = 100;
+export const DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION = 150;
