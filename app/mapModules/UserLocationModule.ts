@@ -227,7 +227,6 @@ export default class UserLocationModule extends MapModule {
         this.updateMarkers(position);
         this.lastUserLocation = position;
         const inBackground = getBGServiceInstance().appInBackground;
-        console.log('🚀 ~ UserLocationModule.ts ~ UserLocationModule ~ updateUserLocation ~ inBackground:', inBackground);
         if (this.userFollow) {
             this.moveToUserLocation(inBackground ? 0 : undefined);
         }
@@ -418,7 +417,6 @@ export default class UserLocationModule extends MapModule {
      */
     syncWatchingState() {
         const watching = !!this.geoHandler?.isWatching();
-        DEV_LOG && console.log('syncWatchingState', watching, get(watchingLocation));
         if (get(watchingLocation) !== watching) {
             watchingLocation.set(watching);
         }
