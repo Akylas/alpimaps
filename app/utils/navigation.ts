@@ -25,8 +25,10 @@ export const MANEUVER_VIEW_HEIGHT = 84;
  * pulling the whole navigation ui into its bundle.
  */
 export function navigationViewHeight(hasPreviewWidgets: boolean) {
-    // return NAVWIDGET_ROW_HEIGHT * (hasPreviewWidgets ? 2 : 1) + NAVSTATS_HEIGHT;
-    return NAVWIDGET_ROW_HEIGHT * 2 + NAVSTATS_HEIGHT;
+    // must match NavigationView's own `barRows`, which collapses the previews row to 0 when there is
+    // nothing to preview. Reserving two rows unconditionally left a widget row of dead space below the
+    // bar whenever previews were off.
+    return NAVWIDGET_ROW_HEIGHT * (hasPreviewWidgets ? 2 : 1) + NAVSTATS_HEIGHT;
 }
 
 /** full elevation chart and route stats, same heights the item sheet gives them */
