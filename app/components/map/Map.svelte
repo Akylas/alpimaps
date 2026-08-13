@@ -39,7 +39,6 @@
     import DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
     import LocationInfoPanel from '~/components/map/LocationInfoPanel.svelte';
     import MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
-    import ManeuverView, { MANEUVER_VIEW_HEIGHT } from '~/components/navigation/ManeuverView.svelte';
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
@@ -53,7 +52,8 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, isNavigationRunning, navigationHideChrome, navigationProgress } from '~/stores/navigationStore';
+    import { isNavigating, isNavigationRunning, navigationHasPreviewWidgets, navigationHideChrome, navigationItem, navigationProgress } from '~/stores/navigationStore';
+    import { MANEUVER_VIEW_HEIGHT, navigationSheetSteps, navigationViewHeight } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -65,7 +65,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
+    import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
@@ -112,6 +112,33 @@
 
     let bottomSheetStepIndex = 0;
     let steps;
+
+    /**
+     * Navigation lives in its own persistent sheet: sharing the item one meant every change of mode
+     * rewrote the same step list, and the two kept fighting over it. Its views are only imported the
+     * first time navigation actually starts, so the map does not carry them otherwise.
+     */
+    let navigationViewComponent = null;
+    let maneuverViewComponent = null;
+    let navigationStepIndex = 0;
+    // scaled text, so at a large font scale a fixed height would clip it
+    $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $fontScaleMaxed);
+    // no 0 step: the bar is the only way out of navigation, so it can never be dismissed. Dragging it
+    // up reveals the route profile then its stats, same as the item sheet does
+    $: navigationSteps = navigationSheetSteps({
+        barHeight: navigationSheetHeight,
+        hasProfile: !!$navigationItem?.profile?.data?.length,
+        hasStats: !!$navigationItem?.stats
+    });
+
+    async function loadNavigationViews() {
+        if (navigationViewComponent) {
+            return;
+        }
+        const [navigationView, maneuverView] = await Promise.all([import('~/components/navigation/NavigationView.svelte'), import('~/components/navigation/ManeuverView.svelte')]);
+        navigationViewComponent = navigationView.default;
+        maneuverViewComponent = maneuverView.default;
+    }
     let topTranslationY;
     let networkConnected = false;
     const itemLoading = false;
@@ -560,7 +587,7 @@
             showMapResultsPager,
             saveItem,
             setBottomSheetStepIndex: (index: number) => {
-                // DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, JSON.stringify(steps));
+                DEV_LOG && console.log('setBottomSheetStepIndex', bottomSheetStepIndex, index, JSON.stringify(steps));
                 bottomSheetStepIndex = index;
             },
             showMapMenu,
@@ -899,14 +926,16 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                // DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
+                DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
                 const route = item?.route;
                 const props = item.properties;
                 if (peek) {
-                    bottomSheetInner.loadView().then(() => {
+                    // the item sheet is not mounted while navigating: selecting still works, the sheet
+                    // just comes back with the item already set once navigation ends
+                    bottomSheetInner?.loadView().then(() => {
                         bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
                     });
                 }
@@ -1081,9 +1110,9 @@
         }
     }
     let mapResultItems: IItem<GeoJSONPoint>[] = [];
-    let mapResultPagerLaoded = false;
+    let mapResultPagerLoaded = false;
     export function showMapResultsPager(items: IItem<GeoJSONPoint>[]) {
-        mapResultPagerLaoded = true;
+        mapResultPagerLoaded = true;
         mapResultItems = items || [];
     }
 
@@ -1132,7 +1161,10 @@
         // DEV_LOG && console.log('zoomToItem done ');
     }
     export function unselectItem(updateBottomSheet = true, forceUnlock = false) {
-        // DEV_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem);
+        // DEV_LOG && console.log('unselectItem', updateBottomSheet, !!$selectedItem, new Error().stack);
+
+        // the route being followed cannot be dropped: a map tap or a pan would otherwise leave
+        // navigation running against an item nothing is showing anymore
 
         if ($itemLock) {
             if (forceUnlock) {
@@ -1216,10 +1248,32 @@
     $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
     $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
-    $: bottomSheetStepIndex === 0 && unselectItem(true, true);
+    let wasNavigating = false;
+    // the two sheets swap places: the item one steps aside while a route is being followed, and comes
+    // back where it was afterwards. Declared before the unselect below, which reads bottomSheetStepIndex
+    $: if (wasNavigating !== $isNavigating) {
+        wasNavigating = $isNavigating;
+        // the sheet being unmounted cannot undo what it did to the floating widgets on its way out
+        resetWidgetTransforms();
+        if ($isNavigating) {
+            $itemLock = true;
+            loadNavigationViews();
+            bottomSheetStepIndex = 0;
+            navigationStepIndex = 1;
+            showMapResultsPager(null);
+        } else {
+            $itemLock = false;
+            navigationStepIndex = 0;
+            bottomSheetStepIndex = $selectedItem ? 1 : 0;
+        }
+    }
+    $: !$isNavigating && bottomSheetStepIndex === 0 && unselectItem(true, true);
+    // whichever sheet is mounted is the one hiding part of the map, so it is the one the focus point
+    // has to account for
+    $: activeSheetHeight = $isNavigating ? navigationSteps[navigationStepIndex] : steps?.[bottomSheetStepIndex];
     $: {
-        if (steps?.length) {
-            mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(steps[bottomSheetStepIndex]) / 2 };
+        if (activeSheetHeight >= 0) {
+            mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
             cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos(mapContext.focusOffset));
         }
     }
@@ -1736,18 +1790,8 @@
                 cartoMap.addLayer(layer);
                 addedLayers.push({ layer, layerId });
             }
-            // } else {
-            // cartoMap.addLayer(layer);
-            // addedLayers.push({ layer, layerId });
-            // }
-            // cartoMap.requestRedraw();
         }
     }
-    // let bottomSheetTranslation = 0;
-    // get bottomSheetTranslation() {
-    //     const result = mBottomSheetTranslation + $navigationBarHeight;
-    //     return result;
-    // }
     /** the maneuver banner sits at the very top, so everything anchored there has to move down under it */
     $: navigationTopOffset = $isNavigationRunning && !!$navigationProgress?.instruction ? MANEUVER_VIEW_HEIGHT : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
@@ -1755,17 +1799,6 @@
 
     let scrollingWidgetsOpacity = 1;
     let mapTranslation = 0;
-    // function topSheetTranslationFunction(maxTranslation, translation, progress) {
-    //     return {
-    //         topSheet: {
-    //             translateY: translation
-    //         },
-    //         search: {
-    //             translateY: maxTranslation - translation
-    //         }
-    //     };
-    // }
-
     function getWidgetsOpacity(translation) {
         if (translation >= -300) {
             return 1;
@@ -1777,12 +1810,13 @@
     $: scrollingWidgetsOpacity = windowInsetBottom > 200 ? 0 : getWidgetsOpacity(mapTranslation);
 
     function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
-        scrollingWidgetsOpacity = getWidgetsOpacity(translation);
-        // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
-        mapTranslation = translation;
+        if (!$isNavigating) {
+            scrollingWidgetsOpacity = getWidgetsOpacity(translation);
+            // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
+            mapTranslation = translation;
+        }
         const result = {
             bottomSheet: {
-                // translateY: translation + (__IOS__ ? (translation === 0 ? $navigationBarHeight : -$navigationBarHeight) : 0)
                 translateY: translation
             },
             searchView: {
@@ -1793,11 +1827,15 @@
                 target: locationInfoPanel.getNativeView(),
                 opacity: scrollingWidgetsOpacity
             },
-            mapScrollingWidgets: {
-                target: mapScrollingWidgets.getNativeView(),
-                translateY: translation,
-                opacity: scrollingWidgetsOpacity
-            }
+            ...(!$isNavigating
+                ? {
+                      mapScrollingWidgets: {
+                          target: mapScrollingWidgets.getNativeView(),
+                          translateY: translation,
+                          opacity: scrollingWidgetsOpacity
+                      }
+                  }
+                : {})
         } as any;
         if (mapResultsPager) {
             result.mapResultsPager = {
@@ -1806,6 +1844,31 @@
                 opacity: scrollingWidgetsOpacity
             };
         }
+        return result;
+    }
+    function navigationBottomSheetcanAnimateToStep(step) {
+        return step !== 0;
+    }
+    function navigationBottomSheetTranslationFunction(translation, maxTranslation, progress) {
+        // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);
+        if ($isNavigating) {
+            scrollingWidgetsOpacity = getWidgetsOpacity(translation);
+            mapTranslation = translation;
+        }
+        const result = {
+            bottomSheet: {
+                translateY: translation
+            },
+            ...($isNavigating
+                ? {
+                      mapScrollingWidgets: {
+                          target: mapScrollingWidgets.getNativeView(),
+                          translateY: translation,
+                          opacity: scrollingWidgetsOpacity
+                      }
+                  }
+                : {})
+        } as any;
         return result;
     }
 
@@ -1863,51 +1926,6 @@
         });
     }
 
-    function onTap(command: string) {
-        switch (
-            command
-            // case 'sendFeedback':
-            //     compose({
-            //         subject: `[${EInfo.getAppNameSync()}(${appVersion})] Feedback`,
-            //         to: ['contact@akylas.fr'],
-            //         attachments: [
-            //             {
-            //                 fileName: 'report.json',
-            //                 path: `base64://${base64Encode(
-            //                     JSON.stringify(
-            //                         {
-            //                             device: {
-            //                                 model: Device.model,
-            //                                 DeviceType: Device.deviceType,
-            //                                 language: Device.language,
-            //                                 manufacturer: Device.manufacturer,
-            //                                 os: Device.os,
-            //                                 osVersion: Device.osVersion,
-            //                                 region: Device.region,
-            //                                 sdkVersion: Device.sdkVersion,
-            //                                 uuid: Device.uuid
-            //                             },
-            //                             screen: {
-            //                                 widthDIPs: screenWidthDips,
-            //                                 heightDIPs: screenHeightDips,
-            //                                 widthPixels: Screen.mainScreen.widthPixels,
-            //                                 heightPixels: Screen.mainScreen.heightPixels,
-            //                                 scale: Screen.mainScreen.scale
-            //                             }
-            //                         },
-            //                         null,
-            //                         4
-            //                     )
-            //                 )}`,
-            //                 mimeType: 'application/json'
-            //             }
-            //         ]
-            //     }).catch((err) => showError(err));
-            //     break;
-        ) {
-        }
-    }
-
     const autoStartWebServer = ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START);
     let webserver;
 
@@ -1935,16 +1953,6 @@
         }
     }
 
-    // onMount(() => {
-    // console.log('onMount', !!vectorDataSource, !!dataSource, !!rasterDataSource);
-    // try {
-    //     const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
-    //     webserver = new (akylas.alpi as any).maps.WebServer(8080, dataSource.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative());
-    //     webserver.start();
-    // } catch (err) {
-    //     console.error(err);
-    // }
-    // });
     onDestroy(() => {
         webserver?.stop();
     });
@@ -1982,12 +1990,6 @@
                         id: 'share_screenshot',
                         icon: 'mdi-cellphone-screenshot'
                     },
-                    // {
-                    //     title: lc('keep_awake'),
-                    //     color: keepAwakeEnabled ? colorError : '#00ff00',
-                    //     id: 'keep_awake',
-                    //     icon: keepAwakeEnabled ? 'mdi-sleep' : 'mdi-sleep-off'
-                    // },
                     {
                         title: lc('compass'),
                         id: 'compass',
@@ -2362,17 +2364,49 @@
         }
     }
     function onStepIndexChanged(e) {
-        // step 0 is the closed state; while navigating the bar has to stay, it is the only way back out
-        if ($isNavigating && e.value === 0) {
-            bottomSheetStepIndex = 1;
-            return;
-        }
         if (e.value !== bottomSheetStepIndex) {
             bottomSheetStepIndex = e.value;
         }
     }
+    function onNavigationStepIndexChanged(e) {
+        if (e.value !== navigationStepIndex) {
+            navigationStepIndex = e.value;
+        }
+    }
+    /**
+     * The translation functions move the floating widgets by native reference, so whatever the
+     * outgoing sheet last applied outlives it. Puts them back where the other sheet expects them.
+     */
+    function resetWidgetTransforms() {
+        scrollingWidgetsOpacity = 1;
+        mapTranslation = 0;
+        [searchView, locationInfoPanel, mapScrollingWidgets, mapResultsPager].forEach((view) => {
+            const nativeView = view?.getNativeView();
+            if (nativeView) {
+                nativeView.opacity = 1;
+                nativeView.translateY = 0;
+            }
+        });
+    }
+    /** Only lifts the floating widgets clear of the navigation bar: the item sheet owns their opacity. */
+    function navigationTranslationFunction(translation, maxTranslation, progress) {
+        const result = {
+            bottomSheet: {
+                translateY: translation
+            }
+        } as any;
+        if (mapScrollingWidgets) {
+            result.mapScrollingWidgets = {
+                target: mapScrollingWidgets.getNativeView(),
+                translateY: translation
+            };
+        }
+        return result;
+    }
 </script>
 
+console.log('🚀 ~ Map.svelte ~ navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep); console.log('🚀 ~ Map.svelte ~
+navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep);
 <page
     bind:this={page}
     actionBarHidden={true}
@@ -2396,16 +2430,40 @@
             on:mapIdle={onMainMapIdle}
             on:mapClicked={onMainMapClicked}
             on:layoutChanged={reportFullyDrawn} />
+
+        <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
+             kept fighting over the single sheet they used to share -->
+        <!-- transparent: the navigation view is a row of floating cards with the map showing between them -->
         <bottomsheet
-            backgroundColor={$isNavigating ? 'transparent' : undefined}
+            backgroundColor="transparent"
+            canAnimateToStep={navigationBottomSheetcanAnimateToStep}
             marginBottom={windowInsetBottom}
             marginLeft={windowInsetLeft}
             marginRight={windowInsetRight}
             panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
-            stepIndex={bottomSheetStepIndex}
+            stepIndex={navigationStepIndex}
+            steps={navigationSteps}
+            translationFunction={navigationBottomSheetTranslationFunction}
+            on:stepIndexChange={onNavigationStepIndexChanged}>
+            <gridlayout height="100%" isPassThroughParentEnabled={true} width="100%" />
+            <gridlayout prop:bottomSheet height={navigationSteps[navigationSteps.length - 1]} width="100%">
+                {#if navigationViewComponent}
+                    <!-- tall enough for every step, the sheet decides how much of it shows -->
+                    <svelte:component this={navigationViewComponent} />
+                {/if}
+            </gridlayout>
+        </bottomsheet>
+        <bottomsheet
+            marginBottom={windowInsetBottom}
+            marginLeft={windowInsetLeft}
+            marginRight={windowInsetRight}
+            panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
+            stepIndex={$isNavigating ? 0 : bottomSheetStepIndex}
             {steps}
             translationFunction={bottomSheetTranslationFunction}
             on:stepIndexChange={onStepIndexChanged}>
+            <!-- the map overlays live outside both sheets: neither owns them, so either sheet can come and
+             go with the mode without taking the widgets down with it -->
             <gridlayout bind:this={widgetsHolder} height="100%" isPassThroughParentEnabled={true} width="100%">
                 <ButtonBar
                     buttonSize={40}
@@ -2424,7 +2482,7 @@
                     marginLeft={40}
                     marginTop={90 + navigationTopOffset}
                     verticalAlignment="top"
-                    visibility={hideChromeForNavigation ? 'collapse' : 'visible'} />
+                    visibility={$isNavigating ? 'collapse' : 'visible'} />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -2435,7 +2493,9 @@
                     verticalAlignment="top"
                     visibility={hideChromeForNavigation ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
-                <ManeuverView style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
+                {#if maneuverViewComponent}
+                    <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
+                {/if}
                 <canvaslabel
                     class="mdi"
                     color={colorError}
@@ -2481,10 +2541,11 @@
                     bind:visible={directionsPanelVisible}
                     bind:translationY={topTranslationY}
                     on:cancel={onDirectionsCancel} />
-                {#if mapResultPagerLaoded}
+                {#if mapResultPagerLoaded}
                     <MapResultPager bind:this={mapResultsPager} style="z-index:9000;" items={mapResultItems} translateY={mapTranslation} verticalAlignment="bottom" width="100%" />
                 {/if}
             </gridlayout>
+
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
@@ -2497,8 +2558,8 @@
                 bind:steps />
         </bottomsheet>
 
-        {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
+        <!-- {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
             <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={__IOS__ ? 1 : windowInsetBottom} verticalAlignment="bottom" />
-        {/if}
+        {/if} -->
     </gridlayout>
 </page>

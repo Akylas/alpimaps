@@ -48,6 +48,11 @@ export const SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY = 'navigation_auto_pause_delay
 export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
 export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
 export const SETTINGS_NAVIGATION_HIDE_CHROME = 'navigation_hide_chrome';
+export const SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
+export const SETTINGS_NAVIGATION_SHOW_SURFACE = 'navigation_show_surface';
+export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
+export const SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT = 'navigation_chart_current_ascent';
+export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
 
 export const SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW = 'elevation_profile_smooth_window';
 export const SETTINGS_ELEVATION_PROFILE_FILTER_STEP = 'elevation_profile_filter_step';
@@ -98,6 +103,13 @@ export const DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY = 120;
 export const DEFAULT_NAVIGATION_RECORD_STATS = true;
 export const DEFAULT_NAVIGATION_RECORD_TRACK = false;
 export const DEFAULT_NAVIGATION_HIDE_CHROME = true;
+export const DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART = true;
+export const DEFAULT_NAVIGATION_SHOW_SURFACE = true;
+/** meters of road ahead the surface widget covers, so the bar has a readable scale */
+export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
+/** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
+export const DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT = true;
+export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
 
 export const DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW = 3;
 export const DEFAULT_ELEVATION_PROFILE_FILTER_STEP = 5;
