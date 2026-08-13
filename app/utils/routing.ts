@@ -1,5 +1,38 @@
-import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { RoutingResult, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { ApplicationSettings, Color } from '@nativescript/core';
+import { type RouteInstruction, RoutingAction } from '~/models/Item';
+
+/**
+ * The maneuvers of a routing result, in the shape items store them in.
+ *
+ * Shared because three callers need exactly this and each used to carry its own copy: the directions
+ * panel, turning a recorded track into instructions, and rerouting during navigation.
+ *
+ * `mapIndex` rewrites the point index a maneuver refers to, for the callers whose polyline is not the
+ * result's own. Returning null from it drops the maneuver.
+ */
+export function instructionsFromResult(result: RoutingResult<LatLonKeys>, mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
+    const rawInstructions = result.getInstructions();
+    const instructions: RouteInstruction[] = [];
+    for (let index = 0; index < rawInstructions.size(); index++) {
+        const instruction = rawInstructions.get(index);
+        const pointIndex = mapIndex ? mapIndex(instruction.getPointIndex()) : instruction.getPointIndex();
+        if (pointIndex === null || pointIndex === undefined) {
+            continue;
+        }
+        instructions.push({
+            a: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
+            az: Math.round(instruction.getAzimuth()),
+            dist: instruction.getDistance(),
+            time: instruction.getTime(),
+            index: pointIndex,
+            angle: Math.round(instruction.getTurnAngle()),
+            name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
+            inst: instruction.getInstruction()
+        });
+    }
+    return instructions;
+}
 
 export const valhallaSettingIcon = {
     driveway_factor: 'mdi-road',

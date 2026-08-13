@@ -28,11 +28,21 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
-    import { Route, RoutingAction } from '~/models/Item';
+    import { Route } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MOBILITY_URL } from '~/services/TransitService';
-    import { Profiles, defaultProfileCostingOptions, getSavedProfile, getValhallaSettings, removeSavedProfile, savedProfile, valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
+    import {
+        Profiles,
+        defaultProfileCostingOptions,
+        getSavedProfile,
+        getValhallaSettings,
+        instructionsFromResult,
+        removeSavedProfile,
+        savedProfile,
+        valhallaSettingColor,
+        valhallaSettingIcon
+    } from '~/utils/routing';
     import { showSliderPopover } from '~/utils/ui';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
@@ -95,23 +105,7 @@
 
     function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints, positions) {
         DEV_LOG && console.log('routingResultToJSON', waypoints);
-        const rInstructions = result.getInstructions();
-        const instructions: RouteInstruction[] = [];
-        // const positions = getPointsFromResult(result);
-        for (let i = 0; i < rInstructions.size(); i++) {
-            const instruction = rInstructions.get(i);
-            const index = instruction.getPointIndex();
-            instructions.push({
-                a: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
-                az: Math.round(instruction.getAzimuth()),
-                dist: instruction.getDistance(),
-                time: instruction.getTime(),
-                index,
-                angle: Math.round(instruction.getTurnAngle()),
-                name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
-                inst: (instruction as any).getInstruction()
-            });
-        }
+        const instructions = instructionsFromResult(result);
         const route = {
             costing_options,
             waypoints: waypoints.map((w) => {
