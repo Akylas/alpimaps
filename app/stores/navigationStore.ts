@@ -3,12 +3,15 @@ import type { GeoLocation } from '~/handlers/GeoHandler';
 import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
+import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_AUTO_PAUSE,
     DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY,
     DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED,
+    DEFAULT_NAVIGATION_AUTO_REROUTE,
+    DEFAULT_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE,
     DEFAULT_NAVIGATION_AUTO_ZOOM,
     DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
@@ -17,6 +20,8 @@ import {
     DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD,
     DEFAULT_NAVIGATION_HIDE_CHROME,
     DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE,
+    DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE,
+    DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
@@ -38,6 +43,8 @@ import {
     SETTINGS_NAVIGATION_AUTO_PAUSE,
     SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY,
     SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED,
+    SETTINGS_NAVIGATION_AUTO_REROUTE,
+    SETTINGS_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE,
     SETTINGS_NAVIGATION_AUTO_ZOOM,
     SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
@@ -46,6 +53,8 @@ import {
     SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
     SETTINGS_NAVIGATION_HIDE_CHROME,
     SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE,
+    SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE,
+    SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
@@ -64,7 +73,7 @@ import {
     SETTINGS_NAVIGATION_ZOOM_MIN,
     SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD
 } from '~/utils/constants';
-import type { RouteProgress } from '~/utils/navigation';
+import type { RejoinTarget, RouteProgress } from '~/utils/navigation';
 
 export enum NavigationState {
     IDLE = 'idle',
@@ -88,12 +97,23 @@ export interface NavigationStats {
 export const navigationState = writable<NavigationState>(NavigationState.IDLE);
 /** the route being navigated, null when idle */
 export const navigationItem = writable<IItem>(null);
-/** where the user is along `navigationItem`, null when off route or idle */
+/** the leg taking the user back to `navigationItem`, null unless a reroute is under way */
+export const navigationDetour = writable<NavigationDetour>(null);
+/** the user's own route, kept only when a full reroute replaced what is being navigated */
+export const navigationOriginalItem = writable<IItem>(null);
+/** where an off-route user is being pointed back to, null while on route */
+export const navigationRejoinTarget = writable<RejoinTarget>(null);
+/** a reroute is being computed, so the ui can say so rather than looking stuck */
+export const navigationRerouting = writable(false);
+/** where the user is along `navigationItem`, null when idle */
 export const navigationProgress = writable<RouteProgress>(null);
 /** last fix received while navigating, for the live speed and elevation readouts */
 export const navigationLocation = writable<GeoLocation>(null);
 /** null unless navigation_record_stats is on */
 export const navigationStats = writable<NavigationStats>(null);
+
+/** confirmed away from the route: a suspicion the detector has not confirmed does not show here */
+export const navigationOffRoute = derived(navigationProgress, (progress) => !!progress?.offRoute);
 
 export const isNavigating = derived(navigationState, (state) => state !== NavigationState.IDLE);
 export const isNavigationRunning = derived(navigationState, (state) => state === NavigationState.RUNNING);
@@ -116,6 +136,10 @@ export const navigationTurnRefreshDelay = settingsStore(SETTINGS_NAVIGATION_TURN
 export const navigationBearingRefreshAngle = settingsStore(SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE, DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE);
 export const navigationSpeedDropWake = settingsStore(SETTINGS_NAVIGATION_SPEED_DROP_WAKE, DEFAULT_NAVIGATION_SPEED_DROP_WAKE);
 export const navigationSpeedDropWakeRatio = settingsStore(SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO, DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO);
+export const navigationOffRouteDistance = settingsStore(SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE, DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE);
+export const navigationOffRouteFixes = settingsStore(SETTINGS_NAVIGATION_OFF_ROUTE_FIXES, DEFAULT_NAVIGATION_OFF_ROUTE_FIXES);
+export const navigationAutoReroute = settingsStore(SETTINGS_NAVIGATION_AUTO_REROUTE, DEFAULT_NAVIGATION_AUTO_REROUTE);
+export const navigationAutoRerouteMaxDistance = settingsStore(SETTINGS_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE, DEFAULT_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE);
 export const navigationAutoPause = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE, DEFAULT_NAVIGATION_AUTO_PAUSE);
 export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED, DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED);
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
@@ -361,6 +385,51 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         max: 0.9,
         step: 0.05,
         formatter: formatPercent
+    },
+    {
+        key: SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE,
+        store: navigationOffRouteDistance,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE,
+        title: () => lc('navigation_off_route_distance'),
+        description: () => lc('navigation_off_route_distance_desc'),
+        min: 10,
+        max: 200,
+        step: 5,
+        formatter: formatDistance,
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_AUTO_REROUTE,
+        store: navigationAutoReroute,
+        type: 'boolean',
+        default: DEFAULT_NAVIGATION_AUTO_REROUTE,
+        title: () => lc('navigation_auto_reroute'),
+        description: () => lc('navigation_auto_reroute_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE,
+        store: navigationAutoRerouteMaxDistance,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE,
+        title: () => lc('navigation_auto_reroute_max_distance'),
+        description: () => lc('navigation_auto_reroute_max_distance_desc'),
+        min: 100,
+        max: 5000,
+        step: 100,
+        formatter: formatDistance
+    },
+    {
+        key: SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
+        store: navigationOffRouteFixes,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
+        title: () => lc('navigation_off_route_fixes'),
+        description: () => lc('navigation_off_route_fixes_desc'),
+        min: 1,
+        max: 10,
+        step: 1
     },
     {
         key: SETTINGS_NAVIGATION_AUTO_PAUSE,

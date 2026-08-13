@@ -17,6 +17,10 @@
     import { convertElevation, formatDistance } from '~/helpers/formatter';
     import { formatTime } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { DismissReasons } from '@nativescript-community/ui-material-snackbar';
+    import type { EventData } from '@nativescript/core';
+    import { onDestroy } from 'svelte';
+    import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
     import {
         NavigationState,
         navigationHasPreviewWidgets,
@@ -27,6 +31,7 @@
         navigationState,
         navigationStats
     } from '~/stores/navigationStore';
+    import { showSnack } from '~/utils/ui';
     import {
         NAVSTATS_HEIGHT,
         NAVWIDGET_ROW_HEIGHT,
@@ -49,16 +54,29 @@
     $: ({ colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
 
     $: paused = $navigationState === NavigationState.PAUSED;
-    $: offRoute = !paused && $navigationProgress?.onPathIndex === -1;
+
+    // an automatic reroute happens without the user asking: it has to say so, and how to take it back
+    async function onRerouted(event: EventData & { data?: { auto: boolean } }) {
+        if (!event.data?.auto) {
+            return;
+        }
+        const result = await showSnack({ message: lc('navigation_rerouted'), actionText: lc('navigation_undo_reroute'), hideDelay: 10000 });
+        if (result?.reason === DismissReasons.ACTION) {
+            navigationService.undoReroute();
+        }
+    }
+    navigationService.on(NavigationReroutedEvent, onRerouted);
+    onDestroy(() => navigationService.off(NavigationReroutedEvent, onRerouted));
     // no previews to show means no second row at all: an empty row with the controls alone in it
     // wasted half the bar and half the map behind it
-    $: previewRow = !paused && !offRoute && $navigationHasPreviewWidgets;
-    // paused and off route have nothing to put in the figures rows, so they collapse and the message
-    // and the buttons drop to the bottom of the bar instead of floating at the top of an empty grid
-    $: compact = paused || offRoute;
-    $: barRows = compact ? '0,0,*' : `${NAVWIDGET_ROW_HEIGHT},${previewRow ? NAVWIDGET_ROW_HEIGHT : 0},${NAVSTATS_HEIGHT}`;
+    $: secondRow = !paused && $navigationHasPreviewWidgets;
+    // only pause has nothing at all to put in the figures rows, so only pause collapses them. Off
+    // route keeps every one of them: the sheet steps are fixed, and its own panel floats above the
+    // bar rather than trying to grow a row inside it
+    $: compact = paused;
+    $: barRows = compact ? '0,0,*' : `${NAVWIDGET_ROW_HEIGHT},${secondRow ? NAVWIDGET_ROW_HEIGHT : 0},${NAVSTATS_HEIGHT}`;
     /** row the message and the controls sit on, always the last one of the bar itself */
-    $: contentRow = compact ? 2 : previewRow ? 1 : 0;
+    $: contentRow = compact ? 2 : secondRow ? 1 : 0;
 
     $: remainingDistance = $navigationProgress?.remainingDistance;
     $: remainingTime = $navigationProgress?.remainingTime;
@@ -149,17 +167,18 @@
 </script>
 
 <!-- transparent like the top banner, so the map shows between the cards.
-     Paused and off route collapse to a single row: the figures are gone, so the rows they needed would
-     only push what is left up to the top of the sheet -->
+     Pause collapses to a single row: the figures are gone, so the rows they needed would only push
+     what is left up to the top of the sheet. Off route keeps every row, because the sheet steps are
+     fixed and a bar that changes shape under the user is worse than one figure going stale -->
 <gridlayout columns="*,auto" rows={`${barRows},${profileAvailable ? ROUTE_PROFILE_HEIGHT : 0},${statsAvailable ? ROUTE_STATS_HEIGHT : 0}`} {...$$restProps}>
     {#if compact}
         <NavigationCard horizontalAlignment="left" marginBottom={6} marginLeft={8} padding="4 12 4 12" row={contentRow} verticalAlignment="bottom">
-            <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} text={paused ? lc('navigation_paused') : lc('navigation_off_route')} verticalTextAlignment="center" />
+            <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} text={lc('navigation_paused')} verticalTextAlignment="center" />
         </NavigationCard>
     {:else}
-        <!-- the figures own the top row. They span both columns only when the previews row exists to
+        <!-- the figures own the top row. They span both columns only when the second row exists to
              hold the controls, else the controls sit beside them and this row must leave them room -->
-        <flexlayout alignItems="flex-end" colSpan={previewRow ? 2 : 1} flexDirection="row" marginLeft={8}>
+        <flexlayout alignItems="flex-end" colSpan={secondRow ? 2 : 1} flexDirection="row" marginLeft={8}>
             <NavigationInfo caption={lc('remaining_distance')} marginBottom={6} marginRight={8} unit={distanceParts?.[1]} value={distanceParts ? distanceParts[0] + '' : '-'} />
             <NavigationInfo
                 caption={lc('duration')}
@@ -184,7 +203,7 @@
                 visibility={currentAscentParts ? 'visible' : 'collapse'} />
         </flexlayout>
 
-        {#if previewRow}
+        {#if secondRow}
             <!-- the wide previews get the second row to themselves, left of the controls. The chart
                  gets the wider share: it carries the live grade beside the silhouette -->
             <gridlayout columns="3*,2*" marginLeft={8} row={1}>

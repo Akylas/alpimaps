@@ -4,6 +4,8 @@
         "lines",
         "items",
         "directions",
+        "navigation",
+        "navigation_hint",
         "stops",
         "poi",
         "search"
@@ -14,6 +16,7 @@
         "shared/transit.mss",
         "shared/items.mss",
         "shared/directions.mss",
+        "shared/navigation.mss",
         "shared/search.mss"
     ],
     "nutiparameters": {
@@ -21,6 +24,7 @@
         "lang": "en",
         "fallback_lang": "en",
         "hide_unselected": 0,
+        "navigating": 0,
         "selected_id": -1,
         "editing_id": -1,
         "selected_id_str": "",
