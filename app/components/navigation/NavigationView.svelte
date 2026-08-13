@@ -185,8 +185,9 @@
         </flexlayout>
 
         {#if previewRow}
-            <!-- the wide previews get the second row to themselves, left of the controls -->
-            <gridlayout columns="*,*" marginLeft={8} row={1}>
+            <!-- the wide previews get the second row to themselves, left of the controls. The chart
+                 gets the wider share: it carries the live grade beside the silhouette -->
+            <gridlayout columns="3*,2*" marginLeft={8} row={1}>
                 {#if $navigationShowElevationChart}
                     <NavigationElevationChart marginBottom={6} marginRight={8} />
                 {/if}

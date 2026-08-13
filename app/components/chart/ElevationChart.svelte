@@ -21,6 +21,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
     import { showError } from '@shared/utils/showError';
+    import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
@@ -280,7 +281,9 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (itemData.g || 0).toFixed() + '% '
+                        // one decimal, and the section colour, so this agrees with the fill under it
+                        color: gradeColor(itemData.g || 0),
+                        text: (itemData.g || 0).toFixed(1) + '% '
                     }
                 ];
                 if (!isNaN(itemData.dp) && params.dplus - itemData.dp > 0) {
