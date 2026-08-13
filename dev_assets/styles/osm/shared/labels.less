@@ -382,7 +382,7 @@
 		// ::major {
 
 			text-name: @name;
-			// text-placement-priority: 3;
+			text-placement-priority: 3;
 			text-placement: line;
 			text-face-name: @mont_md;
 			text-fill: @road_large_label_fill;
@@ -397,7 +397,7 @@
 	[class=service][zoom>=15],
 	[class=aerialway][zoom>=14]{
 		// ::minor {
-			// text-placement-priority: 2;
+			text-placement-priority: 2;
 			text-name: @name;
 			text-placement: line;
 			text-face-name: @mont_md;
@@ -414,7 +414,7 @@
 	[class=path][subclass!=path][subclass!=footway][subclass!=pedestrian][zoom>=15] {
 		::_path {	
 			text-name: @name;
-			// text-placement-priority: 1;
+			text-placement-priority: 1;
 			text-fill: @road_small_label_fill;
 			text-size:@road_small_label_width;
 			text-halo-fill: @road_label_halo;
@@ -431,7 +431,7 @@
 
 #transportation['mapnik::geometry_type'=2][sac_scale>0][zoom>=15]::_sac{
 	text-name: 'T' + [sac_scale];
-	// text-placement-priority: 1;
+	text-placement-priority: 1;
 	text-fill: @path-fill;
 	text-size:@road_small_label_width;
 	text-halo-fill: @road_label_halo;
@@ -730,7 +730,7 @@
 	// text-avoid-edges: true;
 	// [zoom>=19] {
 
-		text-allow-overlap: true;
+		// text-allow-overlap: true;
 		// text-clip: false;
 	// }
 }

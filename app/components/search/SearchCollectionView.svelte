@@ -181,7 +181,7 @@
                 lat: options.location && options.location.lat,
                 lon: options.location && options.location.lon,
                 lang: actualLang,
-                limit: 40,
+                limit: 40
                 // bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
             }
         });

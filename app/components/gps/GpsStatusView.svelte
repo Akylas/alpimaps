@@ -57,8 +57,8 @@
     import { watchingLocation } from '~/stores/mapStore';
     import { TO_RAD } from '~/utils/geo';
     import CompassDialView from '../compass/CompassDialView.svelte';
-    let { colorOnSurface, colorPrimary, colorOutlineVariant } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorOutlineVariant, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
+    let { colorOnSurface, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
 
     $: gridPaint.setColor(colorOnSurface);
     $: gridPaintStrong.setColor(colorOnSurface);
@@ -113,7 +113,7 @@
         }
     });
 
-    function onCanvasDraw({ canvas, object, delta, center, radius }: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number } }) {
+    function onCanvasDraw({ canvas, center, delta, object, radius }: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number } }) {
         try {
             canvas.translate(center.x, center.y);
             canvas.drawPath(northArrow, northPaint);

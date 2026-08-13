@@ -409,6 +409,8 @@
                         key: k,
                         rightValue: value.formatter ? () => value.formatter(value.value()) : value.value,
                         currentValue: value.value,
+                        // without this a slider shows the raw number while being dragged
+                        valueFormatter: value.formatter,
                         ...value,
                         id: 'setting'
                     });
@@ -1103,8 +1105,8 @@
                     } else if (item.type === 'slider') {
                         await showSliderPopover({
                             anchor: event.object,
-                            value: (item.currentValue || item.rightValue)?.(),
                             ...item,
+                            value: (item.currentValue || item.value || item.rightValue)?.(),
                             onChange(value) {
                                 if (value !== null) {
                                     if (item.transformValue) {
