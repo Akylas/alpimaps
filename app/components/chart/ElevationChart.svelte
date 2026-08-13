@@ -391,9 +391,7 @@
                 // the navigation bar owns the drag here, and there is no room for labels anyway. The
                 // axes stay enabled and are only made invisible: calcMinMax skips a disabled axis, and
                 // the y transformer is built from the range it computes, so disabling draws nothing
-                
                 chartView.highlightPerDragEnabled = !mini;
-                console.log('🚀 ~ ElevationChart.svelte ~ updateChartData ~ highlightPerDragEnabled:', mini);
                 chartView.highlightPerTapEnabled = !mini;
                 chartView.scaleXEnabled = !mini;
                 chartView.doubleTapToZoomEnabled = !mini;
