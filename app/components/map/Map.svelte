@@ -41,7 +41,7 @@
     import MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
+    import { l, lc, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
     import { forceDarkMode, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
@@ -50,9 +50,11 @@
     import { LayerStack } from '~/mapModules/layerStack';
     import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
-    import { featureMenuItems } from '~/mapModules/mapFeatures';
-    // registers the built-in map features; import for side effect
+    import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
+    // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
+    import '~/mapModules/features/immersive';
+    import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
@@ -63,22 +65,18 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import { immersive, innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
+    import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
     import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
 
-    const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
-
-    const KEEP_AWAKE_KEY = '_keep_awake';
 </script>
 
 <script lang="ts">
@@ -99,6 +97,7 @@
     let searchView: Search;
     const mapContext = getMapContext();
     const featureMenuItemsStore = featureMenuItems();
+    const featureSideButtonsStore = featureSideButtons();
 
     let selectedOSMId: string;
     let selectedId: string;
@@ -152,9 +151,6 @@
     const layerStack = new LayerStack(() => cartoMap);
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
-    let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
-    let keepScreenAwakeFullBrightness = false;
-    let showOnLockscreen = false;
     let currentMapRotation = 0;
 
     let navigationInstructions: {
@@ -469,33 +465,6 @@
         }
     }
 
-    let toggleSystemBarsWithWindowCompat;
-    if (__ANDROID__) {
-        toggleSystemBarsWithWindowCompat = function (show = true) {
-            const activity = Application.android.startActivity;
-            if (!activity) return;
-
-            const window = activity.getWindow();
-            const decorView = window.getDecorView();
-
-            const WindowCompat = androidx.core.view.WindowCompat;
-            const WindowInsetsControllerCompat = androidx.core.view.WindowInsetsControllerCompat;
-            const WindowInsetsCompat = androidx.core.view.WindowInsetsCompat;
-
-            // Make content extend into system windows
-            WindowCompat.setDecorFitsSystemWindows(window, false);
-
-            const controller = new WindowInsetsControllerCompat(window, decorView);
-            if (show) {
-                controller.show(WindowInsetsCompat.Type.systemBars());
-            } else {
-                controller.hide(WindowInsetsCompat.Type.systemBars());
-
-                // Set behavior to allow swipe to show bars temporarily
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        };
-    }
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
@@ -579,11 +548,6 @@
             };
         }
     });
-    $: {
-        if (__ANDROID__) {
-            toggleSystemBarsWithWindowCompat?.(!$immersive);
-        }
-    }
     function onColorsChange() {
         if (cartoMap) {
             mapContext.innerDecoder?.setJSONStyleParameters({
@@ -1227,10 +1191,6 @@
         }
     }
 
-    $: {
-        ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
-        showHideKeepAwakeNotification(keepScreenAwake);
-    }
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
 
     async function handleSelectedRoutes() {
@@ -1750,35 +1710,6 @@
         mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
     });
 
-    async function showHideKeepAwakeNotification(value: boolean) {
-        if (__ANDROID__) {
-            if (value) {
-                NotificationHelper.showNotification(
-                    {
-                        title: lt('screen_awake_notification'),
-                        channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
-                    },
-                    KEEP_AWAKE_NOTIFICATION_ID
-                );
-            } else {
-                NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
-            }
-        }
-    }
-
-    async function switchKeepAwake() {
-        keepScreenAwake = !keepScreenAwake;
-    }
-    const switchShowOnLockscreen = tryCatchFunction(async () => {
-        if (showOnLockscreen) {
-            disableShowWhenLockedAndTurnScreenOn();
-            showOnLockscreen = false;
-        } else {
-            enableShowWhenLockedAndTurnScreenOn();
-            showOnLockscreen = true;
-        }
-    });
-
     function switchLocationInfo() {
         locationInfoPanel.switchLocationInfo();
     }
@@ -1950,7 +1881,7 @@
                                 shareScreenshot();
                                 break;
                             case 'keep_awake':
-                                switchKeepAwake();
+                                keepScreenAwake.set(!$keepScreenAwake);
                                 break;
                             case 'dark_mode':
                                 toggleForceDarkMode();
@@ -2070,12 +2001,14 @@
     $: {
         const newButtons: any[] = [
             {
-                text: 'mdi-fullscreen',
-                id: 'immersive',
-                tooltip: lc('immersive_mode'),
-                visible: __ANDROID__,
-                isSelected: $immersive,
-                onTap: () => immersive.set(!$immersive)
+                text: showSlopePercentagesProps.icon,
+                id: 'slopes',
+                order: 20,
+                tooltip: showSlopePercentagesProps.title,
+                isSelected: $showSlopePercentages,
+                visible: showSlopePercentagesProps.visible($mapCapabilities),
+                onTap: () => ($showSlopePercentages = !$showSlopePercentages),
+                onLongPress: showSlopePercentagesProps.onLongPress
             },
             // {
             //     text: 'mdi-bullseye',
@@ -2086,17 +2019,9 @@
             //     onTap: () => showContourLines.set(!$showContourLines)
             // },
             {
-                text: showSlopePercentagesProps.icon,
-                id: 'slopes',
-                tooltip: showSlopePercentagesProps.title,
-                isSelected: $showSlopePercentages,
-                visible: showSlopePercentagesProps.visible($mapCapabilities),
-                onTap: () => ($showSlopePercentages = !$showSlopePercentages),
-                onLongPress: showSlopePercentagesProps.onLongPress
-            },
-            {
                 text: showRoutesProps.icon,
                 id: 'routes',
+                order: 30,
                 tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
                 visible: showRoutesProps.visible($mapCapabilities),
@@ -2108,25 +2033,12 @@
             //     tooltip: lc('speedometer'),
             //     onTap: switchLocationInfo
             // },
-            {
-                text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
-                isSelected: keepScreenAwake,
-                tooltip: lc('keep_screen_awake'),
-                selectedColor: colorError,
-                onLongPress: () => (keepScreenAwakeFullBrightness = !keepScreenAwakeFullBrightness),
-                onTap: switchKeepAwake
-            },
-            {
-                text: 'mdi-cellphone-lock',
-                isSelected: showOnLockscreen,
-                tooltip: lc('show_screen_lock'),
-                visible: __ANDROID__,
-                onTap: switchShowOnLockscreen
-            }
+            ...$featureSideButtonsStore
         ];
         if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData) {
             newButtons.push({
                 text: 'mdi-dots-vertical',
+                order: 90,
                 onTap: tryCatchFunction(
                     async (event) => {
                         const options = ([] as any[])
@@ -2188,8 +2100,9 @@
             });
         }
 
+        // features slot themselves in by order rather than the bar knowing where each one belongs
         // eslint-disable-next-line svelte/infinite-reactive-loop
-        sideButtons = newButtons;
+        sideButtons = newButtons.sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
     }
     function onDirectionsCancel() {
         endEditingItem();
@@ -2260,8 +2173,8 @@
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
     ios:iosIgnoreSafeArea={false}
-    {keepScreenAwake}
-    screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
+    keepScreenAwake={$keepScreenAwake}
+    screenBrightness={$keepScreenAwake && $keepScreenAwakeFullBrightness ? 1 : -1}
     statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
     android:statusBarColor={directionsPanelVisible ? (isEInk ? 'white' : colorPrimary) : 'transparent'}

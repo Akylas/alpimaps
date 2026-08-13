@@ -8,6 +8,8 @@ export interface MapSideButton {
     id?: string;
     text: string;
     tooltip?: string;
+    /** Position in the bar, low first. Lets a feature slot itself between buttons it does not own. */
+    order?: number;
     visible?: boolean;
     isSelected?: boolean;
     selectedColor?: string;
@@ -82,9 +84,12 @@ function combine<T>(pick: (feature: MapFeature) => Readable<T[]> | undefined): R
     return derived(stores, (lists) => lists.flat());
 }
 
-/** All registered features' side buttons, flattened. Read once, after registration. */
+/** All registered features' side buttons, flattened and ordered. Read once, after registration. */
 export function featureSideButtons(): Readable<MapSideButton[]> {
-    return combine((feature) => feature.sideButtons);
+    return derived(
+        combine<MapSideButton>((feature) => feature.sideButtons),
+        (buttons) => buttons.slice().sort((first, second) => (first.order ?? 0) - (second.order ?? 0))
+    );
 }
 
 /** All registered features' menu entries, flattened and ordered. */
