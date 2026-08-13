@@ -25,9 +25,9 @@ export const MANEUVER_VIEW_HEIGHT = 84;
  * pulling the whole navigation ui into its bundle.
  */
 export function navigationViewHeight(hasPreviewWidgets: boolean) {
-    // must match NavigationView's own `barRows`, which collapses the previews row to 0 when there is
-    // nothing to preview. Reserving two rows unconditionally left a widget row of dead space below the
-    // bar whenever previews were off.
+    // both widget rows are reserved whether or not there are previews, so the bar keeps one height for
+    // the whole of a navigation: sizing it to the current content makes the sheet jump every time a
+    // preview appears or drops out
     return NAVWIDGET_ROW_HEIGHT * 2 + NAVSTATS_HEIGHT;
 }
 
