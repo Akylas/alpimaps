@@ -35,7 +35,7 @@ What's lifted, vs interactive build:
 
 Verification & failure (the unattended safety core):
 
-- **Green gate** — before opening the PR, the relevant `npx vitest run <path>` is green, `yarn svelte-check` is clean, and `npx eslint <changed files>` passes. Loop commits still require green tests first.
+- **Green gate** — before opening the PR, `yarn svelte-check` is clean and `./node_modules/.bin/eslint <changed files>` passes. There is no test runner in this repo, so the typechecker is the only real gate — treat a new svelte-check error as blocking.
 - **Mutation-smoke every test you write** — break the code under test; the test must go red, then **revert the mutation** (committing mutated code unattended ships a broken build). A green test that asserts nothing fakes the safety net; judge by mutations caught, never coverage %.
 - **Adversarial review** — run the review subagent (Phase 8), fix criticals yourself, note the rest in the PR.
 - **Self-repair while it converges** — review rejects or the green gate won't pass → fix and retry. Keep going as long as **each round clears a distinct new failure** (real progress) — no fixed retry cap. Stop the moment a round **repeats a failure or makes no progress** (spinning, not converging) → **do not open a PR**: post a comment on the GitHub issue (`gh issue comment`) with the reason (no issue → report it in the run output), then stop. **Never push red, never open a failing PR, never loop on the same failure.**
@@ -142,16 +142,16 @@ Define the testing strategy before implementing. Check for missing tests on the 
 
 Core loop (repeat for each commit from the Phase 3 plan):
 
-1. Write implementation code + Vitest tests for ONE logical chunk.
-2. Run `npx vitest run <path>` — must stay green. Tests breaking → fix before continuing. Run `yarn svelte-check` when `.svelte`/typing is touched.
-3. **STOP before committing — even for a one-file change.** Mandatory, not optional, never skip. List changed files, summarize, say: "Step N done. Please review in your editor and confirm when ready to commit." Do NOT commit without explicit approval. _Auto: skip steps 3-4 — mutation-smoke any test written (break code → red → revert), then once tests are green commit directly and continue._
+1. Write implementation code for ONE logical chunk. (No test runner exists here — where the logic is pure, put it in a plain `.ts` module free of NativeScript UI imports so it is at least isolated and reviewable.)
+2. Run `yarn svelte-check` — must stay clean. New errors → fix before continuing. Run `./node_modules/.bin/eslint <changed files>` too.
+3. **STOP before committing — even for a one-file change.** Mandatory, not optional, never skip. List changed files, summarize, say: "Step N done. Please review in your editor and confirm when ready to commit." Do NOT commit without explicit approval. _Auto: skip steps 3-4 — once svelte-check and eslint are clean, commit directly and continue._
 4. Once the user confirms → commit via the `commit` skill.
 
 ### Implementation checklist
 
 - [ ] `.svelte` screen/component/modal in `app/components/<feature>/`
-- [ ] Domain logic in a service singleton under `app/services/`; data in `app/models/`
-- [ ] Shared reactive state via a svelte store (`app/utils/svelte/store.ts`); prefer service singletons for domain state
+- [ ] Map behaviour in a `MapModule` under `app/mapModules/`; domain logic in a service singleton under `app/services/`; data in `app/models/Item.ts`
+- [ ] Shared reactive state via a svelte store in `app/stores/` (`settingsStore()` for anything persisted); prefer service / map-module singletons for domain state
 - [ ] User-facing strings added as i18n keys in `app/i18n/` (not hardcoded)
 - [ ] Platform-specific code split into `.android.ts` / `.ios.ts` when it diverges
 - [ ] Prettier (4-space, single quotes, no trailing comma) + eslint clean on changed files
@@ -164,5 +164,5 @@ Delegate to the `document` skill. Only for hacks, WHY reasoning, architecture de
 
 ## Phase 8: Review & PR — _build only_
 
-1. **Review (pre-PR)** — spawn a **subagent** to review the current diff (`git diff main...HEAD`). Brief it: review for bugs, regressions, missed edge cases, and convention violations (Svelte/NativeScript patterns, no `!`/`as` casts, i18n for strings); report findings by severity, no praise. Surface its findings; **address criticals** before the PR; note the rest for the user. Keep it lightweight — a gate, not a second build loop. _Auto: fix criticals yourself; keep repairing while each round clears a new failure — when a round stops making progress → post the reason on the GitHub issue, no PR (see Autonomous build)._
-2. **Open PR** — ensure the relevant tests pass (`npx vitest run`), propose manual test scenarios for the reviewer, **wait for user confirmation**, then use the `open-pr` skill with a Conventional-Commits `feat(<scope>): …` title in English. _Auto: gate on the full green gate (vitest + svelte-check + eslint), skip the wait, then `open-pr` (draft) with the ⚠️ assumptions banner + 🐞 Suspected bugs, and stop._
+1. **Review (pre-PR)** — spawn a **subagent** to review the current diff (`git diff master...HEAD`). Brief it: review for bugs, regressions, missed edge cases, and convention violations (Svelte/NativeScript patterns, no `!`/`as` casts, i18n for strings); report findings by severity, no praise. Surface its findings; **address criticals** before the PR; note the rest for the user. Keep it lightweight — a gate, not a second build loop. _Auto: fix criticals yourself; keep repairing while each round clears a new failure — when a round stops making progress → post the reason on the GitHub issue, no PR (see Autonomous build)._
+2. **Open PR** — ensure svelte-check and eslint are clean, propose manual test scenarios for the reviewer (there is no automated suite, so these carry the weight), **wait for user confirmation**, then use the `open-pr` skill with a Conventional-Commits `feat(<scope>): …` title in English. _Auto: gate on the full green gate (svelte-check + eslint), skip the wait, then `open-pr` (draft) with the ⚠️ assumptions banner + 🐞 Suspected bugs, and stop._

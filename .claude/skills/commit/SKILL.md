@@ -11,11 +11,11 @@ description: MANDATORY skill for ALL commits. Must be used EVERY TIME before cre
 
 1. **ALWAYS** run `git diff --staged` first to see changes
 2. **ALWAYS** analyze the staged changes thoroughly
-3. **ALWAYS** split the code changes into atomic commits, one per coherent / cohesive change. Tests for a change should be in the same commit as the change itself. A single feature spanning multiple files (module + view + test) is ONE cohesive change — do not split it by file. Only split when changes are truly unrelated (e.g. a bug fix + a new feature + a docs update)
-4. **ALWAYS** run the checks relevant to the change before committing (there are no `test`/`lint`/`format` scripts — invoke the binaries with `npx`; `yarn vitest`/`yarn eslint`/`yarn prettier` fail on Yarn 4):
-    - Tests: `npx vitest run <path>` when a `*.test.ts` covers the change (isolate with a path or `-t '<name>'`)
-    - Types/Svelte: `yarn svelte-check` when `.svelte`/`.ts` typing is affected (this one is a real script)
-    - Lint: `npx eslint <changed files>`
+3. **ALWAYS** split the code changes into atomic commits, one per coherent / cohesive change. A single feature spanning multiple files (module + view) is ONE cohesive change — do not split it by file. Only split when changes are truly unrelated (e.g. a bug fix + a new feature + a docs update)
+4. **ALWAYS** run the checks relevant to the change before committing. **There is no test runner in this repo** — no vitest, no jest, no `yarn test`. Do not invent one. The only checks are:
+    - Types/Svelte: `yarn svelte-check` when `.svelte`/`.ts` typing is affected (a real package.json script)
+    - Lint: `./node_modules/.bin/eslint <changed files>`. Prefer the binary directly over `npx` — `npx` can trigger a dependency re-resolve under Yarn 4 and rewrite `yarn.lock` as a side effect. `yarn eslint`/`yarn prettier` fail on Yarn 4.
+    - Never stage `yarn.lock` unless the dependency change is the point of the commit.
 5. **ALWAYS** generate a commit message following the format below
 6. **NEVER** commit automatically as a side effect of making code changes. Only commit when the user explicitly invokes the commit skill or says "commit".
 
@@ -42,21 +42,21 @@ Before creating a new commit, check whether the staged changes should be fixup'd
 
 **Process:**
 
-1. Run `git log main..HEAD --oneline` to list all commits on the branch since diverging from main
-2. For each staged file, check `git log main..HEAD -- <file>` to see if it was modified in a recent branch commit
+1. Run `git log master..HEAD --oneline` to list all commits on the branch since diverging from master (this repo's default branch is `master`, not `main`)
+2. For each staged file, check `git log master..HEAD -- <file>` to see if it was modified in a recent branch commit
 3. If a staged change clearly amends or extends code from a previous commit (same file, nearby lines, related logic — e.g. fixing a typo introduced in a prior commit, adding a missing import for a recently added module), suggest fixup'ing into that commit
 4. Present the suggestion: "This change to `<file>` looks like it should be fixup'd into `<sha> <message>`. Want me to fixup instead of creating a new commit?"
 
 **When fixup is confirmed:**
 
 1. Run `git commit --fixup=<sha>` (with user confirmation)
-2. Then run `GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash main` to squash immediately (with user confirmation before the rebase)
+2. Then run `GIT_SEQUENCE_EDITOR=true git rebase --interactive --autosquash master` to squash immediately (with user confirmation before the rebase)
 
 If the change doesn't clearly relate to a previous commit, proceed with a normal new commit.
 
 ## Required Commit Message Format
 
-This repo uses Conventional Commits (enforced by the `@commitlint/config-conventional` config inline in `package.json`). The format is fixed:
+This repo follows Conventional Commits by convention. **Nothing enforces it** — there is no commitlint config and no lint/test CI (the only workflow is `release.yml`), so a malformed message will be accepted silently. Getting it right is on you. The format is:
 
 ```
 <type>(<scope>): <subject>
@@ -72,8 +72,8 @@ The **header** is mandatory; **scope**, **body**, and **footer** are optional.
 
 **Shape:** `<type>(<scope>): <subject>`
 
-- `<type>` is one of: `build` `ci` `docs` `feat` `fix` `fix-next` `perf` `refactor` `release` `style` `test`
-- `<scope>` (optional) is the affected area — usually a feature under `app/components/` or a service under `app/services/` (e.g. `ocr`, `pdf`, `camera`, `sync`, `settings`, `security`, `edit`, `pkpass`). When a change is platform-specific, prefix the scope with the platform: `android/sync`, `ios/camera`
+- `<type>` is one of: `chore` `docs` `feat` `fix` `perf` `refactor` `style` `build` `ci`. In this repo's history `chore` is by far the most used, then `fix` and `feat` — do not avoid `chore` for routine work.
+- `<scope>` (optional) is the affected area. Scopes actually used here: `android`, `ios`, `map`, `navigation`, `settings`, `stores`, `claude`. Otherwise take it from the feature dir under `app/components/` (`bottomsheet`, `directions`, `search`, `items`, `layers`, `transit`, `compass`, `peaks`), a map module (`mapModules`), or a service. Platform-specific changes use the platform **as** the scope (`fix(android): …`) — this repo does not use the `android/<feature>` compound form.
 - `<subject>`: imperative present tense ("change" not "changed"), lowercase first letter, no trailing period
 - **No line may exceed 100 characters**
 
@@ -81,7 +81,8 @@ The **header** is mandatory; **scope**, **body**, and **footer** are optional.
 
 ```
 docs(README): add build setup steps for submodules
-fix(ios/camera): correct preview orientation on rotation
+fix(android): correct import of geojson/gpx files
+refactor(map): extract the layer stack out of Map.svelte
 ```
 
 ### Body

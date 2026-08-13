@@ -9,14 +9,14 @@ description: MANDATORY skill for ALL pull requests. Must be used EVERY TIME befo
 
 **`--auto`** (caller runs autonomously): skip step 0 sign-off and any push/PR approval wait — proceed directly. Still fix push-hook errors, still `--draft`.
 
-0. **ALWAYS** ensure the change was verified before opening the PR. For logic changes this means the relevant Vitest tests pass (`npx vitest run <path>`) and `yarn svelte-check` is clean; for UI/behavioral changes, confirm it by running the app (`ns run ios` / `ns run android`), or — when a native run isn't possible — flag that a visual check is still required. Propose the scenarios to verify.
-1. **ALWAYS** run `git push` and check for errors returned by any git hooks / CI (this repo has no local husky hooks, so commitlint runs in CI — a bad conventional-commit title/message will fail there, not on push)
+0. **ALWAYS** ensure the change was verified before opening the PR. **There is no test runner in this repo** — verification means `yarn svelte-check` is clean and `./node_modules/.bin/eslint <changed files>` passes; for UI/behavioral changes, confirm it by running the app (`ns run ios` / `ns run android`), or — when a native run isn't possible — flag that a visual check is still required. Propose the scenarios to verify.
+1. **ALWAYS** run `git push` and check for errors returned by any git hooks / CI. Note this repo has **no** local hooks and **no** commit/lint/test CI — the only workflow is `release.yml`. Nothing will catch a malformed conventional-commit title for you, so get it right before pushing.
 2. **ALWAYS** fix any errors — autofixup into the relevant commits, or create a new commit if autofixup does not apply
 3. **ALWAYS** create the PR as **draft**:
     1. This repo has **no** `.github/PULL_REQUEST_TEMPLATE.md`. Read it **only if one exists** and mirror its structure; otherwise write a clean default body (see "Writing the description" + "Default body" below).
     2. **CRITICAL**: `--template` and `--body` are **mutually exclusive** in `gh pr create`. Always use `--body` with an inline multiline string, never `--template`:
         ```sh
-        gh pr create --draft --title "fix(camera): ..." --body "$(cat <<'EOF'
+        gh pr create --draft --title "fix(map): ..." --body "$(cat <<'EOF'
         ## Summary
         ...
         EOF

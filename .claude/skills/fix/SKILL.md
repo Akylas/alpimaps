@@ -39,7 +39,7 @@ Use the `branch-check` skill before anything else. (Investigate never branches �
 
 ## Phase 2: Understand the bug
 
-1. **Parse title** — feature hint (e.g. a crash in OCR → `app/components/ocr/` + `app/services/ocr.ts`).
+1. **Parse title** — feature hint (e.g. a crash while following a route → `app/components/navigation/` + `app/services/NavigationService.ts`; a tile/layer problem → `app/mapModules/CustomLayersModule.ts`).
 2. **Parse body & comments** — reproduction steps, environment (the `bug_report.yml` fields: app, version, platform), error messages, screenshots, affected users.
 3. **Extract any stacktrace / error string** pasted into the issue — it points straight at files/lines to read in Phase 3.
 4. Summarize: what is the bug, which feature/service, what error, what context exists.
@@ -70,8 +70,10 @@ Tag every claim as exactly one of two things, never blurred:
 
 The highest confidence (`High`) is reserved for hypotheses whose mechanism is backed by quoted code, never for how plausible the story feels. Gut-check before typing: _"Can I paste the code that proves this, or am I pattern-matching?"_
 
-❌ clue-as-fact: "**H1 (High)** — the crash comes from the PDF renderer not handling a null page." (nothing quoted, path never traced — "High" unearned.)
-✅ disciplined: "**H1 (Medium)** — `PDFCanvas` may not handle a null page. **Proof** `app/services/pdf/PDFCanvas.ts:142`: the render loop only guards `page !== undefined`, not `null`. **⚠️ Critical link** is whether the source ever yields `null` (vs `undefined`) — if it never does, H1 collapses → read the producer first."
+❌ clue-as-fact: "**H1 (High)** — the 3D map gets no routes because the datasource is read off the wrong layer." (nothing quoted, path never traced — "High" unearned.)
+✅ disciplined: "**H1 (Medium)** — `3DMap` may read a datasource that does not exist. **Proof** `app/components/3d/3DMap.svelte:21`: it reads `.dataSource` off `getLayers('routes')[0].layer`, and `dataSource` is declared on `TileLayer`, not the base `Layer`. **⚠️ Critical link** is whether a `'routes'` layer is ever registered at all — grep `addLayer(.*'routes'`; if nothing registers one the expression is `undefined` regardless and H1's mechanism is wrong even though its symptom is right."
+
+That second example is real: both halves turned out to be true, and the one that actually mattered — no `'routes'` layer is ever registered — was invisible until the hop was traced. Endpoints looking connected is not a trace.
 
 ### Hypothesis format (always maintain)
 
@@ -184,11 +186,11 @@ Types to consider: **Patch** (guard clause, null check), **Structural** (fix the
 ## Phase 10: Implement & verify — _build only_
 
 - Apply the chosen fix; fix **all** spread instances; implement prevention tasks; mark tasks completed.
-- Verify the bug is resolved and tests pass (`npx vitest run <path>`; `yarn svelte-check` when `.svelte`/typing is touched).
+- Verify the bug is resolved: `yarn svelte-check` clean, `./node_modules/.bin/eslint <changed files>` clean, and — since there is no test runner here — state explicitly how the fix was actually exercised (device run, or reasoning if a run was not possible).
 - **STOP before committing — even for a one-file change.** Mandatory, not optional. List changed files, summarize, say: "Fix ready. Please review in your editor and confirm when ready to commit." Do NOT commit without explicit approval. Never skip this.
 - Once the user confirms → commit via `commit` skill.
 
 ## Phase 11: Review & PR — _build only_
 
-1. **Review (pre-PR)** — spawn a **subagent** to review the current diff (`git diff main...HEAD`). Brief it: review for real bugs and regressions introduced by the fix, and convention violations (Svelte/NativeScript patterns, no `!`/`as` casts); report findings by severity, no praise. Surface its findings; **address criticals** before the PR; note the rest for the user. Keep it lightweight — a gate, not a second debugging loop.
+1. **Review (pre-PR)** — spawn a **subagent** to review the current diff (`git diff master...HEAD`). Brief it: review for real bugs and regressions introduced by the fix, and convention violations (Svelte/NativeScript patterns, no `!`/`as` casts); report findings by severity, no praise. Surface its findings; **address criticals** before the PR; note the rest for the user. Keep it lightweight — a gate, not a second debugging loop.
 2. **Open PR** — assemble from Phase 7 (fill the "after" snippet; "before" was captured there). Commit fix + tests + spread fixes, then use the `open-pr` skill with a Conventional-Commits `fix(<scope>): …` title in English. Add the `bug` label (`gh issue edit`/`gh pr edit --add-label bug`).
