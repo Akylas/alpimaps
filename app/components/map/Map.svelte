@@ -17,7 +17,7 @@
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
@@ -50,6 +50,7 @@
     import { LayerStack } from '~/mapModules/layerStack';
     import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
+    import { FeaturePicker, isPickerPending } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
@@ -107,10 +108,6 @@
     let selectedPosMarker: Point<LatLonKeys>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
-    let handleSelectedRouteTimer: NodeJS.Timeout;
-    let handleSelectedTransitLinesTimer: NodeJS.Timeout;
-    let selectedRoutes: IItem[];
-    let selectedTransitLines: IItem[];
     let didIgnoreAlreadySelected = false;
 
     let currentLayerStyle: string;
@@ -211,43 +208,33 @@
         transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
             {
                 onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                    if (handleSelectedRouteTimer) {
+                    if (isPickerPending('routes')) {
                         return;
                     }
-                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
+                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, transitPicker.pending);
                     if (featureLayerName === 'routes') {
-                        if (handleSelectedTransitLinesTimer) {
-                            clearTimeout(handleSelectedTransitLinesTimer);
-                        }
                         const id = featureData.route_id || featureData.id || featureId;
-                        selectedTransitLines = selectedTransitLines || [];
-                        handleSelectedTransitLinesTimer = setTimeout(() => {
-                            handleSelectedTransitLines();
-                        }, 10);
-
-                        if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
-                            const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
-                            const agency = featureData['agency_id'];
-                            const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                            const lineName = featureData['CODE'].split('_')[1];
-                            const item: IItem = {
-                                properties: {
-                                    class: 'bus',
-                                    id,
-                                    ref: featureData['route_short_name'],
-                                    subtitle: featureData['agency_name'],
-                                    name: featureData['route_long_name'],
-                                    symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
-                                    layer: featureLayerName,
-                                    ...featureData
-                                },
-                                route: {
-                                    osmid: id
-                                } as any,
-                                _nativeGeometry: featureGeometry,
-                                layer: transitVectorTileLayer
-                            };
-                            selectedTransitLines.push(item);
+                        const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
+                        const agency = featureData['agency_id'];
+                        const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
+                        const added = transitPicker.add({
+                            properties: {
+                                class: 'bus',
+                                id,
+                                ref: featureData['route_short_name'],
+                                subtitle: featureData['agency_name'],
+                                name: featureData['route_long_name'],
+                                symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
+                                layer: featureLayerName,
+                                ...featureData
+                            },
+                            route: {
+                                osmid: id
+                            } as any,
+                            _nativeGeometry: featureGeometry,
+                            layer: transitVectorTileLayer
+                        });
+                        if (added) {
                             ignoreNextMapClick = true;
                         }
                         return false;
@@ -1193,78 +1180,29 @@
 
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
 
-    async function handleSelectedRoutes() {
-        DEV_LOG && console.log('handleSelectedRoutes');
-        unFocusSearch();
-        try {
-            if (selectedRoutes && selectedRoutes.length > 0) {
-                if (selectedRoutes.length === 1) {
-                    selectItem({ item: selectedRoutes[0], isFeatureInteresting: true, setMapSelected: true });
-                } else {
-                    const RouteSelect = (await import('~/components/routes/RouteSelect.svelte')).default;
-                    const results = await showBottomSheet({
-                        parent: page,
-                        view: RouteSelect,
-                        skipCollapsedState: true,
-                        props: {
-                            // title: l('pick_route'),
-                            options: selectedRoutes.map((s) => ({ name: s.properties.name, route: s }))
-                        }
-                    });
-                    const result = Array.isArray(results) ? results[0] : results;
-                    if (result) {
-                        selectItem({ item: result.route, isFeatureInteresting: true, setMapSelected: true });
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('handleSelectedRoutes', err, err.stack);
-        }
-        selectedRoutes = null;
-        handleSelectedRouteTimer = null;
-    }
+    const routePicker = new FeaturePicker({
+        id: 'routes',
+        key: (item) => item.route.osmid,
+        label: (item) => item.properties.name,
+        select: (item) => selectItem({ item, isFeatureInteresting: true, setMapSelected: true })
+    });
 
-    async function handleSelectedTransitLines() {
-        DEV_LOG && console.log('handleSelectedTransitLines');
-        unFocusSearch();
-        try {
-            DEV_LOG && console.log('handleSelectedTransitLines', selectedTransitLines?.length);
-            if (selectedTransitLines?.length > 0) {
-                if (selectedTransitLines.length === 1) {
-                    selectItem({ item: selectedTransitLines[0], isFeatureInteresting: true, showButtons: true });
-                    // handleRouteSelection(selectedRoutes[0].featureData, selectedRoutes[0].layer);
-                } else {
-                    closeBottomSheet();
-                    const RouteSelect = (await import('~/components/routes/RouteSelect.svelte')).default;
-                    const results = await showBottomSheet({
-                        parent: page,
-                        view: RouteSelect,
-                        skipCollapsedState: true,
-                        props: {
-                            options: selectedTransitLines
-                                .map((s) => ({ name: s.properties.name, route: s }))
-                                .sort((a, b) => {
-                                    const aS = a.route.properties.shortName;
-                                    const bS = b.route.properties.shortName;
-                                    if (aS.length === bS.length) {
-                                        return aS > bS ? 1 : -1;
-                                    }
-                                    return aS.length - bS.length;
-                                })
-                        }
-                    });
-                    const result = Array.isArray(results) ? results[0] : results;
-                    if (result) {
-                        selectItem({ item: result.route, isFeatureInteresting: true, showButtons: true });
-                    }
-                }
+    const transitPicker = new FeaturePicker({
+        id: 'transit',
+        key: (item) => item.properties.id,
+        label: (item) => item.properties.name,
+        select: (item) => selectItem({ item, isFeatureInteresting: true, showButtons: true }),
+        // shortest code first, then alphabetically: line numbers read as a list that way
+        sort: (first, second) => {
+            const firstShort = first.properties.shortName;
+            const secondShort = second.properties.shortName;
+            if (firstShort.length === secondShort.length) {
+                return firstShort > secondShort ? 1 : -1;
             }
-        } catch (err) {
-            console.error('handleSelectedTransitLines', err, err['stack']);
-        }
-        selectedTransitLines = null;
-        handleSelectedTransitLinesTimer = null;
-    }
+            return firstShort.length - secondShort.length;
+        },
+        closeOpenSheet: true
+    });
     // function handleClickedFeatures(position: GeoLocation) {
     //     let fakeIndex = 0;
     //     // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
@@ -1292,7 +1230,7 @@
         const { clickType, layer, nearestColor, position } = data;
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        if (handleSelectedTransitLinesTimer) {
+        if (transitPicker.pending) {
             return;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
@@ -1331,37 +1269,28 @@
             featureData.layer = featureLayerName;
             if (featureLayerName === 'route') {
                 DEV_LOG && console.log('handling route ');
-                if (handleSelectedRouteTimer) {
-                    clearTimeout(handleSelectedRouteTimer);
-                }
-                selectedRoutes = selectedRoutes || [];
-                handleSelectedRouteTimer = setTimeout(handleSelectedRoutes, 10);
-                if (selectedRoutes.findIndex((s) => s.route.osmid === featureData.osmid) === -1) {
-                    selectedRoutes.push({
-                        properties: {
-                            ...featureData
-                        },
-                        _nativeGeometry: featureGeometry,
-                        route: {
-                            osmid: featureData.osmid || featureData.ref || featureData.name
-                        },
-                        layer
-                    });
+                const added = routePicker.add({
+                    properties: {
+                        ...featureData
+                    },
+                    _nativeGeometry: featureGeometry,
+                    route: {
+                        osmid: featureData.osmid || featureData.ref || featureData.name
+                    },
+                    layer
+                });
+                if (added) {
                     ignoreNextMapClick = true;
                 }
                 return false;
             }
 
             //    const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
-            const isFeatureInteresting = !selectedRoutes;
+            const isFeatureInteresting = !routePicker.pending;
             // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
                 ignoreNextMapClick = false;
-                selectedRoutes = null;
-                if (handleSelectedRouteTimer) {
-                    clearTimeout(handleSelectedRouteTimer);
-                    handleSelectedRouteTimer = null;
-                }
+                routePicker.cancel();
                 const result: IItem = {
                     properties: { featureId, ...featureData },
                     geometry: {
