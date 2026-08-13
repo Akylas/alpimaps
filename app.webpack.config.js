@@ -485,7 +485,7 @@ module.exports = (env, params = {}) => {
     } catch (error) {
         console.error('could not access API_KEYS.json');
     }
-    Object.assign(config.plugins.find((p) => p.constructor.name === 'DefinePlugin').definitions, defines);
+    Object.assign(config.plugins.find((p) => p.constructor.name === 'CompatDefinePlugin').definitions, defines);
 
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
