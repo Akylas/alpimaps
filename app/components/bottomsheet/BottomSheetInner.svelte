@@ -206,7 +206,7 @@
                         query += ' ' + props.address.county;
                     }
                 }
-                console.log('searchWeb', query);
+                DEV_LOG && console.log('searchWeb', query);
                 if (query) {
                     if (__ANDROID__) {
                         const intent = new Intent(Intent.ACTION_WEB_SEARCH);
