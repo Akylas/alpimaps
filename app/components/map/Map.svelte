@@ -123,6 +123,9 @@
      */
     let navigationViewComponent = null;
     let maneuverViewComponent = null;
+    let offRoutePanelComponent = null;
+    /** holder for the off-route panel, so the navigation sheet can lift it like the other widgets */
+    let offRoutePanelHolder: NativeViewElementNode<GridLayout>;
     let navigationStepIndex = 0;
     // scaled text, so at a large font scale a fixed height would clip it
     $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $fontScaleMaxed);
@@ -138,9 +141,14 @@
         if (navigationViewComponent) {
             return;
         }
-        const [navigationView, maneuverView] = await Promise.all([import('~/components/navigation/NavigationView.svelte'), import('~/components/navigation/ManeuverView.svelte')]);
+        const [navigationView, maneuverView, offRoutePanel] = await Promise.all([
+            import('~/components/navigation/NavigationView.svelte'),
+            import('~/components/navigation/ManeuverView.svelte'),
+            import('~/components/navigation/NavigationOffRoutePanel.svelte')
+        ]);
         navigationViewComponent = navigationView.default;
         maneuverViewComponent = maneuverView.default;
+        offRoutePanelComponent = offRoutePanel.default;
     }
     let topTranslationY;
     let networkConnected = false;
@@ -1478,6 +1486,13 @@
                   }
                 : {})
         } as any;
+        if (offRoutePanelHolder?.nativeView) {
+            // it sits right on top of the bar, so it has to move with it or the bar covers it
+            result.offRoutePanel = {
+                target: offRoutePanelHolder.nativeView,
+                translateY: translation
+            };
+        }
         return result;
     }
 
@@ -1823,6 +1838,9 @@
                 nativeView.translateY = 0;
             }
         });
+        if (offRoutePanelHolder?.nativeView) {
+            offRoutePanelHolder.nativeView.translateY = 0;
+        }
     }
     /** Only lifts the floating widgets clear of the navigation bar: the item sheet owns their opacity. */
     function navigationTranslationFunction(translation, maxTranslation, progress) {
@@ -1966,6 +1984,13 @@
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
                 <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} />
+                <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
+                     over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
+                <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">
+                    {#if offRoutePanelComponent}
+                        <svelte:component this={offRoutePanelComponent} />
+                    {/if}
+                </gridlayout>
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}
