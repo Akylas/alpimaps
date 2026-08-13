@@ -31,6 +31,7 @@ import { Address, AscentSegment, IItem, IItem as Item, Route, RouteInstruction, 
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
+import { instructionsFromResult } from '~/utils/routing';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
@@ -987,35 +988,53 @@ class PackageService extends Observable {
         }
         const points = sampleTrackForRouting(trackPositions);
         DEV_LOG && console.log('computeTrackInstructions', trackSize, 'track points ->', points.length, 'via points');
-        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
-        const result = await service.calculateRoute<LatLonKeys>({ projection, points, customOptions: { language: get(fullLangStore) } }, profile);
+        const { result } = await this.computeRoute({ points, projection, profile });
         const routePoints = result.getPoints();
-        const rawInstructions = result.getInstructions();
 
-        const instructions: RouteInstruction[] = [];
         let lastTrackIndex = -1;
-        for (let index = 0; index < rawInstructions.size(); index++) {
-            const instruction = rawInstructions.get(index);
-            const routePoint = fromNativeMapPos<LatLonKeys>(routePoints.get(instruction.getPointIndex()));
+        const instructions = instructionsFromResult(result, (pointIndex) => {
+            const routePoint = fromNativeMapPos<LatLonKeys>(routePoints.get(pointIndex));
             // a generous tolerance: the routed line and the recorded track never overlap exactly
             const projected = projectOnRoute(routePoint, trackPositions, { fromIndex: lastTrackIndex, tolerance: TRACK_INSTRUCTION_TOLERANCE });
             if (!projected) {
-                continue;
+                return null;
             }
             lastTrackIndex = projected.index;
-            instructions.push({
-                a: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
-                az: Math.round(instruction.getAzimuth()),
-                dist: instruction.getDistance(),
-                time: instruction.getTime(),
-                index: projected.index,
-                angle: Math.round(instruction.getTurnAngle()),
-                name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
-                inst: (instruction as any).getInstruction()
-            });
-        }
+            return projected.index;
+        });
         DEV_LOG && console.log('computeTrackInstructions got', instructions.length, 'instructions');
         return instructions.length ? instructions : null;
+    }
+
+    /**
+     * One route, computed offline when we can and online otherwise, with no ui attached.
+     *
+     * The directions panel builds its own costing options out of what the user is looking at; this is
+     * for everything that has to route without a panel — a recorded track, or a reroute during
+     * navigation, which reuses the costing options stored on the route it is rerouting.
+     */
+    async computeRoute({
+        costingOptions,
+        points,
+        profile = 'pedestrian',
+        projection
+    }: {
+        points: GenericMapPos<LatLonKeys>[];
+        projection;
+        profile?: ValhallaProfile;
+        /** valhalla `costing_options`, as stored on a computed route */
+        costingOptions?: any;
+    }) {
+        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
+        if (!service) {
+            throw new Error('no_routing_service');
+        }
+        const customOptions: any = { language: get(fullLangStore) };
+        if (costingOptions) {
+            customOptions.costing_options = costingOptions;
+        }
+        const result = await service.calculateRoute<LatLonKeys>({ projection, points, customOptions }, profile);
+        return { result, positions: result.getPoints(), totalDistance: result.getTotalDistance(), totalTime: result.getTotalTime() };
     }
 
     offlineRoutingSearchService() {
