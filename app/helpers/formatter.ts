@@ -7,9 +7,9 @@ import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
 import dayjs from 'dayjs';
 import humanUnit, { sizePreset } from 'human-unit';
 import { get } from 'svelte/store';
-import { formatDate, formatTime, langStore, lc } from '~/helpers/locale';
+import { convertDurationSeconds, formatDate, formatTime, langStore, lc } from '~/helpers/locale';
 import { IItem } from '~/models/Item';
-export { convertDurationSeconds, formatDate } from '~/helpers/locale';
+export { convertDurationSeconds, formatDate };
 import { UNITS, UNIT_FAMILIES } from './units';
 import { imperialUnits } from '~/variables';
 
@@ -46,8 +46,25 @@ export function formatSize(diskSize) {
     return `${data.value.toFixed(1)} ${data.unit} `;
 }
 
+/**
+ * Durations for settings and navigation. `convertDurationSeconds` defaults to a minutes-only format
+ * that renders 30s as "0 m": both wrong for sub minute values and easy to misread as meters.
+ */
+export function formatDuration(seconds: number) {
+    if (!seconds) {
+        return convertDurationSeconds(0, 's [s]');
+    }
+    if (seconds < 60) {
+        return convertDurationSeconds(seconds, 's [s]');
+    }
+    if (seconds < 3600) {
+        return convertDurationSeconds(seconds, 'm [min]');
+    }
+    return convertDurationSeconds(seconds, 'H [h] mm [min]');
+}
+
 export function formatDistance(meters) {
-    return formatValue(meters, meters < 1000 ? UNITS.Meters:UNITS.Kilometers);
+    return formatValue(meters, meters < 1000 ? UNITS.Meters : UNITS.Kilometers);
 }
 export function convertElevation(meters) {
     return formatValue(meters, UNITS.Meters);

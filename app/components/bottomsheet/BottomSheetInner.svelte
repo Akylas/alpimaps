@@ -4,11 +4,10 @@
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { GenericMapPos, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
     import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
@@ -21,6 +20,10 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
+    import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
+    import { CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
+    import { navigationService } from '~/services/NavigationService';
+    import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
     import { langStore } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
@@ -29,11 +32,13 @@
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { showError } from '@shared/utils/showError';
-    import { computeDistanceBetween } from '~/utils/geo';
+    import { RouteProgress, computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
+    import { showSnack } from '@shared/utils/ui';
+    import { surfaceColors } from '~/utils/routing';
     import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors } from '~/variables';
+    import { actionBarButtonHeight, colors, fontScaleMaxed } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
@@ -71,7 +76,7 @@
 
     let graphAvailable = false;
     let statsAvailable = false;
-    let statsCanvas: NativeViewElementNode<CanvasView>;
+    let statsView: RouteStatsView;
     let elevationChart: ElevationChart;
     let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
@@ -117,7 +122,8 @@
     });
 
     $: {
-        if (itemIsRoute && currentLocation) {
+        // during navigation the service already computed all of this, see highlightChartFromProgress
+        if (itemIsRoute && currentLocation && !$isNavigating) {
             updateRouteItemWithPosition(item, currentLocation);
         }
     }
@@ -245,9 +251,6 @@
     }
     function updateStatsAvailable() {
         statsAvailable = itemIsRoute && !!item.stats;
-        if (statsAvailable && statsCanvas) {
-            statsCanvas.nativeView.invalidate();
-        }
     }
 
     function updateSelectedItem(item) {
@@ -284,47 +287,43 @@
         }
     }
     $: updateSelectedItem(item);
+    $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
+    // a track we could navigate if it had maneuvers, ie an imported gpx
+    $: itemNeedsInstructions = !$isNavigating && !!item && isNavigableRoute(item) && !item.instructions?.length;
+    // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
+    $: if ($isNavigating && $navigationProgress && graphAvailable) {
+        highlightChartFromProgress($navigationProgress);
+    }
 
     function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
             // ignore routes from osm
-            if (routeItem?.route && !routeItem?.route.osmid) {
-                const distanceFromRouteMeters = ApplicationSettings.getNumber('location_distance_from_route', 15);
-                // const props = routeItem.properties;
-                const route = routeItem.route;
+            if (isNavigableRoute(routeItem)) {
                 const profile = routeItem.profile;
                 const positions = packageService.getRouteItemPoses(routeItem);
                 // DEV_LOG && console.log('updateRouteItemWithPosition', JSON.stringify(location), JSON.stringify(positions));
-                const onPathIndex = isLocationOnPath(location, positions, false, true, distanceFromRouteMeters);
-                let remainingDistance: number, remainingTime: number, remainingDistanceToStep: number;
+                const onPathIndex = isLocationOnRoute(location, positions);
+                const computeInstruction = !highlight && !!routeItem.instructions && updateNavigationInstruction;
+                let progress: RouteProgress = { onPathIndex };
                 if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
-                    remainingDistance = distanceToEnd(onPathIndex, positions);
-                    remainingTime = (route.totalTime * remainingDistance) / route.totalDistance;
-                    const stepIndex = route.waypoints.filter((w) => w.properties.showOnMap).find((w) => w.properties.index > onPathIndex)?.properties?.index;
-                    if (stepIndex >= 0) {
-                        remainingDistanceToStep = remainingDistance - distanceToEnd(stepIndex, positions);
-                    }
-                    if (!highlight && routeItem.instructions && updateNavigationInstruction) {
-                        let routeInstruction;
-                        for (let index = routeItem.instructions.length - 1; index >= 0; index--) {
-                            const element = routeItem.instructions[index];
-                            if (element.index < onPathIndex) {
-                                break;
-                            }
-                            routeInstruction = element;
-                        }
-
-                        let distanceToNextInstruction = computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
-                        for (let index = onPathIndex; index < routeInstruction.index; index++) {
-                            distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
-                        }
-                        navigationInstructions = {
-                            instruction: routeInstruction,
-                            remainingDistance,
-                            distanceToNextInstruction,
-                            remainingTime
-                        };
+                    progress = computeRouteProgress({
+                        item: routeItem,
+                        location,
+                        positions,
+                        onPathIndex,
+                        computeRemaining: true,
+                        computeInstruction
+                    });
+                    if (computeInstruction) {
+                        navigationInstructions = progress.instruction
+                            ? {
+                                  instruction: progress.instruction,
+                                  remainingDistance: progress.remainingDistance,
+                                  distanceToNextInstruction: progress.distanceToNextInstruction,
+                                  remainingTime: progress.remainingTime
+                              }
+                            : null;
                         // DEV_LOG && console.log('navigationInstructions', JSON.stringify(navigationInstructions));
                     }
                 } else {
@@ -332,6 +331,7 @@
                 }
 
                 if (updateGraph && graphAvailable) {
+                    const { remainingDistance, remainingDistanceToStep, remainingTime } = progress;
                     if (elevationChart) {
                         elevationChart.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight, false);
                     } else {
@@ -344,6 +344,24 @@
             }
         } catch (error) {
             console.error(error, error.stack);
+        }
+    }
+
+    /** Feeds the elevation chart from the navigation service's progress, no second polyline walk. */
+    function highlightChartFromProgress(progress: RouteProgress) {
+        const profile = item?.profile;
+        const params = {
+            onPathIndex: progress.onPathIndex,
+            remainingDistance: progress.remainingDistance,
+            remainingDistanceToStep: progress.remainingDistanceToStep,
+            remainingTime: progress.remainingTime,
+            dplus: profile?.dplus,
+            dmin: profile?.dmin
+        };
+        if (elevationChart) {
+            elevationChart.hilghlightPathIndex(params, undefined, false);
+        } else {
+            chartLoadHighlightData = params;
         }
     }
 
@@ -378,13 +396,50 @@
         instruction: RouteInstruction;
     };
 
+    /**
+     * An imported track has no maneuvers. Route through it to get some, then store them on the item
+     * so the navigate button appears and navigation can use them like any computed route.
+     */
+    async function getTrackInstructions() {
+        try {
+            updatingItem = true;
+            const instructions = await packageService.computeTrackInstructions({ item, projection: mapContext.getProjection() });
+            if (!instructions) {
+                showSnack({ message: lc('no_directions_found_for_track') });
+                return;
+            }
+            if (item.id !== undefined) {
+                await updateItem(item, { instructions }, false);
+            } else {
+                item.instructions = instructions;
+                item = item;
+            }
+        } catch (error) {
+            showError(error);
+        } finally {
+            updatingItem = false;
+        }
+    }
+
+    async function startNavigation() {
+        try {
+            // navigation has its own sheet now: Map watches isNavigating and moves both of them
+            await navigationService.start(item);
+        } catch (error) {
+            showError(error);
+        }
+    }
+
     function updateSteps() {
         if (!item) {
             steps = [0];
             return;
         }
+        // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and
+        // gets stuck if it is missing
+        const result = [0];
         let total = INFOVIEW_HEIGHT;
-        const result = [0, total];
+        result.push(total);
         total += 50;
         result.push(total);
         if (graphAvailable) {
@@ -834,113 +889,6 @@
             console.error(error, error.stack);
         }
     }
-    let textPaint: Paint;
-    let bigTextPaint: Paint;
-    let barPaint: Paint;
-    const surfaceColors = {
-        highway: '#E6C264',
-        track: '#AD9067',
-        sac_scale_1: '#C9C1B2',
-        sac_scale_2: '#C9C1B2',
-        sac_scale_3: '#C9C1B2',
-        sac_scale_4: '#A6AF8F',
-        sac_scale_5: '#A6AF8F',
-        sac_scale_6: '#A6AF8F',
-        steps: '#CAD0D7',
-        road: '#A4ACB7',
-        street: '#B9C2C8',
-        cycleway: '#65AAA2',
-        paved_smooth: '#8B939E',
-        paved_rough: '#8B857B',
-        paved: '#D7D7D7',
-        gravel: '#A89070',
-        dirt: '#BA915E',
-        path: '#A6AF8F',
-        compacted: '#BA915E'
-    };
-    let statsKey = ApplicationSettings.getString('stats_key', 'waytypes');
-
-    function setStatsKey(value) {
-        statsKey = value;
-        ApplicationSettings.setString('stats_key', value);
-        statsCanvas?.nativeView?.invalidate();
-    }
-
-    function drawStats({ canvas }: { canvas: Canvas; object: CanvasView }) {
-        try {
-            if (!item?.stats) {
-                return;
-            }
-            const w = canvas.getWidth();
-            const h = canvas.getHeight();
-
-            if (!barPaint) {
-                barPaint = new Paint();
-                barPaint.strokeWidth = 2;
-            }
-            if (!textPaint) {
-                textPaint = new Paint();
-                textPaint.textSize = 13;
-            }
-            if (!bigTextPaint) {
-                bigTextPaint = new Paint();
-                bigTextPaint.textSize = 16;
-                bigTextPaint.fontWeight = 'bold';
-            }
-            bigTextPaint.color = colorOnSurfaceVariant;
-            textPaint.color = colorOnSurface;
-
-            const usedWidth = w - 20;
-            let x = 10;
-            let labelx = 13;
-            let labely = 95;
-            const stats = item.stats[statsKey];
-            canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
-            const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
-            const availableWidth = usedWidth / nbColumns - 15;
-            let nString, text, text2, layoutHeight, staticLayout;
-            stats.forEach((s) => {
-                const rigthX = x + s.perc * usedWidth;
-                barPaint.color = 'white';
-                barPaint.style = Style.STROKE;
-                canvas.drawRect(x, 35, rigthX, 75, barPaint);
-                barPaint.color = surfaceColors[s.id] || '#000000';
-                barPaint.style = Style.FILL;
-                canvas.drawRect(x, 35, rigthX, 75, barPaint);
-                x = rigthX;
-                text = lc(s.id);
-                text2 = formatDistance(s.dist * 1000);
-                canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
-                nString = createNativeAttributedString({
-                    spans: [
-                        {
-                            fontWeight: 'bold',
-                            text: text + ': '
-                        },
-                        {
-                            text: text2,
-                            color: colorOnSurfaceVariant,
-                            fontSize: 12
-                        }
-                    ]
-                });
-                staticLayout = new StaticLayout(nString, textPaint, availableWidth, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                layoutHeight = staticLayout.getHeight();
-                canvas.save();
-                canvas.translate(labelx + 15, labely - 14);
-                staticLayout.draw(canvas);
-                canvas.restore();
-                if (labely < h - layoutHeight) {
-                    labely += layoutHeight;
-                } else {
-                    labely = 95;
-                    labelx += usedWidth / nbColumns;
-                }
-            });
-        } catch (error) {
-            console.error(error, error.stack);
-        }
-    }
     async function startEditingItem() {
         if (itemIsRoute && item.route.waypoints) {
             mapContext.startEditingItem(item);
@@ -1069,13 +1017,17 @@
     }
 </script>
 
-<gridlayout id="bottomSheetInner" {...$$restProps} backgroundColor={colorWidgetBackground} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
+            backgroundColor={colorWidgetBackground}
+            borderColor={colorOutlineVariant}
+            borderRadius={CARD_RADIUS}
             closeAnimationDuration={100}
             height={INFOVIEW_HEIGHT}
             leftSwipeDistance={0}
+            margin="0 2 0 2"
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
@@ -1115,10 +1067,12 @@
             </stacklayout>
         </swipemenu>
 
-        <scrollview borderBottomWidth={1} borderColor={colorOutlineVariant} borderTopWidth={1} colSpan={2} orientation="horizontal" row={1}>
+        <scrollview backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
                 <IconButton isVisible={!!item} onLongPress={() => openOpenStreetMap()} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
                 <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
+                <IconButton isVisible={itemCanBeNavigated} rounded={false} text="mdi-navigation" tooltip={lc('start_navigation')} on:tap={startNavigation} />
+                <IconButton isVisible={itemNeedsInstructions} rounded={false} text="mdi-sign-direction" tooltip={lc('get_directions_for_track')} on:tap={getTrackInstructions} />
 
                 <!-- {#if packageService.hasElevation()} -->
                 <IconButton
@@ -1163,33 +1117,28 @@
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart
             bind:this={elevationChart}
+            backgroundColor={colorWidgetBackground}
+            borderColor={colorOutlineVariant}
+            borderRadius={CARD_RADIUS}
             {chartShowWaypoints}
             colSpan={2}
             {item}
+            margin="2 2 0 2"
             row={2}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors}
             visibility={graphAvailable ? 'visible' : 'collapse'}
             on:highlight={onChartHighlight} />
-        <canvasview bind:this={statsCanvas} colSpan={2} row={3} visibility={statsAvailable ? 'visible' : 'collapse'} on:draw={drawStats}>
-            <IconButton
-                fontSize={20}
-                horizontalAlignment="right"
-                isEnabled={statsKey === 'waytypes'}
-                small={true}
-                text="mdi-chevron-right"
-                verticalAlignment="top"
-                on:tap={() => setStatsKey('surfaces')} />
-            <IconButton
-                fontSize={20}
-                horizontalAlignment="right"
-                isEnabled={statsKey === 'surfaces'}
-                marginRight={25}
-                small={true}
-                text="mdi-chevron-left"
-                verticalAlignment="top"
-                on:tap={() => setStatsKey('waytypes')} />
-        </canvasview>
+        <RouteStatsView
+            bind:this={statsView}
+            backgroundColor={colorWidgetBackground}
+            borderColor={colorOutlineVariant}
+            borderRadius={CARD_RADIUS}
+            colSpan={2}
+            {item}
+            margin="2 2 0 2"
+            row={3}
+            visibility={statsAvailable ? 'visible' : 'collapse'} />
 
         <!-- <AWebView
             row={3}

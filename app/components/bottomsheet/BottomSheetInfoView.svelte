@@ -7,6 +7,7 @@
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
+    import { type CurrentAscent, getCurrentAscent } from '~/utils/navigation';
     import { valhallaSettingColor, valhallaSettingIcon } from '~/utils/routing';
     import { colors, fontScaleMaxed, fonts, onFontScaleChanged } from '~/variables';
     import SymbolShape from '../common/SymbolShape';
@@ -65,7 +66,7 @@
 
     const itemsModule = getMapContext().mapModule('items');
     itemsModule.on('user_onroute_data', (event: any) => {
-        if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', false)) {
+        if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', true)) {
             nString3 = null;
             return;
         }
@@ -111,7 +112,7 @@
                     //       }
                     //   ] as any)
                     .concat(
-                        !isNaN(event.itemData.dp) && event.dplus - event.itemData.dp > 0
+                        !isNaN(event.itemData?.dp) && event.dplus - event.itemData.dp > 0
                             ? ([
                                   {
                                       text: '\n'
@@ -127,12 +128,36 @@
                               ] as any)
                             : []
                     )
+                    .concat(currentAscentSpans(getCurrentAscent(item.profile, event.onPathIndex)) as any)
             });
         } else {
             nString3 = null;
         }
         canvas?.nativeView.invalidate();
     });
+
+    /**
+     * The total remaining ascent hides what matters on a multi climb route: how much of the climb
+     * being climbed right now is left. Shown only while inside a climb.
+     */
+    function currentAscentSpans(currentAscent: CurrentAscent) {
+        if (!currentAscent || currentAscent.remainingGain <= 0) {
+            return [];
+        }
+        return [
+            {
+                text: '\n'
+            },
+            {
+                fontFamily: $fonts.mdi,
+                color: colorPrimary,
+                text: 'mdi-summit'
+            },
+            {
+                text: ' ' + convertElevation(currentAscent.remainingGain) + ' / ' + formatDistance(currentAscent.remainingDistance)
+            }
+        ];
+    }
 
     onMapLanguageChanged((lang) => updateItemText(item, lang));
     function updateItemText(it: Item = item, lang?: string) {
