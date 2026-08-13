@@ -2405,8 +2405,6 @@
     }
 </script>
 
-console.log('🚀 ~ Map.svelte ~ navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep); console.log('🚀 ~ Map.svelte ~
-navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep);
 <page
     bind:this={page}
     actionBarHidden={true}
