@@ -2408,8 +2408,8 @@
 
         <!-- fills the navigation-bar inset under both sheets: without it the map shows through and the
              sheets read as if they had lost their bottom padding -->
-        {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
+        <!-- {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
             <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={__IOS__ ? 1 : windowInsetBottom} verticalAlignment="bottom" />
-        {/if}
+        {/if} -->
     </gridlayout>
 </page>
