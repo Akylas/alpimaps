@@ -20,12 +20,19 @@ export interface MapSideButton {
     onLongPress?: (event?, button?) => void;
 }
 
-/** One entry in the map's overflow menu. `run` replaces the switch statements this used to need. */
+/**
+ * One entry in one of the map's two menus. `run` replaces the switch statements this used to need.
+ *
+ * The map has a main menu behind the top-right button and an overflow menu behind the side bar's dots,
+ * so an entry has to say which one it belongs to.
+ */
 export interface MapMenuItem {
     id: string;
     title: string;
     icon?: string;
     color?: string;
+    /** Defaults to the main menu. */
+    menu?: 'main' | 'overflow';
     /** Lower sorts earlier; the built-in entries sit at 0. */
     order?: number;
     run: () => void | Promise<void>;
@@ -92,10 +99,10 @@ export function featureSideButtons(): Readable<MapSideButton[]> {
     );
 }
 
-/** All registered features' menu entries, flattened and ordered. */
-export function featureMenuItems(): Readable<MapMenuItem[]> {
+/** Registered features' entries for one of the two menus, ordered. */
+export function featureMenuItems(menu: 'main' | 'overflow' = 'main'): Readable<MapMenuItem[]> {
     return derived(
         combine<MapMenuItem>((feature) => feature.menuItems),
-        (items) => items.slice().sort((first, second) => (first.order ?? 0) - (second.order ?? 0))
+        (items) => items.filter((item) => (item.menu ?? 'main') === menu).sort((first, second) => (first.order ?? 0) - (second.order ?? 0))
     );
 }
