@@ -3,10 +3,13 @@ import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeSc
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
 import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
+import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
+import { BillboardOrientation, BillboardScaling } from '@nativescript-community/ui-carto/vectorelements';
+import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
-import { ApplicationSettings, Color, Utils } from '@nativescript/core';
+import { ApplicationSettings, Color, ImageSource, Utils } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
@@ -17,11 +20,50 @@ import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import { requestScreenRefresh } from '~/utils/screen';
 import MapModule, { getMapContext } from './MapModule';
 import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
-import { DEFAULT_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_TILT, SETTINGS_NAVIGATION_POSITION_OFFSET, SETTINGS_NAVIGATION_TILT } from '~/utils/constants';
-import { screenHeightDips } from '~/variables';
+import {
+    DEFAULT_NAVIGATION_ARROW_MARKER,
+    DEFAULT_NAVIGATION_POSITION_OFFSET,
+    DEFAULT_NAVIGATION_TILT,
+    SETTINGS_NAVIGATION_ARROW_MARKER,
+    SETTINGS_NAVIGATION_POSITION_OFFSET,
+    SETTINGS_NAVIGATION_TILT
+} from '~/utils/constants';
+import { colors, screenHeightDips } from '~/variables';
 import { request } from '@nativescript-community/perms';
 
 const LOCATION_ANIMATION_DURATION = 300;
+/** pixels of the generated arrow bitmap: big enough to stay clean when carto scales it */
+const ARROW_BITMAP_SIZE = 96;
+
+let arrowBitmap;
+/**
+ * The heading arrow other navigation apps show instead of a dot. Drawn once into an offscreen canvas
+ * rather than shipped as an asset, so it follows the theme colors and needs no extra image files.
+ */
+function getArrowBitmap(color: string, outlineColor: string) {
+    if (!arrowBitmap) {
+        const canvas = new Canvas(ARROW_BITMAP_SIZE, ARROW_BITMAP_SIZE);
+        const size = ARROW_BITMAP_SIZE;
+        const path = new Path();
+        // a chevron pointing up, notched at the bottom so the direction is unambiguous
+        path.moveTo(size * 0.5, size * 0.08);
+        path.lineTo(size * 0.9, size * 0.92);
+        path.lineTo(size * 0.5, size * 0.7);
+        path.lineTo(size * 0.1, size * 0.92);
+        path.close();
+
+        const paint = new Paint();
+        paint.setStyle(Style.FILL);
+        paint.setColor(color);
+        canvas.drawPath(path, paint);
+        paint.setStyle(Style.STROKE);
+        paint.setStrokeWidth(size * 0.06);
+        paint.setColor(outlineColor);
+        canvas.drawPath(path, paint);
+        arrowBitmap = new ImageSource(canvas.getImage());
+    }
+    return arrowBitmap;
+}
 
 export const navigationModeStore = writable(false);
 /** whether the camera is still following the user: panning the map turns it off */
@@ -47,9 +89,9 @@ export default class UserLocationModule extends MapModule {
         if (value !== this.mUserFollow) {
             this.mUserFollow = value;
             userFollowStore.set(value);
-            if (!value) {
-                this.navigationMode = false;
-            }
+            // if (!value) {
+            //     this.navigationMode = false;
+            // }
         }
     }
     get navigationMode() {
@@ -60,6 +102,23 @@ export default class UserLocationModule extends MapModule {
         if (value) {
             this.userFollow = true;
             this.moveToUserLocation();
+        } else {
+            // the arrow hid the dot; without this it stays hidden until the next fix arrives, and if
+            // the watch just stopped that never happens, leaving only the white halo on the map
+            this.showArrowMarker(false);
+        }
+    }
+
+    /** Swaps between the heading arrow and the plain dot, keeping exactly one of them visible. */
+    private showArrowMarker(useArrow: boolean) {
+        if (this.userArrowMarker) {
+            this.userArrowMarker.visible = useArrow;
+        }
+        if (this.userMarker) {
+            this.userMarker.visible = !useArrow;
+        }
+        if (this.userBackMarker) {
+            this.userBackMarker.visible = !useArrow;
         }
     }
     override onMapDestroyed() {
@@ -167,76 +226,82 @@ export default class UserLocationModule extends MapModule {
             accuracySize = 11;
             accuracyColor = 'orange';
         }
-        if (!this.userMarker) {
-            const posWithoutAltitude = { lat: position.lat, lon: position.lon };
-            this.getOrCreateLocalVectorLayer();
-            const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
-            if (accuracyMarkerEnabled) {
-                this.accuracyMarker = new Polygon<LatLonKeys>({
-                    positions: this.getCirclePoints(position),
-                    styleBuilder: {
-                        size: 16,
-                        color: new Color(70, 14, 122, 254),
-                        lineStyleBuilder: {
-                            color: new Color(150, 14, 122, 254),
-                            width: 1
+
+        const useArrow = this.navigationMode && ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_ARROW_MARKER, DEFAULT_NAVIGATION_ARROW_MARKER) && position.bearing >= 0;
+        const newPos = { lat: position.lat, lon: position.lon };
+        if (!useArrow) {
+            if (!this.userMarker) {
+                this.getOrCreateLocalVectorLayer();
+                const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
+                if (accuracyMarkerEnabled) {
+                    this.accuracyMarker = new Polygon<LatLonKeys>({
+                        positions: this.getCirclePoints(position),
+                        styleBuilder: {
+                            size: 16,
+                            color: new Color(70, 14, 122, 254),
+                            lineStyleBuilder: {
+                                color: new Color(150, 14, 122, 254),
+                                width: 1
+                            }
                         }
+                    });
+                    this.localBackVectorDataSource.add(this.accuracyMarker);
+                }
+
+                this.userBackMarker = new Point<LatLonKeys>({
+                    position: newPos,
+                    styleBuilder: {
+                        size: 17,
+                        color: '#ffffff'
                     }
                 });
-                this.localBackVectorDataSource.add(this.accuracyMarker);
-            }
-
-            this.userBackMarker = new Point<LatLonKeys>({
-                position: posWithoutAltitude,
-                styleBuilder: {
-                    size: 17,
-                    color: '#ffffff'
-                }
-            });
-            this.userMarker = new Point<LatLonKeys>({
-                metaData: {
-                    userMarker: 'true'
-                },
-                position: posWithoutAltitude,
-                styleBuilder: {
-                    size: accuracyMarkerEnabled ? 14 : accuracySize,
-                    color: accuracyColor
-                }
-            });
-            this.localVectorDataSource.add(this.userBackMarker);
-            this.localVectorDataSource.add(this.userMarker);
-        } else {
-            this.userMarker.color = accuracyColor;
-            const newPos = { lat: position.lat, lon: position.lon };
-            // TODO: fix tween animation which is only working once
-            // console.log('animating position', { lat: this.lastUserLocation.lat, lon: this.lastUserLocation.lon }, { lat: position.lat, lon: position.lon });
-            // try {
-            //     new Tween({
-            //         onRender: (newPos: any) => {
-            //             try {
-            //                 console.log('onRender', newPos);
-            //                 if (this.userMarker) {
-            //                     this.accuracyMarker.positions = this.getCirclePoints(newPos);
-            //                     this.userBackMarker.position = newPos;
-            //                     this.userMarker.position = newPos;
-            //                 }
-            //             } catch (error) {
-            //                 console.error(error);
-            //             }
-            //         }
-            //     }).tween({ lat: this.lastUserLocation.lat, lon: this.lastUserLocation.lon, time: 0 }, { lat: position.lat, lon: position.lon, time: 1 }, LOCATION_ANIMATION_DURATION);
-            // } catch (err) {
-            //     console.error(err);
-            // }
-            this.userBackMarker.position = newPos;
-            this.userMarker.position = newPos;
-            if (this.accuracyMarker) {
-                this.accuracyMarker.positions = this.getCirclePoints(newPos);
-                this.accuracyMarker.visible = accuracy > 20;
+                this.userMarker = new Point<LatLonKeys>({
+                    metaData: {
+                        userMarker: 'true'
+                    },
+                    position: newPos,
+                    styleBuilder: {
+                        size: accuracyMarkerEnabled ? 14 : accuracySize,
+                        color: accuracyColor
+                    }
+                });
+                this.localVectorDataSource.add(this.userBackMarker);
+                this.localVectorDataSource.add(this.userMarker);
             } else {
-                this.userMarker.size = accuracySize;
+                this.userMarker.color = accuracyColor;
+                const newPos = { lat: position.lat, lon: position.lon };
+
+                this.userBackMarker.position = newPos;
+                this.userMarker.position = newPos;
+                if (this.accuracyMarker) {
+                    this.accuracyMarker.positions = this.getCirclePoints(newPos);
+                    this.accuracyMarker.visible = accuracy > 20;
+                } else {
+                    this.userMarker.size = accuracySize;
+                }
             }
+        } else {
+            if (!this.userArrowMarker) {
+                this.getOrCreateLocalVectorLayer();
+                const { colorOnPrimary, colorPrimary } = get(colors);
+                this.userArrowMarker = new Marker<LatLonKeys>({
+                    position: newPos,
+                    styleBuilder: {
+                        size: 30,
+                        bitmap: getArrowBitmap(colorPrimary, colorOnPrimary),
+                        orientationMode: BillboardOrientation.GROUND,
+                        scalingMode: BillboardScaling.CONST_SCREEN_SIZE
+                    }
+                });
+                this.localVectorDataSource.add(this.userArrowMarker);
+            } else {
+                this.userArrowMarker.position = newPos;
+                this.userArrowMarker.visible = true;
+            }
+            this.userArrowMarker.rotation = -position.bearing;
         }
+
+        this.showArrowMarker(useArrow);
         this.lastUserLocation = position;
         const inBackground = getBGServiceInstance().appInBackground;
         if (this.userFollow) {
@@ -245,12 +310,13 @@ export default class UserLocationModule extends MapModule {
         if (__ANDROID__ && inBackground) {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
-                requestScreenRefresh();
+                requestScreenRefresh(this.geoHandler);
             }
         }
     }
     /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
     navigationZoom = 0;
+    userArrowMarker: Marker<LatLonKeys>;
 
     moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
@@ -308,15 +374,19 @@ export default class UserLocationModule extends MapModule {
         this.geoHandler = null;
     }
 
-    async startWatchLocation() {
-        if (get(watchingLocation) || !this.geoHandler) {
+    /**
+     * @param force restart even when already watching, for callers that just changed the watch
+     * options and need them applied. Without it they had to call startWatch a second time themselves.
+     */
+    async startWatchLocation({ force = false, opts = {} } = {}) {
+        if (!this.geoHandler || (get(watchingLocation) && !force)) {
             return;
         }
         if (__ANDROID__ && !this.geoHandler.stopGpsBackground) {
             await request('notification');
         }
         await this.geoHandler.enableLocation();
-        await this.geoHandler.startWatch();
+        await this.geoHandler.startWatch(opts);
         this.userFollow = true;
         watchingLocation.set(true);
         if (!get(queryingLocation)) {
@@ -326,11 +396,28 @@ export default class UserLocationModule extends MapModule {
             });
         }
     }
+    /**
+     * Puts the location stores back in step with the watch actually running. Navigation drives the
+     * watch directly, so without this the button can end up saying the opposite of what the gps does.
+     */
+    syncWatchingState() {
+        const watching = !!this.geoHandler?.isWatching();
+        DEV_LOG && console.log('syncWatchingState', watching, get(watchingLocation));
+        if (get(watchingLocation) !== watching) {
+            watchingLocation.set(watching);
+        }
+        if (!watching) {
+            queryingLocation.set(false);
+            this.userFollow = false;
+        }
+    }
+
     stopWatchLocation() {
         // console.log('stopWatchLocation');
         this.geoHandler.stopWatch();
         watchingLocation.set(false);
         queryingLocation.set(false);
+        this.userFollow = false;
         //  if (!queryingLocation) {
         //     showSnack({
         //         message: lc('stopped_watching_location')
