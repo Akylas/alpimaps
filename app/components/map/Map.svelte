@@ -49,6 +49,7 @@
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
     import { createTileDecoder, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import { registerMapModule } from '~/mapModules/registry';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
@@ -591,16 +592,16 @@
                 bottomSheetStepIndex = index;
             },
             showMapMenu,
-            showMapOptions,
-            mapModules: {
-                items: itemModule,
-                userLocation: new UserLocationModule(),
-                customLayers: customLayersModule,
-                directionsPanel,
-                mapResultsPager,
-                mapScrollingWidgets
-            }
+            showMapOptions
         });
+
+        // registration order is dispatch order: the first module to handle a click wins
+        registerMapModule('items', itemModule);
+        registerMapModule('userLocation', new UserLocationModule());
+        registerMapModule('customLayers', customLayersModule);
+        registerMapModule('directionsPanel', directionsPanel);
+        registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
+        // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
             mapContext.runOnModules('onServiceLoaded', handler);
