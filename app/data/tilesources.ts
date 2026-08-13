@@ -122,7 +122,7 @@ export const data: { [k: string]: Provider } = {
         },
         sourceOptions: {
             httpHeaders: {
-                'User-Agent': 'AlpiMaps'
+                'User-Agent': __APP_ID__
             },
             maxZoom: 16
         },
@@ -215,7 +215,7 @@ export const data: { [k: string]: Provider } = {
             minZoom: 0,
             maxZoom: 14,
             httpHeaders: {
-                'User-Agent': 'AlpiMaps'
+                'User-Agent': __APP_ID__
             }
         },
         layerOptions: {
@@ -229,7 +229,7 @@ export const data: { [k: string]: Provider } = {
         sourceOptions: {
             maxZoom: 14,
             httpHeaders: {
-                'User-Agent': 'AlpiMaps'
+                'User-Agent': __APP_ID__
             }
         }
     },
@@ -240,7 +240,7 @@ export const data: { [k: string]: Provider } = {
             minZoom: 2,
             maxZoom: 19,
             httpHeaders: {
-                'User-Agent': 'AlpiMaps'
+                'User-Agent': __APP_ID__
             }
         },
         attribution: '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
