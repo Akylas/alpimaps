@@ -22,6 +22,23 @@ export function isPickerPending(id: string) {
     return pendingPickers.has(id);
 }
 
+let ignoreNextMapClick = false;
+
+/**
+ * A tap that landed on a feature must not also count as a tap on the empty map, which would drop the
+ * selection the picker is about to make. Reading it consumes it.
+ */
+export function consumeIgnoreNextMapClick() {
+    const ignore = ignoreNextMapClick;
+    ignoreNextMapClick = false;
+    return ignore;
+}
+
+/** The tap turned out to be an ordinary feature tap after all, so let it through. */
+export function clearIgnoreNextMapClick() {
+    ignoreNextMapClick = false;
+}
+
 export interface FeaturePickerOptions {
     /** Identifies this picker to `isPickerPending`. */
     id: string;
@@ -47,10 +64,8 @@ export class FeaturePicker {
     }
 
     /**
-     * Collects one feature, restarting the window.
-     *
-     * Returns true when the feature was not already collected, which is the caller's cue to swallow
-     * the map click that follows — otherwise the tap would also be treated as a tap on the map.
+     * Collects one feature, restarting the window. Swallows the map click that follows a genuinely
+     * new one, so the tap does not also register as a tap on the empty map.
      */
     add(item: IItem) {
         if (this.timer) {
@@ -64,6 +79,7 @@ export class FeaturePicker {
             return false;
         }
         this.items.push(item);
+        ignoreNextMapClick = true;
         return true;
     }
 
