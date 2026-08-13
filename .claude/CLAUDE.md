@@ -1,5 +1,18 @@
 # NativeScript — working agreement
 
+## Repo facts
+
+Things an agent cannot derive by looking, and will get wrong if it assumes. Skills point here rather
+than restating any of it — see [`tools/.claude/skills/README.md`](../tools/.claude/skills/README.md).
+
+- **Default branch is `master`.** Derive rather than assume: `git symbolic-ref --short refs/remotes/origin/HEAD`.
+- **There is no test runner.** No vitest/jest, no `yarn test`. The only CI workflow is `release.yml` — nothing lints, tests or commit-lints your work. `yarn svelte-check` is the real gate.
+- **Svelte is 4.2.20 and pinned there** by `@nativescript-community/svelte-native`'s peer dep. Runes and svelte-5-only syntax are unavailable.
+- **`app/components/three/**` is excluded from `tsconfig.json`**, so `svelte-check` never sees it.
+- **`app/` and `tools/app` (`@shared`) contain drifted forks of the same files** — components under `app/components/common/`, plus `variables.ts`, `helpers/theme.ts`, `utils/ui`. Check both before editing either. `tools/` is a submodule shared with the other Akylas apps: changes there need their own commit and land in every consumer.
+- **`mapContext` (`app/mapModules/MapModule.ts`) is assembled with `as any`.** Its `MapContext` interface is documentation, not a guarantee — several members have already been found to disagree with the runtime. Verify against the implementation in `Map.svelte`, and expect a corrected type to surface real errors.
+- **Use `./node_modules/.bin/<tool>`, not `npx`.** Under Yarn 4, `npx` can trigger a dependency re-resolve and silently rewrite `yarn.lock`.
+
 ## Working principles
 
 - **Ask if ambiguous.** Never decide silently — surface the choice and let the user pick.
