@@ -54,6 +54,10 @@ export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
 export const SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD = 'navigation_grade_look_ahead';
 export const SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT = 'navigation_chart_current_ascent';
 export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
+export const SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE = 'navigation_off_route_distance';
+export const SETTINGS_NAVIGATION_OFF_ROUTE_FIXES = 'navigation_off_route_fixes';
+export const SETTINGS_NAVIGATION_AUTO_REROUTE = 'navigation_auto_reroute';
+export const SETTINGS_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE = 'navigation_auto_reroute_max_distance';
 
 export const SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW = 'elevation_profile_smooth_window';
 export const SETTINGS_ELEVATION_PROFILE_FILTER_STEP = 'elevation_profile_filter_step';
@@ -117,6 +121,19 @@ export const DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD = 100;
 /** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
 export const DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT = true;
 export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
+/**
+ * meters from the route past which a fix counts as off route. The gps accuracy is added on top, so
+ * this is the margin over a *perfect* fix: a route drawn on a road the user walks beside still fits.
+ */
+export const DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE = 25;
+/** consecutive fixes beyond that distance before we believe it: a single bad fix means nothing */
+export const DEFAULT_NAVIGATION_OFF_ROUTE_FIXES = 3;
+export const DEFAULT_NAVIGATION_AUTO_REROUTE = true;
+/**
+ * meters, straight line to the point we would send the user back to. Past this a way back is a
+ * decision, not a detail, so it is offered instead of taken.
+ */
+export const DEFAULT_NAVIGATION_AUTO_REROUTE_MAX_DISTANCE = 1000;
 
 export const DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW = 3;
 export const DEFAULT_ELEVATION_PROFILE_FILTER_STEP = 5;

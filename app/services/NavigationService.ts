@@ -1,10 +1,11 @@
 import Observable from '@nativescript-community/observable';
-import { MapPosVector } from '@nativescript-community/ui-carto/core';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
 import type { GeoHandler, GeoLocation } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
-import { Item, RoutingAction } from '~/models/Item';
+import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import { IItem, Item, RoutingAction } from '~/models/Item';
+import { NavigationDetour, NavigationRoute, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { packageService } from '~/services/PackageService';
 import {
     NavigationState,
@@ -12,15 +13,23 @@ import {
     navigationAutoPause,
     navigationAutoPauseDelay,
     navigationAutoPauseSpeed,
+    navigationAutoReroute,
+    navigationAutoRerouteMaxDistance,
     navigationAutoZoom,
     navigationBackgroundUpdateInterval,
     navigationBearingRefreshAngle,
+    navigationDetour,
     navigationGpsUpdateDistance,
     navigationItem,
     navigationLocation,
     navigationManeuverWakeDistance,
+    navigationOffRouteDistance,
+    navigationOffRouteFixes,
+    navigationOriginalItem,
     navigationProgress,
     navigationRecordStats,
+    navigationRejoinTarget,
+    navigationRerouting,
     navigationScreenRefreshInterval,
     navigationSpeedDropWake,
     navigationSpeedDropWakeRatio,
@@ -38,7 +47,8 @@ import {
 } from '~/stores/navigationStore';
 import { watchingLocation } from '~/stores/mapStore';
 import { computeDistanceBetween } from '~/utils/geo';
-import { RouteProgress, computeNavigationLookAhead, computeRouteProgress, isNavigableRoute, projectOnRoute } from '~/utils/navigation';
+import { OffRouteDetector, RouteProgress, angleDifference, chooseRejoinTarget, computeNavigationLookAhead, isNavigableRoute } from '~/utils/navigation';
+import { instructionsFromResult } from '~/utils/routing';
 import { requestScreenRefresh } from '~/utils/screen';
 
 const TAG = '[NavigationService]';
@@ -46,6 +56,10 @@ const TAG = '[NavigationService]';
 export const NavigationStateEvent = 'navigationState';
 export const NavigationProgressEvent = 'navigationProgress';
 export const NavigationArrivedEvent = 'navigationArrived';
+/** fired on the transitions only, with the progress of the fix that decided it */
+export const NavigationOffRouteEvent = 'navigationOffRoute';
+/** a detour or a whole new route was applied, `data.auto` telling whether the user asked for it */
+export const NavigationReroutedEvent = 'navigationRerouted';
 
 /** fraction of the screen height that lies ahead of the user, given the navigation focus offset */
 const AHEAD_SCREEN_FRACTION = 0.75;
@@ -63,15 +77,20 @@ const SPEED_DROP_MIN_INTERVAL = 20000;
 const PAUSED_UPDATE_INTERVAL = 10000;
 /** meters from the end at which we consider the route done */
 const ARRIVAL_DISTANCE = 30;
+/** ms between two automatic reroute attempts, so a failing one does not run on every fix */
+const REROUTE_RETRY_INTERVAL = 30000;
 
 const mapContext = getMapContext();
 
 export class NavigationService extends Observable {
     geoHandler: GeoHandler;
 
-    private item: Item = null;
-    /** cached for the whole navigation: rebuilding the native vector on every fix would be wasteful */
-    private positions: MapPosVector<LatLonKeys> = null;
+    /**
+     * The route being followed — never the selected item itself, so a reroute cannot rewrite the
+     * user's own route. Its positions are cached for the whole navigation: rebuilding the native
+     * vector on every fix would be wasteful.
+     */
+    private route: NavigationRoute = null;
     private speeds: number[] = [];
     private currentZoom = 0;
     private zoomOutHoldCount = 0;
@@ -81,7 +100,12 @@ export class NavigationService extends Observable {
     private autoPaused = false;
     private arrived = false;
     private listening = false;
-    private lastOnPathIndex = -1;
+    /** owns everything about where the user is relative to the route, and whether they left it */
+    private readonly offRouteDetector = new OffRouteDetector(() => ({ distance: get(navigationOffRouteDistance), fixes: get(navigationOffRouteFixes) }));
+    private wasOffRoute = false;
+    /** one reroute at a time, and never one per fix while the last one is still failing */
+    private rerouting = false;
+    private lastRerouteAttempt = 0;
     private lastScreenRefresh = 0;
     /** heading of the last fix, and the heading the map was last drawn at */
     private lastBearing = -1;
@@ -99,7 +123,10 @@ export class NavigationService extends Observable {
         return this.state !== NavigationState.IDLE;
     }
     get navigatedItem() {
-        return this.item;
+        return this.route?.item;
+    }
+    get navigationRoute() {
+        return this.route;
     }
     private get userLocationModule() {
         return mapContext.mapModule('userLocation');
@@ -130,8 +157,7 @@ export class NavigationService extends Observable {
             await this.stop();
         }
         DEV_LOG && console.log(TAG, 'start', item.id);
-        this.item = item;
-        this.positions = packageService.getRouteItemPoses(item);
+        this.route = new NavigationRoute(item);
         this.reset();
 
         const userLocationModule = this.userLocationModule;
@@ -180,10 +206,11 @@ export class NavigationService extends Observable {
                 userLocationModule.navigationZoom = 0;
                 userLocationModule.navigationMode = false;
             }
-            this.item = null;
-            this.positions = null;
+            this.route = null;
             this.reset();
             navigationItem.set(null);
+            navigationOriginalItem.set(null);
+            navigationDetour.set(null);
             navigationProgress.set(null);
             navigationLocation.set(null);
             navigationStats.set(null);
@@ -266,7 +293,12 @@ export class NavigationService extends Observable {
         this.belowPauseSpeedSince = 0;
         this.autoPaused = false;
         this.arrived = false;
-        this.lastOnPathIndex = -1;
+        this.offRouteDetector.reset();
+        this.wasOffRoute = false;
+        this.rerouting = false;
+        this.lastRerouteAttempt = 0;
+        navigationRejoinTarget.set(null);
+        navigationRerouting.set(false);
         this.lastScreenRefresh = Date.now();
         this.pendingTurnRefreshIndex = -1;
         this.lastBearing = -1;
@@ -364,6 +396,7 @@ export class NavigationService extends Observable {
                 this.publishStats();
             }
 
+            this.checkOffRoute(progress, location);
             this.updateZoom(progress);
             this.checkArrival(progress);
             this.checkWakeTriggers(progress, speed);
@@ -374,28 +407,225 @@ export class NavigationService extends Observable {
     }
 
     private computeProgress(location: GeoLocation): RouteProgress {
-        // search a window ahead of where we were: progress along a route is monotonic, and a full scan
-        // can match the other leg of a switchback, which makes the distance to the maneuver grow
-        let projection = projectOnRoute(location, this.positions, { fromIndex: this.lastOnPathIndex });
-        if (!projection && this.lastOnPathIndex !== -1) {
-            // nothing in the window: we either left the route or rejoined it elsewhere, so look everywhere
-            projection = projectOnRoute(location, this.positions);
-            DEV_LOG && console.log(TAG, 'lost the route near', this.lastOnPathIndex, 'rescanned ->', projection?.index ?? 'off route');
+        const route = this.route;
+        let state = this.offRouteDetector.update(location, route.activePositions);
+        if (route.hasDetour) {
+            const done = route.shouldDropDetour(state, location, this.offRouteDetector.toleranceFor(location));
+            // leaving the detour too: the user is not taking it, so stop measuring against it and go
+            // back to the plain off-route handling, which can offer them another one
+            if (done || state.offRoute) {
+                DEV_LOG && console.log(TAG, done ? 'detour done' : 'detour left', 'resuming the route at', route.detour.rejoinIndex);
+                this.setDetour(null, route.detour.rejoinIndex);
+                state = this.offRouteDetector.update(location, route.activePositions);
+            }
         }
-        if (!projection) {
-            this.lastOnPathIndex = -1;
-            return { onPathIndex: -1 };
+        // while off route the figures keep coming from where the user left the route: blanking the whole
+        // bar is worse than showing what is left from a point they can see on the map
+        return route.progressFrom(state, location);
+    }
+
+    /**
+     * Swapping the detour in or out changes the polyline everything is projected against, so the
+     * detector has to be told: its indices refer to the old one and mean nothing on the new one.
+     */
+    private setDetour(detour: NavigationDetour, resumeIndex = -1) {
+        if (detour) {
+            this.route.setDetour(detour);
+            this.offRouteDetector.reset();
+        } else {
+            this.route.clearDetour();
+            this.offRouteDetector.resetTo(resumeIndex);
         }
-        this.lastOnPathIndex = projection.index;
-        return computeRouteProgress({
-            item: this.item,
-            location,
-            positions: this.positions,
-            onPathIndex: projection.index,
-            distanceToOnPathIndex: projection.distanceToIndex,
-            computeRemaining: true,
-            computeInstruction: true
+        navigationDetour.set(detour);
+    }
+
+    /** The transitions are what the ui and the reroute care about, not the per-fix state. */
+    private checkOffRoute(progress: RouteProgress, location: GeoLocation) {
+        const offRoute = !!progress.offRoute;
+        // the way back is worth keeping current while off route: it is both drawn on the map and what
+        // a reroute is computed to, and it moves as the user does
+        navigationRejoinTarget.set(offRoute ? this.rejoinTargetFor(progress) : null);
+        if (offRoute !== this.wasOffRoute) {
+            this.wasOffRoute = offRoute;
+            DEV_LOG && console.log(TAG, offRoute ? 'off route by' : 'back on route, was', Math.round(progress.distanceFromRoute ?? 0), 'm near index', progress.onPathIndex);
+            this.notify({ eventName: NavigationOffRouteEvent, object: this, data: progress });
+            if (__ANDROID__ && this.appInBackground) {
+                // leaving the route is exactly the moment the user needs to see the screen without asking
+                this.refreshScreen(offRoute ? 'went off route' : 'back on route');
+            }
+        }
+        if (offRoute) {
+            this.checkAutoReroute(location);
+        }
+    }
+
+    /** Where an off-route user is being sent back to, on the base route rather than on any detour. */
+    private rejoinTargetFor(progress: RouteProgress) {
+        const route = this.route;
+        if (!route || route.hasDetour) {
+            return null;
+        }
+        return chooseRejoinTarget({
+            positions: route.positions,
+            instructions: route.item.instructions,
+            fromIndex: progress.onPathIndex,
+            closestIndex: progress.closestIndex
         });
+    }
+
+    /**
+     * Takes the user back to the route without being asked, when the way back is short enough that
+     * asking would be noise. Anything further is a decision — which way to go, or whether to go back at
+     * all — and is left to the two buttons in the navigation bar.
+     */
+    private checkAutoReroute(location: GeoLocation) {
+        if (!get(navigationAutoReroute) || this.rerouting || this.route?.hasDetour) {
+            return;
+        }
+        const now = Date.now();
+        if (now - this.lastRerouteAttempt < REROUTE_RETRY_INTERVAL) {
+            return;
+        }
+        const target = get(navigationRejoinTarget);
+        if (!target) {
+            return;
+        }
+        // straight line, on purpose: it is what we know before routing, and routing is what we are
+        // deciding whether to pay for
+        const distance = computeDistanceBetween(location, target.position);
+        if (distance > get(navigationAutoRerouteMaxDistance)) {
+            DEV_LOG && console.log(TAG, 'auto reroute skipped, rejoin point is', Math.round(distance), 'm away');
+            return;
+        }
+        if (!packageService.offlineRoutingSearchService()) {
+            // online routing off route is exactly where there is no network: never wait on it silently
+            DEV_LOG && console.log(TAG, 'auto reroute skipped, no offline routing');
+            return;
+        }
+        this.lastRerouteAttempt = now;
+        this.backToRoute(true).catch((error) => console.error(TAG, 'auto reroute failed', error, error.stack));
+    }
+
+    /** valhalla profile and costing options of the route being followed, so a reroute matches it */
+    private routingOptionsForCurrentRoute() {
+        const item = this.route?.item;
+        const profile: ValhallaProfile = item?.properties?.route?.type ?? 'pedestrian';
+        return { profile, costingOptions: item?.route?.costing_options };
+    }
+
+    /**
+     * Routes from where the user is back onto the route, as a detour: the route itself is left alone,
+     * and the detour is dropped by itself once they are back on it.
+     */
+    async backToRoute(auto = false) {
+        const route = this.route;
+        const location = get(navigationLocation);
+        const target = get(navigationRejoinTarget);
+        if (!route || !location || !target || this.rerouting) {
+            return false;
+        }
+        const { costingOptions, profile } = this.routingOptionsForCurrentRoute();
+        this.rerouting = true;
+        navigationRerouting.set(true);
+        try {
+            DEV_LOG && console.log(TAG, 'back to route', auto ? '(auto)' : '(asked)', 'to index', target.index);
+            const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
+                points: [{ lat: location.lat, lon: location.lon }, target.position],
+                projection: mapContext.getProjection(),
+                profile,
+                costingOptions
+            });
+            // the user walks while we compute: an automatic reroute they no longer need must not apply
+            if (!this.isNavigating || this.route !== route || (auto && !this.offRouteDetector.offRoute)) {
+                DEV_LOG && console.log(TAG, 'back to route dropped, no longer needed');
+                return false;
+            }
+            this.setDetour({ positions, instructions: instructionsFromResult(result), rejoinIndex: target.index, totalDistance, totalTime });
+            this.notify({ eventName: NavigationReroutedEvent, object: this, data: { auto, kind: 'detour' } });
+            if (__ANDROID__ && this.appInBackground) {
+                this.refreshScreen('rerouted back to the route');
+            }
+            return true;
+        } finally {
+            this.rerouting = false;
+            navigationRerouting.set(false);
+        }
+    }
+
+    /**
+     * Recomputes the whole route from here to the destination. The user's own route is kept aside,
+     * still drawn, and put back by `undoReroute`.
+     */
+    async rerouteToDestination() {
+        const route = this.route;
+        const location = get(navigationLocation);
+        const destination = route?.destination;
+        if (!route || !location || !destination || this.rerouting) {
+            return false;
+        }
+        const { costingOptions, profile } = this.routingOptionsForCurrentRoute();
+        this.rerouting = true;
+        navigationRerouting.set(true);
+        try {
+            DEV_LOG && console.log(TAG, 'rerouting to the destination');
+            const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
+                points: [{ lat: location.lat, lon: location.lon }, destination],
+                projection: mapContext.getProjection(),
+                profile,
+                costingOptions
+            });
+            if (!this.isNavigating || this.route !== route) {
+                return false;
+            }
+            const item: IItem = {
+                type: 'Feature',
+                properties: {
+                    ...route.item.properties,
+                    // an id would make it look like a saved item to everything that keys on one
+                    id: undefined,
+                    name: route.item.properties?.name,
+                    route: { ...route.item.properties?.route, totalTime, totalDistance }
+                },
+                geometry: positionsToGeoJSONLine(positions),
+                route: { ...route.item.route, totalTime, totalDistance, waypoints: undefined, steps: undefined },
+                instructions: instructionsFromResult(result)
+            };
+            route.replaceBase(item, positions);
+            this.offRouteDetector.reset();
+            navigationDetour.set(null);
+            navigationOriginalItem.set(route.originalItem);
+            navigationItem.set(item);
+            this.notify({ eventName: NavigationReroutedEvent, object: this, data: { auto: false, kind: 'route' } });
+            if (__ANDROID__ && this.appInBackground) {
+                this.refreshScreen('rerouted to the destination');
+            }
+            return true;
+        } finally {
+            this.rerouting = false;
+            navigationRerouting.set(false);
+        }
+    }
+
+    /** Puts back what was being navigated before the last reroute, detour or full route. */
+    undoReroute() {
+        const route = this.route;
+        if (!route) {
+            return false;
+        }
+        if (route.hasDetour) {
+            this.setDetour(null, route.detour.rejoinIndex);
+            return true;
+        }
+        if (route.originalItem) {
+            const original = route.originalItem;
+            route.replaceBase(original);
+            route.originalItem = null;
+            this.offRouteDetector.reset();
+            navigationOriginalItem.set(null);
+            navigationItem.set(original);
+            return true;
+        }
+        return false;
     }
 
     private publishStats() {
@@ -428,7 +658,9 @@ export class NavigationService extends Observable {
             return;
         }
         const speed = this.medianSpeed();
-        const lookAhead = computeNavigationLookAheadFor(progress, speed);
+        // off route the maneuver distances describe a point the user is walking away from: let the
+        // speed alone decide how much road to frame until they are back on it
+        const lookAhead = computeNavigationLookAheadFor(progress.stale ? { onPathIndex: progress.onPathIndex } : progress, speed);
         const zoom = this.zoomForLookAhead(lookAhead);
         if (zoom === null) {
             DEV_LOG && console.log(TAG, 'zoom: could not measure the map', lookAhead);
@@ -497,14 +729,16 @@ export class NavigationService extends Observable {
     }
 
     private checkArrival(progress: RouteProgress) {
-        if (this.arrived || progress.onPathIndex === -1) {
+        // off route the figures are the last on-route ones, and a detour ends at the rejoin point, not
+        // at the destination: neither is in a position to say the route is done
+        if (this.arrived || progress.onPathIndex === -1 || progress.stale || progress.onDetour) {
             return;
         }
         const finishing = progress.instruction?.a === RoutingAction.FINISH && progress.distanceToNextInstruction <= ARRIVAL_DISTANCE;
         const atEnd = !progress.instruction && progress.remainingDistance <= ARRIVAL_DISTANCE;
         if (finishing || atEnd) {
             this.arrived = true;
-            this.notify({ eventName: NavigationArrivedEvent, object: this, data: this.item });
+            this.notify({ eventName: NavigationArrivedEvent, object: this, data: this.route?.item });
             if (__ANDROID__) {
                 requestScreenRefresh(this.geoHandler);
             }
@@ -547,7 +781,8 @@ export class NavigationService extends Observable {
             return;
         }
         const wakeDistance = get(navigationManeuverWakeDistance);
-        if (progress.instruction && progress.distanceToNextInstruction <= wakeDistance) {
+        // a stale distance to the next maneuver would announce a turn the user is not walking towards
+        if (!progress.stale && progress.instruction && progress.distanceToNextInstruction <= wakeDistance) {
             // one wake per maneuver, else it fires again on every fix as we close in
             if (progress.instructionIndex !== this.lastWokenInstructionIndex) {
                 this.lastWokenInstructionIndex = progress.instructionIndex;
@@ -611,12 +846,6 @@ export class NavigationService extends Observable {
             this.pause(true);
         }
     }
-}
-
-/** Smallest angle between two headings, so 350° and 10° are 20° apart rather than 340°. */
-function angleDifference(a: number, b: number) {
-    const diff = Math.abs(a - b) % 360;
-    return diff > 180 ? 360 - diff : diff;
 }
 
 function computeNavigationLookAheadFor(progress: RouteProgress, speed: number) {

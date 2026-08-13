@@ -13,7 +13,8 @@
     $: ({ colorOutlineVariant, colorWidgetBackground } = $colors);
 </script>
 
-<!-- the rounded surface every navigation widget floats on, so the map shows through between them -->
-<gridlayout backgroundColor={colorWidgetBackground} borderRadius={CARD_RADIUS} {...$$restProps}>
+<!-- the rounded surface every navigation widget floats on, so the map shows through between them.
+     The tap is forwarded so a card can be an action without needing a button inside it -->
+<gridlayout backgroundColor={colorWidgetBackground} borderRadius={CARD_RADIUS} {...$$restProps} on:tap>
     <slot />
 </gridlayout>
