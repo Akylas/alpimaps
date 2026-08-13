@@ -1105,8 +1105,8 @@
                     } else if (item.type === 'slider') {
                         await showSliderPopover({
                             anchor: event.object,
-                            value: (item.currentValue || item.rightValue)?.(),
                             ...item,
+                            value: (item.currentValue || item.value || item.rightValue)?.(),
                             onChange(value) {
                                 if (value !== null) {
                                     if (item.transformValue) {

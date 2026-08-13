@@ -27,8 +27,9 @@ import { File, Folder, knownFolders, path } from '@nativescript/core/file-system
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
-import { Address, AscentSegment, IItem, IItem as Item, Route, RouteProfile } from '~/models/Item';
+import { Address, AscentSegment, IItem, IItem as Item, Route, RouteInstruction, RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
+import { projectOnRoute } from '~/utils/navigation';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
@@ -144,6 +145,41 @@ const geocodingMapping = [
 ];
 
 let geocodingAvailable = true;
+/** valhalla rejects requests with too many locations, and a recorded track has thousands of points */
+const TRACK_ROUTING_MAX_POINTS = 40;
+/** meters: closer via points than this add nothing but request size */
+const TRACK_ROUTING_MIN_SPACING = 150;
+/** meters: how far a routed maneuver may sit from the recorded track and still be matched to it */
+const TRACK_INSTRUCTION_TOLERANCE = 60;
+
+/**
+ * Picks via points spread along a track: keeps the ends, then adds points no closer than
+ * TRACK_ROUTING_MIN_SPACING, thinning further if that still leaves too many for valhalla.
+ */
+function sampleTrackForRouting(positions: MapPosVector<LatLonKeys>) {
+    const size = positions.size();
+    const candidates: MapPos<LatLonKeys>[] = [];
+    let previous = fromNativeMapPos<LatLonKeys>(positions.get(0));
+    candidates.push(previous);
+    for (let index = 1; index < size - 1; index++) {
+        const current = fromNativeMapPos<LatLonKeys>(positions.get(index));
+        if (computeDistanceBetween(previous, current) >= TRACK_ROUTING_MIN_SPACING) {
+            candidates.push(current);
+            previous = current;
+        }
+    }
+    const last = fromNativeMapPos<LatLonKeys>(positions.get(size - 1));
+
+    const result: MapPos<LatLonKeys>[] = [];
+    // keep both ends whatever the thinning: they are the actual start and destination
+    const step = Math.max(1, Math.ceil(candidates.length / (TRACK_ROUTING_MAX_POINTS - 1)));
+    for (let index = 0; index < candidates.length; index += step) {
+        result.push(candidates[index]);
+    }
+    result.push(last);
+    return result;
+}
+
 class PackageService extends Observable {
     // vectorTileDecoder: MBVectorTileDecoder;
     hillshadeLayer?: HillshadeRasterTileLayer;
@@ -891,7 +927,8 @@ class PackageService extends Observable {
     }
 
     async getStats({
-        attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length'],
+        // the shape indices are what lets us say which surface is *ahead*, not just how much of it there is
+        attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length', 'edge.begin_shape_index', 'edge.end_shape_index'],
         item,
         points,
         profile,
@@ -967,6 +1004,8 @@ class PackageService extends Observable {
         const stats: {
             [k: string]: { [k: string]: number };
         } = { surfaces: {}, waytypes: {} };
+        // where each surface actually is along the route, so navigation can show what is coming up
+        const surfaceSegments: { id: string; start: number; end: number }[] = [];
         const totalDistanceKm = route.totalDistance / 1000;
         try {
             for (let index = 0; index < edges.length; index++) {
@@ -989,6 +1028,15 @@ class PackageService extends Observable {
                 stats.waytypes[key] = stats.waytypes[key] ? stats.waytypes[key] + edge.length : edge.length;
                 key = edge.surface;
                 stats.surfaces[key] = stats.surfaces[key] ? stats.surfaces[key] + edge.length : edge.length;
+                if (edge.begin_shape_index >= 0 && edge.end_shape_index > edge.begin_shape_index) {
+                    const previous = surfaceSegments[surfaceSegments.length - 1];
+                    // valhalla splits a road into many edges: merge the consecutive ones sharing a surface
+                    if (previous?.id === key && previous.end === edge.begin_shape_index) {
+                        previous.end = edge.end_shape_index;
+                    } else {
+                        surfaceSegments.push({ id: key, start: edge.begin_shape_index, end: edge.end_shape_index });
+                    }
+                }
                 if (edge.unpaved) {
                     stats.surfaces['unpaved'] = stats.surfaces['unpaved'] ? stats.surfaces['unpaved'] + edge.length : edge.length;
                 }
@@ -1003,7 +1051,8 @@ class PackageService extends Observable {
                 .sort((a, b) => b.perc - a.perc),
             surfaces: Object.keys(stats.surfaces)
                 .map((s) => ({ perc: stats.surfaces[s] / totalDistanceKm, dist: stats.surfaces[s], id: s }))
-                .sort((a, b) => b.perc - a.perc)
+                .sort((a, b) => b.perc - a.perc),
+            surfaceSegments
         };
 
         DEV_LOG && console.log('stats', JSON.stringify(resultStats));
@@ -1018,6 +1067,55 @@ class PackageService extends Observable {
             source.setConfigurationParameter(key, value);
         }
     }
+    /**
+     * Turns a recorded track into navigation instructions.
+     *
+     * An imported gpx carries no maneuvers, and valhalla's map matching cannot supply them either:
+     * the binding only exposes trace_attributes, which returns edge attributes and no maneuvers. So we
+     * route through the track instead, sampling it into via points and asking for a normal route.
+     *
+     * The computed route snaps to the road graph, so its own point indices mean nothing to the track.
+     * Each maneuver is therefore projected back onto the track to get an index the navigation can use.
+     */
+    async computeTrackInstructions({ item, profile = 'pedestrian', projection }: { item: Item; projection; profile?: ValhallaProfile }): Promise<RouteInstruction[]> {
+        const trackPositions = this.getRouteItemPoses(item);
+        const trackSize = trackPositions?.size() ?? 0;
+        if (trackSize < 2) {
+            return null;
+        }
+        const points = sampleTrackForRouting(trackPositions);
+        DEV_LOG && console.log('computeTrackInstructions', trackSize, 'track points ->', points.length, 'via points');
+        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
+        const result = await service.calculateRoute<LatLonKeys>({ projection, points, customOptions: { language: get(fullLangStore) } }, profile);
+        const routePoints = result.getPoints();
+        const rawInstructions = result.getInstructions();
+
+        const instructions: RouteInstruction[] = [];
+        let lastTrackIndex = -1;
+        for (let index = 0; index < rawInstructions.size(); index++) {
+            const instruction = rawInstructions.get(index);
+            const routePoint = fromNativeMapPos<LatLonKeys>(routePoints.get(instruction.getPointIndex()));
+            // a generous tolerance: the routed line and the recorded track never overlap exactly
+            const projected = projectOnRoute(routePoint, trackPositions, { fromIndex: lastTrackIndex, tolerance: TRACK_INSTRUCTION_TOLERANCE });
+            if (!projected) {
+                continue;
+            }
+            lastTrackIndex = projected.index;
+            instructions.push({
+                a: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
+                az: Math.round(instruction.getAzimuth()),
+                dist: instruction.getDistance(),
+                time: instruction.getTime(),
+                index: projected.index,
+                angle: Math.round(instruction.getTurnAngle()),
+                name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
+                inst: (instruction as any).getInstruction()
+            });
+        }
+        DEV_LOG && console.log('computeTrackInstructions got', instructions.length, 'instructions');
+        return instructions.length ? instructions : null;
+    }
+
     offlineRoutingSearchService() {
         if (this.hasOfflineRouting && !this.mLocalOfflineRoutingSearchService) {
             const files = this.findFilesWithExtension('.vtiles');

@@ -156,6 +156,15 @@ export interface RouteStats {
         dist: number;
         id: string;
     }[];
+    /**
+     * Where each surface sits along the route, as ranges of polyline indices, so navigation can show
+     * what is coming up rather than only the whole route's composition. Absent on older saved stats.
+     */
+    surfaceSegments?: {
+        id: string;
+        start: number;
+        end: number;
+    }[];
 }
 
 export class Group {

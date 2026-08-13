@@ -1,12 +1,8 @@
-<script context="module" lang="ts">
-    /** fixed so both cards match and a two line road name never resizes the banner */
-    export const MANEUVER_VIEW_HEIGHT = 84;
-</script>
-
 <script lang="ts">
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
     import { isNavigationRunning, navigationLocation, navigationProgress } from '~/stores/navigationStore';
-    import { getManeuverIcon, splitDistance, splitElevation, splitSpeed } from '~/utils/navigation';
+    // fixed height, so both cards match and a two line road name never resizes the banner
+    import { MANEUVER_VIEW_HEIGHT, getManeuverIcon, splitDistance, splitElevation, splitSpeed } from '~/utils/navigation';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);

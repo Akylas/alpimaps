@@ -2,7 +2,7 @@ import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-com
 import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
-import { type Item, type RouteInstruction, RoutingAction } from '~/models/Item';
+import { type AscentSegment, type Item, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
@@ -11,6 +11,42 @@ export const DEFAULT_PROJECTION_WINDOW = 200;
 
 /** how much road past the maneuver we want in frame when we zoom onto it */
 const MANEUVER_FRAME_RATIO = 1.4;
+
+/** one row of navigation widget cards */
+export const NAVWIDGET_ROW_HEIGHT = 60;
+/** the estimates strip below them, shown at the same step so nothing is hidden by default */
+export const NAVSTATS_HEIGHT = 32;
+/** the maneuver banner at the top of the map, everything anchored up there has to clear it */
+export const MANEUVER_VIEW_HEIGHT = 84;
+
+/**
+ * Height of the whole navigation view: the figures row, the previews row when there is one, and the
+ * strip. Lives here rather than in the component so the map can size the navigation sheet without
+ * pulling the whole navigation ui into its bundle.
+ */
+export function navigationViewHeight(hasPreviewWidgets: boolean) {
+    // return NAVWIDGET_ROW_HEIGHT * (hasPreviewWidgets ? 2 : 1) + NAVSTATS_HEIGHT;
+    return NAVWIDGET_ROW_HEIGHT * 2 + NAVSTATS_HEIGHT;
+}
+
+/** full elevation chart and route stats, same heights the item sheet gives them */
+export const ROUTE_PROFILE_HEIGHT = 155;
+export const ROUTE_STATS_HEIGHT = 180;
+
+/**
+ * Steps of the navigation sheet. It has no 0 step on purpose: the bar is the only way back out of
+ * navigation, so it can never be dismissed. Dragging up reveals the profile then the stats.
+ */
+export function navigationSheetSteps({ barHeight, hasProfile, hasStats }: { barHeight: number; hasProfile: boolean; hasStats: boolean }) {
+    const steps = [0, barHeight];
+    if (hasProfile) {
+        steps.push(steps[steps.length - 1] + ROUTE_PROFILE_HEIGHT);
+    }
+    if (hasStats) {
+        steps.push(steps[steps.length - 1] + ROUTE_STATS_HEIGHT);
+    }
+    return steps;
+}
 
 /**
  * Value and unit kept apart so the UI can shrink the unit and let the number carry the emphasis.
@@ -41,6 +77,47 @@ export function splitDuration(seconds: number): [string, string] {
         return [convertDurationSeconds(seconds, 's'), 's'];
     }
     return [convertDurationSeconds(seconds, 'm'), 'min'];
+}
+
+export interface CurrentAscent {
+    ascent: AscentSegment;
+    /** index of the ascent in `profile.ascents`, so the UI can say "climb 2 of 3" */
+    index: number;
+    /** meters of climb left to the summit */
+    remainingGain: number;
+    /** meters of road left to the summit */
+    remainingDistance: number;
+    summitElevation: number;
+}
+
+/**
+ * The climb the user is inside of right now, null when between climbs.
+ * Total remaining ascent answers "how much is left overall"; on a route with several climbs what the
+ * user actually wants while pedalling is how much of *this* climb is left, which is what this returns.
+ */
+export function getCurrentAscent(profile: RouteProfile, onPathIndex: number): CurrentAscent {
+    const ascents = profile?.ascents;
+    const data = profile?.data;
+    if (!ascents?.length || !data?.length || onPathIndex < 0) {
+        return null;
+    }
+    for (let index = 0; index < ascents.length; index++) {
+        const ascent = ascents[index];
+        // endIndex is the summit itself, so the climb is over the moment we pass it
+        if (onPathIndex < ascent.startIndex || onPathIndex >= ascent.endIndex) {
+            continue;
+        }
+        const current = data[Math.min(onPathIndex, data.length - 1)];
+        const summit = data[Math.min(ascent.endIndex, data.length - 1)];
+        return {
+            ascent,
+            index,
+            remainingGain: Math.max(ascent.highestElevation - (current?.a ?? 0), 0),
+            remainingDistance: Math.max((summit?.d ?? 0) - (current?.d ?? 0), 0),
+            summitElevation: ascent.highestElevation
+        };
+    }
+    return null;
 }
 
 export interface ManeuverIcon {
@@ -260,8 +337,11 @@ export function computeRouteProgress({ computeInstruction, computeRemaining, dis
     const route = item.route;
     if (computeRemaining) {
         result.remainingDistance = distanceToEnd(onPathIndex, positions);
-        result.remainingTime = (route.totalTime * result.remainingDistance) / route.totalDistance;
-        const stepIndex = route.waypoints.filter((waypoint) => waypoint.properties.showOnMap).find((waypoint) => waypoint.properties.index > onPathIndex)?.properties?.index;
+        // an imported gpx has no routing result behind it: no timings and no waypoints
+        if (route.totalTime > 0 && route.totalDistance > 0) {
+            result.remainingTime = (route.totalTime * result.remainingDistance) / route.totalDistance;
+        }
+        const stepIndex = route.waypoints?.filter((waypoint) => waypoint.properties?.showOnMap).find((waypoint) => waypoint.properties.index > onPathIndex)?.properties?.index;
         if (stepIndex >= 0) {
             result.remainingDistanceToStep = result.remainingDistance - distanceToEnd(stepIndex, positions);
         }

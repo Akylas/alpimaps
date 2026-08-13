@@ -58,6 +58,52 @@
     export let showWaypoints = true;
     let chart: NativeViewElementNode<LineChart>;
     export let showProfileGrades = true;
+    /**
+     * Widget sized variant used by the navigation bar: no axes, no labels, no limit lines and no
+     * gestures, just the silhouette and where you are on it. Same chart underneath, so it keeps the
+     * point filtering and the curve rendering.
+     */
+    export let mini = false;
+    /** the fill dithers into noise on eink, where the silhouette alone reads better */
+    export let filled = true;
+    /** profile index range to zoom on, eg the climb underway. Whole route when null */
+    export let range: { fromIndex: number; toIndex: number } = null;
+
+    $: if (chart?.nativeView?.data && range !== undefined) {
+        applyRange(range);
+    }
+
+    /** Windows the chart onto part of the profile through the axis bounds, values left untouched. */
+    function applyRange(range: { fromIndex: number; toIndex: number }) {
+        const chartView = chart?.nativeView;
+        const data = item?.profile?.data;
+        if (!chartView || !data?.length) {
+            return;
+        }
+        const leftAxis = chartView.leftAxis;
+        const xAxis = chartView.xAxis;
+        if (!range) {
+            xAxis.resetAxisMinimum();
+            xAxis.resetAxisMaximum();
+            leftAxis.resetAxisMinimum();
+            leftAxis.resetAxisMaximum();
+        } else {
+            const from = Math.max(Math.min(range.fromIndex, data.length - 1), 0);
+            const to = Math.max(Math.min(range.toIndex, data.length - 1), from);
+            xAxis.axisMinimum = data[from].d;
+            xAxis.axisMaximum = data[to].d;
+            // the whole route's altitude range would flatten a single climb into a straight line
+            let min = Infinity;
+            let max = -Infinity;
+            for (let index = from; index <= to; index++) {
+                min = Math.min(min, data[index].a);
+                max = Math.max(max, data[index].a);
+            }
+            leftAxis.axisMinimum = min;
+            leftAxis.axisMaximum = max;
+        }
+        chartView.invalidate();
+    }
 
     $: {
         try {
@@ -201,9 +247,12 @@
             if (nChart) {
                 nChart.highlight(null);
             }
-            mapContext.mapModule('items').notify({
-                eventName: 'user_onroute_data'
-            });
+            // the widget is a second chart on the same route: letting it emit too would fight the
+            // item sheet's own live data
+            !mini &&
+                mapContext.mapModule('items').notify({
+                    eventName: 'user_onroute_data'
+                });
         } else {
             const itemData = highlight?.entry || item?.profile?.data?.[onPathIndex];
 
@@ -273,16 +322,18 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
-                mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data',
-                    itemData,
-                    ...params
-                });
+                !mini &&
+                    mapContext.mapModule('items').notify({
+                        eventName: 'user_onroute_data',
+                        itemData,
+                        ...params
+                    });
             } else {
-                mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data',
-                    ...params
-                });
+                !mini &&
+                    mapContext.mapModule('items').notify({
+                        eventName: 'user_onroute_data',
+                        ...params
+                    });
             }
             if (highlight) {
                 return;
@@ -299,7 +350,7 @@
                     dataSet.ignoreFiltered = true;
                     const entry = profileData[onPathIndex];
                     dataSet.ignoreFiltered = false;
-                    DEV_LOG && console.log('highlight', onPathIndex, sendEvent, entry.d, JSON.stringify(entry));
+                    // DEV_LOG && console.log('highlight', onPathIndex, sendEvent, entry.d, JSON.stringify(entry));
                     const highlight = {
                         dataSetIndex: 0,
                         entryIndex: onPathIndex,
@@ -334,17 +385,28 @@
             const xAxis = chartView.xAxis;
             if (!chartInitialized) {
                 chartInitialized = true;
-                chartView.highlightPerDragEnabled = true;
-                chartView.highlightPerTapEnabled = true;
-                chartView.scaleXEnabled = true;
-                chartView.doubleTapToZoomEnabled = true;
-                chartView.dragEnabled = true;
+                // the navigation bar owns the drag here, and there is no room for labels anyway. The
+                // axes stay enabled and are only made invisible: calcMinMax skips a disabled axis, and
+                // the y transformer is built from the range it computes, so disabling draws nothing
+                chartView.highlightPerDragEnabled = !mini;
+                chartView.highlightPerTapEnabled = !mini;
+                chartView.scaleXEnabled = !mini;
+                chartView.doubleTapToZoomEnabled = !mini;
+                chartView.dragEnabled = !mini;
                 chartView.clipHighlightToContent = false;
-                chartView.zoomedPanWith2Pointers = true;
+                chartView.zoomedPanWith2Pointers = !mini;
                 chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
-                chartView.setExtraOffsets(0, 24, 10, 10);
+                chartView.setExtraOffsets(0, mini ? 4 : 24, mini ? 4 : 10, mini ? 2 : 10);
+                if (mini) {
+                    chartView.legend.enabled = false;
+                    [leftAxis, xAxis].forEach((axis) => {
+                        axis.drawLabels = false;
+                        axis.drawGridLines = false;
+                        axis.drawAxisLine = false;
+                    });
+                }
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
                 leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(70).hex;
@@ -367,6 +429,12 @@
                 chartView.customRenderer = {
                     drawHighlight(c: Canvas, h: Highlight<Entry>, set: LineDataSet, paint: Paint) {
                         const x = h.drawX;
+                        if (mini) {
+                            // a dot riding the profile reads as "you are here"; the full height line
+                            // cuts a widget sized chart in two and leaves nothing readable
+                            c.drawCircle(x, h.drawY, 4, highlightPaint);
+                            return;
+                        }
                         if (highlightNString) {
                             const staticLayout = new StaticLayout(highlightNString, nstringPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
@@ -436,7 +504,7 @@
                 //         }
                 //     }
                 // } as any);
-                set.drawFilledEnabled = true;
+                set.drawFilledEnabled = filled;
                 set.color = '#60B3FC';
                 set.lineWidth = 1;
                 set.fillColor = '#60B3FC80';
@@ -453,6 +521,16 @@
                 set.notifyDataSetChanged();
                 chartData.notifyDataChanged();
                 chartView.notifyDataSetChanged();
+            }
+
+            if (mini) {
+                // limit lines, ascent callouts and waypoint pins all carry labels that have nowhere to
+                // go at this size, so the widget stops here
+                set.drawFilledEnabled = filled;
+                applyRange(range);
+                onChartDataUpdateCallbacks.forEach((c) => c());
+                onChartDataUpdateCallbacks = [];
+                return;
             }
 
             leftAxis.removeAllLimitLines();
@@ -490,13 +568,13 @@
                     limitLine.textColor = colorOnSurface;
                     limitLine.ensureVisible = true;
                     limitLine.drawLabel = (c: Canvas, label: string, x: number, y: number, paint: Paint) => {
-                        c.drawCircle(x + 5, y - 6, 6, waypointsBackPaint);
+                        c.drawCircle(x, y - 6, 6, waypointsBackPaint);
                         waypointsPaint.textSize = 7 * $fontScale;
-                        c.drawText('', x + 5, y - 5 + 1, waypointsPaint);
+                        c.drawText('', x, y - 5 + 1, waypointsPaint);
                         //   paint.setTextAlign(Align.CENTER);
                         const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                         c.save();
-                        c.translate(x, y - 3);
+                        c.translate(x, y + 6);
                         staticLayout.draw(c);
                         c.restore();
                     };

@@ -5,15 +5,28 @@
     import { showError } from '@shared/utils/showError';
     import IconButton from '~/components/common/IconButton.svelte';
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import { userFollowStore } from '~/mapModules/UserLocationModule';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigationRunning } from '~/stores/navigationStore';
     import { colors } from '~/variables';
 
-    $: ({ colorError, colorOnSurfaceVariant } = $colors);
+    $: ({ colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     /** the buttons have to fit next to the info cards without making the bar taller */
     const BUTTON_SIZE = 42;
 
+    /**
+     * Panning the map turns following off, and the map buttons are hidden while navigating, so this is
+     * the only way back to the camera following the route.
+     */
+    function followUserAgain() {
+        try {
+            getMapContext().mapModule('userLocation').navigationMode = true;
+        } catch (error) {
+            showError(error);
+        }
+    }
     async function togglePause() {
         try {
             await navigationService.toggle();
@@ -44,6 +57,10 @@
 
 <!-- square cards, centred on the info row so the whole bar reads as one line of tiles -->
 <flexlayout alignItems="center" flexDirection="row" {...$$restProps}>
+    <!-- only there once the user has panned away, so it does not take room the rest of the time -->
+    <NavigationCard height={BUTTON_SIZE} marginRight={8} visibility={$userFollowStore ? 'collapse' : 'visible'} width={BUTTON_SIZE}>
+        <IconButton color={colorPrimary} size={BUTTON_SIZE} text="mdi-crosshairs-gps" tooltip={lc('recenter_navigation')} on:tap={followUserAgain} />
+    </NavigationCard>
     <NavigationCard height={BUTTON_SIZE} width={BUTTON_SIZE}>
         <IconButton
             color={colorOnSurfaceVariant}

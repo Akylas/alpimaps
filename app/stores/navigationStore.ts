@@ -5,20 +5,25 @@ import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
+    DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_AUTO_PAUSE,
     DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY,
     DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED,
     DEFAULT_NAVIGATION_AUTO_ZOOM,
     DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
+    DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
     DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
     DEFAULT_NAVIGATION_HIDE_CHROME,
     DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
+    DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART,
+    DEFAULT_NAVIGATION_SHOW_SURFACE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    DEFAULT_NAVIGATION_SURFACE_SPAN,
     DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
     DEFAULT_NAVIGATION_TURN_REFRESH_DELAY,
     DEFAULT_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
@@ -28,20 +33,25 @@ import {
     DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ZOOM_MIN,
     DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
+    SETTINGS_NAVIGATION_ARROW_MARKER,
     SETTINGS_NAVIGATION_AUTO_PAUSE,
     SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY,
     SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED,
     SETTINGS_NAVIGATION_AUTO_ZOOM,
     SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
+    SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
     SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
     SETTINGS_NAVIGATION_HIDE_CHROME,
     SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
+    SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART,
+    SETTINGS_NAVIGATION_SHOW_SURFACE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    SETTINGS_NAVIGATION_SURFACE_SPAN,
     SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
     SETTINGS_NAVIGATION_TURN_REFRESH_DELAY,
     SETTINGS_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
@@ -87,6 +97,7 @@ export const isNavigating = derived(navigationState, (state) => state !== Naviga
 export const isNavigationRunning = derived(navigationState, (state) => state === NavigationState.RUNNING);
 
 export const navigationAutoZoom = settingsStore(SETTINGS_NAVIGATION_AUTO_ZOOM, DEFAULT_NAVIGATION_AUTO_ZOOM);
+export const navigationArrowMarker = settingsStore(SETTINGS_NAVIGATION_ARROW_MARKER, DEFAULT_NAVIGATION_ARROW_MARKER);
 export const navigationZoomLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM_LOOK_AHEAD, DEFAULT_NAVIGATION_ZOOM_LOOK_AHEAD);
 export const navigationZoomDenseManeuverDistance = settingsStore(SETTINGS_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE, DEFAULT_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE);
 export const navigationZoomManeuverVisibleDistance = settingsStore(SETTINGS_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE, DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE);
@@ -109,6 +120,20 @@ export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_P
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
 export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
 export const navigationHideChrome = settingsStore(SETTINGS_NAVIGATION_HIDE_CHROME, DEFAULT_NAVIGATION_HIDE_CHROME);
+export const navigationShowElevationChart = settingsStore(SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART, DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART);
+export const navigationShowSurface = settingsStore(SETTINGS_NAVIGATION_SHOW_SURFACE, DEFAULT_NAVIGATION_SHOW_SURFACE);
+export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
+export const navigationChartCurrentAscent = settingsStore(SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT, DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT);
+
+/**
+ * Whether the elevation/surface previews have anything to draw. The navigation view gives them a row
+ * of their own, and that view and the bottom sheet step have to agree on whether that row exists,
+ * else the sheet reserves a row of empty space above the map.
+ */
+export const navigationHasPreviewWidgets = derived([navigationItem, navigationShowElevationChart, navigationShowSurface], ([item, showChart, showSurface]) => {
+    const stats = item?.stats;
+    return (showChart && !!item?.profile?.data?.length) || (showSurface && (!!stats?.surfaceSegments?.length || !!stats?.surfaces?.length));
+});
 
 export interface NavigationParam {
     key: string;
@@ -381,6 +406,55 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         default: DEFAULT_NAVIGATION_RECORD_TRACK,
         title: () => lc('navigation_record_track'),
         description: () => lc('navigation_record_track_desc')
+    },
+    {
+        key: SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART,
+        store: navigationShowElevationChart,
+        type: 'boolean',
+        default: DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART,
+        title: () => lc('navigation_show_elevation_chart'),
+        description: () => lc('navigation_show_elevation_chart_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
+        store: navigationChartCurrentAscent,
+        type: 'boolean',
+        default: DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
+        title: () => lc('navigation_chart_current_ascent'),
+        description: () => lc('navigation_chart_current_ascent_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_ARROW_MARKER,
+        store: navigationArrowMarker,
+        type: 'boolean',
+        default: DEFAULT_NAVIGATION_ARROW_MARKER,
+        title: () => lc('navigation_arrow_marker'),
+        description: () => lc('navigation_arrow_marker_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_SHOW_SURFACE,
+        store: navigationShowSurface,
+        type: 'boolean',
+        default: DEFAULT_NAVIGATION_SHOW_SURFACE,
+        title: () => lc('navigation_show_surface'),
+        description: () => lc('navigation_show_surface_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_SURFACE_SPAN,
+        store: navigationSurfaceSpan,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_SURFACE_SPAN,
+        title: () => lc('navigation_surface_span'),
+        description: () => lc('navigation_surface_span_desc'),
+        min: 500,
+        max: 20000,
+        step: 500,
+        formatter: formatDistance,
+        quick: true
     },
     {
         key: SETTINGS_NAVIGATION_HIDE_CHROME,

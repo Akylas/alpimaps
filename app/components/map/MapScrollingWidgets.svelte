@@ -15,7 +15,7 @@
     import UserLocationModule, { navigationModeStore, userFollowStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-    import { isNavigationRunning, navigationHideChrome } from '~/stores/navigationStore';
+    import { isNavigating, isNavigationRunning, navigationHideChrome } from '~/stores/navigationStore';
     import { openLink } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
@@ -88,7 +88,7 @@
     }
 
     // while navigating the location button has one job left: bring the camera back after a pan
-    $: locationButtonVisible = !$isNavigationRunning || !$userFollowStore;
+    $: locationButtonVisible = !$isNavigating || !$userFollowStore;
 
     function askUserLocation() {
         if ($isNavigationRunning) {
@@ -216,9 +216,14 @@
             horizontalAlignment="center"
             rowSpan={2}
             text="mdi-directions"
-            visibility={selectedItemHasPosition ? 'visible' : 'hidden'}
+            visibility={!$isNavigating && selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <mdcardview id="location" class={`${locationButtonClass} floating-btn`} visibility={locationButtonVisible ? 'visible' : 'collapse'} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+        <mdcardview
+            id="location"
+            class={`${locationButtonClass} floating-btn`}
+            visibility={!$isNavigating && locationButtonVisible ? 'visible' : 'collapse'}
+            on:tap={askUserLocation}
+            on:longPress={onWatchLocation}>
             <label
                 ios:iosAccessibilityAdjustsFontSize={false}
                 class={`mdi ${locationButtonLabelClass}`}
@@ -234,24 +239,24 @@
         color={colorOnSurfaceVariant}
         horizontalAlignment="right"
         isSelected={$navigationModeStore}
-        isVisible={$watchingLocation && !$queryingLocation && !$isNavigationRunning}
+        isVisible={$watchingLocation && !$queryingLocation && !$isNavigating}
         marginBottom={16}
         row={2}
         text={$navigationModeStore ? 'mdi-navigation' : 'mdi-navigation-outline'}
         verticalAlignment="bottom"
         on:tap={() => (userLocationModule.navigationMode = !$navigationModeStore)} />
-    <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom" visibility={$isNavigationRunning && $navigationHideChrome ? 'collapse' : 'visible'}>
+    <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom" visibility={$isNavigating ? 'collapse' : 'visible'}>
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
         <mdbutton id="list" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />
         <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
-    <ScaleView col={1} horizontalAlignment="right" marginBottom={8} row={2} verticalAlignment="bottom" />
+    <ScaleView col={1} horizontalAlignment={$isNavigating ? 'left' : 'right'} marginBottom={8} marginLeft={8} row={2} verticalAlignment="bottom" />
     <IconButton
         col={1}
         horizontalAlignment="left"
         isSelected={true}
-        isVisible={attributionVisible}
+        isVisible={!$isNavigating && attributionVisible}
         row={2}
         text="mdi-information-outline"
         tooltip={lc('attributions')}
