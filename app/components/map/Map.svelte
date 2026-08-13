@@ -46,7 +46,8 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import type { LayerType } from '~/mapModules/MapModule';
+    import type { LayerType } from '~/mapModules/layerStack';
+    import { LayerStack } from '~/mapModules/layerStack';
     import { createTileDecoder, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
@@ -73,7 +74,6 @@
     const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
 
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
     const KEEP_AWAKE_KEY = '_keep_awake';
 </script>
 
@@ -144,7 +144,7 @@
     const itemLoading = false;
 
     let projection: Projection = new EPSG4326();
-    const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
+    const layerStack = new LayerStack(() => cartoMap);
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
     let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
@@ -742,10 +742,6 @@
 
     async function onMainMapReady(e) {
         try {
-            // addedLayers = [];
-            // if (!PRODUCTION) {
-            //     await new Promise((resolve) => setTimeout(resolve, 1000));
-            // }
             const map = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
             if (DEV_LOG) {
@@ -770,12 +766,11 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
-            DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, addedLayers.length, theme);
-            if (addedLayers) {
-                Object.values(addedLayers).forEach((d) => {
-                    addLayer(d.layer, d.layerId, true);
-                });
-            }
+            DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, layerStack.layers.length, theme);
+            // re-add what modules registered before the map existed, and after an activity re-create
+            layerStack.layers.forEach((added) => {
+                addLayer(added.layer, added.layerId, true);
+            });
 
             tryCatch(async () => {
                 packageService.start();
@@ -909,7 +904,7 @@
     }: {
         item: IItem;
         showButtons?: boolean;
-        isFeatureInteresting: boolean;
+        isFeatureInteresting?: boolean;
         peek?: boolean;
         setSelected?: boolean;
         setMapSelected?: boolean;
@@ -1699,99 +1694,14 @@
         }
     }
 
-    function removeLayer(layer: Layer<any, any>, layerId: LayerType) {
-        // const realLayerId = offset ? layerId + offset : layerId;
-        const index = addedLayers.findIndex((d) => d.layer === layer);
-        if (index !== -1) {
-            addedLayers.splice(index, 1);
-        }
-        cartoMap.removeLayer(layer);
-    }
-    function moveLayer(layer: Layer<any, any>, newIndex: number) {
-        // const realLayerId = offset ? layerId + offset : layerId;
-        const layers = cartoMap.getLayers();
-        newIndex = Math.max(0, Math.min(newIndex, layers.count() - 1));
-        const index = addedLayers.findIndex((d) => d.layer === layer);
-        if (index !== -1 && index !== newIndex) {
-            const val = addedLayers[index];
-            addedLayers.splice(index, 1);
-            addedLayers.splice(newIndex, 0, val);
-        }
-        layers.remove(layer);
-        layers.insert(newIndex, layer);
-    }
-    function getLayerIndex(layer: Layer<any, any>) {
-        return addedLayers.findIndex((d) => d.layer === layer);
-    }
-    function replaceLayer(oldLayer: Layer<any, any>, layer: Layer<any, any>) {
-        const index = addedLayers.findIndex((d) => d.layer === oldLayer);
-        // DEV_LOG && console.log('replaceLayer', index, oldLayer, layer);
-        if (index !== -1) {
-            addedLayers[index].layer = layer;
-            cartoMap.getLayers().set(index, layer);
-        }
-    }
-    function getLayerTypeFirstIndex(layerId: LayerType) {
-        const layerIndex = LAYERS_ORDER.indexOf(layerId);
-        return addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
-    }
-
-    function getLayers(layerId: LayerType) {
-        if (!layerId) {
-            return addedLayers.slice();
-        }
-        const layerIndex = LAYERS_ORDER.indexOf(layerId);
-        const startIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
-        const endIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
-        if (startIndex !== -1) {
-            return addedLayers.slice(startIndex, endIndex !== -1 ? endIndex : undefined);
-        }
-        return [];
-    }
-    function addLayer(layer: Layer<any, any>, layerId: LayerType, force = false) {
-        // console.log('addLayer', layer.constructor.name, layerId);
-        if (cartoMap) {
-            if (force) {
-                // used when restoring everything after activity re create
-                cartoMap.addLayer(layer);
-                return;
-            }
-            if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
-                return;
-            }
-            const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            const realIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
-            if (realIndex >= 0 && realIndex < addedLayers.length) {
-                cartoMap.addLayer(layer, realIndex);
-                addedLayers.splice(realIndex, 0, { layer, layerId });
-            } else {
-                cartoMap.addLayer(layer);
-                addedLayers.push({ layer, layerId });
-            }
-            // cartoMap.requestRedraw();
-        }
-    }
-    function insertLayer(layer: Layer<any, any>, layerId: LayerType, index: number) {
-        if (cartoMap) {
-            if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
-                return;
-            }
-            const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            const realIndex =
-                Math.max(
-                    addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex),
-                    0
-                ) + index;
-            const nbLayers = cartoMap.getLayers().count();
-            if (realIndex >= 0 && realIndex < nbLayers) {
-                cartoMap.getLayers().insert(realIndex, layer);
-                addedLayers.splice(realIndex, 0, { layer, layerId });
-            } else {
-                cartoMap.addLayer(layer);
-                addedLayers.push({ layer, layerId });
-            }
-        }
-    }
+    const addLayer = (layer: Layer<any, any>, layerId: LayerType, force = false) => layerStack.addLayer(layer, layerId, force);
+    const insertLayer = (layer: Layer<any, any>, layerId: LayerType, index: number) => layerStack.insertLayer(layer, layerId, index);
+    const removeLayer = (layer: Layer<any, any>) => layerStack.removeLayer(layer);
+    const moveLayer = (layer: Layer<any, any>, newIndex: number) => layerStack.moveLayer(layer, newIndex);
+    const replaceLayer = (oldLayer: Layer<any, any>, layer: Layer<any, any>) => layerStack.replaceLayer(oldLayer, layer);
+    const getLayerIndex = (layer: Layer<any, any>) => layerStack.getLayerIndex(layer);
+    const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
+    const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
     /** the maneuver banner sits at the very top, so everything anchored there has to move down under it */
     $: navigationTopOffset = $isNavigationRunning && !!$navigationProgress?.instruction ? MANEUVER_VIEW_HEIGHT : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
