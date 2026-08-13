@@ -181,6 +181,7 @@
             itemIconFontFamily = $fonts.app;
             itemIcon = formatter.getRouteIcon(itemProps.route.type, itemProps.route.subtype);
         } else {
+            nString3 = null;
             if (itemProps?.fontFamily) {
                 itemIconFontFamily = itemProps.fontFamily;
                 itemIcon = itemProps.icon;
