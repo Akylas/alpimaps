@@ -38,7 +38,7 @@ export abstract class BgServiceCommon extends Observable {
     abstract get geoHandler(): GeoHandler;
     protected _loaded = false;
     protected _started = false;
-    appInBackground = true;
+    appInBackground = Application.inBackground;
     bgService?: WeakRef<any>; //android only
 
     constructor() {
