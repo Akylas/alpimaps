@@ -8,6 +8,7 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 // import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
 // const extend = require('just-extend');
 import extend from 'just-extend';
+import type { GradeSection } from '~/utils/grade';
 const sql = SqlQuery.createFromTemplateString;
 
 export function toJSONStringified(item: Partial<Item>) {
@@ -69,7 +70,10 @@ export interface RouteProfile {
     dplus?: any;
     dmin?: any;
     data: { d: number; a: number; g?: number; dp?: number; dm?: number }[];
+    /** gradient stops for the chart fill, `d` being an **index** into `data` */
     colors?: { d: number; color: string }[];
+    /** the same cut of the route, with the distances and average grades the ui can read */
+    sections?: GradeSection[];
     ascents: AscentSegment[];
 }
 
