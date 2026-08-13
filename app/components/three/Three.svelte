@@ -562,7 +562,7 @@
     }
 
     class CustomOutlineEffect extends Effect {
-        public declare uniforms: Map<string, any>;
+        declare public uniforms: Map<string, any>;
 
         constructor() {
             super(
