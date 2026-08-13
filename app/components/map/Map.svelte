@@ -52,6 +52,7 @@
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
+    import '~/mapModules/features/styleToggles';
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
@@ -1733,88 +1734,46 @@
         }
     }
 
-    let sideButtons = [];
-    const showRoutesProps = nutiProps.getProps('show_routes');
-    const showRoutes = showRoutesProps.store;
-    const showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
-    const showSlopePercentages = showSlopePercentagesProps.store;
-    $: {
-        const newButtons: any[] = [
-            {
-                text: showSlopePercentagesProps.icon,
-                id: 'slopes',
-                order: 20,
-                tooltip: showSlopePercentagesProps.title,
-                isSelected: $showSlopePercentages,
-                visible: showSlopePercentagesProps.visible($mapCapabilities),
-                onTap: () => ($showSlopePercentages = !$showSlopePercentages),
-                onLongPress: showSlopePercentagesProps.onLongPress
-            },
-            // {
-            //     text: 'mdi-bullseye',
-            //     id: 'contours',
-            //     tooltip: lc('show_contour_lines'),
-            //     isSelected: $showContourLines,
-            //     visible: !!customLayersModule?.hasLocalData,
-            //     onTap: () => showContourLines.set(!$showContourLines)
-            // },
-            {
-                text: showRoutesProps.icon,
-                id: 'routes',
-                order: 30,
-                tooltip: showRoutesProps.title,
-                isSelected: $showRoutes,
-                visible: showRoutesProps.visible($mapCapabilities),
-                onTap: () => ($showRoutes = !$showRoutes),
-                onLongPress: showRoutesProps.onLongPress
-            },
-            // {
-            //     text: 'mdi-speedometer',
-            //     tooltip: lc('speedometer'),
-            //     onTap: switchLocationInfo
-            // },
-            ...$featureSideButtonsStore
-        ];
-        if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData) {
-            newButtons.push({
-                text: 'mdi-dots-vertical',
-                order: 90,
-                onTap: tryCatchFunction(
-                    async (event) => {
-                        // entirely fed by the registered features — see ~/mapModules/features/
-                        const options = $featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title }));
+    /**
+     * Opens the overflow menu. Defined outside the reactive statement below: a handler declared inside
+     * one makes the linter trace into everything it can reach, and rightly flag it as a possible loop.
+     */
+    const overflowButton = {
+        text: 'mdi-dots-vertical',
+        order: 90,
+        onTap: tryCatchFunction(
+            async (event) => {
+                // entirely fed by the registered features — see ~/mapModules/features/
+                const options = $featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title }));
 
-                        await showPopoverMenu({
-                            options,
-                            vertPos: VerticalPosition.ALIGN_BOTTOM,
-                            horizPos: HorizontalPosition.LEFT,
-                            anchor: event.object,
-                            props: {
-                                // autoSizeListItem: true,
-                                maxHeight: Screen.mainScreen.heightDIPs - 100
-                            },
-                            onLongPress: tryCatchFunction(async (result) => {
-                                if (result) {
-                                    await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
-                                }
-                            }),
-                            onClose: async (result) => {
-                                if (result) {
-                                    await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
-                                }
-                            }
-                        });
+                await showPopoverMenu({
+                    options,
+                    vertPos: VerticalPosition.ALIGN_BOTTOM,
+                    horizPos: HorizontalPosition.LEFT,
+                    anchor: event.object,
+                    props: {
+                        maxHeight: Screen.mainScreen.heightDIPs - 100
                     },
-                    undefined,
-                    hideLoading
-                )
-            });
-        }
+                    onLongPress: tryCatchFunction(async (result) => {
+                        if (result) {
+                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
+                        }
+                    }),
+                    onClose: async (result) => {
+                        if (result) {
+                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
+                        }
+                    }
+                });
+            },
+            undefined,
+            hideLoading
+        )
+    };
+    $: hasOverflowMenu = (WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData;
+    // features slot themselves in by order rather than the bar knowing where each one belongs
+    $: sideButtons = [...$featureSideButtonsStore, ...(hasOverflowMenu ? [overflowButton] : [])].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 
-        // features slot themselves in by order rather than the bar knowing where each one belongs
-        // eslint-disable-next-line svelte/infinite-reactive-loop
-        sideButtons = newButtons.sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
-    }
     function onDirectionsCancel() {
         endEditingItem();
     }
