@@ -21,6 +21,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
     import { showError } from '@shared/utils/showError';
+    import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
@@ -280,7 +281,9 @@
                         text: 'alpimaps-angle'
                     },
                     {
-                        text: '~' + (itemData.g || 0).toFixed() + '% '
+                        // one decimal, and the section colour, so this agrees with the fill under it
+                        color: gradeColor(itemData.g || 0),
+                        text: (itemData.g || 0).toFixed(1) + '% '
                     }
                 ];
                 if (!isNaN(itemData.dp) && params.dplus - itemData.dp > 0) {
@@ -388,7 +391,9 @@
                 // the navigation bar owns the drag here, and there is no room for labels anyway. The
                 // axes stay enabled and are only made invisible: calcMinMax skips a disabled axis, and
                 // the y transformer is built from the range it computes, so disabling draws nothing
+                
                 chartView.highlightPerDragEnabled = !mini;
+                console.log('🚀 ~ ElevationChart.svelte ~ updateChartData ~ highlightPerDragEnabled:', mini);
                 chartView.highlightPerTapEnabled = !mini;
                 chartView.scaleXEnabled = !mini;
                 chartView.doubleTapToZoomEnabled = !mini;
