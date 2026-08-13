@@ -77,6 +77,7 @@ registerMapFeature({
                       id: 'show_admin_regions',
                       title: lc('show_admin_regions'),
                       icon: 'mdi-vector-polygon',
+                      menu: 'overflow' as const,
                       color: $showAdmins ? $colors.colorPrimary : undefined,
                       run: () => showAdmins.set(!get(showAdmins))
                   }
