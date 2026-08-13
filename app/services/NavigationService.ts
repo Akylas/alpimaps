@@ -2,10 +2,9 @@ import Observable from '@nativescript-community/observable';
 import { MapPosVector } from '@nativescript-community/ui-carto/core';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { GeoHandler, GeoLocation } from '~/handlers/GeoHandler';
+import type { GeoHandler, GeoLocation } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
 import { Item, RoutingAction } from '~/models/Item';
-import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import {
     NavigationState,
@@ -106,7 +105,7 @@ export class NavigationService extends Observable {
         return mapContext.mapModule('userLocation');
     }
     private get appInBackground() {
-        return getBGServiceInstance().appInBackground;
+        return this.geoHandler?.appInBackground;
     }
 
     onServiceLoaded(geoHandler: GeoHandler) {
@@ -139,11 +138,17 @@ export class NavigationService extends Observable {
         // the user asked to navigate, so getting a location is part of the request. Remember whether
         // they were already watching, so stopping puts the gps back the way we found it
         this.wasWatchingBeforeStart = get(watchingLocation);
-        await userLocationModule.startWatchLocation();
-        userLocationModule.navigationMode = true;
 
         this.geoHandler.keepWatchingInBackground = true;
-        this.applyWatchOptions();
+        // options first, so the single start below already uses the navigation cadence. Starting and
+        // then restarting used to register two watches, and startSession a third. Told explicitly that
+        // we are navigating: the state only flips to RUNNING at the end of this method
+        await userLocationModule.startWatchLocation({ force: true });
+        userLocationModule.navigationMode = true;
+
+        // has to happen now, while the app is still in the foreground: android 14 refuses to start a
+        // location foreground service from the background, so waiting for onAppPause is too late
+        this.geoHandler.showForegroundNotification();
 
         if (get(navigationRecordStats) && !this.geoHandler.isSessionRunning()) {
             await this.geoHandler.startSession();
@@ -158,35 +163,48 @@ export class NavigationService extends Observable {
         if (!this.isNavigating) {
             return;
         }
-        DEV_LOG && console.log(TAG, 'stop');
-        this.unlisten();
-        this.geoHandler.keepWatchingInBackground = false;
-        this.geoHandler.navigationWatchOptions = null;
-        if (this.geoHandler.isSessionRunning()) {
-            this.geoHandler.stopSession();
-        }
+        DEV_LOG && console.log(TAG, 'stop, watching before teardown:', this.geoHandler.isWatching());
         const userLocationModule = this.userLocationModule;
-        if (userLocationModule) {
-            userLocationModule.navigationZoom = 0;
-            userLocationModule.navigationMode = false;
+        const keepWatching = this.wasWatchingBeforeStart;
+        // everything here is best effort: whatever fails, the gps and the stores must still end up in
+        // a sane state. A throw halfway through used to leave the watch running with no way to stop it
+        try {
+            this.unlisten();
+            this.geoHandler.keepWatchingInBackground = false;
+            // stopWatch no longer drops it while navigating, so navigation has to take it down itself
+            this.geoHandler.hideForegroundNotification();
+            if (this.geoHandler.isSessionRunning()) {
+                this.geoHandler.stopSession();
+            }
+            if (userLocationModule) {
+                userLocationModule.navigationZoom = 0;
+                userLocationModule.navigationMode = false;
+            }
+            this.item = null;
+            this.positions = null;
+            this.reset();
+            navigationItem.set(null);
+            navigationProgress.set(null);
+            navigationLocation.set(null);
+            navigationStats.set(null);
+        } catch (error) {
+            console.error(TAG, 'error while stopping navigation', error, error.stack);
+        } finally {
+            this.setState(NavigationState.IDLE);
+            this.wasWatchingBeforeStart = false;
+            try {
+                // always stop first, then put back only what the user had running before we started.
+                // Restarting from a known stopped state is the only way to be sure nothing lingers
+                this.geoHandler.stopWatch();
+                if (keepWatching) {
+                    await this.geoHandler.startWatch();
+                }
+            } catch (error) {
+                console.error(TAG, 'error restoring the watch', error, error.stack);
+            }
+            userLocationModule?.syncWatchingState();
+            DEV_LOG && console.log(TAG, 'stopped, keepWatching:', keepWatching, 'watching now:', this.geoHandler.isWatching());
         }
-        this.item = null;
-        this.positions = null;
-        this.reset();
-        navigationItem.set(null);
-        navigationProgress.set(null);
-        navigationLocation.set(null);
-        navigationStats.set(null);
-        this.setState(NavigationState.IDLE);
-        if (this.wasWatchingBeforeStart) {
-            // they were tracking before, so keep tracking, just back at their own gps settings
-            await this.geoHandler.restartWatch();
-        } else {
-            // navigation turned the gps on, so navigation turns it back off
-            DEV_LOG && console.log(TAG, 'stopping the watch, it was off before navigation started');
-            userLocationModule?.stopWatchLocation();
-        }
-        this.wasWatchingBeforeStart = false;
     }
 
     /**
@@ -209,8 +227,11 @@ export class NavigationService extends Observable {
             userLocationModule.navigationZoom = 0;
         }
         this.setState(NavigationState.PAUSED);
-        this.applyWatchOptions();
-        await this.geoHandler.restartWatch();
+        await this.restartWatch();
+    }
+
+    restartWatch() {
+        return this.geoHandler?.restartWatch();
     }
 
     async resume() {
@@ -229,8 +250,7 @@ export class NavigationService extends Observable {
             userLocationModule.navigationMode = true;
         }
         this.setState(NavigationState.RUNNING);
-        this.applyWatchOptions();
-        await this.geoHandler.restartWatch();
+        await this.restartWatch();
     }
 
     toggle() {
@@ -270,8 +290,8 @@ export class NavigationService extends Observable {
         // listening on the module rather than the geo handler means we run before it moves the
         // camera, so the zoom we compute here is applied on this fix and not the next one
         this.userLocationModule.on('location', this.onLocation, this);
-        Application.on(Application.backgroundEvent, this.onAppBackground, this);
-        Application.on(Application.foregroundEvent, this.onAppForeground, this);
+        // Application.on(Application.backgroundEvent, this.onAppBackground, this);
+        // Application.on(Application.foregroundEvent, this.onAppForeground, this);
     }
     private unlisten() {
         if (!this.listening) {
@@ -279,41 +299,36 @@ export class NavigationService extends Observable {
         }
         this.listening = false;
         this.userLocationModule?.off('location', this.onLocation, this);
-        Application.off(Application.backgroundEvent, this.onAppBackground, this);
-        Application.off(Application.foregroundEvent, this.onAppForeground, this);
+        // Application.off(Application.backgroundEvent, this.onAppBackground, this);
+        // Application.off(Application.foregroundEvent, this.onAppForeground, this);
     }
 
-    private onAppBackground(args: ApplicationEventData) {
-        this.applyWatchOptions();
-        this.geoHandler?.restartWatch();
-    }
-    private onAppForeground(args: ApplicationEventData) {
-        this.applyWatchOptions();
-        this.geoHandler?.restartWatch();
-    }
+    // private onAppBackground(args: ApplicationEventData) {
+    //     this.restartWatch();
+    // }
+    // private onAppForeground(args: ApplicationEventData) {
+    //     this.restartWatch();
+    // }
 
     /**
      * Navigation raises the gps rate in background instead of lowering it, which is the whole point
      * of the mode: we need to know a maneuver is coming while the screen is off.
      */
-    private applyWatchOptions() {
-        if (!this.geoHandler) {
-            return;
-        }
-        if (!this.isNavigating) {
-            this.geoHandler.navigationWatchOptions = null;
-            return;
+    public getWatchOptions(navigating = this.isNavigating) {
+        if (!navigating) {
+            return {};
         }
         const updateDistance = get(navigationGpsUpdateDistance);
         if (this.state === NavigationState.PAUSED) {
-            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: PAUSED_UPDATE_INTERVAL, updateDistance };
+            return {
+                /* minimumUpdateTime: PAUSED_UPDATE_INTERVAL, updateDistance */
+            };
         } else if (this.appInBackground) {
-            this.geoHandler.navigationWatchOptions = { minimumUpdateTime: get(navigationBackgroundUpdateInterval), updateDistance };
+            return { minimumUpdateTime: get(navigationBackgroundUpdateInterval), updateDistance };
         } else {
             // in foreground only the distance filter applies, the rate stays the user's own setting
-            this.geoHandler.navigationWatchOptions = updateDistance > 0 ? { updateDistance } : null;
+            return updateDistance > 0 ? { updateDistance } : null;
         }
-        DEV_LOG && console.log(TAG, 'watch options', this.state, this.appInBackground, JSON.stringify(this.geoHandler.navigationWatchOptions));
     }
 
     private onLocation(event: any) {
@@ -489,10 +504,10 @@ export class NavigationService extends Observable {
         const atEnd = !progress.instruction && progress.remainingDistance <= ARRIVAL_DISTANCE;
         if (finishing || atEnd) {
             this.arrived = true;
-            if (__ANDROID__) {
-                requestScreenRefresh();
-            }
             this.notify({ eventName: NavigationArrivedEvent, object: this, data: this.item });
+            if (__ANDROID__) {
+                requestScreenRefresh(this.geoHandler);
+            }
         }
     }
 
@@ -510,12 +525,12 @@ export class NavigationService extends Observable {
                 // the bearing has settled by now, so the map is drawn pointing where we actually go
                 this.lastRefreshBearing = this.lastBearing;
                 DEV_LOG && console.log(TAG, 'screen refresh (delayed):', reason);
-                requestScreenRefresh();
+                requestScreenRefresh(this.geoHandler);
             }, delaySeconds * 1000);
             return;
         }
         DEV_LOG && console.log(TAG, 'screen refresh:', reason);
-        requestScreenRefresh();
+        requestScreenRefresh(this.geoHandler);
     }
 
     /**
