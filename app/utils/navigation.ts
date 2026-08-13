@@ -2,7 +2,7 @@ import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-com
 import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
-import { type AscentSegment, type Item, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
+import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
@@ -210,8 +210,19 @@ export function computeNavigationLookAhead({
 }
 
 export interface RouteProgress {
-    /** index in the route polyline the location snapped to, -1 when off route */
+    /** index in the route polyline the location snapped to, -1 when we never matched the route */
     onPathIndex: number;
+    /** true once the user is confirmed away from the route, see `OffRouteDetector` */
+    offRoute?: boolean;
+    /** meters from the user to the closest point of the route, whatever the state */
+    distanceFromRoute?: number;
+    /**
+     * index of the closest route vertex to the user right now, even while off route. Unlike
+     * `onPathIndex` it keeps following the user, so it is what a rejoin target is picked from.
+     */
+    closestIndex?: number;
+    /** the figures come from the last on-route fix, not from where the user actually is */
+    stale?: boolean;
     remainingDistance?: number;
     remainingTime?: number;
     remainingDistanceToStep?: number;
@@ -225,10 +236,23 @@ export interface RouteProgress {
      * `undefined` when `instruction` is the last one.
      */
     distanceToFollowingInstruction?: number;
+    /** the user is following a reroute leg, so `onPathIndex` is the point it rejoins the route at */
+    onDetour?: boolean;
+    /** index along the detour polyline, only set while `onDetour` */
+    detourIndex?: number;
+}
+
+/**
+ * What progress needs of a route: the timings and the maneuvers. An `Item` satisfies it, and so does a
+ * detour leg, which has both but is not an item and must never be turned into one.
+ */
+export interface RouteProgressSource {
+    route?: Route;
+    instructions?: RouteInstruction[];
 }
 
 export interface ComputeRouteProgressOptions {
-    item: Item;
+    item: RouteProgressSource;
     location: GenericMapPos<LatLonKeys>;
     positions: MapPosVector<LatLonKeys>;
     onPathIndex: number;
@@ -272,18 +296,22 @@ function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, 
 }
 
 /**
- * Projects a location onto the route, returning the closest segment rather than the first one within
- * tolerance like `isLocationOnPath` does.
+ * Closest point of the route to a location, whatever the distance.
  *
- * That difference matters: where a route passes near itself (a switchback, an out and back), the first
- * matching segment can belong to the other leg, the index then never advances, and the distance to the
- * next maneuver *grows* as the user drives away from a vertex they already passed. Searching a window
- * ahead of the last known index also makes progress monotonic and costs a few segments instead of all.
+ * It returns the closest segment rather than the first one within tolerance like `isLocationOnPath`
+ * does. That difference matters: where a route passes near itself (a switchback, an out and back), the
+ * first matching segment can belong to the other leg, the index then never advances, and the distance
+ * to the next maneuver *grows* as the user drives away from a vertex they already passed. Searching a
+ * window ahead of the last known index also makes progress monotonic and costs a few segments instead
+ * of all.
+ *
+ * Deciding whether that closest point is close *enough* is the caller's job — `projectOnRoute` for a
+ * plain tolerance, `OffRouteDetector` when the answer has to survive a bad fix.
  */
-export function projectOnRoute(
+export function findClosestOnRoute(
     location: GenericMapPos<LatLonKeys>,
     positions: MapPosVector<LatLonKeys>,
-    { fromIndex = -1, tolerance = DEFAULT_LOCATION_DISTANCE_FROM_ROUTE, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; tolerance?: number; window?: number } = {}
+    { fromIndex = -1, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; window?: number } = {}
 ): RouteProjection {
     const size = positions.size();
     if (size < 2) {
@@ -305,10 +333,248 @@ export function projectOnRoute(
             };
         }
     }
+    return best;
+}
+
+/** `findClosestOnRoute`, but null when the closest point is further than `tolerance`. */
+export function projectOnRoute(
+    location: GenericMapPos<LatLonKeys>,
+    positions: MapPosVector<LatLonKeys>,
+    { fromIndex = -1, tolerance = DEFAULT_LOCATION_DISTANCE_FROM_ROUTE, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; tolerance?: number; window?: number } = {}
+): RouteProjection {
+    const best = findClosestOnRoute(location, positions, { fromIndex, window });
     if (!best || best.distanceFromRoute > tolerance) {
         return null;
     }
     return best;
+}
+
+/** meters: whatever the gps claims, past this a "maybe I am on the route" is not worth entertaining */
+const MAX_OFF_ROUTE_TOLERANCE = 60;
+/** this many times the tolerance is not a bad fix, it is somewhere else: no need to wait for a second one */
+const OFF_ROUTE_OBVIOUS_RATIO = 3;
+/** ms between two full polyline scans while off route */
+const OFF_ROUTE_RESCAN_INTERVAL = 5000;
+/** meters travelled that also earn a full scan, so a fast rider does not wait out the interval */
+const OFF_ROUTE_RESCAN_DISTANCE = 100;
+/** meters the user must have moved for a fix to count towards a confirmation */
+const OFF_ROUTE_MIN_MOVE = 1;
+
+export interface OffRouteOptions {
+    /** meters of margin over a perfect fix before it counts as off route */
+    distance?: number;
+    /** consecutive confirming fixes needed to believe it */
+    fixes?: number;
+}
+
+export interface OffRouteState {
+    /** index progress is measured from: the live one, or the last on-route one while off route */
+    onPathIndex: number;
+    /** meters from the user to `onPathIndex`, along the route */
+    distanceToIndex: number;
+    /** closest route vertex to where the user actually is, off route included */
+    closestIndex: number;
+    distanceFromRoute: number;
+    offRoute: boolean;
+    /** `onPathIndex` no longer describes where the user is */
+    stale: boolean;
+    /** timestamp the user was confirmed off route, 0 while on route */
+    offRouteSince: number;
+}
+
+/**
+ * Decides whether the user is following the route, keeping enough state to be sure about it.
+ *
+ * Three things a plain per-fix distance test gets wrong, and this exists to fix:
+ * - a single bad fix (urban canyon, cold start, a tunnel exit) is not leaving the route, so a
+ *   confirmation over several fixes is required — unless the fix is so far off there is no doubt;
+ * - the gps says how much it trusts itself, so the tolerance follows the reported accuracy instead of
+ *   pretending every fix is perfect;
+ * - once off route the last known index is worth keeping: it is where the user *left* the route, which
+ *   is both what the remaining figures are measured from and where a rejoin is computed to. Dropping
+ *   it also meant every later fix rescanning the whole polyline.
+ */
+export class OffRouteDetector {
+    private lastOnPathIndex = -1;
+    private lastDistanceToIndex = 0;
+    private offFixes = 0;
+    private mOffRoute = false;
+    private mOffRouteSince = 0;
+    private lastLocation: GenericMapPos<LatLonKeys> = null;
+    private lastFullScanTime = 0;
+    private lastFullScanLocation: GenericMapPos<LatLonKeys> = null;
+
+    /** read lazily so changing the setting mid navigation applies on the next fix */
+    constructor(private readonly getOptions: () => OffRouteOptions = () => ({})) {}
+
+    get offRoute() {
+        return this.mOffRoute;
+    }
+    /** last index the user was actually on the route at, -1 before the first match */
+    get onPathIndex() {
+        return this.lastOnPathIndex;
+    }
+    get offRouteSince() {
+        return this.mOffRouteSince;
+    }
+
+    reset() {
+        this.lastOnPathIndex = -1;
+        this.lastDistanceToIndex = 0;
+        this.offFixes = 0;
+        this.mOffRoute = false;
+        this.mOffRouteSince = 0;
+        this.lastLocation = null;
+        this.lastFullScanTime = 0;
+        this.lastFullScanLocation = null;
+    }
+
+    /** Restarts from a known index, for when the route itself changed under us (a reroute). */
+    resetTo(onPathIndex: number) {
+        this.reset();
+        this.lastOnPathIndex = onPathIndex;
+    }
+
+    /** meters this fix is allowed to be from the route before it counts against us */
+    toleranceFor(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number }) {
+        const base = this.getOptions().distance ?? DEFAULT_LOCATION_DISTANCE_FROM_ROUTE;
+        const accuracy = location.horizontalAccuracy > 0 ? location.horizontalAccuracy : 0;
+        return Math.min(Math.max(base + accuracy, base), Math.max(MAX_OFF_ROUTE_TOLERANCE, base));
+    }
+
+    /** A full scan is the only way to notice a rejoin somewhere else, and the only expensive one. */
+    private shouldFullScan(location: GenericMapPos<LatLonKeys>, now: number) {
+        if (!this.lastFullScanLocation) {
+            return true;
+        }
+        return now - this.lastFullScanTime >= OFF_ROUTE_RESCAN_INTERVAL || computeDistanceBetween(location, this.lastFullScanLocation) >= OFF_ROUTE_RESCAN_DISTANCE;
+    }
+
+    update(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number }, positions: MapPosVector<LatLonKeys>, now = Date.now()): OffRouteState {
+        const tolerance = this.toleranceFor(location);
+        let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex });
+        if ((!best || best.distanceFromRoute > tolerance) && this.lastOnPathIndex !== -1 && this.shouldFullScan(location, now)) {
+            // out of the window: either we left the route, or we rejoined it somewhere else entirely
+            this.lastFullScanTime = now;
+            this.lastFullScanLocation = location;
+            const full = findClosestOnRoute(location, positions);
+            if (full && (!best || full.distanceFromRoute < best.distanceFromRoute)) {
+                best = full;
+            }
+        }
+        if (!best) {
+            return {
+                onPathIndex: this.lastOnPathIndex,
+                distanceToIndex: this.lastDistanceToIndex,
+                closestIndex: -1,
+                distanceFromRoute: Number.POSITIVE_INFINITY,
+                offRoute: this.mOffRoute,
+                stale: this.mOffRoute,
+                offRouteSince: this.mOffRouteSince
+            };
+        }
+
+        const moved = !this.lastLocation || computeDistanceBetween(location, this.lastLocation) >= OFF_ROUTE_MIN_MOVE;
+        this.lastLocation = location;
+
+        if (best.distanceFromRoute <= tolerance) {
+            this.offFixes = 0;
+            this.mOffRoute = false;
+            this.mOffRouteSince = 0;
+            this.lastOnPathIndex = best.index;
+            this.lastDistanceToIndex = best.distanceToIndex;
+        } else {
+            if (moved) {
+                this.offFixes++;
+            }
+            const requiredFixes = this.getOptions().fixes ?? 1;
+            if (!this.mOffRoute && (this.offFixes >= requiredFixes || best.distanceFromRoute > tolerance * OFF_ROUTE_OBVIOUS_RATIO)) {
+                this.mOffRoute = true;
+                this.mOffRouteSince = now;
+            }
+            if (!this.mOffRoute) {
+                // still only a suspicion: keep following the projection, so a wobbly fix on a narrow
+                // path does not freeze the distance to the next maneuver every few seconds
+                this.lastOnPathIndex = best.index;
+                this.lastDistanceToIndex = best.distanceToIndex;
+            }
+        }
+
+        return {
+            onPathIndex: this.lastOnPathIndex,
+            distanceToIndex: this.lastDistanceToIndex,
+            closestIndex: best.index,
+            distanceFromRoute: best.distanceFromRoute,
+            offRoute: this.mOffRoute,
+            stale: this.mOffRoute,
+            offRouteSince: this.mOffRouteSince
+        };
+    }
+}
+
+/** meters of extra road that make a maneuver too far to be worth heading back to rather than the route itself */
+const REJOIN_MANEUVER_MAX_EXTRA = 500;
+
+export interface RejoinTarget {
+    /** index in the route positions the user is being sent back to */
+    index: number;
+    position: GenericMapPos<LatLonKeys>;
+    /** set when the target is a maneuver of the route rather than a plain point on it */
+    maneuver?: RouteInstruction;
+}
+
+/**
+ * meters of route between two of its vertices. `maxDistance` stops the walk as soon as the answer is
+ * known to be over it, which is what every caller here actually asks — a maneuver 40 km up the track
+ * would otherwise cost thousands of distances on every position.
+ */
+export function distanceAlong(positions: MapPosVector<LatLonKeys>, fromIndex: number, toIndex: number, maxDistance = Number.POSITIVE_INFINITY) {
+    let distance = 0;
+    const end = Math.min(toIndex, positions.size() - 1);
+    for (let index = Math.max(fromIndex, 0); index < end; index++) {
+        distance += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+        if (distance > maxDistance) {
+            return distance;
+        }
+    }
+    return distance;
+}
+
+/**
+ * Where to send a user who left the route.
+ *
+ * The next maneuver is the useful answer — rejoining a route between two maneuvers means being told to
+ * do nothing until the turn anyway — but only while it is near: on a track whose maneuvers are
+ * kilometres apart, being pointed at one of them instead of the path a hundred meters away is wrong.
+ * So the closest point of the route wins whenever the maneuver is much further along than it.
+ */
+export function chooseRejoinTarget({
+    closestIndex = -1,
+    fromIndex,
+    instructions,
+    positions
+}: {
+    positions: MapPosVector<LatLonKeys>;
+    instructions?: RouteInstruction[];
+    /** last index the user was on the route at */
+    fromIndex: number;
+    /** closest index to where they are now, which may be further along if they cut a corner */
+    closestIndex?: number;
+}): RejoinTarget {
+    const size = positions?.size() ?? 0;
+    if (size < 2) {
+        return null;
+    }
+    // never send anyone backwards: the furthest along of the two is the honest starting point
+    const baseIndex = Math.min(Math.max(fromIndex, closestIndex, 0), size - 1);
+    const maneuver = instructions?.find((instruction) => instruction.index >= baseIndex);
+    if (maneuver) {
+        const maneuverIndex = Math.min(maneuver.index, size - 1);
+        if (distanceAlong(positions, baseIndex, maneuverIndex, REJOIN_MANEUVER_MAX_EXTRA) <= REJOIN_MANEUVER_MAX_EXTRA) {
+            return { index: maneuverIndex, position: fromNativeMapPos(positions.get(maneuverIndex)), maneuver };
+        }
+    }
+    return { index: baseIndex, position: fromNativeMapPos(positions.get(baseIndex)) };
 }
 
 /** Routes coming from OSM are not navigable: they have no instructions and no consistent direction. */
@@ -340,10 +606,10 @@ export function computeRouteProgress({ computeInstruction, computeRemaining, dis
     if (computeRemaining) {
         result.remainingDistance = distanceToEnd(onPathIndex, positions);
         // an imported gpx has no routing result behind it: no timings and no waypoints
-        if (route.totalTime > 0 && route.totalDistance > 0) {
+        if (route?.totalTime > 0 && route.totalDistance > 0) {
             result.remainingTime = (route.totalTime * result.remainingDistance) / route.totalDistance;
         }
-        const stepIndex = route.waypoints?.filter((waypoint) => waypoint.properties?.showOnMap).find((waypoint) => waypoint.properties.index > onPathIndex)?.properties?.index;
+        const stepIndex = route?.waypoints?.filter((waypoint) => waypoint.properties?.showOnMap).find((waypoint) => waypoint.properties.index > onPathIndex)?.properties?.index;
         if (stepIndex >= 0) {
             result.remainingDistanceToStep = result.remainingDistance - distanceToEnd(stepIndex, positions);
         }
