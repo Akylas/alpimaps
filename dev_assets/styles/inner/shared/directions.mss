@@ -1,5 +1,7 @@
 @id:[id];
-@is_selected: [nuti::selected_id]=[id];
+// while navigating, the followed route is drawn by the navigation layer on top: this one drops back
+// to the plain look rather than competing with it
+@is_selected: [nuti::navigating]=1 ? false : [nuti::selected_id]=[id];
 #directions {
 	['mapnik::geometry_type'=2] {
 		[class='waypointline'] {

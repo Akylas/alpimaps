@@ -43,6 +43,7 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
+    import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
     import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
@@ -386,6 +387,8 @@
         registerMapModule('customLayers', customLayersModule);
         registerMapModule('directionsPanel', directionsPanel);
         registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
+        // draws the route being navigated, which is never the selected item
+        registerNavigationRouteModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
