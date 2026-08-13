@@ -22,9 +22,28 @@
             }
         }
 
+        // while navigating, the route being followed is drawn by the navigation layer on top, so the
+        // item under it goes back to the plain look instead of fighting it with the selected one
+        when ([nuti::selected_id]=[id])['nuti::navigating'=1]::navigating {
+            back/line-color: white;
+            back/line-width: @bicycle_line_width + 2;
+            back/line-join: round;
+            back/line-cap: round;
+            back/line-opacity: @itemBackLineOpacity;
+            line-color: @lineColor;
+            line-join: round;
+            line-cap: round;
+            line-opacity: @itemLineOpacity;
+            line-width: @bicycle_line_width;
+
+            [class=pedestrian] {
+                line-width: @pedestrian_line_width;
+            }
+        }
+
     }
 
-    when ([nuti::selected_id]=[id])::selected {
+    when ([nuti::selected_id]=[id])['nuti::navigating'=0]::selected {
         back/line-color: white;
         back/line-width: @bicycle_line_width + 5;
         back/line-join: round;

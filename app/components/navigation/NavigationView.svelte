@@ -17,16 +17,23 @@
     import { convertElevation, formatDistance } from '~/helpers/formatter';
     import { formatTime } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
+    import { DismissReasons } from '@nativescript-community/ui-material-snackbar';
+    import type { EventData } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
+    import { onDestroy } from 'svelte';
+    import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
     import {
         NavigationState,
         navigationHasPreviewWidgets,
         navigationItem,
         navigationProgress,
+        navigationRerouting,
         navigationShowElevationChart,
         navigationShowSurface,
         navigationState,
         navigationStats
     } from '~/stores/navigationStore';
+    import { showSnack } from '~/utils/ui';
     import {
         NAVSTATS_HEIGHT,
         NAVWIDGET_ROW_HEIGHT,
@@ -48,8 +55,39 @@
 
     $: ({ colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
 
+    /** the off-route message and its two actions, tall enough to hit while moving */
+    const ACTION_HEIGHT = 42;
+
     $: paused = $navigationState === NavigationState.PAUSED;
-    $: offRoute = !paused && $navigationProgress?.onPathIndex === -1;
+    $: offRoute = !paused && !!$navigationProgress?.offRoute;
+
+    async function backToRoute() {
+        try {
+            await navigationService.backToRoute();
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function rerouteToDestination() {
+        try {
+            await navigationService.rerouteToDestination();
+        } catch (error) {
+            showError(error);
+        }
+    }
+
+    // an automatic reroute happens without the user asking: it has to say so, and how to take it back
+    async function onRerouted(event: EventData & { data?: { auto: boolean } }) {
+        if (!event.data?.auto) {
+            return;
+        }
+        const result = await showSnack({ message: lc('navigation_rerouted'), actionText: lc('navigation_undo_reroute'), hideDelay: 10000 });
+        if (result?.reason === DismissReasons.ACTION) {
+            navigationService.undoReroute();
+        }
+    }
+    navigationService.on(NavigationReroutedEvent, onRerouted);
+    onDestroy(() => navigationService.off(NavigationReroutedEvent, onRerouted));
     // no previews to show means no second row at all: an empty row with the controls alone in it
     // wasted half the bar and half the map behind it
     $: previewRow = !paused && !offRoute && $navigationHasPreviewWidgets;
@@ -153,9 +191,25 @@
      only push what is left up to the top of the sheet -->
 <gridlayout columns="*,auto" rows={`${barRows},${profileAvailable ? ROUTE_PROFILE_HEIGHT : 0},${statsAvailable ? ROUTE_STATS_HEIGHT : 0}`} {...$$restProps}>
     {#if compact}
-        <NavigationCard horizontalAlignment="left" marginBottom={6} marginLeft={8} padding="4 12 4 12" row={contentRow} verticalAlignment="bottom">
-            <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} text={paused ? lc('navigation_paused') : lc('navigation_off_route')} verticalTextAlignment="center" />
-        </NavigationCard>
+        <!-- off route the message alone is not enough: the two ways out of it are right beside it, big
+             enough to hit while moving and told apart by their text, not by their colour -->
+        <flexlayout alignItems="center" flexDirection="row" horizontalAlignment="left" marginBottom={6} marginLeft={8} row={contentRow} verticalAlignment="bottom">
+            <NavigationCard height={ACTION_HEIGHT} marginRight={8} padding="4 12 4 12">
+                <label
+                    color={colorOnSurfaceVariant}
+                    fontSize={15 * $fontScaleMaxed}
+                    text={paused ? lc('navigation_paused') : $navigationRerouting ? lc('navigation_rerouting') : lc('navigation_off_route')}
+                    verticalTextAlignment="center" />
+            </NavigationCard>
+            {#if offRoute && !$navigationRerouting}
+                <NavigationCard height={ACTION_HEIGHT} marginRight={8} padding="4 14 4 14" on:tap={backToRoute}>
+                    <label color={colorPrimary} fontSize={15 * $fontScaleMaxed} fontWeight="bold" text={lc('navigation_back_to_route')} verticalTextAlignment="center" />
+                </NavigationCard>
+                <NavigationCard height={ACTION_HEIGHT} padding="4 14 4 14" on:tap={rerouteToDestination}>
+                    <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} text={lc('navigation_reroute_to_destination')} verticalTextAlignment="center" />
+                </NavigationCard>
+            {/if}
+        </flexlayout>
     {:else}
         <!-- the figures own the top row. They span both columns only when the previews row exists to
              hold the controls, else the controls sit beside them and this row must leave them room -->
