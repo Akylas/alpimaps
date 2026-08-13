@@ -19,20 +19,20 @@ Applies to EVERY task, including ad-hoc debugging.
 
 ## Workflow
 
-- **ALWAYS** pull main (`git pull origin main`) before starting any work or creating a branch. On a fork, rebase onto `upstream/main`.
-- Start work from a branch, never edit `main` directly — see the [branch-check](skills/branch-check/SKILL.md) skill (derives the branch from a GitHub issue via `gh` when one is in play).
-- Commits follow Conventional Commits (enforced by the `@commitlint/config-conventional` config inline in `package.json`) — always go through the [commit](skills/commit/SKILL.md) skill.
+- The default branch is **`master`** (not `main`). **ALWAYS** `git pull origin master` before starting any work or creating a branch. On a fork, rebase onto `upstream/master`.
+- Start work from a branch, never edit `master` directly — see the [branch-check](skills/branch-check/SKILL.md) skill (derives the branch from a GitHub issue via `gh` when one is in play).
+- Commits follow Conventional Commits by convention — nothing enforces it (there is no commitlint config in this repo), so it is on you. Always go through the [commit](skills/commit/SKILL.md) skill.
 - Pull requests go through the [open-pr](skills/open-pr/SKILL.md) skill (draft, English; the repo has no PR template, so open-pr writes a clean default body).
 - Be concise — in interactions, commits, and PRs. Sacrifice grammar for concision, but keep technical explanations in simple terms.
 
 ## Verification
 
-- Non-trivial changes require verification. The user should specify how (a Vitest test, `svelte-check`, eslint, manual run); if unspecified, propose a method and confirm.
-- Unit tests run via **Vitest**: `yarn test` (all tests, CI-equivalent) or `yarn test:watch`. Isolate with `npx vitest run <path>` or `-t '<name>'`; `yarn vitest` fails on Yarn 4, so use `npx` for the binary. Config lives in [`vitest.config.ts`](../vitest.config.ts) + [`vitest.setup.ts`](../vitest.setup.ts); tests are `app/**/*.test.ts` and run on every pull request via [`.github/workflows/unit-tests.yml`](../.github/workflows/unit-tests.yml).
-- Writing tests: import the **real** production function — never re-declare its logic (a regex, a format string) inside the test, or the test passes while the app breaks. `vitest.setup.ts` mocks the NativeScript runtime and native plugins, and `vitest.config.ts` mirrors the webpack `DefinePlugin` globals and the `.common.ts` platform resolution; add to those when a module fails to import. `ApplicationSettings` is an in-memory store that resets between tests, so settings-dependent behaviour can be seeded with `ApplicationSettings.setX`. `TZ` is pinned to UTC because filename/date formatting is timezone sensitive.
-- Modules that transitively import the NativeScript UI layer (e.g. `app/models/OCRDocument.ts`) cannot be imported under Vitest; extract the pure logic into a sibling module — as done for `app/services/sync/folderFilter.ts` and `app/utils/exportUtils.ts` — and test that.
-- Types/Svelte: `yarn svelte-check` (this one is a real package.json script). Lint: `npx eslint <files>` (flat config).
-- UI/behavioral changes: run the app on device/emulator — `ns run ios` / `ns run android` (the repo also ships `yarn run.ios.production` / `yarn run.android.production`). This needs the git submodules + native toolchain (see `Readme.md` "Building Setup"), so it is heavy; when a native run isn't possible, state that a visual check is still required.
+- **There is no test runner in this repo.** No Vitest, no Jest, no `yarn test`, no unit-test CI workflow. Do not invent a test command, and do not claim a change is "tested" — verification here means typecheck + lint + running the app.
+- Types/Svelte: `yarn svelte-check` (a real package.json script, wraps `svelte-check` with a few a11y warnings ignored). This is the primary automated gate — it covers `app/**` and `tools/app/**`.
+- Lint: `npx eslint <files>` (flat config, typescript-eslint recommendedTypeChecked + prettier + svelte). If eslint output comes back mangled or empty, invoke the binary directly (`./node_modules/.bin/eslint …`) — a shell wrapper can swallow it.
+- `app/components/three/**` is **excluded** from `tsconfig.json`, so `svelte-check` does not cover it. Anything you change in there is unverified by the typechecker; say so.
+- UI/behavioral changes: run the app on device/emulator — `ns run ios` / `ns run android` (the repo also ships `yarn run.ios.production` / `yarn run.android.production`). This needs the git submodules + native toolchain (see [`README.md`](../README.md) "Building Setup"), so it is heavy; when a native run isn't possible, state plainly that a visual check is still required.
+- Pure logic worth verifying (geo maths, formatters, URL/GPX parsing) has no harness to run in. Prefer extracting it into a plain `.ts` module with no NativeScript UI imports so it *can* be exercised later, and reason about it explicitly in the meantime.
 - Trivial changes (typos, comments) can skip formal verification.
 
 ## Code style
@@ -50,17 +50,43 @@ Beyond those:
 
 ## Repo layout
 
-A **svelte-native** app (`@nativescript-community/svelte-native`, `@akylas/nativescript`). Package manager is **yarn 4 (Berry)** — npm breaks the `portal:` local deps, so always use `yarn`. Yarn workspaces (`./`, `./plugin-nativeprocessor`, `./webpdfviewer`); no nx / lerna. Entry: `app/bootstrap.ts` → `app/app.ts`.
+Alpi Maps — an offline hiking/topo map app. **svelte-native** (`@nativescript-community/svelte-native` 1.0.32, `@akylas/nativescript`) on **Svelte 4.2.20**. Svelte-native pins svelte 4 as a peer dep, so **Svelte 5 / runes are not available** — do not write runes syntax.
+
+Package manager is **yarn 4 (Berry)** — npm breaks the `portal:` local deps, so always use `yarn`. Yarn workspaces: `./`, `./3dmap`, `./peakfinder`, `./geo-three`, `./docs`; no nx / lerna.
+
+Entry: `app/main.ts` — installs the plugin mixins, registers the custom elements, then `svelteNative(Map, {})`. **`app/components/map/Map.svelte` is the root component**, so it is on the startup path for everything.
 
 All app code lives under `app/`:
 
-- `app/components/` — all `.svelte` screens/components/modals, grouped by feature (`camera`, `edit`, `list`, `ocr`, `pdf`, `pkpass`, `qrcode`, `security`, `settings`, `view`, `common`, `widgets`). Platform-specific logic uses `.android.ts` / `.ios.ts`.
-- `app/services/` — domain singletons (`documents.ts`, `sync.ts`, `ocr.ts`, `security.ts`, `api.ts`), backed by SQLite (`@akylas/kiss-orm`) + `@nativescript-community/preferences`.
-- `app/models/`, `app/utils/`, `app/helpers/`, `app/transformers/`, `app/workers/`, `app/i18n/`, `app/themes/`, `app/assets/`.
-- State: light **svelte stores** (`app/utils/svelte/store.ts`) plus the service singletons above.
+- `app/components/` — all `.svelte` screens/components/modals, grouped by feature (`map`, `bottomsheet`, `navigation`, `directions`, `search`, `items`, `layers`, `transit`, `compass`, `astronomy`, `chart`, `gps`, `peaks`, `3d`, `three`, `routes`, `settings`, `common`). Platform-specific logic uses `.android.ts` / `.ios.ts`.
+- `app/mapModules/` — **the map's feature layer.** `MapModule.ts` holds the `mapContext` singleton (the shared API surface between the map and everything else) plus the `MapModule` base class; `CustomLayersModule` (tile sources, hillshade, mbtiles), `ItemsModule` (saved items + local vector layer), `UserLocationModule`, `ItemFormatter`. Modules receive lifecycle hooks (`onMapReady`, `onMapClicked`, `onSelectedItem`, …) dispatched by `mapContext.runOnModules`.
+- `app/services/` — domain singletons: `PackageService` (offline packages, elevation, routing, geocoding), `NavigationService`, `NetworkService`, `TransitService`, `BackendService`, plus `BgService.{android,ios,common}.ts` for the background location service.
+- `app/handlers/GeoHandler.ts` — GPS/sensor plumbing behind the background service.
+- `app/stores/` — `mapStore.ts` (carto style parameters via the `nutiProps` / `innerNutiProps` / `layerProps` proxy stores), `navigationStore.ts`, `settingsStore.ts` (`settingsStore()` = a writable backed by `ApplicationSettings`).
+- `app/models/Item.ts` — the central `IItem` / `Item` GeoJSON-ish shape, persisted via SQLite (`@akylas/kiss-orm`).
+- `app/helpers/`, `app/utils/`, `app/workers/`, `app/data/`, `app/i18n/`, `app/themes/`, `app/assets/`, `app/fonts/`, `app/shims/`.
+- State: light **svelte stores** (the `app/stores/` files above) plus the service and map-module singletons.
 
-Native/support: `App_Resources/`, `plugin-nativeprocessor`, `webpdfviewer`, and git submodules (`tools`, `zxingcpp`, native libs). Sentry is available but gated behind `NS_SENTRY=1` / `.sentry` build variants.
+Mapping stack is **carto mobile SDK** via `@nativescript-community/ui-carto` — layers, datasources, `MBVectorTileDecoder`, and style parameters passed as *strings* into the vector-tile styles under `app/assets/styles/`.
+
+### The `tools` submodule and the `@shared` alias
+
+`tools/` is the [Akylas/app-tools](https://github.com/Akylas/app-tools) git submodule, **shared with the other Akylas apps**. `tools/app` is aliased to **`@shared`** (webpack `resolve.alias` in `app.webpack.config.js`, `paths` in `tsconfig.json`).
+
+The contract runs both ways: `@shared/*` is the shared library, and `~/*` is the host surface the library imports back (`tools/app` files import `~/variables`, `~/helpers/locale`, `~/helpers/theme`, `~/utils/ui`). So an app-local file is expected to re-export the shared one and add only what is app-specific — `app/utils/ui/index.common.ts` does exactly that with `export * from '@shared/utils/ui'`.
+
+Be careful: several files exist as **drifted forks** in both places (components under `app/components/common/`, `variables.ts`, `helpers/theme.ts`). Check both copies before editing, and remember **a change under `tools/` affects the other apps** — it is a submodule, with its own commit.
+
+`geo-three` is the second submodule (3D terrain, used by `app/components/three/`).
+
+### Build flags
+
+`app.webpack.config.js` injects compile-time globals via `DefinePlugin` — treat them as `if` guards that get dead-code-eliminated: `PRODUCTION`, `DEV_LOG`, `__ANDROID__` / `__IOS__`, `WITH_BUS_SUPPORT`, `WITH_PEAK_FINDER`, `WITH_3D_MAP`, `SENTRY_ENABLED`, `TEST_ZIP_STYLES`, `PLAY_STORE_BUILD`. Declarations live in [`typings/references.d.ts`](../typings/references.d.ts).
+
+**Always gate `console.log` behind `DEV_LOG &&`** — ungated logs ship.
+
+Native/support: `App_Resources/`, `3dmap/` + `peakfinder/` (web bundles loaded in a WebView), `tools/`, `geo-three/`. Sentry is available but gated behind `NS_SENTRY=1` / `.sentry` build variants.
 
 ## Library documentation
 
-Use the Context7 MCP when you need library/API/framework documentation, setup, or configuration steps — don't wait to be asked. Exception: for NativeScript itself, prefer this repo's source and the `Readme.md`.
+Use the Context7 MCP when you need library/API/framework documentation, setup, or configuration steps — don't wait to be asked. Exception: for NativeScript, svelte-native and the carto SDK, prefer this repo's source, the `node_modules/@nativescript-community/*` typings, and [`README.md`](../README.md) — the published docs for these lag well behind the Akylas forks this app actually uses.
