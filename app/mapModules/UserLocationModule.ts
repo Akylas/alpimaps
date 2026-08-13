@@ -101,6 +101,12 @@ export default class UserLocationModule extends MapModule {
         navigationModeStore.set(value);
         if (value) {
             this.userFollow = true;
+            // draw the arrow now rather than on the next fix: entering navigation is the moment the
+            // user looks at the marker, and a fix can be seconds away — or, if the position has not
+            // moved, never, since an identical fix is dropped before it reaches the markers
+            if (this.mLastUserLocation) {
+                this.updateMarkers(this.mLastUserLocation);
+            }
             this.moveToUserLocation();
         } else {
             // the arrow hid the dot; without this it stays hidden until the next fix arrives, and if
@@ -119,6 +125,10 @@ export default class UserLocationModule extends MapModule {
         }
         if (this.userBackMarker) {
             this.userBackMarker.visible = !useArrow;
+        }
+        if (this.accuracyMarker && useArrow) {
+            // the halo belongs to the dot: left on, it draws a circle around the arrow for ever
+            this.accuracyMarker.visible = false;
         }
     }
     override onMapDestroyed() {
@@ -214,10 +224,27 @@ export default class UserLocationModule extends MapModule {
             position.altitude = Math.round(altitude);
         }
         // DEV_LOG && console.log('updateUserLocation', JSON.stringify(geoPos));
+        this.updateMarkers(position);
+        this.lastUserLocation = position;
+        const inBackground = getBGServiceInstance().appInBackground;
+        console.log('🚀 ~ UserLocationModule.ts ~ UserLocationModule ~ updateUserLocation ~ inBackground:', inBackground);
+        if (this.userFollow) {
+            this.moveToUserLocation(inBackground ? 0 : undefined);
+        }
+        if (__ANDROID__ && inBackground) {
+            const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
+            if (a9ScreenRefresh) {
+                requestScreenRefresh(this.geoHandler);
+            }
+        }
+    }
+
+    /** Everything drawn at the user's position, split out so entering navigation can redraw it at once. */
+    private updateMarkers(position: GeoLocation) {
         let accuracyColor = '#0e7afe';
         let accuracySize = 14;
-        const accuracy = geoPos.horizontalAccuracy || 0;
-        if (geoPos.age > 120000) {
+        const accuracy = position.horizontalAccuracy || 0;
+        if (position.age > 120000) {
             accuracyColor = 'gray';
         } else if (accuracy > 1000) {
             accuracySize = 8;
@@ -302,17 +329,6 @@ export default class UserLocationModule extends MapModule {
         }
 
         this.showArrowMarker(useArrow);
-        this.lastUserLocation = position;
-        const inBackground = getBGServiceInstance().appInBackground;
-        if (this.userFollow) {
-            this.moveToUserLocation(inBackground ? 0 : undefined);
-        }
-        if (__ANDROID__ && inBackground) {
-            const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
-            if (a9ScreenRefresh) {
-                requestScreenRefresh(this.geoHandler);
-            }
-        }
     }
     /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
     navigationZoom = 0;
