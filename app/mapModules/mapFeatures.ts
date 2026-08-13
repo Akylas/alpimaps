@@ -1,4 +1,5 @@
 import { type Readable, derived, readable } from 'svelte/store';
+import type { IItem } from '~/models/Item';
 
 /**
  * One button in the map's side bar. Matches what `ButtonBar` already consumes, so a feature can
@@ -39,6 +40,17 @@ export interface MapMenuItem {
     onLongPress?: () => void | Promise<void>;
 }
 
+/** One button in the selected item's action row. */
+export interface MapItemAction {
+    id: string;
+    text: string;
+    tooltip?: string;
+    /** Lower sorts earlier; the sheet's own actions are spaced 10 apart from 0. */
+    order?: number;
+    onTap: () => void | Promise<void>;
+    onLongPress?: (event?) => void | Promise<void>;
+}
+
 /**
  * A self-contained piece of map functionality: its layers, its controls and its menu entries live
  * together in one file instead of being spread across the map component.
@@ -53,6 +65,11 @@ export interface MapFeature {
     enabled?: () => boolean;
     sideButtons?: Readable<MapSideButton[]>;
     menuItems?: Readable<MapMenuItem[]>;
+    /**
+     * Actions for the selected item. A function rather than a store because it depends on the item,
+     * which the sheet already re-evaluates on every selection.
+     */
+    itemActions?: (item: IItem) => MapItemAction[];
 }
 
 const features: MapFeature[] = [];
@@ -97,6 +114,11 @@ export function featureSideButtons(): Readable<MapSideButton[]> {
         combine<MapSideButton>((feature) => feature.sideButtons),
         (buttons) => buttons.slice().sort((first, second) => (first.order ?? 0) - (second.order ?? 0))
     );
+}
+
+/** Actions every registered feature offers for `item`, ordered. */
+export function featureItemActions(item: IItem): MapItemAction[] {
+    return features.flatMap((feature) => feature.itemActions?.(item) ?? []).sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 }
 
 /** Registered features' entries for one of the two menus, ordered. */
