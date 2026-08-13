@@ -218,7 +218,7 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
-    <gridlayout columns="auto,*,auto" rows="auto,auto,auto,*" paddingLeft={$windowInset.left} paddingRight={$windowInset.right}>
+    <gridlayout columns="auto,*,auto" paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,auto,*">
         <label
             autoFontSize={true}
             colSpan={3}
