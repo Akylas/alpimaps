@@ -188,7 +188,7 @@
         }
     }
     function onSwipe(event) {
-        console.log('onSwipe', event.direction);
+        DEV_LOG && console.log('onSwipe', event.direction);
         switch (event.direction) {
             case 1:
                 previousDates();

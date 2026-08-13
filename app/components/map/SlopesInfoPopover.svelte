@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { SLOPE_COLORS, SLOPE_STEPS } from '~/mapModules/CustomLayersModule';
     import { colors, fontScale, fonts } from '~/variables';
-    import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import { Paint } from '@nativescript-community/ui-canvas';
 </script>
 

@@ -3,12 +3,11 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { Layer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
+    import { Layer } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
@@ -17,10 +16,9 @@
     import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
     import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { closeBottomSheet, isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
@@ -29,7 +27,6 @@
     import { SDK_VERSION, debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -41,13 +38,24 @@
     import MapScrollingWidgets from '~/components/map/MapScrollingWidgets.svelte';
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
+    import { l, lc, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
     import { forceDarkMode, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
-    import type { LayerType } from '~/mapModules/MapModule';
-    import { createTileDecoder, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import type { LayerType } from '~/mapModules/layerStack';
+    import { LayerStack } from '~/mapModules/layerStack';
+    import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import { registerMapModule } from '~/mapModules/registry';
+    import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
+    import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
+    // registers the built-in map features; imported for side effect
+    import '~/mapModules/features/admin';
+    import '~/mapModules/features/immersive';
+    import '~/mapModules/features/styleToggles';
+    import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
+    import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
+    import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
@@ -58,23 +66,18 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL, NotificationHelper } from '~/services/android/NotifcationHelper';
-    import { immersive, innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
-    import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
+    import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
-    import { clearTimeout, disableShowWhenLockedAndTurnScreenOn, enableShowWhenLockedAndTurnScreenOn, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
+    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
+    import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
     import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
 
-    const KEEP_AWAKE_NOTIFICATION_ID = 23466578;
     const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
-
-    const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'search', 'selection', 'userLocation'];
-    const KEEP_AWAKE_KEY = '_keep_awake';
 </script>
 
 <script lang="ts">
@@ -94,6 +97,9 @@
     let locationInfoPanel: LocationInfoPanel;
     let searchView: Search;
     const mapContext = getMapContext();
+    const featureMenuItemsStore = featureMenuItems('overflow');
+    const mainMenuItemsStore = featureMenuItems('main');
+    const featureSideButtonsStore = featureSideButtons();
 
     let selectedOSMId: string;
     let selectedId: string;
@@ -101,10 +107,6 @@
     let selectedPosMarker: Point<LatLonKeys>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
-    let handleSelectedRouteTimer: NodeJS.Timeout;
-    let handleSelectedTransitLinesTimer: NodeJS.Timeout;
-    let selectedRoutes: IItem[];
-    let selectedTransitLines: IItem[];
     let didIgnoreAlreadySelected = false;
 
     let currentLayerStyle: string;
@@ -144,12 +146,9 @@
     const itemLoading = false;
 
     let projection: Projection = new EPSG4326();
-    const addedLayers: { layer: Layer<any, any>; layerId: LayerType }[] = [];
+    const layerStack = new LayerStack(() => cartoMap);
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
-    let keepScreenAwake = ApplicationSettings.getBoolean(KEEP_AWAKE_KEY, false);
-    let keepScreenAwakeFullBrightness = false;
-    let showOnLockscreen = false;
     let currentMapRotation = 0;
 
     let navigationInstructions: {
@@ -159,17 +158,8 @@
         distanceToNextInstruction: number;
     };
 
-    let ignoreNextMapClick = false;
-
-    let fetchingTransitLines = false;
-    let showingTransitLines = false;
-    let showAdmins = false;
-
-    let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
-    let transitVectorTileLayer: VectorTileLayer;
     // let localVectorDataSource: LocalVectorDataSource;
     let localVectorLayer: VectorLayer;
-    let adminVectorTileLayer: VectorTileLayer;
 
     $: {
         if (steps) {
@@ -188,183 +178,9 @@
     //         }
     //     }
     // }
-    function updateTransitLayer() {
-        const oldLayer = transitVectorTileLayer;
-        transitVectorTileLayer = null;
-        createTransitLayer(false);
-        mapContext.replaceLayer(oldLayer, transitVectorTileLayer);
-    }
-    function createTransitLayer(add = true) {
-        transitVectorTileLayer = new VectorTileLayer({
-            // preloading: true,
-            visibleZoomRange: [7, 24],
-            layerBlendingSpeed: 3,
-            labelBlendingSpeed: 3,
-            preloading: $preloading,
-            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-            labelRenderOrder: VectorTileRenderOrder.LAST,
-            dataSource: transitVectorTileDataSource,
-            decoder: mapContext.innerDecoder
-        });
-        mapContext.innerDecoder.once('change', updateTransitLayer);
-        transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-            {
-                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                    if (handleSelectedRouteTimer) {
-                        return;
-                    }
-                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, handleSelectedTransitLinesTimer);
-                    if (featureLayerName === 'routes') {
-                        if (handleSelectedTransitLinesTimer) {
-                            clearTimeout(handleSelectedTransitLinesTimer);
-                        }
-                        const id = featureData.route_id || featureData.id || featureId;
-                        selectedTransitLines = selectedTransitLines || [];
-                        handleSelectedTransitLinesTimer = setTimeout(() => {
-                            handleSelectedTransitLines();
-                        }, 10);
+    // transit lines now live in ~/mapModules/features/transit.ts
 
-                        if (selectedTransitLines.findIndex((s) => s.properties.id === id) === -1) {
-                            const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
-                            const agency = featureData['agency_id'];
-                            const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                            const lineName = featureData['CODE'].split('_')[1];
-                            const item: IItem = {
-                                properties: {
-                                    class: 'bus',
-                                    id,
-                                    ref: featureData['route_short_name'],
-                                    subtitle: featureData['agency_name'],
-                                    name: featureData['route_long_name'],
-                                    symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
-                                    layer: featureLayerName,
-                                    ...featureData
-                                },
-                                route: {
-                                    osmid: id
-                                } as any,
-                                _nativeGeometry: featureGeometry,
-                                layer: transitVectorTileLayer
-                            };
-                            selectedTransitLines.push(item);
-                            ignoreNextMapClick = true;
-                        }
-                        return false;
-                    }
-                    // selectItem({ item, isFeatureInteresting: true });
-                    // return true;
-                    // mapContext.vectorTileClicked(e);
-                }
-            },
-            mapContext.getProjection()
-        );
-        mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
-        if (add) {
-            addLayer(transitVectorTileLayer, 'transit');
-        }
-    }
-
-    function showTransitLines() {
-        // const pos = cartoMap.focusPos;
-        tryCatch(
-            async () => {
-                if (!transitVectorTileLayer && !fetchingTransitLines) {
-                    fetchingTransitLines = true;
-
-                    const result = await transitService.getTransitLines();
-                    if (!transitVectorTileDataSource) {
-                        transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                            // simplifyTolerance: 0,
-                            minZoom: 0,
-                            maxZoom: 24
-                        });
-                        transitVectorTileDataSource.createLayer('routes');
-                    }
-                    transitVectorTileDataSource.setLayerGeoJSONString(1, result);
-                    if (!transitVectorTileLayer) {
-                        createTransitLayer();
-                    }
-                    // if (!transitVectorTileLayer) {
-                    // } else {
-                    //     transitVectorTileLayer.visible = true;
-                    // }
-                } else if (transitVectorTileLayer) {
-                    transitVectorTileLayer.visible = true;
-                }
-            },
-            () => {
-                // eslint-disable-next-line svelte/infinite-reactive-loop
-                showingTransitLines = false;
-            },
-            () => {
-                fetchingTransitLines = false;
-            }
-        );
-    }
-    function hideTransitLines() {
-        if (transitVectorTileLayer) {
-            transitVectorTileLayer.visible = false;
-        }
-    }
-
-    $: {
-        if (showingTransitLines) {
-            // eslint-disable-next-line svelte/infinite-reactive-loop
-            showTransitLines();
-        } else {
-            hideTransitLines();
-        }
-    }
-
-    $: {
-        // DEV_LOG && console.log('showAdmins', showAdmins, customLayersModule?.hasLocalData, adminVectorTileLayer);
-        if (showAdmins && customLayersModule?.hasLocalData) {
-            // const pos = cartoMap.focusPos;
-            tryCatch(
-                async () => {
-                    if (!adminVectorTileLayer) {
-                        DEV_LOG && console.log('show admins ');
-                        adminVectorTileLayer = new VectorTileLayer({
-                            layerBlendingSpeed: 3,
-                            labelBlendingSpeed: 3,
-                            preloading: $preloading,
-                            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                            labelRenderOrder: VectorTileRenderOrder.LAST,
-                            dataSource: (getLayers('map')[0].layer as any as VectorTileLayer).dataSource,
-                            decoder: createTileDecoder('admin')
-                        });
-                        adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-                            {
-                                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                                    if (handleSelectedRouteTimer) {
-                                        return;
-                                    }
-                                    // DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, JSON.stringify(featureData));
-                                    return false;
-                                    // selectItem({ item, isFeatureInteresting: true });
-                                    // return true;
-                                    // mapContext.vectorTileClicked(e);
-                                }
-                            },
-                            mapContext.getProjection()
-                        );
-                        addLayer(adminVectorTileLayer, 'admin');
-                        // } else {
-                        //     transitVectorTileLayer.visible = true;
-                        // }
-                    } else if (adminVectorTileLayer) {
-                        adminVectorTileLayer.visible = true;
-                    }
-                },
-                () => (showAdmins = false)
-            );
-        } else if (adminVectorTileLayer) {
-            adminVectorTileLayer.visible = false;
-        }
-        if (adminVectorTileLayer) {
-            setStyleParameter('hide_admins', adminVectorTileLayer.visible ? '1' : '0');
-        }
-    }
+    // admin boundaries now live in ~/mapModules/features/admin.ts
 
     const onAppUrl = tryCatchFunction(
         async (link: string) => {
@@ -508,40 +324,10 @@
         }
     }
     function onLayersReady() {
-        updateSideButtons();
-
-        if (autoStartWebServer) {
-            startStopWebServer();
-        }
+        // the side buttons refresh themselves now: their visibility derives from mapCapabilities
+        startWebServerIfWanted();
     }
 
-    let toggleSystemBarsWithWindowCompat;
-    if (__ANDROID__) {
-        toggleSystemBarsWithWindowCompat = function (show = true) {
-            const activity = Application.android.startActivity;
-            if (!activity) return;
-
-            const window = activity.getWindow();
-            const decorView = window.getDecorView();
-
-            const WindowCompat = androidx.core.view.WindowCompat;
-            const WindowInsetsControllerCompat = androidx.core.view.WindowInsetsControllerCompat;
-            const WindowInsetsCompat = androidx.core.view.WindowInsetsCompat;
-
-            // Make content extend into system windows
-            WindowCompat.setDecorFitsSystemWindows(window, false);
-
-            const controller = new WindowInsetsControllerCompat(window, decorView);
-            if (show) {
-                controller.show(WindowInsetsCompat.Type.systemBars());
-            } else {
-                controller.hide(WindowInsetsCompat.Type.systemBars());
-
-                // Set behavior to allow swipe to show bars temporarily
-                controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-            }
-        };
-    }
     onMount(() => {
         Application.on(Application.orientationChangedEvent, onOrientationChanged);
         networkService.on(NetworkConnectionStateEvent, onNetworkChange);
@@ -591,16 +377,16 @@
                 bottomSheetStepIndex = index;
             },
             showMapMenu,
-            showMapOptions,
-            mapModules: {
-                items: itemModule,
-                userLocation: new UserLocationModule(),
-                customLayers: customLayersModule,
-                directionsPanel,
-                mapResultsPager,
-                mapScrollingWidgets
-            }
+            showMapOptions
         });
+
+        // registration order is dispatch order: the first module to handle a click wins
+        registerMapModule('items', itemModule);
+        registerMapModule('userLocation', new UserLocationModule());
+        registerMapModule('customLayers', customLayersModule);
+        registerMapModule('directionsPanel', directionsPanel);
+        registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
+        // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
             mapContext.runOnModules('onServiceLoaded', handler);
@@ -625,11 +411,6 @@
             };
         }
     });
-    $: {
-        if (__ANDROID__) {
-            toggleSystemBarsWithWindowCompat?.(!$immersive);
-        }
-    }
     function onColorsChange() {
         if (cartoMap) {
             mapContext.innerDecoder?.setJSONStyleParameters({
@@ -742,10 +523,6 @@
 
     async function onMainMapReady(e) {
         try {
-            // addedLayers = [];
-            // if (!PRODUCTION) {
-            //     await new Promise((resolve) => setTimeout(resolve, 1000));
-            // }
             const map = e.object as CartoMap<LatLonKeys>;
             CartoMap.setRunOnMainThread(true);
             if (DEV_LOG) {
@@ -770,12 +547,11 @@
             cartoMap.setFocusPos(pos, 0);
             cartoMap.setZoom(zoom, 0);
             cartoMap.setBearing(bearing, 0);
-            DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, addedLayers.length, theme);
-            if (addedLayers) {
-                Object.values(addedLayers).forEach((d) => {
-                    addLayer(d.layer, d.layerId, true);
-                });
-            }
+            DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, layerStack.layers.length, theme);
+            // re-add what modules registered before the map existed, and after an activity re-create
+            layerStack.layers.forEach((added) => {
+                addLayer(added.layer, added.layerId, true);
+            });
 
             tryCatch(async () => {
                 packageService.start();
@@ -784,10 +560,8 @@
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
-            //in case it is created before (clicked as soon as the UI is shown)
-            if (transitVectorTileLayer) {
-                addLayer(transitVectorTileLayer, 'transit');
-            }
+            // the overlay may have been switched on before the map existed to add it to
+            addTransitLayerIfPending();
             // setTimeout(() => {
             mapContext.runOnModules('onMapReady', cartoMap);
 
@@ -866,8 +640,7 @@
         const { clickType, position } = e.data;
         // DEV_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
         // handleClickedFeatures(position);
-        if (ignoreNextMapClick) {
-            ignoreNextMapClick = false;
+        if (consumeIgnoreNextMapClick()) {
             return;
         }
         unFocusSearch();
@@ -909,7 +682,7 @@
     }: {
         item: IItem;
         showButtons?: boolean;
-        isFeatureInteresting: boolean;
+        isFeatureInteresting?: boolean;
         peek?: boolean;
         setSelected?: boolean;
         setMapSelected?: boolean;
@@ -1278,84 +1051,14 @@
         }
     }
 
-    $: {
-        ApplicationSettings.setBoolean(KEEP_AWAKE_KEY, keepScreenAwake);
-        showHideKeepAwakeNotification(keepScreenAwake);
-    }
     // $: shouldShowNavigationBarOverlay = $navigationBarHeight !== 0 && !!selectedItem;
 
-    async function handleSelectedRoutes() {
-        DEV_LOG && console.log('handleSelectedRoutes');
-        unFocusSearch();
-        try {
-            if (selectedRoutes && selectedRoutes.length > 0) {
-                if (selectedRoutes.length === 1) {
-                    selectItem({ item: selectedRoutes[0], isFeatureInteresting: true, setMapSelected: true });
-                } else {
-                    const RouteSelect = (await import('~/components/routes/RouteSelect.svelte')).default;
-                    const results = await showBottomSheet({
-                        parent: page,
-                        view: RouteSelect,
-                        skipCollapsedState: true,
-                        props: {
-                            // title: l('pick_route'),
-                            options: selectedRoutes.map((s) => ({ name: s.properties.name, route: s }))
-                        }
-                    });
-                    const result = Array.isArray(results) ? results[0] : results;
-                    if (result) {
-                        selectItem({ item: result.route, isFeatureInteresting: true, setMapSelected: true });
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('handleSelectedRoutes', err, err.stack);
-        }
-        selectedRoutes = null;
-        handleSelectedRouteTimer = null;
-    }
-
-    async function handleSelectedTransitLines() {
-        DEV_LOG && console.log('handleSelectedTransitLines');
-        unFocusSearch();
-        try {
-            DEV_LOG && console.log('handleSelectedTransitLines', selectedTransitLines?.length);
-            if (selectedTransitLines?.length > 0) {
-                if (selectedTransitLines.length === 1) {
-                    selectItem({ item: selectedTransitLines[0], isFeatureInteresting: true, showButtons: true });
-                    // handleRouteSelection(selectedRoutes[0].featureData, selectedRoutes[0].layer);
-                } else {
-                    closeBottomSheet();
-                    const RouteSelect = (await import('~/components/routes/RouteSelect.svelte')).default;
-                    const results = await showBottomSheet({
-                        parent: page,
-                        view: RouteSelect,
-                        skipCollapsedState: true,
-                        props: {
-                            options: selectedTransitLines
-                                .map((s) => ({ name: s.properties.name, route: s }))
-                                .sort((a, b) => {
-                                    const aS = a.route.properties.shortName;
-                                    const bS = b.route.properties.shortName;
-                                    if (aS.length === bS.length) {
-                                        return aS > bS ? 1 : -1;
-                                    }
-                                    return aS.length - bS.length;
-                                })
-                        }
-                    });
-                    const result = Array.isArray(results) ? results[0] : results;
-                    if (result) {
-                        selectItem({ item: result.route, isFeatureInteresting: true, showButtons: true });
-                    }
-                }
-            }
-        } catch (err) {
-            console.error('handleSelectedTransitLines', err, err['stack']);
-        }
-        selectedTransitLines = null;
-        handleSelectedTransitLinesTimer = null;
-    }
+    const routePicker = new FeaturePicker({
+        id: 'routes',
+        key: (item) => item.route.osmid,
+        label: (item) => item.properties.name,
+        select: (item) => selectItem({ item, isFeatureInteresting: true, setMapSelected: true })
+    });
     // function handleClickedFeatures(position: GeoLocation) {
     //     let fakeIndex = 0;
     //     // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
@@ -1383,7 +1086,7 @@
         const { clickType, layer, nearestColor, position } = data;
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        if (handleSelectedTransitLinesTimer) {
+        if (isTransitPickerPending()) {
             return;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
@@ -1397,7 +1100,7 @@
                 featureId,
                 featureData.class,
                 featureData.subclass,
-                featureData,
+                // featureData,
                 JSON.stringify(position),
                 JSON.stringify(featurePosition),
                 handledByModules
@@ -1422,37 +1125,25 @@
             featureData.layer = featureLayerName;
             if (featureLayerName === 'route') {
                 DEV_LOG && console.log('handling route ');
-                if (handleSelectedRouteTimer) {
-                    clearTimeout(handleSelectedRouteTimer);
-                }
-                selectedRoutes = selectedRoutes || [];
-                handleSelectedRouteTimer = setTimeout(handleSelectedRoutes, 10);
-                if (selectedRoutes.findIndex((s) => s.route.osmid === featureData.osmid) === -1) {
-                    selectedRoutes.push({
-                        properties: {
-                            ...featureData
-                        },
-                        _nativeGeometry: featureGeometry,
-                        route: {
-                            osmid: featureData.osmid || featureData.ref || featureData.name
-                        },
-                        layer
-                    });
-                    ignoreNextMapClick = true;
-                }
+                const added = routePicker.add({
+                    properties: {
+                        ...featureData
+                    },
+                    _nativeGeometry: featureGeometry,
+                    route: {
+                        osmid: featureData.osmid || featureData.ref || featureData.name
+                    },
+                    layer
+                });
                 return false;
             }
 
             //    const isFeatureInteresting = featureLayerName === 'poi' || featureLayerName === 'mountain_peak' || featureLayerName === 'housenumber' || (!!featureData.name && !selectedRoutes);
-            const isFeatureInteresting = !selectedRoutes;
+            const isFeatureInteresting = !routePicker.pending;
             // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
-                ignoreNextMapClick = false;
-                selectedRoutes = null;
-                if (handleSelectedRouteTimer) {
-                    clearTimeout(handleSelectedRouteTimer);
-                    handleSelectedRouteTimer = null;
-                }
+                clearIgnoreNextMapClick();
+                routePicker.cancel();
                 const result: IItem = {
                     properties: { featureId, ...featureData },
                     geometry: {
@@ -1699,99 +1390,14 @@
         }
     }
 
-    function removeLayer(layer: Layer<any, any>, layerId: LayerType) {
-        // const realLayerId = offset ? layerId + offset : layerId;
-        const index = addedLayers.findIndex((d) => d.layer === layer);
-        if (index !== -1) {
-            addedLayers.splice(index, 1);
-        }
-        cartoMap.removeLayer(layer);
-    }
-    function moveLayer(layer: Layer<any, any>, newIndex: number) {
-        // const realLayerId = offset ? layerId + offset : layerId;
-        const layers = cartoMap.getLayers();
-        newIndex = Math.max(0, Math.min(newIndex, layers.count() - 1));
-        const index = addedLayers.findIndex((d) => d.layer === layer);
-        if (index !== -1 && index !== newIndex) {
-            const val = addedLayers[index];
-            addedLayers.splice(index, 1);
-            addedLayers.splice(newIndex, 0, val);
-        }
-        layers.remove(layer);
-        layers.insert(newIndex, layer);
-    }
-    function getLayerIndex(layer: Layer<any, any>) {
-        return addedLayers.findIndex((d) => d.layer === layer);
-    }
-    function replaceLayer(oldLayer: Layer<any, any>, layer: Layer<any, any>) {
-        const index = addedLayers.findIndex((d) => d.layer === oldLayer);
-        // DEV_LOG && console.log('replaceLayer', index, oldLayer, layer);
-        if (index !== -1) {
-            addedLayers[index].layer = layer;
-            cartoMap.getLayers().set(index, layer);
-        }
-    }
-    function getLayerTypeFirstIndex(layerId: LayerType) {
-        const layerIndex = LAYERS_ORDER.indexOf(layerId);
-        return addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
-    }
-
-    function getLayers(layerId: LayerType) {
-        if (!layerId) {
-            return addedLayers.slice();
-        }
-        const layerIndex = LAYERS_ORDER.indexOf(layerId);
-        const startIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) === layerIndex);
-        const endIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
-        if (startIndex !== -1) {
-            return addedLayers.slice(startIndex, endIndex !== -1 ? endIndex : undefined);
-        }
-        return [];
-    }
-    function addLayer(layer: Layer<any, any>, layerId: LayerType, force = false) {
-        // console.log('addLayer', layer.constructor.name, layerId);
-        if (cartoMap) {
-            if (force) {
-                // used when restoring everything after activity re create
-                cartoMap.addLayer(layer);
-                return;
-            }
-            if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
-                return;
-            }
-            const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            const realIndex = addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) > layerIndex);
-            if (realIndex >= 0 && realIndex < addedLayers.length) {
-                cartoMap.addLayer(layer, realIndex);
-                addedLayers.splice(realIndex, 0, { layer, layerId });
-            } else {
-                cartoMap.addLayer(layer);
-                addedLayers.push({ layer, layerId });
-            }
-            // cartoMap.requestRedraw();
-        }
-    }
-    function insertLayer(layer: Layer<any, any>, layerId: LayerType, index: number) {
-        if (cartoMap) {
-            if (addedLayers.findIndex((d) => d.layer === layer) !== -1) {
-                return;
-            }
-            const layerIndex = LAYERS_ORDER.indexOf(layerId);
-            const realIndex =
-                Math.max(
-                    addedLayers.findIndex((d) => LAYERS_ORDER.indexOf(d.layerId) >= layerIndex),
-                    0
-                ) + index;
-            const nbLayers = cartoMap.getLayers().count();
-            if (realIndex >= 0 && realIndex < nbLayers) {
-                cartoMap.getLayers().insert(realIndex, layer);
-                addedLayers.splice(realIndex, 0, { layer, layerId });
-            } else {
-                cartoMap.addLayer(layer);
-                addedLayers.push({ layer, layerId });
-            }
-        }
-    }
+    const addLayer = (layer: Layer<any, any>, layerId: LayerType, force = false) => layerStack.addLayer(layer, layerId, force);
+    const insertLayer = (layer: Layer<any, any>, layerId: LayerType, index: number) => layerStack.insertLayer(layer, layerId, index);
+    const removeLayer = (layer: Layer<any, any>) => layerStack.removeLayer(layer);
+    const moveLayer = (layer: Layer<any, any>, newIndex: number) => layerStack.moveLayer(layer, newIndex);
+    const replaceLayer = (oldLayer: Layer<any, any>, layer: Layer<any, any>) => layerStack.replaceLayer(oldLayer, layer);
+    const getLayerIndex = (layer: Layer<any, any>) => layerStack.getLayerIndex(layer);
+    const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
+    const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
     /** the maneuver banner sits at the very top, so everything anchored there has to move down under it */
     $: navigationTopOffset = $isNavigationRunning && !!$navigationProgress?.instruction ? MANEUVER_VIEW_HEIGHT : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
@@ -1886,35 +1492,6 @@
         mapContext.selectItem({ item, isFeatureInteresting: true, peek, preventZoom: false });
     });
 
-    async function showHideKeepAwakeNotification(value: boolean) {
-        if (__ANDROID__) {
-            if (value) {
-                NotificationHelper.showNotification(
-                    {
-                        title: lt('screen_awake_notification'),
-                        channel: NOTIFICATION_CHANEL_ID_KEEP_AWAKE_CHANNEL
-                    },
-                    KEEP_AWAKE_NOTIFICATION_ID
-                );
-            } else {
-                NotificationHelper.hideNotification(KEEP_AWAKE_NOTIFICATION_ID);
-            }
-        }
-    }
-
-    async function switchKeepAwake() {
-        keepScreenAwake = !keepScreenAwake;
-    }
-    const switchShowOnLockscreen = tryCatchFunction(async () => {
-        if (showOnLockscreen) {
-            disableShowWhenLockedAndTurnScreenOn();
-            showOnLockscreen = false;
-        } else {
-            enableShowWhenLockedAndTurnScreenOn();
-            showOnLockscreen = true;
-        }
-    });
-
     function switchLocationInfo() {
         locationInfoPanel.switchLocationInfo();
     }
@@ -1926,36 +1503,7 @@
         });
     }
 
-    const autoStartWebServer = ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START);
-    let webserver;
-
-    function startStopWebServer() {
-        if (webserver) {
-            webserver.stop();
-            webserver = null;
-        } else {
-            try {
-                const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-                const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-                const vDataSource = vectorDataSource.getNative();
-                DEV_LOG && console.log('webserver', vDataSource, hillshadeDatasource?.getNative());
-                webserver = new (akylas.alpi as any).maps.WebServer(
-                    ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT),
-                    hillshadeDatasource?.getNative(),
-                    vDataSource,
-                    vDataSource,
-                    null
-                );
-                webserver.start();
-            } catch (err) {
-                console.error(err);
-            }
-        }
-    }
-
-    onDestroy(() => {
-        webserver?.stop();
-    });
+    onDestroy(stopWebServer);
     const showMapMenu = tryCatchFunction(
         async (event) => {
             const options = (
@@ -2047,13 +1595,8 @@
                     icon: 'mdi-altimeter'
                 });
             }
-            if (__ANDROID__ && packageService.localVectorTileLayer) {
-                options.push({
-                    title: webserver ? lc('stop_tile_server') : lc('start_tile_server'),
-                    id: 'web_server',
-                    icon: 'mdi-server'
-                });
-            }
+            // whatever the registered features contribute to the main menu — see ~/mapModules/features/
+            options.push(...$mainMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title })));
 
             await showPopoverMenu({
                 options,
@@ -2066,11 +1609,7 @@
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
-                        switch (result.id) {
-                            case 'web_server':
-                                copyTextToClipboard(`http://127.0.0.1:${ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)}?source=data&x={x}&y={y}&z={z}`);
-                                break;
-                        }
+                        await $mainMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
                     }
                 }),
                 onClose: async (result) => {
@@ -2086,7 +1625,7 @@
                                 shareScreenshot();
                                 break;
                             case 'keep_awake':
-                                switchKeepAwake();
+                                keepScreenAwake.set(!$keepScreenAwake);
                                 break;
                             case 'dark_mode':
                                 toggleForceDarkMode();
@@ -2137,13 +1676,15 @@
                                 }
                                 break;
                             }
-                            case 'web_server': {
-                                startStopWebServer();
+                            default: {
+                                const featureItem = $mainMenuItemsStore.find((item) => item.id === result.id);
+                                if (featureItem) {
+                                    await featureItem.run();
+                                } else {
+                                    await handleMapAction(result.id);
+                                }
                                 break;
                             }
-                            default:
-                                await handleMapAction(result.id);
-                                break;
                         }
                     }
                 }
@@ -2181,11 +1722,6 @@
         }
     }
 
-    const showTransitLinesPage = tryCatchFunction(async () => {
-        const component = (await import('~/components/transit/TransitLines.svelte')).default;
-        navigate({ page: component });
-    });
-
     let drawn = false;
     function reportFullyDrawn() {
         if (!drawn) {
@@ -2198,149 +1734,46 @@
         }
     }
 
-    let sideButtons = [];
-    function updateSideButtons() {
-        sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
-        sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
-        // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
-        sideButtons = sideButtons;
-    }
-    const showRoutesProps = nutiProps.getProps('show_routes');
-    const showRoutes = showRoutesProps.store;
-    const showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
-    const showSlopePercentages = showSlopePercentagesProps.store;
-    $: {
-        const newButtons: any[] = [
-            {
-                text: 'mdi-fullscreen',
-                id: 'immersive',
-                tooltip: lc('immersive_mode'),
-                visible: __ANDROID__,
-                isSelected: $immersive,
-                onTap: () => immersive.set(!$immersive)
-            },
-            // {
-            //     text: 'mdi-bullseye',
-            //     id: 'contours',
-            //     tooltip: lc('show_contour_lines'),
-            //     isSelected: $showContourLines,
-            //     visible: !!customLayersModule?.hasLocalData,
-            //     onTap: () => showContourLines.set(!$showContourLines)
-            // },
-            {
-                text: showSlopePercentagesProps.icon,
-                id: 'slopes',
-                tooltip: showSlopePercentagesProps.title,
-                isSelected: $showSlopePercentages,
-                visible: showSlopePercentagesProps.visible(customLayersModule),
-                onTap: () => ($showSlopePercentages = !$showSlopePercentages),
-                onLongPress: showSlopePercentagesProps.onLongPress
-            },
-            {
-                text: showRoutesProps.icon,
-                id: 'routes',
-                tooltip: showRoutesProps.title,
-                isSelected: $showRoutes,
-                visible: showRoutesProps.visible(customLayersModule),
-                onTap: () => ($showRoutes = !$showRoutes),
-                onLongPress: showRoutesProps.onLongPress
-            },
-            // {
-            //     text: 'mdi-speedometer',
-            //     tooltip: lc('speedometer'),
-            //     onTap: switchLocationInfo
-            // },
-            {
-                text: keepScreenAwake ? 'mdi-sleep' : 'mdi-sleep-off',
-                isSelected: keepScreenAwake,
-                tooltip: lc('keep_screen_awake'),
-                selectedColor: colorError,
-                onLongPress: () => (keepScreenAwakeFullBrightness = !keepScreenAwakeFullBrightness),
-                onTap: switchKeepAwake
-            },
-            {
-                text: 'mdi-cellphone-lock',
-                isSelected: showOnLockscreen,
-                tooltip: lc('show_screen_lock'),
-                visible: __ANDROID__,
-                onTap: switchShowOnLockscreen
-            }
-        ];
-        if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
-            newButtons.push({
-                text: 'mdi-dots-vertical',
-                onTap: tryCatchFunction(
-                    async (event) => {
-                        const options = []
-                            .concat(
-                                WITH_BUS_SUPPORT && customLayersModule?.devMode
-                                    ? [
-                                          {
-                                              icon: 'mdi-bus-marker',
-                                              id: 'transit_lines',
-                                              title: lc('show_transit_lines'),
-                                              color: showingTransitLines ? colorPrimary : undefined
-                                          }
-                                      ]
-                                    : []
-                            )
-                            .concat(
-                                customLayersModule.hasLocalData
-                                    ? [
-                                          {
-                                              icon: 'mdi-vector-polygon',
-                                              id: 'show_admin_regions',
-                                              title: lc('show_admin_regions'),
-                                              color: showAdmins ? colorPrimary : undefined
-                                          }
-                                      ]
-                                    : []
-                            );
+    /**
+     * Opens the overflow menu. Defined outside the reactive statement below: a handler declared inside
+     * one makes the linter trace into everything it can reach, and rightly flag it as a possible loop.
+     */
+    const overflowButton = {
+        text: 'mdi-dots-vertical',
+        order: 90,
+        onTap: tryCatchFunction(
+            async (event) => {
+                // entirely fed by the registered features — see ~/mapModules/features/
+                const options = $featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title }));
 
-                        await showPopoverMenu({
-                            options,
-                            vertPos: VerticalPosition.ALIGN_BOTTOM,
-                            horizPos: HorizontalPosition.LEFT,
-                            anchor: event.object,
-                            props: {
-                                // autoSizeListItem: true,
-                                maxHeight: Screen.mainScreen.heightDIPs - 100
-                            },
-                            onLongPress: tryCatchFunction(async (result) => {
-                                if (result) {
-                                    switch (result.id) {
-                                        case 'transit_lines':
-                                            closePopover();
-                                            await showTransitLinesPage();
-                                            break;
-                                    }
-                                }
-                            }),
-                            onClose: async (result) => {
-                                if (result) {
-                                    switch (result.id) {
-                                        case 'transit_lines':
-                                            // eslint-disable-next-line svelte/infinite-reactive-loop
-                                            showingTransitLines = !showingTransitLines;
-                                            break;
-                                        case 'show_admin_regions':
-                                            // eslint-disable-next-line svelte/infinite-reactive-loop
-                                            showAdmins = !showAdmins;
-                                            break;
-                                    }
-                                }
-                            }
-                        });
+                await showPopoverMenu({
+                    options,
+                    vertPos: VerticalPosition.ALIGN_BOTTOM,
+                    horizPos: HorizontalPosition.LEFT,
+                    anchor: event.object,
+                    props: {
+                        maxHeight: Screen.mainScreen.heightDIPs - 100
                     },
-                    undefined,
-                    hideLoading
-                )
-            });
-        }
+                    onLongPress: tryCatchFunction(async (result) => {
+                        if (result) {
+                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
+                        }
+                    }),
+                    onClose: async (result) => {
+                        if (result) {
+                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
+                        }
+                    }
+                });
+            },
+            undefined,
+            hideLoading
+        )
+    };
+    $: hasOverflowMenu = (WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData;
+    // features slot themselves in by order rather than the bar knowing where each one belongs
+    $: sideButtons = [...$featureSideButtonsStore, ...(hasOverflowMenu ? [overflowButton] : [])].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 
-        // eslint-disable-next-line svelte/infinite-reactive-loop
-        sideButtons = newButtons;
-    }
     function onDirectionsCancel() {
         endEditingItem();
     }
@@ -2405,15 +1838,13 @@
     }
 </script>
 
-console.log('🚀 ~ Map.svelte ~ navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep); console.log('🚀 ~ Map.svelte ~
-navigationBottomSheetcanAnimateToStep ~ navigationBottomSheetcanAnimateToStep:', navigationBottomSheetcanAnimateToStep);
 <page
     bind:this={page}
     actionBarHidden={true}
     backgroundColor="#E3E1D3"
     ios:iosIgnoreSafeArea={false}
-    {keepScreenAwake}
-    screenBrightness={keepScreenAwake && keepScreenAwakeFullBrightness ? 1 : -1}
+    keepScreenAwake={$keepScreenAwake}
+    screenBrightness={$keepScreenAwake && $keepScreenAwakeFullBrightness ? 1 : -1}
     statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
     android:statusBarColor={directionsPanelVisible ? (isEInk ? 'white' : colorPrimary) : 'transparent'}

@@ -13,7 +13,7 @@
     import { ListItem as IListItem } from '~/components/common/ListItem';
     import ListItem from '~/components/common/ListItem.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
-    import SettingsSlider from '~/components/settings/SettingsSlider.svelte';
+    import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import { lc } from '~/helpers/locale';
     import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
     export interface OptionType extends IListItem {

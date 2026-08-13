@@ -489,7 +489,7 @@ export class GeoHandler extends Handler {
         };
         if (__IOS__) {
         } else {
-            console.log('test', ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime), minimumUpdateTime);
+            DEV_LOG && console.log('test', ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime), minimumUpdateTime);
             Object.assign(options, {
                 gps_update_minTime: {
                     title: lc('gps_update_minTime'),

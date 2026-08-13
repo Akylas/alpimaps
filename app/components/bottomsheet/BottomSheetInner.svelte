@@ -28,6 +28,7 @@
     import { langStore } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
+    import { featureItemActions } from '~/mapModules/mapFeatures';
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -206,7 +207,7 @@
                         query += ' ' + props.address.county;
                     }
                 }
-                console.log('searchWeb', query);
+                DEV_LOG && console.log('searchWeb', query);
                 if (query) {
                     if (__ANDROID__) {
                         const intent = new Intent(Intent.ACTION_WEB_SEARCH);
@@ -290,6 +291,57 @@
     $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
     $: itemNeedsInstructions = !$isNavigating && !!item && isNavigableRoute(item) && !item.instructions?.length;
+
+    /**
+     * Handlers kept out of the reactive statement below on purpose: referencing them there makes the
+     * linter trace into functions that assign `item`, and it is right that that would be a loop.
+     * The row's shape is reactive; what its buttons do is not.
+     */
+    const actionHandlers: Record<string, { tap: (event?) => void; long?: (event?) => void }> = {
+        information: { tap: () => showInformation(), long: () => openOpenStreetMap() },
+        save: { tap: () => saveItem() },
+        navigate: { tap: () => startNavigation() },
+        instructions: { tap: () => getTrackInstructions() },
+        profile: { tap: () => getProfile(), long: (event) => showElevationProfileSettings(event) },
+        stats: { tap: () => getStats() },
+        hide: { tap: () => hideItem() },
+        edit: { tap: () => startEditingItem() },
+        web: { tap: () => searchWeb(), long: () => searchWeb(false) },
+        wikipedia: { tap: () => openWikipedia() },
+        weather: { tap: () => checkWeather(), long: () => openWeather() },
+        astronomy: { tap: () => showAstronomy() },
+        peaks: { tap: () => openPeakFinder() },
+        threed: { tap: () => open3DMap() },
+        compass: { tap: () => openCompass() },
+        transit: { tap: () => getTransitLines() },
+        share: { tap: (event) => shareItem(event) }
+    };
+
+    /**
+     * The action row as data: each entry is only listed when it applies, so the row is built rather
+     * than a fixed set of buttons each hiding itself, and features can contribute their own.
+     */
+    $: itemActions = [
+        { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
+        { id: 'save', when: itemCanBeAdded, text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus', tooltip: lc('save') },
+        { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
+        { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
+        { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
+        { id: 'stats', when: itemIsRoute && itemCanQueryStats, text: 'mdi-chart-bar-stacked', tooltip: lc('road_stats') },
+        { id: 'hide', when: !!item?.id && itemIsRoute, text: 'mdi-eye-off', tooltip: lc('hide') },
+        { id: 'edit', when: itemCanBeEdited, text: 'mdi-pencil', tooltip: lc('edit') },
+        { id: 'web', when: !!item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false)), text: 'mdi-web', tooltip: lc('search_web') },
+        { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
+        { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
+        { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
+        { id: 'peaks', when: WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation() && !itemIsRoute, text: 'mdi-summit', tooltip: lc('peaks') },
+        { id: 'threed', when: WITH_3D_MAP && __ANDROID__ && packageService.hasElevation() && !itemIsRoute, text: 'mdi-video-3d', tooltip: lc('threed_map') },
+        { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
+        { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
+        { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
+    ]
+        .filter((action) => action.when)
+        .concat(featureItemActions(item) as any);
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
     $: if ($isNavigating && $navigationProgress && graphAvailable) {
         highlightChartFromProgress($navigationProgress);
@@ -1069,49 +1121,15 @@
 
         <scrollview backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                <IconButton isVisible={!!item} onLongPress={() => openOpenStreetMap()} rounded={false} text="mdi-information-outline" tooltip={lc('information')} on:tap={() => showInformation()} />
-                <IconButton isVisible={itemCanBeAdded} rounded={false} text={itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus'} tooltip={lc('save')} on:tap={() => saveItem()} />
-                <IconButton isVisible={itemCanBeNavigated} rounded={false} text="mdi-navigation" tooltip={lc('start_navigation')} on:tap={startNavigation} />
-                <IconButton isVisible={itemNeedsInstructions} rounded={false} text="mdi-sign-direction" tooltip={lc('get_directions_for_track')} on:tap={getTrackInstructions} />
-
-                <!-- {#if packageService.hasElevation()} -->
-                <IconButton
-                    isVisible={itemIsRoute && itemCanQueryProfile}
-                    onLongPress={(event) => showElevationProfileSettings(event)}
-                    rounded={false}
-                    text="mdi-chart-areaspline"
-                    tooltip={lc('elevation_profile')}
-                    on:tap={() => getProfile()} />
-                <!-- {/if} -->
-                <!-- {#if packageService.offlineRoutingSearchService()} -->
-                <IconButton isVisible={itemIsRoute && itemCanQueryStats} rounded={false} text="mdi-chart-bar-stacked" tooltip={lc('road_stats')} on:tap={() => getStats()} />
-                <!-- {/if} -->
-                <IconButton isVisible={!!item?.id && itemIsRoute} rounded={false} text="mdi-eye-off" tooltip={lc('hide')} on:tap={hideItem} />
-                <IconButton isVisible={itemCanBeEdited} rounded={false} text="mdi-pencil" tooltip={lc('edit')} on:tap={startEditingItem} />
-                <IconButton
-                    isVisible={item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false))}
-                    onLongPress={() => searchWeb(false)}
-                    rounded={false}
-                    text="mdi-web"
-                    tooltip={lc('search_web')}
-                    on:tap={() => searchWeb()} />
-                <IconButton isVisible={!itemIsRoute && item && item.properties && !!item.properties.name} rounded={false} text="mdi-wikipedia" tooltip={lc('wikipedia')} on:tap={openWikipedia} />
-                {#if networkService.canCheckWeather}
-                    <IconButton isVisible={!itemIsRoute} onLongPress={() => openWeather()} rounded={false} text="mdi-weather-partly-cloudy" tooltip={lc('weather')} on:tap={checkWeather} />
-                {/if}
-                <IconButton id="astronomy" isVisible={!itemIsRoute} rounded={false} text="mdi-weather-night" tooltip={lc('astronomy')} on:tap={showAstronomy} />
-                {#if WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation()}
-                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-summit" tooltip={lc('peaks')} on:tap={openPeakFinder} />
-                {/if}
-                {#if WITH_3D_MAP && __ANDROID__ && packageService.hasElevation()}
-                    <IconButton isVisible={!itemIsRoute} rounded={false} text="mdi-video-3d" tooltip={lc('threed_map')} on:tap={open3DMap} />
-                {/if}
-                <IconButton isVisible={(itemIsRoute && !item?.id) || !!currentLocation} rounded={false} text="mdi-compass-outline" tooltip={lc('compass')} on:tap={openCompass} />
-
-                <IconButton isVisible={itemIsBusStop} rounded={false} text="mdi-bus" tooltip={lc('bus_stop_infos')} on:tap={getTransitLines} />
-                <IconButton rounded={false} text="mdi-share-variant" tooltip={lc('share')} on:tap={shareItem} />
-
-                <!-- <IconButton on:tap={deleteItem} tooltip={lc('delete')} isVisible={!!item?.id} color="red" text="mdi-delete" rounded={false} /> -->
+                {#each itemActions as action (action.id)}
+                    <IconButton
+                        id={action.id}
+                        onLongPress={action['onLongPress'] ?? actionHandlers[action.id]?.long}
+                        rounded={false}
+                        text={action.text}
+                        tooltip={action.tooltip}
+                        on:tap={action['onTap'] ?? actionHandlers[action.id]?.tap} />
+                {/each}
             </stacklayout>
         </scrollview>
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->

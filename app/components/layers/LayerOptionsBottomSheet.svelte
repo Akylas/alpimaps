@@ -16,7 +16,7 @@
     import { createView } from '~/utils/ui';
     $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
     import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
-    import type SettingsSlider__SvelteComponent_ from '~/components/settings/SettingsSlider.svelte';
+    import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { GestureRootView } from '@nativescript-community/gesturehandler';
 
@@ -114,7 +114,7 @@
                         padding: 10,
                         rows: 'auto,auto'
                     });
-                    const SettingsSlider = (await import('~/components/settings/SettingsSlider.svelte')).default;
+                    const SettingsSlider = (await import('@shared/components/SettingsSlider.svelte')).default;
                     const cartoMap = mapContext.getMap();
                     const minSliderInstance = resolveComponentElement(SettingsSlider, {
                         title: lc('min_zoom'),

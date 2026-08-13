@@ -13,7 +13,7 @@
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { onThemeChanged } from '~/helpers/theme';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { nutiProps, pitchEnabled, projectionModeSpherical } from '~/stores/mapStore';
     import { openLink } from '~/utils/ui/index.common';
@@ -231,7 +231,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
         </collectionview>
         <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
             <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
-            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
                 <StoreValue store={option.store} let:value>
                     <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
                 </StoreValue>

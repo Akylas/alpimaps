@@ -549,7 +549,7 @@ export class NetworkService extends Observable {
                 encoded_polyline: compress(points, 6)
             },
             headers: {
-                'User-Agent': 'AlpiMaps',
+                'User-Agent': __APP_ID__,
                 'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             method: 'POST',
@@ -568,7 +568,7 @@ export class NetworkService extends Observable {
                 ...options
             },
             headers: {
-                'User-Agent': 'AlpiMaps',
+                'User-Agent': __APP_ID__,
                 'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
             },
             method: 'POST',

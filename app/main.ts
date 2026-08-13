@@ -20,7 +20,7 @@ import Map from '~/components/map/Map.svelte';
 import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
 import { startSentry } from '@shared/utils/sentry';
-import { NestedScrollView } from './NestedScrollView';
+import { NestedScrollView } from '@shared/components/NestedScrollView';
 import { SETTINGS_ENABLE_CRASH_REPORT } from '~/utils/constants';
 
 try {

@@ -824,7 +824,8 @@ export default class ItemsModule extends MapModule {
             url: overpassAPIURL() + 'interpreter',
             method: 'GET',
             headers: {
-                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1, force)
+                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1, force),
+                'User-Agent': __APP_ID__
             },
             queryParams: {
                 data
