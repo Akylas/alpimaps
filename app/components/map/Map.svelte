@@ -54,6 +54,7 @@
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
+    import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
@@ -66,10 +67,10 @@
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
-    import { ALERT_OPTION_MAX_HEIGHT, DEFAULT_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_PORT, SETTINGS_TILE_SERVER_AUTO_START, SETTINGS_TILE_SERVER_PORT } from '~/utils/constants';
+    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { getBoundsZoomLevel } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { copyTextToClipboard, hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
+    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
     import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
@@ -96,7 +97,8 @@
     let locationInfoPanel: LocationInfoPanel;
     let searchView: Search;
     const mapContext = getMapContext();
-    const featureMenuItemsStore = featureMenuItems();
+    const featureMenuItemsStore = featureMenuItems('overflow');
+    const mainMenuItemsStore = featureMenuItems('main');
     const featureSideButtonsStore = featureSideButtons();
 
     let selectedOSMId: string;
@@ -460,9 +462,7 @@
     }
     function onLayersReady() {
         // the side buttons refresh themselves now: their visibility derives from mapCapabilities
-        if (autoStartWebServer) {
-            startStopWebServer();
-        }
+        startWebServerIfWanted();
     }
 
     onMount(() => {
@@ -1721,36 +1721,7 @@
         });
     }
 
-    const autoStartWebServer = ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START);
-    let webserver;
-
-    function startStopWebServer() {
-        if (webserver) {
-            webserver.stop();
-            webserver = null;
-        } else {
-            try {
-                const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-                const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-                const vDataSource = vectorDataSource.getNative();
-                DEV_LOG && console.log('webserver', vDataSource, hillshadeDatasource?.getNative());
-                webserver = new (akylas.alpi as any).maps.WebServer(
-                    ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT),
-                    hillshadeDatasource?.getNative(),
-                    vDataSource,
-                    vDataSource,
-                    null
-                );
-                webserver.start();
-            } catch (err) {
-                console.error(err);
-            }
-        }
-    }
-
-    onDestroy(() => {
-        webserver?.stop();
-    });
+    onDestroy(stopWebServer);
     const showMapMenu = tryCatchFunction(
         async (event) => {
             const options = (
@@ -1842,13 +1813,8 @@
                     icon: 'mdi-altimeter'
                 });
             }
-            if (__ANDROID__ && packageService.localVectorTileLayer) {
-                options.push({
-                    title: webserver ? lc('stop_tile_server') : lc('start_tile_server'),
-                    id: 'web_server',
-                    icon: 'mdi-server'
-                });
-            }
+            // whatever the registered features contribute to the main menu — see ~/mapModules/features/
+            options.push(...$mainMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title })));
 
             await showPopoverMenu({
                 options,
@@ -1861,11 +1827,7 @@
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
-                        switch (result.id) {
-                            case 'web_server':
-                                copyTextToClipboard(`http://127.0.0.1:${ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)}?source=data&x={x}&y={y}&z={z}`);
-                                break;
-                        }
+                        await $mainMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
                     }
                 }),
                 onClose: async (result) => {
@@ -1932,13 +1894,15 @@
                                 }
                                 break;
                             }
-                            case 'web_server': {
-                                startStopWebServer();
+                            default: {
+                                const featureItem = $mainMenuItemsStore.find((item) => item.id === result.id);
+                                if (featureItem) {
+                                    await featureItem.run();
+                                } else {
+                                    await handleMapAction(result.id);
+                                }
                                 break;
                             }
-                            default:
-                                await handleMapAction(result.id);
-                                break;
                         }
                     }
                 }
