@@ -3,12 +3,11 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import type { MapPos } from '@nativescript-community/ui-carto/core';
     import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
     import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { Layer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
+    import { Layer } from '@nativescript-community/ui-carto/layers';
     import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
     import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { VectorLayer, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
     import { Projection } from '@nativescript-community/ui-carto/projections';
     import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
     import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
@@ -20,7 +19,6 @@
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
@@ -29,7 +27,6 @@
     import { SDK_VERSION, debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
-    import { navigate } from '@shared/utils/svelte/ui';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount } from 'svelte';
@@ -50,11 +47,12 @@
     import { LayerStack } from '~/mapModules/layerStack';
     import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
-    import { FeaturePicker, isPickerPending } from '~/mapModules/featurePicker';
+    import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
+    import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
     import UserLocationModule from '~/mapModules/UserLocationModule';
@@ -159,13 +157,6 @@
         distanceToNextInstruction: number;
     };
 
-    let ignoreNextMapClick = false;
-
-    let fetchingTransitLines = false;
-    let showingTransitLines = false;
-
-    let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
-    let transitVectorTileLayer: VectorTileLayer;
     // let localVectorDataSource: LocalVectorDataSource;
     let localVectorLayer: VectorLayer;
 
@@ -186,123 +177,7 @@
     //         }
     //     }
     // }
-    function updateTransitLayer() {
-        const oldLayer = transitVectorTileLayer;
-        transitVectorTileLayer = null;
-        createTransitLayer(false);
-        mapContext.replaceLayer(oldLayer, transitVectorTileLayer);
-    }
-    function createTransitLayer(add = true) {
-        transitVectorTileLayer = new VectorTileLayer({
-            // preloading: true,
-            visibleZoomRange: [7, 24],
-            layerBlendingSpeed: 3,
-            labelBlendingSpeed: 3,
-            preloading: $preloading,
-            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-            labelRenderOrder: VectorTileRenderOrder.LAST,
-            dataSource: transitVectorTileDataSource,
-            decoder: mapContext.innerDecoder
-        });
-        mapContext.innerDecoder.once('change', updateTransitLayer);
-        transitVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-            {
-                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                    if (isPickerPending('routes')) {
-                        return;
-                    }
-                    DEV_LOG && console.log('clicked on transit data', featureId, featureLayerName, featureGeometry, transitPicker.pending);
-                    if (featureLayerName === 'routes') {
-                        const id = featureData.route_id || featureData.id || featureId;
-                        const color = featureData['route_color']?.length ? featureData['route_color'] : transitService.defaultTransitLineColor;
-                        const agency = featureData['agency_id'];
-                        const textColor = new Color(color).getBrightness() >= 186 ? '#000000' : '#ffffff';
-                        const added = transitPicker.add({
-                            properties: {
-                                class: 'bus',
-                                id,
-                                ref: featureData['route_short_name'],
-                                subtitle: featureData['agency_name'],
-                                name: featureData['route_long_name'],
-                                symbol: `${color}:${color}:${agency === 'FLIXBUS-eu' ? 'FLIX' : featureData['route_short_name']}:${textColor}`,
-                                layer: featureLayerName,
-                                ...featureData
-                            },
-                            route: {
-                                osmid: id
-                            } as any,
-                            _nativeGeometry: featureGeometry,
-                            layer: transitVectorTileLayer
-                        });
-                        if (added) {
-                            ignoreNextMapClick = true;
-                        }
-                        return false;
-                    }
-                    // selectItem({ item, isFeatureInteresting: true });
-                    // return true;
-                    // mapContext.vectorTileClicked(e);
-                }
-            },
-            mapContext.getProjection()
-        );
-        mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
-        if (add) {
-            addLayer(transitVectorTileLayer, 'transit');
-        }
-    }
-
-    function showTransitLines() {
-        // const pos = cartoMap.focusPos;
-        tryCatch(
-            async () => {
-                if (!transitVectorTileLayer && !fetchingTransitLines) {
-                    fetchingTransitLines = true;
-
-                    const result = await transitService.getTransitLines();
-                    if (!transitVectorTileDataSource) {
-                        transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                            // simplifyTolerance: 0,
-                            minZoom: 0,
-                            maxZoom: 24
-                        });
-                        transitVectorTileDataSource.createLayer('routes');
-                    }
-                    transitVectorTileDataSource.setLayerGeoJSONString(1, result);
-                    if (!transitVectorTileLayer) {
-                        createTransitLayer();
-                    }
-                    // if (!transitVectorTileLayer) {
-                    // } else {
-                    //     transitVectorTileLayer.visible = true;
-                    // }
-                } else if (transitVectorTileLayer) {
-                    transitVectorTileLayer.visible = true;
-                }
-            },
-            () => {
-                // eslint-disable-next-line svelte/infinite-reactive-loop
-                showingTransitLines = false;
-            },
-            () => {
-                fetchingTransitLines = false;
-            }
-        );
-    }
-    function hideTransitLines() {
-        if (transitVectorTileLayer) {
-            transitVectorTileLayer.visible = false;
-        }
-    }
-
-    $: {
-        if (showingTransitLines) {
-            // eslint-disable-next-line svelte/infinite-reactive-loop
-            showTransitLines();
-        } else {
-            hideTransitLines();
-        }
-    }
+    // transit lines now live in ~/mapModules/features/transit.ts
 
     // admin boundaries now live in ~/mapModules/features/admin.ts
 
@@ -684,10 +559,8 @@
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
-            //in case it is created before (clicked as soon as the UI is shown)
-            if (transitVectorTileLayer) {
-                addLayer(transitVectorTileLayer, 'transit');
-            }
+            // the overlay may have been switched on before the map existed to add it to
+            addTransitLayerIfPending();
             // setTimeout(() => {
             mapContext.runOnModules('onMapReady', cartoMap);
 
@@ -766,8 +639,7 @@
         const { clickType, position } = e.data;
         // DEV_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
         // handleClickedFeatures(position);
-        if (ignoreNextMapClick) {
-            ignoreNextMapClick = false;
+        if (consumeIgnoreNextMapClick()) {
             return;
         }
         unFocusSearch();
@@ -1186,23 +1058,6 @@
         label: (item) => item.properties.name,
         select: (item) => selectItem({ item, isFeatureInteresting: true, setMapSelected: true })
     });
-
-    const transitPicker = new FeaturePicker({
-        id: 'transit',
-        key: (item) => item.properties.id,
-        label: (item) => item.properties.name,
-        select: (item) => selectItem({ item, isFeatureInteresting: true, showButtons: true }),
-        // shortest code first, then alphabetically: line numbers read as a list that way
-        sort: (first, second) => {
-            const firstShort = first.properties.shortName;
-            const secondShort = second.properties.shortName;
-            if (firstShort.length === secondShort.length) {
-                return firstShort > secondShort ? 1 : -1;
-            }
-            return firstShort.length - secondShort.length;
-        },
-        closeOpenSheet: true
-    });
     // function handleClickedFeatures(position: GeoLocation) {
     //     let fakeIndex = 0;
     //     // currentClickedFeatures = [...new Map(clickedFeatures.map((item) => [JSON.stringify(item), item])).values()];
@@ -1230,7 +1085,7 @@
         const { clickType, layer, nearestColor, position } = data;
     }
     function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
-        if (transitPicker.pending) {
+        if (isTransitPickerPending()) {
             return;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
@@ -1279,9 +1134,6 @@
                     },
                     layer
                 });
-                if (added) {
-                    ignoreNextMapClick = true;
-                }
                 return false;
             }
 
@@ -1289,7 +1141,7 @@
             const isFeatureInteresting = !routePicker.pending;
             // DEV_LOG && console.log('isFeatureInteresting', featureLayerName, featureData.name, isFeatureInteresting, featureGeometry.constructor.name, featurePosition, position);
             if (isFeatureInteresting) {
-                ignoreNextMapClick = false;
+                clearIgnoreNextMapClick();
                 routePicker.cancel();
                 const result: IItem = {
                     properties: { featureId, ...featureData },
@@ -1869,11 +1721,6 @@
         }
     }
 
-    const showTransitLinesPage = tryCatchFunction(async () => {
-        const component = (await import('~/components/transit/TransitLines.svelte')).default;
-        navigate({ page: component });
-    });
-
     let drawn = false;
     function reportFullyDrawn() {
         if (!drawn) {
@@ -1934,21 +1781,8 @@
                 order: 90,
                 onTap: tryCatchFunction(
                     async (event) => {
-                        const options = ([] as any[])
-                            .concat(
-                                WITH_BUS_SUPPORT && customLayersModule?.devMode
-                                    ? [
-                                          {
-                                              icon: 'mdi-bus-marker',
-                                              id: 'transit_lines',
-                                              title: lc('show_transit_lines'),
-                                              color: showingTransitLines ? colorPrimary : undefined
-                                          }
-                                      ]
-                                    : []
-                            )
-                            // whatever the registered features contribute — see ~/mapModules/features/
-                            .concat($featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title })));
+                        // entirely fed by the registered features — see ~/mapModules/features/
+                        const options = $featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title }));
 
                         await showPopoverMenu({
                             options,
@@ -1961,28 +1795,12 @@
                             },
                             onLongPress: tryCatchFunction(async (result) => {
                                 if (result) {
-                                    switch (result.id) {
-                                        case 'transit_lines':
-                                            closePopover();
-                                            await showTransitLinesPage();
-                                            break;
-                                        default:
-                                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
-                                            break;
-                                    }
+                                    await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
                                 }
                             }),
                             onClose: async (result) => {
                                 if (result) {
-                                    switch (result.id) {
-                                        case 'transit_lines':
-                                            // eslint-disable-next-line svelte/infinite-reactive-loop
-                                            showingTransitLines = !showingTransitLines;
-                                            break;
-                                        default:
-                                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
-                                            break;
-                                    }
+                                    await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
                                 }
                             }
                         });
