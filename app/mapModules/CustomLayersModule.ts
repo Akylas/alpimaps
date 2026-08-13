@@ -440,7 +440,6 @@ export default class CustomLayersModule extends MapModule {
             url,
             ...provider.sourceOptions
         });
-
         const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
         const cacheable = provider.cacheable || !PRODUCTION;
         const cacheSize = ApplicationSettings.getNumber(`${id}_cacheSize`, 300);
@@ -451,7 +450,8 @@ export default class CustomLayersModule extends MapModule {
                           dataSource,
                           cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                           capacity: cacheSize * 1024 * 1024,
-                          databasePath
+                          databasePath,
+                          encoding: dataSource.encoding
                       })
                     : dataSource,
             vectorDataSource

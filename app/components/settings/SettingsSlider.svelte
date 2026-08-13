@@ -30,7 +30,6 @@
     export let formatter = (value) => value + '';
     export let valueFormatter = (value) => value.toFixed(1);
 
-
     // let canvas: NativeViewElementNode<CanvasView>;
     let actualValue;
     $: actualValue = value ?? defaultValue;

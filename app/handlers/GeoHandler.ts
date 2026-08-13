@@ -4,11 +4,14 @@ import { confirm } from '@nativescript-community/ui-material-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
-import { convertDurationSeconds, formatDistance } from '~/helpers/formatter';
+import { formatDistance, formatDuration } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceCommon } from '~/services/BgService.common';
+import { DEFAULT_NAVIGATION_RECORD_TRACK, SETTINGS_NAVIGATION_RECORD_TRACK } from '~/utils/constants';
 import { Handler } from './Handler';
+import { navigationService } from '~/services/NavigationService';
+import { getBGServiceInstance } from '~/services/BgService';
 
 let geolocation: GPS;
 
@@ -19,12 +22,26 @@ export const timeout = 20000;
 export const minimumUpdateTime = 0; // Should update every 1 second according ;
 export type GeoLocation = GenericGeoLocation<LatLonKeys>;
 
+/** meters: past this the fix is too vague to feed the session accumulators */
+const SESSION_MAX_ACCURACY = 30;
+/** m/s: below this the GPS considers us stopped, so distance must not grow */
+const SESSION_STOPPED_SPEED = 0.3;
+/** meters: fallback movement threshold when the fix carries no speed */
+const SESSION_MIN_DISTANCE = 2;
+/** meters: altimeter noise floor, below which a climb is not counted */
+const SESSION_ALTITUDE_THRESHOLD = 3;
+
 export interface Session {
     lastLoc: GeoLocation;
+    /** km/h */
     currentSpeed: number;
+    /** km/h */
     averageSpeed: number;
+    /** meters climbed */
     altitudeGain: number;
+    /** meters descended, stored as a positive magnitude */
     altitudeNegative: number;
+    /** meters */
     distance: number;
     startTime: Date;
     lastPauseTime: Date;
@@ -70,6 +87,8 @@ const TAG = '[GeoHandler]';
 
 export class GeoHandler extends Handler {
     watchId;
+    /** incremented by every start/stop, so a startWatch that resolves late can tell it is obsolete */
+    private watchGeneration = 0;
     currentWatcher: Function;
     _isIOSBackgroundMode = false;
     _deferringUpdates = false;
@@ -86,7 +105,15 @@ export class GeoHandler extends Handler {
     get stopGpsBackground() {
         return ApplicationSettings.getBoolean('stop_gps_background', true);
     }
+    get recordTrack() {
+        return ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
+    }
     gpsEnabled = true;
+
+    /** set by NavigationService: merged into the GPS watch options while navigating */
+    // navigationWatchOptions: Partial<GeolocationOptions> = null;
+    /** set by NavigationService: navigation drives the watch itself, so the app going to background must not stop it */
+    keepWatchingInBackground = false;
 
     constructor(service: BgServiceCommon) {
         super(service);
@@ -94,7 +121,14 @@ export class GeoHandler extends Handler {
             geolocation = new GPS();
         }
     }
+    shouldIgnoreNextResumePause = false;
+    ignoreNextResumePause() {
+        this.shouldIgnoreNextResumePause = true;
+    }
     onAppResume(args: ApplicationEventData) {
+        if (this.shouldIgnoreNextResumePause) {
+            return;
+        }
         if (__IOS__) {
             this._isIOSBackgroundMode = false;
             // For iOS applications, args.ios is UIApplication.
@@ -102,9 +136,13 @@ export class GeoHandler extends Handler {
             DEV_LOG && console.log('UIApplication: foregroundEvent', this.isWatching());
             if (this.currentSession) {
                 // we need to restart
-                this.stopWatch();
-                this.startWatch();
+                this.restartWatch();
             }
+        }
+
+        if (this.keepWatchingInBackground) {
+            // keep the navigation notification up, navigation restarts the watch at its foreground cadence
+            return;
         }
 
         if (!this.currentSession) {
@@ -116,8 +154,7 @@ export class GeoHandler extends Handler {
                     const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
                     const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
                     if (backgroundUpdateTime !== updateTime) {
-                        this.stopWatch();
-                        this.startWatch();
+                        this.restartWatch();
                     }
                     (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
                 }
@@ -125,6 +162,10 @@ export class GeoHandler extends Handler {
         }
     }
     onAppPause(args: ApplicationEventData) {
+        if (this.shouldIgnoreNextResumePause) {
+            this.shouldIgnoreNextResumePause = false;
+            return;
+        }
         if (__IOS__) {
             this._isIOSBackgroundMode = true;
             // For iOS applications, args.ios is UIApplication.
@@ -135,7 +176,13 @@ export class GeoHandler extends Handler {
                 this.startWatch();
             }
         }
-        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground);
+        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground, this.keepWatchingInBackground);
+        if (this.keepWatchingInBackground) {
+            // navigation owns the watch cadence in background and restarts it itself. The foreground
+            // service is already running, started back when navigation began: android 14 would refuse
+            // to start a location one from here
+            return;
+        }
         if (!this.currentSession && this.isWatching()) {
             if (this.stopGpsBackground) {
                 this.wasWatchingBeforePause = true;
@@ -146,8 +193,7 @@ export class GeoHandler extends Handler {
                     const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
                     DEV_LOG && console.log('pause background gps', updateTime, backgroundUpdateTime);
                     if (backgroundUpdateTime !== updateTime) {
-                        this.stopWatch();
-                        this.startWatch({
+                        this.restartWatch({
                             minimumUpdateTime: backgroundUpdateTime
                         });
                     }
@@ -346,7 +392,17 @@ export class GeoHandler extends Handler {
         DEV_LOG && console.log(' location error: ', err);
         this.currentWatcher && this.currentWatcher(err);
     }
+
+    public get appInBackground() {
+        return getBGServiceInstance().appInBackground;
+    }
     async startWatch(opts?: Partial<GeolocationOptions>) {
+        // a second watch would leak the first one: only the last id is kept, so the previous
+        // registration keeps feeding locations with nothing left to clear it with
+        if (this.watchId) {
+            DEV_LOG && console.log('startWatch: replacing the running watch', this.watchId);
+            this.stopWatch();
+        }
         const options: GeolocationOptions = {
             // provider: 'gps',
             updateDistance: ApplicationSettings.getNumber('gps_update_distance', updateDistance),
@@ -355,7 +411,8 @@ export class GeoHandler extends Handler {
             onDeferred: this.onDeferred,
             nmeaAltitude: true,
             skipPermissionCheck: true,
-            ...opts
+            ...opts,
+            ...navigationService.getWatchOptions()
         };
         DEV_LOG && console.log('startWatch', JSON.stringify(options));
 
@@ -371,7 +428,17 @@ export class GeoHandler extends Handler {
             options.activityType = ApplicationSettings.getNumber('gps_ios_activitytype', CLActivityType.Other);
         }
 
-        this.watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
+        const generation = ++this.watchGeneration;
+        const watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
+        if (generation !== this.watchGeneration) {
+            // a stopWatch (or another startWatch) landed while we were still starting. Assigning now
+            // would resurrect a watch nobody can stop: watchId was null when stopWatch ran, so it
+            // cleared nothing. Drop this one instead
+            DEV_LOG && console.log('startWatch: obsolete before it started, clearing', watchId);
+            geolocation.clearWatch(watchId);
+            return;
+        }
+        this.watchId = watchId;
     }
     IOS_ACCURACIES = __IOS__
         ? {
@@ -397,7 +464,10 @@ export class GeoHandler extends Handler {
                 description: lc('gps_update_distance_desc'),
                 value: () => ApplicationSettings.getNumber('gps_update_distance', updateDistance),
                 default: updateDistance,
-                type: 'prompt',
+                type: 'slider',
+                min: 0,
+                max: 500,
+                step: 5,
                 formatter: formatDistance
             },
             gps_desired_accuracy: {
@@ -419,22 +489,29 @@ export class GeoHandler extends Handler {
         };
         if (__IOS__) {
         } else {
+            console.log('test', ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime), minimumUpdateTime);
             Object.assign(options, {
                 gps_update_minTime: {
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime),
-                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
-                    type: 'prompt'
+                    formatter: (seconds) => formatDuration(seconds),
+                    type: 'slider',
+                    min: 0,
+                    max: 300,
+                    step: 1
                 },
                 gps_background_update_minTime: {
                     title: lc('gps_background_update_minTime'),
                     description: lc('gps_background_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime),
-                    formatter: (n) => convertDurationSeconds(n / 1000, 's[s]'),
-                    type: 'prompt'
+                    formatter: (seconds) => formatDuration(seconds),
+                    type: 'slider',
+                    min: 0,
+                    max: 300,
+                    step: 1
                 }
             });
         }
@@ -443,9 +520,15 @@ export class GeoHandler extends Handler {
 
     stopWatch() {
         DEV_LOG && console.log('stopWatch', this.watchId);
+        // bumped even with no watchId: several callers do not await startWatch, so one may still be in
+        // flight and this is what tells it to throw its watch away rather than install it
+        this.watchGeneration++;
         if (this.watchId) {
-            if (__ANDROID__) {
-                (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
+            // navigation restarts the watch whenever its cadence changes. Dropping the foreground
+            // service each time would be fatal: android 14 refuses to start a location one again
+            // from the background, so it could never be restored
+            if (__ANDROID__ && !this.keepWatchingInBackground) {
+                (this.service.bgService as WeakRef<AndroidBgService>)?.get()?.removeForeground();
             }
             geolocation.clearWatch(this.watchId);
             this.watchId = null;
@@ -453,14 +536,43 @@ export class GeoHandler extends Handler {
         }
     }
 
+    /**
+     * Must be called while the app is still in the foreground: android 14 only lets a location
+     * foreground service start from an eligible state, which the background is not.
+     */
+    showForegroundNotification() {
+        // bgService is null until the android service has bound, and dereferencing it would throw
+        // from inside navigation start/stop, leaving the gps running
+        if (__ANDROID__) {
+            (this.service.bgService as WeakRef<AndroidBgService>)?.get()?.showForeground(true);
+        }
+    }
+    hideForegroundNotification() {
+        if (__ANDROID__) {
+            (this.service.bgService as WeakRef<AndroidBgService>)?.get()?.removeForeground();
+        }
+    }
+
     isWatching() {
         return !!this.watchId;
+    }
+
+    async restartWatch(opts?) {
+        if (!this.isWatching()) {
+            return;
+        }
+        this.stopWatch();
+        await this.startWatch(opts);
     }
 
     getDistance(loc1, loc2) {
         return Math.round(geolocation.distance(loc1, loc2) * 1000) / 1000;
     }
     updateSessionWithLoc(loc: GeoLocation) {
+        const session = this.currentSession;
+        if (!session || this.sessionState !== SessionState.RUNNING) {
+            return;
+        }
         if (this.lastLoc === null && loc) {
             this.notify({
                 eventName: SessionFirstPositionEvent,
@@ -468,20 +580,57 @@ export class GeoHandler extends Handler {
                 data: loc
             } as GPSEvent);
         }
+        const previousLoc = this.lastLoc;
         this.lastLoc = loc;
-        if (!this.lastAlt) {
-            this.lastAlt = loc.altitude;
+        session.lastLoc = loc;
+
+        // a fix we cannot trust would only add noise to every accumulator below
+        const accuracy = loc.horizontalAccuracy ?? 0;
+        if (previousLoc && accuracy <= SESSION_MAX_ACCURACY) {
+            const delta = this.getDistance(previousLoc, loc);
+            // GPS speed is doppler derived, so it tells us whether we are moving far more reliably than
+            // differencing two positions does. Only fall back to the distance when we have no speed.
+            const moving = loc.speed >= 0 ? loc.speed > SESSION_STOPPED_SPEED : delta > SESSION_MIN_DISTANCE;
+            if (moving) {
+                session.distance += delta;
+            }
         }
-        this.currentSession.lastLoc = loc;
-        const { android, ios, ...dataToStore } = loc;
-        this.currentSession.locs.push(dataToStore);
+
+        const altitude = loc.altitude;
+        if (altitude !== undefined && altitude !== null && !isNaN(altitude)) {
+            if (this.lastAlt === undefined || this.lastAlt === null) {
+                this.lastAlt = altitude;
+            } else {
+                const deltaAltitude = altitude - this.lastAlt;
+                // only commit a climb once it clears the altimeter noise, else a flat road accumulates gain
+                if (Math.abs(deltaAltitude) >= SESSION_ALTITUDE_THRESHOLD) {
+                    if (deltaAltitude > 0) {
+                        session.altitudeGain += deltaAltitude;
+                    } else {
+                        session.altitudeNegative -= deltaAltitude;
+                    }
+                    this.lastAlt = altitude;
+                }
+            }
+        }
+
+        session.currentSpeed = loc.speed >= 0 ? loc.speed * 3.6 : 0;
+        const elapsed = Date.now() - session.startTime.valueOf() - session.pauseDuration;
+        if (elapsed > 0) {
+            session.averageSpeed = Math.round((session.distance / elapsed) * 3600);
+        }
+
+        if (this.recordTrack) {
+            const { android, ios, ...dataToStore } = loc;
+            session.locs.push(dataToStore);
+        }
         this.notify({
             eventName: SessionUpdatedEvent,
             object: this,
-            data: this.currentSession
+            data: session
         } as SessionEventData);
         if (this.onUpdatedSession) {
-            this.onUpdatedSession(this.currentSession);
+            this.onUpdatedSession(session);
         }
     }
 
@@ -521,7 +670,11 @@ export class GeoHandler extends Handler {
 
             // this.lastSpeeds = [];
             this.onUpdatedSession = onUpdate;
-            this.startWatch();
+            // a session needs a watch, not its own watch: restarting one that is already running would
+            // throw away the cadence whoever started it asked for, navigation in particular
+            if (!this.isWatching()) {
+                this.startWatch();
+            }
             this.setSessionState(SessionState.RUNNING);
             this.startChronoTimer();
             return this.currentSession;

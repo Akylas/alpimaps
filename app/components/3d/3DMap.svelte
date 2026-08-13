@@ -48,7 +48,6 @@
         // client.originalClient = originalClient;
         return client;
     }
-
 </script>
 
 <page actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
