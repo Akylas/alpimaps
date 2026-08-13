@@ -10,7 +10,7 @@
     import { Writable } from 'svelte/store';
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
@@ -259,12 +259,12 @@
     </collectionview>
 
     <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
-        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
             <StoreValue store={option.store} let:value>
                 <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
             </StoreValue>
         {/each}
-        {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.(customLayers) ?? true) as option}
+        {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
             <StoreValue store={option.store} let:value>
                 <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
             </StoreValue>
