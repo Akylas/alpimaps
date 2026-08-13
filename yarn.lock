@@ -34,10 +34,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-android-runtime@npm:8.9.2":
-  version: 8.9.2
-  resolution: "@akylas/nativescript-android-runtime@npm:8.9.2"
-  checksum: 10/3d1cd13b1a3e2256d139c97699097a8fe37e1a05771d17849b6b0a3b07c4784f1160c791e09aed023b14178cff70b6f305562e9e46a8e8594eda218a97dfc3af
+"@akylas/nativescript-android-runtime@npm:9.0.5":
+  version: 9.0.5
+  resolution: "@akylas/nativescript-android-runtime@npm:9.0.5"
+  checksum: 10/46233a96a633deb3d1b7b7240a7d312e62fe625155a35b7ad26f706863cc9f399204b69784bc795248b733b9922ce572ebe4a361ab9cdfd1a85d611a250798ed
   languageName: node
   linkType: hard
 
@@ -100,15 +100,15 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@akylas/nativescript-app-utils@npm:2.2.13":
-  version: 2.2.13
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.13"
+"@akylas/nativescript-app-utils@npm:2.2.14":
+  version: 2.2.14
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.14"
   dependencies:
     "@nativescript-community/https": "npm:^4.1.32"
     "@nativescript-community/l": "npm:^4.3.11"
     "@nativescript-community/ui-share-file": "npm:^1.3.3"
     make-error: "npm:1.3.6"
-  checksum: 10/19a2e00f67b108f942bb0ebe87794da5c4ce6cf5bb41a670b943b3dab2def13cbd414092ee5da459e25a57755ba805347c7ec1719083e7f4a34e0b492db074e6
+  checksum: 10/f1838bab88cba04126b3633f94f80ae69dc5671d4acd62ceec11b3f28e9d4fc117ace2fe40cee8591836d4b71e86353473db92d668fd830c48e51c90c6e6492a
   languageName: node
   linkType: hard
 
@@ -126,16 +126,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-ios-runtime@npm:8.9.6":
-  version: 8.9.6
-  resolution: "@akylas/nativescript-ios-runtime@npm:8.9.6"
-  checksum: 10/440afa81870c523c376dad4598648ccd6436badacd8bbb5d8f123cb7af84944120e4a61991e500aeea5f04fe7e76ea00279c26418a75eb33b79dbe396d96bc40
+"@akylas/nativescript-ios-runtime@npm:9.0.3":
+  version: 9.0.3
+  resolution: "@akylas/nativescript-ios-runtime@npm:9.0.3"
+  checksum: 10/83583a6b4b4f2b81e42458db4351312e7412b75e7f3be68cb95b936a8aaa8490b5a0801b7c4a520b8a6664f8aea438a3c1b19a17177911ae4872f65ac1334002
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-webpack@npm:5.0.24":
-  version: 5.0.24
-  resolution: "@akylas/nativescript-webpack@npm:5.0.24"
+"@akylas/nativescript-webpack@npm:5.0.35":
+  version: 5.0.35
+  resolution: "@akylas/nativescript-webpack@npm:5.0.35"
   dependencies:
     "@babel/core": "npm:^7.23.3"
     "@pmmmwh/react-refresh-webpack-plugin": "npm:~0.6.1"
@@ -158,7 +158,7 @@ __metadata:
     postcss-import: "npm:^16.0.0"
     postcss-loader: "npm:^8.0.0"
     raw-loader: "npm:^4.0.0"
-    react-refresh: "npm:~0.17.0"
+    react-refresh: "npm:~0.18.0"
     sass: "npm:^1.0.0"
     sass-loader: "npm:^16.0.0"
     sax: "npm:^1.0.0"
@@ -175,32 +175,33 @@ __metadata:
     webpack-merge: "npm:^6.0.0"
     webpack-virtual-modules: "npm:^0.4.0"
   peerDependencies:
-    nativescript-vue-template-compiler: ^2.8.1
+    nativescript-vue-template-compiler: ^2.9.3
   peerDependenciesMeta:
     nativescript-vue-template-compiler:
       optional: true
   bin:
     nativescript-webpack: dist/bin/index.js
-  checksum: 10/62ed665ff592fc9f8b1d2a6baf8c1d04446cfc82b56fe46c29674de079d2ed96b1a83d11afaa7f1e017387ff47dfa21cf8feec4b5e6bb0fc9899acec397d3c9c
+  checksum: 10/f68b978152c8aa891e9e33a1145d4359e98e66bf594ee0e3d9b7822e94fe3c04c14b10211d898b0a87c994156ad93b98459535b478ee84023823aec384dceaa7
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@npm:8.9.17":
-  version: 8.9.17
-  resolution: "@akylas/nativescript@npm:8.9.17"
+"@akylas/nativescript@npm:9.0.23":
+  version: 9.0.23
+  resolution: "@akylas/nativescript@npm:9.0.23"
   dependencies:
-    "@csstools/css-calc": "npm:~2.1.2"
-    "@csstools/css-color-parser": "npm:^3.0.8"
-    "@csstools/css-parser-algorithms": "npm:^3.0.4"
-    "@csstools/css-tokenizer": "npm:^3.0.3"
-    "@nativescript/hook": "npm:~2.0.0"
-    acorn: "npm:^8.7.0"
-    css-tree: "npm:^1.1.2"
+    "@csstools/css-calc": "npm:~2.1.4"
+    "@csstools/css-color-parser": "npm:^3.0.10"
+    "@csstools/css-parser-algorithms": "npm:^3.0.5"
+    "@csstools/css-tokenizer": "npm:^3.0.4"
+    "@nativescript/hook": "npm:~3.0.4"
+    acorn: "npm:^8.15.0"
+    css-tree: "npm:^3.1.0"
     css-what: "npm:^6.1.0"
-    emoji-regex: "npm:^10.3.0"
-    reduce-css-calc: "npm:^2.1.8"
-    tslib: "npm:^2.6.3"
-  checksum: 10/f397e54b5e3675d49eb0e9cf3888be72fcdfc9842e00145f77edb2e9860dc08761872e21d53daff362904e6354f7f4c26b2f9fcc23c766d660640819e8156b62
+    emoji-regex: "npm:^10.2.1"
+    source-map: "npm:0.7.6"
+    source-map-js: "npm:^1.2.1"
+    tslib: "npm:^2.0.0"
+  checksum: 10/976b2e07b7088a48856f95162395e6470874c3d89f5250ec467a221630594089e3c456579e0d747981c6aefe11f01453c2fff00c995cdc60b64ecccd8f9480ca
   languageName: node
   linkType: hard
 
@@ -1461,7 +1462,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-calc@npm:^2.1.4, @csstools/css-calc@npm:~2.1.2":
+"@csstools/css-calc@npm:^2.1.4, @csstools/css-calc@npm:~2.1.4":
   version: 2.1.4
   resolution: "@csstools/css-calc@npm:2.1.4"
   peerDependencies:
@@ -1471,7 +1472,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-color-parser@npm:^3.0.8":
+"@csstools/css-color-parser@npm:^3.0.10":
   version: 3.1.0
   resolution: "@csstools/css-color-parser@npm:3.1.0"
   dependencies:
@@ -1484,7 +1485,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-parser-algorithms@npm:^3.0.4":
+"@csstools/css-parser-algorithms@npm:^3.0.5":
   version: 3.0.5
   resolution: "@csstools/css-parser-algorithms@npm:3.0.5"
   peerDependencies:
@@ -1493,7 +1494,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-tokenizer@npm:^3.0.3":
+"@csstools/css-tokenizer@npm:^3.0.4":
   version: 3.0.4
   resolution: "@csstools/css-tokenizer@npm:3.0.4"
   checksum: 10/eb6c84c086312f6bb8758dfe2c85addd7475b0927333c5e39a4d59fb210b9810f8c346972046f95e60a721329cffe98895abe451e51de753ad1ca7a8c24ec65f
@@ -2771,34 +2772,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/https@npm:4.1.32":
-  version: 4.1.32
-  resolution: "@nativescript-community/https@npm:4.1.32"
-  checksum: 10/8eed4f362e656a9ad7a4da82e43087eed54ee218b2b130c2e11b8963d60eeec631155ea4f985a020b8f66a185846060d894d5c27799faad0f39ab6d10f38e50c
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/https@npm:^4.1.32":
+"@nativescript-community/https@npm:4.1.35, @nativescript-community/https@npm:^4.1.32":
   version: 4.1.35
   resolution: "@nativescript-community/https@npm:4.1.35"
   checksum: 10/99938cb0f09815cf5d2e4b334dee194058bce71aae1b3cf47156d5b46ec134dcdd5d8935ae76e12cb6e107b1f6e8f3e52bb8b61069f695688b62fdd4178269a2
   languageName: node
   linkType: hard
 
-"@nativescript-community/l@npm:4.3.11":
-  version: 4.3.11
-  resolution: "@nativescript-community/l@npm:4.3.11"
-  dependencies:
-    "@nativescript/hook": "npm:~2.0.0"
-    mkdirp: "npm:^1.0.4"
-    shorthash: "npm:0.0.2"
-    simple-plist: "npm:^1.1.1"
-    sprintf-js: "npm:^1.1.2"
-  checksum: 10/8e41b69daffe236c22d6f86d40950e3245990ec16263803db4cd2d219da021c75a581e5241117f4a5770db3dc922cb71f0a7facc33b9556bc02d86b8ef7f13fe
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/l@npm:^4.3.11":
+"@nativescript-community/l@npm:4.3.12, @nativescript-community/l@npm:^4.3.11":
   version: 4.3.12
   resolution: "@nativescript-community/l@npm:4.3.12"
   dependencies:
@@ -2958,9 +2939,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-chart@npm:2.0.29":
-  version: 2.0.29
-  resolution: "@nativescript-community/ui-chart@npm:2.0.29"
+"@nativescript-community/ui-chart@npm:2.0.30":
+  version: 2.0.30
+  resolution: "@nativescript-community/ui-chart@npm:2.0.30"
   dependencies:
     "@nativescript-community/additween": "npm:^4.0.9"
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
@@ -2968,7 +2949,7 @@ __metadata:
     "@nativescript-community/ui-canvas": "npm:^4.6.46"
     downsample: "npm:^1.4.0"
     number-format.js: "npm:^2.0.9"
-  checksum: 10/23b5db20bd92eda654326a03d9a0b3fa32a76bad7ac1e3d7dc4244326cd821b518b3cda9ac1faed321b0ab5aad08fb4e705e3339b6ccd565dded13cb4c21ca16
+  checksum: 10/6d07766c63134752bbc07ba36dd9807fba5067ab1112c875c8987fb81f45ade1a2694d6f5edab61f23efe9dda5b48b4183123372cc71e99645a1c6bc95bb685c
   languageName: node
   linkType: hard
 
@@ -2979,27 +2960,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.21":
-  version: 6.0.21
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.21"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.25":
+  version: 6.0.25
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.25"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.21"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.25"
     "@nativescript-community/ui-drawer": "npm:^0.1.31"
-  checksum: 10/c8f32ac9f1b85778974787b30dd907ea44cac730b919ef58052fd6dc3b7e99dc4b15937bb7a64208ddf85782188a166f29da639ee098e3fa01a867a1509d9093
+  checksum: 10/aab23d0f27e5095fb2fbe3e15cdac6620305f8c9577c602e14aab691f11dc26b43ca8fe22e26cb00cb5cc07d7bf640a4598f8ea0b69970487c29f9f2c925428e
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.21":
-  version: 6.0.21
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.21"
-  dependencies:
-    "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/3c909bb294660b8ed7a980d5378e16dd9b5711a851432e3ff393417e561c827fefade545e183ae96f17b2f68b60aca0af5072bef8c198cc0cf05838f0e167aec
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/ui-collectionview@npm:^6.0.21":
+"@nativescript-community/ui-collectionview@npm:6.0.25, @nativescript-community/ui-collectionview@npm:^6.0.25":
   version: 6.0.25
   resolution: "@nativescript-community/ui-collectionview@npm:6.0.25"
   dependencies:
@@ -3026,19 +2998,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-image@npm:4.6.19":
-  version: 4.6.19
-  resolution: "@nativescript-community/ui-image@npm:4.6.19"
-  checksum: 10/b5fc7a4814ece483660f1fe5d6c2c92daa3b5381df7f05ea17d14019b5bead55e70dd3b8a34234b0d680193e1906449a3e3096302a6e80d3e2e8bd74f27df046
+"@nativescript-community/ui-image@npm:4.6.20":
+  version: 4.6.20
+  resolution: "@nativescript-community/ui-image@npm:4.6.20"
+  checksum: 10/c699e975b424ac0aa1f2bd8cc084bf8d130fd483db9354946e8bfb35f016659bbf48cefe62a6a94aec8ad9f08c6119fb454477911968a3506cb062140ea9ba11
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-label@npm:1.3.43":
-  version: 1.3.43
-  resolution: "@nativescript-community/ui-label@npm:1.3.43"
+"@nativescript-community/ui-label@npm:2.0.1":
+  version: 2.0.1
+  resolution: "@nativescript-community/ui-label@npm:2.0.1"
   dependencies:
     "@nativescript-community/text": "npm:^1.6.25"
-  checksum: 10/2e35d42162fbc91c78203b24e9993f7d345be2ab8395f6004c574df5bba7ec1252cea8a562ea8c93a0eed28a9fd5613253ababef3afca5b61d08062b059a82e2
+  checksum: 10/b3d5e2eb8f1b38889b8f9cf09949f70bf820db1834bb714a7cb8a3438db382fb3ee1fd67f71bf6f7a0bf457cb6ad78cbca935f2b22de380f1b23474dc19a878a
   languageName: node
   linkType: hard
 
@@ -3166,12 +3138,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-persistent-bottomsheet@npm:0.1.10":
-  version: 0.1.10
-  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.1.10"
+"@nativescript-community/ui-persistent-bottomsheet@npm:0.1.11":
+  version: 0.1.11
+  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.1.11"
   dependencies:
     "@nativescript-community/gesturehandler": "npm:^2.0.43"
-  checksum: 10/cca3aaf027f4e46b6fee507baaa1c6e12712cdfc94c471f9827e5e7ae88adedea9d5a6b49a97fb42e8cf6db974bf5b463b7ea3eacf89a5d4c7e0736e621858a2
+  checksum: 10/746a356f09b954ef4c45ae8cb45ff564f70dc1daeb52d527d2718f8804a2e8b5760bfeafc2844c59b4e89e40ee93779653ac55520487e75f13bbe940849c11b2
   languageName: node
   linkType: hard
 
@@ -3198,25 +3170,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-webview-rtc@npm:1.6.1":
-  version: 1.6.1
-  resolution: "@nativescript-community/ui-webview-rtc@npm:1.6.1"
+"@nativescript-community/ui-webview-rtc@npm:1.6.2":
+  version: 1.6.2
+  resolution: "@nativescript-community/ui-webview-rtc@npm:1.6.2"
   dependencies:
-    "@nativescript-community/ui-webview": "npm:^1.6.1"
-  checksum: 10/7c1236e7f7bd3401667d9c85569818a4f357a1fd4cb6dcf0c413c62d8d40021e44edd9078a849e1b2389df13b04e5c1feab4adf7fcdcf1296373eb624679653e
+    "@nativescript-community/ui-webview": "npm:^1.6.2"
+  checksum: 10/5013e6c3e23be4d089d27721f8728edae5894db97ec5d7e7d4aa601fd235f1e092508a62915d59610d5f6c5d304ae10c3533462f422a7605031ecbe135b94215
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-webview@npm:1.6.1":
-  version: 1.6.1
-  resolution: "@nativescript-community/ui-webview@npm:1.6.1"
-  dependencies:
-    url: "npm:^0.11.0"
-  checksum: 10/690508cfc7b9fa435b4c6103693e765e3ec73ebdf8677433c6615550467ab1aeb6f692f1d2718a54a1e9248fe9aec68b71eaad739c794c5b776fe7ac9621f963
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/ui-webview@npm:^1.6.1":
+"@nativescript-community/ui-webview@npm:1.6.2, @nativescript-community/ui-webview@npm:^1.6.2":
   version: 1.6.2
   resolution: "@nativescript-community/ui-webview@npm:1.6.2"
   dependencies:
@@ -3246,22 +3209,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript/core@npm:8.9.9":
-  version: 8.9.9
-  resolution: "@nativescript/core@npm:8.9.9"
+"@nativescript/core@npm:9.0.20":
+  version: 9.0.20
+  resolution: "@nativescript/core@npm:9.0.20"
   dependencies:
-    "@csstools/css-calc": "npm:~2.1.2"
-    "@csstools/css-color-parser": "npm:^3.0.8"
-    "@csstools/css-parser-algorithms": "npm:^3.0.4"
-    "@csstools/css-tokenizer": "npm:^3.0.3"
-    "@nativescript/hook": "npm:~2.0.0"
-    acorn: "npm:^8.7.0"
-    css-tree: "npm:^1.1.2"
-    css-what: "npm:^6.1.0"
+    "@csstools/css-calc": "npm:~2.1.4"
+    "@csstools/css-color-parser": "npm:^3.0.10"
+    "@csstools/css-parser-algorithms": "npm:^3.0.5"
+    "@csstools/css-tokenizer": "npm:^3.0.4"
+    "@nativescript/hook": "npm:~3.0.4"
+    acorn: "npm:^8.15.0"
+    css-tree: "npm:^3.1.0"
+    css-what: "npm:^7.0.0"
     emoji-regex: "npm:^10.2.1"
-    source-map: "npm:0.6.1"
+    source-map: "npm:0.7.6"
+    source-map-js: "npm:^1.2.1"
     tslib: "npm:^2.0.0"
-  checksum: 10/5122af3ae49a9ef69df8a0ebf12ca0efca5b1d1ec3e0315725e6044da3935e4f60520baa47798fa414e4e5c86c9838942943346f11cea35f0294fc5a1ab441f4
+  checksum: 10/f17d8cff0630b79cc35d21ca6d93fe1c70fc3acbbb228b4f1fa903648e60566facb307a6c652781fdca7acddec8ae12b35d1bcf2e63d7fa4af599c7176ef7362
   languageName: node
   linkType: hard
 
@@ -3279,6 +3243,13 @@ __metadata:
     glob: "npm:^7.1.0"
     mkdirp: "npm:^1.0.4"
   checksum: 10/fbc93d6e9e7585febd59f0aed0ca3f39d94edbff623b308046fa0e74ef4c1643dbeda921d507bd5a5d54f2c8457d4a6b6bf4c1eaffe5f151c178d03d8083b8ca
+  languageName: node
+  linkType: hard
+
+"@nativescript/hook@npm:~3.0.4":
+  version: 3.0.5
+  resolution: "@nativescript/hook@npm:3.0.5"
+  checksum: 10/ff2b1bc85a88e51e4d0b271d4c043b23bc640f47936dd65c9473be1a8faf8e5835504ac4430669c32f1e6cfb0e5c2a5eb3c363f9717c530e17f70ba2e8cfd829
   languageName: node
   linkType: hard
 
@@ -5511,7 +5482,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"acorn@npm:^8.0.0, acorn@npm:^8.0.4, acorn@npm:^8.10.0, acorn@npm:^8.11.0, acorn@npm:^8.14.0, acorn@npm:^8.15.0, acorn@npm:^8.16.0, acorn@npm:^8.7.0, acorn@npm:^8.7.1, acorn@npm:^8.8.1, acorn@npm:^8.9.0":
+"acorn@npm:^8.0.0, acorn@npm:^8.0.4, acorn@npm:^8.10.0, acorn@npm:^8.11.0, acorn@npm:^8.14.0, acorn@npm:^8.15.0, acorn@npm:^8.16.0, acorn@npm:^8.7.1, acorn@npm:^8.8.1, acorn@npm:^8.9.0":
   version: 8.18.0
   resolution: "acorn@npm:8.18.0"
   bin:
@@ -6821,11 +6792,11 @@ __metadata:
   linkType: hard
 
 "baseline-browser-mapping@npm:^2.11.12":
-  version: 2.11.13
-  resolution: "baseline-browser-mapping@npm:2.11.13"
+  version: 2.11.14
+  resolution: "baseline-browser-mapping@npm:2.11.14"
   bin:
     baseline-browser-mapping: dist/cli.cjs
-  checksum: 10/42b8b85ab6662d8cba5678dcd01acfcd884b4e87b882f517b137ce0b193db1478cfb0d0c5a50cd43c031e81f8514d1a1533ce1d55f0cb5735246665fd5ebe8f6
+  checksum: 10/b1745ec32246d3d1182bfeab2c2efeaf29925e6f617da59f28fde032fce6fa4eaa4632bcf2f9edeca83ceeb7cdfd72d6361ebd7c10e1d4fcb117259ec7059165
   languageName: node
   linkType: hard
 
@@ -7771,16 +7742,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"css-tree@npm:^1.1.2":
-  version: 1.1.3
-  resolution: "css-tree@npm:1.1.3"
-  dependencies:
-    mdn-data: "npm:2.0.14"
-    source-map: "npm:^0.6.1"
-  checksum: 10/29710728cc4b136f1e9b23ee1228ec403ec9f3d487bc94a9c5dbec563c1e08c59bc917dd6f82521a35e869ff655c298270f43ca673265005b0cd05b292eb05ab
-  languageName: node
-  linkType: hard
-
 "css-tree@npm:^2.3.1":
   version: 2.3.1
   resolution: "css-tree@npm:2.3.1"
@@ -7791,7 +7752,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"css-tree@npm:^3.0.1":
+"css-tree@npm:^3.0.1, css-tree@npm:^3.1.0":
   version: 3.2.1
   resolution: "css-tree@npm:3.2.1"
   dependencies:
@@ -7811,17 +7772,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"css-unit-converter@npm:^1.1.1":
-  version: 1.1.2
-  resolution: "css-unit-converter@npm:1.1.2"
-  checksum: 10/1058d7ce913caa07ae441f0536bb34a7ef0cfd7eb5e5194d440e7a4f4261cbb320720546db345d0e34b842e114d7b7e3817433e9b3efaee3ba25340627ed52e5
-  languageName: node
-  linkType: hard
-
 "css-what@npm:^6.0.1, css-what@npm:^6.1.0":
   version: 6.2.2
   resolution: "css-what@npm:6.2.2"
   checksum: 10/3c5a53be94728089bd1716f915f7f96adde5dd8bf374610eb03982266f3d860bf1ebaf108cda30509d02ef748fe33eaa59aa75911e2c49ee05a85ef1f9fb5223
+  languageName: node
+  linkType: hard
+
+"css-what@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "css-what@npm:7.0.0"
+  checksum: 10/253c3013f8aee74b60d7d5c60bc62f3151a32f59ec6a9cc74527bb514d3aa746466f81fc10d57d85c58ee777d6e82eced7c5733a2181a884458dfc134518afab
   languageName: node
   linkType: hard
 
@@ -8411,7 +8372,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"emoji-regex@npm:^10.2.1, emoji-regex@npm:^10.3.0":
+"emoji-regex@npm:^10.2.1":
   version: 10.6.0
   resolution: "emoji-regex@npm:10.6.0"
   checksum: 10/98cc0b0e1daed1ed25afbf69dcb921fee00f712f51aab93aa1547e4e4e8171725cc4f0098aaa645b4f611a19da11ec9f4623eb6ff2b72314b39a8f2ae7c12bf2
@@ -12158,13 +12119,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mdn-data@npm:2.0.14":
-  version: 2.0.14
-  resolution: "mdn-data@npm:2.0.14"
-  checksum: 10/64c629fcf14807e30d6dc79f97cbcafa16db066f53a294299f3932b3beb0eb0d1386d3a7fe408fc67348c449a4e0999360c894ba4c81eb209d7be4e36503de0e
-  languageName: node
-  linkType: hard
-
 "mdn-data@npm:2.0.28":
   version: 2.0.28
   resolution: "mdn-data@npm:2.0.28"
@@ -13892,13 +13846,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-value-parser@npm:^3.3.0":
-  version: 3.3.1
-  resolution: "postcss-value-parser@npm:3.3.1"
-  checksum: 10/e8bc676092ad0c4a628e8d7b06ef1844a157bcce22e489d72ac661d6d47b8e8e7c342e5e0da807056a0a2fced1372fff0f67fbfd6e06fd8509828ac6190b54ae
-  languageName: node
-  linkType: hard
-
 "postcss-value-parser@npm:^4.0.0, postcss-value-parser@npm:^4.1.0, postcss-value-parser@npm:^4.2.0":
   version: 4.2.0
   resolution: "postcss-value-parser@npm:4.2.0"
@@ -14202,10 +14149,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-refresh@npm:~0.17.0":
-  version: 0.17.0
-  resolution: "react-refresh@npm:0.17.0"
-  checksum: 10/5e94f07d43bb1cfdc9b0c6e0c8c73e754005489950dcff1edb53aa8451d1d69a47b740b195c7c80fb4eb511c56a3585dc55eddd83f0097fb5e015116a1460467
+"react-refresh@npm:~0.18.0":
+  version: 0.18.0
+  resolution: "react-refresh@npm:0.18.0"
+  checksum: 10/504c331c19776bf8320c23bad7f80b3a28de03301ed7523b0dd21d3f02bf2b53bbdd5aa52469b187bc90f358614b2ba303c088a0765c95f4f0a68c43a7d67b1d
   languageName: node
   linkType: hard
 
@@ -14318,16 +14265,6 @@ __metadata:
     indent-string: "npm:^2.1.0"
     strip-indent: "npm:^1.0.1"
   checksum: 10/2bb8f76fda9c9f44e26620047b0ba9dd1834b0a80309d0badcc23fdcf7bb27a7ca74e66b683baa0d4b8cb5db787f11be086504036d63447976f409dd3e73fd7d
-  languageName: node
-  linkType: hard
-
-"reduce-css-calc@npm:^2.1.8":
-  version: 2.1.8
-  resolution: "reduce-css-calc@npm:2.1.8"
-  dependencies:
-    css-unit-converter: "npm:^1.1.1"
-    postcss-value-parser: "npm:^3.3.0"
-  checksum: 10/ad0269e4f32e80d184faa76746db825917c9482a5aa2d455c249261515916e3607d053667444269b6b8f21d0952bd29f6e24a1fb811838f55d91404bea3d2c1d
   languageName: node
   linkType: hard
 
@@ -14749,14 +14686,14 @@ __metadata:
   dependencies:
     "@akylas/address-formatter": "npm:5.3.1"
     "@akylas/kiss-orm": "npm:2.1.14"
-    "@akylas/nativescript": "npm:8.9.17"
-    "@akylas/nativescript-android-runtime": "npm:8.9.2"
+    "@akylas/nativescript": "npm:9.0.23"
+    "@akylas/nativescript-android-runtime": "npm:9.0.5"
     "@akylas/nativescript-app-tools": "portal:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.13"
+    "@akylas/nativescript-app-utils": "npm:2.2.14"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
-    "@akylas/nativescript-ios-runtime": "npm:8.9.6"
-    "@akylas/nativescript-webpack": "npm:5.0.24"
+    "@akylas/nativescript-ios-runtime": "npm:9.0.3"
+    "@akylas/nativescript-webpack": "npm:5.0.35"
     "@mapbox/tilebelt": "npm:2.0.3"
     "@mdi/font": "npm:7.4.47"
     "@modern-dev/daylight": "npm:^0.1.0"
@@ -14766,8 +14703,8 @@ __metadata:
     "@nativescript-community/geocoding": "npm:3.2.1"
     "@nativescript-community/gesturehandler": "npm:2.0.44"
     "@nativescript-community/gps": "npm:3.1.10"
-    "@nativescript-community/https": "npm:4.1.32"
-    "@nativescript-community/l": "npm:4.3.11"
+    "@nativescript-community/https": "npm:4.1.35"
+    "@nativescript-community/l": "npm:4.3.12"
     "@nativescript-community/licenses": "npm:2.0.9"
     "@nativescript-community/observable": "npm:2.0.11"
     "@nativescript-community/perms": "npm:3.0.11"
@@ -14781,14 +14718,14 @@ __metadata:
     "@nativescript-community/ui-canvas": "npm:4.6.52"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.55"
     "@nativescript-community/ui-carto": "npm:2.1.0"
-    "@nativescript-community/ui-chart": "npm:2.0.29"
+    "@nativescript-community/ui-chart": "npm:2.0.30"
     "@nativescript-community/ui-checkbox": "npm:2.0.18"
-    "@nativescript-community/ui-collectionview": "npm:6.0.21"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.21"
+    "@nativescript-community/ui-collectionview": "npm:6.0.25"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.25"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
     "@nativescript-community/ui-drawer": "npm:0.1.31"
-    "@nativescript-community/ui-image": "npm:4.6.19"
-    "@nativescript-community/ui-label": "npm:1.3.43"
+    "@nativescript-community/ui-image": "npm:4.6.20"
+    "@nativescript-community/ui-label": "npm:2.0.1"
     "@nativescript-community/ui-lottie": "npm:5.0.11"
     "@nativescript-community/ui-material-activityindicator": "npm:7.3.2"
     "@nativescript-community/ui-material-bottomsheet": "npm:7.3.2"
@@ -14803,16 +14740,16 @@ __metadata:
     "@nativescript-community/ui-material-textfield": "npm:7.3.2"
     "@nativescript-community/ui-material-textview": "npm:7.3.2"
     "@nativescript-community/ui-pager": "npm:14.1.42"
-    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.1.10"
+    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.1.11"
     "@nativescript-community/ui-popover": "npm:0.1.22"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     "@nativescript-community/ui-svg": "npm:0.2.24"
-    "@nativescript-community/ui-webview": "npm:1.6.1"
-    "@nativescript-community/ui-webview-rtc": "npm:1.6.1"
+    "@nativescript-community/ui-webview": "npm:1.6.2"
+    "@nativescript-community/ui-webview-rtc": "npm:1.6.2"
     "@nativescript-community/universal-links": "npm:3.0.2"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
     "@nativescript/appavailability": "npm:2.0.0"
-    "@nativescript/core": "npm:8.9.9"
+    "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"
     "@sentry/cli": "npm:3.5.0"
     "@swc/core": "npm:1.13.5"
@@ -15427,10 +15364,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:0.6.1, source-map@npm:^0.6.0, source-map@npm:^0.6.1, source-map@npm:~0.6.0, source-map@npm:~0.6.1":
-  version: 0.6.1
-  resolution: "source-map@npm:0.6.1"
-  checksum: 10/59ef7462f1c29d502b3057e822cdbdae0b0e565302c4dd1a95e11e793d8d9d62006cdc10e0fd99163ca33ff2071360cf50ee13f90440806e7ed57d81cba2f7ff
+"source-map@npm:0.7.6, source-map@npm:^0.7.0, source-map@npm:^0.7.3, source-map@npm:^0.7.4":
+  version: 0.7.6
+  resolution: "source-map@npm:0.7.6"
+  checksum: 10/c8d2da7c57c14f3fd7568f764b39ad49bbf9dd7632b86df3542b31fed117d4af2fb74a4f886fc06baf7a510fee68e37998efc3080aacdac951c36211dc29a7a3
   languageName: node
   linkType: hard
 
@@ -15441,10 +15378,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"source-map@npm:^0.7.0, source-map@npm:^0.7.3, source-map@npm:^0.7.4":
-  version: 0.7.6
-  resolution: "source-map@npm:0.7.6"
-  checksum: 10/c8d2da7c57c14f3fd7568f764b39ad49bbf9dd7632b86df3542b31fed117d4af2fb74a4f886fc06baf7a510fee68e37998efc3080aacdac951c36211dc29a7a3
+"source-map@npm:^0.6.0, source-map@npm:^0.6.1, source-map@npm:~0.6.0, source-map@npm:~0.6.1":
+  version: 0.6.1
+  resolution: "source-map@npm:0.6.1"
+  checksum: 10/59ef7462f1c29d502b3057e822cdbdae0b0e565302c4dd1a95e11e793d8d9d62006cdc10e0fd99163ca33ff2071360cf50ee13f90440806e7ed57d81cba2f7ff
   languageName: node
   linkType: hard
 
@@ -16500,7 +16437,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.0, tslib@npm:^2.0.3, tslib@npm:^2.6.3":
+"tslib@npm:^2.0.0, tslib@npm:^2.0.3":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10/3e2e043d5c2316461cb54e5c7fe02c30ef6dccb3384717ca22ae5c6b5bc95232a6241df19c622d9c73b809bea33b187f6dbc73030963e29950c2141bc32a79f7

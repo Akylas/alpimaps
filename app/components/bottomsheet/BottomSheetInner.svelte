@@ -48,10 +48,14 @@
         DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
         DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
         DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
+        DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE,
+        DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION,
         DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
         SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
         SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
         SETTINGS_ELEVATION_PROFILE_FILTER_STEP,
+        SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE,
+        SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION,
         SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW
     } from '~/utils/constants';
     import dayjs from 'dayjs';
@@ -1033,6 +1037,34 @@
                         value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP),
                         onChange: debounce((item, value) => {
                             ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, value);
+                        }, 10)
+                    },
+                    {
+                        // the knob that decides how sharp the grades read: below the DEM resolution
+                        // the profile only differentiates terrain noise
+                        type: 'slider',
+                        title: lc('elevation_profile_grade_baseline'),
+                        icon: 'mdi-slope-uphill',
+                        min: 20,
+                        max: 400,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE,
+                        step: 10,
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE, DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE, value);
+                        }, 10)
+                    },
+                    {
+                        type: 'slider',
+                        title: lc('elevation_profile_grade_min_section'),
+                        icon: 'mdi-arrow-expand-horizontal',
+                        min: 20,
+                        max: 1000,
+                        defaultValue: DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION,
+                        step: 10,
+                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION, DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION),
+                        onChange: debounce((item, value) => {
+                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION, value);
                         }, 10)
                     },
                     {

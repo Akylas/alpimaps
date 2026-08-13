@@ -699,7 +699,7 @@
             didIgnoreAlreadySelected = false;
             if (isFeatureInteresting) {
                 const isCurrentItem = item === $selectedItem;
-                DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
+                // DEV_LOG && console.log('selectItem', setSelected, isCurrentItem, item.properties?.class, item.properties?.name, peek, setSelected, showButtons, Date.now());
                 if (setSelected && isCurrentItem && !item) {
                     unselectItem(false);
                 }
