@@ -39,7 +39,7 @@
 </script>
 
 <gesturerootview rows="auto">
-    <collectionView id="scrollView" height={200} items={options} rowHeight={72} ios:contentInsetAdjustmentBehavior={2}>
+    <collectionView id="scrollView" height={200} items={options} ios:contentInsetAdjustmentBehavior={2}>
         <Template let:item>
             <ListItemAutoSize
                 borderRadius={30}
