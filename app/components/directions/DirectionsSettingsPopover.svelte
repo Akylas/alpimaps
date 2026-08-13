@@ -7,7 +7,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
-    import SettingsSlider from '../settings/SettingsSlider.svelte';
+    import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 </script>
