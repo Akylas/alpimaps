@@ -1,6 +1,6 @@
 import { getFromLocation } from '@nativescript-community/geocoding';
 import Observable from '@nativescript-community/observable';
-import { GenericMapPos, IntVector, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
+import { DoubleVector, GenericMapPos, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
 import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
 import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
 import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
@@ -29,6 +29,7 @@ import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import { Address, AscentSegment, IItem, IItem as Item, Route, RouteInstruction, RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
+import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
@@ -39,6 +40,10 @@ import {
     DEFAULT_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
     DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
     DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
+    DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE,
+    DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION,
+    DEFAULT_ELEVATION_PROFILE_GRADE_SMOOTH,
+    DEFAULT_ELEVATION_PROFILE_GRADE_STEP,
     DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
     DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
     DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
@@ -47,6 +52,10 @@ import {
     SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
     SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
     SETTINGS_ELEVATION_PROFILE_FILTER_STEP,
+    SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE,
+    SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION,
+    SETTINGS_ELEVATION_PROFILE_GRADE_SMOOTH,
+    SETTINGS_ELEVATION_PROFILE_GRADE_STEP,
     SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW,
     SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
     SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
@@ -115,18 +124,6 @@ class WindowFilter extends MathFilter {
                 return sum + num;
             }, 0) / this.datas.length
         );
-    }
-}
-
-function getGradeColor(grade) {
-    if (grade > 10) {
-        return '#EA3223';
-    } else if (grade > 7) {
-        return '#FFFE54';
-    } else if (grade > 4) {
-        return '#001CF5';
-    } else {
-        return '#75FA4C';
     }
 }
 
@@ -564,7 +561,8 @@ class PackageService extends Observable {
         }
         return null;
     }
-    async getElevations(pos: MapPosVector<LatLonKeys> | GenericMapPos<LatLonKeys>[]): Promise<IntVector> {
+    /** the carto layer interpolates, so these are real doubles: rounding them destroys the grade */
+    async getElevations(pos: MapPosVector<LatLonKeys> | GenericMapPos<LatLonKeys>[]): Promise<DoubleVector> {
         if (this.hillshadeLayer) {
             return new Promise((resolve, reject) => {
                 this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
@@ -578,61 +576,8 @@ class PackageService extends Observable {
         }
         return null;
     }
-    // getSmoothedGradient(points: { d: number; a: number; avg: number; g }[]) {
-    //     const finalGrades = [];
-    //     const grades: { grad: number; dist: number }[] = [null];
-    //     grades[points.length - 1] = null;
-    //     for (let index = 1; index < points.length - 1; index++) {
-    //         const dist = points[index + 1].d - points[index - 1].d;
-    //         if (dist > 0) {
-    //             const grad = Math.max(Math.min((100 * (points[index + 1].avg - points[index - 1].avg)) / dist, 30), -30);
-    //             grades[index] = {
-    //                 grad,
-    //                 dist: points[index].d
-    //             };
-    //         } else {
-    //             grades[index] = grades[index - 1];
-    //         }
-    //     }
-    //     for (let index = points.length - 2; 0 <= index; index--) {
-    //         if (null === grades[index] && null !== grades[index + 1]) {
-    //             grades[index] = {
-    //                 grad: grades[index + 1].grad,
-    //                 dist: points[index].d
-    //             };
-    //         }
-    //     }
-    //     for (let index = 1; index < points.length; index++) {
-    //         if (null === grades[index] && null !== grades[index - 1]) {
-    //             grades[index] = {
-    //                 grad: grades[index - 1].grad,
-    //                 dist: points[index].d
-    //             };
-    //         }
-    //     }
-    //     const dist = Math.max(Math.min(5, grades.length / 50), 50);
-    //     const lastDist = grades[grades.length - 1].dist;
-    //     const g = Math.min(lastDist / 50, 500);
-    //     for (let index = 0; index < grades.length; index++) {
-    //         let d = 0,
-    //             f = 0;
-    //         let e = 0;
-    //         for (let k = 1; k <= dist && e < g; k++) {
-    //             e = grades.at(index + k < grades.length ? index + k : -1).dist - grades[0 <= index - k ? index - k : 0].dist;
-    //             for (let h = index - k; h < index + k; h++) {
-    //                 if (undefined !== grades[h] && null !== grades[h]) {
-    //                     e = Math.pow(grades[h].dist, 2) / (Math.abs(h - index) + 1);
-    //                     f += e * grades[h].grad;
-    //                     d += e;
-    //                 }
-    //             }
-    //         }
-    //         finalGrades[index] = points[index].g = Math.round(f / d);
-    //     }
-    //     return finalGrades;
-    // }
 
-    computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: IntVector | number[]) {
+    computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: DoubleVector | number[]) {
         const smoothWindow = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW);
         const filterStep = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP);
         const ascentsMinGain = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN, DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN);
@@ -672,7 +617,8 @@ class PackageService extends Observable {
         let ascent = 0;
         let descent = 0;
         let lastAlt;
-        const avgs = [];
+        /** smoothed altitudes, kept unrounded: the grade is differentiated from these */
+        const smoothedElevations: number[] = [];
 
         const ascents: AscentSegment[] = [];
         let startIndex: number | null = null;
@@ -701,13 +647,12 @@ class PackageService extends Observable {
                 lastAlt = sample.tmpElevation;
             }
             currentHeight = Math.round(sample.altitude);
-            const avg = Math.round(sample.tmpElevation);
 
             function getElevation(index) {
                 return Math.round(profile[index].altitude);
             }
             const elevation = getElevation(i);
-            avgs.push(avg);
+            smoothedElevations.push(sample.tmpElevation);
             result.data.push({
                 d: Math.round(currentDistance * 100) / 100,
                 dp: Math.round(ascent),
@@ -788,66 +733,23 @@ class PackageService extends Observable {
                 });
             }
         }
-        const colors = [];
-        let grade;
-        let lastKm = 0.5;
-        let gradesCounter = 0;
-        let gradeSum = 0;
-        let lastIndex = 0;
-        lastAlt = result.data[0].a;
+        const gradeOptions: GradeOptions = {
+            step: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_STEP, DEFAULT_ELEVATION_PROFILE_GRADE_STEP),
+            smoothDistance: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_SMOOTH, DEFAULT_ELEVATION_PROFILE_GRADE_SMOOTH),
+            baseline: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE, DEFAULT_ELEVATION_PROFILE_GRADE_BASELINE),
+            minSectionLength: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION, DEFAULT_ELEVATION_PROFILE_GRADE_MIN_SECTION)
+        };
+        const distances = result.data.map((point) => point.d);
+        const grades = computeGrades(distances, smoothedElevations, gradeOptions);
         for (let i = 0; i < result.data.length; i++) {
-            const pt1 = result.data[i];
-            let idelta = 1;
-            let prevIndex = Math.min(i + idelta, profile.length - 1);
-            let pt2 = result.data[prevIndex];
-            if (pt2.d - pt1.d < 20) {
-                if (grade === undefined) {
-                    while (pt2.d - pt1.d < 20 && i + idelta < profile.length) {
-                        idelta++;
-                        prevIndex = Math.min(i + idelta, profile.length - 1);
-                        pt2 = result.data[prevIndex];
-                    }
-                } else {
-                    if (grade !== 0) {
-                        pt1.g = Math.round(grade * 100) / 100;
-                    }
-                    continue;
-                }
-            }
-            grade = ((avgs[prevIndex] - avgs[i]) / (pt2.d - pt1.d)) * 100;
-            if (grade !== 0) {
-                pt1.g = Math.round(grade * 100) / 100;
-            }
-            gradeSum += grade;
-            gradesCounter += 1;
-            if (pt1.d / 1000 > lastKm) {
-                lastKm += 0.5;
-                const avgGrade = gradeSum / gradesCounter;
-                gradeSum = 0;
-                gradesCounter = 0;
-                colors.push({
-                    d: lastIndex,
-                    //  g: avgGrade,
-                    color: getGradeColor(Math.abs(avgGrade))
-                });
-                for (let j = lastIndex; j <= i; j++) {
-                    avgs[j] = avgGrade;
-                }
-                lastIndex = i;
-                lastAlt = pt1.a;
-            }
+            result.data[i].g = Math.round(grades[i] * 10) / 10;
         }
-        if (colors.length && colors[colors.length - 1].lastIndex < result.data.length - 1) {
-            const avgGrade = gradeSum / gradesCounter;
-            colors.push({
-                d: result.data.length - 1,
-                // g: avgGrade,
-                color: getGradeColor(avgGrade)
-            });
-        }
+        const sections = buildGradeSections(result.data, grades, smoothedElevations, gradeOptions);
         result.dmin = Math.round(-descent);
         result.dplus = Math.round(ascent);
-        result.colors = colors;
+        result.sections = sections;
+        // the chart takes its gradient stops as indices into `data`
+        result.colors = sections.map((section) => ({ d: section.startIndex, color: section.color }));
         result.ascents = ascents;
         return result;
     }
