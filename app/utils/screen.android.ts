@@ -11,7 +11,7 @@ export const DEFAULT_SCREEN_REFRESH_DELAY = 1600;
  */
 export function requestScreenRefresh(geoHandler: GeoHandler, delay = ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', DEFAULT_SCREEN_REFRESH_DELAY)) {
     const action = ApplicationSettings.getString('refreshAlarmBroadcast', 'com.akylas.A9_REFRESH_SCREEN');
-    DEV_LOG && console.log('[screen] requestScreenRefresh', action, 'delay', delay);
+    DEV_LOG && console.log('[screen]  requestScreenRefresh', action, 'delay', delay, new Error().stack);
     const broadcastIntent = new android.content.Intent(action);
     broadcastIntent.putExtra('sleep_delay', delay);
     geoHandler.ignoreNextResumePause();
