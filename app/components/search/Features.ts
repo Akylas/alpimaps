@@ -6,7 +6,7 @@ export class PhotonFeature {
     constructor(data) {
         const properties = data.properties || {};
         const actualName = properties.name === properties.city ? undefined : properties.name;
-        const { region, name, state, street, housenumber, postcode, city, country, neighbourhood, ...actualProperties } = properties;
+        const { city, country, housenumber, name, neighbourhood, postcode, region, state, street, ...actualProperties } = properties;
         actualProperties.address = {
             state,
             county: region,
