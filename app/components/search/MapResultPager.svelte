@@ -41,8 +41,17 @@
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { getDistanceSimple } from '~/helpers/geolib';
     import { isEInk } from '~/helpers/theme';
+    import { onDestroy, onMount } from 'svelte';
+    import { registerMapModule, unregisterMapModule } from '~/mapModules/registry';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+
+    // This component is mounted lazily, long after the map registers its own modules, so it has to put
+    // itself in the registry — the map used to capture it by value while it was still undefined, which
+    // meant the two click hooks below were never dispatched at all.
+    // Registers after directionsPanel, preserving the original dispatch order for onVectorTileClicked.
+    onMount(() => registerMapModule('mapResultsPager', { onVectorTileClicked, onVectorElementClicked }));
+    onDestroy(() => unregisterMapModule('mapResultsPager'));
 
     export let items: IItem<Point>[] = [];
 
