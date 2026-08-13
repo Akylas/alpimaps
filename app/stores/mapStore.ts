@@ -343,6 +343,9 @@ function nutiSettings(type, key, store) {
     }
 }
 function createStore(params) {
+    const propsObj = new Observable();
+    // stays null for the whole loop below: subscribing to a writable fires the callback
+    // synchronously, and that first call is the store reporting its start value, not a change
     let notifyCallback = null;
     Object.keys(params).forEach((key) => {
         const obj = params[key];
@@ -370,7 +373,8 @@ function createStore(params) {
         }
         obj.value = startValue;
         obj.store = writable(startValue);
-        obj.store.ignoreUpdate = false;
+        // true so the synchronous start-value callback does not persist what we just read
+        obj.store.ignoreUpdate = true;
         obj.store.subscribe((value) => {
             if (obj.store.ignoreUpdate) {
                 obj.store.ignoreUpdate = false;
@@ -378,15 +382,14 @@ function createStore(params) {
             }
             obj.value = value;
             if (value === defaultValue) {
-                ApplicationSettings.remove(key);
+                ApplicationSettings.remove(settingKey);
             } else {
-                updateMethod(key, value);
+                updateMethod(settingKey, value);
             }
-            notifyCallback?.({ eventName: 'change', object: nutiProps, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
+            notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
         });
         obj.updateMethod = updateMethod;
     });
-    const propsObj = new Observable();
     notifyCallback = propsObj.notify.bind(propsObj);
     Object.assign(propsObj, params);
     return new Proxy(propsObj, {
@@ -395,7 +398,7 @@ function createStore(params) {
                 const obj = target[key];
                 const settingKey = obj.key || key;
                 const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
-                console.log('set', key, value, settingKey);
+                DEV_LOG && console.log('set', key, value, settingKey);
                 obj.value = value;
                 obj.store.ignoreUpdate = true;
                 obj.store.set(value);
@@ -404,7 +407,7 @@ function createStore(params) {
                 } else {
                     obj.updateMethod(settingKey, value);
                 }
-                notifyCallback?.({ eventName: 'change', object: this, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
+                notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
             } catch (error) {
                 showError(error);
             }
