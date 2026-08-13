@@ -25,7 +25,7 @@
 				casing/line-width: @directions_casing_width;
 				casing/line-join: round;
 				casing/line-cap: round;
-				casing/line-opacity: @directions_line_opacity;
+				casing/line-opacity: @directions_casing_opacity;
 				line-color: @is_selected ? [nuti::main_color]: ([style.color]? [style.color]:@directions_line_color);
 				line-width: @directions_line_width;
 				line-opacity: @directions_line_opacity;
