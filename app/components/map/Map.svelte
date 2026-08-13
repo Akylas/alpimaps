@@ -48,8 +48,11 @@
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
-    import { createTileDecoder, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
+    import { featureMenuItems } from '~/mapModules/mapFeatures';
+    // registers the built-in map features; import for side effect
+    import '~/mapModules/features/admin';
     import UserLocationModule from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
@@ -95,6 +98,7 @@
     let locationInfoPanel: LocationInfoPanel;
     let searchView: Search;
     const mapContext = getMapContext();
+    const featureMenuItemsStore = featureMenuItems();
 
     let selectedOSMId: string;
     let selectedId: string;
@@ -164,13 +168,11 @@
 
     let fetchingTransitLines = false;
     let showingTransitLines = false;
-    let showAdmins = false;
 
     let transitVectorTileDataSource: GeoJSONVectorTileDataSource;
     let transitVectorTileLayer: VectorTileLayer;
     // let localVectorDataSource: LocalVectorDataSource;
     let localVectorLayer: VectorLayer;
-    let adminVectorTileLayer: VectorTileLayer;
 
     $: {
         if (steps) {
@@ -317,55 +319,7 @@
         }
     }
 
-    $: {
-        // DEV_LOG && console.log('showAdmins', showAdmins, customLayersModule?.hasLocalData, adminVectorTileLayer);
-        if (showAdmins && customLayersModule?.hasLocalData) {
-            // const pos = cartoMap.focusPos;
-            tryCatch(
-                async () => {
-                    if (!adminVectorTileLayer) {
-                        DEV_LOG && console.log('show admins ');
-                        adminVectorTileLayer = new VectorTileLayer({
-                            layerBlendingSpeed: 3,
-                            labelBlendingSpeed: 3,
-                            preloading: $preloading,
-                            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-                            labelRenderOrder: VectorTileRenderOrder.LAST,
-                            dataSource: (getLayers('map')[0].layer as any as VectorTileLayer).dataSource,
-                            decoder: createTileDecoder('admin')
-                        });
-                        adminVectorTileLayer.setVectorTileEventListener<LatLonKeys>(
-                            {
-                                onVectorTileClicked: ({ featureData, featureGeometry, featureId, featureLayerName }) => {
-                                    if (handleSelectedRouteTimer) {
-                                        return;
-                                    }
-                                    // DEV_LOG && console.log('onVectorTileClicked', featureId, featureLayerName, JSON.stringify(featureData));
-                                    return false;
-                                    // selectItem({ item, isFeatureInteresting: true });
-                                    // return true;
-                                    // mapContext.vectorTileClicked(e);
-                                }
-                            },
-                            mapContext.getProjection()
-                        );
-                        addLayer(adminVectorTileLayer, 'admin');
-                        // } else {
-                        //     transitVectorTileLayer.visible = true;
-                        // }
-                    } else if (adminVectorTileLayer) {
-                        adminVectorTileLayer.visible = true;
-                    }
-                },
-                () => (showAdmins = false)
-            );
-        } else if (adminVectorTileLayer) {
-            adminVectorTileLayer.visible = false;
-        }
-        if (adminVectorTileLayer) {
-            setStyleParameter('hide_admins', adminVectorTileLayer.visible ? '1' : '0');
-        }
-    }
+    // admin boundaries now live in ~/mapModules/features/admin.ts
 
     const onAppUrl = tryCatchFunction(
         async (link: string) => {
@@ -2175,7 +2129,7 @@
                 text: 'mdi-dots-vertical',
                 onTap: tryCatchFunction(
                     async (event) => {
-                        const options = []
+                        const options = ([] as any[])
                             .concat(
                                 WITH_BUS_SUPPORT && customLayersModule?.devMode
                                     ? [
@@ -2188,18 +2142,8 @@
                                       ]
                                     : []
                             )
-                            .concat(
-                                customLayersModule.hasLocalData
-                                    ? [
-                                          {
-                                              icon: 'mdi-vector-polygon',
-                                              id: 'show_admin_regions',
-                                              title: lc('show_admin_regions'),
-                                              color: showAdmins ? colorPrimary : undefined
-                                          }
-                                      ]
-                                    : []
-                            );
+                            // whatever the registered features contribute — see ~/mapModules/features/
+                            .concat($featureMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title })));
 
                         await showPopoverMenu({
                             options,
@@ -2217,6 +2161,9 @@
                                             closePopover();
                                             await showTransitLinesPage();
                                             break;
+                                        default:
+                                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
+                                            break;
                                     }
                                 }
                             }),
@@ -2227,9 +2174,8 @@
                                             // eslint-disable-next-line svelte/infinite-reactive-loop
                                             showingTransitLines = !showingTransitLines;
                                             break;
-                                        case 'show_admin_regions':
-                                            // eslint-disable-next-line svelte/infinite-reactive-loop
-                                            showAdmins = !showAdmins;
+                                        default:
+                                            await $featureMenuItemsStore.find((item) => item.id === result.id)?.run();
                                             break;
                                     }
                                 }
