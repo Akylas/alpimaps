@@ -15,21 +15,23 @@ export const valhallaSettingIcon = {
     use_ferry: 'mdi-ferry'
 };
 
-export const Profiles: {[key in 'auto' | 'bicycle' | 'pedestrian' | 'motorcycle'] : {icon:string, fontFamily?:string}} = {auto:{
-        icon:'mdi-car',
-    }, 
+export const Profiles: { [key in 'auto' | 'bicycle' | 'pedestrian' | 'motorcycle']: { icon: string; fontFamily?: string } } = {
+    auto: {
+        icon: 'mdi-car'
+    },
     // car:{
     //     icon:'mdi-car',
     // },
-    motorcycle:{
-        icon:'mdi-motorbike',
+    motorcycle: {
+        icon: 'mdi-motorbike'
     },
-    pedestrian:{
-        icon:'alpimaps-directions_walk',
-        fontFamily:'app',
-    },bicycle: {
-        icon:'alpimaps-touring',
-        fontFamily:'app',
+    pedestrian: {
+        icon: 'alpimaps-directions_walk',
+        fontFamily: 'app'
+    },
+    bicycle: {
+        icon: 'alpimaps-touring',
+        fontFamily: 'app'
     }
     // ,bus: {
     //     icon:'mdi-bus',
@@ -134,4 +136,27 @@ export const defaultProfileCostingOptions = {
     bicycle: { use_roads: 0.4, use_tracks: 0, non_network_penalty: 15, exclude_unpaved: false },
     auto: { use_tolls: 1, use_highways: 1 },
     motorcycle: { use_tolls: 1, use_trails: 0 }
+};
+
+/** Ground surface colors, shared by the route stats chart and the navigation surface widget. */
+export const surfaceColors = {
+    highway: '#E6C264',
+    track: '#AD9067',
+    sac_scale_1: '#C9C1B2',
+    sac_scale_2: '#C9C1B2',
+    sac_scale_3: '#C9C1B2',
+    sac_scale_4: '#A6AF8F',
+    sac_scale_5: '#A6AF8F',
+    sac_scale_6: '#A6AF8F',
+    steps: '#CAD0D7',
+    road: '#A4ACB7',
+    street: '#B9C2C8',
+    cycleway: '#65AAA2',
+    paved_smooth: '#8B939E',
+    paved_rough: '#8B857B',
+    paved: '#D7D7D7',
+    gravel: '#A89070',
+    dirt: '#BA915E',
+    path: '#A6AF8F',
+    compacted: '#BA915E'
 };

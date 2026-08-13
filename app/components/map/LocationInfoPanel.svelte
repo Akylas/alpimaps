@@ -227,7 +227,7 @@
             loadedListeners.forEach((listener) => listener());
         }
     }
-    $: speedFormatted = convertValueToUnit(currentLocation?.speed, UNITS.SpeedKm);
+    $: speedFormatted = convertValueToUnit(currentLocation?.speed * 3.6, UNITS.SpeedKm);
     $: altitudeFormatted = convertValueToUnit(shownAltitude, UNITS.Meters);
 </script>
 
@@ -264,7 +264,7 @@
                 text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
                 verticalAlignment="top" />
             <cgroup verticalAlignment="middle">
-                <cspan fontSize={20} fontWeight="bold" text={altitudeFormatted[0] ??'-'} />
+                <cspan fontSize={20} fontWeight="bold" text={altitudeFormatted[0] ?? '-'} />
                 <cspan fontSize={12} text={` ${altitudeFormatted[1]}`} />
             </cgroup>
         </canvaslabel>
