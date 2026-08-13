@@ -45,7 +45,7 @@ const layersParams = {
         showAsIcon: true,
         defaultValue: true,
         icon: 'mdi-signal',
-        visible: (customLayers) => !!customLayers?.hasTerrain,
+        visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event, button) => {
             if (layerProps['showSlopePercentages']) {
                 const component = (await import('~/components/map/SlopesInfoPopover.svelte')).default;
@@ -95,7 +95,7 @@ const nutiParams = {
         defaultValue: true,
         icon: 'mdi-bullseye',
         showAsIcon: true,
-        visible: (customLayers) => !!customLayers?.hasLocalData,
+        visible: (capabilities) => !!capabilities?.hasLocalData,
         onLongPress: tryCatchFunction(async (event) => {
             await showSliderPopover({
                 debounceDuration: 100,
@@ -122,7 +122,7 @@ const nutiParams = {
         showAsIcon: true,
         defaultValue: false,
         icon: 'mdi-domain',
-        visible: (customLayers) => !!customLayers?.hasLocalData,
+        visible: (capabilities) => !!capabilities?.hasLocalData,
         nutiTransform: (value) => (!!value ? '2' : '1')
     },
     building_min_zoom: {
@@ -143,7 +143,7 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: true,
         icon: 'mdi-routes',
-        visible: (customLayers) => !!customLayers?.hasRoute,
+        visible: (capabilities) => !!capabilities?.hasRoute,
         onLongPress: tryCatchFunction(async (event) => {
             const component = (await import('~/components/routes/RoutesTypePopover.svelte')).default;
             await showPopover({

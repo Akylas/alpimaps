@@ -14,7 +14,7 @@ import { alert, confirm, login, prompt } from '@nativescript-community/ui-materi
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';
 import { File, Folder, path } from '@nativescript/core/file-system';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
@@ -159,6 +159,13 @@ const HILLSHADE_OPTIONS = {
         max: 24
     }
 };
+/**
+ * What the currently loaded offline data supports. Flips asynchronously while mbtiles are scanned, so
+ * anything gating UI on it (the slopes and routes buttons, the contour/buildings options) must react
+ * to the store rather than read a snapshot.
+ */
+export const mapCapabilities = writable({ hasLocalData: false, hasTerrain: false, hasRoute: false });
+
 export interface SourceItem {
     downloading?: boolean;
     downloadProgress?: number;
@@ -892,9 +899,29 @@ export default class CustomLayersModule extends MapModule {
         }
         this.updateAttribution(item);
     }
-    hasLocalData = false;
-    hasTerrain = false;
-    hasRoute = false;
+    /**
+     * Backed by a store so anything showing a control for these re-renders when offline data finishes
+     * loading. They flip asynchronously, long after the map mounts, and as plain fields they were
+     * invisible to svelte — the map had to poke its button list by hand to notice.
+     */
+    get hasLocalData() {
+        return get(mapCapabilities).hasLocalData;
+    }
+    set hasLocalData(value: boolean) {
+        mapCapabilities.update((capabilities) => ({ ...capabilities, hasLocalData: value }));
+    }
+    get hasTerrain() {
+        return get(mapCapabilities).hasTerrain;
+    }
+    set hasTerrain(value: boolean) {
+        mapCapabilities.update((capabilities) => ({ ...capabilities, hasTerrain: value }));
+    }
+    get hasRoute() {
+        return get(mapCapabilities).hasRoute;
+    }
+    set hasRoute(value: boolean) {
+        mapCapabilities.update((capabilities) => ({ ...capabilities, hasRoute: value }));
+    }
     async loadLocalMbtiles(directory: string) {
         try {
             const context: android.app.Activity = __ANDROID__ && Application.android.startActivity;
@@ -1040,7 +1067,7 @@ export default class CustomLayersModule extends MapModule {
                 }
 
                 // we add mapterhorn as fallback for regions without elevation or high zoom levels
-                dataSource = this.createOrderedTileDataSource([dataSource/* , await this.createDataSourceFromId('mapterhorn') */], mbTilesSourceGenerator);
+                dataSource = this.createOrderedTileDataSource([dataSource /* , await this.createDataSourceFromId('mapterhorn') */], mbTilesSourceGenerator);
 
                 const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
                 const data = {

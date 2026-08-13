@@ -44,7 +44,7 @@
     import { l, lc, lt, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
     import { forceDarkMode, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
-    import CustomLayersModule from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
@@ -509,8 +509,7 @@
         }
     }
     function onLayersReady() {
-        updateSideButtons();
-
+        // the side buttons refresh themselves now: their visibility derives from mapCapabilities
         if (autoStartWebServer) {
             startStopWebServer();
         }
@@ -2110,12 +2109,6 @@
     }
 
     let sideButtons = [];
-    function updateSideButtons() {
-        sideButtons.find((b) => b.id === 'routes').visible = !!customLayersModule?.hasRoute;
-        sideButtons.find((b) => b.id === 'slopes').visible = !!customLayersModule?.hasTerrain;
-        // sideButtons.find((b) => b.id === 'contours').visible = !!customLayersModule?.hasLocalData;
-        sideButtons = sideButtons;
-    }
     const showRoutesProps = nutiProps.getProps('show_routes');
     const showRoutes = showRoutesProps.store;
     const showSlopePercentagesProps = layerProps.getProps('showSlopePercentages');
@@ -2143,7 +2136,7 @@
                 id: 'slopes',
                 tooltip: showSlopePercentagesProps.title,
                 isSelected: $showSlopePercentages,
-                visible: showSlopePercentagesProps.visible(customLayersModule),
+                visible: showSlopePercentagesProps.visible($mapCapabilities),
                 onTap: () => ($showSlopePercentages = !$showSlopePercentages),
                 onLongPress: showSlopePercentagesProps.onLongPress
             },
@@ -2152,7 +2145,7 @@
                 id: 'routes',
                 tooltip: showRoutesProps.title,
                 isSelected: $showRoutes,
-                visible: showRoutesProps.visible(customLayersModule),
+                visible: showRoutesProps.visible($mapCapabilities),
                 onTap: () => ($showRoutes = !$showRoutes),
                 onLongPress: showRoutesProps.onLongPress
             },
@@ -2177,7 +2170,7 @@
                 onTap: switchShowOnLockscreen
             }
         ];
-        if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || customLayersModule?.hasLocalData) {
+        if ((WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData) {
             newButtons.push({
                 text: 'mdi-dots-vertical',
                 onTap: tryCatchFunction(
