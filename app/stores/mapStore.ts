@@ -349,7 +349,8 @@ function createStore(params) {
     let notifyCallback = null;
     Object.keys(params).forEach((key) => {
         const obj = params[key];
-        const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
+        // resolved once here rather than re-derived on every read and every write
+        const nutiTransform = (obj.nutiTransform = obj.nutiTransform ?? nutiTransformForType(obj.settingsOptionsType));
         const settingKey = obj.key || key;
         const defaultValue = obj.defaultValue ?? null;
         const tpof = obj.settingsOptionsType || typeof defaultValue;
@@ -392,12 +393,38 @@ function createStore(params) {
     });
     notifyCallback = propsObj.notify.bind(propsObj);
     Object.assign(propsObj, params);
+
+    const keys = Object.keys(params);
+    /**
+     * Built once. The get trap runs on every property access, so returning a fresh closure from it —
+     * as this used to for each of the ten accessors, plus a bind() for anything else — allocated on
+     * reads that happen while the map is being styled.
+     */
+    const accessors: Record<string, Function> = {
+        getTitle: (key: string) => params[key].title,
+        getDescription: (key: string) => params[key].description,
+        getKey: (key: string) => params[key].key || key,
+        getDefaultValue: (key: string) => params[key].defaultValue,
+        getProps: (key: string) => params[key],
+        getNutiTransform: (key: string) => params[key].nutiTransform,
+        getStore: (key: string) => params[key].store,
+        getNutiValue(key: string) {
+            const obj = params[key];
+            if (obj.value == null) {
+                return null;
+            }
+            return obj.nutiTransform ? obj.nutiTransform(obj.value) : obj.value + '';
+        },
+        getKeys: () => keys.slice()
+    };
+    const boundMethods = new Map<string, Function>();
+
     return new Proxy(propsObj, {
         set(target, key, value) {
             try {
                 const obj = target[key];
                 const settingKey = obj.key || key;
-                const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
+                const nutiTransform = obj.nutiTransform;
                 DEV_LOG && console.log('set', key, value, settingKey);
                 obj.value = value;
                 obj.store.ignoreUpdate = true;
@@ -416,62 +443,25 @@ function createStore(params) {
         get(target, name, receiver) {
             if (target[name] && typeof target[name] === 'object') {
                 return target[name].value !== target[name].defaultValue ? target[name].value : null;
-            } else {
-                switch (name) {
-                    case 'getTitle':
-                        return function (key) {
-                            return target[key].title;
-                        };
-                    case 'getDescription':
-                        return function (key) {
-                            return target[key].description;
-                        };
-                    case 'getKey':
-                        return function (key) {
-                            return target[key].key || key;
-                        };
-                    case 'getDefaultValue':
-                        return function (key) {
-                            return target[key].defaultValue;
-                        };
-                    case 'getProps':
-                        return function (key) {
-                            return target[key];
-                        };
-                    case 'getNutiTransform':
-                        return function (key) {
-                            return target[key].nutiTransform;
-                        };
-                    case 'getStore':
-                        return function (key) {
-                            return target[key].store;
-                        };
-                    case 'getNutiValue':
-                        return function (key) {
-                            const obj = target[key];
-                            const value = obj.value;
-                            if (value != null) {
-                                const nutiTransform = obj.nutiTransform || nutiTransformForType(obj.settingsOptionsType);
-                                return nutiTransform ? nutiTransform(value) : value + '';
-                            }
-                            return null;
-                        };
-                    case 'getSettingsOptions':
-                        return function (key) {
-                            return nutiSettings(target[key].settingsOptionsType, key, this);
-                        };
-                    case 'getKeys':
-                        return function () {
-                            return Object.keys(params);
-                        };
-                    default:
-                        const orig = target[name];
-                        if (typeof orig === 'function') {
-                            return orig.bind(target);
-                        }
-                        return Reflect.get(target, name, receiver);
-                }
             }
+            const accessor = accessors[name as string];
+            if (accessor) {
+                return accessor;
+            }
+            // needs the proxy as `this` so nutiSettings reads values back through this same trap
+            if (name === 'getSettingsOptions') {
+                return (key: string) => nutiSettings(params[key].settingsOptionsType, key, receiver);
+            }
+            const orig = target[name];
+            if (typeof orig === 'function') {
+                let bound = boundMethods.get(name as string);
+                if (!bound) {
+                    bound = orig.bind(target);
+                    boundMethods.set(name as string, bound);
+                }
+                return bound;
+            }
+            return Reflect.get(target, name, receiver);
         }
     }) as any;
 }
