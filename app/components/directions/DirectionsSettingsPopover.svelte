@@ -8,7 +8,7 @@
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SettingsSlider from '../settings/SettingsSlider.svelte';
-    import PopoverBackgroundView from '../common/PopoverBackgroundView.svelte';
+    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 </script>
 
