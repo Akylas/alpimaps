@@ -54,5 +54,22 @@
 
 @itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
 @itemBackLineOpacity: linear([view::zoom], (16, 1), (18, 0.3));
-@itemSelectedLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
-@itemSelectedBackLineOpacity: linear([view::zoom], (13, 1), (15, 0.5), (18, 0.3));
+// a selected route is the one you are following: it must stay readable at navigation zooms,
+// where the generic item fade would drop it to 0.3
+@itemSelectedLineOpacity: linear([view::zoom], (13, 1), (18, 0.9));
+@itemSelectedBackLineOpacity: linear([view::zoom], (13, 1), (18, 0.9));
+
+// directions are the computed navigation route. Kept as variables so the eink theme can raise
+// their contrast, and barely faded at high zoom for the same reason as the selected item above
+@directions_casing_color: #787E7B;
+@directions_line_color: #ACB0AE;
+@directions_arrow_color: #ACB0AE;
+@directions_selected_arrow_color: #B3CEFF;
+// the casing stays solid so the route always reads as a distinct band, while the fill turns
+// translucent when zoomed in so the road and its type stay visible underneath it
+@directions_casing_opacity: 1;
+@directions_line_opacity: linear([view::zoom], (15, 1), (18, 0.55));
+// wide enough to follow at a glance while moving, and growing with zoom like a real navigation line
+@directions_casing_width: [class=auto] ? linear([view::zoom], (10, 8), (16, 16), (18, 22)) : linear([view::zoom], (10, 6), (16, 13), (18, 18));
+@directions_line_width: [class=auto] ? linear([view::zoom], (10, 5), (16, 11), (18, 15)) : linear([view::zoom], (10, 4), (16, 9), (18, 12));
+@directions_arrow_size: linear([view::zoom], (14, 5), (18, 9));
