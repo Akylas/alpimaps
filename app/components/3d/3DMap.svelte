@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { TileLayer } from '@nativescript-community/ui-carto/layers';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page, knownFolders, path } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
@@ -18,7 +19,9 @@
     const mapContext = getMapContext();
     const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
     const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-    const routeDataSource = mapContext.getLayers('routes')?.[0]?.layer.dataSource;
+    // only tile layers carry a datasource, and nothing registers a 'routes' layer today
+    const routesLayer = mapContext.getLayers('routes')?.[0]?.layer;
+    const routeDataSource = routesLayer instanceof TileLayer ? routesLayer.dataSource : undefined;
 
     const consoleEnabled = !PRODUCTION;
 

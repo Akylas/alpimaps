@@ -13,6 +13,7 @@ import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';
+import type { Point as GeoJSONPoint } from 'geojson';
 import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
 import type DirectionsPanel from '~/components/directions/DirectionsPanel.svelte';
@@ -40,7 +41,9 @@ import { showSnack, showToast } from '~/utils/ui';
 //     onVectorElementClicked?(data: VectorElementEventData<LatLonKeys>);
 //     onSelectedItem?(item: IItem, oldItem: IItem);
 // }
-export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'userLocation' | 'search' | 'transit' | 'admin';
+import type { AddedLayer, LayerType } from '~/mapModules/layerStack';
+
+export type { AddedLayer, LayerType };
 
 export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
 
@@ -92,6 +95,7 @@ export interface MapContext {
     onVectorElementClicked(callback: ContextCallback<VectorElementEventData<LatLonKeys>>, once?: boolean);
     onVectorTileClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
     onVectorTileElementClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
+    onRasterTileClicked(callback: ContextCallback<RasterTileClickInfo<LatLonKeys>>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => CartoMap<LatLonKeys>;
     getProjection: () => Projection;
@@ -108,25 +112,25 @@ export interface MapContext {
         zoomDuration?: number;
         preventZoom?: boolean;
         forceZoomOut?: boolean;
-    }) => void;
-    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; forceZoomOut?: boolean }) => void;
+    }) => Promise<void>;
+    zoomToItem: (args: { item: IItem; zoom?: number; minZoom?: number; duration?: number; forceZoomOut?: boolean }) => void;
     unselectItem: (updateBottomSheet?: boolean, forceUnlock?: boolean) => void;
     selectStyle: () => Promise<void>;
     unFocusSearch: () => void;
-    showMapResultsPager: (items: IItem[]) => void;
+    showMapResultsPager: (items: IItem<GeoJSONPoint>[]) => void;
     clearSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
     setSelectedItem: (item: IItem) => void;
     saveItem: (item?: IItem, peek?: boolean) => Promise<void>;
     getEditingItem: () => IItem;
-    getLayers: (layerId?: LayerType) => { layer: VectorTileLayer; id: string }[];
-    addLayer: (layer: Layer<any, any>, layerId: LayerType) => number;
+    getLayers: (layerId?: LayerType) => AddedLayer[];
+    addLayer: (layer: Layer<any, any>, layerId: LayerType, force?: boolean) => void;
     insertLayer: (layer: Layer<any, any>, layerId: LayerType, index: number) => void;
-    removeLayer: (layer: Layer<any, any>, layerId: LayerType) => void;
+    removeLayer: (layer: Layer<any, any>, layerId?: LayerType) => void;
     moveLayer: (layer: Layer<any, any>, newIndex: number) => void;
     getLayerIndex: (layer: Layer<any, any>) => number;
-    replaceLayer: (oldLayer: Layer<any, any>, layer: Layer<any, any>) => number;
+    replaceLayer: (oldLayer: Layer<any, any>, layer: Layer<any, any>) => void;
     getLayerTypeFirstIndex: (layerId: LayerType) => number;
     vectorElementClicked: (data: VectorElementEventData<LatLonKeys>) => boolean;
     vectorTileClicked: (data: VectorTileEventData<LatLonKeys>) => boolean;
