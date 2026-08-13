@@ -10,6 +10,7 @@ module.exports = {
     id: appId,
     appResourcesPath: process.env['APP_RESOURCES'] || 'App_Resources',
     buildPath: process.env['APP_BUILD_PATH'] || 'platforms',
+    corePackageName: '@akylas/nativescript',
     webpackPackageName: '@akylas/nativescript-webpack',
     webpackConfigPath: 'app.webpack.config.js',
     appPath: 'app',
