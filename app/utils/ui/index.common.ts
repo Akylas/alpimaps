@@ -175,7 +175,7 @@ export async function showSliderPopover({
     defaultValue?;
     onChange?;
 }) {
-    const component = (await import('~/components/common/SliderPopover.svelte')).default;
+    const component = (await import('@shared/components/SliderPopover.svelte')).default;
     const { colorSurfaceContainer } = get(colors);
 
     return showPopover({
@@ -218,7 +218,7 @@ export async function showSlidersPopover({
     width?;
     items;
 }) {
-    const component = (await import('~/components/common/SlidersPopover.svelte')).default;
+    const component = (await import('@shared/components/SlidersPopover.svelte')).default;
     const { colorSurfaceContainer } = get(colors);
 
     return showPopover({

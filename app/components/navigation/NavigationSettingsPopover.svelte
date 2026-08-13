@@ -6,7 +6,7 @@
     import { onThemeChanged } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
-    import SettingsSlider from '../settings/SettingsSlider.svelte';
+    import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import SettingsSwitch from '../settings/SettingsSwitch.svelte';
 </script>
 
