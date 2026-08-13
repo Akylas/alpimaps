@@ -47,7 +47,7 @@ import {
 } from '~/stores/navigationStore';
 import { watchingLocation } from '~/stores/mapStore';
 import { computeDistanceBetween } from '~/utils/geo';
-import { OffRouteDetector, RouteProgress, chooseRejoinTarget, computeNavigationLookAhead, isNavigableRoute } from '~/utils/navigation';
+import { OffRouteDetector, RouteProgress, angleDifference, chooseRejoinTarget, computeNavigationLookAhead, isNavigableRoute } from '~/utils/navigation';
 import { instructionsFromResult } from '~/utils/routing';
 import { requestScreenRefresh } from '~/utils/screen';
 
@@ -846,12 +846,6 @@ export class NavigationService extends Observable {
             this.pause(true);
         }
     }
-}
-
-/** Smallest angle between two headings, so 350° and 10° are 20° apart rather than 340°. */
-function angleDifference(a: number, b: number) {
-    const diff = Math.abs(a - b) % 360;
-    return diff > 180 ? 360 - diff : diff;
 }
 
 function computeNavigationLookAheadFor(progress: RouteProgress, speed: number) {

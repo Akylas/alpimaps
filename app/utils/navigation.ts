@@ -3,9 +3,17 @@ import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-cart
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
 import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
-import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
+import { EARTH_RADIUS, TO_DEG, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
+/** degrees past which a segment counts as going the other way, rather than merely bending away */
+const OPPOSITE_SEGMENT_ANGLE = 120;
+/** meters a segment going the other way is scored as further, so the right leg of an out and back wins */
+const OPPOSITE_SEGMENT_PENALTY = 60;
+/** m/s below which the reported heading is noise: standing still, it points anywhere */
+const MIN_BEARING_SPEED = 1;
+/** meters of route ahead of the last known position the projection may move to in one fix */
+const MAX_PROJECTION_LOOKAHEAD = 1000;
 /** how many segments ahead of the last known position we look for the user */
 export const DEFAULT_PROJECTION_WINDOW = 200;
 
@@ -275,7 +283,13 @@ export interface RouteProjection {
     distanceFromRoute: number;
 }
 
-/** Distance from a point to a segment, and how far along that segment the closest point sits. */
+/** Smallest angle between two headings, so 350° and 10° are 20° apart rather than 340°. */
+export function angleDifference(first: number, second: number) {
+    const diff = Math.abs(first - second) % 360;
+    return diff > 180 ? 360 - diff : diff;
+}
+
+/** Distance from a point to a segment, how far along that segment the closest point sits, and its heading. */
 function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, bLat: number, bLon: number) {
     // at these distances a local flat approximation is exact enough and far cheaper than haversine
     const cosLat = Math.cos(aLat * TO_RAD);
@@ -291,7 +305,9 @@ function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, 
     return {
         ratio,
         distance: Math.sqrt(dx * dx + dy * dy) * degreesToMeters,
-        segmentLength: Math.sqrt(lengthSquared) * degreesToMeters
+        segmentLength: Math.sqrt(lengthSquared) * degreesToMeters,
+        // the local frame is already east/north, so the heading of the segment falls out of it
+        bearing: (Math.atan2(bx, by) * TO_DEG + 360) % 360
     };
 }
 
@@ -311,7 +327,7 @@ function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, 
 export function findClosestOnRoute(
     location: GenericMapPos<LatLonKeys>,
     positions: MapPosVector<LatLonKeys>,
-    { fromIndex = -1, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; window?: number } = {}
+    { bearing, fromIndex = -1, maxAhead = Number.POSITIVE_INFINITY, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; window?: number; bearing?: number; maxAhead?: number } = {}
 ): RouteProjection {
     const size = positions.size();
     if (size < 2) {
@@ -320,12 +336,29 @@ export function findClosestOnRoute(
     // one segment of slack behind, so a fix that lands just short of the last vertex still matches
     const start = fromIndex >= 0 ? Math.max(0, fromIndex - 2) : 0;
     const end = fromIndex >= 0 ? Math.min(size - 1, fromIndex + window) : size - 1;
+    const useBearing = bearing >= 0;
+    // the limit is "ahead of where we were", so it means nothing without a position to be ahead of:
+    // capping a search that starts at the route's own beginning would simply never reach the user
+    const limitAhead = fromIndex >= 0 ? maxAhead : Number.POSITIVE_INFINITY;
     let best: RouteProjection = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+    let ahead = 0;
     for (let index = start; index < end; index++) {
         const from = positions.get(index);
         const to = positions.get(index + 1);
         const projection = projectOnSegment(location.lat, location.lon, from.getY(), from.getX(), to.getY(), to.getX());
-        if (!best || projection.distance < best.distanceFromRoute) {
+        // a window counted in vertices is kilometres long on a sparse track: stepping off the route
+        // there would match a piece of it the user has not walked yet and read as progress
+        ahead += projection.segmentLength;
+        if (best && ahead > limitAhead) {
+            break;
+        }
+        // an out and back walks the same road twice: geometrically the two legs are the same segments,
+        // so distance alone cannot tell them apart and the projection lands on whichever came first.
+        // Which way the user is going can, so a segment heading against them is scored as further away
+        const score = useBearing && angleDifference(projection.bearing, bearing) > OPPOSITE_SEGMENT_ANGLE ? projection.distance + OPPOSITE_SEGMENT_PENALTY : projection.distance;
+        if (score < bestScore) {
+            bestScore = score;
             best = {
                 index: index + 1,
                 distanceToIndex: (1 - projection.ratio) * projection.segmentLength,
@@ -357,8 +390,6 @@ const OFF_ROUTE_OBVIOUS_RATIO = 3;
 const OFF_ROUTE_RESCAN_INTERVAL = 5000;
 /** meters travelled that also earn a full scan, so a fast rider does not wait out the interval */
 const OFF_ROUTE_RESCAN_DISTANCE = 100;
-/** meters the user must have moved for a fix to count towards a confirmation */
-const OFF_ROUTE_MIN_MOVE = 1;
 
 export interface OffRouteOptions {
     /** meters of margin over a perfect fix before it counts as off route */
@@ -400,7 +431,6 @@ export class OffRouteDetector {
     private offFixes = 0;
     private mOffRoute = false;
     private mOffRouteSince = 0;
-    private lastLocation: GenericMapPos<LatLonKeys> = null;
     private lastFullScanTime = 0;
     private lastFullScanLocation: GenericMapPos<LatLonKeys> = null;
 
@@ -424,7 +454,6 @@ export class OffRouteDetector {
         this.offFixes = 0;
         this.mOffRoute = false;
         this.mOffRouteSince = 0;
-        this.lastLocation = null;
         this.lastFullScanTime = 0;
         this.lastFullScanLocation = null;
     }
@@ -450,15 +479,20 @@ export class OffRouteDetector {
         return now - this.lastFullScanTime >= OFF_ROUTE_RESCAN_INTERVAL || computeDistanceBetween(location, this.lastFullScanLocation) >= OFF_ROUTE_RESCAN_DISTANCE;
     }
 
-    update(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number }, positions: MapPosVector<LatLonKeys>, now = Date.now()): OffRouteState {
+    update(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number; bearing?: number; speed?: number }, positions: MapPosVector<LatLonKeys>, now = Date.now()): OffRouteState {
         const tolerance = this.toleranceFor(location);
-        let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex });
+        // standing still, the reported heading is noise and would score the segments at random
+        const bearing = location.speed >= MIN_BEARING_SPEED && location.bearing >= 0 ? location.bearing : undefined;
+        let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex, bearing, maxAhead: MAX_PROJECTION_LOOKAHEAD });
         if ((!best || best.distanceFromRoute > tolerance) && this.lastOnPathIndex !== -1 && this.shouldFullScan(location, now)) {
             // out of the window: either we left the route, or we rejoined it somewhere else entirely
             this.lastFullScanTime = now;
             this.lastFullScanLocation = location;
-            const full = findClosestOnRoute(location, positions);
-            if (full && (!best || full.distanceFromRoute < best.distanceFromRoute)) {
+            const full = findClosestOnRoute(location, positions, { bearing });
+            // only a real rejoin is worth leaving the neighbourhood for. Walking away from the route
+            // often ends up nearer some later part of it — a switchback above, the way back down — and
+            // taking that as progress would jump the user kilometres forward for stepping aside
+            if (full && full.distanceFromRoute <= tolerance && (!best || full.distanceFromRoute < best.distanceFromRoute)) {
                 best = full;
             }
         }
@@ -474,9 +508,6 @@ export class OffRouteDetector {
             };
         }
 
-        const moved = !this.lastLocation || computeDistanceBetween(location, this.lastLocation) >= OFF_ROUTE_MIN_MOVE;
-        this.lastLocation = location;
-
         if (best.distanceFromRoute <= tolerance) {
             this.offFixes = 0;
             this.mOffRoute = false;
@@ -484,9 +515,9 @@ export class OffRouteDetector {
             this.lastOnPathIndex = best.index;
             this.lastDistanceToIndex = best.distanceToIndex;
         } else {
-            if (moved) {
-                this.offFixes++;
-            }
+            // every fix counts, moving or not: standing away from the route is being away from it, and
+            // requiring movement meant a navigation started off route was never told so
+            this.offFixes++;
             const requiredFixes = this.getOptions().fixes ?? 1;
             if (!this.mOffRoute && (this.offFixes >= requiredFixes || best.distanceFromRoute > tolerance * OFF_ROUTE_OBVIOUS_RATIO)) {
                 this.mOffRoute = true;
