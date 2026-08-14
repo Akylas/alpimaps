@@ -61,8 +61,8 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, isNavigationRunning, navigationHasPreviewWidgets, navigationHideChrome, navigationItem, navigationProgress } from '~/stores/navigationStore';
-    import { MANEUVER_VIEW_HEIGHT, navigationSheetSteps, navigationViewHeight } from '~/utils/navigation';
+    import { isNavigating, isNavigationRunning, navigationHasPreviewWidgets, navigationHideChrome, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
+    import { MANEUVER_VIEW_HEIGHT, NAVACTIONS_HEIGHT, navigationSheetSteps, navigationViewHeight } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -73,7 +73,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
-    import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
+    import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
@@ -128,11 +128,12 @@
     let offRoutePanelHolder: NativeViewElementNode<GridLayout>;
     let navigationStepIndex = 0;
     // scaled text, so at a large font scale a fixed height would clip it
-    $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $fontScaleMaxed);
+    $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $navigationScale);
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed. Dragging it
-    // up reveals the route profile then its stats, same as the item sheet does
+    // up reveals the route actions, then its profile, then its stats, same as the item sheet does
     $: navigationSteps = navigationSheetSteps({
         barHeight: navigationSheetHeight,
+        actionsHeight: Math.round(NAVACTIONS_HEIGHT * $navigationScale),
         hasProfile: !!$navigationItem?.profile?.data?.length,
         hasStats: !!$navigationItem?.stats
     });
@@ -1409,8 +1410,12 @@
     const getLayerIndex = (layer: Layer<any, any>) => layerStack.getLayerIndex(layer);
     const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
     const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
-    /** the maneuver banner sits at the very top, so everything anchored there has to move down under it */
-    $: navigationTopOffset = $isNavigationRunning && !!$navigationProgress?.instruction ? MANEUVER_VIEW_HEIGHT : 0;
+    /**
+     * the maneuver banner sits at the very top, so everything anchored there has to move down under it.
+     * Same condition and same scale as the banner itself (see ManeuverView), which also shows while off
+     * route — where it carries the way back and the speed.
+     */
+    $: navigationTopOffset = $isNavigationRunning && (!!$navigationProgress?.instruction || !!$navigationProgress?.offRoute) ? Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
     $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
 

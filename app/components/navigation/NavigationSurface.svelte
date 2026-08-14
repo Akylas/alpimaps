@@ -16,15 +16,15 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import NavigationCard, { NAVWIDGET_CARD_HEIGHT } from '~/components/navigation/NavigationCard.svelte';
     import { formatDistance } from '~/helpers/formatter';
-    import { lc } from '~/helpers/locale';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
-    import { navigationItem, navigationProgress, navigationSurfaceSpan } from '~/stores/navigationStore';
+    import { navigationItem, navigationProgress, navigationScale, navigationSurfaceSpan } from '~/stores/navigationStore';
     import { surfaceColors } from '~/utils/routing';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
-    import { colors, fontScaleMaxed } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
     /** null lets the flex row share its width out; the canvas still needs an explicit height */
-    export let height = NAVWIDGET_CARD_HEIGHT;
+    export let height: number = null;
+    $: cardHeight = height ?? Math.round(NAVWIDGET_CARD_HEIGHT * $navigationScale);
 
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
 
@@ -37,11 +37,24 @@
     $: profile = $navigationItem?.profile;
     $: onPathIndex = $navigationProgress?.onPathIndex ?? -1;
     $: available = !!segments?.length || !!stats?.surfaces?.length;
-    // "surfaces" alone never said how far ahead the bar looks, which made it unreadable
-    $: caption = segments?.length ? lc('surfaces') + ' · ' + formatDistance($navigationSurfaceSpan) : lc('surfaces');
-    $: if (onPathIndex !== undefined || stats || $navigationSurfaceSpan) {
+    // an icon rather than the word, and the span beside it: "surfaces" alone never said how far ahead
+    // the bar looks, and spelled out it was too small to read anyway
+    $: caption = segments?.length ? formatDistance($navigationSurfaceSpan) : '';
+    // the band only moves when the position index does: redrawing on every fix is a canvas pass for a
+    // picture that has not changed, which on a long straight is most of them
+    let drawnIndex = -2;
+    let drawnSpan = -1;
+    let drawnStats = null;
+    function redrawIfNeeded(index: number, span: number, currentStats) {
+        if (index === drawnIndex && span === drawnSpan && currentStats === drawnStats) {
+            return;
+        }
+        drawnIndex = index;
+        drawnSpan = span;
+        drawnStats = currentStats;
         surfaceCanvas?.nativeView?.invalidate();
     }
+    $: redrawIfNeeded(onPathIndex, $navigationSurfaceSpan, stats);
     onThemeChanged(() => surfaceCanvas?.nativeView?.invalidate());
 
     function drawBand(canvas: Canvas, id: string, left: number, right: number, height: number) {
@@ -155,9 +168,12 @@
 
 {#if available}
     <!-- the canvas has no intrinsic size, so the card has to carry explicit dimensions -->
-    <NavigationCard {height} padding="3 6 4 6" {...$$restProps}>
+    <NavigationCard height={cardHeight} padding="3 6 4 6" {...$$restProps}>
         <gridlayout rows="auto,*">
-            <label color={colorOnSurfaceVariant} fontSize={10 * $fontScaleMaxed} text={caption} />
+            <label color={colorOnSurfaceVariant}>
+                <cspan fontFamily={$fonts.mdi} fontSize={11 * $navigationScale} text="mdi-road-variant" />
+                <cspan fontSize={10 * $navigationScale} text={caption ? ' ' + caption : ''} />
+            </label>
             <canvasview bind:this={surfaceCanvas} borderRadius={3} marginTop={2} row={1} on:draw={onDraw} />
         </gridlayout>
     </NavigationCard>

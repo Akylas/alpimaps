@@ -630,7 +630,7 @@
     "gps_update_distance": "actualizar distancia",
     "gps_update_distance_desc": "Actualizar filtro de distancia en metros. Especifique como a menudo actualizar",
     "gps_update_minTime": "intervalo de actualizaciones",
-    "gps_update_minTime_desc": "Intervalo de tiempo mínimo entre actualizaciones de lugar, en segundos",
+    "gps_update_minTime_desc": "Intervalo de tiempo mínimo entre actualizaciones de lugar, en milisegundos",
     "gravel": "grava",
     "imperial_units_desc": "cambiar este ajuste sobrescribirá unidades definidas específicas",
     "import_settings": "importar ajustes",

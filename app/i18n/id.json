@@ -321,7 +321,7 @@
     "gps_update_distance": "jarak pembaruan",
     "gps_update_distance_desc": "Filter jarak pembaruan dalam meter. Menentukan seberapa sering untuk memperbarui",
     "gps_update_minTime": "interval pembaruan",
-    "gps_update_minTime_desc": "Interval waktu minimum antara pembaruan lokasi, dalam detik",
+    "gps_update_minTime_desc": "Interval waktu minimum antara pembaruan lokasi, dalam milidetik",
     "gpx": "GPX",
     "gravel": "kerikil",
     "greengrocer": "toko sayur",

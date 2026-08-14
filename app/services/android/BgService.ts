@@ -3,6 +3,7 @@ import { lc } from '~/helpers/locale';
 import { BgServiceBinder } from '~/services/android/BgServiceBinder';
 import { BgServiceCommon } from '../BgService.common';
 import { ACTION_PAUSE, ACTION_RESUME, NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, NotificationHelper } from './NotifcationHelper';
+import { SDK_VERSION } from '@nativescript/core/utils';
 
 const NOTIFICATION_ID = 3426124;
 
@@ -83,6 +84,9 @@ export class BgService extends android.app.Service {
             case SessionState.RUNNING:
                 this.recording = true;
                 this.updateNotification();
+                // a plain notify() only draws a notification: without startForeground the process has no
+                // location grant left once the app backgrounds, and the recording stops getting fixes
+                this.showForeground(true);
                 break;
             case SessionState.STOPPED:
                 this.recording = false;
@@ -101,8 +105,9 @@ export class BgService extends android.app.Service {
     onSessionChronoEvent(e: SessionChronoEventData) {
         this.updateNotification();
     }
-
+    showingForeground = false;
     showForeground(force = false) {
+        DEV_LOG && console.log('showForeground', force, this.bounded, this.showingForeground);
         if (!this.bounded) {
             return;
         }
@@ -111,7 +116,18 @@ export class BgService extends android.app.Service {
                 if (!this.mNotification) {
                     this.displayNotification(this.recording);
                 }
-                this.startForeground(NOTIFICATION_ID, this.mNotification);
+                if (this.showingForeground) {
+                    return;
+                }
+                if (SDK_VERSION >= 29) {
+                    this.startForeground(NOTIFICATION_ID, this.mNotification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+                } else {
+                    this.startForeground(NOTIFICATION_ID, this.mNotification);
+                }
+                this.showingForeground = true;
+                // the notification alone proves nothing: without the service actually being foreground
+                // android revokes location the moment the app leaves the screen
+                DEV_LOG && console.log('startForeground done');
             } catch (err) {
                 console.error('showForeground', err, err['stack']);
             }
@@ -119,9 +135,11 @@ export class BgService extends android.app.Service {
     }
 
     removeForeground() {
-        this.stopForeground(false);
+        DEV_LOG && console.log('removeForeground', this.showingForeground);
+        this.stopForeground(1); //STOP_FOREGROUND_REMOVE
         this.notificationManager.cancel(NOTIFICATION_ID);
         this.mNotification = null;
+        this.showingForeground = false;
     }
 
     // onAppEvent(event: ApplicationEventData) {

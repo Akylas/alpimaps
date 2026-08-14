@@ -12,6 +12,7 @@
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
     import NavigationControls from '~/components/navigation/NavigationControls.svelte';
     import NavigationElevationChart from '~/components/navigation/NavigationElevationChart.svelte';
+    import NavigationActions from '~/components/navigation/NavigationActions.svelte';
     import NavigationInfo from '~/components/navigation/NavigationInfo.svelte';
     import NavigationSurface from '~/components/navigation/NavigationSurface.svelte';
     import { convertElevation, formatDistance } from '~/helpers/formatter';
@@ -26,6 +27,7 @@
         navigationHasPreviewWidgets,
         navigationItem,
         navigationProgress,
+        navigationScale,
         navigationShowElevationChart,
         navigationShowSurface,
         navigationState,
@@ -33,6 +35,7 @@
     } from '~/stores/navigationStore';
     import { showSnack } from '~/utils/ui';
     import {
+        NAVACTIONS_HEIGHT,
         NAVSTATS_HEIGHT,
         NAVWIDGET_ROW_HEIGHT,
         ROUTE_PROFILE_HEIGHT,
@@ -49,7 +52,7 @@
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
     import { CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import { chartShowWaypoints, showAscents, showGradeColors } from '~/stores/mapStore';
-    import { colors, fontScaleMaxed, fonts } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
     $: ({ colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
 
@@ -74,7 +77,12 @@
     // route keeps every one of them: the sheet steps are fixed, and its own panel floats above the
     // bar rather than trying to grow a row inside it
     $: compact = paused;
-    $: barRows = compact ? '0,0,*' : `${NAVWIDGET_ROW_HEIGHT},${secondRow ? NAVWIDGET_ROW_HEIGHT : 0},${NAVSTATS_HEIGHT}`;
+    // scaled with the same store the sheet sizes its steps with, else the rows and the room the sheet
+    // gives them disagree and the bar either clips or leaves a gap over the map
+    $: widgetRowHeight = Math.round(NAVWIDGET_ROW_HEIGHT * $navigationScale);
+    $: barRows = compact ? '0,0,*' : `${widgetRowHeight},${secondRow ? widgetRowHeight : 0},${Math.round(NAVSTATS_HEIGHT * $navigationScale)}`;
+    /** the actions step, sized exactly like the sheet reserves it (see `navigationSheetSteps`) */
+    $: actionsHeight = Math.round(NAVACTIONS_HEIGHT * $navigationScale);
     /** row the message and the controls sit on, always the last one of the bar itself */
     $: contentRow = compact ? 2 : secondRow ? 1 : 0;
 
@@ -157,7 +165,7 @@
             return;
         }
         stripPaint.color = colorOnSurfaceVariant;
-        stripPaint.textSize = 12 * $fontScaleMaxed;
+        stripPaint.textSize = 12 * $navigationScale;
         const staticLayout = new StaticLayout(stripString, stripPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
         canvas.save();
         canvas.translate(0, (canvas.getHeight() - staticLayout.getHeight()) / 2);
@@ -170,35 +178,38 @@
      Pause collapses to a single row: the figures are gone, so the rows they needed would only push
      what is left up to the top of the sheet. Off route keeps every row, because the sheet steps are
      fixed and a bar that changes shape under the user is worse than one figure going stale -->
-<gridlayout columns="*,auto" rows={`${barRows},${profileAvailable ? ROUTE_PROFILE_HEIGHT : 0},${statsAvailable ? ROUTE_STATS_HEIGHT : 0}`} {...$$restProps}>
+<gridlayout columns="*,auto" rows={`${barRows},${actionsHeight},${profileAvailable ? ROUTE_PROFILE_HEIGHT : 0},${statsAvailable ? ROUTE_STATS_HEIGHT : 0}`} {...$$restProps}>
     {#if compact}
         <NavigationCard horizontalAlignment="left" marginBottom={6} marginLeft={8} padding="4 12 4 12" row={contentRow} verticalAlignment="bottom">
-            <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} text={lc('navigation_paused')} verticalTextAlignment="center" />
+            <label color={colorOnSurfaceVariant} fontSize={15 * $navigationScale} text={lc('navigation_paused')} verticalTextAlignment="center" />
         </NavigationCard>
     {:else}
         <!-- the figures own the top row. They span both columns only when the second row exists to
              hold the controls, else the controls sit beside them and this row must leave them room -->
         <flexlayout alignItems="flex-end" colSpan={secondRow ? 2 : 1} flexDirection="row" marginLeft={8}>
-            <NavigationInfo caption={lc('remaining_distance')} marginBottom={6} marginRight={8} unit={distanceParts?.[1]} value={distanceParts ? distanceParts[0] + '' : '-'} />
+            <!-- icons rather than captions: a header small enough to fit beside the figure is not
+                 readable at a glance, and at a glance is the only way these are ever read -->
+            <NavigationInfo icon="mdi-map-marker-distance" marginBottom={6} marginRight={8} unit={distanceParts?.[1]} value={distanceParts ? distanceParts[0] + '' : '-'} />
             <NavigationInfo
-                caption={lc('duration')}
+                icon="mdi-timer-outline"
                 marginBottom={6}
                 marginRight={8}
                 unit={durationParts?.[1]}
                 value={durationParts?.[0] ?? '-'}
                 visibility={$navigationStats ? 'visible' : 'collapse'} />
             <NavigationInfo
-                caption={lc('remaining_ascent')}
+                icon="mdi-arrow-top-right"
                 marginBottom={6}
                 marginRight={8}
                 unit={ascentParts?.[1]}
                 value={ascentParts ? ascentParts[0] + '' : '-'}
                 visibility={ascentParts ? 'visible' : 'collapse'} />
+            <!-- the climb underway, with how much of it is left to ride -->
             <NavigationInfo
-                caption={lc('current_ascent') + (currentAscent ? ' · ' + formatDistance(currentAscent.remainingDistance) : '')}
+                icon="mdi-summit"
                 marginBottom={6}
                 marginRight={8}
-                unit={currentAscentParts?.[1]}
+                unit={(currentAscentParts?.[1] ?? '') + (currentAscent ? ' · ' + formatDistance(currentAscent.remainingDistance) : '')}
                 value={currentAscentParts ? currentAscentParts[0] + '' : '-'}
                 visibility={currentAscentParts ? 'visible' : 'collapse'} />
         </flexlayout>
@@ -227,7 +238,10 @@
     <!-- always bottom right of the bar, whether that is the previews row or the figures row -->
     <NavigationControls col={1} marginBottom={6} marginRight={8} row={contentRow} verticalAlignment="bottom" />
 
-    <!-- the sheet steps above the bar: same chart and stats the item sheet shows for the route -->
+    <!-- the sheet steps above the bar. The actions come first: what the item sheet offers for a route —
+         the profile and the road stats of what is ahead, the sun and moon where the user is — and the
+         one step they go looking for, so it is the shortest drag away -->
+    <NavigationActions colSpan={2} margin="4 8 0 8" row={3} />
     {#if profileAvailable}
         <ElevationChart
             bind:this={elevationChart}
@@ -238,11 +252,11 @@
             colSpan={2}
             item={$navigationItem}
             margin="4 8 0 8"
-            row={3}
+            row={4}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors} />
     {/if}
     {#if statsAvailable}
-        <RouteStatsView backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} item={$navigationItem} margin="4 8 0 8" row={4} />
+        <RouteStatsView backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} item={$navigationItem} margin="4 8 0 8" row={5} />
     {/if}
 </gridlayout>

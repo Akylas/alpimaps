@@ -16,16 +16,17 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { isEInk, onThemeChanged } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { surfaceColors } from '~/utils/routing';
+    import { drawSurfaceBand } from '~/utils/surfacePattern';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
     /** The waytype/surface breakdown of a route, shared by the item sheet and the navigation one. */
     export let item: IItem;
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
 
     let statsCanvas: NativeViewElementNode<CanvasView>;
     let statsKey = ApplicationSettings.getString('stats_key', 'waytypes');
@@ -57,6 +58,14 @@
             let labelx = 13;
             let labely = 95;
             const stats = item.stats[statsKey];
+            /**
+             * On eink the whole `surfaceColors` palette renders as a handful of indistinguishable
+             * greys, so the bands and their legend markers are hatched instead, exactly like the
+             * navigation surface widget. Only the surfaces have patterns — waytypes keep their colours.
+             * Read here rather than from a reactive value: `setStatsKey` invalidates the canvas itself,
+             * before svelte has flushed anything derived from it.
+             */
+            const patterned = isEInk && statsKey === 'surfaces';
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
             const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
             const availableWidth = usedWidth / nbColumns - 15;
@@ -68,11 +77,28 @@
                 canvas.drawRect(x, 35, rigthX, 75, barPaint);
                 barPaint.color = surfaceColors[s.id] || '#000000';
                 barPaint.style = Style.FILL;
-                canvas.drawRect(x, 35, rigthX, 75, barPaint);
+                if (patterned) {
+                    drawSurfaceBand(canvas, { id: s.id, left: x, right: rigthX, top: 35, bottom: 75, fillColor: colorSurfaceContainerHigh, patternColor: colorOnSurface });
+                } else {
+                    canvas.drawRect(x, 35, rigthX, 75, barPaint);
+                }
                 x = rigthX;
                 text = lc(s.id);
                 text2 = formatDistance(s.dist * 1000);
-                canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
+                if (patterned) {
+                    // a hatched square, so the legend carries the same mark as the band it names
+                    drawSurfaceBand(canvas, {
+                        id: s.id,
+                        left: labelx - 3,
+                        right: labelx + 9,
+                        top: labely - 10,
+                        bottom: labely + 2,
+                        fillColor: colorSurfaceContainerHigh,
+                        patternColor: colorOnSurface
+                    });
+                } else {
+                    canvas.drawCircle(labelx + 3, labely - 4, 6, barPaint);
+                }
                 nString = createNativeAttributedString({
                     spans: [
                         {
