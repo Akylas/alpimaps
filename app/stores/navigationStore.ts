@@ -32,8 +32,11 @@ import {
     DEFAULT_NAVIGATION_SURFACE_SPAN,
     DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
     DEFAULT_NAVIGATION_TURN_REFRESH_DELAY,
+    DEFAULT_NAVIGATION_UI_SCALE,
     DEFAULT_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
+    DEFAULT_NAVIGATION_ZOOM_FACTOR,
     DEFAULT_NAVIGATION_ZOOM_LOOK_AHEAD,
+    DEFAULT_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO,
     DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
     DEFAULT_NAVIGATION_ZOOM_MAX,
     DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
@@ -65,8 +68,11 @@ import {
     SETTINGS_NAVIGATION_SURFACE_SPAN,
     SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
     SETTINGS_NAVIGATION_TURN_REFRESH_DELAY,
+    SETTINGS_NAVIGATION_UI_SCALE,
     SETTINGS_NAVIGATION_ZOOM_DENSE_MANEUVER_DISTANCE,
+    SETTINGS_NAVIGATION_ZOOM_FACTOR,
     SETTINGS_NAVIGATION_ZOOM_LOOK_AHEAD,
+    SETTINGS_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO,
     SETTINGS_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE,
     SETTINGS_NAVIGATION_ZOOM_MAX,
     SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
@@ -74,6 +80,7 @@ import {
     SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD
 } from '~/utils/constants';
 import type { RejoinTarget, RouteProgress } from '~/utils/navigation';
+import { fontScaleMaxed } from '~/variables';
 
 export enum NavigationState {
     IDLE = 'idle',
@@ -127,6 +134,9 @@ export const navigationZoomMinLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM
 export const navigationZoomMaxLookAhead = settingsStore(SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD, DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD);
 export const navigationZoomMin = settingsStore(SETTINGS_NAVIGATION_ZOOM_MIN, DEFAULT_NAVIGATION_ZOOM_MIN);
 export const navigationZoomMax = settingsStore(SETTINGS_NAVIGATION_ZOOM_MAX, DEFAULT_NAVIGATION_ZOOM_MAX);
+export const navigationZoomFactor = settingsStore(SETTINGS_NAVIGATION_ZOOM_FACTOR, DEFAULT_NAVIGATION_ZOOM_FACTOR);
+export const navigationZoomManeuverFrameRatio = settingsStore(SETTINGS_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO, DEFAULT_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO);
+export const navigationUiScale = settingsStore(SETTINGS_NAVIGATION_UI_SCALE, DEFAULT_NAVIGATION_UI_SCALE);
 export const navigationBackgroundUpdateInterval = settingsStore(SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL, DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL);
 export const navigationGpsUpdateDistance = settingsStore(SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE, DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE);
 export const navigationManeuverWakeDistance = settingsStore(SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE, DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE);
@@ -153,6 +163,13 @@ export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_
 export const navigationChartCurrentAscent = settingsStore(SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT, DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT);
 
 /**
+ * What every navigation widget, button and sheet step is sized with: the system font scale the rest of
+ * the app already follows, times the user's own navigation scale. One store rather than each component
+ * multiplying two of them, so the bar rows and the sheet steps cannot end up disagreeing.
+ */
+export const navigationScale = derived([fontScaleMaxed, navigationUiScale], ([fontScale, uiScale]) => fontScale * (uiScale > 0 ? uiScale : 1));
+
+/**
  * Whether the elevation/surface previews have anything to draw. The navigation view gives them a row
  * of their own, and that view and the bottom sheet step have to agree on whether that row exists,
  * else the sheet reserves a row of empty space above the map.
@@ -176,11 +193,14 @@ export interface NavigationParam {
     formatter?: (value: number) => string;
     /** also offered in the compact popover shown during navigation */
     quick?: boolean;
+    /** a tuning knob for testing on the road, kept out of release builds rather than shipped to users */
+    dev?: boolean;
 }
 
 const formatSeconds = (value: number) => formatDuration(value);
 const formatMilliseconds = (value: number) => formatDuration(value / 1000);
 const formatPercent = (value: number) => Math.round(value * 100) + '%';
+const formatFactor = (value: number) => '×' + value.toFixed(2);
 // auto pause speed is stored in m/s but shown in the user's own speed unit
 const formatSpeed = (value: number) => formatValue(value * 3.6, UNITS.SpeedKm);
 
@@ -279,6 +299,45 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         step: 1
     },
     {
+        key: SETTINGS_NAVIGATION_ZOOM_FACTOR,
+        store: navigationZoomFactor,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_ZOOM_FACTOR,
+        title: () => lc('navigation_zoom_factor'),
+        description: () => lc('navigation_zoom_factor_desc'),
+        min: 0.5,
+        max: 2,
+        // step: 0.05,
+        formatter: formatFactor,
+        quick: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO,
+        store: navigationZoomManeuverFrameRatio,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO,
+        title: () => lc('navigation_zoom_maneuver_frame_ratio'),
+        min: 1,
+        max: 4,
+        // step: 0.1,
+        formatter: formatFactor,
+        quick: true,
+        dev: true
+    },
+    {
+        key: SETTINGS_NAVIGATION_UI_SCALE,
+        store: navigationUiScale,
+        type: 'number',
+        default: DEFAULT_NAVIGATION_UI_SCALE,
+        title: () => lc('navigation_ui_scale'),
+        description: () => lc('navigation_ui_scale_desc'),
+        min: 0.8,
+        max: 1.8,
+        // step: 0.05,
+        formatter: formatFactor,
+        quick: true
+    },
+    {
         key: SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
         store: navigationBackgroundUpdateInterval,
         type: 'number',
@@ -286,9 +345,9 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         title: () => lc('navigation_background_update_interval'),
         description: () => lc('navigation_background_update_interval_desc'),
         min: 0,
-        max: 30000,
-        step: 500,
-        formatter: formatMilliseconds,
+        max: 300000,
+        step: 1000,
+        formatter: (ms) => formatDuration(ms / 1000),
         quick: true
     },
     {
@@ -383,7 +442,7 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         title: () => lc('navigation_speed_drop_wake_ratio'),
         min: 0.1,
         max: 0.9,
-        step: 0.05,
+        // step: 0.05,
         formatter: formatPercent
     },
     {
@@ -448,7 +507,7 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         title: () => lc('navigation_auto_pause_speed'),
         min: 0.1,
         max: 5,
-        step: 0.1,
+        // step: 0.1,
         formatter: formatSpeed
     },
     {
@@ -539,9 +598,14 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
     }
 ];
 
+/** Tuning knobs are for testing on the road: `PRODUCTION` is a compile time global, so they drop out. */
+function visibleParams() {
+    return NAVIGATION_PARAMS.filter((param) => !param.dev || !PRODUCTION);
+}
+
 /** Entries for the settings screen (see the `navigation` case in Settings.svelte). */
 export function getNavigationSettingsOptions() {
-    return NAVIGATION_PARAMS.map((param) =>
+    return visibleParams().map((param) =>
         param.type === 'boolean'
             ? {
                   type: 'switch',
@@ -572,31 +636,33 @@ export function getNavigationSettingsOptions() {
 
 /** Entries for the compact popover shown during navigation. */
 export function getNavigationQuickSettings() {
-    return NAVIGATION_PARAMS.filter((param) => param.quick).map((param) =>
-        param.type === 'boolean'
-            ? {
-                  type: 'switch',
-                  key: param.key,
-                  store: param.store,
-                  value: getStoreValue(param),
-                  title: param.title(),
-                  subtitle: param.description?.()
-              }
-            : {
-                  key: param.key,
-                  store: param.store,
-                  title: param.title(),
-                  subtitle: param.description?.(),
-                  min: param.min,
-                  max: param.max,
-                  step: param.step,
-                  value: getStoreValue(param),
-                  defaultValue: param.default,
-                  onChange: (value) => param.store.set(value),
-                  // formats the value the slider is being dragged to, which the store does not hold yet
-                  valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
-              }
-    );
+    return visibleParams()
+        .filter((param) => param.quick)
+        .map((param) =>
+            param.type === 'boolean'
+                ? {
+                      type: 'switch',
+                      key: param.key,
+                      store: param.store,
+                      value: getStoreValue(param),
+                      title: param.title(),
+                      subtitle: param.description?.()
+                  }
+                : {
+                      key: param.key,
+                      store: param.store,
+                      title: param.title(),
+                      subtitle: param.description?.(),
+                      min: param.min,
+                      max: param.max,
+                      step: param.step,
+                      value: getStoreValue(param),
+                      defaultValue: param.default,
+                      onChange: (value) => param.store.set(value),
+                      // formats the value the slider is being dragged to, which the store does not hold yet
+                      valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
+                  }
+        );
 }
 
 function getStoreValue(param: NavigationParam) {

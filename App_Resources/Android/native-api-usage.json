@@ -3,6 +3,7 @@
     "whitelist": [
         "akylas.alpi.maps*:*",
         "fi.iki.elonen:NanoHTTPD",
+        "android.content.pm:ServiceInfo",
         "android.view:View.OnApplyWindowInsetsListener",
         "android.view:WindowInsets",
         "android.graphics:Insets",

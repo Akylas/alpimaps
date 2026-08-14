@@ -3,9 +3,9 @@
     import { showError } from '@shared/utils/showError';
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigationRunning, navigationProgress, navigationRerouting } from '~/stores/navigationStore';
+    import { isNavigationRunning, navigationProgress, navigationRerouting, navigationScale } from '~/stores/navigationStore';
     import { splitDistance } from '~/utils/navigation';
-    import { colors, fontScaleMaxed } from '~/variables';
+    import { colors } from '~/variables';
 
     $: ({ colorOnSurfaceVariant, colorPrimary } = $colors);
 
@@ -43,12 +43,12 @@
     verticalAlignment="bottom"
     visibility={offRoute ? 'visible' : 'collapse'}
     {...$$restProps}>
-    <label color={colorOnSurfaceVariant} fontSize={15 * $fontScaleMaxed} marginRight={8} text={message} verticalAlignment="center" />
-    <mdbutton col={1} fontSize={14 * $fontScaleMaxed} isEnabled={!$navigationRerouting} text={lc('navigation_back_to_route')} variant="outline" verticalAlignment="center" on:tap={backToRoute} />
+    <label color={colorOnSurfaceVariant} fontSize={15 * $navigationScale} marginRight={8} text={message} verticalAlignment="center" />
+    <mdbutton col={1} fontSize={14 * $navigationScale} isEnabled={!$navigationRerouting} text={lc('navigation_back_to_route')} variant="outline" verticalAlignment="center" on:tap={backToRoute} />
     <mdbutton
         col={2}
         color={colorPrimary}
-        fontSize={14 * $fontScaleMaxed}
+        fontSize={14 * $navigationScale}
         isEnabled={!$navigationRerouting}
         marginLeft={4}
         text={lc('navigation_reroute_to_destination')}
