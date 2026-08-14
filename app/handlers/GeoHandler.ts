@@ -19,7 +19,8 @@ export const desiredAccuracy = __ANDROID__ ? CoreTypes.Accuracy.high : kCLLocati
 export const updateDistance = 0;
 export const maximumAge = 3000;
 export const timeout = 20000;
-export const minimumUpdateTime = 0; // Should update every 1 second according ;
+/** ms: the unit `@nativescript-community/gps` hands to `requestLocationUpdates`. 0 = as fast as it comes */
+export const minimumUpdateTime = 0;
 export type GeoLocation = GenericGeoLocation<LatLonKeys>;
 
 /** meters: past this the fix is too vague to feed the session accumulators */
@@ -30,6 +31,14 @@ const SESSION_STOPPED_SPEED = 0.3;
 const SESSION_MIN_DISTANCE = 2;
 /** meters: altimeter noise floor, below which a climb is not counted */
 const SESSION_ALTITUDE_THRESHOLD = 3;
+/**
+ * ms: how long a screen refresh owns the resume/pause events it causes.
+ *
+ * The eink refresh is a fire and forget broadcast, so on any other device nothing comes back and the
+ * window has to close on its own. A flag cleared by the pause used to stay set forever there, and
+ * swallow the user's next real unlock.
+ */
+const SCREEN_REFRESH_IGNORE_WINDOW = 5000;
 
 export interface Session {
     lastLoc: GeoLocation;
@@ -87,6 +96,12 @@ const TAG = '[GeoHandler]';
 
 export class GeoHandler extends Handler {
     watchId;
+    /**
+     * A fresh watch replays the last known fix straight away. It is not news, and treating it as such
+     * is what let a screen refresh restart the watch and the replayed fix ask for another refresh.
+     * Consumed by whoever reads the first fix after a restart.
+     */
+    watchJustRestarted = false;
     /** incremented by every start/stop, so a startWatch that resolves late can tell it is obsolete */
     private watchGeneration = 0;
     currentWatcher: Function;
@@ -110,80 +125,85 @@ export class GeoHandler extends Handler {
     }
     gpsEnabled = true;
 
-    /** set by NavigationService: merged into the GPS watch options while navigating */
-    // navigationWatchOptions: Partial<GeolocationOptions> = null;
-    /** set by NavigationService: navigation drives the watch itself, so the app going to background must not stop it */
-    keepWatchingInBackground = false;
-
     constructor(service: BgServiceCommon) {
         super(service);
         if (!geolocation) {
             geolocation = new GPS();
         }
     }
-    shouldIgnoreNextResumePause = false;
+
+    /**
+     * Navigation and a recording session both need fixes with the screen off, so neither may have its
+     * watch stopped on pause nor its foreground service dropped on resume — android 14 refuses to
+     * start a location one again from the background, so it could never be restored.
+     */
+    private get needsBackgroundLocation() {
+        return navigationService.isNavigating || !!this.currentSession;
+    }
+
+    private ignoreResumePauseUntil = 0;
+    private get shouldIgnoreResumePause() {
+        return Date.now() < this.ignoreResumePauseUntil;
+    }
     ignoreNextResumePause() {
-        this.shouldIgnoreNextResumePause = true;
+        this.ignoreResumePauseUntil = Date.now() + SCREEN_REFRESH_IGNORE_WINDOW;
     }
     onAppResume(args: ApplicationEventData) {
-        if (this.shouldIgnoreNextResumePause) {
+        if (this.shouldIgnoreResumePause) {
             return;
         }
         if (__IOS__) {
+            // read back by startWatch to decide on the background location options
             this._isIOSBackgroundMode = false;
-            // For iOS applications, args.ios is UIApplication.
+        }
+        DEV_LOG && console.log('onAppResume', !!this.currentSession, this.isWatching(), this.wasWatchingBeforePause, this.needsBackgroundLocation);
 
-            DEV_LOG && console.log('UIApplication: foregroundEvent', this.isWatching());
-            if (this.currentSession) {
-                // we need to restart
+        if (this.needsBackgroundLocation) {
+            // the rate is the background one right now, so it has to go back to the foreground one — and
+            // on ios the background location options go with it. Both only take on a fresh watch.
+            // The notification stays: dropping it here is what makes the next screen lock unrecoverable
+            if (__IOS__ || navigationService.isNavigating) {
                 this.restartWatch();
             }
-        }
-
-        if (this.keepWatchingInBackground) {
-            // keep the navigation notification up, navigation restarts the watch at its foreground cadence
             return;
         }
 
-        if (!this.currentSession) {
-            if (this.wasWatchingBeforePause) {
-                this.startWatch();
-                this.wasWatchingBeforePause = false;
-            } else if (this.isWatching()) {
-                if (__ANDROID__) {
-                    const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
-                    const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
-                    if (backgroundUpdateTime !== updateTime) {
-                        this.restartWatch();
-                    }
-                    (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
+        if (this.wasWatchingBeforePause) {
+            this.startWatch();
+            this.wasWatchingBeforePause = false;
+        } else if (this.isWatching()) {
+            if (__ANDROID__) {
+                const backgroundUpdateTime = ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime);
+                const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
+                if (backgroundUpdateTime !== updateTime) {
+                    this.restartWatch();
                 }
+                (this.service.bgService as WeakRef<AndroidBgService>).get().removeForeground();
             }
         }
     }
     onAppPause(args: ApplicationEventData) {
-        if (this.shouldIgnoreNextResumePause) {
-            this.shouldIgnoreNextResumePause = false;
+        if (this.shouldIgnoreResumePause) {
             return;
         }
         if (__IOS__) {
+            // read back by startWatch to decide on the background location options
             this._isIOSBackgroundMode = true;
-            // For iOS applications, args.ios is UIApplication.
-            DEV_LOG && console.log('UIApplication: backgroundEvent', this.isWatching());
-            if (this.currentSession) {
-                // we need to restart
-                this.stopWatch();
-                this.startWatch();
-            }
         }
-        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground, this.keepWatchingInBackground);
-        if (this.keepWatchingInBackground) {
-            // navigation owns the watch cadence in background and restarts it itself. The foreground
-            // service is already running, started back when navigation began: android 14 would refuse
-            // to start a location one from here
+        DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground, this.needsBackgroundLocation);
+
+        if (this.needsBackgroundLocation) {
+            // the watch has to keep running, only slower: a fresh one is what applies the background
+            // cadence getWatchOptions returns now that the app is in background, and on ios the
+            // background location options. The foreground service is already up, started while the app
+            // was still visible — this is exactly where it must not be touched
+            if (__IOS__ || navigationService.isNavigating) {
+                this.restartWatch();
+            }
             return;
         }
-        if (!this.currentSession && this.isWatching()) {
+
+        if (this.isWatching()) {
             if (this.stopGpsBackground) {
                 this.wasWatchingBeforePause = true;
                 this.stopWatch();
@@ -193,9 +213,9 @@ export class GeoHandler extends Handler {
                     const updateTime = ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime);
                     DEV_LOG && console.log('pause background gps', updateTime, backgroundUpdateTime);
                     if (backgroundUpdateTime !== updateTime) {
-                        this.restartWatch({
-                            minimumUpdateTime: backgroundUpdateTime
-                        });
+                        // this.restartWatch({
+                        //     minimumUpdateTime: backgroundUpdateTime
+                        // });
                     }
                     (this.service.bgService as WeakRef<AndroidBgService>).get().showForeground(true);
                 }
@@ -439,6 +459,7 @@ export class GeoHandler extends Handler {
             return;
         }
         this.watchId = watchId;
+        this.watchJustRestarted = true;
     }
     IOS_ACCURACIES = __IOS__
         ? {
@@ -489,29 +510,28 @@ export class GeoHandler extends Handler {
         };
         if (__IOS__) {
         } else {
-            DEV_LOG && console.log('test', ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime), minimumUpdateTime);
             Object.assign(options, {
                 gps_update_minTime: {
                     title: lc('gps_update_minTime'),
                     description: lc('gps_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_update_minTime', minimumUpdateTime),
-                    formatter: (seconds) => formatDuration(seconds),
+                    formatter: (ms) => formatDuration(ms / 1000),
                     type: 'slider',
                     min: 0,
-                    max: 300,
-                    step: 1
+                    max: 300000,
+                    step: 1000
                 },
                 gps_background_update_minTime: {
                     title: lc('gps_background_update_minTime'),
                     description: lc('gps_background_update_minTime_desc'),
                     default: minimumUpdateTime,
                     value: () => ApplicationSettings.getNumber('gps_background_update_minTime', minimumUpdateTime),
-                    formatter: (seconds) => formatDuration(seconds),
+                    formatter: (ms) => formatDuration(ms / 1000),
                     type: 'slider',
                     min: 0,
-                    max: 300,
-                    step: 1
+                    max: 300000,
+                    step: 1000
                 }
             });
         }
@@ -527,7 +547,7 @@ export class GeoHandler extends Handler {
             // navigation restarts the watch whenever its cadence changes. Dropping the foreground
             // service each time would be fatal: android 14 refuses to start a location one again
             // from the background, so it could never be restored
-            if (__ANDROID__ && !this.keepWatchingInBackground) {
+            if (__ANDROID__ && !this.needsBackgroundLocation) {
                 (this.service.bgService as WeakRef<AndroidBgService>)?.get()?.removeForeground();
             }
             geolocation.clearWatch(this.watchId);

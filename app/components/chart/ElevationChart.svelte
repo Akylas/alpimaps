@@ -17,7 +17,7 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
     import { getBounds } from '~/helpers/geolib';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
     import { showError } from '@shared/utils/showError';
@@ -26,6 +26,11 @@
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+
+    /** what ui-chart fills a line set with by default, out of 255 */
+    const DEFAULT_FILL_ALPHA = 85;
+    /** grade sections are read by colour, so their fill has to actually carry one */
+    const GRADE_FILL_ALPHA = 180;
 
     const xintervals = [1, 2, 5, 10, 20, 50, 100];
     function closestUpper(arr: number[], target: number): number | undefined {
@@ -401,7 +406,9 @@
                 chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
-                chartView.setExtraOffsets(0, mini ? 4 : 24, mini ? 4 : 10, mini ? 2 : 10);
+                // the mini chart is drawn under the widget's own labels — the summit elevation sits in
+                // its top right corner — so the curve needs headroom rather than the whole card
+                chartView.setExtraOffsets(0, mini ? 14 : 24, mini ? 4 : 10, mini ? 2 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -481,14 +488,22 @@
             xAxis.clipLimitLinesToContent = false;
             const chartData = chartView.data;
             let set: LineDataSet;
+            // thicker in the widget: the same hairline that reads fine on a full chart nearly disappears
+            // at a glance on a card the height of a line of text
+            const lineWidth = mini ? 2 : 1;
             function updateSetColors() {
                 if (showProfileGrades && profile.colors && profile.colors.length > 1) {
-                    set.lineWidth = 1;
+                    set.lineWidth = lineWidth;
                     set.colors = profile.colors as any;
+                    // the grade buckets only mean something if they can be told apart, and the chart's
+                    // default fill alpha washes them out. Eink keeps that default: there the fill is a
+                    // grey wedge behind the curve, and darkening it buries the line in it
+                    set.fillAlpha = isEInk ? DEFAULT_FILL_ALPHA : GRADE_FILL_ALPHA;
                 } else {
-                    set.lineWidth = 1;
+                    set.lineWidth = lineWidth;
                     set.resetColors();
                     set.color = '#60B3FC';
+                    set.fillAlpha = DEFAULT_FILL_ALPHA;
                 }
             }
             if (!chartData) {
