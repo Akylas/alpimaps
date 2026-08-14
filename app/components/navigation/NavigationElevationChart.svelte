@@ -2,14 +2,19 @@
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import NavigationCard, { NAVWIDGET_CARD_HEIGHT } from '~/components/navigation/NavigationCard.svelte';
     import { convertElevation } from '~/helpers/formatter';
-    import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
-    import { navigationChartCurrentAscent, navigationGradeLookAhead, navigationItem, navigationProgress } from '~/stores/navigationStore';
+    import { navigationChartCurrentAscent, navigationGradeLookAhead, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { gradeAhead, gradeColor } from '~/utils/grade';
     import { getCurrentAscent } from '~/utils/navigation';
-    import { colors, fontScaleMaxed } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
-    export let height = NAVWIDGET_CARD_HEIGHT;
+    /**
+     * The card follows the navigation scale like every other widget — it shares a row with them, so a
+     * fixed height here would simply leave it shorter than its neighbour. Only the chart drawn inside
+     * keeps its own sizing.
+     */
+    export let height: number = null;
+    $: cardHeight = height ?? Math.round(NAVWIDGET_CARD_HEIGHT * $navigationScale);
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
@@ -32,9 +37,17 @@
     $: gradeText = grade === null || grade === undefined ? '-' : (grade > 0 ? '+' : '') + grade.toFixed(grade > -10 && grade < 10 ? 1 : 0);
     // the eink screen collapses every bucket to the same grey, so the figure carries the meaning there
     $: gradeValueColor = isEInk || grade === null || grade === undefined ? colorOnSurface : gradeColor(grade);
-    // the service already walked the polyline for this fix, so the chart just follows its result
-    $: if ($navigationProgress && available) {
-        highlight($navigationProgress);
+    // the service already walked the polyline for this fix, so the chart just follows its result. The
+    // marker only moves with the index, so a fix that lands on the same vertex is not worth a redraw
+    let highlightedIndex = -2;
+    $: highlightIfMoved($navigationProgress, available);
+
+    function highlightIfMoved(progress, chartAvailable: boolean) {
+        if (!progress || !chartAvailable || progress.onPathIndex === highlightedIndex) {
+            return;
+        }
+        highlightedIndex = progress.onPathIndex;
+        highlight(progress);
     }
 
     function highlight(progress) {
@@ -54,7 +67,7 @@
 </script>
 
 {#if available}
-    <NavigationCard {height} {...$$restProps}>
+    <NavigationCard height={cardHeight} {...$$restProps}>
         <!-- the chart keeps the space it can use, the grade takes the fixed width a figure needs -->
         <gridlayout columns="*,auto">
             <gridlayout>
@@ -63,7 +76,7 @@
                 {#if currentAscent}
                     <label
                         color={colorOnSurfaceVariant}
-                        fontSize={10 * $fontScaleMaxed}
+                        fontSize={10 * $navigationScale}
                         horizontalAlignment="right"
                         marginRight={4}
                         text={convertElevation(currentAscent.summitElevation)}
@@ -71,10 +84,11 @@
                 {/if}
             </gridlayout>
             <stacklayout col={1} paddingLeft={6} paddingRight={8} verticalAlignment="center">
-                <label color={colorOnSurfaceVariant} fontSize={11 * $fontScaleMaxed} text={lc('grade')} />
+                <!-- the icon says what the figure is where the word could not be drawn big enough to -->
+                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={13 * $navigationScale} text="mdi-angle-acute" />
                 <label>
-                    <cspan color={gradeValueColor} fontSize={20 * $fontScaleMaxed} fontWeight="bold" text={gradeText} />
-                    <cspan color={colorOnSurfaceVariant} fontSize={13 * $fontScaleMaxed} text=" %" />
+                    <cspan color={gradeValueColor} fontSize={20 * $navigationScale} fontWeight="bold" text={gradeText} />
+                    <cspan color={colorOnSurfaceVariant} fontSize={13 * $navigationScale} text=" %" />
                 </label>
             </stacklayout>
         </gridlayout>

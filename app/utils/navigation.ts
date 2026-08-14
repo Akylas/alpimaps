@@ -1,7 +1,9 @@
 import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
 import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
+import { getRhumbLineBearing } from '~/helpers/geolib';
 import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, TO_DEG, TO_RAD, computeDistanceBetween } from '~/utils/geo';
 
@@ -12,16 +14,23 @@ const OPPOSITE_SEGMENT_ANGLE = 120;
 const OPPOSITE_SEGMENT_PENALTY = 60;
 /** m/s below which the reported heading is noise: standing still, it points anywhere */
 const MIN_BEARING_SPEED = 1;
-/** meters of route ahead of the last known position the projection may move to in one fix */
+/** meters between two fixes past which the line between them is a better heading than none */
+const MIN_DERIVED_BEARING_DISTANCE = 5;
+/** ceiling on the meters of route ahead the projection may move to in one fix, whatever the speed */
 const MAX_PROJECTION_LOOKAHEAD = 1000;
+/** how much further than the plausible travel the projection is still allowed to reach, for a lost fix */
+const PROJECTION_LOOKAHEAD_MARGIN = 100;
+/** the projection may travel this many times the distance the speed says, so a burst is not cut off */
+const PROJECTION_LOOKAHEAD_TOLERANCE = 3;
 /** how many segments ahead of the last known position we look for the user */
 export const DEFAULT_PROJECTION_WINDOW = 200;
 
-/** how much road past the maneuver we want in frame when we zoom onto it */
-const MANEUVER_FRAME_RATIO = 1.4;
-
 /** one row of navigation widget cards */
 export const NAVWIDGET_ROW_HEIGHT = 60;
+/** every navigation button, so the controls and the actions row cannot end up different sizes */
+export const NAVBUTTON_SIZE = 48;
+/** the actions step: one row of buttons and its margins */
+export const NAVACTIONS_HEIGHT = NAVBUTTON_SIZE + 10;
 /** the estimates strip below them, shown at the same step so nothing is hidden by default */
 export const NAVSTATS_HEIGHT = 32;
 /** the maneuver banner at the top of the map, everything anchored up there has to clear it */
@@ -45,10 +54,15 @@ export const ROUTE_STATS_HEIGHT = 180;
 
 /**
  * Steps of the navigation sheet. It has no 0 step on purpose: the bar is the only way back out of
- * navigation, so it can never be dismissed. Dragging up reveals the profile then the stats.
+ * navigation, so it can never be dismissed. Dragging up reveals the actions, then the profile, then
+ * the stats — the actions first because they are the one step the user goes looking for, rather than
+ * something they read while moving.
  */
-export function navigationSheetSteps({ barHeight, hasProfile, hasStats }: { barHeight: number; hasProfile: boolean; hasStats: boolean }) {
+export function navigationSheetSteps({ actionsHeight = 0, barHeight, hasProfile, hasStats }: { barHeight: number; actionsHeight?: number; hasProfile: boolean; hasStats: boolean }) {
     const steps = [0, barHeight];
+    if (actionsHeight > 0) {
+        steps.push(steps[steps.length - 1] + actionsHeight);
+    }
     if (hasProfile) {
         steps.push(steps[steps.length - 1] + ROUTE_PROFILE_HEIGHT);
     }
@@ -175,6 +189,10 @@ export interface NavigationLookAheadOptions {
     maneuverVisibleDistance: number;
     minLookAhead: number;
     maxLookAhead: number;
+    /** how much road past the maneuver stays in frame when the camera zooms onto it */
+    maneuverFrameRatio: number;
+    /** the user's own multiplier on the framed distance, 1 leaving the computation as it comes */
+    zoomFactor?: number;
 }
 
 /**
@@ -193,10 +211,12 @@ export function computeNavigationLookAhead({
     distanceToFollowingInstruction,
     distanceToNextInstruction,
     lookAheadSeconds,
+    maneuverFrameRatio,
     maneuverVisibleDistance,
     maxLookAhead,
     minLookAhead,
-    speed
+    speed,
+    zoomFactor = 1
 }: NavigationLookAheadOptions) {
     const hasManeuver = distanceToNextInstruction >= 0;
     // the floor keeps a slow speed from collapsing the view onto the user's own dot
@@ -204,17 +224,49 @@ export function computeNavigationLookAhead({
 
     if (hasManeuver && distanceToNextInstruction <= maneuverVisibleDistance) {
         // close enough to be worth showing: make sure it fits on screen, widening if we have to
-        lookAhead = Math.max(lookAhead, distanceToNextInstruction * MANEUVER_FRAME_RATIO);
+        lookAhead = Math.max(lookAhead, distanceToNextInstruction * maneuverFrameRatio);
     }
     if (hasManeuver) {
         // never frame much more road than the maneuver itself once we are nearly on it
-        lookAhead = Math.min(lookAhead, Math.max(distanceToNextInstruction * MANEUVER_FRAME_RATIO, minLookAhead));
+        lookAhead = Math.min(lookAhead, Math.max(distanceToNextInstruction * maneuverFrameRatio, minLookAhead));
     }
     const clustered = hasManeuver && distanceToFollowingInstruction >= 0 && distanceToFollowingInstruction < denseManeuverDistance;
     if (clustered) {
         lookAhead = Math.min(lookAhead, distanceToNextInstruction + distanceToFollowingInstruction);
     }
-    return Math.min(Math.max(lookAhead, minLookAhead), maxLookAhead);
+    // the user's factor comes last and is clamped like everything else: it tunes the result, it does
+    // not get to escape the bounds the rest of the settings set
+    return Math.min(Math.max(lookAhead * (zoomFactor > 0 ? zoomFactor : 1), minLookAhead), maxLookAhead);
+}
+
+/**
+ * What "far", "close" and "slow" mean depends on how the route is travelled: 500 m ahead is the next
+ * ten minutes on foot and the next thirty seconds in a car. Rather than storing every distance three
+ * times, the settings hold the pedestrian figures and this scales them.
+ */
+export interface NavigationProfileTuning {
+    /** multiplies the distance settings: min/max look ahead, maneuver visible, dense maneuver */
+    distance: number;
+    /** m/s under which the framing rule counts the user as going slow */
+    slowSpeed: number;
+    /** meters past which a leg counts as a long stretch, ie not worth framing whole while crawling */
+    longStretch: number;
+}
+
+const PEDESTRIAN_TUNING: NavigationProfileTuning = { distance: 1, slowSpeed: 0.7, longStretch: 1000 };
+const PROFILE_TUNINGS: { [key: string]: NavigationProfileTuning } = {
+    pedestrian: PEDESTRIAN_TUNING,
+    bicycle: { distance: 2.5, slowSpeed: 2.5, longStretch: 3000 },
+    car: { distance: 5, slowSpeed: 8, longStretch: 8000 },
+    auto: { distance: 5, slowSpeed: 8, longStretch: 8000 },
+    bus: { distance: 5, slowSpeed: 8, longStretch: 8000 },
+    truck: { distance: 5, slowSpeed: 8, longStretch: 8000 },
+    motorcycle: { distance: 5, slowSpeed: 8, longStretch: 8000 }
+};
+
+/** Walking is the safe default: it frames the least road, so an unknown profile cannot overshoot. */
+export function navigationProfileTuning(profile?: ValhallaProfile): NavigationProfileTuning {
+    return PROFILE_TUNINGS[profile] ?? PEDESTRIAN_TUNING;
 }
 
 export interface RouteProgress {
@@ -429,10 +481,17 @@ export class OffRouteDetector {
     private lastOnPathIndex = -1;
     private lastDistanceToIndex = 0;
     private offFixes = 0;
+    /** consecutive fixes back inside the tolerance, so returning is as hysteretic as leaving */
+    private onFixes = 0;
     private mOffRoute = false;
     private mOffRouteSince = 0;
     private lastFullScanTime = 0;
     private lastFullScanLocation: GenericMapPos<LatLonKeys> = null;
+    private lastUpdateTime = 0;
+    private lastSpeed = 0;
+    /** position the derived heading is measured from, only moved once the user has left it behind */
+    private bearingAnchor: GenericMapPos<LatLonKeys> = null;
+    private derivedBearing = -1;
 
     /** read lazily so changing the setting mid navigation applies on the next fix */
     constructor(private readonly getOptions: () => OffRouteOptions = () => ({})) {}
@@ -452,10 +511,15 @@ export class OffRouteDetector {
         this.lastOnPathIndex = -1;
         this.lastDistanceToIndex = 0;
         this.offFixes = 0;
+        this.onFixes = 0;
         this.mOffRoute = false;
         this.mOffRouteSince = 0;
         this.lastFullScanTime = 0;
         this.lastFullScanLocation = null;
+        this.lastUpdateTime = 0;
+        this.lastSpeed = 0;
+        this.bearingAnchor = null;
+        this.derivedBearing = -1;
     }
 
     /** Restarts from a known index, for when the route itself changed under us (a reroute). */
@@ -471,6 +535,49 @@ export class OffRouteDetector {
         return Math.min(Math.max(base + accuracy, base), Math.max(MAX_OFF_ROUTE_TOLERANCE, base));
     }
 
+    /**
+     * Which way the user is going, which is the only thing telling the two legs of a path walked both
+     * ways apart.
+     *
+     * The reported heading is noise at a standstill, but "moving slowly" is not "standing still": a
+     * walker at 0.6 m/s still has a direction, and dropping it there is what let the projection snap
+     * onto the return leg of an out and back, jumping the user hundreds of vertices forward. So below
+     * the reported-heading threshold we derive one from the ground actually covered, holding the last
+     * answer until the user has moved far enough for a new one to mean something.
+     */
+    private bearingFor(location: GenericMapPos<LatLonKeys> & { bearing?: number; speed?: number }) {
+        if (location.speed >= MIN_BEARING_SPEED && location.bearing >= 0) {
+            this.bearingAnchor = location;
+            this.derivedBearing = -1;
+            return location.bearing;
+        }
+        if (!this.bearingAnchor) {
+            this.bearingAnchor = location;
+        } else if (computeDistanceBetween(this.bearingAnchor, location) >= MIN_DERIVED_BEARING_DISTANCE) {
+            this.derivedBearing = getRhumbLineBearing(this.bearingAnchor, location);
+            this.bearingAnchor = location;
+        }
+        return this.derivedBearing >= 0 ? this.derivedBearing : undefined;
+    }
+
+    /**
+     * Meters of route ahead the projection may move to on this fix.
+     *
+     * A flat allowance meant that anywhere the route came back along itself within a kilometre, the
+     * *later* leg was a legitimate candidate — and a metre closer to a wobbly fix is all it took to be
+     * picked, which reads as suddenly having covered that kilometre. The user cannot travel further
+     * than their speed says, so that is the budget, with a wide tolerance for a burst and a margin for
+     * a lost fix.
+     */
+    private projectionLookAhead(location: { speed?: number }, now: number) {
+        if (!this.lastUpdateTime) {
+            return MAX_PROJECTION_LOOKAHEAD;
+        }
+        const elapsed = Math.max((now - this.lastUpdateTime) / 1000, 0);
+        const speed = Math.max(location.speed > 0 ? location.speed : 0, this.lastSpeed);
+        return Math.min(speed * elapsed * PROJECTION_LOOKAHEAD_TOLERANCE + PROJECTION_LOOKAHEAD_MARGIN, MAX_PROJECTION_LOOKAHEAD);
+    }
+
     /** A full scan is the only way to notice a rejoin somewhere else, and the only expensive one. */
     private shouldFullScan(location: GenericMapPos<LatLonKeys>, now: number) {
         if (!this.lastFullScanLocation) {
@@ -481,9 +588,11 @@ export class OffRouteDetector {
 
     update(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number; bearing?: number; speed?: number }, positions: MapPosVector<LatLonKeys>, now = Date.now()): OffRouteState {
         const tolerance = this.toleranceFor(location);
-        // standing still, the reported heading is noise and would score the segments at random
-        const bearing = location.speed >= MIN_BEARING_SPEED && location.bearing >= 0 ? location.bearing : undefined;
-        let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex, bearing, maxAhead: MAX_PROJECTION_LOOKAHEAD });
+        const bearing = this.bearingFor(location);
+        const maxAhead = this.projectionLookAhead(location, now);
+        this.lastUpdateTime = now;
+        this.lastSpeed = location.speed > 0 ? location.speed : 0;
+        let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex, bearing, maxAhead });
         if ((!best || best.distanceFromRoute > tolerance) && this.lastOnPathIndex !== -1 && this.shouldFullScan(location, now)) {
             // out of the window: either we left the route, or we rejoined it somewhere else entirely
             this.lastFullScanTime = now;
@@ -508,17 +617,26 @@ export class OffRouteDetector {
             };
         }
 
+        const requiredFixes = this.getOptions().fixes ?? 1;
         if (best.distanceFromRoute <= tolerance) {
             this.offFixes = 0;
-            this.mOffRoute = false;
-            this.mOffRouteSince = 0;
-            this.lastOnPathIndex = best.index;
-            this.lastDistanceToIndex = best.distanceToIndex;
+            // coming back takes as many fixes as leaving did. One was enough before, so a user
+            // travelling along the edge of the tolerance flapped off and on every other fix — and each
+            // flip re-framed the map, re-armed the reroute and, in background, woke the screen. The
+            // projection stays where it was until the return is confirmed, as it does while off route
+            this.onFixes++;
+            if (!this.mOffRoute || this.onFixes >= requiredFixes) {
+                this.onFixes = 0;
+                this.mOffRoute = false;
+                this.mOffRouteSince = 0;
+                this.lastOnPathIndex = best.index;
+                this.lastDistanceToIndex = best.distanceToIndex;
+            }
         } else {
             // every fix counts, moving or not: standing away from the route is being away from it, and
             // requiring movement meant a navigation started off route was never told so
+            this.onFixes = 0;
             this.offFixes++;
-            const requiredFixes = this.getOptions().fixes ?? 1;
             if (!this.mOffRoute && (this.offFixes >= requiredFixes || best.distanceFromRoute > tolerance * OFF_ROUTE_OBVIOUS_RATIO)) {
                 this.mOffRoute = true;
                 this.mOffRouteSince = now;
