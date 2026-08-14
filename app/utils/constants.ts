@@ -33,6 +33,9 @@ export const SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD = 'navigation_zoom_min_look
 export const SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD = 'navigation_zoom_max_look_ahead';
 export const SETTINGS_NAVIGATION_ZOOM_MIN = 'navigation_zoom_min';
 export const SETTINGS_NAVIGATION_ZOOM_MAX = 'navigation_zoom_max';
+export const SETTINGS_NAVIGATION_ZOOM_FACTOR = 'navigation_zoom_factor';
+export const SETTINGS_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO = 'navigation_zoom_maneuver_frame_ratio';
+export const SETTINGS_NAVIGATION_UI_SCALE = 'navigation_ui_scale';
 export const SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL = 'navigation_background_update_interval';
 export const SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE = 'navigation_gps_update_distance';
 export const SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE = 'navigation_maneuver_wake_distance';
@@ -91,7 +94,18 @@ export const DEFAULT_NAVIGATION_ZOOM_MANEUVER_VISIBLE_DISTANCE = 2000;
 export const DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD = 200;
 export const DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD = 4000;
 export const DEFAULT_NAVIGATION_ZOOM_MIN = 12;
-export const DEFAULT_NAVIGATION_ZOOM_MAX = 18;
+export const DEFAULT_NAVIGATION_ZOOM_MAX = 17;
+/**
+ * multiplies every computed look-ahead distance, ie how much ground the camera frames. Above 1 the
+ * view sits further out and shows more, below 1 it sits closer. A factor on the *distance* rather than
+ * on the zoom: zoom is a log2 scale, so scaling the zoom number itself means nothing physical.
+ */
+export const DEFAULT_NAVIGATION_ZOOM_FACTOR = 1;
+/** how much road past the next maneuver stays in frame when the camera zooms onto it */
+export const DEFAULT_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO = 1.8;
+/** scales the navigation widgets, buttons and sheet steps on top of the system font scale */
+export const DEFAULT_NAVIGATION_UI_SCALE = 1;
+/** ms, like every `minimumUpdateTime` handed to `@nativescript-community/gps` */
 export const DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL = 5000;
 /** meters the gps must move before reporting, 0 means report every fix */
 export const DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE = 0;
