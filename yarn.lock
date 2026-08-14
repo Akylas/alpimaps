@@ -3202,6 +3202,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nativescript/android@npm:next":
+  version: 9.0.6-next.2026-08-13-31716987422
+  resolution: "@nativescript/android@npm:9.0.6-next.2026-08-13-31716987422"
+  checksum: 10/1878307c8f5366db299ea30aa6e5ee3893e5252845bf6134396e0635edf992f6f4d72a44d313fe4839f98550a0f2825889ccf311b3d2857f8878c35a6a6fed44
+  languageName: node
+  linkType: hard
+
 "@nativescript/appavailability@npm:2.0.0":
   version: 2.0.0
   resolution: "@nativescript/appavailability@npm:2.0.0"
@@ -14748,6 +14755,7 @@ __metadata:
     "@nativescript-community/ui-webview-rtc": "npm:1.6.2"
     "@nativescript-community/universal-links": "npm:3.0.2"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
+    "@nativescript/android": "npm:next"
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"
