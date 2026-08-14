@@ -2,7 +2,6 @@ import { lc } from '@nativescript-community/l';
 import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
 import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
 import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
 import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
 import { BillboardOrientation, BillboardScaling } from '@nativescript-community/ui-carto/vectorelements';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
@@ -30,39 +29,67 @@ import {
 } from '~/utils/constants';
 import { colors, screenHeightDips } from '~/variables';
 import { request } from '@nativescript-community/perms';
+import { CLog } from '@nativescript-community/sentry';
+import { isNavigating } from '~/stores/navigationStore';
 
 const LOCATION_ANIMATION_DURATION = 300;
-/** pixels of the generated arrow bitmap: big enough to stay clean when carto scales it */
-const ARROW_BITMAP_SIZE = 96;
+/** pixels of the generated marker bitmaps: big enough to stay clean when carto scales them */
+const USER_BITMAP_SIZE = 96;
+/** screen size of the heading arrow, and of the plain dot with its ring */
+const ARROW_MARKER_SIZE = 30;
+const DOT_MARKER_SIZE = 20;
 
-let arrowBitmap;
+/** what the user's position looks like: a heading chevron while navigating, a ringed dot otherwise */
+type UserMarkerKind = 'arrow' | 'dot';
+
+const userBitmaps: { [key: string]: ImageSource } = {};
 /**
- * The heading arrow other navigation apps show instead of a dot. Drawn once into an offscreen canvas
- * rather than shipped as an asset, so it follows the theme colors and needs no extra image files.
+ * The marker image, drawn into an offscreen canvas rather than shipped as an asset so it follows the
+ * theme colors and needs no extra image files. One per look, cached: the dot's colour follows the fix
+ * accuracy, so there are a handful of them.
+ *
+ * Android gets a *copy* every time, and never the cached image itself: carto's `getCartoBitmap`
+ * recycles the android bitmap it is handed (see `@nativescript-community/ui-carto/index.android`).
+ * Handing it the cached one recycles a bitmap the offscreen Canvas still owns — leaving the cache
+ * pointing at a recycled bitmap for the next marker, and the canvas free to release it a second time.
  */
-function getArrowBitmap(color: string, outlineColor: string) {
-    if (!arrowBitmap) {
-        const canvas = new Canvas(ARROW_BITMAP_SIZE, ARROW_BITMAP_SIZE);
-        const size = ARROW_BITMAP_SIZE;
-        const path = new Path();
-        // a chevron pointing up, notched at the bottom so the direction is unambiguous
-        path.moveTo(size * 0.5, size * 0.08);
-        path.lineTo(size * 0.9, size * 0.92);
-        path.lineTo(size * 0.5, size * 0.7);
-        path.lineTo(size * 0.1, size * 0.92);
-        path.close();
-
+function getUserBitmap(kind: UserMarkerKind, color: string, outlineColor: string) {
+    const key = `${kind}|${color}|${outlineColor}`;
+    let bitmap = userBitmaps[key];
+    if (!bitmap) {
+        const size = USER_BITMAP_SIZE;
+        const canvas = new Canvas(size, size);
         const paint = new Paint();
-        paint.setStyle(Style.FILL);
-        paint.setColor(color);
-        canvas.drawPath(path, paint);
-        paint.setStyle(Style.STROKE);
-        paint.setStrokeWidth(size * 0.06);
-        paint.setColor(outlineColor);
-        canvas.drawPath(path, paint);
-        arrowBitmap = new ImageSource(canvas.getImage());
+        if (kind === 'arrow') {
+            const path = new Path();
+            // a chevron pointing up, notched at the bottom so the direction is unambiguous
+            path.moveTo(size * 0.5, size * 0.08);
+            path.lineTo(size * 0.9, size * 0.92);
+            path.lineTo(size * 0.5, size * 0.7);
+            path.lineTo(size * 0.1, size * 0.92);
+            path.close();
+            paint.setStyle(Style.FILL);
+            paint.setColor(color);
+            canvas.drawPath(path, paint);
+            paint.setStyle(Style.STROKE);
+            paint.setStrokeWidth(size * 0.06);
+            paint.setColor(outlineColor);
+            canvas.drawPath(path, paint);
+        } else {
+            // the ring is part of the image: it used to be a second marker underneath this one
+            paint.setStyle(Style.FILL);
+            paint.setColor(outlineColor);
+            canvas.drawCircle(size / 2, size / 2, size * 0.42, paint);
+            paint.setColor(color);
+            canvas.drawCircle(size / 2, size / 2, size * 0.32, paint);
+        }
+        bitmap = new ImageSource(canvas.getImage());
+        userBitmaps[key] = bitmap;
     }
-    return arrowBitmap;
+    if (__ANDROID__) {
+        return new ImageSource(android.graphics.Bitmap.createBitmap(bitmap.android));
+    }
+    return bitmap;
 }
 
 export const navigationModeStore = writable(false);
@@ -78,9 +105,19 @@ export default class UserLocationModule extends MapModule {
     localVectorDataSource: LocalVectorDataSource;
     localBackVectorLayer: VectorLayer;
     localVectorLayer: VectorLayer;
-    userBackMarker: Point<LatLonKeys>;
-    userMarker: Point<LatLonKeys>;
+    /**
+     * One marker for both modes. The heading arrow and the dot used to be three separate elements kept
+     * in sync by showing and hiding each other, which meant every mode change had to remember to touch
+     * all of them — and a marker whose look depended on a fix that had not arrived yet simply stayed
+     * wrong. Now the look is a style swapped on the single marker, so there is nothing to keep in sync.
+     */
+    userMarker: Marker<LatLonKeys>;
+    /** which look the marker currently wears, so the style is only rebuilt when it actually changes */
+    private userMarkerStyleKey: string = null;
+    /** the halo stays its own element: it is a ground circle in meters, not a screen sized billboard */
     accuracyMarker: Polygon<LatLonKeys>;
+    /** last heading we were given, so a fix without one does not swing the arrow back to north */
+    private lastKnownBearing = 0;
     mUserFollow = false;
     get userFollow() {
         return this.mUserFollow;
@@ -99,38 +136,18 @@ export default class UserLocationModule extends MapModule {
     }
     set navigationMode(value: boolean) {
         navigationModeStore.set(value);
+        // redraw now rather than on the next fix, whichever way we are going: entering navigation is
+        // the moment the user looks at the marker, and a fix can be seconds away — or never, since an
+        // unchanged position is dropped before it reaches the markers
+        if (this.mLastUserLocation) {
+            this.updateMarkers(this.mLastUserLocation);
+        }
         if (value) {
             this.userFollow = true;
-            // draw the arrow now rather than on the next fix: entering navigation is the moment the
-            // user looks at the marker, and a fix can be seconds away — or, if the position has not
-            // moved, never, since an identical fix is dropped before it reaches the markers
-            if (this.mLastUserLocation) {
-                this.updateMarkers(this.mLastUserLocation);
-            }
             this.moveToUserLocation();
-        } else {
-            // the arrow hid the dot; without this it stays hidden until the next fix arrives, and if
-            // the watch just stopped that never happens, leaving only the white halo on the map
-            this.showArrowMarker(false);
         }
     }
 
-    /** Swaps between the heading arrow and the plain dot, keeping exactly one of them visible. */
-    private showArrowMarker(useArrow: boolean) {
-        if (this.userArrowMarker) {
-            this.userArrowMarker.visible = useArrow;
-        }
-        if (this.userMarker) {
-            this.userMarker.visible = !useArrow;
-        }
-        if (this.userBackMarker) {
-            this.userBackMarker.visible = !useArrow;
-        }
-        if (this.accuracyMarker && useArrow) {
-            // the halo belongs to the dot: left on, it draws a circle around the arrow for ever
-            this.accuracyMarker.visible = false;
-        }
-    }
     override onMapDestroyed() {
         super.onMapDestroyed();
         this.localVectorLayer = null;
@@ -138,6 +155,11 @@ export default class UserLocationModule extends MapModule {
             this.localVectorDataSource.clear();
             this.localVectorDataSource = null;
         }
+        // the elements belonged to that data source: kept around, the next `updateMarkers` would update
+        // markers attached to nothing and never add them to the layer the new map builds
+        this.userMarker = null;
+        this.userMarkerStyleKey = null;
+        this.accuracyMarker = null;
     }
 
     getCirclePoints(loc: Partial<MapPos<LatLonKeys> & { horizontalAccuracy: number }>) {
@@ -209,9 +231,14 @@ export default class UserLocationModule extends MapModule {
         const position = {
             ...geoPos
         };
+        // the heading is part of what the marker draws, so a fix that only turned is not "the same fix"
         if (
             !this.mapView ||
-            (this.lastUserLocation && this.lastUserLocation.lat === geoPos.lat && this.lastUserLocation.lon === geoPos.lon && this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy)
+            (this.lastUserLocation &&
+                this.lastUserLocation.lat === geoPos.lat &&
+                this.lastUserLocation.lon === geoPos.lon &&
+                this.lastUserLocation.horizontalAccuracy === geoPos.horizontalAccuracy &&
+                this.lastUserLocation.bearing === geoPos.bearing)
         ) {
             if (this.userFollow) {
                 this.moveToUserLocation();
@@ -230,7 +257,7 @@ export default class UserLocationModule extends MapModule {
         if (this.userFollow) {
             this.moveToUserLocation(inBackground ? 0 : undefined);
         }
-        if (__ANDROID__ && inBackground) {
+        if (__ANDROID__ && inBackground && !get(isNavigating)) {
             const a9ScreenRefresh = ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false);
             if (a9ScreenRefresh) {
                 requestScreenRefresh(this.geoHandler);
@@ -238,100 +265,99 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    /** Everything drawn at the user's position, split out so entering navigation can redraw it at once. */
+    /**
+     * Everything drawn at the user's position, split out so entering navigation can redraw it at once.
+     *
+     * The marker is one element wearing one of two looks. Which look it wears follows the mode alone,
+     * not the mode *and* whether this particular fix happened to carry a heading: the arrow used to
+     * wait for a fix with a bearing, so starting navigation while standing still left the dot on screen.
+     */
     private updateMarkers(position: GeoLocation) {
         let accuracyColor = '#0e7afe';
-        let accuracySize = 14;
+        let accuracySize = DOT_MARKER_SIZE;
         const accuracy = position.horizontalAccuracy || 0;
         if (position.age > 120000) {
             accuracyColor = 'gray';
         } else if (accuracy > 1000) {
-            accuracySize = 8;
+            accuracySize = 12;
             accuracyColor = 'red';
         } else if (accuracy > 20) {
-            accuracySize = 11;
+            accuracySize = 16;
             accuracyColor = 'orange';
         }
-
-        const useArrow = this.navigationMode && ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_ARROW_MARKER, DEFAULT_NAVIGATION_ARROW_MARKER) && position.bearing >= 0;
-        const newPos = { lat: position.lat, lon: position.lon };
-        if (!useArrow) {
-            if (!this.userMarker) {
-                this.getOrCreateLocalVectorLayer();
-                const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
-                if (accuracyMarkerEnabled) {
-                    this.accuracyMarker = new Polygon<LatLonKeys>({
-                        positions: this.getCirclePoints(position),
-                        styleBuilder: {
-                            size: 16,
-                            color: new Color(70, 14, 122, 254),
-                            lineStyleBuilder: {
-                                color: new Color(150, 14, 122, 254),
-                                width: 1
-                            }
-                        }
-                    });
-                    this.localBackVectorDataSource.add(this.accuracyMarker);
-                }
-
-                this.userBackMarker = new Point<LatLonKeys>({
-                    position: newPos,
-                    styleBuilder: {
-                        size: 17,
-                        color: '#ffffff'
-                    }
-                });
-                this.userMarker = new Point<LatLonKeys>({
-                    metaData: {
-                        userMarker: 'true'
-                    },
-                    position: newPos,
-                    styleBuilder: {
-                        size: accuracyMarkerEnabled ? 14 : accuracySize,
-                        color: accuracyColor
-                    }
-                });
-                this.localVectorDataSource.add(this.userBackMarker);
-                this.localVectorDataSource.add(this.userMarker);
-            } else {
-                this.userMarker.color = accuracyColor;
-                const newPos = { lat: position.lat, lon: position.lon };
-
-                this.userBackMarker.position = newPos;
-                this.userMarker.position = newPos;
-                if (this.accuracyMarker) {
-                    this.accuracyMarker.positions = this.getCirclePoints(newPos);
-                    this.accuracyMarker.visible = accuracy > 20;
-                } else {
-                    this.userMarker.size = accuracySize;
-                }
-            }
-        } else {
-            if (!this.userArrowMarker) {
-                this.getOrCreateLocalVectorLayer();
-                const { colorOnPrimary, colorPrimary } = get(colors);
-                this.userArrowMarker = new Marker<LatLonKeys>({
-                    position: newPos,
-                    styleBuilder: {
-                        size: 30,
-                        bitmap: getArrowBitmap(colorPrimary, colorOnPrimary),
-                        orientationMode: BillboardOrientation.GROUND,
-                        scalingMode: BillboardScaling.CONST_SCREEN_SIZE
-                    }
-                });
-                this.localVectorDataSource.add(this.userArrowMarker);
-            } else {
-                this.userArrowMarker.position = newPos;
-                this.userArrowMarker.visible = true;
-            }
-            this.userArrowMarker.rotation = -position.bearing;
+        if (position.bearing >= 0) {
+            this.lastKnownBearing = position.bearing;
         }
 
-        this.showArrowMarker(useArrow);
+        const useArrow = this.navigationMode && ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_ARROW_MARKER, DEFAULT_NAVIGATION_ARROW_MARKER);
+        const accuracyMarkerEnabled = ApplicationSettings.getBoolean('show_accuracy_marker', true);
+        const newPos = { lat: position.lat, lon: position.lon };
+        this.getOrCreateLocalVectorLayer();
+
+        if (accuracyMarkerEnabled) {
+            if (!this.accuracyMarker) {
+                this.accuracyMarker = new Polygon<LatLonKeys>({
+                    positions: this.getCirclePoints(position),
+                    styleBuilder: {
+                        size: 16,
+                        color: new Color(70, 14, 122, 254),
+                        lineStyleBuilder: {
+                            color: new Color(150, 14, 122, 254),
+                            width: 1
+                        }
+                    }
+                });
+                this.localBackVectorDataSource.add(this.accuracyMarker);
+            } else {
+                this.accuracyMarker.positions = this.getCirclePoints(position);
+            }
+            // the halo belongs to the dot: around the arrow it just draws a circle that never goes away
+            this.accuracyMarker.visible = !useArrow && accuracy > 20;
+        }
+
+        const { colorOnPrimary, colorPrimary } = get(colors);
+        const kind: UserMarkerKind = useArrow ? 'arrow' : 'dot';
+        const color = useArrow ? colorPrimary : accuracyColor;
+        // with a halo to say how good the fix is, the dot itself can keep one size
+        const size = useArrow ? ARROW_MARKER_SIZE : accuracyMarkerEnabled ? DOT_MARKER_SIZE : accuracySize;
+        const styleKey = `${kind}|${color}|${size}`;
+        if (!this.userMarker) {
+            this.userMarker = new Marker<LatLonKeys>({
+                metaData: {
+                    userMarker: 'true'
+                },
+                position: newPos,
+                styleBuilder: this.userMarkerStyle(kind, color, size, colorOnPrimary)
+            });
+            this.localVectorDataSource.add(this.userMarker);
+        } else if (styleKey !== this.userMarkerStyleKey) {
+            // rebuilding a style means rebuilding its bitmap, so only ever on a real change of look
+            this.userMarker.styleBuilder = this.userMarkerStyle(kind, color, size, colorOnPrimary);
+        }
+        this.userMarkerStyleKey = styleKey;
+        this.userMarker.position = newPos;
+        // the dot has no heading to show, and a chevron pointing north while the map points elsewhere
+        // is worse than one holding the last direction we were actually given
+        this.userMarker.rotation = useArrow ? -this.lastKnownBearing : 0;
+        this.userMarker.visible = true;
+    }
+
+    private userMarkerStyle(kind: UserMarkerKind, color: string, size: number, outlineColor: string) {
+        return {
+            size,
+            bitmap: getUserBitmap(kind, color, outlineColor),
+            // carto anchors a marker at (0, -1) — its bottom edge — because a marker is usually a pin
+            // whose tip points at the place. This one *is* the place, so it is centred on it instead:
+            // left as it was, the whole marker sat half its own height north of the actual fix
+            anchorPointX: 0,
+            anchorPointY: 0,
+            // GROUND so the chevron turns with the map rather than staying upright on screen
+            orientationMode: BillboardOrientation.GROUND,
+            scalingMode: BillboardScaling.CONST_SCREEN_SIZE
+        };
     }
     /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
     navigationZoom = 0;
-    userArrowMarker: Marker<LatLonKeys>;
 
     moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
