@@ -392,7 +392,7 @@ export class GeoHandler extends Handler {
     @bind
     onLocation(loc: GeoLocation, manager?: any) {
         // if (DEV_LOG) {
-        //     console.log('onLocation', loc);
+        //     console.log('onLocation', JSON.stringify(loc));
         // }
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
@@ -497,7 +497,11 @@ export class GeoHandler extends Handler {
                 default: desiredAccuracy,
                 value: () => ApplicationSettings.getNumber('gps_desired_accuracy', desiredAccuracy),
                 formatter: __ANDROID__ ? formatDistance : (k) => this.IOS_ACCURACIES[k],
-                type: __ANDROID__ ? 'prompt' : undefined,
+                // android takes any distance, ios only the handful of constants listed above
+                type: __ANDROID__ ? 'slider' : undefined,
+                min: __ANDROID__ ? 0 : undefined,
+                max: __ANDROID__ ? 100 : undefined,
+                step: __ANDROID__ ? 5 : undefined,
                 values: __IOS__
                     ? Object.keys(this.IOS_ACCURACIES)
                           .map((k) => ({
