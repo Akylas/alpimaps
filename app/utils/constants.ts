@@ -41,6 +41,7 @@ export const SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE = 'navigation_gps_update_di
 export const SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE = 'navigation_maneuver_wake_distance';
 export const SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL = 'navigation_screen_refresh_interval';
 export const SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE = 'navigation_turn_refresh_angle';
+export const SETTINGS_NAVIGATION_MANEUVER_REFRESH_DISTANCE = 'navigation_maneuver_refresh_distance';
 export const SETTINGS_NAVIGATION_TURN_REFRESH_DELAY = 'navigation_turn_refresh_delay';
 export const SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE = 'navigation_bearing_refresh_angle';
 export const SETTINGS_NAVIGATION_SPEED_DROP_WAKE = 'navigation_speed_drop_wake';
@@ -114,10 +115,15 @@ export const DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE = 150;
 export const DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL = 120;
 /** degrees: past this turn angle the map is worth refreshing again once the maneuver is behind us */
 export const DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE = 45;
-/** seconds to wait after a sharp maneuver before refreshing, so the heading has settled first */
-export const DEFAULT_NAVIGATION_TURN_REFRESH_DELAY = 2;
-/** degrees of heading change since the last refresh that make the map worth redrawing, 0 disables */
-export const DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE = 90;
+/** meters past the maneuver at which the heading has settled and the map is worth showing again */
+export const DEFAULT_NAVIGATION_MANEUVER_REFRESH_DISTANCE = 25;
+/** seconds: cap on the wait for that distance, so stopping just past a turn still gets the refresh */
+export const DEFAULT_NAVIGATION_TURN_REFRESH_DELAY = 10;
+/**
+ * degrees of heading change since the last refresh that make the map worth redrawing, 0 disables.
+ * A roundabout exit swings the heading 60 to 120°, which 90 was too coarse to catch.
+ */
+export const DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE = 60;
 export const DEFAULT_NAVIGATION_SPEED_DROP_WAKE = true;
 export const DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO = 0.5;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE = true;
