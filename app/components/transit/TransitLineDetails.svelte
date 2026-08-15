@@ -7,7 +7,7 @@
     import { openUrl } from '@nativescript/core/utils';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import CActionBar from '~/components/common/CActionBar.svelte';
+    import CActionBar from '@shared/components/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { createTileDecoder, getMapContext } from '~/mapModules/MapModule';
