@@ -34,10 +34,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-android-runtime@npm:9.0.5":
-  version: 9.0.5
-  resolution: "@akylas/nativescript-android-runtime@npm:9.0.5"
-  checksum: 10/46233a96a633deb3d1b7b7240a7d312e62fe625155a35b7ad26f706863cc9f399204b69784bc795248b733b9922ce572ebe4a361ab9cdfd1a85d611a250798ed
+"@akylas/nativescript-android-runtime@npm:8.9.2":
+  version: 8.9.2
+  resolution: "@akylas/nativescript-android-runtime@npm:8.9.2"
+  checksum: 10/3d1cd13b1a3e2256d139c97699097a8fe37e1a05771d17849b6b0a3b07c4784f1160c791e09aed023b14178cff70b6f305562e9e46a8e8594eda218a97dfc3af
   languageName: node
   linkType: hard
 
@@ -3202,10 +3202,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript/android@npm:next":
-  version: 9.0.6-next.2026-08-13-31716987422
-  resolution: "@nativescript/android@npm:9.0.6-next.2026-08-13-31716987422"
-  checksum: 10/1878307c8f5366db299ea30aa6e5ee3893e5252845bf6134396e0635edf992f6f4d72a44d313fe4839f98550a0f2825889ccf311b3d2857f8878c35a6a6fed44
+"@nativescript/android@npm:9.0.6-next.2026-08-15-31860582391":
+  version: 9.0.6-next.2026-08-15-31860582391
+  resolution: "@nativescript/android@npm:9.0.6-next.2026-08-15-31860582391"
+  checksum: 10/161f357c5121921a0c2121d489401219df53eab4d2211879c8219da2c66f3c179a0f4673c808a87a0398006feb78390e2cea1bb9cd39fe5e5c9a38db1b53ff96
   languageName: node
   linkType: hard
 
@@ -14694,7 +14694,7 @@ __metadata:
     "@akylas/address-formatter": "npm:5.3.1"
     "@akylas/kiss-orm": "npm:2.1.14"
     "@akylas/nativescript": "npm:9.0.23"
-    "@akylas/nativescript-android-runtime": "npm:9.0.5"
+    "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "portal:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.14"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
@@ -14755,7 +14755,7 @@ __metadata:
     "@nativescript-community/ui-webview-rtc": "npm:1.6.2"
     "@nativescript-community/universal-links": "npm:3.0.2"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
-    "@nativescript/android": "npm:next"
+    "@nativescript/android": "npm:9.0.6-next.2026-08-15-31860582391"
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"

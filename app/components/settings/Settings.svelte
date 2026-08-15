@@ -2,34 +2,29 @@
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
-    import { CheckBox } from '@nativescript-community/ui-checkbox';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
-    import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';
-    import { ApplicationSettings, Device, File, Folder, ObservableArray, ScrollView, StackLayout, Utils, View, path } from '@nativescript/core';
-    import { inappItems, presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
+    import { ApplicationSettings, Device, File, Folder, ScrollView, StackLayout, Utils, path } from '@nativescript/core';
+    import BaseSettingsPage from '@shared/components/BaseSettingsPage.svelte';
+    import { presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
     import { Sentry, startSentry, stopSentry } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { Writable, get } from 'svelte/store';
     import { GeoHandler } from '~/handlers/GeoHandler';
-    import { clock_24, getLocaleDisplayName, l, lc, onLanguageChanged, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
-    import { getColorThemeDisplayName, getThemeDisplayName, onThemeChanged, selectColorTheme, selectTheme } from '~/helpers/theme';
+    import { formatDistance } from '~/helpers/formatter';
+    import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
+    import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
+    import { getNavigationSettingsOptions } from '~/stores/navigationStore';
     import { clickHandlerLayerFilter, immersive, layerProps, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
-        ALERT_OPTION_MAX_HEIGHT,
-        DEFAULT_NAVIGATION_POSITION_OFFSET,
-        DEFAULT_NAVIGATION_TILT,
         DEFAULT_TILE_SERVER_AUTO_START,
         DEFAULT_TILE_SERVER_PORT,
         DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
@@ -38,8 +33,6 @@
         DEFAULT_VALHALLA_ONLINE_URL,
         SETTINGS_ENABLE_CRASH_REPORT,
         SETTINGS_IMPERIAL,
-        SETTINGS_NAVIGATION_POSITION_OFFSET,
-        SETTINGS_NAVIGATION_TILT,
         SETTINGS_TILE_SERVER_AUTO_START,
         SETTINGS_TILE_SERVER_PORT,
         SETTINGS_UNITS,
@@ -50,495 +43,81 @@
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
     import { showSnack } from '~/utils/ui';
-    import { confirmRestartApp, createView, hideLoading, openLink, showAlertOptionSelect, showLoading, showSettings, showSliderPopover } from '~/utils/ui/index.common';
+    import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
-    import { colors, fonts, imperial, onFontScaleChanged, unitsSettings, windowInset } from '~/variables';
-    import CActionBar from '../common/CActionBar.svelte';
-    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import { fonts, imperial, unitsSettings } from '~/variables';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
+
+    const numberTextFieldProperties = {
+        keyboardType: 'number',
+        autocapitalizationType: 'none',
+        autocorrect: false
+    } as TextFieldProperties;
+    const textTextFieldProperties = {
+        autocapitalizationType: 'none',
+        autocorrect: false
+    } as TextFieldProperties;
+
+    const formatMilliseconds = (value: number) => value + ' ms';
+
+    /** the a9 watch needs its screen woken for the gps to keep reporting: nobody else has that quirk */
+    const isA9Watch = __ANDROID__ && Device.model === 'HLTE556N';
+    const dataPathsAvailable = __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30;
 </script>
 
 <script lang="ts">
-    import SettingsCheckbox from './SettingsCheckbox.svelte';
-    import SettingsSwitch from './SettingsSwitch.svelte';
-
-    let { colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
-    $: ({ bottom: windowInsetBottom } = $windowInset);
-
-    let collectionView: NativeViewElementNode<CollectionView>;
-
-    const inAppAvailable = PLAY_STORE_BUILD && inappItems?.length > 0;
+    let settingsPage: BaseSettingsPage;
 
     export let title = null;
+    export let id = 'settingsPage';
     export let actionBarButtons = [
         { icon: 'mdi-share-variant', id: 'share' },
         { icon: 'mdi-github', id: 'github' }
     ];
-
     export let subSettingsOptions: string = null;
+    export let searchable: boolean = null;
     export let options: any[] = null;
     if (!options && subSettingsOptions) {
         options = getSubSettings(subSettingsOptions);
     }
 
-    let items: ObservableArray<any>;
+    let refresh: (force?: boolean, filter?: string) => void;
+    // search only makes sense on the root page: a sub page is a handful of rows already
+    $: searchEnabled = searchable ?? (!subSettingsOptions && !options);
+
     const customLayers = getMapContext().mapModule('customLayers');
     let geoHandler: GeoHandler;
     onServiceLoaded((handler: GeoHandler) => {
         geoHandler = handler;
-        refresh();
+        refresh?.();
     });
+
+    /**
+     * The units live in a single json setting rather than one key each, so they get a store shim: the
+     * settings page only ever calls `set`/`reset` on it, and `variables.ts` reloads them from the
+     * `units` key change.
+     */
+    function unitStore(key: string) {
+        function save() {
+            ApplicationSettings.setString(SETTINGS_UNITS, JSON.stringify(unitsSettings));
+        }
+        return {
+            set(value) {
+                unitsSettings[key] = value;
+                save();
+            },
+            reset() {
+                delete unitsSettings[key];
+                save();
+            }
+        };
+    }
 
     function getSubSettings(id: string): any[] {
         switch (id) {
-            case 'units':
+            case 'appearance':
                 return [
-                    {
-                        type: 'switch',
-                        id: SETTINGS_IMPERIAL,
-                        title: lc('imperial_units'),
-                        description: lc('imperial_units_desc'),
-                        value: $imperial
-                    },
-                    {
-                        type: 'sectionheader',
-                        title: lc('custom_units')
-                    },
-                    {
-                        id: 'store_setting',
-                        store: unitsSettings,
-                        storeKey: SETTINGS_UNITS,
-                        key: UNIT_FAMILIES.Distance,
-                        valueType: 'string',
-                        title: lc('distance'),
-                        rightValue: () => unitsSettings[UNIT_FAMILIES.Distance],
-                        values: [UNITS.Kilometers, UNITS.Miles, UNITS.Meters, UNITS.Feet, UNITS.Inch].map((u) => ({ title: u, value: u }))
-                    },
-                    {
-                        id: 'store_setting',
-                        store: unitsSettings,
-                        storeKey: SETTINGS_UNITS,
-                        key: UNIT_FAMILIES.Speed,
-                        valueType: 'string',
-                        title: lc('speed'),
-                        rightValue: () => unitsSettings[UNIT_FAMILIES.Speed],
-                        values: [UNITS.SpeedKm, UNITS.SpeedM, UNITS.MPH, UNITS.FPH, UNITS.Knot].map((u) => ({ title: u, value: u }))
-                    }
-                ];
-            case 'debugging':
-                return PLAY_STORE_BUILD
-                    ? [
-                          {
-                              type: 'switch',
-                              id: SETTINGS_ENABLE_CRASH_REPORT,
-                              title: lc('crash_report'),
-                              description: lc('crash_report_desc'),
-                              value: ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD)
-                          }
-                      ]
-                    : [];
-            case 'directions':
-                return [
-                    {
-                        type: 'switch',
-                        key: 'startDirDest',
-                        value: ApplicationSettings.getBoolean('startDirDest', false),
-                        title: lc('start_direction_dest')
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('valhalla_online_url'),
-                        description: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
-                        currentValue: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
-                        onUpdate: (key, value, defaultValue) => packageService.setOnlineRoutingUrl(value),
-                        key: SETTINGS_VALHALLA_ONLINE_URL,
-                        valueType: 'string',
-                        textFieldProperties: {
-                            keyboardType: 'url',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties
-                    },
-                    {
-                        id: 'setting',
-                        key: SETTINGS_NAVIGATION_TILT,
-                        min: 0,
-                        max: 90,
-                        step: 1,
-                        title: lc('navigation_tilt'),
-                        type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT)
-                    },
-                    {
-                        id: 'setting',
-                        key: SETTINGS_NAVIGATION_POSITION_OFFSET,
-                        min: 0,
-                        max: 0.5,
-                        step: 0.01,
-                        title: lc('navigation_position_offset'),
-                        type: 'slider',
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('location_distance_from_route'),
-                        description: lc('location_distance_from_route_desc'),
-                        key: 'location_distance_from_route',
-                        valueType: 'number',
-                        default: 15,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('location_distance_from_route', 15)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('elevation_profile_smooth_window'),
-                        key: 'elevation_profile_smooth_window',
-                        valueType: 'number',
-                        default: 3,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('elevation_profile_smooth_window', 3)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('elevation_profile_filter_step'),
-                        key: 'elevation_profile_filter_step',
-                        valueType: 'number',
-                        default: 10,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('elevation_profile_filter_step', 10)
-                    }
-                ];
-            case 'general':
-                return [
-                    {
-                        type: 'switch',
-                        key: 'url_use_inapp_browser',
-                        value: ApplicationSettings.getBoolean('url_use_inapp_browser', true),
-                        title: lc('url_use_inapp_browser')
-                    }
-                ].concat(
-                    __ANDROID__
-                        ? ([
-                              {
-                                  type: 'switch',
-                                  key: 'list_longpress_camera',
-                                  value: ApplicationSettings.getBoolean('list_longpress_camera', false),
-                                  title: lc('longpress_list_open_camera')
-                              },
-                              {
-                                  type: 'switch',
-                                  mapStore: immersive,
-                                  value: get(immersive),
-                                  title: lc('immersive_mode')
-                              }
-                          ] as any)
-                        : []
-                );
-            case 'address':
-                return [
-                    {
-                        type: 'switch',
-                        mapStore: useOfflineGeocodeAddress,
-                        value: get(useOfflineGeocodeAddress),
-                        title: lc('use_offline_geocoding_address')
-                    },
-                    {
-                        type: 'switch',
-                        mapStore: useSystemGeocodeAddress,
-                        value: get(useSystemGeocodeAddress),
-                        title: lc('use_system_geocoding_address')
-                    }
-                ];
-            case 'valhalla':
-                return [
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('offline_routing_pedestrian_max_distance'),
-                        key: SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
-                        valueType: 'number',
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('offline_routing_bicycle_max_distance'),
-                        key: SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
-                        valueType: 'number',
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('offline_routing_auto_max_distance'),
-                        key: SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
-                        valueType: 'number',
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('offline_routing_trace_max_distance'),
-                        key: SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
-                        valueType: 'number',
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        onUpdate: (key, value, defaultValue) => packageService.setValhallaSetting(key, defaultValue),
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_VALHALLA_MAX_DISTANCE_TRACE, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO)
-                    }
-                ];
-            case 'charts':
-                return [
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('chart_max_filter'),
-                        key: 'chart_max_filter',
-                        valueType: 'number',
-                        default: 50,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('chart_max_filter', 50)
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('chart_elevation_min_range'),
-                        key: 'chart_elevation_min_range',
-                        valueType: 'number',
-                        default: 250,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber('chart_elevation_min_range', 250)
-                    }
-                ];
-            case 'offline_data':
-                return [
-                    {
-                        type: 'switch',
-                        key: SETTINGS_TILE_SERVER_AUTO_START,
-                        value: ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START),
-                        title: lc('auto_start_tile_server')
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('tile_server_port'),
-                        key: SETTINGS_TILE_SERVER_PORT,
-                        valueType: 'number',
-                        default: DEFAULT_TILE_SERVER_PORT,
-                        textFieldProperties: {
-                            keyboardType: 'number',
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties,
-                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)
-                    },
-                    {
-                        type: 'switch',
-                        key: 'route_image_capture',
-                        value: ApplicationSettings.getBoolean('route_image_capture', true),
-                        title: lc('route_item_image_capture')
-                    },
-                    {
-                        id: 'setting',
-                        type: 'prompt',
-                        title: lc('click_handler_layer_filter'),
-                        description: () => get(clickHandlerLayerFilter),
-                        currentValue: () => get(clickHandlerLayerFilter),
-                        onUpdate: (key, value, defaultValue) => getMapContext().mapModules.customLayers.updateClickHandlerLayerFilter(),
-                        mapStore: clickHandlerLayerFilter,
-                        valueType: 'string',
-                        textFieldProperties: {
-                            autocapitalizationType: 'none',
-                            autocorrect: false
-                        } as TextFieldProperties
-                    }
-                ].concat(['clickRadius'].map((key) => ({ ...layerProps.getSettingsOptions(key) })) as any);
-            case 'geolocation':
-                const newItems = [];
-                const geoSettings = geoHandler.getWatchSettings();
-                Object.keys(geoSettings).forEach((k) => {
-                    const value = geoSettings[k];
-                    newItems.push({
-                        key: k,
-                        rightValue: value.formatter ? () => value.formatter(value.value()) : value.value,
-                        currentValue: value.value,
-                        // without this a slider shows the raw number while being dragged
-                        valueFormatter: value.formatter,
-                        ...value,
-                        id: 'setting'
-                    });
-                });
-                newItems.push(
-                    {
-                        type: 'switch',
-                        key: 'show_accuracy_marker',
-                        value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
-                        title: lc('show_accuracy_marker')
-                    },
-                    {
-                        type: 'switch',
-                        key: 'draw_onroute_live_data',
-                        value: ApplicationSettings.getBoolean('draw_onroute_live_data', false),
-                        title: lc('draw_onroute_live_data')
-                    }
-                );
-                if (__ANDROID__ && Device.model === 'HLTE556N') {
-                    newItems.push(
-                        {
-                            type: 'switch',
-                            key: 'a9_background_location_screenrefresh',
-                            value: ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false),
-                            title: lc('a9_refresh_screen_on_location')
-                        },
-                        {
-                            id: 'setting',
-                            type: 'prompt',
-                            title: lc('a9_background_location_screenrefresh_delay'),
-                            key: 'a9_background_location_screenrefresh_delay',
-                            valueType: 'number',
-                            default: 100,
-                            textFieldProperties: {
-                                keyboardType: 'number',
-                                autocapitalizationType: 'none',
-                                autocorrect: false
-                            } as TextFieldProperties,
-                            rightValue: () => ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100)
-                        }
-                    );
-                }
-                return newItems;
-            case 'api_keys':
-                const tokenSettings = [
-                    // {
-                    //     type: 'html',
-                    //     description: getMapContext().mapModules.customLayers.americanaOSMHTML
-                    // }
-                ] as any[];
-                Object.keys(customLayers.tokenKeys).forEach((k) => {
-                    tokenSettings.push({
-                        id: 'token',
-                        token: k,
-                        value: customLayers.tokenKeys[k]
-                    });
-                });
-
-                return tokenSettings;
-            default:
-                break;
-        }
-        return null;
-    }
-
-    let nbDevModeTap = 0;
-    let devModeClearTimer;
-    function onTouch(item, event) {
-        if (event.action !== 'down') {
-            return;
-        }
-        nbDevModeTap += 1;
-        if (devModeClearTimer) {
-            clearTimeout(devModeClearTimer);
-        }
-        if (nbDevModeTap === 6) {
-            const devMode = (customLayers.devMode = !customLayers.devMode);
-            nbDevModeTap = 0;
-            showSnack({ message: devMode ? 'devmode on' : 'devmode off' });
-            refresh();
-            return;
-        }
-        devModeClearTimer = setTimeout(() => {
-            devModeClearTimer = null;
-            nbDevModeTap = 0;
-        }, 500);
-    }
-
-    function getTitle(item) {
-        switch (item.id) {
-            case 'token':
-                return lc(item.token);
-            default:
-                return item.title;
-        }
-    }
-    function getSubtitle(item) {
-        switch (item.id) {
-            case 'token':
-                return item.value || lc('click_to_set_key');
-            default:
-                return typeof item.description === 'function' ? item.description() : item.description;
-        }
-    }
-    function refresh() {
-        const newItems: any[] =
-            options ||
-            [
-                {
-                    type: 'header',
-                    title: lc('donate')
-                },
-                {
-                    type: 'sectionheader',
-                    title: lc('general')
-                },
-                {
-                    id: 'language',
-                    description: () => getLocaleDisplayName(),
-                    title: lc('language')
-                },
-                {
-                    id: 'map_language',
-                    description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
-                    title: lc('map_language')
-                }
-            ]
-                .concat([
                     {
                         id: 'theme',
                         description: () => getThemeDisplayName(),
@@ -561,78 +140,409 @@
                         value: clock_24,
                         title: lc('hours_24_clock')
                     }
-                    // {
-                    //     id: 'share',
-                    //     rightBtnIcon: 'mdi-chevron-right',
-                    //     title: lc('share_application')
-                    // },
-                ] as any)
-                .concat(
-                    __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30
+                ];
+            case 'units':
+                return [
+                    {
+                        type: 'switch',
+                        id: SETTINGS_IMPERIAL,
+                        title: lc('imperial_units'),
+                        description: lc('imperial_units_desc'),
+                        value: $imperial
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('custom_units')
+                    },
+                    {
+                        id: 'setting',
+                        store: unitStore(UNIT_FAMILIES.Distance),
+                        key: UNIT_FAMILIES.Distance,
+                        valueType: 'string',
+                        title: lc('distance'),
+                        currentValue: () => unitsSettings[UNIT_FAMILIES.Distance],
+                        rightValue: () => unitsSettings[UNIT_FAMILIES.Distance],
+                        values: [UNITS.Kilometers, UNITS.Miles, UNITS.Meters, UNITS.Feet, UNITS.Inch].map((unit) => ({ title: unit, value: unit }))
+                    },
+                    {
+                        id: 'setting',
+                        store: unitStore(UNIT_FAMILIES.Speed),
+                        key: UNIT_FAMILIES.Speed,
+                        valueType: 'string',
+                        title: lc('speed'),
+                        currentValue: () => unitsSettings[UNIT_FAMILIES.Speed],
+                        rightValue: () => unitsSettings[UNIT_FAMILIES.Speed],
+                        values: [UNITS.SpeedKm, UNITS.SpeedM, UNITS.MPH, UNITS.FPH, UNITS.Knot].map((unit) => ({ title: unit, value: unit }))
+                    }
+                ];
+            case 'behavior':
+                return [
+                    {
+                        type: 'switch',
+                        key: 'url_use_inapp_browser',
+                        value: ApplicationSettings.getBoolean('url_use_inapp_browser', true),
+                        title: lc('url_use_inapp_browser')
+                    }
+                ].concat(
+                    __ANDROID__
+                        ? ([
+                              {
+                                  type: 'switch',
+                                  key: 'list_longpress_camera',
+                                  value: ApplicationSettings.getBoolean('list_longpress_camera', false),
+                                  title: lc('longpress_list_open_camera')
+                              },
+                              {
+                                  type: 'switch',
+                                  key: 'immersive',
+                                  store: immersive,
+                                  value: $immersive,
+                                  title: lc('immersive_mode')
+                              }
+                          ] as any)
+                        : []
+                );
+            case 'address':
+                return [
+                    {
+                        type: 'switch',
+                        key: 'useOfflineGeocodeAddress',
+                        store: useOfflineGeocodeAddress,
+                        value: $useOfflineGeocodeAddress,
+                        title: lc('use_offline_geocoding_address')
+                    },
+                    {
+                        type: 'switch',
+                        key: 'useSystemGeocodeAddress',
+                        store: useSystemGeocodeAddress,
+                        value: $useSystemGeocodeAddress,
+                        title: lc('use_system_geocoding_address')
+                    }
+                ];
+            case 'directions':
+                return [
+                    {
+                        type: 'switch',
+                        key: 'startDirDest',
+                        value: ApplicationSettings.getBoolean('startDirDest', false),
+                        title: lc('start_direction_dest')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('valhalla_online_url'),
+                        description: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
+                        currentValue: () => ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL),
+                        onUpdate: (key, value) => packageService.setOnlineRoutingUrl(ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL)),
+                        key: SETTINGS_VALHALLA_ONLINE_URL,
+                        valueType: 'string',
+                        textFieldProperties: {
+                            keyboardType: 'url',
+                            autocapitalizationType: 'none',
+                            autocorrect: false
+                        } as TextFieldProperties
+                    },
+                    {
+                        id: 'setting',
+                        type: 'slider',
+                        title: lc('location_distance_from_route'),
+                        description: lc('location_distance_from_route_desc'),
+                        key: 'location_distance_from_route',
+                        default: 15,
+                        min: 5,
+                        max: 100,
+                        step: 5,
+                        formatter: formatDistance,
+                        valueFormatter: formatDistance,
+                        currentValue: () => ApplicationSettings.getNumber('location_distance_from_route', 15),
+                        rightValue: () => formatDistance(ApplicationSettings.getNumber('location_distance_from_route', 15))
+                    }
+                ];
+            case 'navigation':
+                return getNavigationSettingsOptions();
+            case 'valhalla':
+                return [
+                    {
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+                        title: lc('offline_routing_pedestrian_max_distance'),
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN,
+                        min: 10000,
+                        max: 500000,
+                        step: 10000
+                    },
+                    {
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE,
+                        title: lc('offline_routing_bicycle_max_distance'),
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE,
+                        min: 10000,
+                        max: 1000000,
+                        step: 10000
+                    },
+                    {
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_AUTO,
+                        title: lc('offline_routing_auto_max_distance'),
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
+                        min: 100000,
+                        max: 10000000,
+                        step: 100000
+                    },
+                    {
+                        key: SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
+                        title: lc('offline_routing_trace_max_distance'),
+                        default: DEFAULT_VALHALLA_MAX_DISTANCE_AUTO,
+                        min: 100000,
+                        max: 10000000,
+                        step: 100000
+                    }
+                ].map((setting) => ({
+                    ...setting,
+                    id: 'setting',
+                    type: 'slider',
+                    formatter: formatDistance,
+                    valueFormatter: formatDistance,
+                    onUpdate: (key, value) => packageService.setValhallaSetting(setting.key, setting.default),
+                    currentValue: () => ApplicationSettings.getNumber(setting.key, setting.default),
+                    rightValue: () => formatDistance(ApplicationSettings.getNumber(setting.key, setting.default))
+                }));
+            case 'elevation_profile':
+                return [
+                    {
+                        key: 'chart_max_filter',
+                        title: lc('chart_max_filter'),
+                        default: 50,
+                        min: 0,
+                        max: 500,
+                        step: 10
+                    },
+                    {
+                        key: 'chart_elevation_min_range',
+                        title: lc('chart_elevation_min_range'),
+                        default: 250,
+                        min: 50,
+                        max: 2000,
+                        step: 50,
+                        formatter: formatDistance
+                    },
+                    {
+                        key: 'elevation_profile_smooth_window',
+                        title: lc('elevation_profile_smooth_window'),
+                        default: 3,
+                        min: 0,
+                        max: 20,
+                        step: 1
+                    },
+                    {
+                        key: 'elevation_profile_filter_step',
+                        title: lc('elevation_profile_filter_step'),
+                        default: 10,
+                        min: 1,
+                        max: 50,
+                        step: 1
+                    }
+                ].map((setting) => ({
+                    ...setting,
+                    id: 'setting',
+                    type: 'slider',
+                    valueFormatter: setting.formatter,
+                    currentValue: () => ApplicationSettings.getNumber(setting.key, setting.default),
+                    rightValue: () => {
+                        const value = ApplicationSettings.getNumber(setting.key, setting.default);
+                        return setting.formatter ? setting.formatter(value) : value + '';
+                    }
+                }));
+            case 'map_data':
+                return (
+                    dataPathsAvailable
                         ? [
                               {
                                   id: 'data_path',
                                   title: lc('map_data_path'),
                                   description: getSavedMBTilesDir
-                                  //   rightBtnIcon: 'mdi-chevron-right'
                               },
                               {
                                   id: 'items_data_path',
                                   title: lc('items_data_path'),
                                   description: getItemsDataFolder
-                                  //   rightBtnIcon: 'mdi-chevron-right'
                               }
                           ]
-                        : ([] as any)
-                )
-
-                .concat(
-                    PLAY_STORE_BUILD
-                        ? [
-                              //   {
-                              //       id: 'share',
-                              //       rightBtnIcon: 'mdi-chevron-right',
-                              //       title: lc('share_application')
-                              //   },
-                              {
-                                  id: 'review',
-                                  //   rightBtnIcon: 'mdi-chevron-right',
-                                  title: lc('review_application')
-                              }
-                          ]
-                        : ([] as any)
-                )
-                .concat([
+                        : ([] as any[])
+                ).concat([
                     {
-                        id: 'third_party',
-                        title: lc('third_parties'),
-                        description: lc('list_used_third_parties')
+                        type: 'switch',
+                        key: SETTINGS_TILE_SERVER_AUTO_START,
+                        value: ApplicationSettings.getBoolean(SETTINGS_TILE_SERVER_AUTO_START, DEFAULT_TILE_SERVER_AUTO_START),
+                        title: lc('auto_start_tile_server')
                     },
                     {
-                        id: 'feedback',
-                        icon: 'mdi-bullhorn',
-                        title: lc('send_feedback')
+                        id: 'setting',
+                        // a port is an arbitrary number, not a range to drag through
+                        type: 'prompt',
+                        title: lc('tile_server_port'),
+                        key: SETTINGS_TILE_SERVER_PORT,
+                        default: DEFAULT_TILE_SERVER_PORT,
+                        textFieldProperties: numberTextFieldProperties,
+                        currentValue: () => ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT),
+                        rightValue: () => ApplicationSettings.getNumber(SETTINGS_TILE_SERVER_PORT, DEFAULT_TILE_SERVER_PORT)
+                    },
+                    {
+                        type: 'switch',
+                        key: 'route_image_capture',
+                        value: ApplicationSettings.getBoolean('route_image_capture', true),
+                        title: lc('route_item_image_capture')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'prompt',
+                        title: lc('click_handler_layer_filter'),
+                        description: () => $clickHandlerLayerFilter,
+                        currentValue: () => $clickHandlerLayerFilter,
+                        onUpdate: () => getMapContext().mapModules.customLayers.updateClickHandlerLayerFilter(),
+                        key: 'clickHandlerLayerFilter',
+                        store: clickHandlerLayerFilter,
+                        valueType: 'string',
+                        textFieldProperties: textTextFieldProperties
+                    },
+                    {
+                        ...layerProps.getSettingsOptions('clickRadius'),
+                        // the carto style parameters are not plain settings: they go through the props proxy
+                        store: { set: (value) => (layerProps['clickRadius'] = value) }
+                    }
+                ] as any[]);
+            case 'geolocation': {
+                const newItems = [];
+                const geoSettings = geoHandler?.getWatchSettings() ?? {};
+                Object.keys(geoSettings).forEach((key) => {
+                    const setting = geoSettings[key];
+                    newItems.push({
+                        key,
+                        rightValue: setting.formatter ? () => setting.formatter(setting.value()) : setting.value,
+                        currentValue: setting.value,
+                        // without this a slider shows the raw number while being dragged
+                        valueFormatter: setting.formatter,
+                        ...setting,
+                        id: 'setting'
+                    });
+                });
+                newItems.push(
+                    {
+                        type: 'switch',
+                        key: 'show_accuracy_marker',
+                        value: ApplicationSettings.getBoolean('show_accuracy_marker', true),
+                        title: lc('show_accuracy_marker')
+                    },
+                    {
+                        type: 'switch',
+                        key: 'draw_onroute_live_data',
+                        value: ApplicationSettings.getBoolean('draw_onroute_live_data', false),
+                        title: lc('draw_onroute_live_data')
+                    }
+                );
+                return newItems;
+            }
+            case 'a9':
+                return [
+                    {
+                        type: 'switch',
+                        key: 'a9_background_location_screenrefresh',
+                        value: ApplicationSettings.getBoolean('a9_background_location_screenrefresh', false),
+                        title: lc('a9_refresh_screen_on_location')
+                    },
+                    {
+                        id: 'setting',
+                        type: 'slider',
+                        title: lc('a9_background_location_screenrefresh_delay'),
+                        key: 'a9_background_location_screenrefresh_delay',
+                        default: 100,
+                        min: 0,
+                        max: 2000,
+                        step: 50,
+                        // a sub second delay, so milliseconds rather than the duration formatter
+                        formatter: formatMilliseconds,
+                        valueFormatter: formatMilliseconds,
+                        currentValue: () => ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100),
+                        rightValue: () => formatMilliseconds(ApplicationSettings.getNumber('a9_background_location_screenrefresh_delay', 100))
+                    }
+                ];
+            case 'api_keys':
+                return Object.keys(customLayers.tokenKeys).map((token) => ({
+                    id: 'token',
+                    token,
+                    value: customLayers.tokenKeys[token]
+                }));
+            case 'debugging':
+                return PLAY_STORE_BUILD
+                    ? [
+                          {
+                              type: 'switch',
+                              id: SETTINGS_ENABLE_CRASH_REPORT,
+                              title: lc('crash_report'),
+                              description: lc('crash_report_desc'),
+                              value: ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD)
+                          }
+                      ]
+                    : [];
+            default:
+                break;
+        }
+        return null;
+    }
+
+    function getAvailableOptions() {
+        return (
+            options ||
+            (
+                [
+                    {
+                        type: 'header',
+                        title: lc('donate')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('general')
+                    },
+                    {
+                        id: 'language',
+                        icon: 'mdi-translate',
+                        description: () => getLocaleDisplayName(),
+                        title: lc('language')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-palette',
+                        title: lc('appearance'),
+                        description: lc('appearance_settings'),
+                        options: () => getSubSettings('appearance')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-ruler',
+                        title: lc('units'),
+                        description: lc('units_settings'),
+                        options: () => getSubSettings('units')
                     },
                     {
                         id: 'sub_settings',
                         icon: 'mdi-cards-outline',
                         title: lc('behavior'),
                         description: lc('behavior_settings'),
-                        options: () => getSubSettings('general')
+                        options: () => getSubSettings('behavior')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('map')
+                    },
+                    {
+                        id: 'map_language',
+                        icon: 'mdi-translate-variant',
+                        description: () => getLocaleDisplayName(ApplicationSettings.getString('map_language')),
+                        title: lc('map_language')
                     },
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-directions',
-                        title: lc('directions'),
-                        description: lc('directions_settings'),
-                        options: () => getSubSettings('directions')
-                    },
-                    {
-                        id: 'sub_settings',
-                        icon: 'mdi-chart-bar',
-                        title: lc('charts'),
-                        description: lc('charts_settings'),
-                        options: () => getSubSettings('charts')
+                        icon: 'mdi-database',
+                        title: lc('map_data'),
+                        description: lc('map_data_settings'),
+                        options: () => getSubSettings('map_data')
                     },
                     {
                         id: 'sub_settings',
@@ -643,25 +553,31 @@
                     },
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-crosshairs-gps',
-                        title: lc('geolocation'),
-                        description: lc('geolocation_settings'),
-                        options: () => getSubSettings('geolocation')
+                        icon: 'mdi-key',
+                        title: lc('api_keys'),
+                        description: lc('api_keys_settings'),
+                        options: () => getSubSettings('api_keys')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('routing')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-directions',
+                        title: lc('directions'),
+                        description: lc('directions_settings'),
+                        options: () => getSubSettings('directions')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-navigation',
+                        title: lc('navigation'),
+                        description: lc('navigation_settings'),
+                        options: () => getSubSettings('navigation')
                     }
-                ] as any)
-                .concat(
-                    PLAY_STORE_BUILD
-                        ? ([
-                              {
-                                  id: 'sub_settings',
-                                  icon: 'mdi-bug-outline',
-                                  title: lc('debugging'),
-                                  description: lc('debugging_settings_desc'),
-                                  options: () => getSubSettings('debugging')
-                              }
-                          ] as any[])
-                        : []
-                )
+                ] as any[]
+            )
                 .concat(
                     packageService.offlineRoutingSearchService
                         ? [
@@ -673,25 +589,82 @@
                                   options: () => getSubSettings('valhalla')
                               }
                           ]
-                        : ([] as any)
+                        : []
                 )
                 .concat([
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-database',
-                        title: lc('offline_data'),
-                        description: lc('offline_data_settings'),
-                        options: () => getSubSettings('offline_data')
-                    }
-                ] as any[])
-                .concat([
+                        icon: 'mdi-chart-bar',
+                        title: lc('elevation_profile'),
+                        description: lc('elevation_profile_settings'),
+                        options: () => getSubSettings('elevation_profile')
+                    },
+                    {
+                        type: 'sectionheader',
+                        title: lc('location')
+                    },
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-key',
-                        title: lc('api_keys'),
-                        description: lc('api_keys_settings'),
-                        options: () => getSubSettings('api_keys')
+                        icon: 'mdi-crosshairs-gps',
+                        title: lc('geolocation'),
+                        description: lc('geolocation_settings'),
+                        options: () => getSubSettings('geolocation')
+                    }
+                ])
+                .concat(
+                    isA9Watch
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-watch',
+                                  title: lc('a9_settings'),
+                                  description: lc('a9_settings_desc'),
+                                  options: () => getSubSettings('a9')
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        type: 'sectionheader',
+                        title: lc('advanced')
+                    }
+                ])
+                .concat(
+                    PLAY_STORE_BUILD
+                        ? [
+                              {
+                                  id: 'sub_settings',
+                                  icon: 'mdi-bug-outline',
+                                  title: lc('debugging'),
+                                  description: lc('debugging_settings_desc'),
+                                  options: () => getSubSettings('debugging')
+                              }
+                          ]
+                        : []
+                )
+                .concat([
+                    {
+                        id: 'third_party',
+                        title: lc('third_parties'),
+                        description: lc('list_used_third_parties')
                     },
+                    {
+                        id: 'feedback',
+                        title: lc('send_feedback')
+                    }
+                ])
+                .concat(
+                    PLAY_STORE_BUILD
+                        ? [
+                              {
+                                  id: 'review',
+                                  title: lc('review_application')
+                              }
+                          ]
+                        : []
+                )
+                .concat([
                     {
                         type: 'sectionheader',
                         title: lc('backup_restore')
@@ -706,29 +679,56 @@
                         title: lc('import_settings'),
                         description: lc('import_settings_desc')
                     }
-                ] as any);
+                ])
+        );
+    }
 
-        items = new ObservableArray(newItems);
+    function getTitle(item) {
+        switch (item.id) {
+            case 'token':
+                return lc(item.token);
+            default:
+                return item.title;
+        }
+    }
+    function getDescription(item) {
+        switch (item.id) {
+            case 'token':
+                return item.value || lc('click_to_set_key');
+            default:
+                return typeof item.description === 'function' ? item.description(item) : item.description;
+        }
+    }
+    function updateItem(item, key = 'key') {
+        settingsPage?.updateItem?.(item, key);
+    }
+
+    let nbDevModeTap = 0;
+    let devModeClearTimer;
+    function onTouch(event) {
+        if (event.action !== 'down') {
+            return;
+        }
+        nbDevModeTap += 1;
+        if (devModeClearTimer) {
+            clearTimeout(devModeClearTimer);
+        }
+        if (nbDevModeTap === 6) {
+            const devMode = (customLayers.devMode = !customLayers.devMode);
+            nbDevModeTap = 0;
+            showSnack({ message: devMode ? 'devmode on' : 'devmode off' });
+            refresh?.();
+            return;
+        }
+        devModeClearTimer = setTimeout(() => {
+            devModeClearTimer = null;
+            nbDevModeTap = 0;
+        }, 500);
     }
 
     async function onLongPress(item, event) {
         try {
             switch (item.id) {
-                // case 'data_path': {
-                //     const result = await confirm({
-                //         message: lc('reset_setting', item.title),
-                //         okButtonText: lc('ok'),
-                //         cancelButtonText: lc('cancel')
-                //     });
-                //     if (!result) {
-                //         return;
-                //     }
-                //     setSavedMBTilesDir(null);
-
-                //     item.description = await getDefaultMBTilesDir();
-                //     updateItem(item, 'id');
-                //     break;
-                // }
                 case 'items_data_path': {
                     let result = await confirm({
                         message: lc('reset_setting', item.title),
@@ -768,44 +768,11 @@
             showError(error);
         }
     }
-    function updateItem(item, key = 'key') {
-        item.onUpdate?.(key, item[key], item.default);
-        const index = items.findIndex((it) => it[key] === item[key]);
-        if (index !== -1) {
-            items.setItem(index, item);
-        }
-    }
-    let checkboxTapTimer;
-    function clearCheckboxTimer() {
-        if (checkboxTapTimer) {
-            clearTimeout(checkboxTapTimer);
-            checkboxTapTimer = null;
-        }
-    }
+
     async function onTap(item, event) {
         try {
-            if (item.type === 'checkbox' || item.type === 'switch') {
-                // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
-                const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
-                if (checkboxView.isEnabled) {
-                    clearCheckboxTimer();
-                    checkboxTapTimer = setTimeout(() => {
-                        checkboxView.checked = !checkboxView.checked;
-                    }, 10);
-                }
-                return;
-            }
             switch (item.id) {
-                case 'sub_settings': {
-                    showSettings({
-                        title: item.title,
-                        options: item.options(),
-                        actionBarButtons: item.actionBarButtons?.() || []
-                    });
-
-                    break;
-                }
-                case 'export_settings':
+                case 'export_settings': {
                     if (__ANDROID__ && SDK_VERSION < 29) {
                         const permRes = await request('storage');
                         if (!isPermResultAuthorized(permRes)) {
@@ -821,7 +788,8 @@
                         });
                     }
                     break;
-                case 'import_settings':
+                }
+                case 'import_settings': {
                     const result = await openFilePicker({
                         extensions: ['json'],
 
@@ -886,6 +854,7 @@
                         confirmRestartApp();
                     }
                     break;
+                }
                 case 'share':
                     await share({
                         message: GIT_URL
@@ -981,17 +950,13 @@
                     }
                     break;
                 }
-                case 'review':
-                    openLink(STORE_REVIEW_LINK);
-                    break;
-                case 'third_party':
+                case 'third_party': {
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({
-                        parent: this,
                         view: ThirdPartySoftwareBottomSheet
-                        // trackingScrollView: 'scrollView'
                     });
                     break;
+                }
                 case 'data_path': {
                     const result = await pickFolder({
                         permissions: {
@@ -1025,19 +990,15 @@
                         const current = getItemsDataFolder();
                         if (toUsePath !== current) {
                             setItemsDataFolder(toUsePath);
-                            //TODO: we need to move files from current to new folder
-                            // Folder.fromPath(current).getEntitiesSync().forEach(e=>{
-                            //     e.
-                            // })
                             item.description = toUsePath;
                             updateItem(item, 'id');
 
-                            const result = await confirm({
+                            const confirmed = await confirm({
                                 message: lc('move_items_data_files', current, toUsePath),
                                 okButtonText: lc('ok'),
                                 cancelButtonText: lc('cancel')
                             });
-                            if (result) {
+                            if (confirmed) {
                                 //we need to move files around
                                 Folder.fromPath(current)
                                     .getEntitiesSync()
@@ -1055,119 +1016,6 @@
                     }
                     break;
                 }
-                case 'setting': {
-                    if (item.type === 'prompt') {
-                        const result = await prompt({
-                            title: getTitle(item),
-                            message: getSubtitle(item),
-                            okButtonText: l('save'),
-                            cancelButtonText: l('cancel'),
-                            autoFocus: true,
-                            textFieldProperties: item.textFieldProperties,
-                            defaultText: (item.currentValue || item.rightValue)?.() + '',
-                            view: item.useHTML
-                                ? createView(
-                                      Label,
-                                      {
-                                          padding: '10 20 0 20',
-                                          textWrap: true,
-                                          color: colorOnSurfaceVariant as any,
-                                          html: item.full_description || item.description
-                                      },
-                                      item.onLinkTap
-                                          ? {
-                                                linkTap: item.onLinkTap
-                                            }
-                                          : undefined
-                                  )
-                                : undefined
-                        });
-                        Utils.dismissSoftInput();
-                        if (result && !!result.result && result.text.length > 0) {
-                            if (item.store) {
-                                item.store.set(item.valueType === 'string' ? result.text : parseFloat(result.text));
-                            } else if (item.mapStore) {
-                                (item.mapStore as Writable<any>).set(item.valueType === 'string' ? result.text : parseFloat(result.text));
-                            } else if (item.valueType === 'string') {
-                                ApplicationSettings.setString(item.key, result.text);
-                            } else {
-                                ApplicationSettings.setNumber(item.key, parseInt(result.text, 10));
-                            }
-                            updateItem(item);
-                        } else if (result && !!result.result && result.text.length === 0) {
-                            if (item.mapStore) {
-                                item.mapStore?.reset?.();
-                            } else {
-                                ApplicationSettings.remove(item.key);
-                            }
-                            updateItem(item);
-                        }
-                    } else if (item.type === 'slider') {
-                        await showSliderPopover({
-                            anchor: event.object,
-                            ...item,
-                            value: (item.currentValue || item.value || item.rightValue)?.(),
-                            onChange(value) {
-                                if (value !== null) {
-                                    if (item.transformValue) {
-                                        value = item.transformValue(value, item);
-                                    } else {
-                                        value = Math.round(value / item.step) * item.step;
-                                    }
-                                }
-                                if (item.store) {
-                                    item.store.set(value);
-                                } else if (item.mapStore) {
-                                    (item.mapStore as Writable<any>).set(value);
-                                } else {
-                                    if (value === null) {
-                                        ApplicationSettings.remove(item.key);
-                                    } else {
-                                        if (item.valueType === 'string') {
-                                            ApplicationSettings.setString(item.key, value + '');
-                                        } else {
-                                            ApplicationSettings.setNumber(item.key, value);
-                                        }
-                                    }
-                                }
-                                updateItem(item);
-                            }
-                        });
-                    } else {
-                        const currentValue = ApplicationSettings.getNumber(item.key, item.default);
-                        let selectedIndex = -1;
-                        const options = item.values.map((k, index) => {
-                            const selected = currentValue === k.value;
-                            if (selected) {
-                                selectedIndex = index;
-                            }
-                            return {
-                                name: k.title || k.name,
-                                data: k.value,
-                                boxType: 'circle',
-                                type: 'checkbox',
-                                value: selected
-                            };
-                        });
-                        const result = await showAlertOptionSelect(
-                            {
-                                height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
-                                rowHeight: 56,
-                                selectedIndex,
-                                options
-                            },
-                            {
-                                title: item.title
-                            }
-                        );
-                        if (result?.data !== undefined) {
-                            ApplicationSettings.setNumber(item.key, result.data);
-                            updateItem(item);
-                        }
-                    }
-
-                    break;
-                }
                 case 'token': {
                     const result = await prompt({
                         title: lc('token_key', lc(item.token)),
@@ -1182,6 +1030,7 @@
                         item.value = result.text;
                         updateItem(item, 'token');
                     }
+                    break;
                 }
             }
         } catch (err) {
@@ -1191,212 +1040,75 @@
         }
     }
 
-    function selectTemplate(item, index, items) {
-        if (item.type === 'prompt') {
-            return 'default';
-        }
-
-        if (item.icon) {
-            return 'leftIcon';
-        }
-        return item.type || 'default';
-    }
-
-    let ignoreNextOnCheckBoxChange = false;
     async function onCheckBox(item, event) {
-        if (ignoreNextOnCheckBoxChange || item.value === event.value) {
-            return;
-        }
-        const value = event.value;
-        item.value = value;
-        clearCheckboxTimer();
-        DEV_LOG && console.log('onCheckBox', item.id, value);
-        try {
-            ignoreNextOnCheckBoxChange = true;
-            switch (item.id) {
-                case SETTINGS_ENABLE_CRASH_REPORT: {
-                    ApplicationSettings.setBoolean(item.key || item.id, value);
-                    if (value) {
-                        startSentry();
-                    } else {
-                        stopSentry();
-                    }
-                    break;
+        switch (item.id) {
+            case SETTINGS_ENABLE_CRASH_REPORT:
+                ApplicationSettings.setBoolean(item.key || item.id, event.value);
+                if (event.value) {
+                    startSentry();
+                } else {
+                    stopSentry();
                 }
-                default:
-                    ApplicationSettings.setBoolean(item.key || item.id, value);
-                    break;
-            }
-        } catch (error) {
-            showError(error);
-        } finally {
-            ignoreNextOnCheckBoxChange = false;
+                return true;
+            default:
+                return false; // BaseSettingsPage persists it, through the item store when there is one
         }
     }
-    function refreshCollectionView() {
-        collectionView?.nativeView.refreshVisibleItems();
-        //     console.log('refreshCollectionView');
-        // const nativeView = collectionView?.nativeView;
-        //     if (nativeView) {
-        //         items.forEach((item, index)=>{
-        //         if (item.type === 'switch') {
-        //             nativeView.getViewForItemAtIndex(index).getViewById('checkbox')?.updateTheme?.();
-        //         }
-        //     });
-        //     }
-    }
-    export const refreshVisibleItems = () => {
-        collectionView?.nativeView?.refreshVisibleItems();
-    };
-    onFontScaleChanged(refreshVisibleItems);
-    onThemeChanged(refreshCollectionView);
-    onLanguageChanged((value, event) => {
-        if (event.clock_24 !== true) {
-            refresh();
-        }
-    });
-    onMapLanguageChanged(refresh);
+
+    onMapLanguageChanged(() => refresh?.());
+    $: refresh?.();
 </script>
 
-<page class="themedPage" actionBarHidden={true}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
-        <collectionview bind:this={collectionView} itemTemplateSelector={selectTemplate} {items} row={1} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
-            <Template key="sectionheader" let:item>
-                <label class="sectionHeader" text={item.title} />
-            </Template>
-            <Template key="header" let:item>
-                <gridlayout rows="auto,auto">
-                    <gridlayout columns="*,auto,auto" margin="10 16 0 16">
-                        <stacklayout
-                            backgroundColor="#ea4bae"
-                            borderRadius={10}
-                            orientation="horizontal"
-                            padding={10}
-                            rippleColor="white"
-                            verticalAlignment="center"
-                            on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
-                            <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
-                            <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
-                        </stacklayout>
-                        {#if __ANDROID__}
-                            <image
-                                borderRadius={6}
-                                col={1}
-                                height={40}
-                                margin="0 10 0 10"
-                                rippleColor="white"
-                                src="~/assets/images/librepay.png"
-                                verticalAlignment="center"
-                                on:tap={(event) => onTap({ id: 'sponsor', type: 'librepay' }, event)} />
-                            <image borderRadius={6} col={2} height={40} rippleColor="#f96754" src="~/assets/images/patreon.png" on:tap={(event) => onTap({ id: 'sponsor', type: 'patreon' }, event)} />
-                        {/if}
-                    </gridlayout>
+<BaseSettingsPage
+    bind:this={settingsPage}
+    {id}
+    {getDescription}
+    {getTitle}
+    {onCheckBox}
+    onItemLongPress={onLongPress}
+    onItemTap={onTap}
+    optionsProvider={getAvailableOptions}
+    {searchEnabled}
+    title={title || $slc('settings')}
+    bind:refresh>
+    <svelte:fragment slot="actionBarButtons">
+        {#each actionBarButtons as button (button.id)}
+            <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
+        {/each}
+    </svelte:fragment>
 
-                    <gridlayout marginTop={20} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center">
-                        <image borderRadius={25} col={1} height={50} horizontalAlignment="center" src="res://icon" width={50} />
-                        <label
-                            fontSize={13}
-                            horizontalAlignment="center"
-                            marginTop={4}
-                            row={1}
-                            text={version}
-                            on:longPress={(event) => onLongPress({ id: 'version' }, event)}
-                            on:touch={(e) => onTouch(item, e)} />
-                    </gridlayout>
-                </gridlayout>
-            </Template>
-            <Template key="switch" let:item>
-                <SettingsSwitch item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
-            </Template>
-            <Template key="checkbox" let:item>
-                <SettingsCheckbox item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
-            </Template>
-            <Template key="leftIcon" let:item>
-                <ListItemAutoSize
-                    columns="auto,*,auto"
-                    item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
-                    mainCol={1}
-                    showBottomLine={false}
-                    on:tap={(event) => onTap(item, event)}>
-                    <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
-                </ListItemAutoSize>
-            </Template>
-            <Template let:item>
-                <ListItemAutoSize
-                    item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
-                    showBottomLine={false}
-                    on:tap={(event) => onTap(item, event)}
-                    on:longPress={(event) => onLongPress(item, event)}>
-                </ListItemAutoSize>
-            </Template>
-            <Template key="html" let:item>
-                <ListItemAutoSize
-                    item={{ ...item, title: getTitle(item), html: getSubtitle(item) }}
-                    showBottomLine={false}
-                    on:tap={(event) => onTap(item, event)}
-                    on:longPress={(event) => onLongPress(item, event)}>
-                </ListItemAutoSize>
-            </Template>
-            <!-- <Template key="switch" let:item>
-                <gridlayout columns="*,auto" padding="0 10 0 10">
-                    <stacklayout verticalAlignment="middle">
-                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} verticalTextAlignment="top" />
-                        <label
-                            color={colorOnSurfaceVariant}
-                            fontSize={14}
-                            lineBreak="end"
-                            maxLines={2}
-                            text={getSubtitle(item)}
-                            verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapse'} />
-                    </stacklayout>
-                    <switch checked={item.value} col={1} verticalAlignment="middle" on:checkedChange={(e) => onCheckBox(item, e.value)} />
-                    <absolutelayout backgroundColor={colorOutlineVariant} colSpan={2} height={1} verticalAlignment="bottom" />
-                </gridlayout>
-            </Template>
-            <Template let:item>
-                <gridlayout class="textRipple" columns="auto,*,auto" on:tap={(event) => onTap(item.id, item)} on:longPress={(event) => onLongPress(item.id, item)} on:touch={(e) => onTouch(item, e)}>
-                    <label fontFamily={$fonts.mdi} fontSize={36} marginLeft="-10" text={item.icon} verticalAlignment="middle" visibility={!!item.icon ? 'visible' : 'hidden'} width={40} />
-                    <stacklayout col={1} marginLeft="10" verticalAlignment="middle">
-                        <label fontSize={17} lineBreak="end" maxLines={1} text={getTitle(item)} textWrap="true" verticalTextAlignment="top" />
-                        <label
-                            color={colorOnSurfaceVariant}
-                            fontSize={14}
-                            lineBreak="end"
-                            maxLines={2}
-                            text={getSubtitle(item)}
-                            verticalTextAlignment="top"
-                            visibility={getSubtitle(item).length > 0 ? 'visible' : 'collapse'} />
-                    </stacklayout>
+    <Template key="header" let:item>
+        <gridlayout rows="auto,auto">
+            <gridlayout columns="*,auto,auto" margin="10 16 0 16">
+                <stacklayout
+                    backgroundColor="#ea4bae"
+                    borderRadius={10}
+                    orientation="horizontal"
+                    padding={10}
+                    rippleColor="white"
+                    verticalAlignment="center"
+                    on:tap={(event) => onTap({ id: 'sponsor' }, event)}>
+                    <label color="white" fontFamily={$fonts.mdi} fontSize={26} marginRight={10} text="mdi-heart" verticalAlignment="center" />
+                    <label color="white" fontSize={12} text={item.title} textWrap={true} verticalAlignment="center" />
+                </stacklayout>
+                {#if __ANDROID__}
+                    <image
+                        borderRadius={6}
+                        col={1}
+                        height={40}
+                        margin="0 10 0 10"
+                        rippleColor="white"
+                        src="~/assets/images/librepay.png"
+                        verticalAlignment="center"
+                        on:tap={(event) => onTap({ id: 'sponsor', type: 'librepay' }, event)} />
+                    <image borderRadius={6} col={2} height={40} rippleColor="#f96754" src="~/assets/images/patreon.png" on:tap={(event) => onTap({ id: 'sponsor', type: 'patreon' }, event)} />
+                {/if}
+            </gridlayout>
 
-                    <label
-                        col={2}
-                        color={colorOnSurfaceVariant}
-                        marginLeft={16}
-                        marginRight={16}
-                        text={item.rightValue && item.rightValue()}
-                        verticalAlignment="middle"
-                        visibility={!!item.rightValue ? 'visible' : 'collapse'} />
-                    <label
-                        class="mdi"
-                        col={2}
-                        color={colorOnSurfaceVariant}
-                        fontSize={30}
-                        height={25}
-                        horizontalAlignment="right"
-                        marginLeft={10}
-                        marginRight={10}
-                        text={item.rightBtnIcon}
-                        visibility={!!item.rightBtnIcon ? 'visible' : 'hidden'}
-                        width={25} />
-                    <absolutelayout backgroundColor={colorOutlineVariant} col={1} colSpan={3} height={1} row={2} verticalAlignment="bottom" />
-                </gridlayout>
-            </Template> -->
-        </collectionview>
-        <CActionBar canGoBack title={title || $slc('settings')}>
-            {#each actionBarButtons as button (button.id)}
-                <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
-            {/each}
-        </CActionBar>
-    </gridlayout>
-</page>
+            <gridlayout marginTop={20} paddingLeft={16} paddingRight={16} row={1} rows="auto,auto" verticalAlignment="center">
+                <image borderRadius={25} col={1} height={50} horizontalAlignment="center" src="res://icon" width={50} />
+                <label fontSize={13} horizontalAlignment="center" marginTop={4} row={1} text={version} on:touch={onTouch} />
+            </gridlayout>
+        </gridlayout>
+    </Template>
+</BaseSettingsPage>
