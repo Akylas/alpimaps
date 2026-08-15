@@ -308,18 +308,12 @@ label {
 }
 
 .actionBarTitle {
-    font-size: 20;
-    font-weight: 500;
+    font-size: 22;
+    max-font-size: 22;
+    white-space: normal;
+    font-weight: 400;
+    color: var(--colorOnBackground);
 
-    color: var(--colorOnPrimary);
-
-    &:transparent {
-        color: var(--colorOnSurface);
-    }
-
-    .ns-eink & {
-        color: var(--colorOnSurface);
-    }
 }
 
 .actionBarSubtitle {

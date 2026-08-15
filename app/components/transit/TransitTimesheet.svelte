@@ -8,7 +8,7 @@
     import { onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import CActionBar from '~/components/common/CActionBar.svelte';
+    import CActionBar from '@shared/components/CActionBar.svelte';
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
