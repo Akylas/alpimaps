@@ -1,7 +1,7 @@
 import { ApplicationSettings, Utils } from '@nativescript/core';
 import { GeoHandler } from '~/handlers/GeoHandler';
 
-export const DEFAULT_SCREEN_REFRESH_DELAY = 1600;
+export const DEFAULT_SCREEN_REFRESH_DELAY = 1200;
 
 /**
  * ms on top of the sleep delay: the screen has to have gone back off before a second refresh means
