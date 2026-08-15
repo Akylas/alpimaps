@@ -4,7 +4,7 @@ import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-communit
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { AlertOptions, Application, ApplicationSettings, GridLayout, Utils, View } from '@nativescript/core';
-import { SDK_VERSION, copyToClipboard, debounce } from '@nativescript/core/utils';
+import { SDK_VERSION, copyToClipboard } from '@nativescript/core/utils';
 import { tryCatchFunction } from '@shared/utils/ui';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
@@ -142,101 +142,6 @@ export function createView<T extends View>(claz: new () => T, props: Partial<Pic
     }
     return view;
 }
-export async function showSliderPopover({
-    anchor,
-    debounceDuration = 100,
-    formatter,
-    horizPos = HorizontalPosition.ALIGN_LEFT,
-    icon,
-    max = 100,
-    min = 0,
-    onChange,
-    step = 1,
-    title,
-    value,
-    defaultValue,
-    valueFormatter,
-    vertPos = VerticalPosition.CENTER,
-    width = 0.8 * screenWidthDips
-}: {
-    title?;
-    debounceDuration?;
-    icon?;
-    min?;
-    max?;
-    step?;
-    formatter?;
-    valueFormatter?;
-    horizPos?;
-    anchor;
-    vertPos?;
-    width?;
-    value?;
-    defaultValue?;
-    onChange?;
-}) {
-    const component = (await import('@shared/components/SliderPopover.svelte')).default;
-    const { colorSurfaceContainer } = get(colors);
-
-    return showPopover({
-        backgroundColor: colorSurfaceContainer,
-        view: component,
-        anchor,
-        horizPos,
-        vertPos,
-        props: {
-            elevation: __ANDROID__ ? 3 : 0,
-            title,
-            icon,
-            min,
-            max,
-            step,
-            width,
-            formatter,
-            valueFormatter,
-            value,
-            defaultValue,
-            onChange: debounceDuration ? debounce(onChange, debounceDuration) : onChange
-        }
-
-        // trackingScrollView: 'collectionView'
-    });
-}
-
-export async function showSlidersPopover({
-    anchor,
-    debounceDuration = 100,
-    horizPos = HorizontalPosition.ALIGN_LEFT,
-    items,
-    vertPos = VerticalPosition.CENTER,
-    width = 0.8 * screenWidthDips
-}: {
-    debounceDuration?;
-    horizPos?;
-    anchor;
-    vertPos?;
-    width?;
-    items;
-}) {
-    const component = (await import('@shared/components/SlidersPopover.svelte')).default;
-    const { colorSurfaceContainer } = get(colors);
-
-    return showPopover({
-        backgroundColor: colorSurfaceContainer,
-        view: component,
-        anchor,
-        horizPos,
-        vertPos,
-        props: {
-            elevation: __ANDROID__ ? 3 : 0,
-            width,
-            items
-        }
-
-        // trackingScrollView: 'collectionView'
-    });
-}
-
 export async function showSettings(props?) {
     const Settings = (await import('~/components/settings/Settings.svelte')).default;
     navigate({
