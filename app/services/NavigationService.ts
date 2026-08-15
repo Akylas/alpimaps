@@ -5,7 +5,7 @@ import { get } from 'svelte/store';
 import { type GeoHandler, type GeoLocation, UserLocationdEvent } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import { IItem, Item, RoutingAction } from '~/models/Item';
+import { IItem, Item, type RouteInstruction, RoutingAction } from '~/models/Item';
 import { NavigationDetour, NavigationRoute, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { packageService } from '~/services/PackageService';
 import {
@@ -23,6 +23,7 @@ import {
     navigationGpsUpdateDistance,
     navigationItem,
     navigationLocation,
+    navigationManeuverRefreshDistance,
     navigationManeuverWakeDistance,
     navigationOffRouteDistance,
     navigationOffRouteFixes,
@@ -94,6 +95,12 @@ const SPEED_WINDOW = 5;
 const SPEED_DROP_MIN_AVERAGE = 2;
 /** ms between two speed-drop wakes */
 const SPEED_DROP_MIN_INTERVAL = 20000;
+/**
+ * meters: closer than this to a maneuver there is no time to read the screen before being on it, so
+ * waking only shows the middle of the turn. Reached when the instruction index advances to one we are
+ * already on top of, which is what clustered maneuvers do — a roundabout's enter and exit especially.
+ */
+const MIN_WAKE_LEAD = 30;
 /** ms: gps rate while navigation is auto-paused, just enough to notice we started moving again */
 const PAUSED_UPDATE_INTERVAL = 10000;
 /** ms: nothing reads the speed of a pause the user asked for, so the dot only has to stay roughly live */
@@ -151,9 +158,11 @@ export class NavigationService extends Observable {
     /** heading of the last fix, and the heading the map was last drawn at */
     private lastBearing = -1;
     private lastRefreshBearing = -1;
-    private delayedRefreshTimer;
-    /** a sharp maneuver we already announced, still owed a second refresh once it is behind us */
+    /** a maneuver still owed a refresh once it is behind us, -1 when nothing is */
     private pendingTurnRefreshIndex = -1;
+    /** where and when that maneuver went behind us, ie what the wait past it is measured from */
+    private pendingTurnPassedLocation: GeoLocation = null;
+    private pendingTurnPassedTime = 0;
     /** so stopping navigation does not leave the gps running when it was off beforehand */
     private wasWatchingBeforeStart = false;
 
@@ -370,13 +379,9 @@ export class NavigationService extends Observable {
         this.lastScreenRefresh = Date.now();
         this.lastFixTime = 0;
         this.currentBackgroundInterval = 0;
-        this.pendingTurnRefreshIndex = -1;
+        this.armManeuverRefresh(-1);
         this.lastBearing = -1;
         this.lastRefreshBearing = -1;
-        if (this.delayedRefreshTimer) {
-            clearTimeout(this.delayedRefreshTimer);
-            this.delayedRefreshTimer = null;
-        }
     }
 
     private setState(state: NavigationState) {
@@ -535,7 +540,7 @@ export class NavigationService extends Observable {
             this.checkOffRoute(progress, location);
             this.updateZoom(progress);
             this.checkArrival(progress);
-            this.checkWakeTriggers(progress, speed);
+            this.checkWakeTriggers(progress, speed, location);
             this.checkAutoPause(speed);
             this.updateBackgroundInterval();
         } catch (error) {
@@ -1032,23 +1037,7 @@ export class NavigationService extends Observable {
      * refresh asked for here may not happen. Only a refresh that did counts as one: stamping it either
      * way would also hold off the periodic refresh, which is the one meant to cover exactly this case.
      */
-    private refreshScreen(reason: string, delaySeconds = 0) {
-        if (delaySeconds > 0) {
-            DEV_LOG && console.log(TAG, 'screen refresh in', delaySeconds + 's:', reason);
-            if (this.delayedRefreshTimer) {
-                clearTimeout(this.delayedRefreshTimer);
-            }
-            this.delayedRefreshTimer = setTimeout(() => {
-                this.delayedRefreshTimer = null;
-                DEV_LOG && console.log(TAG, 'screen refresh (delayed):', reason);
-                if (requestScreenRefresh(this.geoHandler)) {
-                    this.lastScreenRefresh = Date.now();
-                    // the bearing has settled by now, so the map is drawn pointing where we actually go
-                    this.lastRefreshBearing = this.lastBearing;
-                }
-            }, delaySeconds * 1000);
-            return;
-        }
+    private refreshScreen(reason: string) {
         DEV_LOG && console.log(TAG, 'screen refresh:', reason);
         if (requestScreenRefresh(this.geoHandler)) {
             this.lastScreenRefresh = Date.now();
@@ -1056,11 +1045,64 @@ export class NavigationService extends Observable {
         }
     }
 
+    /** A maneuver is owed a refresh once it is behind the user, so they see the heading they ended on. */
+    private armManeuverRefresh(instructionIndex: number) {
+        this.pendingTurnRefreshIndex = instructionIndex;
+        this.pendingTurnPassedLocation = null;
+        this.pendingTurnPassedTime = 0;
+    }
+
+    /**
+     * Whether a maneuver leaves the user pointing somewhere else, and so is worth a second look once
+     * it is done.
+     *
+     * A roundabout always is, whatever its own angle says: valhalla reports the turn *into* the ring,
+     * a handful of degrees, while the heading change the user actually experiences is spread across
+     * the entry, the ring and the exit.
+     */
+    private turnsTheUser(instruction: RouteInstruction) {
+        switch (instruction.a) {
+            case RoutingAction.ENTER_ROUNDABOUT:
+            case RoutingAction.STAY_ON_ROUNDABOUT:
+            case RoutingAction.LEAVE_ROUNDABOUT:
+            case RoutingAction.UTURN:
+                return true;
+        }
+        return Math.abs(instruction.angle ?? 0) >= get(navigationTurnRefreshAngle);
+    }
+
+    /**
+     * The refresh owed to a maneuver now behind us, held until the user is far enough past it that the
+     * map is worth looking at: mid turn the heading is still swinging and the screen shows the inside
+     * of the junction. Distance rather than a timer, so it means the same thing on foot and in a car —
+     * with the delay setting as a cap, because stopped just past a turn the distance never comes.
+     */
+    private checkManeuverRefresh(progress: RouteProgress, location: GeoLocation) {
+        if (this.pendingTurnRefreshIndex < 0 || !(progress.instructionIndex > this.pendingTurnRefreshIndex)) {
+            return false;
+        }
+        if (!this.pendingTurnPassedLocation) {
+            // the fix the maneuver went behind us on, which is what the distance is measured from
+            this.pendingTurnPassedLocation = location;
+            this.pendingTurnPassedTime = Date.now();
+            return false;
+        }
+        const travelled = computeDistanceBetween(this.pendingTurnPassedLocation, location);
+        const waited = Date.now() - this.pendingTurnPassedTime;
+        if (travelled < get(navigationManeuverRefreshDistance) && waited < get(navigationTurnRefreshDelay) * 1000) {
+            return false;
+        }
+        const turnIndex = this.pendingTurnRefreshIndex;
+        this.armManeuverRefresh(-1);
+        this.refreshScreen(`${Math.round(travelled)}m past maneuver ${turnIndex}, new heading`);
+        return true;
+    }
+
     /**
      * Waking the screen only makes sense when it is off, ie when the app is in background: that is
      * the whole point of the mode, not having to turn the phone on to know what comes next.
      */
-    private checkWakeTriggers(progress: RouteProgress, speed: number) {
+    private checkWakeTriggers(progress: RouteProgress, speed: number, location: GeoLocation) {
         if (!__ANDROID__) {
             DEV_LOG && console.log(TAG, 'screen refresh skipped: not android');
             return;
@@ -1075,16 +1117,23 @@ export class NavigationService extends Observable {
             // one wake per maneuver, else it fires again on every fix as we close in
             if (progress.instructionIndex !== this.lastWokenInstructionIndex) {
                 this.lastWokenInstructionIndex = progress.instructionIndex;
-                // a sharp turn changes what is ahead, so ask for a second refresh once it is behind us
-                this.pendingTurnRefreshIndex = Math.abs(progress.instruction.angle ?? 0) >= get(navigationTurnRefreshAngle) ? progress.instructionIndex : -1;
-                this.refreshScreen(`maneuver ${progress.instructionIndex} within ${Math.round(progress.distanceToNextInstruction)}m of ${wakeDistance}m`);
-                return;
+                // maneuvers come clustered — a roundabout's enter and exit are metres apart — so the
+                // index can advance to one we are already on top of. Waking for that shows the middle
+                // of the turn, pointing the wrong way, with nothing of what comes after in frame
+                const tooClose = progress.distanceToNextInstruction < MIN_WAKE_LEAD;
+                // a maneuver that turns us changes what is ahead, so a refresh is owed once it is
+                // behind us. So is one we could not usefully announce: that refresh is all the user gets
+                this.armManeuverRefresh(tooClose || this.turnsTheUser(progress.instruction) ? progress.instructionIndex : -1);
+                if (!tooClose) {
+                    this.refreshScreen(`maneuver ${progress.instructionIndex} within ${Math.round(progress.distanceToNextInstruction)}m of ${wakeDistance}m`);
+                    return;
+                }
+                DEV_LOG && console.log(TAG, `maneuver ${progress.instructionIndex} is already ${Math.round(progress.distanceToNextInstruction)}m away, refreshing past it instead`);
             }
-        } else if (this.pendingTurnRefreshIndex >= 0 && progress.instructionIndex > this.pendingTurnRefreshIndex) {
-            // the sharp turn is done, but wait a moment: mid roundabout the heading is still swinging
-            const turnIndex = this.pendingTurnRefreshIndex;
-            this.pendingTurnRefreshIndex = -1;
-            this.refreshScreen(`sharp maneuver ${turnIndex} completed, new heading`, get(navigationTurnRefreshDelay));
+        }
+        // deliberately not an else: with clustered maneuvers the next one is still inside wakeDistance,
+        // and the refresh owed for the one just completed has to happen all the same
+        if (this.checkManeuverRefresh(progress, location)) {
             return;
         }
 
