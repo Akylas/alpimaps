@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { MapPos } from '@nativescript-community/ui-massifmaps/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { onMount } from 'svelte';

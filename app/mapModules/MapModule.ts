@@ -1,14 +1,14 @@
 import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
-import { getCartoBitmap } from '@nativescript-community/ui-carto';
-import { MapPos, arrayToNativeVector } from '@nativescript-community/ui-carto/core';
-import { Layer } from '@nativescript-community/ui-carto/layers';
-import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { Projection } from '@nativescript-community/ui-carto/projections';
-import { CartoMap, MapClickInfo, MapInteractionInfo, PanningMode } from '@nativescript-community/ui-carto/ui';
-import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-carto/utils';
-import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+import { getMassifBitmap } from '@nativescript-community/ui-massifmaps';
+import { MapPos, arrayToNativeVector } from '@nativescript-community/ui-massifmaps/core';
+import { Layer } from '@nativescript-community/ui-massifmaps/layers';
+import type { RasterTileClickInfo } from '@nativescript-community/ui-massifmaps/layers/raster';
+import { VectorElementEventData, VectorTileEventData, VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { Projection } from '@nativescript-community/ui-massifmaps/projections';
+import { MapClickInfo, MapInteractionInfo, MassifMap, PanningMode } from '@nativescript-community/ui-massifmaps/ui';
+import { DirAssetPackage, ZippedAssetPackage } from '@nativescript-community/ui-massifmaps/utils';
+import { MBVectorTileDecoder } from '@nativescript-community/ui-massifmaps/vectortiles';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
@@ -33,7 +33,7 @@ import { showError } from '@shared/utils/showError';
 import { innerNutiProps } from '~/stores/mapStore';
 import { showSnack, showToast } from '~/utils/ui';
 // export interface IMapModule {
-//     onMapReady(mapView: CartoMap<LatLonKeys>);
+//     onMapReady(mapView: MassifMap<LatLonKeys>);
 //     onMapDestroyed();
 //     onServiceLoaded?(geoHandler: GeoHandler);
 //     onServiceUnloaded?(geoHandler: GeoHandler);
@@ -48,7 +48,7 @@ import type { AddedLayer, LayerType } from '~/mapModules/layerStack';
 
 export type { AddedLayer, LayerType };
 
-export type ContextCallback<T = CartoMap<LatLonKeys>> = (data: T) => void;
+export type ContextCallback<T = MassifMap<LatLonKeys>> = (data: T) => void;
 
 const appPath = knownFolders.currentApp().path;
 const styleAssets = ['fonts/osm.ttf'];
@@ -58,7 +58,7 @@ function loadAsset(name) {
     const filePath = path.join(appPath, name);
     //DEV_LOG && console.log('loadAsset', name, fil ePath);
     if (File.exists(filePath)) {
-        return new com.carto.core.BinaryData(File.fromPath(filePath).readSync());
+        return new com.massifmaps.core.BinaryData(File.fromPath(filePath).readSync());
     }
     return null;
 }
@@ -101,7 +101,7 @@ export interface MapContext {
     onVectorTileElementClicked(callback: ContextCallback<VectorTileEventData<LatLonKeys>>, once?: boolean);
     onRasterTileClicked(callback: ContextCallback<RasterTileClickInfo<LatLonKeys>>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
-    getMap: () => CartoMap<LatLonKeys>;
+    getMap: () => MassifMap<LatLonKeys>;
     getProjection: () => Projection;
     setBottomSheetStepIndex: (value: number) => void;
     startEditingItem: (item: IItem) => void;
@@ -203,7 +203,7 @@ const mapContext: MapContext = {
         options.setRestrictedPanning(true);
         options.setPanningMode(PanningMode.PANNING_MODE_STICKY_FINAL);
         if (isEInk) {
-            options.setBackgroundBitmap(getCartoBitmap('~/assets/images/eink-map-background.png'));
+            options.setBackgroundBitmap(getMassifBitmap('~/assets/images/eink-map-background.png'));
         }
 
         options.setZoomGestures(true);
@@ -369,8 +369,8 @@ export async function handleMapAction(action: string, options?) {
 }
 
 export default abstract class MapModule extends Observable /*  implements IMapModule */ {
-    mapView: CartoMap<LatLonKeys>;
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
+    mapView: MassifMap<LatLonKeys>;
+    onMapReady(mapView: MassifMap<LatLonKeys>) {
         this.mapView = mapView;
     }
     onMapDestroyed() {

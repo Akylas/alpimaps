@@ -16,15 +16,15 @@
     let currentZoom;
     function updateData() {
         // executeOnMainThread(() => {
-        const cartoMap = mapContext.getMap();
-        if (!cartoMap) {
+        const massifMap = mapContext.getMap();
+        if (!massifMap) {
             return;
         }
-        const zoom = cartoMap.zoom;
+        const zoom = massifMap.zoom;
         if (currentZoom === zoom) {
             return;
         }
-        const newMpp = getMetersPerPixel(cartoMap.focusPos, zoom);
+        const newMpp = getMetersPerPixel(massifMap.focusPos, zoom);
         const metersPerCM = PX_PER_CM * newMpp;
         const data = formatDistance(metersPerCM);
         scaleText = `${data} (${zoom.toFixed(1)})`;

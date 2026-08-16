@@ -1,15 +1,15 @@
 <script context="module" lang="ts">
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { ClickType } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-    import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
-    import { isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+    import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
+    import { ClickType } from '@nativescript-community/ui-massifmaps/core';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { LineGeometry } from '@nativescript-community/ui-massifmaps/geometry';
+    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
+    import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
+    import { MapClickInfo } from '@nativescript-community/ui-massifmaps/ui';
+    import { isLocationOnPath } from '@nativescript-community/ui-massifmaps/utils';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';

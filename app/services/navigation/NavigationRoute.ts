@@ -1,7 +1,7 @@
-import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
-import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { distanceToEnd } from '@nativescript-community/ui-carto/utils';
+import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-massifmaps/core';
+import { LineGeometry } from '@nativescript-community/ui-massifmaps/geometry';
+import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
+import { distanceToEnd } from '@nativescript-community/ui-massifmaps/utils';
 import type { LineString } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem, RouteInstruction } from '~/models/Item';

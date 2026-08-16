@@ -1,4 +1,4 @@
-import type { RoutingResult, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { RoutingResult, ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
 import { ApplicationSettings, Color } from '@nativescript/core';
 import { type RouteInstruction, RoutingAction } from '~/models/Item';
 

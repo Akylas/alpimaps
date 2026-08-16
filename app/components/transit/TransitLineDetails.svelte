@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { MassifMap, PanningMode } from '@nativescript-community/ui-massifmaps/ui';
     import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { ObservableArray, Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
@@ -20,7 +20,7 @@
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import { FeatureCollection } from 'geojson';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { MapPos } from '@nativescript-community/ui-massifmaps/core';
     import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorOnBackground, colorPrimary } = $colors;
@@ -37,7 +37,7 @@
     export let position: MapPos<LatLonKeys> = null;
     export let selectedStop = line.stopIds?.[0];
 
-    let cartoMap: CartoMap<LatLonKeys>;
+    let massifMap: MassifMap<LatLonKeys>;
     let selectedIndex = -1;
 
     DEV_LOG && console.log('line', selectedStop, JSON.stringify(line));
@@ -50,7 +50,7 @@
 
     async function refresh() {
         try {
-            if (!cartoMap) {
+            if (!massifMap) {
                 return;
             }
             dataItems = new ObservableArray(
@@ -87,11 +87,11 @@
             });
 
             transitVectorTileLayer.setVectorTileEventListener(this);
-            cartoMap.addLayer(transitVectorTileLayer);
+            massifMap.addLayer(transitVectorTileLayer);
             if (selectedIndex) {
                 focusOnItem(dataItems.getItem(selectedIndex), true);
             } else {
-                cartoMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
+                massifMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
             }
             noNetworkAndNoData = false;
         } catch (error) {
@@ -110,8 +110,8 @@
         refresh();
     }
     async function onMapReady(e) {
-        cartoMap = e.object as CartoMap<LatLonKeys>;
-        mapContext.setMapDefaultOptions(cartoMap.getOptions());
+        massifMap = e.object as MassifMap<LatLonKeys>;
+        mapContext.setMapDefaultOptions(massifMap.getOptions());
         // const route = dataItems.map(i=>([]))
         try {
             let layers = mapContext.getLayers('map');
@@ -120,7 +120,7 @@
             }
             layers.forEach((l) => {
                 const prototype = Object.getPrototypeOf(l.layer);
-                cartoMap.addLayer(new prototype.constructor(l.layer.options));
+                massifMap.addLayer(new prototype.constructor(l.layer.options));
             });
             refresh();
         } catch (err) {
@@ -172,8 +172,8 @@
     }
 
     function focusOnItem(item: Item, scrollToIndex = false) {
-        cartoMap.setFocusPos(item, 200);
-        cartoMap.setZoom(15, 200);
+        massifMap.setFocusPos(item, 200);
+        massifMap.setZoom(15, 200);
         decoder.setJSONStyleParameters({ selected_id_str: item.id + '' });
         if (scrollToIndex) {
             collectionView.nativeView.scrollToIndex(dataItems.indexOf(item), false, SnapPosition.START);
@@ -219,7 +219,7 @@
             textAlignment="center"
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
-        <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
+        <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
                 <canvasview columns="*,auto" on:tap={() => selectStop(item)}>

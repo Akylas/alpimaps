@@ -1,10 +1,10 @@
 import Observable from '@nativescript-community/observable';
-import { fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+import { fromNativeMapPos } from '@nativescript-community/ui-massifmaps/core';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
 import { type GeoHandler, type GeoLocation, UserLocationdEvent } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
-import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
 import { IItem, Item, type RouteInstruction, RoutingAction } from '~/models/Item';
 import { NavigationDetour, NavigationRoute, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { packageService } from '~/services/PackageService';

@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { MapBounds } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { CartoMap } from '@nativescript-community/ui-carto/ui';
+    import { MapBounds } from '@nativescript-community/ui-massifmaps/core';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -85,7 +85,7 @@
         updatePreview(false);
     }
 
-    let cartoMap: CartoMap<LatLonKeys>;
+    let massifMap: MassifMap<LatLonKeys>;
     let vectorTileDataSource: GeoJSONVectorTileDataSource;
     let vectorTileLayer: VectorTileLayer;
 
@@ -102,15 +102,15 @@
         }
     }
     async function onMapReady(e) {
-        cartoMap = e.object as CartoMap<LatLonKeys>;
-        // projection = cartoMap.projection;
+        massifMap = e.object as MassifMap<LatLonKeys>;
+        // projection = massifMap.projection;
         // if (__ANDROID__) {
-        //     console.log('onMapReady', com.carto.ui.BaseMapView.getSDKVersion());
+        //     console.log('onMapReady', com.massifmaps.ui.BaseMapView.getSDKVersion());
         // } else {
-        //     console.log('onMapReady', cartoMap.nativeViewProtected as NTMapView);
+        //     console.log('onMapReady', massifMap.nativeViewProtected as NTMapView);
         // }
 
-        mapContext.setMapDefaultOptions(cartoMap.getOptions());
+        mapContext.setMapDefaultOptions(massifMap.getOptions());
         // const route = dataItems.map(i=>([]))
         try {
             let layers = mapContext.getLayers('map');
@@ -119,7 +119,7 @@
             }
             layers.forEach((l) => {
                 const prototype = Object.getPrototypeOf(l.layer);
-                cartoMap.addLayer(new prototype.constructor(l.layer.options));
+                massifMap.addLayer(new prototype.constructor(l.layer.options));
             });
 
             vectorTileDataSource = new GeoJSONVectorTileDataSource({
@@ -138,9 +138,9 @@
                 decoder: getMapContext().innerDecoder
             });
             // vectorTileLayer.setVectorTileEventListener(this);
-            cartoMap.addLayer(vectorTileLayer);
+            massifMap.addLayer(vectorTileLayer);
 
-            if (cartoMap.getMeasuredWidth()) {
+            if (massifMap.getMeasuredWidth()) {
                 onLayoutChanged();
             }
         } catch (err) {
@@ -148,7 +148,7 @@
         }
     }
     function onLayoutChanged() {
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
 
@@ -162,10 +162,10 @@
             const margin = Utils.layout.toDevicePixels(20);
             const screenBounds = {
                 min: { x: margin, y: margin },
-                max: { x: cartoMap.getMeasuredWidth() - margin, y: cartoMap.getMeasuredHeight() - margin }
+                max: { x: massifMap.getMeasuredWidth() - margin, y: massifMap.getMeasuredHeight() - margin }
             };
             if (item.properties?.zoomBounds) {
-                cartoMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, 0);
+                massifMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, 0);
             } else if (item.properties?.extent) {
                 let extent: [number, number, number, number] = item.properties.extent as any;
                 if (typeof extent === 'string') {
@@ -174,13 +174,13 @@
                     }
                     extent = JSON.parse(extent as any);
                 }
-                cartoMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 0);
+                massifMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 0);
             }
         } else {
-            cartoMap.setZoom(14, 0);
+            massifMap.setZoom(14, 0);
             const geometry = item.geometry as GeoJSONPoint;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            cartoMap.setFocusPos(position, 0);
+            massifMap.setFocusPos(position, 0);
         }
     }
 
@@ -434,7 +434,7 @@
             <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
             <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
-        <cartomap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
+        <massifmap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
         <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={() => pickOptionColor(itemColor)}>
             <circle antiAlias={true} fillColor={colorOnSurfaceVariant} horizontalAlignment="right" paintStyle="fill" radius={15} strokeWidth={2} verticalAlignment="middle" width={20} />
             <circle

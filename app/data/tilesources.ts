@@ -1,6 +1,6 @@
-import { HTTPTileDataSourceOptions } from '@nativescript-community/ui-carto/datasources/http';
-import { RasterTileLayerOptions } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorTileLayerOptions } from '@nativescript-community/ui-carto/layers/vector';
+import { HTTPTileDataSourceOptions } from '@nativescript-community/ui-massifmaps/datasources/http';
+import { RasterTileLayerOptions } from '@nativescript-community/ui-massifmaps/layers/raster';
+import { VectorTileLayerOptions } from '@nativescript-community/ui-massifmaps/layers/vector';
 
 export interface DataProviderOptions {
     [k: string]: any;

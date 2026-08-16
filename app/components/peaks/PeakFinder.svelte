@@ -1,10 +1,10 @@
 <script lang="ts">
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
+    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
+    import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/maptiler';
+    import { MBTilesTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/mbtiles';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
