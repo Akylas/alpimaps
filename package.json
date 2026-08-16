@@ -132,10 +132,11 @@
         "@akylas/nativescript-android-runtime": "8.9.2",
         "@akylas/nativescript-ios-runtime": "9.0.3",
         "@akylas/nativescript-webpack": "5.0.35",
-        "@nativescript/android": "9.0.6-next.2026-08-15-31860582391",
+        "@nativescript/android": "9.0.6-next.2026-08-15-31910596854",
         "@nativescript/core": "9.0.20",
+        "@nativescript/ios": "next",
         "@sentry/cli": "3.5.0",
-        "@swc/core": "1.13.5",
+        "@swc/core": "1.16.0",
         "@types/geojson": "^7946.0.14",
         "@types/offscreencanvas": "^2019.7.3",
         "@types/suncalc": "^1.9.2",
@@ -143,6 +144,7 @@
         "fast-xml-parser": "5.8.0",
         "merge-properties-files": "^1.1.6",
         "mini-css-extract-plugin": "^2.10.2",
+        "minimizer-webpack-plugin": "^5.6.1",
         "svelte-loader": "3.2.4",
         "swc-loader": "0.2.6",
         "webpack-shell-plugin-next": "2.3.3"
@@ -154,5 +156,8 @@
         "./geo-three",
         "./docs"
     ],
-    "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b"
+    "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b",
+    "resolutions": {
+        "webpack": "5.107.2"
+    }
 }

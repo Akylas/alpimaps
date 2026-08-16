@@ -739,7 +739,10 @@ module.exports = (env, params = {}) => {
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.map((l) => l.replace('_', '-').toLowerCase()).join('|')}).\js`)));
 
     // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
-    config.optimization.splitChunks.cacheGroups.defaultVendor.test = function (module) {
+    // cache group is named `defaultVendor` in the commonjs base config, `vendor` in the esm one
+    const cacheGroups = config.optimization.splitChunks.cacheGroups;
+    const vendorCacheGroup = cacheGroups.defaultVendor || cacheGroups.vendor;
+    vendorCacheGroup.test = function (module) {
         const absPath = module.resource;
         if (absPath) {
             const relativePath = relative(projectRoot, absPath);
@@ -972,6 +975,17 @@ module.exports = (env, params = {}) => {
     }
     config.externalsPresets = { node: false };
     config.resolve.fallback = config.resolve.fallback || {};
+    // config.resolve.fallback.timers = require.resolve('timers/');
+    config.resolve.fallback.stream = false;
+    config.resolve.fallback.timers = false;
+    config.resolve.fallback.buffer = false;
+    config.resolve.fallback.util = false;
+    config.resolve.fallback.path = false;
+    config.resolve.fallback.crypto = false;
+    config.resolve.fallback.fs = false;
+    config.resolve.fallback.assert = false;
+    config.resolve.fallback.tty = false;
+    config.resolve.fallback.os = false;
     config.optimization.minimize = uglify !== undefined ? !!uglify : production;
     const isAnySourceMapEnabled = !!sourceMap || !!hiddenSourceMap || !!inlineSourceMap;
     const actual_keep_classnames_functionnames = keep_classnames_functionnames;
@@ -990,7 +1004,9 @@ module.exports = (env, params = {}) => {
                     semicolons: !isAnySourceMapEnabled
                 },
                 compress: {
-                    booleans_as_integers: false,
+                    ecma: 2020,
+                    directives: false, // messed span vertical align
+                    unused: false, //breaks css on first start
                     // The Android SBG has problems parsing the output
                     // when these options are enabled
                     collapse_vars: platform !== 'android',
