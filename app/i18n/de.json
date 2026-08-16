@@ -802,5 +802,18 @@
     "scrub_pattern_zoom": "Scrub-Muster Min. Zoom",
     "scrub_pattern_zoom_desc": "Mindestvergrößerung, bei der das Buschmuster angezeigt wird",
     "show_elevation_profile_grade_colors": "Höhenprofil-Steigungsfarben anzeigen",
-    "vector_element_click_radius_desc": "Radius vom Berühren bis zum Entdecken geklickter Vektorelemente"
+    "vector_element_click_radius_desc": "Radius vom Berühren bis zum Entdecken geklickter Vektorelemente",
+    "navigation_zoom_factor": "Zoomfaktor",
+    "arrival_time": "Ankunft",
+    "crash_report": "Absturzberichte aktivieren",
+    "disabled": "deaktiviert",
+    "navigation_auto_pause": "automatisch pausieren",
+    "navigation_auto_pause_delay": "Verzögerung für automatisches Pausieren",
+    "navigation_auto_pause_speed": "Geschwindigkeit für automatisches Pausieren",
+    "navigation_hide_chrome": "Oberfläche ausblenden",
+    "navigation_undo_reroute": "Rückgängig",
+    "navigation_reroute_to_destination": "neue Route",
+    "navigation_rerouting": "wird berechnet …",
+    "navigation_paused": "Navigation pausiert",
+    "navigation_back_to_route": "zurück zur Route"
 }
