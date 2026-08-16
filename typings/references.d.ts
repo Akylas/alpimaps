@@ -1,5 +1,5 @@
 
-/// <reference path="../node_modules/@nativescript-community/ui-carto/typings/carto.android.d.ts" />
+/// <reference path="../node_modules/@nativescript-community/ui-massifmaps/typings/massifmaps.android.d.ts" />
 
 declare const gVars: {
     platform: string;

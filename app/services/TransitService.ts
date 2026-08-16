@@ -1,5 +1,5 @@
 import Observable from '@nativescript-community/observable';
-import { GenericMapPos } from '@nativescript-community/ui-carto/core';
+import { GenericMapPos } from '@nativescript-community/ui-massifmaps/core';
 import { Color } from '@nativescript/core';
 import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
 

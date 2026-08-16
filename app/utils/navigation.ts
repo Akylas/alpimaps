@@ -1,6 +1,6 @@
-import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
-import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-massifmaps/core';
+import type { ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
+import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-massifmaps/utils';
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
 import { getRhumbLineBearing } from '~/helpers/geolib';

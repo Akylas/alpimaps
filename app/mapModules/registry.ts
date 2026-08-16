@@ -1,8 +1,8 @@
-import type { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
-import { CartoMap, MapClickInfo } from '@nativescript-community/ui-carto/ui';
-import type { MapPos } from '@nativescript-community/ui-carto/core';
-import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-import type { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+import type { MapInteractionInfo } from '@nativescript-community/ui-massifmaps/ui';
+import { MapClickInfo, MassifMap } from '@nativescript-community/ui-massifmaps/ui';
+import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
+import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
+import type { MBVectorTileDecoder } from '@nativescript-community/ui-massifmaps/vectortiles';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { globalObservable } from '@shared/utils/svelte/ui';
 import type { GeoHandler } from '~/handlers/GeoHandler';
@@ -19,7 +19,7 @@ import type { IItem } from '~/models/Item';
  * A hook returning a truthy value means "handled, stop" — see `runOnModules`.
  */
 export interface MapModuleHooks {
-    onMapReady: [CartoMap<LatLonKeys>];
+    onMapReady: [MassifMap<LatLonKeys>];
     onMapDestroyed: [];
     onServiceLoaded: [GeoHandler];
     onServiceUnloaded: [GeoHandler];

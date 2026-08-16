@@ -3,7 +3,7 @@ import { GestureRootView, install as installGestures } from '@nativescript-commu
 import { setGeoLocationKeys } from '@nativescript-community/gps';
 import { installMixins as installUIMixins } from '@nativescript-community/systemui';
 import { overrideSpanAndFormattedString } from '@nativescript-community/text';
-import { setMapPosKeys } from '@nativescript-community/ui-carto/core';
+import { setMapPosKeys } from '@nativescript-community/ui-massifmaps/core';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import { initialize } from '@nativescript-community/ui-image';
@@ -64,7 +64,7 @@ try {
     registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
     registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
-    registerNativeViewElement('cartomap', () => require('@nativescript-community/ui-carto/ui').CartoMap);
+    registerNativeViewElement('massifmap', () => require('@nativescript-community/ui-massifmaps/ui').MassifMap);
     registerNativeViewElement('canvasview', () => require('@nativescript-community/ui-canvas').CanvasView);
     registerNativeViewElement('line', () => require('@nativescript-community/ui-canvas/shapes').Line);
     registerNativeViewElement('circle', () => require('@nativescript-community/ui-canvas/shapes').Circle);

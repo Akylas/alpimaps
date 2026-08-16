@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
+    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
+    import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, confirm } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, Color, File, ScrollView, StackLayout } from '@nativescript/core';
@@ -115,7 +115,7 @@
                         rows: 'auto,auto'
                     });
                     const SettingsSlider = (await import('@shared/components/SettingsSlider.svelte')).default;
-                    const cartoMap = mapContext.getMap();
+                    const massifMap = mapContext.getMap();
                     const minSliderInstance = resolveComponentElement(SettingsSlider, {
                         title: lc('min_zoom'),
                         subtitle: lc('dowload_area_minzoom'),
@@ -124,7 +124,7 @@
                         step: 1,
                         valueFormatter: (value) => value + '',
                         min: 0,
-                        value: Math.round(cartoMap.getZoom())
+                        value: Math.round(massifMap.getZoom())
                     });
                     const maxSliderInstance = resolveComponentElement(SettingsSlider, {
                         row: 1,

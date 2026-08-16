@@ -1,7 +1,7 @@
 <script lang="ts">
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
     import { Utils } from '@nativescript-community/ui-chart/utils/Utils';
     import { SVG } from '@nativescript-community/ui-svg/canvas';
     import { executeOnMainThread } from '@nativescript/core/utils';

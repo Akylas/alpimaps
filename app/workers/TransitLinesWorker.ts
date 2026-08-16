@@ -1,7 +1,7 @@
 import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
-import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
+import { GeoJSONGeometryReader } from '@nativescript-community/ui-massifmaps/geometry/reader';
+import { EPSG4326 } from '@nativescript-community/ui-massifmaps/projections/epsg4326';
 
 // try {
 //     const test = require('~/services/pdf/PDFExportCanvas');

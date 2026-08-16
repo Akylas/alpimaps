@@ -1,6 +1,6 @@
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+import { TileSubstitutionPolicy } from '@nativescript-community/ui-massifmaps/layers';
+import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
 import { Color } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';

@@ -1,4 +1,4 @@
-import { MapBounds, MapPos, MapPosVector, ScreenBounds, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
+import { MapBounds, MapPos, MapPosVector, ScreenBounds, fromNativeMapPos } from '@nativescript-community/ui-massifmaps/core';
 
 const PI = Math.PI;
 export const TO_RAD = PI / 180;

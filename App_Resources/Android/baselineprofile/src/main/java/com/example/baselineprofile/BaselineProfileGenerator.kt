@@ -77,7 +77,7 @@ class BaselineProfileGenerator {
             }
     
             // Waits for content to be visible, which represents time to fully drawn.
-            var input = By.descContains("cartoMap")
+            var input = By.descContains("massifMap")
             device.wait(Until.hasObject(input), 2_000)
             val scrollable = device.findObject(input)
             // Setting a gesture margin is important otherwise gesture nav is triggered.

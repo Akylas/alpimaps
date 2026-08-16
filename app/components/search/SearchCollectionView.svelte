@@ -1,8 +1,8 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
-    import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { SearchRequest, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
+    import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-massifmaps/core';
+    import { LineGeometry } from '@nativescript-community/ui-massifmaps/geometry';
+    import { SearchRequest, VectorTileSearchServiceOptions } from '@nativescript-community/ui-massifmaps/search';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';

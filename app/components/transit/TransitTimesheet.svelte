@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import { MapPos } from '@nativescript-community/ui-massifmaps/core';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';

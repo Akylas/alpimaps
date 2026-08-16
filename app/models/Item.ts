@@ -1,6 +1,6 @@
-import { MapBounds } from '@nativescript-community/ui-carto/core';
-import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import { MapBounds } from '@nativescript-community/ui-massifmaps/core';
+import { VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
 import type { Geometry, Point } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';

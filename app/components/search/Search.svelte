@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { PointStyleBuilder } from '@nativescript-community/ui-carto/vectorelements/point';
+    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { PointStyleBuilder } from '@nativescript-community/ui-massifmaps/vectorelements/point';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';

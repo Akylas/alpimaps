@@ -1,9 +1,9 @@
 import { getFromLocation } from '@nativescript-community/geocoding';
 import Observable from '@nativescript-community/observable';
-import { DoubleVector, GenericMapPos, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-carto/core';
-import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
+import { DoubleVector, GenericMapPos, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-massifmaps/core';
+import { TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
+import { MBTilesTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/mbtiles';
 import {
     GeocodingRequest,
     GeocodingResult,
@@ -13,16 +13,16 @@ import {
     MultiOSMOfflineReverseGeocodingService,
     ReverseGeocodingRequest,
     ReverseGeocodingService
-} from '@nativescript-community/ui-carto/geocoding/service';
-import { Geometry, LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
-import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { HillshadeRasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { Projection } from '@nativescript-community/ui-carto/projections';
-import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import { SearchRequest, VectorTileSearchService, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
+} from '@nativescript-community/ui-massifmaps/geocoding/service';
+import { Geometry, LineGeometry } from '@nativescript-community/ui-massifmaps/geometry';
+import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-massifmaps/geometry/feature';
+import { GeoJSONGeometryReader } from '@nativescript-community/ui-massifmaps/geometry/reader';
+import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
+import { HillshadeRasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
+import { VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { Projection } from '@nativescript-community/ui-massifmaps/projections';
+import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
+import { SearchRequest, VectorTileSearchService, VectorTileSearchServiceOptions } from '@nativescript-community/ui-massifmaps/search';
 import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';

@@ -1,6 +1,6 @@
-import { TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { TileLayer } from '@nativescript-community/ui-carto/layers';
+import { TileSubstitutionPolicy } from '@nativescript-community/ui-massifmaps/layers';
+import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { TileLayer } from '@nativescript-community/ui-massifmaps/layers';
 import { showError } from '@shared/utils/showError';
 import { derived, get, writable } from 'svelte/store';
 import { lc } from '~/helpers/locale';

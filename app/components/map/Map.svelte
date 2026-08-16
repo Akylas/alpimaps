@@ -1,20 +1,20 @@
 <script context="module" lang="ts">
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-    import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-    import { Layer } from '@nativescript-community/ui-carto/layers';
-    import type { RasterTileClickInfo } from '@nativescript-community/ui-carto/layers/raster';
-    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
-    import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { Projection } from '@nativescript-community/ui-carto/projections';
-    import { EPSG3857 } from '@nativescript-community/ui-carto/projections/epsg3857';
-    import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
-    import { CartoMap, MapClickInfo, RenderProjectionMode } from '@nativescript-community/ui-carto/ui';
-    import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-carto/utils';
-    import { Point } from '@nativescript-community/ui-carto/vectorelements/point';
-    import { MBVectorTileDecoder } from '@nativescript-community/ui-carto/vectortiles';
+    import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
+    import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-massifmaps/core';
+    import { LocalVectorDataSource } from '@nativescript-community/ui-massifmaps/datasources/vector';
+    import { Layer } from '@nativescript-community/ui-massifmaps/layers';
+    import type { RasterTileClickInfo } from '@nativescript-community/ui-massifmaps/layers/raster';
+    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { VectorLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import { Projection } from '@nativescript-community/ui-massifmaps/projections';
+    import { EPSG3857 } from '@nativescript-community/ui-massifmaps/projections/epsg3857';
+    import { EPSG4326 } from '@nativescript-community/ui-massifmaps/projections/epsg4326';
+    import { MapClickInfo, MassifMap, RenderProjectionMode } from '@nativescript-community/ui-massifmaps/ui';
+    import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-massifmaps/utils';
+    import { Point } from '@nativescript-community/ui-massifmaps/vectorelements/point';
+    import { MBVectorTileDecoder } from '@nativescript-community/ui-massifmaps/vectortiles';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
@@ -89,7 +89,7 @@
 
     let page: NativeViewElementNode<Page>;
     let widgetsHolder: NativeViewElementNode<GridLayout>;
-    let cartoMap: CartoMap<LatLonKeys>;
+    let massifMap: MassifMap<LatLonKeys>;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -156,7 +156,7 @@
     const itemLoading = false;
 
     let projection: Projection = new EPSG4326();
-    const layerStack = new LayerStack(() => cartoMap);
+    const layerStack = new LayerStack(() => massifMap);
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
     let currentMapRotation = 0;
@@ -206,7 +206,7 @@
             //     }
             // }
             DEV_LOG && console.log('Got the following appURL', link);
-            const loaded = !!cartoMap;
+            const loaded = !!massifMap;
             const isGeoUrl = link.startsWith('geo:');
             let locationMatch = isGeoUrl ? null : link.match(GEO_TEXT_REGEXP);
             let query: string;
@@ -223,7 +223,7 @@
                     if (params.hasOwnProperty('z')) {
                         const zoom = parseFloat(params.z);
                         if (loaded) {
-                            cartoMap.setZoom(zoom, 0);
+                            massifMap.setZoom(zoom, 0);
                         } else {
                             ApplicationSettings.setNumber('mapZoom', zoom);
                         }
@@ -252,7 +252,7 @@
                     };
                     if (loaded) {
                         ApplicationSettings.remove('selectPosOnLoad');
-                        cartoMap.setFocusPos(pos, 0);
+                        massifMap.setFocusPos(pos, 0);
                         selectItem({
                             item,
                             isFeatureInteresting: true
@@ -275,7 +275,7 @@
                         if (value) {
                             if (/[\d.-]+,[\d.-]+/.test(value)) {
                                 const pos = value.split(',').map(parseFloat);
-                                cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                massifMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
                                 directionsPanel.addStartPoint({
                                     lat: pos[0],
                                     lon: pos[1]
@@ -287,7 +287,7 @@
                         if (value) {
                             if (/[\d.-]+,[\d.-]+/.test(value)) {
                                 const pos = value.split(',').map(parseFloat);
-                                cartoMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                massifMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
                                 directionsPanel.addStopPoint({
                                     lat: pos[0],
                                     lon: pos[1]
@@ -352,7 +352,7 @@
 
         setMapContext({
             // drawer: drawer.nativeView,
-            getMap: () => cartoMap,
+            getMap: () => massifMap,
             getMainPage: () => page,
             getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
@@ -424,7 +424,7 @@
         }
     });
     function onColorsChange() {
-        if (cartoMap) {
+        if (massifMap) {
             mapContext.innerDecoder?.setJSONStyleParameters({
                 main_color: $colors.colorPrimary,
                 main_darker_color: new Color($colors.colorPrimary).darken(10).hex
@@ -441,8 +441,8 @@
         // if (localVectorDataSource) {
         //     localVectorDataSource = null;
         // }
-        // if (cartoMap) {
-        //     cartoMap = null;
+        // if (massifMap) {
+        //     massifMap = null;
         // }
         // selectedPosMarker = null;
         if (DEV_LOG) {
@@ -500,14 +500,14 @@
     }
 
     function resetBearing() {
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
-        cartoMap.setBearing(0, 200);
+        massifMap.setBearing(0, 200);
     }
     function getMapViewPort() {
-        const width = cartoMap.getMeasuredWidth();
-        const height = cartoMap.getMeasuredHeight();
+        const width = massifMap.getMeasuredWidth();
+        const height = massifMap.getMeasuredHeight();
         const left = Utils.layout.toDevicePixels(40);
         const top = Utils.layout.toDevicePixels(windowInsetTop + 90 + topTranslationY);
         const bottom = Utils.layout.toDevicePixels(windowInsetBottom - mapTranslation + 0);
@@ -523,20 +523,20 @@
         return result;
     }
     const saveSettings = debounce(function () {
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
-        ApplicationSettings.setNumber('mapZoom', cartoMap.zoom);
-        ApplicationSettings.setNumber('mapBearing', cartoMap.bearing);
-        ApplicationSettings.setString('mapFocusPos', JSON.stringify(cartoMap.focusPos));
+        ApplicationSettings.setNumber('mapZoom', massifMap.zoom);
+        ApplicationSettings.setNumber('mapBearing', massifMap.bearing);
+        ApplicationSettings.setString('mapFocusPos', JSON.stringify(massifMap.focusPos));
     }, 500);
 
     let appUrlRegistered = false;
 
     async function onMainMapReady(e) {
         try {
-            const map = e.object as CartoMap<LatLonKeys>;
-            CartoMap.setRunOnMainThread(true);
+            const map = e.object as MassifMap<LatLonKeys>;
+            MassifMap.setRunOnMainThread(true);
             if (DEV_LOG) {
                 setShowDebug(true);
                 setShowInfo(true);
@@ -551,14 +551,14 @@
             projection = map.projection;
             mapContext.setMapDefaultOptions(map.getOptions());
 
-            cartoMap = map;
+            massifMap = map;
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
 
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
-            cartoMap.setFocusPos(pos, 0);
-            cartoMap.setZoom(zoom, 0);
-            cartoMap.setBearing(bearing, 0);
+            massifMap.setFocusPos(pos, 0);
+            massifMap.setZoom(zoom, 0);
+            massifMap.setBearing(bearing, 0);
             DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, layerStack.layers.length, theme);
             // re-add what modules registered before the map existed, and after an activity re-create
             layerStack.layers.forEach((added) => {
@@ -575,7 +575,7 @@
             // the overlay may have been switched on before the map existed to add it to
             addTransitLayerIfPending();
             // setTimeout(() => {
-            mapContext.runOnModules('onMapReady', cartoMap);
+            mapContext.runOnModules('onMapReady', massifMap);
 
             // }, 0);
             if (!appUrlRegistered) {
@@ -610,17 +610,17 @@
     let mapMoved = false;
     function onMainMapMove(e: { data: { userAction: boolean } }) {
         // DEV_LOG && console.log('onMainMapMove', mapMoved);
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
         mapContext.runOnModules('onMapMove', e);
         mapMoved = true;
-        currentMapRotation = Math.round(cartoMap.bearing * 100) / 100;
+        currentMapRotation = Math.round(massifMap.bearing * 100) / 100;
     }
     function onMainMapInteraction(e) {
         // this means user interaction
         // DEV_LOG && console.log('onMainMapInteraction', Object.keys(e));
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
         if (!mapMoved) {
@@ -631,7 +631,7 @@
     }
     function onMainMapIdle(e) {
         // DEV_LOG && console.log('onMainMapIdle', mapMoved);
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
         if (mapMoved) {
@@ -642,7 +642,7 @@
     }
     function onMainMapStable(e) {
         // DEV_LOG && console.log('onMainMapStable', mapMoved);
-        if (!cartoMap) {
+        if (!massifMap) {
             return;
         }
         mapContext.runOnModules('onMapStable', e);
@@ -661,7 +661,7 @@
             return;
         }
         const handledByModules = mapContext.runOnModules('onMapClicked', e);
-        // console.log('mapTile', latLngToTileXY(position.lat, position.lon, cartoMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
+        // console.log('mapTile', latLngToTileXY(position.lat, position.lon, massifMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem });
         }
@@ -914,8 +914,8 @@
                 width: Screen.mainScreen.widthDIPs,
                 height: Screen.mainScreen.widthDIPs
             });
-            if (forceZoomOut || cartoMap.zoom < zoomLevel) {
-                cartoMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
+            if (forceZoomOut || massifMap.zoom < zoomLevel) {
+                massifMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
             }
         } else if (item.properties?.extent) {
             let extent: [number, number, number, number] = item.properties.extent as [number, number, number, number];
@@ -925,23 +925,23 @@
                 }
                 extent = JSON.parse(extent as any);
             }
-            cartoMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 200);
+            massifMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 200);
         } else if (item.route) {
             const geometry = packageService.getRouteItemGeometry(item);
             //we need to convert geometry bounds to wgs84
             //not perfect as vectorTile geometry might not represent the whole entier route at higher zoom levels
             const bounds = geometry?.getBounds();
             const projection = new EPSG3857();
-            cartoMap.moveToFitBounds(new MapBounds(projection.toWgs84(bounds.getMin()), projection.toWgs84(bounds.getMax())), screenBounds, true, true, false, 200);
+            massifMap.moveToFitBounds(new MapBounds(projection.toWgs84(bounds.getMin()), projection.toWgs84(bounds.getMax())), screenBounds, true, true, false, 200);
         } else if (item.geometry.type === 'Point') {
             if (zoom) {
-                cartoMap.setZoom(zoom, duration);
+                massifMap.setZoom(zoom, duration);
             } else if (minZoom) {
-                cartoMap.setZoom(Math.max(minZoom, cartoMap.zoom), duration);
+                massifMap.setZoom(Math.max(minZoom, massifMap.zoom), duration);
             }
             const geometry = item.geometry;
             const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            cartoMap.setFocusPos(position, duration);
+            massifMap.setFocusPos(position, duration);
         }
         // DEV_LOG && console.log('zoomToItem done ');
     }
@@ -988,19 +988,19 @@
 
     //    $: {
     //        try {
-    //            cartoMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
+    //            massifMap && mapContext?.innerDecoder?.setStyleParameter('routes_type', $routesType + '');
     //        } catch (error) {
     //           console.error(error, error.stack);
     //       }
     //    }
     //    $: {
     //        try {
-    //            cartoMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
+    //            massifMap && mapContext?.innerDecoder?.setStyleParameter('route_shields', $showRouteShields ? '1' : '0');
     //       } catch (error) {
     //            console.error(error, error.stack);
     //       }
     //    }
-    $: cartoMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
+    $: massifMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
 
     nutiProps.on('change', (event: any) => {
         // console.log('nutichange', event.key, event.nutiValue);
@@ -1026,12 +1026,12 @@
     //    getLayers('routes').forEach((l) => {
     //           l.layer.visible = visible;
     //        });
-    //      cartoMap?.requestRedraw();
+    //      massifMap?.requestRedraw();
     //   }
     //    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
-    $: cartoMap?.getOptions().setRotationGestures($rotateEnabled);
-    $: cartoMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
+    $: massifMap?.getOptions().setRotationGestures($rotateEnabled);
+    $: massifMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
     // the two sheets swap places: the item one steps aside while a route is being followed, and comes
@@ -1059,7 +1059,7 @@
     $: {
         if (activeSheetHeight >= 0) {
             mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
-            cartoMap?.getOptions().setFocusPointOffset(toNativeScreenPos(mapContext.focusOffset));
+            massifMap?.getOptions().setFocusPointOffset(toNativeScreenPos(mapContext.focusOffset));
         }
     }
 
@@ -1520,7 +1520,7 @@
     }
 
     async function shareScreenshot() {
-        const image = await cartoMap.captureRendering(true);
+        const image = await massifMap.captureRendering(true);
         return share({
             image
         });
@@ -1877,8 +1877,8 @@
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
-        <cartomap
-            accessibilityLabel="cartoMap"
+        <massifmap
+            accessibilityLabel="massifMap"
             zoom={16}
             on:mapReady={onMainMapReady}
             on:mapMoved={onMainMapMove}
