@@ -120,8 +120,6 @@ const AUTO_REROUTE_MIN_OFF_ROUTE_TIME = 20000;
 /** meters travelled since leaving the route that earn an attempt before that delay is up */
 const AUTO_REROUTE_MIN_OFF_ROUTE_DISTANCE = 100;
 
-const mapContext = getMapContext();
-
 export class NavigationService extends Observable {
     geoHandler: GeoHandler;
 
@@ -179,7 +177,7 @@ export class NavigationService extends Observable {
         return this.route;
     }
     private get userLocationModule() {
-        return mapContext.mapModule('userLocation');
+        return getMapContext().mapModule('userLocation');
     }
     /** valhalla profile the route was computed with, which a reroute has to match */
     private get routeProfile(): ValhallaProfile {
@@ -697,7 +695,7 @@ export class NavigationService extends Observable {
             DEV_LOG && console.log(TAG, 'back to route', auto ? '(auto)' : '(asked)', 'to index', target.index);
             const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, target.position],
-                projection: mapContext.getProjection(),
+                projection: getMapContext().getProjection(),
                 profile,
                 costingOptions
             });
@@ -736,7 +734,7 @@ export class NavigationService extends Observable {
             DEV_LOG && console.log(TAG, 'rerouting to the destination');
             const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, destination],
-                projection: mapContext.getProjection(),
+                projection: getMapContext().getProjection(),
                 profile,
                 costingOptions
             });
@@ -788,7 +786,7 @@ export class NavigationService extends Observable {
         const item = route.item;
         // an item with no id was never saved — a computed route the user has not kept — so there is
         // nothing to persist it into and the in-memory one is all there is
-        const updated = item.id !== undefined ? await mapContext.mapModule('items').updateItem(item, data) : Object.assign(item, data);
+        const updated = item.id !== undefined ? await getMapContext().mapModule('items').updateItem(item, data) : Object.assign(item, data);
         // navigation may have stopped or rerouted while we were computing
         if (this.route !== route) {
             return null;
@@ -861,7 +859,7 @@ export class NavigationService extends Observable {
             return;
         }
         const target = Math.min(Math.max(zoom, get(navigationZoomMin)), get(navigationZoomMax));
-        const current = this.currentZoom || mapContext.getMap()?.zoom || target;
+        const current = this.currentZoom || getMapContext().getMap()?.zoom || target;
         const delta = target - current;
         DEV_LOG &&
             console.log(
@@ -981,7 +979,7 @@ export class NavigationService extends Observable {
      * needs the most ground wins, so the leg can only ever widen the view the speed asked for.
      */
     private zoomToFrame(lookAheadMeters: number, legFrame: { forward: number; lateral: number }) {
-        const map = mapContext.getMap();
+        const map = getMapContext().getMap();
         if (!map || !(lookAheadMeters > 0)) {
             return null;
         }
