@@ -4,10 +4,10 @@
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { GenericMapPos } from '@nativescript-community/ui-carto/core';
-    import { TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-    import type { VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { GenericMapPos } from '@nativescript-community/ui-massifmaps/core';
+    import { TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+    import { RasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
+    import type { VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';

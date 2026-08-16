@@ -1,13 +1,13 @@
 import { shareFile } from '@akylas/nativescript-app-utils/share';
-import { GenericMapPos, MapBounds } from '@nativescript-community/ui-carto/core';
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { PolygonGeometry } from '@nativescript-community/ui-carto/geometry';
-import { VectorTileFeatureCollection } from '@nativescript-community/ui-carto/geometry/feature';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { VectorTileSearchService } from '@nativescript-community/ui-carto/search';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
-import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-carto/vectorelements/point';
+import { GenericMapPos, MapBounds } from '@nativescript-community/ui-massifmaps/core';
+import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+import { PolygonGeometry } from '@nativescript-community/ui-massifmaps/geometry';
+import { VectorTileFeatureCollection } from '@nativescript-community/ui-massifmaps/geometry/feature';
+import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
+import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { VectorTileSearchService } from '@nativescript-community/ui-massifmaps/search';
+import { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
+import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-massifmaps/vectorelements/point';
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { ApplicationSettings, File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
@@ -110,7 +110,7 @@ export default class ItemsModule extends MapModule {
             showError(err);
         }
     }
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
+    onMapReady(mapView: MassifMap<LatLonKeys>) {
         super.onMapReady(mapView);
         DEV_LOG && console.log(TAG, 'onMapReady', !!this.localVectorLayer);
         // if (this.localVectorLayer) {

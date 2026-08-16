@@ -1,13 +1,13 @@
-import { MapBounds, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
-import { MergedMBVTTileDataSource, MultiTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
-import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
-import { TileLayer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import { HillshadeRasterTileLayer, HillshadeRasterTileLayerOptions, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { MapBounds, toNativeScreenBounds } from '@nativescript-community/ui-massifmaps/core';
+import { MergedMBVTTileDataSource, MultiTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
+import { HTTPTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/http';
+import { MBTilesTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/mbtiles';
+import { TileLayer, TileSubstitutionPolicy } from '@nativescript-community/ui-massifmaps/layers';
+import { HillshadeRasterTileLayer, HillshadeRasterTileLayerOptions, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
+import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-massifmaps/rastertiles';
+import { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { alert, confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
@@ -722,7 +722,7 @@ export default class CustomLayersModule extends MapModule {
     //     );
     // }
 
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
+    onMapReady(mapView: MassifMap<LatLonKeys>) {
         super.onMapReady(mapView);
         (async () => {
             try {
@@ -1119,19 +1119,19 @@ export default class CustomLayersModule extends MapModule {
                     try {
                         this.currentlyDownloadind = { dataSource, provider };
                         const zoom = maxZoom ?? provider.sourceOptions.maxZoom - 1;
-                        const cartoMap = mapContext.getMap();
+                        const massifMap = mapContext.getMap();
                         const projection = dataSource.getProjection();
                         const screenBounds = toNativeScreenBounds({
-                            min: { x: cartoMap.getMeasuredWidth(), y: 0 },
-                            max: { x: 0, y: cartoMap.getMeasuredHeight() }
+                            min: { x: massifMap.getMeasuredWidth(), y: 0 },
+                            max: { x: 0, y: massifMap.getMeasuredHeight() }
                         });
                         const bounds = new MapBounds(
-                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
-                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
+                            projection.fromWgs84(massifMap.screenToMap(screenBounds.getMin()) as any),
+                            projection.fromWgs84(massifMap.screenToMap(screenBounds.getMax()) as any)
                         );
 
-                        DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, cartoMap.getZoom(), zoom);
-                        dataSource.startDownloadArea(bounds, minZoom ?? cartoMap.getZoom(), zoom, {
+                        DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, massifMap.getZoom(), zoom);
+                        dataSource.startDownloadArea(bounds, minZoom ?? massifMap.getZoom(), zoom, {
                             onDownloadCompleted: () => {
                                 DEV_LOG && console.log('onDownloadCompleted');
                                 this.currentlyDownloadind = null;

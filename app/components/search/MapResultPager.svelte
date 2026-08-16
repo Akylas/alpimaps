@@ -30,7 +30,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
     import { openUrl } from '@nativescript/core/utils';
     import { compose } from '@nativescript/email';
     import { openLink } from '@shared/utils/ui';

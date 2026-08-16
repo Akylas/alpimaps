@@ -1,11 +1,11 @@
 import { lc } from '@nativescript-community/l';
-import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeScreenPos } from '@nativescript-community/ui-carto/core';
-import { LocalVectorDataSource } from '@nativescript-community/ui-carto/datasources/vector';
-import { VectorLayer } from '@nativescript-community/ui-carto/layers/vector';
-import { Marker } from '@nativescript-community/ui-carto/vectorelements/marker';
-import { BillboardOrientation, BillboardScaling } from '@nativescript-community/ui-carto/vectorelements';
+import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeScreenPos } from '@nativescript-community/ui-massifmaps/core';
+import { LocalVectorDataSource } from '@nativescript-community/ui-massifmaps/datasources/vector';
+import { VectorLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { Marker } from '@nativescript-community/ui-massifmaps/vectorelements/marker';
+import { BillboardOrientation, BillboardScaling } from '@nativescript-community/ui-massifmaps/vectorelements';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-import { Polygon } from '@nativescript-community/ui-carto/vectorelements/polygon';
+import { Polygon } from '@nativescript-community/ui-massifmaps/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
 import { ApplicationSettings, Color, ImageSource, Utils } from '@nativescript/core';
@@ -18,7 +18,7 @@ import { queryingLocation, watchingLocation } from '~/stores/mapStore';
 import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
 import { requestScreenRefresh } from '~/utils/screen';
 import MapModule, { getMapContext } from './MapModule';
-import { MapInteractionInfo } from '@nativescript-community/ui-carto/ui';
+import { MapInteractionInfo } from '@nativescript-community/ui-massifmaps/ui';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -48,8 +48,8 @@ const userBitmaps: { [key: string]: ImageSource } = {};
  * theme colors and needs no extra image files. One per look, cached: the dot's colour follows the fix
  * accuracy, so there are a handful of them.
  *
- * Android gets a *copy* every time, and never the cached image itself: carto's `getCartoBitmap`
- * recycles the android bitmap it is handed (see `@nativescript-community/ui-carto/index.android`).
+ * Android gets a *copy* every time, and never the cached image itself: carto's `getMassifBitmap`
+ * recycles the android bitmap it is handed (see `@nativescript-community/ui-massifmaps/index.android`).
  * Handing it the cached one recycles a bitmap the offscreen Canvas still owns — leaving the cache
  * pointing at a recycled bitmap for the next marker, and the canvas free to release it a second time.
  */

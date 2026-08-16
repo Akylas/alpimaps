@@ -1,5 +1,5 @@
-import { Layer } from '@nativescript-community/ui-carto/layers';
-import type { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { Layer } from '@nativescript-community/ui-massifmaps/layers';
+import type { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
 
 /**
  * Every kind of layer the map can hold. A feature that needs its own layer adds its id here and
@@ -28,7 +28,7 @@ export interface AddedLayer {
 export class LayerStack {
     private readonly addedLayers: AddedLayer[] = [];
 
-    constructor(private readonly getMap: () => CartoMap<LatLonKeys>) {}
+    constructor(private readonly getMap: () => MassifMap<LatLonKeys>) {}
 
     /** The tracked layers, in carto order. Used to re-add everything after an activity re-create. */
     get layers(): AddedLayer[] {
@@ -48,12 +48,12 @@ export class LayerStack {
      * activity re-create the array is still populated but the native map is empty.
      */
     addLayer(layer: Layer<any, any>, layerId: LayerType, force = false) {
-        const cartoMap = this.getMap();
-        if (!cartoMap) {
+        const massifMap = this.getMap();
+        if (!massifMap) {
             return;
         }
         if (force) {
-            cartoMap.addLayer(layer);
+            massifMap.addLayer(layer);
             return;
         }
         if (this.indexOfLayer(layer) !== -1) {
@@ -63,18 +63,18 @@ export class LayerStack {
         // the first layer that belongs above this one — insert just before it
         const realIndex = this.addedLayers.findIndex((added) => this.orderOf(added.layerId) > layerIndex);
         if (realIndex >= 0 && realIndex < this.addedLayers.length) {
-            cartoMap.addLayer(layer, realIndex);
+            massifMap.addLayer(layer, realIndex);
             this.addedLayers.splice(realIndex, 0, { layer, layerId });
         } else {
-            cartoMap.addLayer(layer);
+            massifMap.addLayer(layer);
             this.addedLayers.push({ layer, layerId });
         }
     }
 
     /** Adds at `index` counted from the first layer of that type, so a type can hold an ordered set. */
     insertLayer(layer: Layer<any, any>, layerId: LayerType, index: number) {
-        const cartoMap = this.getMap();
-        if (!cartoMap) {
+        const massifMap = this.getMap();
+        if (!massifMap) {
             return;
         }
         if (this.indexOfLayer(layer) !== -1) {
@@ -86,12 +86,12 @@ export class LayerStack {
                 this.addedLayers.findIndex((added) => this.orderOf(added.layerId) >= layerIndex),
                 0
             ) + index;
-        const nbLayers = cartoMap.getLayers().count();
+        const nbLayers = massifMap.getLayers().count();
         if (realIndex >= 0 && realIndex < nbLayers) {
-            cartoMap.getLayers().insert(realIndex, layer);
+            massifMap.getLayers().insert(realIndex, layer);
             this.addedLayers.splice(realIndex, 0, { layer, layerId });
         } else {
-            cartoMap.addLayer(layer);
+            massifMap.addLayer(layer);
             this.addedLayers.push({ layer, layerId });
         }
     }
@@ -105,11 +105,11 @@ export class LayerStack {
     }
 
     moveLayer(layer: Layer<any, any>, newIndex: number) {
-        const cartoMap = this.getMap();
-        if (!cartoMap) {
+        const massifMap = this.getMap();
+        if (!massifMap) {
             return;
         }
-        const layers = cartoMap.getLayers();
+        const layers = massifMap.getLayers();
         newIndex = Math.max(0, Math.min(newIndex, layers.count() - 1));
         const index = this.indexOfLayer(layer);
         if (index !== -1 && index !== newIndex) {

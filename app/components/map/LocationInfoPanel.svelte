@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
     import type { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
-    import type { VectorElementEventData } from '@nativescript-community/ui-carto/layers/vector';
+    import type { VectorElementEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import type { ApplicationEventData, GridLayout } from '@nativescript/core';
     import { Application } from '@nativescript/core';

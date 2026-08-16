@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { TileLayer } from '@nativescript-community/ui-carto/layers';
+    import { TileLayer } from '@nativescript-community/ui-massifmaps/layers';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page, knownFolders, path } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';

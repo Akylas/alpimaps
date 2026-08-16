@@ -1,5 +1,5 @@
 import * as https from '@nativescript-community/https';
-import { MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
+import { MapBounds, MapPos } from '@nativescript-community/ui-massifmaps/core';
 import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';

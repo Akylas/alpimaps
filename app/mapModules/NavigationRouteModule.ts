@@ -1,6 +1,6 @@
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
+import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
+import { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
 import type { Feature, Geometry } from 'geojson';
 import type { Unsubscriber } from 'svelte/store';
 import type { GeoLocation } from '~/handlers/GeoHandler';
@@ -81,7 +81,7 @@ export default class NavigationRouteModule extends MapModule {
         this.layer = null;
     }
 
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
+    onMapReady(mapView: MassifMap<LatLonKeys>) {
         super.onMapReady(mapView);
         // navigation may have been running before the map came back (an android activity re-create)
         this.draw();
