@@ -6,9 +6,9 @@
 @mont_it: @font_face + ' Medium Italic';
 @osm: 'osm';
 
-//@name: [name:[nuti::lang]] ? [name:[nuti::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
+//@name: [name:[param::lang]] ? [name:[param::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
 
-@name: [name:[nuti::lang]] ?? [name_int] ?? [name:en] ?? [name] ?? [ref];
+@name: [name:[param::lang]] ?? [name_int] ?? [name:en] ?? [name] ?? [ref];
 @selected_item_id: ([osmid] ?? [ref] ?? [name]) + '';
 
 @background: #e6e4e0;
@@ -24,7 +24,7 @@
 
 @protected_area_line_width:linear([view::zoom], (9, 0.75), (12, 1), (15, 1), (18, 3));
 
-@contour_opacity: [nuti::contoursOpacity];
+@contour_opacity: [param::contoursOpacity];
 @contour_opacity_low: @contour_opacity * 0.5;
 @contour_opacity_semi: step([view::zoom], (12, @contour_opacity_low), (14, @contour_opacity));
 
