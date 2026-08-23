@@ -1,5 +1,5 @@
 
-@osm_icon: [nuti::osm-[subclass]] ?? [nuti::osm-[class]] ??[nuti::osm-symbol-dot];
+@osm_icon: [param::osm-[subclass]] ?? [param::osm-[class]] ??[param::osm-symbol-dot];
 @featureId: [name]+[subclass];
 
 @shield_file: 'shields/road_shield_' + max(min(5, length([ref])), 2) + '.svg';
@@ -11,7 +11,7 @@
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-fill: @hamlet_label;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-size: @hamlet_label_width 
 		text-halo-fill: @standard-halo-fill;
@@ -41,7 +41,7 @@
 		text-face-name: @mont_it;
 		text-wrap-width: 50;
 		text-fill: @marine_labels;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-halo-fill: @marine_labels_halo;
 		text-halo-radius: @marine_labels_halo_radius;
 		text-line-spacing: -2;
@@ -51,12 +51,12 @@
 		}
 	}
 }
-#boundary['mapnik::geometry_type'=1]['nuti::hide_admins'=0]::label {
+#boundary['mapnik::geometry_type'=1]['param::hide_admins'=0]::label {
 	[admin_level=4][zoom>=5][zoom<=8], [admin_level=6][zoom>=8][zoom<=10]{
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-wrap-character: @wrap_characters;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-fill: @state_label;
 		text-halo-fill: @state_halo;
 		text-halo-radius: @place_halo_radius;
@@ -69,7 +69,7 @@
 		text-name: @name;
 		text-fill: @continent_text;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-transform: uppercase;
 		text-wrap-character: @wrap_characters;
 		text-halo-fill: @place_halo;
@@ -81,7 +81,7 @@
     text-placement-priority: 28;
 		text-name: @name;
 		text-face-name: @mont_bd;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-wrap-character: @wrap_characters;
 		text-halo-fill: @country_halo;
 		text-halo-radius: @place_halo_radius;
@@ -118,7 +118,7 @@
 	// 	text-name: @name;
 	// 	text-face-name: @mont_it;
 	// 	text-wrap-character: @wrap_characters;
-	// 	text-placement: nutibillboard;
+	// 	text-placement: billboard;
 	// 	text-fill: @state_label;
 	// 	text-halo-fill: @state_halo;
 	// 	text-halo-radius: @place_halo_radius;
@@ -130,7 +130,7 @@
 		text-name: @name;
 		text-face-name: @mont_md;
 		text-wrap-character: @wrap_characters;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-fill: @island_label;
@@ -143,7 +143,7 @@
 	[class=hamlet][zoom>=12][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-wrap-width:@suburb-label-wrap-width;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-character: @wrap_characters;
@@ -158,7 +158,7 @@
     text-placement-priority: 26;
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-fill: @village_label;
 		text-min-distance:@suburb_min_dist;
 		text-wrap-character: @wrap_characters;
@@ -171,7 +171,7 @@
         text-placement-priority: 27;
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-fill: @suburb_label;
 		text-transform: uppercase;
 		text-wrap-character: @wrap_characters;
@@ -187,7 +187,7 @@
 		text-placement-priority: 28;
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-halo-fill: @place_halo;
 		text-halo-radius: @place_halo_radius;
 		text-fill: @town_label;
@@ -200,14 +200,14 @@
 		}
 		
 	}
-	[class=city][zoom>='nuti::city_min_zoom'][zoom<14]::label{
+	[class=city][zoom>='param::city_min_zoom'][zoom<14]::label{
 		shield-placement-priority: 30;
 	//	shield-feature-id: [name]+[ele];
 		shield-name: @name;
 		shield-unlock-image: true;
 		shield-face-name: @mont_md;
 		shield-size: @city-label-width;
-		shield-placement: nutibillboard;
+		shield-placement: billboard;
 		shield-fill: @city_label;
 		shield-wrap-width: @city-label-wrap-width;
 		shield-halo-fill: @place_halo;
@@ -219,7 +219,7 @@
 		shield-text-dy: 0;
 		[zoom<=7] {
 			shield-file: url(shields/place.svg);
-			shield-text-dy: @city-label-dy / [nuti::_fontscale];
+			shield-text-dy: @city-label-dy / [param::_fontscale];
 		}
 
 	}
@@ -228,7 +228,7 @@
 		 {
 			text-name: @name;
 			text-face-name: @mont_md;
-			text-placement: nutibillboard;
+			text-placement: billboard;
 			text-fill: @neighbourhood_label;
 			text-transform: uppercase;
 			text-wrap-character: @wrap_characters;
@@ -246,7 +246,7 @@
 	[class=locality][zoom>=13][zoom<=16] {
 		text-name: @name;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-fill: @locality_label_fill;
 		text-halo-fill: @place_halo;
 		text-min-distance:@locality_min_dist;
@@ -261,7 +261,7 @@
 #water_name[class!=river][class!=ocean][class!=sea],
 #landcover_name[class=ice]{
 	::label {
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-name: @name;
 		text-face-name: @mont_it;
 		text-fill: @water_label;
@@ -276,7 +276,7 @@
 }
 
 #waterway[class=riverbank][zoom>=13],
-#waterway[class=river][zoom>='nuti::river_label_min_zoom'],
+#waterway[class=river][zoom>='param::river_label_min_zoom'],
 #waterway[class=stream][zoom>=13],
 #waterway[class=canal][zoom>=13],
 #waterway[class=ditch][zoom>=15],
@@ -357,7 +357,7 @@
 }
 
 #transportation_name {
-  ['nuti::road_shields'>0][zoom<14][ref != null][subclass!=junction]::label{
+  ['param::road_shields'>0][zoom<14][ref != null][subclass!=junction]::label{
     [class=motorway][zoom >= 9],
     [class=trunk][zoom >= 10],
     [class=primary][zoom >= 12],
@@ -366,9 +366,9 @@
       shield-placement-priority: 10;
       shield-size: @shield-size;
       shield-line-spacing: @shield-line-spacing;
-      shield-placement: nutibillboardline;
-      shield-spacing: [nuti::road_shield_spacing];
-      shield-min-distance: [nuti::road_shield_min_dist];
+      shield-placement: billboard-line;
+      shield-spacing: [param::road_shield_spacing];
+      shield-min-distance: [param::road_shield_min_dist];
       shield-face-name: @mont_bd;
       shield-file: @shield_file;
       shield-fill: #ffffff;
@@ -448,7 +448,7 @@
 	[zoom=17][rank<=100],
 	[zoom>=18] {
 		::icon {
-			text-placement: nutibillboard;
+			text-placement: billboard;
             text-placement-priority: 40;
 			text-feature-id: @featureId;
 			text-name: @osm_icon;
@@ -464,13 +464,13 @@
 			text-name: @name;
 			text-feature-id: @featureId;
 			text-face-name: @mont_md;
-			text-placement: nutibillboard;
+			text-placement: billboard;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
 			text-wrap-character: @wrap_characters;
-			text-dy: @poi_label_dy / [nuti::_fontscale];
+			text-dy: @poi_label_dy / [param::_fontscale];
 			text-fill: darken(@poi-lodging-fill, 10%);
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
@@ -478,11 +478,11 @@
 	}
 }
 #poi[class=campsite][subclass!=caravan_site][zoom>=10],
-#poi[class=campsite][subclass=caravan_site]['nuti::show_caravan_site'=1][zoom>=10],
+#poi[class=campsite][subclass=caravan_site]['param::show_caravan_site'=1][zoom>=10],
 #aerodrome_label[class!=international][zoom>=13],
 #aerodrome_label[class=international]  {
 		::icon {
-			text-placement: nutibillboard;
+			text-placement: billboard;
             #poi {     
               text-placement-priority: 40;
             }
@@ -496,9 +496,9 @@
 			text-fill: @poi-campsite-fill;
 			text-allow-overlap-same-feature-id: true;
       #aerodrome_label {
-          text-name:  [nuti::osm-airport];
+          text-name:  [param::osm-airport];
       }
-      [class=campsite]['nuti::campsite_allow_overlap'=1] {
+      [class=campsite]['param::campsite_allow_overlap'=1] {
           text-allow-overlap: true;
           text-clip: false;
       }
@@ -510,13 +510,13 @@
               text-placement-priority: 40;
             }
 			text-face-name: @mont_md;
-			text-placement: nutibillboard;
+			text-placement: billboard;
 			text-halo-fill: @poi_halo;
 			text-halo-radius: @poi_halo_radius;
 			text-size: @poi_label_width;
 			text-wrap-width: @poi_label_wrap_width;
 			text-wrap-character: @wrap_characters;
-			text-dy: @poi_label_dy / [nuti::_fontscale];
+			text-dy: @poi_label_dy / [param::_fontscale];
 			text-fill: darken(@poi-campsite-fill, 30%);
 			text-allow-overlap-same-feature-id: true;
 			text-same-feature-id-dependent: true;
@@ -526,7 +526,7 @@
 
 #poi[class=spring][zoom>=12] {
 	::icon {
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-feature-id: @featureId;
 		text-face-name: @osm;
 		text-halo-fill: @poi_icon_halo;
@@ -537,8 +537,8 @@
 		text-allow-overlap: true;
 		text-clip: false;
 		text-allow-overlap-same-feature-id: true;
-		['nuti::highlight_drinking_water'>0] {
-			text-name: [nuti::osm-droplet];
+		['param::highlight_drinking_water'>0] {
+			text-name: [param::osm-droplet];
 			text-halo-radius: @poi_icon_halo_radius;
 			text-size: @poi-spring-size + 10;
 
@@ -548,28 +548,28 @@
 		text-name: @name;
 		text-feature-id: @featureId;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
 		text-wrap-width: @poi_label_wrap_width;
 		text-wrap-character: @wrap_characters;
-		text-dy: @poi_label_dy / [nuti::_fontscale];
+		text-dy: @poi_label_dy / [param::_fontscale];
 		text-fill: darken(@poi-water-fill, 30%);
 		text-allow-overlap-same-feature-id: true;
 		text-same-feature-id-dependent: true;
 	}
 }
 #poi[class!=lodging][class!=spring][class!=campsite] {
-	['nuti::highlight_drinking_water'>0][class='drinking_water'],
+	['param::highlight_drinking_water'>0][class='drinking_water'],
 	[zoom=14][rank<=5][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'][class!='bus'],
 	[zoom=15][rank<=10][class!='restaurant'][class!='park'][class!='bar'][class!='parking'][class!='school'][class!='college'][subclass!='community_centre'][subclass!='tram_stop'],
 	[zoom=16][rank<=30][class!='shop'],
 	[zoom=17][rank<=70],
 	[zoom>=18] {
 		::icon {
-			// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 10;
-			text-placement: nutibillboard;
+			// text-placement-priority:[param::selected_id] = @featureId ? 1000 : 10;
+			text-placement: billboard;
             text-placement-priority: 39;
 			text-name: @osm_icon;
 			text-feature-id: @featureId;
@@ -598,7 +598,7 @@
 				text-fill: @poi-pharmacy-fill;
 			}
 			[class=fountain],[class=drinking_water],[class=bassin],[class=waterfall] {
-				['nuti::highlight_drinking_water'>0][class=drinking_water] {
+				['param::highlight_drinking_water'>0][class=drinking_water] {
 					text-allow-overlap: true;
 					text-clip: false;
 					text-size: @poi_icon_width  + 3;
@@ -621,18 +621,18 @@
 		[zoom=17][rank<=50],
 		[zoom>=18] {
 			::label {
-				// text-placement-priority:[nuti::selected_id] = @featureId ? 1000 : 0;
+				// text-placement-priority:[param::selected_id] = @featureId ? 1000 : 0;
 				text-name: @name;
 				text-feature-id: @featureId;
         text-placement-priority: 39;
 				text-face-name: @mont_md;
-				text-placement: nutibillboard;
+				text-placement: billboard;
 				text-halo-fill: @poi_halo;
 				text-halo-radius: @poi_halo_radius;
 				text-size: @poi_label_width;
 				text-wrap-width: @poi_label_wrap_width;
 				text-wrap-character: @wrap_characters;
-				text-dy: @poi_label_dy / [nuti::_fontscale];
+				text-dy: @poi_label_dy / [param::_fontscale];
 				// text-vertical-alignment: bottom;
 				text-fill: darken(@poi-fill, 30%);
 				text-allow-overlap-same-feature-id: true;
@@ -675,9 +675,9 @@
 
 #park['mapnik::geometry_type'=1][class=national_park][zoom>=5][zoom<12] {
 	::icon {
-		text-placement: nutibillboard;
+		text-placement: billboard;
         text-placement-priority: 29;
-		text-name: [nuti::osm-park];
+		text-name: [param::osm-park];
 		text-feature-id: @featureId;
 		text-size: @poi_icon_width;
 		text-face-name: @osm;
@@ -691,13 +691,13 @@
 		text-feature-id: @featureId;
         text-placement-priority: 29;
 		text-face-name: @mont_md;
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-halo-fill: @poi_halo;
 		text-halo-radius: @poi_halo_radius;
 		text-size: @poi_label_width;
 		text-wrap-width: @poi_label_wrap_width;
 		text-wrap-character: @wrap_characters;
-		text-dy: @poi_label_dy / [nuti::_fontscale];
+		text-dy: @poi_label_dy / [param::_fontscale];
 		text-fill: darken(@poi-park-fill, 30%);
 		text-size:@poi_national_park_label_width;
 		text-wrap-width: @poi_national_park_wrap_width;
@@ -706,7 +706,7 @@
 	}
 }
 
-#building_name['nuti::buildings'>0][zoom>=17]::label{
+#building_name['param::buildings'>0][zoom>=17]::label{
 	text-name: [name];
 	text-face-name: @mont;
 	text-fill: @housenumber;
@@ -722,7 +722,7 @@
 	text-name: [housenumber];
 	text-face-name: @mont;
 	text-fill: @housename;
-	// text-placement: nutibillboard;
+	// text-placement: billboard;
 	text-size: linear([view::zoom], (17, 9), (19, 11));
 	// text-allow-overlap-same-feature-id: true; // needed because housenumber use MultiPoint and thus some can share the same id
 	// text-min-distance: linear([view::zoom], (17, 50), (18, 30), (19, 20));

@@ -6,7 +6,7 @@
         "voyager/style.mss",
         "shared/admin.mss"
     ],
-    "nutiparameters": {
+    "styleparameters": {
         "lang": "en",
         "fallback_lang": "en",
         "selected_id": -1,

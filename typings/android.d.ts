@@ -9,7 +9,7 @@ declare namespace com {
 declare namespace akylas {
     export namespace alpi {
         export namespace maps {
-            class VectorTileEventListener extends com.akylas.carto.additions.AKVectorTileEventListener {}
+            class VectorTileEventListener extends com.nativescript.massifmaps.additions.AKVectorTileEventListener {}
             class BgService extends globalAndroid.app.Service {}
             class BgServiceBinder extends globalAndroid.os.Binder {}
             class RefreshAlarmReceiver extends globalAndroid.content.BroadcastReceiver {}

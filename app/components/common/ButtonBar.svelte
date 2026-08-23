@@ -92,6 +92,7 @@
         } else {
             index = Math.floor(event.getX() / buttonSize);
         }
+        console.log('onTap', index);
         if (index >= 0) {
             const button = visibleButtons()[index];
             button.onTap?.(event, button);
@@ -129,7 +130,7 @@
     const rippleY = 0;
 </script>
 
-<canvasview bind:this={canvas} {height} {width} on:draw={onDraw} {...$$restProps} on:tap={() => {}} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
+<canvasview bind:this={canvas} {height} {width} on:draw={onDraw} {...$$restProps} on:touch={onTouch} on:tap={onTap} on:longPress={onLongPress}>
     <absolutelayout
         bind:this={ripple}
         borderRadius="{buttonSize / 2}}"

@@ -1,19 +1,19 @@
 @osm_id: [osmid] +'';
-@is_selected: [nuti::selected_id]=@osm_id;
+@is_selected: [param::selected_id]=@osm_id;
 
 @route_shield_file: 'shields/route_shield_' + max(min(5, length([ref])), 2) + '.svg';
-#route['nuti::show_routes'>0]['nuti::routes_type'=0],
-#route['nuti::show_routes'>0]['nuti::routes_type'=1][class=bicycle],
-#route['nuti::show_routes'>0]['nuti::routes_type'=2][class=hiking] {
+#route['param::show_routes'>0]['param::routes_type'=0],
+#route['param::show_routes'>0]['param::routes_type'=1][class=bicycle],
+#route['param::show_routes'>0]['param::routes_type'=2][class=hiking] {
 	[network=1][zoom>=5],
 	[network=2][class=bicycle][zoom>=6],
 	[network=2][zoom>=8],
 	[network=3][zoom>=9],
 	[zoom>=10]
 	{
-		when ([nuti::selected_id]=[osmid]+'')::selected,
+		when ([param::selected_id]=[osmid]+'')::selected,
 		{
-			when ([nuti::selected_id]=[osmid]+'') {
+			when ([param::selected_id]=[osmid]+'') {
 				casing/line-color: white;
 				casing/line-width: @route_casing_width + @route_width + 2.0;
 				casing/line-join: round;
@@ -29,13 +29,13 @@
 			[class=bicycle] {
 				line-width: @biking_route_width +(@is_selected ? 2 : 0);
 				line-color: @biking_symbolColor;
-				[zoom>='nuti::routes_dash_min_zoom'] {
+				[zoom>='param::routes_dash_min_zoom'] {
 					line-dasharray: @biking_route_dasharray;
 				}
 			}
             
 		}
-        ['nuti::route_shields'>0][zoom<15][ref != null]{
+        ['param::route_shields'>0][zoom<15][ref != null]{
             [network=1][zoom>=6],
             [network=2][class=bicycle][zoom>=8],
             [network=2][zoom>=10],
@@ -45,8 +45,8 @@
                 shield-size: @shield-size;
                 shield-line-spacing: @shield-line-spacing;
                 shield-placement: line;
-                shield-spacing: [nuti::road_shield_spacing];
-                shield-min-distance: [nuti::road_shield_min_dist];
+                shield-spacing: [param::road_shield_spacing];
+                shield-min-distance: [param::road_shield_min_dist];
                 shield-face-name: @mont_bd;
                 shield-file: @route_shield_file;
                 shield-fill: #000000;
