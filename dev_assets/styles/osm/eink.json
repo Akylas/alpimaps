@@ -27,9 +27,8 @@
         "cemetery_pattern_opacity":0.51,
         "cemetery_pattern":"symbols/grave_yard_generic.svg"
     },
-    "nutiparameters": {
+    "styleparameters": {
         "river_min_zoom":4,
-        "polygons_border": 0,
         "wetland_pattern_zoom":13,
         "rock_pattern_zoom":10,
         "scree_pattern_zoom":12,

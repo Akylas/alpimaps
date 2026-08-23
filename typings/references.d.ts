@@ -3,7 +3,6 @@
 
 declare const gVars: {
     platform: string;
-    CARTO_TOKEN: string;
     // FACEBOOK_TOKEN: string;
     IGN_TOKEN: string;
     AMERICANA_OSM_URL: string;
@@ -18,7 +17,6 @@ declare const gVars: {
     AVWX_API_KEY: string;
 };
 
-declare const CARTO_TOKEN: string;
 // FACEBOOK_TOKEN: string;
 declare const IGN_TOKEN: string;
 declare const AMERICANA_OSM_URL: string;

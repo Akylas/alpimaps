@@ -487,8 +487,8 @@ export default class ItemsModule extends MapModule {
                             class: 'waypoint',
                             icon: '',
                             iconSize: 10,
-                            iconDx: 0,
-                            iconDy: 0
+                            iconDx: 0.5,
+                            iconDy: -1
                         }
                     });
                 });

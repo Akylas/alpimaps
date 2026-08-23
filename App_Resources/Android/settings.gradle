@@ -1,5 +1,6 @@
-// if (hasProperty('debugMassif')) {
-    // include ':massif'
-    // project(':massif').projectDir = new File("/home/mguillon/dev/carto/mobile-sdk/scripts/android-dev/massif")
-// }
+if (System.env.DEBUGMASSIF) {
+    include ':massif'
+    println 'debugMassif project: ' + "${System.env.MASSIF_SDK_HOME}/scripts/android-dev/massif"
+    project(':massif').projectDir = new File("${System.env.MASSIF_SDK_HOME}/scripts/android-dev/massif")
+}
 include ':baselineprofile'

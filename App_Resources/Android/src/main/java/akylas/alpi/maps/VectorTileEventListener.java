@@ -3,14 +3,13 @@ package akylas.alpi.maps;
 import android.os.Handler;
 import android.util.Log;
 
-import com.carto.ui.VectorTileClickInfo;
-import com.carto.core.Variant;
-import com.carto.geometry.Geometry;
-import com.akylas.carto.additions.AKMapView;
-import com.akylas.carto.additions.SynchronousHandler;
-import com.akylas.carto.additions.AKVectorTileEventListener;
+import com.massifmaps.ui.VectorTileClickInfo;
+import com.massifmaps.core.Variant;
+import com.massifmaps.geometry.Geometry;
+import com.nativescript.massifmaps.additions.MapView;
+import com.nativescript.massifmaps.additions.SynchronousHandler;
 
-public class VectorTileEventListener extends AKVectorTileEventListener {
+public class VectorTileEventListener extends com.nativescript.massifmaps.additions.VectorTileEventListener {
     Handler mainHandler = null;
 
     public VectorTileEventListener(Listener listener) {
@@ -20,7 +19,7 @@ public class VectorTileEventListener extends AKVectorTileEventListener {
     @Override
     public boolean onVectorTileClicked(final VectorTileClickInfo clickInfo) {
         final String featureLayerName = clickInfo.getFeatureLayerName();
-        com.carto.geometry.VectorTileFeature feature = clickInfo.getFeature();
+        com.massifmaps.geometry.VectorTileFeature feature = clickInfo.getFeature();
         final Variant name  = feature.getProperties().getObjectElement("name");
         final Geometry geometry  = feature.getGeometry();
         if (
@@ -30,13 +29,13 @@ public class VectorTileEventListener extends AKVectorTileEventListener {
             // featureLayerName.equals("place") ||
             // featureLayerName.equals("contour") ||
             // featureLayerName.equals("hillshade") ||
-            // (featureLayerName.equals("park") && geometry instanceof com.carto.geometry.PolygonGeometry
+            // (featureLayerName.equals("park") && geometry instanceof com.massifmaps.geometry.PolygonGeometry
 // ) ||
             ((featureLayerName.equals("building") || featureLayerName.equals("landcover" )|| featureLayerName.equals(  "landuse")) && name != null)
         ) {
             return false;
         }
-        if (AKMapView.RUN_ON_MAIN_THREAD) {
+        if (MapView.RUN_ON_MAIN_THREAD) {
             final Object[] arr = new Object[1];
             if (mainHandler == null) {
                 mainHandler = new Handler(android.os.Looper.getMainLooper());

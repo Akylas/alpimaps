@@ -2,7 +2,7 @@
 //
 // It is a layer of its own because navigation must not run on the item the user selected: a reroute
 // would rewrite their own route. So the planned route keeps drawing as a plain item underneath
-// (de-emphasised through [nuti::navigating]), and what is being followed is drawn here on top.
+// (de-emphasised through [param::navigating]), and what is being followed is drawn here on top.
 //
 //   route      the line being followed
 //   detour     the leg taking the user back onto the route

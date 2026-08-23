@@ -43,7 +43,8 @@
         "orchard_pattern_zoom":15,
         "orchard_pattern":"symbols/orchard.png"
     },
-    "nutiparameters": {
+    "styleparameters": {
+        "polygons_border": 0,
         "campsite_allow_overlap":1,
         "show_tram": 1,
         "show_underground": 0,

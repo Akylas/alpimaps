@@ -289,17 +289,17 @@ export default class CustomLayersModule extends MapModule {
         }
     }
     createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}) {
-        const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.42);
-        const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 0.22);
+        const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.5);
+        const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 1.0);
         const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
-        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000aa'));
+        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000'));
         const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#00000000'));
-        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000aa'));
+        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000'));
         const minVisibleZoom = ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0);
-        const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 16);
+        const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 18);
 
         let tileFilterMode: RasterTileFilterMode;
         switch (tileFilterModeStr) {
@@ -348,7 +348,6 @@ export default class CustomLayersModule extends MapModule {
     getTokenKeys() {
         return {
             americanaosm: ApplicationSettings.getString('americanaosmToken', this.devMode ? AMERICANA_OSM_URL : undefined),
-            carto: ApplicationSettings.getString('cartoToken', this.devMode ? CARTO_TOKEN : undefined),
             here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? HER_APP_ID : undefined),
             here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? HER_APP_CODE : undefined),
             mapbox: ApplicationSettings.getString('mapboxToken', this.devMode ? MAPBOX_TOKEN : undefined),
@@ -499,10 +498,12 @@ export default class CustomLayersModule extends MapModule {
                 opacity,
                 tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
                 visible: opacity !== 0,
-                ...provider.layerOptions
+                ...(provider.layerOptions as any)
             });
             if (!this.hillshadeLayer) {
                 this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
+                this.hasTerrain = true;
+
             }
         } else if (vectorDataSource) {
             layer = new VectorTileLayer({
@@ -1047,7 +1048,6 @@ export default class CustomLayersModule extends MapModule {
                 mapContext.addLayer(layer, 'map');
             }
             if (terrains.length) {
-                this.hasTerrain = true;
                 const name = 'Hillshade';
                 const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
                 let dataSource: TileDataSource<any, any> = new MultiTileDataSource({
