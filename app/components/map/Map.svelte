@@ -1,20 +1,8 @@
 <script context="module" lang="ts">
     import { share } from '@akylas/nativescript-app-utils/share';
     import { isSensorAvailable } from '@nativescript-community/sensors';
-    import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
-    import { ClickType, MapBounds, toNativeMapRange, toNativeScreenPos } from '@nativescript-community/ui-massifmaps/core';
-    import { LocalVectorDataSource } from '@nativescript-community/ui-massifmaps/datasources/vector';
-    import { Layer } from '@nativescript-community/ui-massifmaps/layers';
-    import type { RasterTileClickInfo } from '@nativescript-community/ui-massifmaps/layers/raster';
-    import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
-    import { VectorLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
-    import { Projection } from '@nativescript-community/ui-massifmaps/projections';
-    import { EPSG3857 } from '@nativescript-community/ui-massifmaps/projections/epsg3857';
-    import { EPSG4326 } from '@nativescript-community/ui-massifmaps/projections/epsg4326';
-    import { MapClickInfo, MassifMap, RenderProjectionMode } from '@nativescript-community/ui-massifmaps/ui';
-    import { ZippedAssetPackage, nativeVectorToArray, setShowDebug, setShowError, setShowInfo, setShowWarn } from '@nativescript-community/ui-massifmaps/utils';
-    import { Point } from '@nativescript-community/ui-massifmaps/vectorelements/point';
-    import { MBVectorTileDecoder } from '@nativescript-community/ui-massifmaps/vectortiles';
+    import * as api from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifLayer, MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
@@ -46,7 +34,7 @@
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
-    import { getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData, type MapDecoder, type MapMoveReason, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
@@ -69,7 +57,7 @@
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { getBoundsZoomLevel } from '~/utils/geo';
+    import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
@@ -89,7 +77,7 @@
 
     let page: NativeViewElementNode<Page>;
     let widgetsHolder: NativeViewElementNode<GridLayout>;
-    let massifMap: MassifMap<LatLonKeys>;
+    let massifMap: MassifMap;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -105,13 +93,13 @@
     let selectedOSMId: string;
     let selectedId: string;
     let selectedMapId: string;
-    let selectedPosMarker: Point<LatLonKeys>;
+    let selectedPosMarker: MassifObject;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
     let didIgnoreAlreadySelected = false;
 
     let currentLayerStyle: string;
-    let vectorTileDecoder: MBVectorTileDecoder;
+    let vectorTileDecoder: MapDecoder;
 
     let bottomSheetStepIndex = 0;
     let steps;
@@ -155,7 +143,6 @@
     let networkConnected = false;
     const itemLoading = false;
 
-    let projection: Projection = new EPSG4326();
     const layerStack = new LayerStack(() => massifMap);
 
     let currentLanguage = ApplicationSettings.getString('map_language', ApplicationSettings.getString('language', 'en'));
@@ -169,7 +156,7 @@
     };
 
     // let localVectorDataSource: LocalVectorDataSource;
-    let localVectorLayer: VectorLayer;
+    let localVectorLayer: MassifLayer<'massif::VectorLayer'>;
 
     $: {
         if (steps) {
@@ -211,7 +198,7 @@
             let locationMatch = isGeoUrl ? null : link.match(GEO_TEXT_REGEXP);
             let query: string;
             if (isGeoUrl || locationMatch) {
-                let pos: MapPos<LatLonKeys>;
+                let pos: MapPos;
                 let posName: string;
                 let searchQuery: string;
                 if (isGeoUrl) {
@@ -223,7 +210,7 @@
                     if (params.hasOwnProperty('z')) {
                         const zoom = parseFloat(params.z);
                         if (loaded) {
-                            massifMap.setZoom(zoom, 0);
+                            massifMap.camera().zoom(zoom);
                         } else {
                             ApplicationSettings.setNumber('mapZoom', zoom);
                         }
@@ -252,7 +239,7 @@
                     };
                     if (loaded) {
                         ApplicationSettings.remove('selectPosOnLoad');
-                        massifMap.setFocusPos(pos, 0);
+                        massifMap.camera().position(toPosition(pos));
                         selectItem({
                             item,
                             isFeatureInteresting: true
@@ -275,7 +262,7 @@
                         if (value) {
                             if (/[\d.-]+,[\d.-]+/.test(value)) {
                                 const pos = value.split(',').map(parseFloat);
-                                massifMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                massifMap.camera().position([pos[1], pos[0]]);
                                 directionsPanel.addStartPoint({
                                     lat: pos[0],
                                     lon: pos[1]
@@ -287,7 +274,7 @@
                         if (value) {
                             if (/[\d.-]+,[\d.-]+/.test(value)) {
                                 const pos = value.split(',').map(parseFloat);
-                                massifMap.setFocusPos({ lat: pos[0], lon: pos[1] }, 0);
+                                massifMap.camera().position([pos[1], pos[0]]);
                                 directionsPanel.addStopPoint({
                                     lat: pos[0],
                                     lon: pos[1]
@@ -354,14 +341,12 @@
             // drawer: drawer.nativeView,
             getMap: () => massifMap,
             getMainPage: () => page,
-            getProjection: () => projection,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
             getEditingItem: () => editingItem,
             vectorElementClicked: onVectorElementClicked,
             vectorTileElementClicked: onVectorTileElementClicked,
             vectorTileClicked: onVectorTileClicked,
-            rasterTileClicked: onRasterTileClicked,
             getMapViewPort,
             // getCurrentLayer,
             selectStyle,
@@ -425,7 +410,7 @@
     });
     function onColorsChange() {
         if (massifMap) {
-            mapContext.innerDecoder?.setJSONStyleParameters({
+            mapContext.innerDecoder?.call('setStyleParameters', {
                 main_color: $colors.colorPrimary,
                 main_darker_color: new Color($colors.colorPrimary).darken(10).hex
             });
@@ -481,18 +466,19 @@
 
     function getOrCreateLocalVectorLayer(position) {
         if (!localVectorLayer) {
-            const localVectorDataSource = new LocalVectorDataSource({ projection });
+            const localVectorDataSource = massifMap.source('source.selection', { type: 'local', projection: { type: 'EPSG:4326' } });
 
+            // no scaleWithDPI: that is a BILLBOARD style setting, and a point is not one - the
+            // old option was accepted and did nothing
             selectedPosMarker = itemModule.createLocalPoint(position, {
-                color: new Color(colorPrimary).setAlpha(178).hex,
+                color: new Color(colorPrimary).setAlpha(178).argb,
                 clickSize: 0,
-                scaleWithDPI: true,
                 size: 20
             });
-            localVectorDataSource.add(selectedPosMarker);
-            localVectorLayer = new VectorLayer({ dataSource: localVectorDataSource });
-            localVectorLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked
+            localVectorDataSource.call('add', selectedPosMarker.handle);
+            localVectorLayer = massifMap.buildLayer('layer.selection', { type: 'elements', source: localVectorDataSource.id });
+            localVectorLayer.onElementClick((e) => {
+                e.consumed = onVectorElementClicked(mapContext.elementClickData(e));
             });
             addLayer(localVectorLayer, 'selection');
         }
@@ -500,14 +486,10 @@
     }
 
     function resetBearing() {
-        if (!massifMap) {
-            return;
-        }
-        massifMap.setBearing(0, 200);
+        massifMap?.camera().rotation(0);
     }
     function getMapViewPort() {
-        const width = massifMap.getMeasuredWidth();
-        const height = massifMap.getMeasuredHeight();
+        const { height, width } = massifMap.size();
         const left = Utils.layout.toDevicePixels(40);
         const top = Utils.layout.toDevicePixels(windowInsetTop + 90 + topTranslationY);
         const bottom = Utils.layout.toDevicePixels(windowInsetBottom - mapTranslation + 0);
@@ -526,39 +508,27 @@
         if (!massifMap) {
             return;
         }
-        ApplicationSettings.setNumber('mapZoom', massifMap.zoom);
-        ApplicationSettings.setNumber('mapBearing', massifMap.bearing);
-        ApplicationSettings.setString('mapFocusPos', JSON.stringify(massifMap.focusPos));
+        const camera = massifMap.camera();
+        ApplicationSettings.setNumber('mapZoom', camera.zoom());
+        ApplicationSettings.setNumber('mapBearing', camera.rotation());
+        ApplicationSettings.setString('mapFocusPos', JSON.stringify(fromPosition(camera.position())));
     }, 500);
 
     let appUrlRegistered = false;
 
     async function onMainMapReady(e) {
         try {
-            const map = e.object as MassifMap<LatLonKeys>;
-            MassifMap.setRunOnMainThread(true);
-            if (DEV_LOG) {
-                setShowDebug(true);
-                setShowInfo(true);
-                setShowWarn(true);
-                setShowError(true);
-            } else {
-                setShowDebug(false);
-                setShowInfo(false);
-                setShowWarn(false);
-                setShowError(false);
-            }
-            projection = map.projection;
-            mapContext.setMapDefaultOptions(map.getOptions());
+            // The whole map, through one handle: options, layers, camera and events.
+            massifMap = api.attach(e.object);
+            api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
+            mapContext.setMapDefaultOptions(massifMap);
+            subscribeToMapEvents();
 
-            massifMap = map;
-            const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos<LatLonKeys>;
-
+            const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
             const bearing = ApplicationSettings.getNumber('mapBearing', 0);
-            massifMap.setFocusPos(pos, 0);
-            massifMap.setZoom(zoom, 0);
-            massifMap.setBearing(bearing, 0);
+            // ONE move: position, zoom and rotation set separately animate against each other
+            massifMap.camera().moveTo(pos, { zoom, rotation: bearing });
             DEV_LOG && console.log('onMainMapReady', JSON.stringify(pos), zoom, bearing, layerStack.layers.length, theme);
             // re-add what modules registered before the map existed, and after an activity re-create
             layerStack.layers.forEach((added) => {
@@ -608,47 +578,54 @@
         }
     }
     let mapMoved = false;
-    function onMainMapMove(e: { data: { userAction: boolean } }) {
-        // DEV_LOG && console.log('onMainMapMove', mapMoved);
-        if (!massifMap) {
-            return;
-        }
-        mapContext.runOnModules('onMapMove', e);
-        mapMoved = true;
-        currentMapRotation = Math.round(massifMap.bearing * 100) / 100;
-    }
-    function onMainMapInteraction(e) {
-        // this means user interaction
-        // DEV_LOG && console.log('onMainMapInteraction', Object.keys(e));
-        if (!massifMap) {
-            return;
-        }
-        if (!mapMoved) {
-            unFocusSearch();
-        }
-        mapContext.runOnModules('onMapInteraction', e);
-        mapMoved = true;
-    }
-    function onMainMapIdle(e) {
-        // DEV_LOG && console.log('onMainMapIdle', mapMoved);
-        if (!massifMap) {
-            return;
-        }
-        if (mapMoved) {
-            mapMoved = false;
-            saveSettings();
-        }
-        mapContext.runOnModules('onMapIdle', e);
-    }
-    function onMainMapStable(e) {
-        // DEV_LOG && console.log('onMainMapStable', mapMoved);
-        if (!massifMap) {
-            return;
-        }
-        mapContext.runOnModules('onMapStable', e);
+
+    /**
+     * The map's own events, subscribed on the facade rather than on the view.
+     *
+     * One source of truth, and it is where the useful knobs live: `map.moved` fires above frame
+     * rate during a drag, so the rotation readout is THROTTLED rather than recomputed per frame,
+     * and `map.stable` is once per movement with the reason it happened - which is why saving the
+     * camera hangs off it now instead of off `map.idle` (idle also fires when tiles finish
+     * loading, which is not a movement).
+     */
+    function subscribeToMapEvents() {
+        massifMap.subscribe(
+            'map.moved',
+            (e) => {
+                mapContext.runOnModules('onMapMove', { data: { reason: e.reason as MapMoveReason } });
+                mapMoved = true;
+                currentMapRotation = Math.round(massifMap.camera().rotation() * 100) / 100;
+            },
+            { throttle: 100 }
+        );
+        massifMap.onInteraction((e) => {
+            // an interaction is by definition the user: the SDK only raises it from the touch pipeline
+            if (!mapMoved) {
+                unFocusSearch();
+            }
+            mapContext.runOnModules('onMapInteraction', {
+                data: {
+                    panAction: e.panAction as boolean,
+                    zoomAction: e.zoomAction as boolean,
+                    rotateAction: e.rotateAction as boolean,
+                    tiltAction: e.tiltAction as boolean,
+                    animationStarted: e.animationStarted as boolean
+                }
+            });
+            mapMoved = true;
+        });
+        massifMap.onStable((e) => {
+            if (mapMoved) {
+                mapMoved = false;
+                saveSettings();
+            }
+            mapContext.runOnModules('onMapStable', { data: { reason: e.reason as MapMoveReason } });
+        });
+        massifMap.onIdle((e) => mapContext.runOnModules('onMapIdle', e));
+        massifMap.onClick((e) => onMainMapClicked({ data: { clickType: e.clickType as ClickType, position: fromPosition(e.getPos('clickPos') as never) } }));
     }
 
-    function onMainMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
+    function onMainMapClicked(e: { data: MapClickData }) {
         const { clickType, position } = e.data;
         // DEV_LOG && console.log('onMainMapClicked', clickType, JSON.stringify(position), ignoreNextMapClick);
         // handleClickedFeatures(position);
@@ -732,15 +709,15 @@
                         // DEV_LOG && console.log('selected_id', typeof route.osmid, route.osmid, typeof props.id, props.id, setSelected);
                         if (setMapSelected) {
                             selectedMapId = (route.osmid || props.osmid || props.id || props.name + props.class) + '';
-                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
+                            mapContext.mapDecoder.call('setStyleParameters', { selected_id: selectedMapId });
                             const styleParameters = {};
                             styleParameters['selected_osmid'] = '0';
                             styleParameters['selected_id_str'] = '0';
                             styleParameters['selected_id'] = '0';
-                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                            mapContext.innerDecoder.call('setStyleParameters', styleParameters);
                         } else {
                             if (selectedMapId) {
-                                mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                                mapContext.mapDecoder.call('setStyleParameters', { selected_id: '' });
                                 selectedMapId = null;
                             }
                             // selected_osmid is for routes
@@ -772,11 +749,11 @@
                                     styleParameters['selected_id'] = '0';
                                 }
                             }
-                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                            mapContext.innerDecoder.call('setStyleParameters', styleParameters);
                         }
 
                         if (selectedPosMarker) {
-                            selectedPosMarker.visible = false;
+                            selectedPosMarker.set('visible', false);
                         }
                     })();
                 } else {
@@ -786,20 +763,20 @@
                         if (!selectedPosMarker) {
                             getOrCreateLocalVectorLayer(position);
                         } else {
-                            selectedPosMarker.position = position;
-                            selectedPosMarker.visible = true;
+                            selectedPosMarker.set('geometry.pos' as never, toPosition(position) as never);
+                            selectedPosMarker.set('visible', true);
                         }
                         if (setMapSelected) {
                             // TODO: not enabled for now as really slow
                             DEV_LOG && console.log('mapDecoder selected_id', props.name + props.class);
                             // if (props.subclass) {
                             selectedMapId = props.name + props.class;
-                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: selectedMapId });
+                            mapContext.mapDecoder.call('setStyleParameters', { selected_id: selectedMapId });
                             // } else {
                             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
                             // }
                         } else if (selectedMapId) {
-                            mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                            mapContext.mapDecoder.call('setStyleParameters', { selected_id: '' });
                             selectedMapId = null;
                         }
                         if (setSelected) {
@@ -826,7 +803,7 @@
                                     styleParameters['selected_id'] = '0';
                                 }
                             }
-                            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+                            mapContext.innerDecoder.call('setStyleParameters', styleParameters);
                         }
                     })();
                 }
@@ -835,7 +812,7 @@
                     Promise.all([
                         (async () => {
                             if (!props.address?.['city']) {
-                                const r = await packageService.getItemAddress(item, projection);
+                                const r = await packageService.getItemAddress(item);
                                 if (r && $selectedItem.geometry === item.geometry) {
                                     // DEV_LOG && console.log('found addresses', JSON.stringify(r));
                                     toUpdate.address = r;
@@ -905,17 +882,18 @@
         const viewPort = getMapViewPort();
         // DEV_LOG && console.log('zoomToItem', viewPort, item.properties?.zoomBounds, item.properties?.extent, !!item.route);
         // we ensure the viewPort is squared for the screen captured
-        const screenBounds = {
+        const screen = {
             min: { x: viewPort.left, y: viewPort.top },
             max: { x: viewPort.left + viewPort.width, y: viewPort.top + viewPort.height }
         };
+        const camera = massifMap.camera();
         if (item.properties?.zoomBounds) {
             const zoomLevel = getBoundsZoomLevel(item.properties.zoomBounds, {
                 width: Screen.mainScreen.widthDIPs,
                 height: Screen.mainScreen.widthDIPs
             });
-            if (forceZoomOut || massifMap.zoom < zoomLevel) {
-                massifMap.moveToFitBounds(item.properties.zoomBounds, screenBounds, false, true, false, duration);
+            if (forceZoomOut || camera.zoom() < zoomLevel) {
+                camera.fitBounds(toBounds(item.properties.zoomBounds), { screen, resetRotation: true, duration });
             }
         } else if (item.properties?.extent) {
             let extent: [number, number, number, number] = item.properties.extent as [number, number, number, number];
@@ -925,23 +903,19 @@
                 }
                 extent = JSON.parse(extent as any);
             }
-            massifMap.moveToFitBounds(new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] }), screenBounds, true, true, false, 200);
+            camera.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], { screen, integerZoom: true, resetRotation: true, duration: 200 });
         } else if (item.route) {
-            const geometry = packageService.getRouteItemGeometry(item);
-            //we need to convert geometry bounds to wgs84
-            //not perfect as vectorTile geometry might not represent the whole entier route at higher zoom levels
-            const bounds = geometry?.getBounds();
-            const projection = new EPSG3857();
-            massifMap.moveToFitBounds(new MapBounds(projection.toWgs84(bounds.getMin()), projection.toWgs84(bounds.getMax())), screenBounds, true, true, false, 200);
-        } else if (item.geometry.type === 'Point') {
-            if (zoom) {
-                massifMap.setZoom(zoom, duration);
-            } else if (minZoom) {
-                massifMap.setZoom(Math.max(minZoom, massifMap.zoom), duration);
+            // the item's own GeoJSON: no SDK geometry to build, and nothing to convert out of a
+            // projection - what used to make this "not perfect as vectorTile geometry might not
+            // represent the whole route" is gone with it
+            const bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+            if (bounds) {
+                camera.fitBounds(toBounds(bounds), { screen, integerZoom: true, resetRotation: true, duration: 200 });
             }
-            const geometry = item.geometry;
-            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            massifMap.setFocusPos(position, duration);
+        } else if (item.geometry.type === 'Point') {
+            // one move rather than a zoom animation racing a position animation
+            const target = item.geometry.coordinates as [number, number];
+            camera.moveTo(target, { zoom: zoom ?? (minZoom ? Math.max(minZoom, camera.zoom()) : undefined), duration });
         }
         // DEV_LOG && console.log('zoomToItem done ');
     }
@@ -962,12 +936,12 @@
             // mapContext.mapDecoder.setStyleParameter('selected_id', '');
             setSelectedItem(null);
             if (selectedPosMarker) {
-                selectedPosMarker.visible = false;
+                selectedPosMarker.set('visible', false);
             }
 
             if (selectedMapId) {
                 selectedMapId = null;
-                mapContext.mapDecoder.setJSONStyleParameters({ selected_id: '' });
+                mapContext.mapDecoder.call('setStyleParameters', { selected_id: '' });
             }
             const styleParameters = {};
             if (selectedOSMId !== undefined) {
@@ -979,7 +953,7 @@
                 styleParameters['selected_id'] = '0';
                 styleParameters['selected_id_str'] = '';
             }
-            mapContext.innerDecoder.setJSONStyleParameters(styleParameters);
+            mapContext.innerDecoder.call('setStyleParameters', styleParameters);
             if (updateBottomSheet) {
                 bottomSheetStepIndex = 0;
             }
@@ -1000,7 +974,7 @@
     //            console.error(error, error.stack);
     //       }
     //    }
-    $: massifMap?.getOptions().setRenderProjectionMode($projectionModeSpherical ? RenderProjectionMode.RENDER_PROJECTION_MODE_SPHERICAL : RenderProjectionMode.RENDER_PROJECTION_MODE_PLANAR);
+    $: massifMap?.set('renderProjectionMode', $projectionModeSpherical ? 'RENDER_PROJECTION_MODE_SPHERICAL' : 'RENDER_PROJECTION_MODE_PLANAR');
 
     nutiProps.on('change', (event: any) => {
         // console.log('nutichange', event.key, event.nutiValue);
@@ -1030,8 +1004,8 @@
     //   }
     //    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
-    $: massifMap?.getOptions().setRotationGestures($rotateEnabled);
-    $: massifMap?.getOptions().setTiltRange(toNativeMapRange([$pitchEnabled ? 30 : 90, 90]));
+    $: massifMap?.set('rotatable', $rotateEnabled);
+    $: massifMap?.set('tiltRange', [$pitchEnabled ? 30 : 90, 90]);
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
     // the two sheets swap places: the item one steps aside while a route is being followed, and comes
@@ -1059,7 +1033,7 @@
     $: {
         if (activeSheetHeight >= 0) {
             mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
-            massifMap?.getOptions().setFocusPointOffset(toNativeScreenPos(mapContext.focusOffset));
+            massifMap?.set('focusPointOffset', mapContext.focusOffset as never);
         }
     }
 
@@ -1094,10 +1068,7 @@
     //     // clickedFeatures = [];
     // }
 
-    function onRasterTileClicked(data: RasterTileClickInfo<LatLonKeys>) {
-        const { clickType, layer, nearestColor, position } = data;
-    }
-    function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
+    function onVectorTileClicked(data: FeatureClickData) {
         if (isTransitPickerPending()) {
             return;
         }
@@ -1180,8 +1151,8 @@
         }
         return handledByModules;
     }
-    function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
-        const { clickType, element, elementPos, metaData, position } = data;
+    function onVectorElementClicked(data: ElementClickData) {
+        const { clickType, elementPosition, metaData, position } = data;
         DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
             if (metaData[k][0] === '{' || metaData[k][0] === '[') {
@@ -1200,7 +1171,7 @@
             const item: IItem = {
                 geometry: {
                     type: 'Point',
-                    coordinates: [elementPos.lon, elementPos.lat]
+                    coordinates: [elementPosition.lon, elementPosition.lat]
                 },
                 properties: metaData
             };
@@ -1217,7 +1188,7 @@
         }
         return !!handledByModules;
     }
-    function onVectorTileElementClicked(data: VectorTileEventData<LatLonKeys>) {
+    function onVectorTileElementClicked(data: FeatureClickData) {
         const { clickType, featureData, featurePosition, position } = data;
         DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const feature = itemModule.getFeature(featureData.id);
@@ -1270,7 +1241,7 @@
     function setStyleParameter(key: string, value: string | number, decoder?) {
         decoder = decoder || mapContext.mapDecoder;
         // DEV_LOG && console.log('setStyleParameter', key, value);
-        decoder?.setStyleParameter(key, value + '');
+        decoder?.call('setStyleParameter', key, value + '');
     }
 
     function handleNewLanguage(newLang) {
@@ -1317,7 +1288,7 @@
                 }, {});
                 if (Object.keys(nutiPropsToApply).length > 0) {
                     //    showToast(JSON.stringify(nutiPropsToApply));
-                    vectorTileDecoder.setJSONStyleParameters(nutiPropsToApply);
+                    vectorTileDecoder.call('setStyleParameters', nutiPropsToApply);
                 }
             } catch (error) {
                 vectorTileDecoder = null;
@@ -1357,7 +1328,10 @@
                 );
             } else {
                 try {
-                    const assetsNames = nativeVectorToArray(new ZippedAssetPackage({ zipPath: e.path }).getAssetNames());
+                    // the archive, only to list what is in it: `assetNames` is a plain property
+                    const pack = api.create('assets', `assets.probe.${e.name}`, { type: 'zip', data: { type: 'url', url: `file://${e.path}` } });
+                    const assetsNames = pack.get('assetNames') as string[];
+                    pack.destroy();
                     // DEV_LOG && console.log('assetsNames', assetsNames);
                     styles.push(
                         ...assetsNames
@@ -1402,12 +1376,12 @@
         }
     }
 
-    const addLayer = (layer: Layer<any, any>, layerId: LayerType, force = false) => layerStack.addLayer(layer, layerId, force);
-    const insertLayer = (layer: Layer<any, any>, layerId: LayerType, index: number) => layerStack.insertLayer(layer, layerId, index);
-    const removeLayer = (layer: Layer<any, any>) => layerStack.removeLayer(layer);
-    const moveLayer = (layer: Layer<any, any>, newIndex: number) => layerStack.moveLayer(layer, newIndex);
-    const replaceLayer = (oldLayer: Layer<any, any>, layer: Layer<any, any>) => layerStack.replaceLayer(oldLayer, layer);
-    const getLayerIndex = (layer: Layer<any, any>) => layerStack.getLayerIndex(layer);
+    const addLayer = (layer: MassifLayer, layerId: LayerType, force = false) => layerStack.addLayer(layer, layerId, force);
+    const insertLayer = (layer: MassifLayer, layerId: LayerType, index: number) => layerStack.insertLayer(layer, layerId, index);
+    const removeLayer = (layer: MassifLayer) => layerStack.removeLayer(layer);
+    const moveLayer = (layer: MassifLayer, newIndex: number) => layerStack.moveLayer(layer, newIndex);
+    const replaceLayer = (oldLayer: MassifLayer, layer: MassifLayer) => layerStack.replaceLayer(oldLayer, layer);
+    const getLayerIndex = (layer: MassifLayer) => layerStack.getLayerIndex(layer);
     const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
     const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
     /**
@@ -1520,7 +1494,7 @@
     }
 
     async function shareScreenshot() {
-        const image = await massifMap.captureRendering(true);
+        const image = await massifMap.capture(true);
         return share({
             image
         });
@@ -1803,7 +1777,7 @@
     function startEditingItem(item: Item) {
         if (!!item.route) {
             DEV_LOG && console.log('startEditingItem', item.properties.id);
-            mapContext.innerDecoder.setStyleParameter('editing_id', item.properties.id + '');
+            mapContext.innerDecoder.call('setStyleParameter', 'editing_id', item.properties.id + '');
             getMapContext().mapModule('items').showItem(item);
             editingItem = item;
             unselectItem(true, true);
@@ -1814,7 +1788,7 @@
     function endEditingItem() {
         if (editingItem) {
             editingItem = null;
-            mapContext.innerDecoder.setStyleParameter('editing_id', '0');
+            mapContext.innerDecoder.call('setStyleParameter', 'editing_id', '0');
 
             // getMapContext().mapModule('items').hideItem(item);
         }
@@ -1881,11 +1855,6 @@
             accessibilityLabel="massifMap"
             zoom={16}
             on:mapReady={onMainMapReady}
-            on:mapMoved={onMainMapMove}
-            on:mapInteraction={onMainMapInteraction}
-            on:mapStable={onMainMapStable}
-            on:mapIdle={onMainMapIdle}
-            on:mapClicked={onMainMapClicked}
             on:layoutChanged={reportFullyDrawn} />
 
         <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
