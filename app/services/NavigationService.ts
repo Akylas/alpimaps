@@ -1,10 +1,9 @@
 import Observable from '@nativescript-community/observable';
-import { fromNativeMapPos } from '@nativescript-community/ui-carto/core';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
 import { type GeoHandler, type GeoLocation, UserLocationdEvent } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
-import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { ValhallaProfile } from '~/utils/routing';
 import { IItem, Item, type RouteInstruction, RoutingAction } from '~/models/Item';
 import { NavigationDetour, NavigationRoute, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { packageService } from '~/services/PackageService';
@@ -51,7 +50,7 @@ import {
 } from '~/stores/navigationStore';
 import { watchingLocation } from '~/stores/mapStore';
 import { getRhumbLineBearing } from '~/helpers/geolib';
-import { computeDistanceBetween } from '~/utils/geo';
+import { computeDistanceBetween, fromPosition } from '~/utils/geo';
 import {
     NavigationProfileTuning,
     OffRouteDetector,
@@ -695,7 +694,6 @@ export class NavigationService extends Observable {
             DEV_LOG && console.log(TAG, 'back to route', auto ? '(auto)' : '(asked)', 'to index', target.index);
             const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, target.position],
-                projection: getMapContext().getProjection(),
                 profile,
                 costingOptions
             });
@@ -734,7 +732,6 @@ export class NavigationService extends Observable {
             DEV_LOG && console.log(TAG, 'rerouting to the destination');
             const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, destination],
-                projection: getMapContext().getProjection(),
                 profile,
                 costingOptions
             });
@@ -859,7 +856,7 @@ export class NavigationService extends Observable {
             return;
         }
         const target = Math.min(Math.max(zoom, get(navigationZoomMin)), get(navigationZoomMax));
-        const current = this.currentZoom || getMapContext().getMap()?.zoom || target;
+        const current = this.currentZoom || getMapContext().getMap()?.camera().zoom() || target;
         const delta = target - current;
         DEV_LOG &&
             console.log(
@@ -939,7 +936,7 @@ export class NavigationService extends Observable {
             return null;
         }
         const positions = route.activePositions;
-        const size = positions?.size() ?? 0;
+        const size = positions?.length ?? 0;
         // on a detour the maneuvers and the polyline are the detour's, so the index has to be too
         const fromIndex = progress.onDetour ? progress.detourIndex : progress.onPathIndex;
         const toIndex = Math.min(instruction.index, size - 1);
@@ -952,7 +949,7 @@ export class NavigationService extends Observable {
         let forward = 0;
         let lateral = 0;
         const measure = (index: number) => {
-            const vertex = fromNativeMapPos<LatLonKeys>(positions.get(index));
+            const vertex = positions[index];
             const distance = computeDistanceBetween(location, vertex);
             if (!(distance > 0)) {
                 return;
@@ -983,27 +980,28 @@ export class NavigationService extends Observable {
         if (!map || !(lookAheadMeters > 0)) {
             return null;
         }
-        const width = map.getMeasuredWidth();
-        const height = map.getMeasuredHeight();
+        const { height, width } = map.size();
         if (!width || !height) {
             return null;
         }
+        const camera = map.camera();
         const y = height / 2;
         // measured horizontally at mid screen, where the navigation tilt distorts the least
-        const left = map.screenToMap({ x: width * 0.25, y });
-        const right = map.screenToMap({ x: width * 0.75, y });
+        const left = fromPosition(camera.screenToMap(width * 0.25, y));
+        const right = fromPosition(camera.screenToMap(width * 0.75, y));
         const metersPerScreenWidth = computeDistanceBetween(left, right) * 2;
         if (!(metersPerScreenWidth > 0)) {
             return null;
         }
+        const currentZoom = camera.zoom();
         const metersAhead = metersPerScreenWidth * (height / width) * AHEAD_SCREEN_FRACTION;
         const metersLateral = metersPerScreenWidth * LATERAL_SCREEN_FRACTION;
-        let zoom = map.zoom + Math.log2(metersAhead / lookAheadMeters);
+        let zoom = currentZoom + Math.log2(metersAhead / lookAheadMeters);
         if (legFrame?.forward > 0) {
-            zoom = Math.min(zoom, map.zoom + Math.log2(metersAhead / legFrame.forward));
+            zoom = Math.min(zoom, currentZoom + Math.log2(metersAhead / legFrame.forward));
         }
         if (legFrame?.lateral > 0) {
-            zoom = Math.min(zoom, map.zoom + Math.log2(metersLateral / legFrame.lateral));
+            zoom = Math.min(zoom, currentZoom + Math.log2(metersLateral / legFrame.lateral));
         }
         return zoom;
     }

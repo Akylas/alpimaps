@@ -45,8 +45,6 @@
     import { Sky } from 'three/examples/jsm/objects/Sky';
     // import RenderTargetHelper from 'three-rt-helper';
     import { pointToTileFraction, tileToBBOX } from '@mapbox/tilebelt';
-    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
     import { debounce, throttle } from '@nativescript/core/utils';
     import { isMobile, settings } from 'geo-three/webapp/settings';
     import { showError } from '@shared/utils/showError';

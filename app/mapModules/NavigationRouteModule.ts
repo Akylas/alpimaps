@@ -1,6 +1,4 @@
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import type { MassifLayer, MassifMap, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import type { Feature, Geometry } from 'geojson';
 import type { Unsubscriber } from 'svelte/store';
 import type { GeoLocation } from '~/handlers/GeoHandler';
@@ -33,8 +31,8 @@ const HINT_LAYER = 2;
  * same item sheet, once navigation ends.
  */
 export default class NavigationRouteModule extends MapModule {
-    dataSource: GeoJSONVectorTileDataSource;
-    layer: VectorTileLayer;
+    dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
+    layer: MassifLayer<'massif::VectorTileLayer'>;
     private readonly subscriptions: Unsubscriber[] = [];
     private item: IItem = null;
     private originalItem: IItem = null;
@@ -81,38 +79,46 @@ export default class NavigationRouteModule extends MapModule {
         this.layer = null;
     }
 
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
-        super.onMapReady(mapView);
+    onMapReady(map: MassifMap) {
+        super.onMapReady(map);
         // navigation may have been running before the map came back (an android activity re-create)
         this.draw();
     }
 
     private getOrCreateLayer() {
         if (!this.layer) {
-            this.dataSource = new GeoJSONVectorTileDataSource({ simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
+            const map = mapContext.getMap();
+            this.dataSource = map.source('source.navigation', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
             this.dataSource.createLayer('navigation');
             this.dataSource.createLayer('navigation_hint');
-            this.layer = new VectorTileLayer({
+            this.layer = map.buildLayer('layer.navigation', {
+                type: 'vector',
+                source: this.dataSource.id,
+                style: mapContext.innerDecoder.id,
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
-                dataSource: this.dataSource,
-                decoder: mapContext.innerDecoder
+                labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST'
             });
-            // the decoder is rebuilt on a style change, and a layer holds the old one for ever
-            mapContext.innerDecoder.once('change', this.rebuildLayer, this);
             mapContext.addLayer(this.layer, 'navigation');
         }
         return this.layer;
     }
 
-    private rebuildLayer() {
+    /**
+     * A layer holds its decoder, so a style change has to rebuild it.
+     *
+     * The map's own hook rather than an event on the decoder: the decoder is destroyed as part of
+     * the change, and a listener on a destroyed object is a listener on nothing.
+     */
+    vectorTileDecoderChanged() {
         const oldLayer = this.layer;
         if (!oldLayer) {
             return;
         }
         this.layer = null;
+        this.dataSource?.destroy();
         this.dataSource = null;
+        oldLayer.destroy();
         mapContext.replaceLayer(oldLayer, this.getOrCreateLayer());
         this.draw();
         this.drawHint();
@@ -140,7 +146,7 @@ export default class NavigationRouteModule extends MapModule {
         }
         this.getOrCreateLayer();
         DEV_LOG && console.log(TAG, 'drawing', features.map((feature) => feature.properties.class).join(', ') || 'nothing');
-        this.dataSource.setLayerGeoJSONString(NAVIGATION_LAYER, { type: 'FeatureCollection', features });
+        this.dataSource.setGeoJSON(NAVIGATION_LAYER, { type: 'FeatureCollection', features });
         this.setNavigating(!!item);
     }
 
@@ -169,12 +175,12 @@ export default class NavigationRouteModule extends MapModule {
             return;
         }
         this.getOrCreateLayer();
-        this.dataSource.setLayerGeoJSONString(HINT_LAYER, { type: 'FeatureCollection', features });
+        this.dataSource.setGeoJSON(HINT_LAYER, { type: 'FeatureCollection', features });
     }
 
     /** Tells the item and directions styles to stop drawing their selected look. */
     private setNavigating(navigating: boolean) {
-        mapContext.innerDecoder?.setStyleParameter('navigating', navigating ? '1' : '0');
+        mapContext.innerDecoder?.call('setStyleParameter', 'navigating', navigating ? '1' : '0');
     }
 }
 

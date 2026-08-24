@@ -1,6 +1,21 @@
-import type { RoutingResult, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { MassifObject } from '@nativescript-community/ui-massifmaps/api';
 import { ApplicationSettings, Color } from '@nativescript/core';
 import { type RouteInstruction, RoutingAction } from '~/models/Item';
+
+/** The costing models valhalla answers to. */
+export type ValhallaProfile = 'car' | 'auto' | 'bus' | 'bicycle' | 'pedestrian' | 'truck' | 'motorcycle';
+
+/** One maneuver, as the SDK hands the whole list over. */
+interface RawInstruction {
+    action: RoutingAction;
+    pointIndex: number;
+    streetName: string;
+    instruction: string;
+    turnAngle: number;
+    azimuth: number;
+    distance: number;
+    time: number;
+}
 
 /**
  * The maneuvers of a routing result, in the shape items store them in.
@@ -8,27 +23,29 @@ import { type RouteInstruction, RoutingAction } from '~/models/Item';
  * Shared because three callers need exactly this and each used to carry its own copy: the directions
  * panel, turning a recorded track into instructions, and rerouting during navigation.
  *
+ * The whole list arrives as one `instructionsJSON` read. Walking it instruction by instruction was
+ * a call per maneuver plus one per field, and a mountain route has hundreds.
+ *
  * `mapIndex` rewrites the point index a maneuver refers to, for the callers whose polyline is not the
  * result's own. Returning null from it drops the maneuver.
  */
-export function instructionsFromResult(result: RoutingResult<LatLonKeys>, mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
-    const rawInstructions = result.getInstructions();
+export function instructionsFromResult(result: MassifObject<'massif::RoutingResult'>, mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
+    const raw = (result.get('instructionsJSON') ?? []) as unknown as RawInstruction[];
     const instructions: RouteInstruction[] = [];
-    for (let index = 0; index < rawInstructions.size(); index++) {
-        const instruction = rawInstructions.get(index);
-        const pointIndex = mapIndex ? mapIndex(instruction.getPointIndex()) : instruction.getPointIndex();
+    for (const instruction of raw) {
+        const pointIndex = mapIndex ? mapIndex(instruction.pointIndex) : instruction.pointIndex;
         if (pointIndex === null || pointIndex === undefined) {
             continue;
         }
         instructions.push({
-            a: RoutingAction[instruction.getAction().toString().replace('ROUTING_ACTION_', '')],
-            az: Math.round(instruction.getAzimuth()),
-            dist: instruction.getDistance(),
-            time: instruction.getTime(),
+            a: instruction.action,
+            az: Math.round(instruction.azimuth),
+            dist: instruction.distance,
+            time: instruction.time,
             index: pointIndex,
-            angle: Math.round(instruction.getTurnAngle()),
-            name: instruction.getStreetName() !== '' ? instruction.getStreetName() : undefined,
-            inst: instruction.getInstruction()
+            angle: Math.round(instruction.turnAngle),
+            name: instruction.streetName !== '' ? instruction.streetName : undefined,
+            inst: instruction.instruction
         });
     }
     return instructions;

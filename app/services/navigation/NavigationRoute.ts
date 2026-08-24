@@ -1,13 +1,9 @@
-import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
-import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-import { distanceToEnd } from '@nativescript-community/ui-carto/utils';
 import type { LineString } from 'geojson';
-import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem, RouteInstruction } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
 import type { OffRouteState, RouteProgress } from '~/utils/navigation';
 import { computeRouteProgress, findClosestOnRoute } from '~/utils/navigation';
+import { type MapPos, distanceToEnd, toPosition } from '~/utils/geo';
 
 /**
  * A leg the user is being sent along to get back to the route.
@@ -17,7 +13,7 @@ import { computeRouteProgress, findClosestOnRoute } from '~/utils/navigation';
  * or its maneuver indices. Once the user is back on the route the detour is simply dropped.
  */
 export interface NavigationDetour {
-    positions: MapPosVector<LatLonKeys>;
+    positions: MapPos[];
     instructions: RouteInstruction[];
     /** index in the *base* positions the detour comes back onto the route at */
     rejoinIndex: number;
@@ -25,17 +21,17 @@ export interface NavigationDetour {
     totalTime: number;
 }
 
-let writer: GeoJSONGeometryWriter<LatLonKeys>;
-
-/** GeoJSON for a native position vector, for the layers that draw a detour or a connector. */
-export function positionsToGeoJSONLine(positions: MapPosVector<LatLonKeys>): LineString {
-    if (!positions || positions.size() < 2) {
+/**
+ * GeoJSON for a position list, for the layers that draw a detour or a connector.
+ *
+ * Built here rather than through the SDK's writer: the positions are already JavaScript, so a
+ * geometry object only to serialise it would be two crossings for a `map` call.
+ */
+export function positionsToGeoJSONLine(positions: MapPos[]): LineString {
+    if (!positions || positions.length < 2) {
         return null;
     }
-    if (!writer) {
-        writer = new GeoJSONGeometryWriter<LatLonKeys>({ sourceProjection: getMapContext().getProjection() });
-    }
-    return JSON.parse(writer.writeGeometry(new LineGeometry<LatLonKeys>({ poses: positions })));
+    return { type: 'LineString', coordinates: positions.map(toPosition) };
 }
 
 /**
@@ -49,7 +45,7 @@ export function positionsToGeoJSONLine(positions: MapPosVector<LatLonKeys>): Lin
  * an in-memory one while keeping the original for display.
  */
 export class NavigationRoute {
-    positions: MapPosVector<LatLonKeys>;
+    positions: MapPos[];
     detour: NavigationDetour = null;
     /** the route the user picked, kept when a full reroute replaced the base */
     originalItem: IItem = null;
@@ -66,9 +62,8 @@ export class NavigationRoute {
         return !!this.detour;
     }
     /** where the route ends, ie what a full reroute has to route to */
-    get destination(): GenericMapPos<LatLonKeys> {
-        const size = this.positions?.size() ?? 0;
-        return size ? fromNativeMapPos<LatLonKeys>(this.positions.get(size - 1)) : null;
+    get destination(): MapPos {
+        return this.positions?.length ? this.positions[this.positions.length - 1] : null;
     }
 
     setDetour(detour: NavigationDetour) {
@@ -82,7 +77,7 @@ export class NavigationRoute {
      * Swaps the base for a freshly computed one, keeping the user's own route for the map.
      * `positions` skips re-parsing a geometry the caller already has natively.
      */
-    replaceBase(item: IItem, positions?: MapPosVector<LatLonKeys>) {
+    replaceBase(item: IItem, positions?: MapPos[]) {
         this.originalItem = this.originalItem ?? this.item;
         this.item = item;
         this.positions = positions ?? packageService.getRouteItemPoses(item);
@@ -101,7 +96,7 @@ export class NavigationRoute {
      * the app indexes by `onPathIndex` — the elevation chart, the ascents, the surface preview — is
      * about the base route, so `onPathIndex` stays a base index: the point the detour rejoins at.
      */
-    progressFrom(state: OffRouteState, location: GenericMapPos<LatLonKeys>): RouteProgress {
+    progressFrom(state: OffRouteState, location: MapPos): RouteProgress {
         if (state.onPathIndex === -1) {
             return { onPathIndex: -1, offRoute: state.offRoute, closestIndex: state.closestIndex, distanceFromRoute: state.distanceFromRoute };
         }
@@ -142,12 +137,12 @@ export class NavigationRoute {
      * Whether the detour has done its job. Reaching its last vertex is the normal case; being back
      * within tolerance of the base at or past the rejoin point covers the user cutting the detour short.
      */
-    shouldDropDetour(state: OffRouteState, location: GenericMapPos<LatLonKeys>, tolerance: number) {
+    shouldDropDetour(state: OffRouteState, location: MapPos, tolerance: number) {
         const detour = this.detour;
         if (!detour) {
             return false;
         }
-        if (state.onPathIndex >= detour.positions.size() - 1) {
+        if (state.onPathIndex >= detour.positions.length - 1) {
             return true;
         }
         // only from the rejoin point on: matching the base *before* it would undo the detour

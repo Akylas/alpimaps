@@ -1,8 +1,5 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
-    import { GenericMapPos, MapBounds, MapPos } from '@nativescript-community/ui-carto/core';
-    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { SearchRequest, VectorTileSearchServiceOptions } from '@nativescript-community/ui-carto/search';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
@@ -22,7 +19,8 @@
     import { networkService, regionToOSMString } from '~/services/NetworkService';
     import type { GeoResult } from '~/services/PackageService';
     import { packageService } from '~/services/PackageService';
-    import { computeDistanceBetween } from '~/utils/geo';
+    import { type MapBounds, type MapPos, computeDistanceBetween, fromBounds, fromPosition, geometryBounds } from '~/utils/geo';
+    import type { SearchOptions } from '~/services/PackageService';
     import { showSnack } from '~/utils/ui';
     import { arraySortOn } from '~/utils/utils';
     import { colors } from '~/variables';
@@ -116,7 +114,7 @@
             'distance'
         ) as GeoResult[];
     }
-    async function searchInVectorTiles(enabled: boolean, options: SearchRequest & VectorTileSearchServiceOptions & { bounds?: IMapBounds }) {
+    async function searchInVectorTiles(enabled: boolean, options: SearchOptions) {
         if (!enabled) {
             return [];
         }
@@ -128,7 +126,7 @@
         }
     }
 
-    async function herePlaceSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number }) {
+    async function herePlaceSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos; locationRadius?: number }) {
         if (!enabled) {
             return [];
         }
@@ -164,7 +162,7 @@
         }
         return [];
     }
-    async function photonSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos<LatLonKeys>; locationRadius?: number; bounds?: MapBounds<LatLonKeys> }) {
+    async function photonSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos; locationRadius?: number; bounds?: MapBounds }) {
         if (!enabled) {
             return [];
         }
@@ -201,11 +199,11 @@
             'distance'
         );
     }
-    export async function instantSearch(_query, position?: GenericMapPos<LatLonKeys>, item?: Item) {
+    export async function instantSearch(_query, position?: MapPos, item?: Item) {
         try {
             loading = true;
             currentQuery = cleanUpString(_query);
-            let bounds: MapBounds<LatLonKeys>;
+            let bounds: MapBounds;
             if (!position) {
                 if (item) {
                     if (item.properties?.zoomBounds) {
@@ -218,12 +216,11 @@
                             }
                             extent = JSON.parse(extent as any);
                         }
-                        bounds = new MapBounds({ lat: extent[1], lon: extent[0] }, { lat: extent[3], lon: extent[2] });
+                        bounds = { southwest: { lat: extent[1], lon: extent[0] }, northeast: { lat: extent[3], lon: extent[2] } };
                     } else if (item.route) {
-                        const geometry = packageService.getRouteItemGeometry(item);
-                        //we need to convert geometry bounds to wgs84
-                        //not perfect as vectorTile geometry might not represent the whole entier route at higher zoom levels
-                        bounds = geometry?.getBounds();
+                        // the item's own GeoJSON: no SDK geometry to build, and no projection to
+                        // convert back out of
+                        bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
                     } else {
                         const geometry = item.geometry as GeoJSONPoint;
                         position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
@@ -232,18 +229,17 @@
                         position = { lat: bounds.southwest.lat + (bounds.northeast.lat - bounds.southwest.lat) / 2, lon: bounds.southwest.lon + (bounds.northeast.lon - bounds.southwest.lon) / 2 };
                     }
                 } else {
-                    position = mapContext.getMap().focusPos;
+                    position = fromPosition(mapContext.getMap().camera().position());
                 }
             }
 
-            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const mpp = getMetersPerPixel(position, mapContext.getMap().camera().zoom());
             const searchRadius = bounds
                 ? Math.max(getDistanceSimple(position, { lat: bounds.southwest.lat, lon: position.lon }), getDistanceSimple(position, { lon: bounds.southwest.lon, lat: position.lat })) + 1000
                 : Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
             DEV_LOG && console.log('instantSearch', currentQuery, !!item, position, bounds, searchRadius);
             const options = {
                 query: currentQuery,
-                projection: mapContext.getProjection(),
                 language: packageService.currentLanguage,
                 // regexFilter: `.*${currentQuery}.*`,
                 // filterExpression: `layer='transportation_name'`,
@@ -278,16 +274,25 @@
                 // updateFilteredDataItems(filteringOSMKey);
             }
             if (/^(class|subclass)/.test(currentQuery)) {
-                bounds = bounds || mapContext.getMap().getMapBounds();
+                bounds = bounds || fromBounds(mapContext.getMap().camera().bounds());
                 DEV_LOG && console.log('bounds', bounds);
 
                 const zoom = /peak|campsite/.test(currentQuery) ? 11 : 14;
-                const geometry = new LineGeometry<LatLonKeys>({
-                    poses: [bounds.northeast, { lat: bounds.southwest.lat, lon: bounds.northeast.lon }, { lat: bounds.southwest.lat, lon: bounds.southwest.lon }, bounds.northeast]
-                });
+                // the box as a closed ring, which is what bounds a search
+                const geometry: GeoJSON.Polygon = {
+                    type: 'Polygon',
+                    coordinates: [
+                        [
+                            [bounds.northeast.lon, bounds.northeast.lat],
+                            [bounds.northeast.lon, bounds.southwest.lat],
+                            [bounds.southwest.lon, bounds.southwest.lat],
+                            [bounds.southwest.lon, bounds.northeast.lat],
+                            [bounds.northeast.lon, bounds.northeast.lat]
+                        ]
+                    ]
+                };
                 const array = currentQuery.split(':');
                 await searchInVectorTiles(true, {
-                    projection: options.projection,
                     geometry,
                     bounds,
                     minZoom: zoom,

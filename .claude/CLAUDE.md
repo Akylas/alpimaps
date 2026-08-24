@@ -75,12 +75,12 @@ All app code lives under `app/`:
 - `app/mapModules/` — **the map's feature layer.** `MapModule.ts` holds the `mapContext` singleton (the shared API surface between the map and everything else) plus the `MapModule` base class; `CustomLayersModule` (tile sources, hillshade, mbtiles), `ItemsModule` (saved items + local vector layer), `UserLocationModule`, `ItemFormatter`. Modules receive lifecycle hooks (`onMapReady`, `onMapClicked`, `onSelectedItem`, …) dispatched by `mapContext.runOnModules`.
 - `app/services/` — domain singletons: `PackageService` (offline packages, elevation, routing, geocoding), `NavigationService`, `NetworkService`, `TransitService`, `BackendService`, plus `BgService.{android,ios,common}.ts` for the background location service.
 - `app/handlers/GeoHandler.ts` — GPS/sensor plumbing behind the background service.
-- `app/stores/` — `mapStore.ts` (carto style parameters via the `nutiProps` / `innerNutiProps` / `layerProps` proxy stores), `navigationStore.ts`, `settingsStore.ts` (`settingsStore()` = a writable backed by `ApplicationSettings`).
+- `app/stores/` — `mapStore.ts` (map style parameters via the `nutiProps` / `innerNutiProps` / `layerProps` proxy stores), `navigationStore.ts`, `settingsStore.ts` (`settingsStore()` = a writable backed by `ApplicationSettings`).
 - `app/models/Item.ts` — the central `IItem` / `Item` GeoJSON-ish shape, persisted via SQLite (`@akylas/kiss-orm`).
 - `app/helpers/`, `app/utils/`, `app/workers/`, `app/data/`, `app/i18n/`, `app/themes/`, `app/assets/`, `app/fonts/`, `app/shims/`.
 - State: light **svelte stores** (the `app/stores/` files above) plus the service and map-module singletons.
 
-Mapping stack is **carto mobile SDK** via `@nativescript-community/ui-carto` — layers, datasources, `MBVectorTileDecoder`, and style parameters passed as *strings* into the vector-tile styles under `app/assets/styles/`.
+Mapping stack is the **MassifMaps SDK** (the renamed carto mobile SDK fork) via `@nativescript-community/ui-massifmaps` — layers, datasources, `MBVectorTileDecoder`, and style parameters passed as *strings* into the vector-tile styles under `app/assets/styles/`. The map view class is `MassifMap`, registered as the `<massifmap>` element; the native namespaces are `com.massifmaps.*` (Android) and the `MSF*` prefix (iOS). CartoCSS is *not* renamed — `CartoCSSStyleSet` / `setCartoCSSStyleSet` keep their names.
 
 ### The `tools` submodule and the `@shared` alias
 

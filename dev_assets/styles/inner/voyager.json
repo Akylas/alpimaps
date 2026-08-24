@@ -19,7 +19,7 @@
         "shared/navigation.mss",
         "shared/search.mss"
     ],
-    "nutiparameters": {
+    "styleparameters": {
         "items_show_km_shields": 1,
         "lang": "en",
         "fallback_lang": "en",

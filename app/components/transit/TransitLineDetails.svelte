@@ -1,7 +1,6 @@
 <script lang="ts">
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { VectorTileLayer } from '@nativescript-community/ui-carto/layers/vector';
-    import { CartoMap, PanningMode } from '@nativescript-community/ui-carto/ui';
+    import * as api from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifMap } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { ObservableArray, Page } from '@nativescript/core';
     import { openUrl } from '@nativescript/core/utils';
@@ -10,7 +9,7 @@
     import CActionBar from '@shared/components/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
-    import { createTileDecoder, getMapContext } from '~/mapModules/MapModule';
+    import { cloneLayerSpec, createTileDecoder, getMapContext } from '~/mapModules/MapModule';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
@@ -18,9 +17,10 @@
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
+    import { geoJSONBounds } from '~/utils/geo';
     import IconButton from '../common/IconButton.svelte';
     import { FeatureCollection } from 'geojson';
-    import { MapPos } from '@nativescript-community/ui-carto/core';
+    import type { MapPos } from '~/utils/geo';
     import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorOnBackground, colorPrimary } = $colors;
@@ -34,10 +34,10 @@
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line: TransitRoute;
-    export let position: MapPos<LatLonKeys> = null;
+    export let position: MapPos = null;
     export let selectedStop = line.stopIds?.[0];
 
-    let cartoMap: CartoMap<LatLonKeys>;
+    let massifMap: MassifMap;
     let selectedIndex = -1;
 
     DEV_LOG && console.log('line', selectedStop, JSON.stringify(line));
@@ -50,7 +50,7 @@
 
     async function refresh() {
         try {
-            if (!cartoMap) {
+            if (!massifMap) {
                 return;
             }
             dataItems = new ObservableArray(
@@ -71,27 +71,16 @@
             });
             // lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
 
-            const transitVectorTileDataSource = new GeoJSONVectorTileDataSource({
-                minZoom: 0,
-                maxZoom: 24
-            });
-            const lineGeoJSONStr = JSON.stringify(lineGeoJSON);
-            DEV_LOG && console.log('line', JSON.stringify(lineGeoJSONStr));
+            const transitVectorTileDataSource = massifMap.source('source.transitLine', { type: 'geojson', minZoom: 0, maxZoom: 24 });
             transitVectorTileDataSource.createLayer('routes');
-            const geometry = packageService.getGeoJSONReader().readFeatureCollection(lineGeoJSONStr);
-            transitVectorTileDataSource.setLayerGeoJSONString(1, lineGeoJSONStr);
+            transitVectorTileDataSource.setGeoJSON(1, lineGeoJSON);
 
-            const transitVectorTileLayer = new VectorTileLayer({
-                dataSource: transitVectorTileDataSource,
-                decoder
-            });
-
-            transitVectorTileLayer.setVectorTileEventListener(this);
-            cartoMap.addLayer(transitVectorTileLayer);
+            massifMap.addLayer('layer.transitLine', { type: 'vector', source: transitVectorTileDataSource.id, style: decoder.id });
             if (selectedIndex) {
                 focusOnItem(dataItems.getItem(selectedIndex), true);
             } else {
-                cartoMap.moveToFitBounds(geometry.getBounds(), undefined, true, true, true, 0);
+                // the bounds of what was just drawn, worked out here: the geometry is ours already
+                massifMap.camera().fitBounds(geoJSONBounds(lineGeoJSON), { integerZoom: true, resetRotation: true, resetTilt: true });
             }
             noNetworkAndNoData = false;
         } catch (error) {
@@ -110,17 +99,19 @@
         refresh();
     }
     async function onMapReady(e) {
-        cartoMap = e.object as CartoMap<LatLonKeys>;
-        mapContext.setMapDefaultOptions(cartoMap.getOptions());
-        // const route = dataItems.map(i=>([]))
+        // its own registry id: two maps in one app must not share the "map" one
+        massifMap = api.attach(e.object, { id: 'map.transitLine' });
+        mapContext.setMapDefaultOptions(massifMap);
         try {
             let layers = mapContext.getLayers('map');
             if (layers.length === 0) {
                 layers = mapContext.getLayers('customLayers');
             }
-            layers.forEach((l) => {
-                const prototype = Object.getPrototypeOf(l.layer);
-                cartoMap.addLayer(new prototype.constructor(l.layer.options));
+            layers.forEach((l, index) => {
+                const spec = cloneLayerSpec(l.layer);
+                if (spec) {
+                    massifMap.addLayer(`layer.transitLine.base${index}`, spec as never);
+                }
             });
             refresh();
         } catch (err) {
@@ -172,9 +163,9 @@
     }
 
     function focusOnItem(item: Item, scrollToIndex = false) {
-        cartoMap.setFocusPos(item, 200);
-        cartoMap.setZoom(15, 200);
-        decoder.setJSONStyleParameters({ selected_id_str: item.id + '' });
+        // one move rather than a position animation racing a zoom animation
+        massifMap.camera().moveTo({ lat: item.lat, lon: item.lon }, { zoom: 15, duration: 200 });
+        decoder.call('setStyleParameters', { selected_id_str: item.id + '' });
         if (scrollToIndex) {
             collectionView.nativeView.scrollToIndex(dataItems.indexOf(item), false, SnapPosition.START);
         }
@@ -219,7 +210,7 @@
             textAlignment="center"
             verticalTextAlignment="center"
             visibility={line.longName ? 'visible' : 'collapse'} />
-        <cartomap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
+        <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
                 <canvasview columns="*,auto" on:tap={() => selectStop(item)}>

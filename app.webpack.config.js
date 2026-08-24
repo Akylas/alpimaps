@@ -30,6 +30,7 @@ module.exports = (env, params = {}) => {
             env[k] = true;
         }
     });
+    env.commonjs = true;
     if (env.adhoc_sentry) {
         env = Object.assign(
             {},
@@ -117,7 +118,6 @@ module.exports = (env, params = {}) => {
         profile,
         noconsole,
         timeline,
-        cartoLicense = false,
         devlog,
         testlog,
         fork = true,
@@ -738,7 +738,6 @@ module.exports = (env, params = {}) => {
     );
     config.plugins.push(new webpack.ContextReplacementPlugin(/dayjs[\/\\]locale$/, new RegExp(`(${supportedLocales.map((l) => l.replace('_', '-').toLowerCase()).join('|')}).\js`)));
 
-    // config.optimization.splitChunks.cacheGroups.defaultVendor.test = /[\\/](node_modules|ui-carto|ui-chart|NativeScript[\\/]dist[\\/]packages[\\/]core)[\\/]/;
     // cache group is named `defaultVendor` in the commonjs base config, `vendor` in the esm one
     const cacheGroups = config.optimization.splitChunks.cacheGroups;
     const vendorCacheGroup = cacheGroups.defaultVendor || cacheGroups.vendor;
