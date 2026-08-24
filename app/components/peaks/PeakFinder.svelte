@@ -1,10 +1,8 @@
 <script lang="ts">
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { MultiTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-    import { MapTilerOnlineTileDataSource } from '@nativescript-community/ui-carto/datasources/maptiler';
-    import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
+    import * as api from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
@@ -26,9 +24,10 @@
     export let position;
     export let bearing;
     export let terrarium: boolean = false;
-    export let dataSource: TileDataSource<any, any>;
-    export let vectorDataSource: MBTilesTileDataSource | MultiTileDataSource<any, any>;
-    export let rasterDataSource: TileDataSource<any, any>;
+    /** The sources the peak finder draws from, handed over by whoever opened it. */
+    export let dataSource: MassifSource;
+    export let vectorDataSource: MassifSource;
+    export let rasterDataSource: MassifSource;
     let webView: NativeViewElementNode<AWebView>;
     let page: NativeViewElementNode<Page>;
     let collectionView1: NativeViewElementNode<CollectionView>;
@@ -50,14 +49,15 @@
     function truncate(str, maxlength) {
         return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
     }
+    /** The fallback when the app has no offline tiles: maptiler, behind a persistent cache. */
     function getDefaultDataSource() {
         const cacheFolder = Folder.fromPath(path.join(getDataFolder(), 'carto_cache'));
-        const dataSource = new PersistentCacheTileDataSource({
-            dataSource: new MapTilerOnlineTileDataSource({ key: 'V7KGiDaKQBCWTYsgsmxh' }),
+        return api.createSource('source.peakfinder.default', {
+            type: 'persistent-cache',
+            source: { type: 'maptiler', key: 'V7KGiDaKQBCWTYsgsmxh' },
             capacity: 300 * 1024 * 1024,
             databasePath: path.join(cacheFolder.path, 'cache.db')
-        });
-        return dataSource;
+        } as never);
     }
 
     function formatSecondsInDay(value) {
@@ -538,8 +538,9 @@
     }
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
         const originalClient = new webClientClass(webview);
-        const vDataSource = (vectorDataSource || getDefaultDataSource()).getNative();
-        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.getNative(), vDataSource, vDataSource, rasterDataSource?.getNative(), null);
+        // the client is the app's own Java class, so it takes the SDK objects themselves
+        const vDataSource = (vectorDataSource || getDefaultDataSource()).native;
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.native, vDataSource, vDataSource, rasterDataSource?.native, null);
         // this crashes in production saying no originalClient property ...
         // client.originalClient = originalClient;
         return client;

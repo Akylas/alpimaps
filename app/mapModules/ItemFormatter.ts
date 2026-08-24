@@ -1,4 +1,4 @@
-import { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
+import type { ValhallaProfile } from '~/utils/routing';
 import { formatAddress } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';

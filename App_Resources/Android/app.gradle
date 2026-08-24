@@ -168,8 +168,8 @@ dependencies {
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
     def kotlinVersion = computeKotlinVersion()
 
-    // if (project.hasProperty('debugCarto')) {
-    //   implementation project(path: ':carto-mobile-sdk')
+    // if (project.hasProperty('debugMassif')) {
+    //   implementation project(path: ':massif')
     // }
     implementation "com.github.skydoves:colorpickerview:2.2.4"
     implementation 'androidx.core:core-splashscreen:1.0.1'
@@ -184,7 +184,7 @@ dependencies {
     }
     implementation "androidx.profileinstaller:profileinstaller:1.4.1"
     baselineProfile project(':baselineprofile')
-    // implementation project(':carto-mobile-sdk')
+    // implementation project(':massif')
 }
 
 if (project.hasProperty("sentryEnabled")) {
