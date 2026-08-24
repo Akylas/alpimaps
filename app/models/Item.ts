@@ -1,6 +1,6 @@
-import { MapBounds } from '@nativescript-community/ui-massifmaps/core';
-import { VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
-import { ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
+import type { MassifLayer } from '@nativescript-community/ui-massifmaps/api';
+import type { MapBounds } from '~/utils/geo';
+import type { ValhallaProfile } from '~/utils/routing';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
 import type { Geometry, Point } from 'geojson';
 import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
@@ -41,7 +41,9 @@ export enum RoutingAction {
     LEAVE_AGAINST_ALLOWED_DIRECTION,
     GO_UP,
     GO_DOWN,
-    WAIT
+    WAIT,
+    ENTER_FERRY,
+    LEAVE_FERRY
 }
 
 export interface RouteInstruction {
@@ -114,7 +116,7 @@ export interface ItemProperties {
         dplus?: any;
         dmin?: any;
     };
-    zoomBounds?: MapBounds<LatLonKeys>;
+    zoomBounds?: MapBounds;
 }
 
 export interface DirectionWayPoint {
@@ -205,7 +207,7 @@ export class Item<T extends Geometry = Geometry> {
 }
 
 export interface IItem<T extends Geometry = Geometry> extends Partial<Item<T>> {
-    layer?: VectorTileLayer;
+    layer?: MassifLayer;
 }
 
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
