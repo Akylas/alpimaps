@@ -47,7 +47,10 @@
         const result = { ...item.options };
 
         Object.keys(result).forEach((k) => {
-            result[k].value = opts[k].transformBack ? opts[k].transformBack(layer[k]) : layer[k];
+            // a surface handle has no JS properties: reading one gives undefined, and transformBack
+            // then dereferences it
+            const value = layer.get(k as never);
+            result[k].value = opts[k].transformBack ? opts[k].transformBack(value) : value;
         });
         options = result;
     });
@@ -65,7 +68,7 @@
         if (options[name].transform) {
             newValue = options[name].transform(newValue);
         }
-        item.layer[name] = newValue;
+        item.layer.set(name as never, newValue as never);
     }
     async function pickOptionColor(name, color: Color) {
         try {
@@ -75,7 +78,8 @@
             }
             ApplicationSettings.setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
-            item.layer[name] = newColor;
+            // argb, the same form createHillshadeTileLayer builds these colours with
+            item.layer.set(name as never, newColor.argb as never);
         } catch (err) {
             showError(err);
         }
@@ -102,7 +106,7 @@
                     if (persistent) {
                         source.call('clear');
                     }
-                    item.layer.clearTileCaches(true);
+                    item.layer.call('clearTileCaches', true);
                     break;
                 }
                 case 'download_area': {
