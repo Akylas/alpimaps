@@ -11,21 +11,21 @@ import java.lang.Exception;
 
 import fi.iki.elonen.NanoHTTPD;
 
-import com.carto.core.MapPos;
-import com.carto.core.MapPosVector;
-import com.carto.core.MapTile;
-import com.carto.core.BinaryData;
-import com.carto.datasources.TileDataSource;
-import com.carto.datasources.components.TileData;
-import com.carto.geometry.GeoJSONGeometryWriter;
-import com.carto.geometry.PolygonGeometry;
-import com.carto.geometry.VectorTileFeatureCollection;
-import com.carto.projections.EPSG4326;
-import com.carto.search.SearchRequest;
-import com.carto.search.VectorTileSearchService;
-import com.carto.styles.CartoCSSStyleSet;
-import com.carto.vectortiles.MBVectorTileDecoder;
-import com.carto.core.MapBounds;
+import com.massifmaps.core.MapPos;
+import com.massifmaps.core.MapPosVector;
+import com.massifmaps.core.MapTile;
+import com.massifmaps.core.BinaryData;
+import com.massifmaps.datasources.TileDataSource;
+import com.massifmaps.datasources.components.TileData;
+import com.massifmaps.geometry.GeoJSONGeometryWriter;
+import com.massifmaps.geometry.PolygonGeometry;
+import com.massifmaps.geometry.VectorTileFeatureCollection;
+import com.massifmaps.projections.EPSG4326;
+import com.massifmaps.search.SearchRequest;
+import com.massifmaps.search.VectorTileSearchService;
+import com.massifmaps.styles.CartoCSSStyleSet;
+import com.massifmaps.vectortiles.MBVectorTileDecoder;
+import com.massifmaps.core.MapBounds;
 
 import android.util.Log;
 

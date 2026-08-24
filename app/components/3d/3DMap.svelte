@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { TileLayer } from '@nativescript-community/ui-carto/layers';
     import { AWebView } from '@nativescript-community/ui-webview';
     import { LoadEventData, Page, knownFolders, path } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
@@ -17,11 +16,12 @@
     export let pitch;
 
     const mapContext = getMapContext();
-    const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-    const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+    // The 3d view is a webview driven by the app's own Java client, so it takes the SDK sources
+    // themselves - `source()` hands one over whether or not it was given an id.
+    const hillshadeSource = packageService.hillshadeLayer?.source();
+    const vectorSource = packageService.localVectorTileLayer?.source();
     // only tile layers carry a datasource, and nothing registers a 'routes' layer today
-    const routesLayer = mapContext.getLayers('routes')?.[0]?.layer;
-    const routeDataSource = routesLayer instanceof TileLayer ? routesLayer.dataSource : undefined;
+    const routeSource = mapContext.getLayers('routes')?.[0]?.layer?.source();
 
     const consoleEnabled = !PRODUCTION;
 
@@ -40,9 +40,9 @@
 
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
         const originalClient = new webClientClass(webview);
-        const vDataSource = vectorDataSource?.getNative();
+        const vDataSource = vectorSource?.native;
 
-        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, hillshadeDatasource?.getNative(), vDataSource, vDataSource, null, routeDataSource?.getNative());
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, hillshadeSource?.native, vDataSource, vDataSource, null, routeSource?.native);
 
         client.registerLocalResource('http://127.0.0.1/sprite@2x.json', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.json'));
         client.registerLocalResource('http://127.0.0.1/sprite@2x.png', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.png'));

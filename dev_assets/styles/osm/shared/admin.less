@@ -7,7 +7,7 @@
             line-dasharray: @border_country_dasharray;
         }
     }
-    ['nuti::sub_boundaries'>0] {
+    ['param::sub_boundaries'>0] {
         [admin_level=4][zoom>=4][zoom<=14],
         [admin_level>=5][zoom>=7][zoom<=14] {
             line-color: @border_region;
@@ -94,7 +94,7 @@
     }
 }
 #park['mapnik::geometry_type'=3][name != null]{
-    when ([nuti::selected_id] ='' + [name] + [class])::selected {
+    when ([param::selected_id] ='' + [name] + [class])::selected {
         line-width: @protected_area_line_width;
         line-color: darken(@protected_area_line, 10%);
         [class='aboriginal_lands'] {

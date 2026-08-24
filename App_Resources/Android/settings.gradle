@@ -1,5 +1,6 @@
-// if (hasProperty('debugCarto')) {
-    // include ':carto-mobile-sdk'
-    // project(':carto-mobile-sdk').projectDir = new File("/home/mguillon/dev/carto/mobile-sdk/scripts/android-dev/carto_mobile_sdk")
-// }
+if (System.env.DEBUGMASSIF) {
+    include ':massif'
+    println 'debugMassif project: ' + "${System.env.MASSIF_SDK_HOME}/scripts/android-dev/massif"
+    project(':massif').projectDir = new File("${System.env.MASSIF_SDK_HOME}/scripts/android-dev/massif")
+}
 include ':baselineprofile'
