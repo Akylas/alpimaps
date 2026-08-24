@@ -1,5 +1,5 @@
 import Observable from '@nativescript-community/observable';
-import { GenericMapPos } from '@nativescript-community/ui-massifmaps/core';
+import type { MapPos } from '~/utils/geo';
 import { Color } from '@nativescript/core';
 import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
 
@@ -71,7 +71,7 @@ export interface MetroTrip {
 
 export interface TransitRoute extends MetroRoute {
     stopIds?: string[];
-    position?: GenericMapPos<LatLonKeys>;
+    position?: MapPos;
     geometry?;
 }
 
@@ -171,7 +171,7 @@ class TransitService extends Observable {
         }
         return this.metroLinesData;
     }
-    async findBusStop(position: GenericMapPos<LatLonKeys>) {
+    async findBusStop(position: MapPos) {
         return networkService.request<MetroBusStop[]>({
             url: MOBILITY_API_URL + '/linesNear/json',
             method: 'GET',

@@ -1,5 +1,5 @@
 import * as https from '@nativescript-community/https';
-import { MapBounds, MapPos } from '@nativescript-community/ui-massifmaps/core';
+import type { MapBounds, MapPos } from '~/utils/geo';
 import * as appavailability from '@nativescript/appavailability';
 import { Application, ApplicationEventData, ApplicationSettings, Connectivity, EventData, Folder, Observable, Utils } from '@nativescript/core';
 import { wrapNativeException } from '@nativescript/core/utils';
@@ -295,7 +295,7 @@ function decompress(encoded: string, precision: number) {
         lat = 0,
         lng = 0;
     const len = encoded.length,
-        array: MapPos<LatLonKeys>[] = [];
+        array: MapPos[] = [];
     while (index < len) {
         let b,
             shift = 0,
@@ -358,10 +358,10 @@ function compress(points: [number, number][], precision: number) {
     return encoded;
 }
 
-function latlongToOSMString(_point: MapPos<LatLonKeys>) {
+function latlongToOSMString(_point: MapPos) {
     return _point.lon.toFixed(4) + ',' + _point.lat.toFixed(4);
 }
-export function regionToOSMString(_region: MapBounds<LatLonKeys>) {
+export function regionToOSMString(_region: MapBounds) {
     return latlongToOSMString(_region.southwest) + ',' + latlongToOSMString(_region.northeast);
 }
 
