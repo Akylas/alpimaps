@@ -1,37 +1,19 @@
 import { getFromLocation } from '@nativescript-community/geocoding';
 import Observable from '@nativescript-community/observable';
-import { DoubleVector, GenericMapPos, MapBounds, MapPos, MapPosVector, fromNativeMapPos, nativeVectorToArray } from '@nativescript-community/ui-massifmaps/core';
-import { TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
-import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
-import { MBTilesTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/mbtiles';
-import {
-    GeocodingRequest,
-    GeocodingResult,
-    GeocodingResultVector,
-    GeocodingService,
-    MultiOSMOfflineGeocodingService,
-    MultiOSMOfflineReverseGeocodingService,
-    ReverseGeocodingRequest,
-    ReverseGeocodingService
-} from '@nativescript-community/ui-massifmaps/geocoding/service';
-import { Geometry, LineGeometry } from '@nativescript-community/ui-massifmaps/geometry';
-import { Feature, VectorTileFeature, VectorTileFeatureCollection } from '@nativescript-community/ui-massifmaps/geometry/feature';
-import { GeoJSONGeometryReader } from '@nativescript-community/ui-massifmaps/geometry/reader';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
-import { HillshadeRasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
-import { VectorTileLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
-import { Projection } from '@nativescript-community/ui-massifmaps/projections';
-import { MultiValhallaOfflineRoutingService, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-massifmaps/routing';
-import { SearchRequest, VectorTileSearchService, VectorTileSearchServiceOptions } from '@nativescript-community/ui-massifmaps/search';
+import * as api from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
 import type { Point as GeoJSONPoint } from 'geojson';
 import { LineString, MultiLineString, Point } from 'geojson';
 import { getMapContext } from '~/mapModules/MapModule';
 import { Address, AscentSegment, IItem, IItem as Item, Route, RouteInstruction, RouteProfile, RoutingAction } from '~/models/Item';
-import { EARTH_RADIUS, TO_RAD, computeDistanceBetween } from '~/utils/geo';
+import { EARTH_RADIUS, type MapPos, TO_RAD, computeDistanceBetween, fromPosition, geometryBounds, geometryCenter, toPosition } from '~/utils/geo';
+
+/** `[lng, lat]` pairs, which is what the valhalla HTTP helpers take. */
+const toLngLat = (positions: MapPos[]): [number, number][] => positions.map((p) => [p.lon, p.lat]);
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
-import { instructionsFromResult } from '~/utils/routing';
+import { type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
@@ -130,19 +112,40 @@ class WindowFilter extends MathFilter {
 
 const streetKeys = ['service_other', 'residential', 'living_street', 'driveway', 'alley', 'footway', 'culdesac', 'parking_aisle', 'turn_channel'];
 
-const geocodingMapping = [
-    ['name', 'getName'],
-    ['country', 'getCountry'],
-    ['city', 'getLocality'],
-    ['neighbourhood', 'getNeighbourhood'],
-    ['state', 'getRegion'],
-    ['postcode', 'getPostcode'],
-    ['street', 'getStreet'],
-    ['houseNumber', 'getHouseNumber'],
-    ['county', 'getCounty']
+/** app field name -> the key the SDK serialises the address under */
+const geocodingMapping: [string, string][] = [
+    ['name', 'name'],
+    ['country', 'country'],
+    ['city', 'locality'],
+    ['neighbourhood', 'neighbourhood'],
+    ['state', 'region'],
+    ['postcode', 'postcode'],
+    ['street', 'street'],
+    ['houseNumber', 'houseNumber'],
+    ['county', 'county']
 ];
 
 let geocodingAvailable = true;
+let geocodingRequestId = 0;
+let searchRequestId = 0;
+let routingRequestId = 0;
+
+/** What a tile search takes. The zoom/result knobs are properties of the SERVICE, not the request. */
+export interface SearchOptions {
+    position?: MapPos;
+    geometry?: GeoJSON.Geometry;
+    searchRadius?: number;
+    regexFilter?: string;
+    filterExpression?: string;
+    minZoom?: number;
+    maxZoom?: number;
+    maxResults?: number;
+    layers?: string[];
+    preventDuplicates?: boolean;
+    sortByDistance?: boolean;
+    bounds?: IMapBounds;
+}
+
 /** valhalla rejects requests with too many locations, and a recorded track has thousands of points */
 const TRACK_ROUTING_MAX_POINTS = 40;
 /** meters: closer via points than this add nothing but request size */
@@ -154,21 +157,21 @@ const TRACK_INSTRUCTION_TOLERANCE = 60;
  * Picks via points spread along a track: keeps the ends, then adds points no closer than
  * TRACK_ROUTING_MIN_SPACING, thinning further if that still leaves too many for valhalla.
  */
-function sampleTrackForRouting(positions: MapPosVector<LatLonKeys>) {
-    const size = positions.size();
-    const candidates: MapPos<LatLonKeys>[] = [];
-    let previous = fromNativeMapPos<LatLonKeys>(positions.get(0));
+function sampleTrackForRouting(positions: MapPos[]) {
+    const size = positions.length;
+    const candidates: MapPos[] = [];
+    let previous = positions[0];
     candidates.push(previous);
     for (let index = 1; index < size - 1; index++) {
-        const current = fromNativeMapPos<LatLonKeys>(positions.get(index));
+        const current = positions[index];
         if (computeDistanceBetween(previous, current) >= TRACK_ROUTING_MIN_SPACING) {
             candidates.push(current);
             previous = current;
         }
     }
-    const last = fromNativeMapPos<LatLonKeys>(positions.get(size - 1));
+    const last = positions[size - 1];
 
-    const result: MapPos<LatLonKeys>[] = [];
+    const result: MapPos[] = [];
     // keep both ends whatever the thinning: they are the actual start and destination
     const step = Math.max(1, Math.ceil(candidates.length / (TRACK_ROUTING_MAX_POINTS - 1)));
     for (let index = 0; index < candidates.length; index += step) {
@@ -179,12 +182,11 @@ function sampleTrackForRouting(positions: MapPosVector<LatLonKeys>) {
 }
 
 class PackageService extends Observable {
-    // vectorTileDecoder: MBVectorTileDecoder;
-    hillshadeLayer?: HillshadeRasterTileLayer;
-    localVectorTileLayer?: VectorTileLayer;
+    hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
+    localVectorTileLayer?: MassifLayer<'massif::VectorTileLayer'>;
 
-    mLocalOfflineRoutingSearchService: MultiValhallaOfflineRoutingService;
-    mOnlineRoutingSearchService: ValhallaOnlineRoutingService;
+    mLocalOfflineRoutingSearchService: MassifObject<'massif::MultiValhallaOfflineRoutingService'>;
+    mOnlineRoutingSearchService: MassifObject<'massif::ValhallaOnlineRoutingService'>;
 
     mDocPath;
     get docPath() {
@@ -203,14 +205,6 @@ class PackageService extends Observable {
             console.error('creating doc folder', Folder.fromPath(this.docPath).path);
         }
     }
-    clearCacheOnDataSource(dataSource: TileDataSource<any, any> & { dataSources?: TileDataSource<any, any>[] }) {
-        if (dataSource instanceof PersistentCacheTileDataSource) {
-            dataSource.clear();
-        }
-        if (dataSource.dataSources) {
-            dataSource.dataSources.forEach((d) => this.clearCacheOnDataSource(d));
-        }
-    }
     _currentLanguage = ApplicationSettings.getString('language', 'en');
     get currentLanguage() {
         return this._currentLanguage;
@@ -218,23 +212,24 @@ class PackageService extends Observable {
     set currentLanguage(value) {
         if (this._currentLanguage === value) {
             this._currentLanguage = value;
-            if (this.mLocalOSMOfflineGeocodingService) {
-                this.mLocalOSMOfflineGeocodingService.language = value;
-            }
-            if (this.mLocalOSMOfflineReverseGeocodingService) {
-                this.mLocalOSMOfflineReverseGeocodingService.language = value;
-            }
+            this.mLocalOSMOfflineGeocodingService?.set('language', value);
+            this.mLocalOSMOfflineReverseGeocodingService?.set('language', value);
         }
     }
-    convertGeoCodingResults(result: GeocodingResultVector, full = false) {
+    /**
+     * One geocoding answer, as the app's item shape.
+     *
+     * The SDK hands the whole result set over as a GeoJSON FeatureCollection whose features already
+     * carry `address` and `rank`, so there is nothing to walk: what used to be a crossing per
+     * result, per feature and per address field is one read.
+     */
+    convertGeoCodingResults(features: GeoJSON.Feature[], full = false) {
         const items: GeoResult[] = [];
-        if (!result) {
+        if (!features) {
             return items;
         }
-        const size = result.size();
-        let item;
-        for (let i = 0; i < size; i++) {
-            item = this.convertGeoCodingResult(result.get(i), full);
+        for (const feature of features) {
+            const item = this.convertGeoCodingResult(feature, full);
             if (item) {
                 items.push(item);
             }
@@ -242,69 +237,69 @@ class PackageService extends Observable {
         return items;
     }
 
-    convertFeatureCollection(features: VectorTileFeatureCollection, options: SearchRequest & { bounds?: IMapBounds }) {
-        const projection = this.vectorTileSearchService.options.layer.dataSource.getProjection();
-        let feature: VectorTileFeature;
-        const count = features.getFeatureCount();
+    convertFeatureCollection(features: GeoJSON.Feature[], options: { bounds?: IMapBounds }) {
         const result: GeoResult[] = [];
-        for (let index = 0; index < count; index++) {
-            feature = features.getFeature(index);
-            if (!feature.geometry) {
+        for (const feature of features) {
+            const geometry = feature.geometry;
+            if (!geometry) {
                 continue;
             }
-            const position = projection.toWgs84(feature.geometry.getCenterPos());
-            if (options.bounds && !isPointInsideBounds(position, options.bounds)) {
+            const position = geometryCenter(geometry);
+            if (!position || (options.bounds && !isPointInsideBounds(position, options.bounds))) {
                 continue;
             }
-            // if (result.findIndex((i) => i.geometry.coordinates[0] === position.lon && i.geometry.coordinates[1] === position.lat) >= 0) {
-            //     continue;
-            // }
+            const properties = feature.properties as any;
             result.push({
-                properties: { layer: feature.layerName, ...feature.properties } as any,
-                geometry: {
-                    type: 'Point',
-                    coordinates: [position.lon, position.lat]
-                },
-                distance: feature.distance
+                properties: { layer: properties?.layerName, ...properties } as any,
+                geometry: { type: 'Point', coordinates: [position.lon, position.lat] },
+                distance: properties?.distance
             } as GeoResult);
         }
         return result;
     }
-    convertGeoCodingResult(result: GeocodingResult, full = false) {
-        let feature: Feature;
-        const rank = result.getRank();
-        const features = result.getFeatureCollection();
-        if (features.getFeatureCount() > 0) {
-            feature = features.getFeature(0);
-            const position = fromNativeMapPos<LatLonKeys>(feature.geometry.getCenterPos());
-            const r = {
-                properties: { ...feature.properties, address: result.getAddress(), rank },
-                geometry: {
-                    type: 'Point',
-                    coordinates: [position.lon, position.lat]
-                }
-            } as GeoResult;
-            if ('getPos' in feature.geometry === false) {
-                r.properties.zoomBounds = features.getBounds();
-            }
-            if (full) {
-                this.prepareGeoCodingResult(r);
-                if (!r.properties.name && !r.properties.address['street'] && !r.properties.address['city']) {
-                    return;
-                }
-            }
-            return r;
+
+    convertGeoCodingResult(feature: GeoJSON.Feature, full = false) {
+        if (!feature?.geometry) {
+            return;
         }
+        const position = geometryCenter(feature.geometry);
+        const properties = feature.properties as any;
+        const r = {
+            properties: { ...properties },
+            geometry: { type: 'Point', coordinates: [position.lon, position.lat] }
+        } as GeoResult;
+        // a shape rather than a point: the caller zooms to it instead of centring on it
+        if (feature.geometry.type !== 'Point') {
+            r.properties.zoomBounds = geometryBounds(feature.geometry);
+        }
+        if (full) {
+            this.prepareGeoCodingResult(r);
+            if (!r.properties.name && !r.properties.address?.['street'] && !r.properties.address?.['city']) {
+                return;
+            }
+        }
+        return r;
     }
-    searchInGeocodingService(service: ReverseGeocodingService<any, any> | GeocodingService<any, any>, options): Promise<GeocodingResultVector> {
-        return new Promise((resolve, reject) => {
-            service.calculateAddresses(options, (err, result) => {
-                // console.log('calculateAddresses', options, err, result && result.size());
-                if (err) reject(err);
-                else resolve(result);
-                resolve(result);
-            });
-        });
+
+    /**
+     * Runs a geocoding request and returns its features.
+     *
+     * `calculateAddresses` is blocking - the offline geocoder reads sqlite - so it goes through
+     * callAsync, which runs it on a worker and resolves when the answer arrives.
+     */
+    async searchInGeocodingService(service: MassifObject, options: { query?: string; location?: MapPos; searchRadius?: number }): Promise<GeoJSON.Feature[]> {
+        if (!service) {
+            return null;
+        }
+        const request = options.location
+            ? api.create('geocoding', `geocoding.request.${++geocodingRequestId}`, { type: 'reverse-request', location: toPosition(options.location), searchRadius: options.searchRadius }, 'massif::ReverseGeocodingRequest')
+            : api.create('geocoding', `geocoding.request.${++geocodingRequestId}`, { type: 'request', query: options.query, searchRadius: options.searchRadius }, 'massif::GeocodingRequest');
+        try {
+            const collection = (await service.callAsync('calculateAddresses' as never, [request.handle] as never)) as unknown as GeoJSON.FeatureCollection;
+            return collection?.features ?? [];
+        } finally {
+            request.destroy();
+        }
     }
 
     findFilesWithExtension(extension: string) {
@@ -321,79 +316,84 @@ class PackageService extends Observable {
         return result;
     }
 
-    mLocalOSMOfflineGeocodingService: MultiOSMOfflineGeocodingService;
+    /**
+     * The offline geocoders, over whatever .nutigeodb the user has downloaded.
+     *
+     * One database per area, found by scanning, so they are added after construction - which is
+     * why the service takes none in its spec.
+     */
+    private buildGeocoder(id: string, type: 'multi-osm-offline' | 'multi-osm-offline-reverse') {
+        const files = this.findFilesWithExtension('.nutigeodb');
+        if (!files.length) {
+            return null;
+        }
+        const service = api.create('geocoding', id, { type });
+        service.set('language', this.currentLanguage);
+        files.forEach((f) => service.call('add', f.path));
+        return service;
+    }
+
+    mLocalOSMOfflineGeocodingService: MassifObject<'massif::MultiOSMOfflineGeocodingService'>;
     hasLocalOSMOfflineGeocodingService = true;
     get localOSMOfflineGeocodingService() {
         if (this.hasLocalOSMOfflineGeocodingService && !this.mLocalOSMOfflineGeocodingService) {
-            const files = this.findFilesWithExtension('.nutigeodb');
-            if (files.length) {
-                const source = (this.mLocalOSMOfflineGeocodingService = new MultiOSMOfflineGeocodingService({
-                    language: this.currentLanguage
-                }));
-                files.forEach((f) => source.add(f.path));
-            } else {
-                this.hasLocalOSMOfflineGeocodingService = false;
-            }
+            this.mLocalOSMOfflineGeocodingService = this.buildGeocoder('geocoding.osm', 'multi-osm-offline') as never;
+            this.hasLocalOSMOfflineGeocodingService = !!this.mLocalOSMOfflineGeocodingService;
         }
         return this.mLocalOSMOfflineGeocodingService;
     }
-    mLocalOSMOfflineReverseGeocodingService: MultiOSMOfflineReverseGeocodingService;
+    mLocalOSMOfflineReverseGeocodingService: MassifObject<'massif::MultiOSMOfflineReverseGeocodingService'>;
     hasLocalOSMOfflineReverseGeocodingService = true;
     get localOSMOfflineReverseGeocodingService() {
         if (this.hasLocalOSMOfflineReverseGeocodingService && !this.mLocalOSMOfflineReverseGeocodingService) {
-            const files = this.findFilesWithExtension('.nutigeodb');
-            if (files.length) {
-                const source = (this.mLocalOSMOfflineReverseGeocodingService = new MultiOSMOfflineReverseGeocodingService({
-                    language: this.currentLanguage
-                }));
-                files.forEach((f) => source.add(f.path));
-            } else {
-                this.hasLocalOSMOfflineReverseGeocodingService = false;
-            }
+            this.mLocalOSMOfflineReverseGeocodingService = this.buildGeocoder('geocoding.osm.reverse', 'multi-osm-offline-reverse') as never;
+            this.hasLocalOSMOfflineReverseGeocodingService = !!this.mLocalOSMOfflineReverseGeocodingService;
         }
         return this.mLocalOSMOfflineReverseGeocodingService;
     }
-    _vectorTileSearchService: VectorTileSearchService;
+    _vectorTileSearchService: MassifObject<'massif::VectorTileSearchService'>;
     get vectorTileSearchService() {
-        if (!this._vectorTileSearchService) {
-            if (this.localVectorTileLayer) {
-                this._vectorTileSearchService = new VectorTileSearchService({
-                    minZoom: 14,
-                    maxZoom: 14,
-                    preventDuplicates: true,
-                    sortByDistance: true,
-                    layers: ['poi', 'place', 'mountain_peak', 'transportation_name', 'landcover_name', 'landuse_name', 'park', 'water_name', 'building_name'],
-                    layer: this.localVectorTileLayer
-                });
-            }
+        if (!this._vectorTileSearchService && this.localVectorTileLayer) {
+            // Built FROM THE LAYER: its source and its decoder are the ones already on screen, so
+            // a search reads exactly what the user is looking at.
+            this._vectorTileSearchService = api.create('search', 'search.vectortile', {
+                type: 'vectortile',
+                layer: this.localVectorTileLayer.id,
+                minZoom: 14,
+                maxZoom: 14,
+                preventDuplicates: true,
+                sortByDistance: true,
+                layers: ['poi', 'place', 'mountain_peak', 'transportation_name', 'landcover_name', 'landuse_name', 'park', 'water_name', 'building_name']
+            } as never) as never;
         }
         return this._vectorTileSearchService;
     }
-    _timezoneTileSearchService: VectorTileSearchService;
-    timezoneVectorTileDataSource?: MBTilesTileDataSource;
+    _timezoneTileSearchService: MassifObject<'massif::VectorTileSearchService'>;
+    timezoneVectorTileDataSource?: MassifSource<'massif::MBTilesTileDataSource'>;
     get timezoneTileSearchService() {
         if (!this._timezoneTileSearchService) {
             if (this.timezoneVectorTileDataSource === undefined) {
-                this.timezoneVectorTileDataSource = new MBTilesTileDataSource({
-                    databasePath: path.join(knownFolders.currentApp().path, 'assets', 'timezone.mbtiles')
+                this.timezoneVectorTileDataSource = api.createSource('source.timezone', {
+                    type: 'mbtiles',
+                    path: path.join(knownFolders.currentApp().path, 'assets', 'timezone.mbtiles')
                 });
             }
-
             if (this.timezoneVectorTileDataSource) {
-                this._timezoneTileSearchService = new VectorTileSearchService({
+                this._timezoneTileSearchService = api.create('search', 'search.timezone', {
+                    type: 'vectortile',
+                    source: this.timezoneVectorTileDataSource.id,
+                    style: getMapContext().mapDecoder.id,
                     minZoom: 3,
                     maxZoom: 3,
                     preventDuplicates: true,
-                    sortByDistance: true,
-                    dataSource: this.timezoneVectorTileDataSource,
-                    decoder: getMapContext().mapDecoder
-                });
+                    sortByDistance: true
+                } as never) as never;
             }
         }
         return this._timezoneTileSearchService;
     }
 
-    async getItemAddress(item: IItem, projection: Projection) {
+    async getItemAddress(item: IItem) {
         try {
             const service = this.localOSMOfflineReverseGeocodingService;
             let foundAddress = false;
@@ -402,16 +402,12 @@ class PackageService extends Observable {
             // DEV_LOG && console.log('fetching addresses', !!service, JSON.stringify(location), get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
             if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
-                const res = await packageService.searchInGeocodingService(service, {
-                    projection,
-                    location,
-                    searchRadius: radius
-                });
+                const res = await packageService.searchInGeocodingService(service, { location, searchRadius: radius });
                 const props = item.properties;
                 if (res) {
                     let bestFind: GeoResult;
-                    for (let index = 0; index < res.size(); index++) {
-                        const r = packageService.convertGeoCodingResult(res.get(index), true);
+                    for (const feature of res) {
+                        const r = packageService.convertGeoCodingResult(feature, true);
 
                         if (
                             r &&
@@ -461,74 +457,98 @@ class PackageService extends Observable {
             console.error('error fetching address', error, error.stack);
         }
     }
-    searchInLocalGeocodingService(options: GeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
-        const service = this.localOSMOfflineGeocodingService;
-        if (!service) {
-            return Promise.resolve(null);
-        }
-        return this.searchInGeocodingService(service, options);
+    searchInLocalGeocodingService(options: { query: string; searchRadius?: number }) {
+        return this.searchInGeocodingService(this.localOSMOfflineGeocodingService, options);
     }
-    searchInLocalReverseGeocodingService(options: ReverseGeocodingRequest<LatLonKeys>): Promise<GeocodingResultVector> {
-        const service = this.localOSMOfflineReverseGeocodingService;
-        if (!service) {
-            return Promise.resolve(null);
-        }
-        return this.searchInGeocodingService(service, options);
+    searchInLocalReverseGeocodingService(options: { location: MapPos; searchRadius?: number }) {
+        return this.searchInGeocodingService(this.localOSMOfflineReverseGeocodingService, options);
     }
 
-    async searchInVectorTiles(options: SearchRequest & VectorTileSearchServiceOptions): Promise<VectorTileFeatureCollection> {
+    /**
+     * A search over the tiles on screen. Returns the matching features, flat.
+     *
+     * The per-search settings are written onto the service and put back afterwards, because the
+     * SDK has no per-request override for them - which also means two overlapping searches would
+     * fight, so callers keep them sequential.
+     */
+    async searchInVectorTiles(options: SearchOptions): Promise<GeoJSON.Feature[]> {
         const service = this.vectorTileSearchService;
         if (!service) {
             return null;
         }
-        const toRestoreSettings = {};
-        Object.keys(options)
-            .filter((s) => VECTORTILESEARCH_OPTIONS.indexOf(s) !== -1)
-            .forEach((s) => {
-                toRestoreSettings[s] = service[s];
-                service[s] = options[s];
-            });
-        DEV_LOG && console.log('searchInVectorTiles', service.minZoom, service.maxZoom, JSON.stringify(toRestoreSettings));
-        const result = await new Promise<VectorTileFeatureCollection<LatLonKeys>>((resolve) => service.findFeatures(options, resolve));
-        Object.keys(toRestoreSettings).forEach((s) => {
-            service[s] = toRestoreSettings[s];
-        });
-        return result;
+        const restore: { [key: string]: any } = {};
+        for (const key of Object.keys(options)) {
+            if (VECTORTILESEARCH_OPTIONS.indexOf(key) !== -1) {
+                restore[key] = service.get(key as never);
+                service.set(key as never, options[key] as never);
+            }
+        }
+        const request = this.buildSearchRequest(options);
+        try {
+            const features = await service.callAsync('findFeatures' as never, [request.handle] as never, ((collection) =>
+                collection.collect((feature) => ({
+                    type: 'Feature',
+                    geometry: JSON.parse(feature.get('geometryGeoJSON') as string),
+                    properties: { ...(feature.get('properties') as object), layerName: feature.get('layerName'), distance: feature.get('distance') }
+                }))) as never);
+            return features as unknown as GeoJSON.Feature[];
+        } finally {
+            request.destroy();
+            for (const key of Object.keys(restore)) {
+                service.set(key as never, restore[key] as never);
+            }
+        }
     }
 
-    getTimezone(position: MapPos<LatLonKeys>) {
+    /** A search request: a centre or a bounding geometry, a radius, and the filters. */
+    private buildSearchRequest(options: SearchOptions): MassifObject<'massif::SearchRequest'> {
+        const spec: { [key: string]: any } = { type: 'request' };
+        if (options.searchRadius !== undefined) {
+            spec.searchRadius = options.searchRadius;
+        }
+        if (options.regexFilter) {
+            spec.regexFilter = options.regexFilter;
+        }
+        if (options.filterExpression) {
+            spec.filterExpression = options.filterExpression;
+        }
+        if (options.position) {
+            spec.geometry = { type: 'geojson', geojson: { type: 'Point', coordinates: toPosition(options.position) } };
+        } else if (options.geometry) {
+            spec.geometry = { type: 'geojson', geojson: options.geometry };
+        }
+        return api.create('search', `search.request.${++searchRequestId}`, spec as never) as never;
+    }
+
+    getTimezone(position: MapPos) {
         const service = this.timezoneTileSearchService;
         if (!service) {
             return null;
         }
-        return service.findFeatures({
-            projection: getMapContext().getProjection(),
-            position,
-            searchRadius: 10
-        });
+        const request = this.buildSearchRequest({ position, searchRadius: 10 });
+        try {
+            return service.callAsync('findFeatures' as never, [request.handle] as never, ((collection) => collection.collect((feature) => feature.get('properties'))) as never);
+        } finally {
+            request.destroy();
+        }
     }
+    /**
+     * Normalises a geocoding result's address onto the app's own field names.
+     *
+     * The address arrives as a plain object now - the SDK serialises it with the feature - so this
+     * is a rename, where it used to be a getter call per field through a native object.
+     */
     prepareGeoCodingResult(geoRes: GeoResult, onlyAddress = false) {
+        const source = (geoRes.properties.address ?? {}) as { [key: string]: any };
         const address: any = {};
-
-        geocodingMapping.forEach((d) => {
-            if (!address[d[0]] && d[1] in geoRes.properties.address) {
-                try {
-                    const value = geoRes.properties.address[d[1]]();
-                    if (value.length > 0) {
-                        address[d[0]] = value;
-                    }
-                } catch (err) {
-                    console.error('error getting address', d[0], err);
-                }
+        for (const [target, key] of geocodingMapping) {
+            const value = source[key];
+            if (value?.length > 0) {
+                address[target] = value;
             }
-        });
-        if ('getCategories' in geoRes.properties.address) {
-            const cat = geoRes.properties.address['getCategories']();
-            if (cat && cat.size() > 0) {
-                geoRes.properties.categories = nativeVectorToArray<string>(cat)
-                    .map((s) => s.split(':').reverse())
-                    .flat();
-            }
+        }
+        if (source.categories?.length) {
+            geoRes.properties.categories = (source.categories as string[]).map((c) => c.split(':').reverse()).flat();
         }
 
         const res = geoRes as Item;
@@ -540,45 +560,30 @@ class PackageService extends Observable {
                 delete geoRes.properties.name;
             }
         }
-        // console.log('geoRes', JSON.stringify(geoRes));
         return geoRes as Item;
     }
     hasElevation() {
         return !!this.hillshadeLayer;
     }
-    async getElevation(pos: MapPos<LatLonKeys>): Promise<number> {
-        if (this.hillshadeLayer) {
-            return new Promise((resolve, reject) => {
-                // console.log('getElevation', pos);
-                this.hillshadeLayer.getElevationAsync(pos, (err, result) => {
-                    if (err || result === -10000) {
-                        reject(err);
-                        return;
-                    }
-                    // console.log('gotElevation', result);
-                    resolve(Math.max(-100, Math.round(result)));
-                });
-            });
-        }
-        return null;
-    }
-    /** the carto layer interpolates, so these are real doubles: rounding them destroys the grade */
-    async getElevations(pos: MapPosVector<LatLonKeys> | GenericMapPos<LatLonKeys>[]): Promise<DoubleVector> {
-        if (this.hillshadeLayer) {
-            return new Promise((resolve, reject) => {
-                this.hillshadeLayer.getElevationsAsync(pos, (err, result) => {
-                    if (err) {
-                        reject(err);
-                        return;
-                    }
-                    resolve(result);
-                });
-            });
-        }
-        return null;
+
+    /**
+     * Elevations under a set of positions, in one crossing.
+     *
+     * Only a hillshade layer answers. The values come back as real doubles - the layer interpolates,
+     * and rounding them destroys the grade the profile is differentiated from.
+     */
+    getElevations(positions: MapPos[]): number[] {
+        return this.hillshadeLayer ? this.hillshadeLayer.elevations(positions.map(toPosition)) : null;
     }
 
-    computeProfileFromHeights(positions: MapPosVector<LatLonKeys>, elevations: DoubleVector | number[]) {
+    getElevation(pos: MapPos): number {
+        const elevations = this.getElevations([pos]);
+        const value = elevations?.[0];
+        // -10000 is the layer's "no data here"
+        return value === undefined || value === -10000 ? null : Math.max(-100, Math.round(value));
+    }
+
+    computeProfileFromHeights(positions: MapPos[], elevations: number[]) {
         const smoothWindow = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW);
         const filterStep = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP);
         const ascentsMinGain = ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN, DEFAULT_ELEVATION_PROFILE_ASCENTS_MIN_GAIN);
@@ -597,22 +602,14 @@ class PackageService extends Observable {
 
         const profile: { lat: number; lon: number; altitude: number; tmpElevation?: number }[] = [];
         const altitudeFilter = new WindowFilter({ windowLength: smoothWindow });
-        const jsElevation: number[] = typeof elevations['toArray'] === 'function' ? (elevations as any).toArray() : elevations;
-        const usingNative = typeof positions.size === 'function';
-        const getPos = usingNative
-            ? (i) => {
-                  const pos = positions.get(i);
-                  return [pos.getX(), pos.getY()];
-              }
-            : (i) => positions[i];
-        const nbPoints = usingNative ? positions.size() : positions['length'];
+        const nbPoints = positions.length;
         for (let i = 0; i < nbPoints; i++) {
-            const pos = getPos(i);
+            const pos = positions[i];
             profile.push({
-                lat: pos[1],
-                lon: pos[0],
-                altitude: jsElevation[i],
-                tmpElevation: altitudeFilter.filter(jsElevation[i])
+                lat: pos.lat,
+                lon: pos.lon,
+                altitude: elevations[i],
+                tmpElevation: altitudeFilter.filter(elevations[i])
             });
         }
         let ascent = 0;
@@ -754,153 +751,115 @@ class PackageService extends Observable {
         result.ascents = ascents;
         return result;
     }
-    _reader: GeoJSONGeometryReader;
-    getGeoJSONReader() {
-        if (!this._reader) {
-            this._reader = new GeoJSONGeometryReader({
-                targetProjection: getMapContext().getProjection()
-            });
+    /**
+     * The positions of a route item, as plain `{ lat, lon }`.
+     *
+     * There is no native geometry cache any more: the item already carries GeoJSON, and building an
+     * SDK geometry only to read its points back was two crossings and a proxy per point. A
+     * MultiLineString is flattened, which is what every caller here assumed anyway.
+     */
+    getRouteItemPoses(item: Item): MapPos[] {
+        const geometry = (item?.geometry ?? (item?._geometry ? JSON.parse(item._geometry) : null)) as LineString | MultiLineString;
+        if (!geometry) {
+            return null;
         }
-        return this._reader;
+        const coordinates = geometry.type === 'MultiLineString' ? (geometry.coordinates as number[][][]).flat() : (geometry.coordinates as number[][]);
+        return coordinates.map((c) => ({ lat: c[1], lon: c[0] }) as MapPos);
     }
 
-    getRouteItemGeometry(item: Item) {
-        let geometry = item._nativeGeometry || (packageService.getGeoJSONReader().readGeometry(item._geometry || JSON.stringify(item.geometry)) as LineGeometry<LatLonKeys>);
-        if (geometry['getGeometryCount']) {
-            geometry = geometry['getGeometry'](0);
-        }
-        if (!item._nativeGeometry) {
-            item._nativeGeometry = geometry.getNative?.() || geometry;
-        }
-        return item._nativeGeometry as Geometry<LatLonKeys>;
-    }
-
-    getRouteItemPoses(item: Item) {
-        const geometry = this.getRouteItemGeometry(item) as any as LineGeometry<LatLonKeys>;
-        return geometry?.getPoses();
-    }
     getItemCenter(item: Item) {
-        if (!!item?.route) {
-            return fromNativeMapPos(this.getRouteItemGeometry(item).getCenterPos());
+        if (item?.route) {
+            const bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+            return bounds && { lat: (bounds.northeast.lat + bounds.southwest.lat) / 2, lon: (bounds.northeast.lon + bounds.southwest.lon) / 2 };
         }
         return (item.geometry as Point).coordinates;
     }
-    async getElevationProfile(item: Item, positions?: MapPosVector<LatLonKeys>) {
-        if (!item || item.geometry.type === 'LineString' || item.geometry.type === 'MultiLineString') {
-            if (this.hillshadeLayer) {
-                const startTime = Date.now();
-                if (!positions) {
-                    positions = this.getRouteItemPoses(item);
-                }
-                const elevations = await this.getElevations(positions);
-                const result = this.computeProfileFromHeights(positions, elevations);
-                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
-                return result;
-            } else {
-                const startTime = Date.now();
-                let positions;
-                if (item._nativeGeometry) {
-                    const writer = new GeoJSONGeometryWriter<LatLonKeys>({
-                        sourceProjection: getMapContext().getProjection()
-                    });
-                    const geometry = JSON.parse(writer.writeGeometry(item._nativeGeometry));
-                    positions = (geometry as MultiLineString | LineString).coordinates;
-                    if (Array.isArray(positions[0][0])) {
-                        positions = positions.flatten();
-                    }
-                } else {
-                    const geometry = item.geometry || JSON.parse(item._geometry);
-                    positions = (geometry as MultiLineString | LineString).coordinates;
-                    if (Array.isArray(positions[0][0])) {
-                        positions = positions.flatten();
-                    }
-                }
-                //    DEV_LOG && console.log('getValhallaElevationProfile', positions.length);
-                const webResult = await networkService.getValhallaElevationProfile(positions);
-                // DEV_LOG && console.log('getValhallaElevationProfile elevations', Object.keys(webResult), webResult.range_height.length, JSON.stringify(webResult.range_height));
-                const result = this.computeProfileFromHeights(
-                    positions,
-                    webResult.range_height.map((e) => e[1])
-                );
-                DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
-                return result;
-            }
+
+    /**
+     * The elevation profile of a route: from the hillshade layer when there is one, from valhalla
+     * otherwise.
+     *
+     * The two branches used to build their positions differently - one from a cached native
+     * geometry, one from the item's GeoJSON - and produced the same thing; there is one path now.
+     */
+    async getElevationProfile(item: Item, positions?: MapPos[]) {
+        if (item && item.geometry.type !== 'LineString' && item.geometry.type !== 'MultiLineString') {
+            return null;
         }
-        return null;
+        const startTime = Date.now();
+        positions = positions ?? this.getRouteItemPoses(item);
+        if (!positions?.length) {
+            return null;
+        }
+        if (this.hillshadeLayer) {
+            const result = this.computeProfileFromHeights(positions, this.getElevations(positions));
+            DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
+            return result;
+        }
+        const webResult = await networkService.getValhallaElevationProfile(toLngLat(positions));
+        const result = this.computeProfileFromHeights(
+            positions,
+            webResult.range_height.map((e) => e[1])
+        );
+        DEV_LOG && console.log('getValhallaElevationProfile done', Date.now() - startTime, 'ms');
+        return result;
     }
 
+    /**
+     * Valhalla's trace attributes for a route: surface, road class, grade, per edge.
+     *
+     * Offline it is a map-matching call on the routing service; online it is the same request over
+     * HTTP. `shape_match` and the attribute filters are free-form JSON, so they go through
+     * setCustomParameter rather than being properties.
+     */
     async getStats({
         // the shape indices are what lets us say which surface is *ahead*, not just how much of it there is
         attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length', 'edge.begin_shape_index', 'edge.end_shape_index'],
         item,
         points,
         profile,
-        projection,
         shape_match = 'walk_or_snap'
     }: {
-        item;
-        projection;
-        points;
+        item?;
+        points?: MapPos[];
         profile?: ValhallaProfile;
         attributes?: string[];
         shape_match?: string;
     }) {
-        const service = this.offlineRoutingSearchService();
-        if (service instanceof MultiValhallaOfflineRoutingService) {
-            const startTime = Date.now();
-            DEV_LOG && console.log('matchRoute', points);
-            const matchResult = await service.matchRoute(
-                {
-                    projection,
-                    points,
-                    accuracy: 1,
-                    customOptions: {
-                        shape_match,
-                        filters: { attributes, action: 'include' }
-                    }
-                },
-                profile
-            );
-            DEV_LOG && console.log('got trace attributes', Date.now() - startTime, 'ms');
-            return JSON.parse(matchResult.getRawResult()).edges;
-        } else {
-            const startTime = Date.now();
-            let positions;
-            if (item._nativeGeometry) {
-                const writer = new GeoJSONGeometryWriter<LatLonKeys>({
-                    sourceProjection: getMapContext().getProjection()
-                });
-                const geometry = JSON.parse(writer.writeGeometry(item._nativeGeometry));
-                positions = (geometry as MultiLineString | LineString).coordinates;
-                if (Array.isArray(positions[0][0])) {
-                    positions = positions.flatten();
-                }
-            } else {
-                const geometry = item.geometry || JSON.parse(item._geometry);
-                positions = (geometry as MultiLineString | LineString).coordinates;
-                if (Array.isArray(positions[0][0])) {
-                    positions = positions.flatten();
-                }
-            }
-            DEV_LOG && console.log('getStats', positions.length);
-            const webResult = await networkService.getValhallaTraceAttributes(positions, {
-                shape_match,
-                filters: { attributes, action: 'include' }
-            });
-            // DEV_LOG && console.log('getStats result', Object.keys(webResult));
-            // const result = this.computeProfileFromHeights(
-            //     positions,
-            //     webResult.range_height.map((e) => e[1])
-            // );
-            DEV_LOG && console.log('getStats done', Date.now() - startTime, 'ms');
-            return webResult.edges;
+        const positions = points ?? this.getRouteItemPoses(item);
+        if (!positions?.length) {
+            return null;
         }
+        const startTime = Date.now();
+        const service = this.offlineRoutingSearchService() as unknown as MassifObject<'massif::RoutingService'>;
+        if (service) {
+            const request = api.create('routing', `routing.match.${++routingRequestId}`, { type: 'match-request', points: positions.map(toPosition), accuracy: 1 }, 'massif::RouteMatchingRequest');
+            try {
+                request.call('setCustomParameter', 'shape_match', shape_match);
+                request.call('setCustomParameter', 'filters', { attributes, action: 'include' });
+                if (profile) {
+                    service.set('profile', profile);
+                }
+                const raw = await service.callAsync('matchRoute' as never, [request.handle] as never, ((result) => result.get('rawResult')) as never);
+                DEV_LOG && console.log('got trace attributes', Date.now() - startTime, 'ms');
+                return JSON.parse(raw as unknown as string).edges;
+            } finally {
+                request.destroy();
+            }
+        }
+        const webResult = await networkService.getValhallaTraceAttributes(toLngLat(positions), {
+            shape_match,
+            filters: { attributes, action: 'include' }
+        });
+        DEV_LOG && console.log('getStats done', Date.now() - startTime, 'ms');
+        return webResult.edges;
     }
-    async fetchStats({ item, positions, profile, projection, route }: { projection; positions?; item?; route?: Route; profile?: ValhallaProfile }) {
+
+    async fetchStats({ item, positions, profile, route }: { positions?: MapPos[]; item?; route?: Route; profile?: ValhallaProfile }) {
         if (!route) {
             route = item.route;
         }
-        const edges = await this.getStats({ item, projection, points: positions || this.getRouteItemPoses(item), profile });
+        const edges = await this.getStats({ item, points: positions, profile });
         if (!edges) {
             return;
         }
@@ -963,11 +922,10 @@ class PackageService extends Observable {
     }
     hasOfflineRouting = true;
 
-    setValhallaSetting(key, defaultValue) {
-        const source = this.mLocalOfflineRoutingSearchService;
+    setValhallaSetting(key: string, defaultValue: number) {
         const value = ApplicationSettings.getNumber(key, defaultValue);
         if (value !== defaultValue) {
-            source.setConfigurationParameter(key, value);
+            this.mLocalOfflineRoutingSearchService?.call('setConfigurationParameter', key, value);
         }
     }
     /**
@@ -980,20 +938,19 @@ class PackageService extends Observable {
      * The computed route snaps to the road graph, so its own point indices mean nothing to the track.
      * Each maneuver is therefore projected back onto the track to get an index the navigation can use.
      */
-    async computeTrackInstructions({ item, profile = 'pedestrian', projection }: { item: Item; projection; profile?: ValhallaProfile }): Promise<RouteInstruction[]> {
+    async computeTrackInstructions({ item, profile = 'pedestrian' }: { item: Item; profile?: ValhallaProfile }): Promise<RouteInstruction[]> {
         const trackPositions = this.getRouteItemPoses(item);
-        const trackSize = trackPositions?.size() ?? 0;
+        const trackSize = trackPositions?.length ?? 0;
         if (trackSize < 2) {
             return null;
         }
         const points = sampleTrackForRouting(trackPositions);
         DEV_LOG && console.log('computeTrackInstructions', trackSize, 'track points ->', points.length, 'via points');
-        const { result } = await this.computeRoute({ points, projection, profile });
-        const routePoints = result.getPoints();
+        const { positions: routePoints, result } = await this.computeRoute({ points, profile });
 
         let lastTrackIndex = -1;
         const instructions = instructionsFromResult(result, (pointIndex) => {
-            const routePoint = fromNativeMapPos<LatLonKeys>(routePoints.get(pointIndex));
+            const routePoint = routePoints[pointIndex];
             // a generous tolerance: the routed line and the recorded track never overlap exactly
             const projected = projectOnRoute(routePoint, trackPositions, { fromIndex: lastTrackIndex, tolerance: TRACK_INSTRUCTION_TOLERANCE });
             if (!projected) {
@@ -1016,25 +973,48 @@ class PackageService extends Observable {
     async computeRoute({
         costingOptions,
         points,
-        profile = 'pedestrian',
-        projection
+        profile = 'pedestrian'
     }: {
-        points: GenericMapPos<LatLonKeys>[];
-        projection;
+        points: MapPos[];
         profile?: ValhallaProfile;
         /** valhalla `costing_options`, as stored on a computed route */
         costingOptions?: any;
     }) {
-        const service = this.offlineRoutingSearchService() || this.onlineRoutingSearchService();
+        // Typed as the BASE: the two services differ only in how they are built, and a union of
+        // the two concrete types has no callable methods in common.
+        const service = (this.offlineRoutingSearchService() ?? this.onlineRoutingSearchService()) as unknown as MassifObject<'massif::RoutingService'>;
         if (!service) {
             throw new Error('no_routing_service');
         }
-        const customOptions: any = { language: get(fullLangStore) };
-        if (costingOptions) {
-            customOptions.costing_options = costingOptions;
+        const request = api.create('routing', `routing.request.${++routingRequestId}`, { type: 'request', points: points.map(toPosition) }, 'massif::RoutingRequest');
+        try {
+            request.call('setCustomParameter', 'language', get(fullLangStore));
+            if (costingOptions) {
+                request.call('setCustomParameter', 'costing_options', costingOptions);
+            }
+            service.set('profile', profile);
+            // The result is destroyed with the delivery, so everything the caller needs is read
+            // out here - the path in one flat array, through the bulk channel.
+            const route = await service.callAsync('calculateRoute' as never, [request.handle] as never, ((result) => ({
+                instructionsJSON: result.get('instructionsJSON'),
+                flat: result.getDoubles(),
+                totalDistance: result.get('totalDistance'),
+                totalTime: result.get('totalTime')
+            })) as never) as unknown as { instructionsJSON: any; flat: number[]; totalDistance: number; totalTime: number };
+            const positions: MapPos[] = [];
+            for (let index = 0; index < route.flat.length; index += 2) {
+                positions.push({ lat: route.flat[index + 1], lon: route.flat[index] });
+            }
+            return {
+                // what instructionsFromResult reads, without the result object having to outlive it
+                result: { get: (path: string) => (path === 'instructionsJSON' ? route.instructionsJSON : undefined) } as never,
+                positions,
+                totalDistance: route.totalDistance,
+                totalTime: route.totalTime
+            };
+        } finally {
+            request.destroy();
         }
-        const result = await service.calculateRoute<LatLonKeys>({ projection, points, customOptions }, profile);
-        return { result, positions: result.getPoints(), totalDistance: result.getTotalDistance(), totalTime: result.getTotalTime() };
     }
 
     offlineRoutingSearchService() {
@@ -1042,16 +1022,16 @@ class PackageService extends Observable {
             const files = this.findFilesWithExtension('.vtiles');
             const currentLanguage = get(fullLangStore);
             if (files.length) {
-                const source = (this.mLocalOfflineRoutingSearchService = new MultiValhallaOfflineRoutingService());
+                const service = (this.mLocalOfflineRoutingSearchService = api.create('routing', 'routing.offline', { type: 'multi-valhalla-offline' }) as MassifObject<'massif::MultiValhallaOfflineRoutingService'>);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_TRACE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
-                files.forEach((f) => source.add(f.path));
+                files.forEach((f) => service.call('add', f.path));
                 if (currentLanguage !== 'en-US' && SUPPORTED_VALHALLA_LOCALES.indexOf(currentLanguage) !== -1) {
                     const localeData = require(`~/assets/valhalla/${currentLanguage}.json`);
                     DEV_LOG && console.log('loading custom valhalla locale', currentLanguage);
-                    this.mLocalOfflineRoutingSearchService.addLocale(currentLanguage, JSON.stringify(localeData));
+                    service.call('addLocale', currentLanguage, JSON.stringify(localeData));
                 }
             } else {
                 this.hasOfflineRouting = false;
@@ -1061,19 +1041,17 @@ class PackageService extends Observable {
     }
 
     setOnlineRoutingUrl(url: string) {
-        if (this.mOnlineRoutingSearchService) {
-            this.mOnlineRoutingSearchService.customServiceURL = url + +'/{service}';
-        }
+        // `+ +` was a typo that stringified NaN onto the url; one concatenation is what was meant
+        this.mOnlineRoutingSearchService?.set('customServiceURL', `${url}/{service}`);
     }
 
     onlineRoutingSearchService() {
         if (!this.mOnlineRoutingSearchService) {
-            this.mOnlineRoutingSearchService = new ValhallaOnlineRoutingService({
+            this.mOnlineRoutingSearchService = api.create('routing', 'routing.online', {
+                type: 'valhalla-online',
                 customServiceURL: ApplicationSettings.getString(SETTINGS_VALHALLA_ONLINE_URL, DEFAULT_VALHALLA_ONLINE_URL) + '/{service}',
                 profile: 'pedestrian',
-                httpHeaders: {
-                    'X-Client-Id': 'AlpiMaps'
-                }
+                HTTPHeaders: { 'X-Client-Id': 'AlpiMaps' }
             });
         }
         return this.mOnlineRoutingSearchService;
