@@ -1,6 +1,5 @@
 <script lang="ts">
-    import { PersistentCacheTileDataSource } from '@nativescript-community/ui-massifmaps/datasources/cache';
-    import { HillshadeRasterTileLayer, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
+    import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { action, confirm } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, Color, File, ScrollView, StackLayout } from '@nativescript/core';
@@ -27,8 +26,11 @@
 
     $: downloadable = item.provider.downloadable || devMode;
     $: cacheable = item.provider.cacheable || !PRODUCTION;
-    $: persistent = item.layer.dataSource instanceof PersistentCacheTileDataSource;
-    $: cacheOnlyMode = persistent && (item.layer.dataSource as PersistentCacheTileDataSource).cacheOnlyMode;
+    // the layer's source, held for the length of this sheet: it is a reference, and destroying it
+    // does not touch the layer's own
+    $: source = item.layer.source() as MassifSource<'massif::PersistentCacheTileDataSource'>;
+    $: persistent = !!source?.is('massif::PersistentCacheTileDataSource');
+    $: cacheOnlyMode = persistent && source.get('cacheOnlyMode');
     let options: {
         [k: string]: {
             type?: string;
@@ -88,22 +90,19 @@
                     break;
                 }
                 case 'cache_only_mode': {
-                    const layer = item.layer as any;
-                    const dataSource = layer.dataSource;
-                    if (dataSource instanceof PersistentCacheTileDataSource) {
-                        cacheOnlyMode = dataSource.cacheOnlyMode = !dataSource.cacheOnlyMode;
+                    if (persistent) {
+                        cacheOnlyMode = !cacheOnlyMode;
+                        source.set('cacheOnlyMode', cacheOnlyMode);
                         ApplicationSettings.setBoolean(`${item.name}_cacheOnlyMode`, cacheOnlyMode);
                     }
                     //dont close the bottom sheet
                     return;
                 }
                 case 'clear_cache': {
-                    const layer = item.layer as any;
-                    const dataSource = layer.dataSource;
-                    if (dataSource instanceof PersistentCacheTileDataSource) {
-                        dataSource.clear();
+                    if (persistent) {
+                        source.call('clear');
                     }
-                    layer.clearTileCaches(true);
+                    item.layer.clearTileCaches(true);
                     break;
                 }
                 case 'download_area': {
@@ -124,7 +123,7 @@
                         step: 1,
                         valueFormatter: (value) => value + '',
                         min: 0,
-                        value: Math.round(massifMap.getZoom())
+                        value: Math.round(mapContext.getMap().camera().zoom())
                     });
                     const maxSliderInstance = resolveComponentElement(SettingsSlider, {
                         row: 1,
@@ -154,17 +153,15 @@
                     maxSliderInstance.element.nativeElement._tearDownUI();
                     maxSliderInstance.viewInstance.$destroy();
                     if (result) {
-                        const layer = item.layer;
-                        const dataSource = layer.dataSource;
                         const customLayers = mapContext.mapModule('customLayers');
-                        if (customLayers) {
-                            customLayers.downloadDataSource({ dataSource, provider: item.provider, minZoom, maxZoom });
+                        if (customLayers && source) {
+                            customLayers.downloadDataSource({ source: source as never, provider: item.provider, minZoom, maxZoom });
                         }
                     }
                     break;
                 }
                 case 'tile_filter_mode':
-                    if (item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer) {
+                    if (item.layer.is('massif::RasterTileLayer') || item.layer.is('massif::HillshadeRasterTileLayer')) {
                         const result = await action({
                             title: lc('tile_filter_mode'),
                             actions: ['bicubic', 'bilinear', 'nearest']
@@ -174,13 +171,13 @@
                             // use native for now
                             switch (result) {
                                 case 'bicubic':
-                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
+                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_BICUBIC' as never);
                                     break;
                                 case 'bilinear':
-                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
+                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_BILINEAR' as never);
                                     break;
                                 case 'nearest':
-                                    (item.layer as RasterTileLayer).tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
+                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_NEAREST' as never);
                                     break;
                             }
                         }
@@ -196,10 +193,11 @@
 
     function getTitle() {
         let result = item.name.toUpperCase();
-        const dataSource = item.layer.dataSource;
-        if (dataSource instanceof PersistentCacheTileDataSource) {
-            const databasePath = dataSource.options.databasePath;
-            result += ` (${formatSize(File.fromPath(databasePath).size)})`;
+        if (persistent) {
+            const databasePath = source.get('databasePath' as never) as string;
+            if (databasePath && File.exists(databasePath)) {
+                result += ` (${formatSize(File.fromPath(databasePath).size)})`;
+            }
         }
         return result;
     }
@@ -272,7 +270,7 @@
                 on:tap={() => handleAction('download_area')} />
             <IconButton
                 gray={true}
-                isVisible={item.layer instanceof RasterTileLayer || item.layer instanceof HillshadeRasterTileLayer}
+                isVisible={item.layer.is('massif::RasterTileLayer') || item.layer.is('massif::HillshadeRasterTileLayer')}
                 text="mdi-filter-cog"
                 tooltip={lc('tile_filter_mode')}
                 on:tap={() => handleAction('tile_filter_mode')} />

@@ -3,6 +3,7 @@
     import { formatDistance } from '~/helpers/formatter';
     import { getMetersPerPixel } from '~/helpers/geolib';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { fromPosition } from '~/utils/geo';
 
     const mapContext = getMapContext();
 
@@ -16,15 +17,16 @@
     let currentZoom;
     function updateData() {
         // executeOnMainThread(() => {
-        const massifMap = mapContext.getMap();
-        if (!massifMap) {
+        const map = mapContext.getMap();
+        if (!map) {
             return;
         }
-        const zoom = massifMap.zoom;
+        const camera = map.camera();
+        const zoom = camera.zoom();
         if (currentZoom === zoom) {
             return;
         }
-        const newMpp = getMetersPerPixel(massifMap.focusPos, zoom);
+        const newMpp = getMetersPerPixel(fromPosition(camera.position()), zoom);
         const metersPerCM = PX_PER_CM * newMpp;
         const data = formatDistance(metersPerCM);
         scaleText = `${data} (${zoom.toFixed(1)})`;

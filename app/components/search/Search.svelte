@@ -1,7 +1,5 @@
 <script lang="ts">
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
-    import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
-    import { PointStyleBuilder } from '@nativescript-community/ui-massifmaps/vectorelements/point';
+    import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
@@ -11,6 +9,7 @@
     import { lc, slc } from '~/helpers/locale';
     import { currentTheme, isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { geoJSONBounds } from '~/utils/geo';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -55,9 +54,9 @@
     let collectionViewHolder: NativeViewElementNode<GridLayout>;
     let collectionView: SearchCollectionView;
     // let _searchDataSource: LocalVectorDataSource<LatLonKeys>;
-    let _searchDataSource: GeoJSONVectorTileDataSource;
+    let _searchDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
     // let _searchLayer: ClusteredVectorLayer;
-    let _searchLayer: VectorTileLayer;
+    let _searchLayer: MassifLayer<'massif::VectorTileLayer'>;
     let searchAsTypeTimer;
     let loading = false;
     let searchAroundItem = false;
@@ -74,26 +73,21 @@
 
     function getSearchDataSource() {
         if (!_searchDataSource) {
-            // const projection = mapContext.getProjection();
-            // _searchDataSource = new LocalVectorDataSource<LatLonKeys>({ projection });
-            _searchDataSource = new GeoJSONVectorTileDataSource({
-                simplifyTolerance: 2,
-                minZoom: 0,
-                maxZoom: 24
-            });
+            _searchDataSource = mapContext.getMap().source('source.search', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
             _searchDataSource.createLayer('search');
         }
         return _searchDataSource;
     }
     function getSearchLayer() {
         if (!_searchLayer) {
-            _searchLayer = new VectorTileLayer({
+            _searchLayer = mapContext.getMap().buildLayer('layer.search', {
+                type: 'vector',
+                source: getSearchDataSource().id,
+                style: mapContext.innerDecoder.id,
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
-                dataSource: getSearchDataSource(),
-                decoder: mapContext.innerDecoder
+                labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16)
             });
             // _searchLayer = new ClusteredVectorLayer({
             //     visibleZoomRange: [0, 24],
@@ -108,12 +102,9 @@
             //         shape: 'point'
             //     })
             // });
-            _searchLayer.setVectorTileEventListener<LatLonKeys>(
-                {
-                    onVectorTileClicked: (data) => mapContext.vectorTileClicked(data)
-                },
-                mapContext.getProjection()
-            );
+            _searchLayer.onFeatureClick((e) => {
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+            });
             mapContext.addLayer(_searchLayer, 'search');
         }
         return _searchLayer;
@@ -153,7 +144,8 @@
         }
         if (_searchLayer) {
             mapContext.removeLayer(_searchLayer, 'search');
-            _searchLayer.setVectorTileEventListener(null);
+            // destroying the object drops its subscriptions with it
+            _searchLayer.destroy();
             _searchLayer = null;
         }
     }
@@ -318,13 +310,12 @@
     function toggleShowResultsOnMap() {
         if (showingOnMap) {
             showingOnMap = false;
-            getSearchLayer().visible = false;
+            getSearchLayer().visible(false);
         } else {
             showResultsOnMap(dataItems);
         }
     }
     let showingOnMap = false;
-    let searchStyle: PointStyleBuilder;
     function showResultsOnMap(items: ObservableArray<SearchItem>, shouldUnfocus = true) {
         try {
             if (!items || items.length === 0) {
@@ -333,7 +324,7 @@
                 mapContext.showMapResultsPager(null);
                 showingOnMap = false;
             } else {
-                getSearchLayer().visible = true;
+                getSearchLayer().visible(true);
                 showingOnMap = true;
                 // if (!_searchDataSource) {
                 const dataSource = getSearchDataSource();
@@ -345,21 +336,21 @@
                 //     searchStyle = new PointStyleBuilder({ color: 'red', size: 10 });
                 // }
                 // dataSource.clear();
-                dataSource.setLayerGeoJSONString(1, geojson);
+                dataSource.setGeoJSON(1, geojson);
                 // items.forEach((d) => {
                 //     dataSource.add(createSearchMarker(d));
                 // });
                 ensureSearchLayer();
-                const featureCollection = packageService.getGeoJSONReader().readFeatureCollection(geojson);
-                const mapBounds = featureCollection.getBounds();
+                // the bounds of what we just drew, from the GeoJSON we already have
+                const mapBounds = geoJSONBounds(geojson as unknown as GeoJSON.FeatureCollection);
 
                 const viewPort = mapContext.getMapViewPort();
                 // we ensure the viewPort is squared for the screen captured
-                const screenBounds = {
+                const screen = {
                     min: { x: viewPort.left, y: viewPort.top },
                     max: { x: viewPort.left + viewPort.width, y: viewPort.top + viewPort.height - 200 }
                 };
-                mapContext.getMap().moveToFitBounds(mapBounds, screenBounds, false, false, false, 100);
+                mapContext.getMap().camera().fitBounds(mapBounds, { screen, duration: 100 });
                 // } else {
                 // getSearchLayer().visible = true;
                 // }

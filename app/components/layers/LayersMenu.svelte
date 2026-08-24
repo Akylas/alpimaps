@@ -60,12 +60,11 @@
     }, 500);
     function onLayerOpacityChanged(item: SourceItem, event) {
         const opacity = event.value;
-        if (item.layer.opacity === opacity) {
+        if (item.layer.opacity() === opacity) {
             return;
         }
-        item.layer.opacity = opacity;
+        item.layer.opacity(opacity).visible(opacity > 0);
         setNumber(item.name + '_opacity', opacity);
-        item.layer.visible = opacity > 0;
         mapContext.getMap().requestRedraw();
         updateItem(item);
     }
