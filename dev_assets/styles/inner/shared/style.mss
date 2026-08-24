@@ -10,7 +10,7 @@
 @standard-halo-fill: #f2f5f888;
 @wrap_characters: '-_';
 
-@name: [name:[nuti::lang]] || [name_int] || [name:en] || [name] || [ref];
+@name: [name:[param::lang]] || [name_int] || [name:en] || [name] || [ref];
 
 @hiking_route_fill:[network] = 4 ? yellow:   [network] <= 3 ? red:   #8800ff;
 @hiking_route_dasharray: none;
@@ -45,14 +45,14 @@
 
 @default_icon_dx : [style.iconDx] = 'osm' ? 0 : -2;
 
-@itemColor: [color] ? [color] : [nuti::main_color];
-@lineColor: [color] ? [color] : [nuti::main_darker_color];
+@itemColor: [color] ? [color] : [param::main_color];
+@lineColor: [color] ? [color] : [param::main_darker_color];
 @editing_dash: 12, 8;
 @non_editing_dash: none;
 
 @itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 160 ? #33333388 : #f2f5f888;
 
-@itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([nuti::editing_id]=[id] ? 0.5 :1);
+@itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([param::editing_id]=[id] ? 0.5 :1);
 @itemBackLineOpacity: linear([view::zoom], (16, 1), (18, 0.3));
 // a selected route is the one you are following: it must stay readable at navigation zooms,
 // where the generic item fade would drop it to 0.3
@@ -77,11 +77,11 @@
 // the navigation layer, ie the route actually being followed. Same widths as a computed route, so
 // entering navigation does not resize the line under the user, but its own colours and dashes
 @nav_casing_color: @directions_casing_color;
-@nav_line_color: [nuti::main_color];
+@nav_line_color: [param::main_color];
 @nav_arrow_color: @directions_selected_arrow_color;
-@nav_detour_color: [nuti::main_darker_color];
+@nav_detour_color: [param::main_darker_color];
 @nav_detour_dash: 18, 10;
-@nav_connector_color: [nuti::main_darker_color];
+@nav_connector_color: [param::main_darker_color];
 @nav_connector_width: linear([view::zoom], (10, 2), (16, 4));
 @nav_connector_dash: 2, 8;
 @nav_original_color: #787E7B;

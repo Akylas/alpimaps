@@ -28,11 +28,13 @@ export function startStopWebServer() {
         return;
     }
     try {
-        const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-        const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
-        const vDataSource = vectorDataSource.getNative();
-        DEV_LOG && console.log('webserver', vDataSource, hillshadeDatasource?.getNative());
-        webserver = new (akylas.alpi as any).maps.WebServer(serverPort(), hillshadeDatasource?.getNative(), vDataSource, vDataSource, null);
+        // The one thing the facade cannot express: the server is the app's own Java class, so it
+        // takes the SDK objects themselves. `source()` hands them over without an id.
+        const hillshadeSource = packageService.hillshadeLayer?.source();
+        const vectorSource = packageService.localVectorTileLayer?.source();
+        const vDataSource = vectorSource?.native;
+        DEV_LOG && console.log('webserver', vDataSource, hillshadeSource?.native);
+        webserver = new (akylas.alpi as any).maps.WebServer(serverPort(), hillshadeSource?.native, vDataSource, vDataSource, null);
         webserver.start();
         running.set(true);
     } catch (error) {

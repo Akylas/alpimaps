@@ -1,7 +1,7 @@
 @id:[id];
 // while navigating, the followed route is drawn by the navigation layer on top: this one drops back
 // to the plain look rather than competing with it
-@is_selected: [nuti::navigating]=1 ? false : [nuti::selected_id]=[id];
+@is_selected: [param::navigating]=1 ? false : [param::selected_id]=[id];
 #directions {
 	['mapnik::geometry_type'=2] {
 		[class='waypointline'] {
@@ -21,14 +21,14 @@
 		}
 
 		[class !='waypointline'] {
-			when ([nuti::selected_id]=[id])::selected,
+			when ([param::selected_id]=[id])::selected,
 			{
-				casing/line-color:  @is_selected ? [nuti::main_darker_color]: @directions_casing_color;
+				casing/line-color:  @is_selected ? [param::main_darker_color]: @directions_casing_color;
 				casing/line-width: @directions_casing_width;
 				casing/line-join: round;
 				casing/line-cap: round;
 				casing/line-opacity: @directions_casing_opacity;
-				line-color: @is_selected ? [nuti::main_color]: ([style.color]? [style.color]:@directions_line_color);
+				line-color: @is_selected ? [param::main_color]: ([style.color]? [style.color]:@directions_line_color);
 				line-width: @directions_line_width;
 				line-opacity: @directions_line_opacity;
 				line-join: round;
@@ -45,7 +45,7 @@
 	}
 
 	['mapnik::geometry_type'=1] {
-		text-placement: nutibillboard;
+		text-placement: billboard;
 		text-fill: [isStart] ? 'green': ([isStop] ? 'red' : 'blue');
 		text-allow-overlap: true;
 		text-clip: false;

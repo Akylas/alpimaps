@@ -1,4 +1,4 @@
-@transitLineColor: [route_color] ? [route_color] : ([COULEUR] ? 'rgb(' + [COULEUR] + ')' : [nuti::default_transit_color]);
+@transitLineColor: [route_color] ? [route_color] : ([COULEUR] ? 'rgb(' + [COULEUR] + ')' : [param::default_transit_color]);
 @transitLineContrastColor: [route_text_color] ? [route_text_color] : brightness(color(@transitLineColor)) > 180 ? #000 : #fff;
 @transit_route_width: linear([view::zoom], (4, 0.3), (14, 2.1), (15, 3.2), (18, 4));
 @transit_route_casing_width: linear([view::zoom], (4, 1), (18, 3));
@@ -13,13 +13,13 @@
 @transit_route_label_halo: #f2f5f8;
 @transit_line_priority: 100 - length([route_short_name]);
 
-@marker-size: linear([view::zoom], (12, 4), (13, 5.5), (19, 8.5)) + ([nuti::selected_id_str]=[id] ? 5: 0);
+@marker-size: linear([view::zoom], (12, 4), (13, 5.5), (19, 8.5)) + ([param::selected_id_str]=[id] ? 5: 0);
 
 #routes['mapnik::geometry_type'=2][route_type !=2][generated !=true][agency_id !='FLIXBUS-eu'] {
 
-    when ([nuti::selected_id_str]=[route_id])::selected,
+    when ([param::selected_id_str]=[route_id])::selected,
     {
-        when ([nuti::selected_id_str]=[route_id]) {
+        when ([param::selected_id_str]=[route_id]) {
             // line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
             casing/line-color: white;
             casing/line-width: @transit_route_casing_width + @transit_route_width + 2.0;
@@ -42,7 +42,7 @@
 
         line-cap: round;
         line-join: round;
-        line-width: @transit_route_width +([route_id]=[nuti::selected_id_str] ? 1 : 0);
+        line-width: @transit_route_width +([route_id]=[param::selected_id_str] ? 1 : 0);
 
         [route_short_name !=null][zoom>=12],
         [route_short_name =null][route_long_name !=null][zoom>=14] {
@@ -57,7 +57,7 @@
                 // 	text-name: [route_long_name];
                 // }
 
-                text-placement: nutibillboardline;
+                text-placement: billboard-line;
                 text-placement-priority: 0 + @transit_line_priority;
                 text-wrap-before: true;
                 text-face-name: @mont_bd;
@@ -72,8 +72,8 @@
             ::label1 {
                 text-placement-priority: 1 + @transit_line_priority;
                 text-allow-overlap-same-feature-id: true;
-                // text-placement-priority: [nuti::selected_id_str]=[route_id] ? 1000: 0;
-                text-placement: nutibillboardline;
+                // text-placement-priority: [param::selected_id_str]=[route_id] ? 1000: 0;
+                text-placement: billboard-line;
                 text-vertical-alignment: middle;
                 text-dy: 0.5;
                 text-character-spacing: -1;
@@ -88,7 +88,7 @@
 }
 
 #routes['mapnik::geometry_type'=1] {
-    marker-placement-priority: [nuti::selected_id_str]=[id] ? 10: 0;
+    marker-placement-priority: [param::selected_id_str]=[id] ? 10: 0;
     marker-placement: point;
     marker-type: ellipse;
     marker-line-color: black;

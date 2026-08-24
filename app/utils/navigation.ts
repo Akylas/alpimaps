@@ -1,11 +1,9 @@
-import { GenericMapPos, MapPosVector, fromNativeMapPos } from '@nativescript-community/ui-carto/core';
-import type { ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-import { distanceToEnd, isLocationOnPath } from '@nativescript-community/ui-carto/utils';
 import { ApplicationSettings } from '@nativescript/core';
 import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, formatValue } from '~/helpers/formatter';
 import { getRhumbLineBearing } from '~/helpers/geolib';
 import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
-import { EARTH_RADIUS, TO_DEG, TO_RAD, computeDistanceBetween } from '~/utils/geo';
+import { EARTH_RADIUS, type MapPos, TO_DEG, TO_RAD, computeDistanceBetween, distanceToEnd, isLocationOnPath } from '~/utils/geo';
+import type { ValhallaProfile } from '~/utils/routing';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
 /** degrees past which a segment counts as going the other way, rather than merely bending away */
@@ -313,8 +311,8 @@ export interface RouteProgressSource {
 
 export interface ComputeRouteProgressOptions {
     item: RouteProgressSource;
-    location: GenericMapPos<LatLonKeys>;
-    positions: MapPosVector<LatLonKeys>;
+    location: MapPos;
+    positions: MapPos[];
     onPathIndex: number;
     computeRemaining?: boolean;
     computeInstruction?: boolean;
@@ -377,11 +375,11 @@ function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, 
  * plain tolerance, `OffRouteDetector` when the answer has to survive a bad fix.
  */
 export function findClosestOnRoute(
-    location: GenericMapPos<LatLonKeys>,
-    positions: MapPosVector<LatLonKeys>,
+    location: MapPos,
+    positions: MapPos[],
     { bearing, fromIndex = -1, maxAhead = Number.POSITIVE_INFINITY, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; window?: number; bearing?: number; maxAhead?: number } = {}
 ): RouteProjection {
-    const size = positions.size();
+    const size = positions.length;
     if (size < 2) {
         return null;
     }
@@ -396,9 +394,9 @@ export function findClosestOnRoute(
     let bestScore = Number.POSITIVE_INFINITY;
     let ahead = 0;
     for (let index = start; index < end; index++) {
-        const from = positions.get(index);
-        const to = positions.get(index + 1);
-        const projection = projectOnSegment(location.lat, location.lon, from.getY(), from.getX(), to.getY(), to.getX());
+        const from = positions[index];
+        const to = positions[index + 1];
+        const projection = projectOnSegment(location.lat, location.lon, from.lat, from.lon, to.lat, to.lon);
         // a window counted in vertices is kilometres long on a sparse track: stepping off the route
         // there would match a piece of it the user has not walked yet and read as progress
         ahead += projection.segmentLength;
@@ -423,8 +421,8 @@ export function findClosestOnRoute(
 
 /** `findClosestOnRoute`, but null when the closest point is further than `tolerance`. */
 export function projectOnRoute(
-    location: GenericMapPos<LatLonKeys>,
-    positions: MapPosVector<LatLonKeys>,
+    location: MapPos,
+    positions: MapPos[],
     { fromIndex = -1, tolerance = DEFAULT_LOCATION_DISTANCE_FROM_ROUTE, window = DEFAULT_PROJECTION_WINDOW }: { fromIndex?: number; tolerance?: number; window?: number } = {}
 ): RouteProjection {
     const best = findClosestOnRoute(location, positions, { fromIndex, window });
@@ -486,11 +484,11 @@ export class OffRouteDetector {
     private mOffRoute = false;
     private mOffRouteSince = 0;
     private lastFullScanTime = 0;
-    private lastFullScanLocation: GenericMapPos<LatLonKeys> = null;
+    private lastFullScanLocation: MapPos = null;
     private lastUpdateTime = 0;
     private lastSpeed = 0;
     /** position the derived heading is measured from, only moved once the user has left it behind */
-    private bearingAnchor: GenericMapPos<LatLonKeys> = null;
+    private bearingAnchor: MapPos = null;
     private derivedBearing = -1;
 
     /** read lazily so changing the setting mid navigation applies on the next fix */
@@ -529,7 +527,7 @@ export class OffRouteDetector {
     }
 
     /** meters this fix is allowed to be from the route before it counts against us */
-    toleranceFor(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number }) {
+    toleranceFor(location: MapPos & { horizontalAccuracy?: number }) {
         const base = this.getOptions().distance ?? DEFAULT_LOCATION_DISTANCE_FROM_ROUTE;
         const accuracy = location.horizontalAccuracy > 0 ? location.horizontalAccuracy : 0;
         return Math.min(Math.max(base + accuracy, base), Math.max(MAX_OFF_ROUTE_TOLERANCE, base));
@@ -545,7 +543,7 @@ export class OffRouteDetector {
      * the reported-heading threshold we derive one from the ground actually covered, holding the last
      * answer until the user has moved far enough for a new one to mean something.
      */
-    private bearingFor(location: GenericMapPos<LatLonKeys> & { bearing?: number; speed?: number }) {
+    private bearingFor(location: MapPos & { bearing?: number; speed?: number }) {
         if (location.speed >= MIN_BEARING_SPEED && location.bearing >= 0) {
             this.bearingAnchor = location;
             this.derivedBearing = -1;
@@ -579,14 +577,14 @@ export class OffRouteDetector {
     }
 
     /** A full scan is the only way to notice a rejoin somewhere else, and the only expensive one. */
-    private shouldFullScan(location: GenericMapPos<LatLonKeys>, now: number) {
+    private shouldFullScan(location: MapPos, now: number) {
         if (!this.lastFullScanLocation) {
             return true;
         }
         return now - this.lastFullScanTime >= OFF_ROUTE_RESCAN_INTERVAL || computeDistanceBetween(location, this.lastFullScanLocation) >= OFF_ROUTE_RESCAN_DISTANCE;
     }
 
-    update(location: GenericMapPos<LatLonKeys> & { horizontalAccuracy?: number; bearing?: number; speed?: number }, positions: MapPosVector<LatLonKeys>, now = Date.now()): OffRouteState {
+    update(location: MapPos & { horizontalAccuracy?: number; bearing?: number; speed?: number }, positions: MapPos[], now = Date.now()): OffRouteState {
         const tolerance = this.toleranceFor(location);
         const bearing = this.bearingFor(location);
         const maxAhead = this.projectionLookAhead(location, now);
@@ -667,7 +665,7 @@ const REJOIN_MANEUVER_MAX_EXTRA = 500;
 export interface RejoinTarget {
     /** index in the route positions the user is being sent back to */
     index: number;
-    position: GenericMapPos<LatLonKeys>;
+    position: MapPos;
     /** set when the target is a maneuver of the route rather than a plain point on it */
     maneuver?: RouteInstruction;
 }
@@ -677,11 +675,11 @@ export interface RejoinTarget {
  * known to be over it, which is what every caller here actually asks — a maneuver 40 km up the track
  * would otherwise cost thousands of distances on every position.
  */
-export function distanceAlong(positions: MapPosVector<LatLonKeys>, fromIndex: number, toIndex: number, maxDistance = Number.POSITIVE_INFINITY) {
+export function distanceAlong(positions: MapPos[], fromIndex: number, toIndex: number, maxDistance = Number.POSITIVE_INFINITY) {
     let distance = 0;
-    const end = Math.min(toIndex, positions.size() - 1);
+    const end = Math.min(toIndex, positions.length - 1);
     for (let index = Math.max(fromIndex, 0); index < end; index++) {
-        distance += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+        distance += computeDistanceBetween(positions[index], positions[index + 1]);
         if (distance > maxDistance) {
             return distance;
         }
@@ -703,14 +701,14 @@ export function chooseRejoinTarget({
     instructions,
     positions
 }: {
-    positions: MapPosVector<LatLonKeys>;
+    positions: MapPos[];
     instructions?: RouteInstruction[];
     /** last index the user was on the route at */
     fromIndex: number;
     /** closest index to where they are now, which may be further along if they cut a corner */
     closestIndex?: number;
 }): RejoinTarget {
-    const size = positions?.size() ?? 0;
+    const size = positions?.length ?? 0;
     if (size < 2) {
         return null;
     }
@@ -720,10 +718,10 @@ export function chooseRejoinTarget({
     if (maneuver) {
         const maneuverIndex = Math.min(maneuver.index, size - 1);
         if (distanceAlong(positions, baseIndex, maneuverIndex, REJOIN_MANEUVER_MAX_EXTRA) <= REJOIN_MANEUVER_MAX_EXTRA) {
-            return { index: maneuverIndex, position: fromNativeMapPos(positions.get(maneuverIndex)), maneuver };
+            return { index: maneuverIndex, position: positions[maneuverIndex], maneuver };
         }
     }
-    return { index: baseIndex, position: fromNativeMapPos(positions.get(baseIndex)) };
+    return { index: baseIndex, position: positions[baseIndex] };
 }
 
 /** Routes coming from OSM are not navigable: they have no instructions and no consistent direction. */
@@ -736,7 +734,7 @@ export function getDistanceFromRouteSetting() {
 }
 
 /** Snaps a location onto a route polyline. Returns -1 when the location is further than `distanceFromRoute` meters from it. */
-export function isLocationOnRoute(location: GenericMapPos<LatLonKeys>, positions: MapPosVector<LatLonKeys>, distanceFromRoute: number = getDistanceFromRouteSetting()) {
+export function isLocationOnRoute(location: MapPos, positions: MapPos[], distanceFromRoute: number = getDistanceFromRouteSetting()) {
     return isLocationOnPath(location, positions, false, true, distanceFromRoute);
 }
 
@@ -777,9 +775,9 @@ export function computeRouteProgress({ computeInstruction, computeRemaining, dis
         if (instructionIndex !== -1) {
             result.instructionIndex = instructionIndex;
             result.instruction = instructions[instructionIndex];
-            let distanceToNextInstruction = distanceToOnPathIndex ?? computeDistanceBetween(location, fromNativeMapPos(positions.get(onPathIndex)));
+            let distanceToNextInstruction = distanceToOnPathIndex ?? computeDistanceBetween(location, positions[onPathIndex]);
             for (let index = onPathIndex; index < result.instruction.index; index++) {
-                distanceToNextInstruction += computeDistanceBetween(fromNativeMapPos(positions.get(index)), fromNativeMapPos(positions.get(index + 1)));
+                distanceToNextInstruction += computeDistanceBetween(positions[index], positions[index + 1]);
             }
             result.distanceToNextInstruction = distanceToNextInstruction;
             if (instructionIndex < instructions.length - 1) {

@@ -1,17 +1,17 @@
-// @markerOverlap: [nuti::selected_id] = [id] ? false : true;
+// @markerOverlap: [param::selected_id] = [id] ? false : true;
 @stepId: 173716 + [distFromStartStr];
 @waypointId: 84732 +[id];
 
 #items['mapnik::geometry_type'=2] {
-    ['nuti::hide_unselected'=0] {
-        when ([nuti::selected_id] !=[id]) {
+    ['param::hide_unselected'=0] {
+        when ([param::selected_id] !=[id]) {
             back/line-color: white;
             back/line-width: @bicycle_line_width + 2;
             back/line-join: round;
             back/line-cap: round;
             back/line-opacity: @itemBackLineOpacity;
             line-color: @lineColor;
-            line-dasharray: [nuti::editing_id]=[id] ? @editing_dash : @non_editing_dash;
+            line-dasharray: [param::editing_id]=[id] ? @editing_dash : @non_editing_dash;
             line-join: round;
             line-cap: round;
             line-opacity: @itemLineOpacity;
@@ -24,7 +24,7 @@
 
         // while navigating, the route being followed is drawn by the navigation layer on top, so the
         // item under it goes back to the plain look instead of fighting it with the selected one
-        when ([nuti::selected_id]=[id])['nuti::navigating'=1]::navigating {
+        when ([param::selected_id]=[id])['param::navigating'=1]::navigating {
             back/line-color: white;
             back/line-width: @bicycle_line_width + 2;
             back/line-join: round;
@@ -43,7 +43,7 @@
 
     }
 
-    when ([nuti::selected_id]=[id])['nuti::navigating'=0]::selected {
+    when ([param::selected_id]=[id])['param::navigating'=0]::selected {
         back/line-color: white;
         back/line-width: @bicycle_line_width + 5;
         back/line-join: round;
@@ -52,11 +52,11 @@
         line-cap: round;
         line-color: @lineColor;
         line-width: @bicycle_line_width + 2;
-        ['nuti::hide_unselected'=1] {
+        ['param::hide_unselected'=1] {
             line-width: @bicycle_line_width + 7;
         }
 
-        ['nuti::hide_unselected'=0] {
+        ['param::hide_unselected'=0] {
             back/line-opacity: @itemSelectedBackLineOpacity;
             line-opacity: @itemSelectedLineOpacity;
 
@@ -79,9 +79,9 @@
     }
 }
 
-#items['mapnik::geometry_type'=1]['nuti::hide_unselected'=0][zoom>=5] {
+#items['mapnik::geometry_type'=1]['param::hide_unselected'=0][zoom>=5] {
         text-fill: [style.color] ?? @itemColor;
-        text-placement: nutibillboard;
+        text-placement: billboard;
         text-name: [style.icon] ?? '';
         text-allow-overlap: true;
         text-clip: false;
@@ -94,7 +94,7 @@
         text-dx:[style.iconDx] ?? @default_icon_dx;
         text-dy:[style.iconDy] ?? 0;
         text-placement-priority: 27;
-        when ([nuti::selected_id]=[id]) {
+        when ([param::selected_id]=[id]) {
             text-size: ([style.iconSize] ?? @default_icon_size) + 10;
         }
 
@@ -103,7 +103,7 @@
 
 #poi {
 
-    ['nuti::items_show_km_shields'=1][class=step][zoom<16] {
+    ['param::items_show_km_shields'=1][class=step][zoom<16] {
         [zoom>=6][level<=1],
         [zoom>=7][level<=2],
         [zoom>=9][level<=3],
@@ -112,7 +112,7 @@
             text-name: [distFromStartStr];
             text-placement-priority: 9;
             text-face-name: @mont_bd;
-            text-placement: nutibillboard;
+            text-placement: billboard;
             text-size: 8 * linear([view::zoom], (4, 0.2), (6, 0.5), (8, 1));      
             text-fill: #ffffff;
             text-halo-fill: #000000;
@@ -121,7 +121,7 @@
     }
         [class=waypoint] {
           ::icon {
-            text-placement: nutibillboard;
+            text-placement: billboard;
             text-placement-priority: 9;
             text-name: '';
          //   text-feature-id: @waypointId;
@@ -145,7 +145,7 @@
       
       //      text-feature-id: @waypointId;
           text-placement-priority: 9;
-            text-placement: nutibillboard;   
+            text-placement: billboard;   
             text-fill: #ffffff;
             text-allow-overlap: true;
           //  text-same-feature-id-dependent: true;

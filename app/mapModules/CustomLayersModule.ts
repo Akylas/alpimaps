@@ -1,13 +1,5 @@
-import { MapBounds, toNativeScreenBounds } from '@nativescript-community/ui-carto/core';
-import { MergedMBVTTileDataSource, MultiTileDataSource, OrderedTileDataSource, TileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { PersistentCacheTileDataSource } from '@nativescript-community/ui-carto/datasources/cache';
-import { HTTPTileDataSource } from '@nativescript-community/ui-carto/datasources/http';
-import { MBTilesTileDataSource } from '@nativescript-community/ui-carto/datasources/mbtiles';
-import { TileLayer, TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import { HillshadeRasterTileLayer, HillshadeRasterTileLayerOptions, RasterTileFilterMode, RasterTileLayer } from '@nativescript-community/ui-carto/layers/raster';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-import { MapBoxElevationDataDecoder, TerrariumElevationDataDecoder } from '@nativescript-community/ui-carto/rastertiles';
-import { CartoMap } from '@nativescript-community/ui-carto/ui';
+import * as api from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifMap, MassifSource, SpecArg } from '@nativescript-community/ui-massifmaps/api';
 import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { alert, confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
@@ -18,7 +10,8 @@ import { get, writable } from 'svelte/store';
 import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
-import MapModule, { getMapContext } from '~/mapModules/MapModule';
+import MapModule, { type MapDecoder, getMapContext } from '~/mapModules/MapModule';
+import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
 import { clickHandlerLayerFilter, layerProps, preloading } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
@@ -40,11 +33,13 @@ export enum RoutesType {
     Hiking = 2
 }
 
-const mbTilesSourceGenerator = (s, minZoom) =>
-    new MBTilesTileDataSource({
-        minZoom,
-        databasePath: s
-    });
+/** One mbtiles file, as a source spec. Specs compose, so a merge or an order is just nesting. */
+let localSourceId = 0;
+
+/** Only a persistent cache can download an area, and only it declares the download events. */
+export type DownloadableSource = MassifSource<'massif::PersistentCacheTileDataSource'>;
+
+const mbTilesSourceSpec = (path: string, minZoom?: number) => ({ type: 'mbtiles' as const, path, ...(minZoom !== undefined ? { minZoom } : {}) });
 
 let DEFAULT_HILLSHADE_SHADER;
 function getDefaultShader() {
@@ -174,7 +169,9 @@ export interface SourceItem {
     name: string;
     id?: string;
     local?: boolean;
-    layer: TileLayer<any, any>;
+    layer: MassifLayer;
+    /** the spec it was built from, so a style change can rebuild it with the new decoder */
+    spec?: any;
     provider: Provider;
     index?: number;
     options?: {
@@ -235,112 +232,86 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    createMergeDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
-        if (sources.length === 1) {
-            if (sources[0] instanceof TileDataSource) {
-                return sources[0];
-            }
-            return dataSourceGenerator(sources[0], minZoom);
-        } else {
-            const dataSources = sources.map((s) => (s instanceof TileDataSource ? s : dataSourceGenerator(s, minZoom)));
-            let result, merged;
-            for (let index = 0; index < dataSources.length; index += 2) {
-                if (index < dataSources.length - 1) {
-                    merged = new MergedMBVTTileDataSource({
-                        dataSources: [dataSources[index], dataSources[index + 1]]
-                    });
-                } else {
-                    merged = dataSources[index];
-                }
-                if (result) {
-                    result = new MergedMBVTTileDataSource({
-                        dataSources: [result, merged]
-                    });
-                } else {
-                    result = merged;
-                }
-            }
-            return result;
+    /**
+     * Several mbtiles as ONE source, merged pairwise.
+     *
+     * Specs all the way down: a source is JSON until it is built, so composing them is nesting
+     * rather than constructing objects and holding handles. `merged-mbvt` merges two vector-tile
+     * sources tile by tile, which is how a region and its routes become one map.
+     */
+    createMergeDataSource(sources: any[], minZoom?: number) {
+        const specs = sources.map((s) => (typeof s === 'string' ? mbTilesSourceSpec(s, minZoom) : s));
+        if (specs.length === 1) {
+            return specs[0];
         }
+        let result;
+        for (let index = 0; index < specs.length; index += 2) {
+            const merged = index < specs.length - 1 ? { type: 'merged-mbvt' as const, source: specs[index], source2: specs[index + 1] } : specs[index];
+            result = result ? { type: 'merged-mbvt' as const, source: result, source2: merged } : merged;
+        }
+        return result;
     }
 
-    createOrderedTileDataSource(sources: (string | TileDataSource<any, any>)[], dataSourceGenerator: (s: string, minZoom?: number) => TileDataSource<any, any>, minZoom?: number) {
-        if (sources.length === 0) {
+    /** The first source that has a tile wins, so a detailed region shadows the world map. */
+    createOrderedTileDataSource(sources: any[], minZoom?: number) {
+        const specs = sources.filter((s) => !!s).map((s) => (typeof s === 'string' ? mbTilesSourceSpec(s, minZoom) : s));
+        if (specs.length === 0) {
             return null;
         }
-        if (sources.length === 1) {
-            if (sources[0] instanceof TileDataSource) {
-                return sources[0];
-            }
-            return dataSourceGenerator(sources[0], minZoom);
-        } else {
-            const dataSources = sources.map((s) => (s instanceof TileDataSource ? s : dataSourceGenerator(s, minZoom)));
-            // const dataSources = sources
-            //     .map(
-            //         (s) =>
-            //             new MBTilesTileDataSource({
-            //                 databasePath: s
-            //             })
-            //     )
-            //     .reverse();
-            return new OrderedTileDataSource({
-                dataSources
-            });
+        if (specs.length === 1) {
+            return specs[0];
         }
+        return specs.reduce((first, second) => ({ type: 'ordered' as const, source: first, source2: second }));
     }
-    createHillshadeTileLayer(name, dataSource, options: HillshadeRasterTileLayerOptions = {}) {
-        const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.42);
-        const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 0.22);
+
+    /**
+     * The hillshade layer, with every knob the settings panel exposes.
+     *
+     * The elevation decoder is not named here: it comes from the source's own `encoding`, which is
+     * what the terrarium/mapbox choice already sets.
+     */
+    createHillshadeTileLayer(id: string, name: string, sourceSpec: any, options: { [key: string]: any } = {}) {
+        const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.5);
+        const heightScale = ApplicationSettings.getNumber(`${name}_heightScale`, 1.0);
         const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
 
-        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000aa'));
+        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000'));
         const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#00000000'));
-        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000aa'));
+        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000'));
         const minVisibleZoom = ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0);
-        const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 16);
+        const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 18);
 
-        let tileFilterMode: RasterTileFilterMode;
-        switch (tileFilterModeStr) {
-            case 'bicubic':
-                tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BICUBIC;
-                break;
-            case 'nearest':
-                tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_NEAREST;
-                break;
-            default:
-                tileFilterMode = RasterTileFilterMode.RASTER_TILE_FILTER_MODE_BILINEAR;
-                break;
-        }
-        return new HillshadeRasterTileLayer({
-            // decoder: new MapBoxElevationDataDecoder(),
+        const tileFilterMode =
+            tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR';
+
+        return mapContext.getMap().buildLayer(id, {
+            type: 'hillshade',
+            source: sourceSpec,
             tileFilterMode,
             visibleZoomRange: [minVisibleZoom, maxVisibleZoom],
             contrast,
-            // maxSourceOverzoomLevel: 1,
-            // exagerateHeightScaleEnabled: false,
+            // tileBlendingSpeed: isEInk ? 0 : 3,
             normalMapLightingShader: getDefaultShader(),
-            tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+            tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
-            highlightColor,
-            shadowColor,
-            accentColor,
+            highlightColor: highlightColor.argb,
+            shadowColor: shadowColor.argb,
+            accentColor: accentColor.argb,
             heightScale,
-            dataSource,
             opacity,
             visible: opacity !== 0,
             ...options
-        });
+        } as never);
     }
     toggleHillshadeSlope(value: boolean) {
-        if (this.hillshadeLayer && this.hillshadeLayer.exagerateHeightScaleEnabled !== !value) {
-            this.hillshadeLayer.exagerateHeightScaleEnabled = !value;
-            if (value) {
-                this.hillshadeLayer.normalMapLightingShader = getSlopeHillshadeShader();
-            } else {
-                this.hillshadeLayer.normalMapLightingShader = getDefaultShader();
-            }
+        const layer = this.hillshadeLayer;
+        if (layer && layer.get('exagerateHeightScaleEnabled') !== !value) {
+            layer.apply({
+                exagerateHeightScaleEnabled: !value,
+                normalMapLightingShader: value ? getSlopeHillshadeShader() : getDefaultShader()
+            });
         }
     }
     mDevMode = ApplicationSettings.getBoolean('devMode', false);
@@ -348,7 +319,6 @@ export default class CustomLayersModule extends MapModule {
     getTokenKeys() {
         return {
             americanaosm: ApplicationSettings.getString('americanaosmToken', this.devMode ? AMERICANA_OSM_URL : undefined),
-            carto: ApplicationSettings.getString('cartoToken', this.devMode ? CARTO_TOKEN : undefined),
             here_appid: ApplicationSettings.getString('here_appidToken', this.devMode ? HER_APP_ID : undefined),
             here_appcode: ApplicationSettings.getString('here_appcodeToken', this.devMode ? HER_APP_CODE : undefined),
             mapbox: ApplicationSettings.getString('mapboxToken', this.devMode ? MAPBOX_TOKEN : undefined),
@@ -443,24 +413,33 @@ export default class CustomLayersModule extends MapModule {
             }
         }
         const vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
-        const dataSource = new HTTPTileDataSource({
+        // `httpHeaders` is spelled HTTPHeaders on the SDK's own property, which is what a spec key
+        // has to be: the facade resolves against the declared name, not the plugin's old option.
+        const { httpHeaders, subdomains, ...sourceOptions } = (provider.sourceOptions ?? {}) as any;
+        const httpSpec = {
+            type: 'http' as const,
             url,
-            ...provider.sourceOptions
-        });
+            ...sourceOptions,
+            ...(httpHeaders ? { HTTPHeaders: httpHeaders } : {}),
+            // the tables spell a subdomain set as 'abcd'; the SDK's property is a list
+            ...(subdomains ? { subdomains: typeof subdomains === 'string' ? subdomains.split('') : subdomains } : {})
+        };
         const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
         const cacheable = provider.cacheable || !PRODUCTION;
         const cacheSize = ApplicationSettings.getNumber(`${id}_cacheSize`, 300);
         return {
-            dataSource:
+            sourceSpec:
                 cacheable !== false || downloadable
-                    ? new PersistentCacheTileDataSource({
-                          dataSource,
+                    ? {
+                          type: 'persistent-cache' as const,
+                          source: httpSpec,
+                          databasePath,
                           cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                           capacity: cacheSize * 1024 * 1024,
-                          databasePath,
-                          encoding: dataSource.encoding
-                      })
-                    : dataSource,
+                          // the cache serves the tiles, so it has to declare what they encode
+                          ...(sourceOptions.encoding ? { encoding: sourceOptions.encoding } : {})
+                      }
+                    : httpSpec,
             vectorDataSource
         };
     }
@@ -470,7 +449,7 @@ export default class CustomLayersModule extends MapModule {
         // Apply zoom level bias to the raster layer.
         // By default, bitmaps are upsampled on high-DPI screens.
         // We will correct this by applying appropriate bias
-        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2)) * 0.75);
+        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(mapContext.getMap().get('DPI') / 160.0) / Math.log(2)) * 0.75);
         const options = {
             zoomLevelBias: {
                 min: 0,
@@ -478,38 +457,35 @@ export default class CustomLayersModule extends MapModule {
             }
         };
 
-        // if (provider.type === 'orux') {
-        //     dataSource = new OruxDBTileDataSource({
-        //         databasePath: provider.url as string
-        //     });
-        //     layer = new RasterTileLayer({
-        //         dataSource,
-        //         zoomLevelBias,
-        //         opacity,
-        //         visible: opacity !== 0
-        //     });
-        // } else {
-        const { dataSource, vectorDataSource } = await this.createDataSource(id, provider);
+        const { sourceSpec, vectorDataSource } = await this.createDataSource(id, provider);
+        const map = mapContext.getMap();
+        const layerId = `layer.custom.${id}`;
 
-        let layer: TileLayer<any, any>;
+        let layer: MassifLayer;
+        let spec: any;
         if (provider.hillshade) {
             Object.assign(options, HILLSHADE_OPTIONS);
-            layer = this.createHillshadeTileLayer(id, dataSource, {
+            layer = this.createHillshadeTileLayer(layerId, id, sourceSpec, {
                 zoomLevelBias,
                 opacity,
-                tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_ALL,
+                tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_ALL',
                 visible: opacity !== 0,
-                ...provider.layerOptions
+                ...(provider.layerOptions as any)
             });
             if (!this.hillshadeLayer) {
-                this.hillshadeLayer = packageService.hillshadeLayer = layer as HillshadeRasterTileLayer;
+                this.hillshadeLayer = packageService.hillshadeLayer = layer as never;
+                this.hasTerrain = true;
             }
         } else if (vectorDataSource) {
-            layer = new VectorTileLayer({
-                dataSource,
+            // Kept, not inlined: `vectorTileDecoderChanged` rebuilds the layer from this on a style
+            // change, and an item without it is silently skipped - which is what made switching
+            // style do nothing for every provider-backed base map.
+            spec = {
+                type: 'vector',
+                source: sourceSpec,
+                style: mapContext.mapDecoder.id,
                 zoomLevelBias: ApplicationSettings.getNumber(`${id}_zoomLevelBias`, 0),
-                labelRenderOrder: VectorTileRenderOrder.LAST,
-                decoder: mapContext.mapDecoder,
+                labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
                 visible: opacity !== 0,
                 layerBlendingSpeed: isEInk ? 0 : 3,
                 labelBlendingSpeed: isEInk ? 0 : 3,
@@ -517,28 +493,24 @@ export default class CustomLayersModule extends MapModule {
                 clickRadius: layerProps['clickRadius'],
                 preloading: get(preloading),
                 clickHandlerLayerFilter: get(clickHandlerLayerFilter),
-                // tileCacheCapacity: 30 * 1024 * 1024,
-                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 ...provider.layerOptions
+            };
+            layer = map.buildLayer(layerId, spec as never);
+            layer.onFeatureClick((e) => {
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
             });
-            (layer as VectorTileLayer).setVectorTileEventListener<LatLonKeys>(
-                {
-                    onVectorTileClicked: mapContext.vectorTileClicked
-                },
-                mapContext.getProjection()
-                // TODO: fix this to be optimized too on iOS
-                // __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
-            );
         } else {
-            layer = new RasterTileLayer({
-                dataSource,
+            spec = {
+                type: 'raster',
+                source: sourceSpec,
                 preloading: get(preloading),
+                tileBlendingSpeed: isEInk ? 0 : 3,
                 zoomLevelBias,
                 opacity,
-                // tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
                 visible: opacity !== 0,
                 ...provider.layerOptions
-            });
+            };
+            layer = map.buildLayer(layerId, spec as never);
         }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
@@ -549,6 +521,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             options,
             layer,
+            spec,
             provider
         };
     }
@@ -691,20 +664,13 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-    async getDataSource(s: string) {
-        await this.getSourcesLibrary();
-        const provider = this.baseProviders[s] || this.overlayProviders[s];
-        if (provider) {
-            const data = await this.createDataSourceAndMapLayer(s, provider);
-            return data.layer.dataSource;
-        }
-    }
+    /** The SOURCE SPEC of a provider, for anything that wants to compose with it. */
     async createDataSourceFromId(s: string) {
         await this.getSourcesLibrary();
         const provider = this.baseProviders[s] || this.overlayProviders[s];
         if (provider) {
-            const { dataSource } = await this.createDataSource(s, provider);
-            return dataSource;
+            const { sourceSpec } = await this.createDataSource(s, provider);
+            return sourceSpec;
         }
     }
 
@@ -722,8 +688,8 @@ export default class CustomLayersModule extends MapModule {
     //     );
     // }
 
-    onMapReady(mapView: CartoMap<LatLonKeys>) {
-        super.onMapReady(mapView);
+    onMapReady(map: MassifMap) {
+        super.onMapReady(map);
         (async () => {
             try {
                 if (!this.listenForSourceChanges) {
@@ -833,49 +799,49 @@ export default class CustomLayersModule extends MapModule {
         })();
     }
     updateClickHandlerLayerFilter() {
-        mapContext.getLayers().forEach((data) => {
-            if (data.layer instanceof VectorTileLayer) {
-                data.layer.clickHandlerLayerFilter = get(clickHandlerLayerFilter);
-            }
-        });
+        this.updateVectorTileLayerProperty('clickHandlerLayerFilter', get(clickHandlerLayerFilter));
     }
+    /**
+     * Writes one property on every vector tile layer.
+     *
+     * `trySet` rather than `set`: the stack holds raster and hillshade layers too, and a property
+     * they do not have is not an error here - it is simply not theirs.
+     */
     updateVectorTileLayerProperty(key: string, value) {
-        mapContext.getLayers().forEach((data) => {
-            if (data.layer instanceof VectorTileLayer) {
-                data.layer[key] = value;
+        mapContext.getLayers().forEach((data) => data.layer?.trySet(key as never, value as never));
+    }
+    /**
+     * The decoder was rebuilt, so every layer holding the old one has to be rebuilt too.
+     *
+     * `tileDecoder` is read-only on the SDK's layer - a decoder is what a layer's tiles were
+     * DECODED with, not a setting - so the layer is created again from the spec it was built from,
+     * with the new decoder's id.
+     */
+    vectorTileDecoderChanged(oldDecoder: MapDecoder, newDecoder: MapDecoder) {
+        const generation = ++this.decoderGeneration;
+        this.customSources.forEach((item) => {
+            if (!item.spec || item.spec.type !== 'vector') {
+                return;
             }
+            const oldLayer = item.layer;
+            // The SOURCE is handed over, not rebuilt from its spec: a provider's spec describes a
+            // persistent cache, and building it again opens a SECOND cache on the same file.
+            const source = oldLayer.source();
+            item.spec = { ...item.spec, ...(source ? { source: source.handle } : {}), style: newDecoder.id };
+            // A fresh id per generation, from the layer's own base: appending to the previous id
+            // grew a segment on every style switch and kept each one registered.
+            const baseId = String(oldLayer.id).replace(/#\d+$/, '');
+            const layer = mapContext.getMap().buildLayer(`${baseId}#${generation}`, item.spec);
+            layer.onFeatureClick((e) => {
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+            });
+            mapContext.replaceLayer(oldLayer, layer);
+            oldLayer.destroy();
+            item.layer = layer;
         });
     }
-    reloadMapStyle() {
-        mapContext.getLayers().forEach((data) => {
-            if (data.layer instanceof VectorTileLayer) {
-                const decoder = data.layer.getTileDecoder();
-                try {
-                    decoder.reloadStyle();
-                } catch (error) {
-                    console.error(error, error.stack);
-                }
-            }
-        });
-    }
-    @profile
-    vectorTileDecoderChanged(oldVectorTileDecoder, newVectorTileDecoder) {
-        this.customSources.forEach((s, i) => {
-            if (s.layer instanceof VectorTileLayer && s.layer.getTileDecoder() === oldVectorTileDecoder) {
-                s.layer.options.decoder = newVectorTileDecoder;
-                const layer = new VectorTileLayer(s.layer.options);
-                layer.setVectorTileEventListener<LatLonKeys>(
-                    {
-                        onVectorTileClicked: mapContext.vectorTileClicked
-                    },
-                    mapContext.getProjection()
-                );
-                mapContext.replaceLayer(s.layer, layer);
-                s.layer = layer;
-            }
-        });
-    }
-    hillshadeLayer: HillshadeRasterTileLayer;
+    private decoderGeneration = 0;
+    hillshadeLayer: MassifLayer<'massif::HillshadeRasterTileLayer'>;
     needsAttribution = false;
     addDataSource(item: SourceItem, save = true) {
         const name = this.getSourceItemId(item);
@@ -949,89 +915,75 @@ export default class CustomLayersModule extends MapModule {
                             sources.map((s) => s.path)
                         );
                     if (sources.length) {
-                        const dataSource: TileDataSource<any, any> = this.createMergeDataSource(
-                            sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                            mbTilesSourceGenerator,
-                            worldMbtilesEntity ? 5 : undefined
+                        mbtiles.push(
+                            this.createMergeDataSource(
+                                sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                                worldMbtilesEntity ? 5 : undefined
+                            )
                         );
-                        mbtiles.push(dataSource);
                     }
 
                     const terrain = subentities.find((e) => e.name.endsWith('.etiles'));
                     if (terrain) {
-                        terrains.push(
-                            new MBTilesTileDataSource({
-                                databasePath: getFileNameThatICanUseInNativeCode(context, terrain.path)
-                            })
-                        );
+                        terrains.push(mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, terrain.path)));
                     }
                 }
             }
 
             if (worldMbtilesEntity && mbtiles.length === 0) {
-                const datasource: TileDataSource<any, any> = this.createMergeDataSource(
-                    [worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                    mbTilesSourceGenerator,
-                    undefined
-                );
-                mbtiles.push(datasource);
+                mbtiles.push(this.createMergeDataSource([worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path))));
                 this.hasRoute = this.hasRoute || !!worldRouteMbtilesEntity;
                 worldMbtilesEntity = null;
             }
 
             if (worldTerrainMbtilesEntity && terrains.length === 0) {
-                terrains.push(
-                    new MBTilesTileDataSource({
-                        databasePath: getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)
-                    })
-                );
+                terrains.push(mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)));
                 worldTerrainMbtilesEntity = null;
             }
 
             if (mbtiles.length) {
                 this.hasLocalData = true;
                 const name = 'Local';
-                let dataSource: TileDataSource<any, any> = new MultiTileDataSource();
-                DEV_LOG && console.log('mbtiles', JSON.stringify(mbtiles.map((s) => s?.options.databasePath)), get(preloading));
-                mbtiles.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
-
+                const map = mapContext.getMap();
+                // `multi` picks the right package per tile, so a region and its neighbours read as
+                // one map. It is filled after construction: the packages are found by scanning.
+                const multi = map.source('source.local.multi', { type: 'multi' });
+                mbtiles.forEach((spec) => multi.call('add', map.source(`source.local.${++localSourceId}`, spec).handle, ''));
+                let sourceSpec: any = multi.handle;
                 if (worldMbtilesEntity) {
-                    const worldDataSource: TileDataSource<any, any> = this.createMergeDataSource(
-                        [worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                        mbTilesSourceGenerator,
-                        undefined
-                    );
-                    dataSource = this.createOrderedTileDataSource([worldDataSource, dataSource], mbTilesSourceGenerator);
+                    const worldSpec = this.createMergeDataSource([worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)));
+                    // the detailed packages first, the world map behind them
+                    sourceSpec = this.createOrderedTileDataSource([worldSpec, multi.handle]);
                 }
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
-                // const zoomLevelBias = Math.log(this.mapView.getOptions().getDPI() / 160.0) / Math.log(2);
-                const layer = new VectorTileLayer({
-                    dataSource,
-                    layerBlendingSpeed: 3,
-                    labelBlendingSpeed: 3,
-                    labelRenderOrder: VectorTileRenderOrder.LAST,
+                // SpecArg<'layer', 'vector'> is what gives the literal its typings: every key is
+                // checked, enums complete to their constant names, and an unknown one is an error.
+                const spec: SpecArg<'layer', 'vector'> = {
+                    type: 'vector',
+                    source: sourceSpec,
+                    style: mapContext.mapDecoder.id,
+
+                    layerBlendingSpeed: isEInk ? 0 : 3,
+                    labelBlendingSpeed: isEInk ? 0 : 3,
+                    labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
                     opacity,
                     preloading: get(preloading),
                     clickRadius: layerProps['clickRadius'],
                     tileCacheCapacity: 30 * 1024 * 1024,
-                    decoder: mapContext.mapDecoder,
                     clickHandlerLayerFilter: get(clickHandlerLayerFilter),
-                    tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
+                    tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
                     visible: opacity !== 0
+                };
+                const layer = map.buildLayer('layer.local', spec);
+                layer.onFeatureClick((e) => {
+                    e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
                 });
-                layer.setVectorTileEventListener<LatLonKeys>(
-                    {
-                        onVectorTileClicked: (e) => mapContext.vectorTileClicked(e)
-                    },
-                    mapContext.getProjection()
-                    // TODO: fix this to be optimized too on iOS
-                    // __ANDROID__ ? akylas.alpi.maps.VectorTileEventListener : undefined
-                );
                 if (!packageService.localVectorTileLayer) {
-                    packageService.localVectorTileLayer = layer;
+                    packageService.localVectorTileLayer = layer as never;
                 }
                 this.customSources.push({
                     layer,
+                    spec,
                     name,
                     opacity,
                     options: {
@@ -1047,29 +999,17 @@ export default class CustomLayersModule extends MapModule {
                 mapContext.addLayer(layer, 'map');
             }
             if (terrains.length) {
-                this.hasTerrain = true;
                 const name = 'Hillshade';
                 const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
-                let dataSource: TileDataSource<any, any> = new MultiTileDataSource({
-                    // encoding: 'terrarium'
-                });
-                terrains.forEach((s) => (dataSource as MultiTileDataSource<any, any>).add(s));
+                const map = mapContext.getMap();
+                const multi = map.source('source.terrain.multi', { type: 'multi' });
+                terrains.forEach((spec) => multi.call('add', map.source(`source.terrain.${++localSourceId}`, spec).handle, ''));
+                let sourceSpec: any = multi.handle;
                 if (worldTerrainMbtilesEntity) {
-                    dataSource = this.createOrderedTileDataSource(
-                        [
-                            dataSource,
-                            new MBTilesTileDataSource({
-                                databasePath: getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)
-                            })
-                        ],
-                        mbTilesSourceGenerator
-                    );
+                    sourceSpec = this.createOrderedTileDataSource([multi.handle, mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path))]);
                 }
 
-                // we add mapterhorn as fallback for regions without elevation or high zoom levels
-                dataSource = this.createOrderedTileDataSource([dataSource /* , await this.createDataSourceFromId('mapterhorn') */], mbTilesSourceGenerator);
-
-                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer(name, dataSource));
+                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer('layer.hillshade.local', name, sourceSpec) as never);
                 const data = {
                     name,
                     opacity,
@@ -1087,123 +1027,92 @@ export default class CustomLayersModule extends MapModule {
             // throw err;
         }
     }
-    currentlyDownloadind: { dataSource: PersistentCacheTileDataSource; provider: Provider };
+    currentlyDownloadind: { source: DownloadableSource; provider: Provider };
+
+    /** Marks a provider's row as no longer downloading, wherever it is in the list. */
+    private clearDownloadingRow(provider: Provider) {
+        const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+        if (itemIndex >= 0) {
+            const item = this.customSources.getItem(itemIndex);
+            delete item.downloading;
+            delete item.downloadProgress;
+            this.customSources.setItem(itemIndex, item);
+        }
+    }
+
     async stopDownloads() {
         if (this.currentlyDownloadind) {
-            this.currentlyDownloadind.dataSource.stopAllDownloads();
-            this.notify({
-                eventName: 'datasource_download_progress',
-                object: this,
-                data: 0
-            });
-            const itemIndex = this.customSources.findIndex((s) => s.provider === this.currentlyDownloadind.provider);
-            DEV_LOG && console.log('stopDownloads', this.currentlyDownloadind.provider, itemIndex);
-            if (itemIndex) {
-                const item = this.customSources.getItem(itemIndex);
-                delete item.downloading;
-                delete item.downloadProgress;
-                this.customSources.setItem(itemIndex, item);
-            }
+            const { provider, source } = this.currentlyDownloadind;
+            source.call('stopAllDownloads');
+            source.off('download.started');
+            source.off('download.progress');
+            source.off('download.completed');
+            this.notify({ eventName: 'datasource_download_progress', object: this, data: 0 });
+            this.clearDownloadingRow(provider);
             this.currentlyDownloadind = null;
         }
     }
 
-    async downloadDataSource({ dataSource, maxZoom, minZoom, provider }: { dataSource: TileDataSource<any, any>; provider: Provider; minZoom?; maxZoom? }) {
-        DEV_LOG && console.log('downloadDataSource', dataSource.constructor.name, provider, minZoom, maxZoom);
+    /**
+     * Downloads what is on screen into a provider's persistent cache.
+     *
+     * The SDK reports progress through events on the source now (`download.started`,
+     * `download.progress`, `download.completed`), so there is no listener object to build - which
+     * is what made an offline download unreachable from a string API at all.
+     */
+    async downloadDataSource({ maxZoom, minZoom, provider, source }: { source: DownloadableSource; provider: Provider; minZoom?: number; maxZoom?: number }) {
         try {
-            if (this.currentlyDownloadind) {
+            if (this.currentlyDownloadind || !source) {
                 return;
             }
-            if (dataSource instanceof PersistentCacheTileDataSource) {
-                await new Promise<void>((resolve, reject) => {
-                    try {
-                        this.currentlyDownloadind = { dataSource, provider };
-                        const zoom = maxZoom ?? provider.sourceOptions.maxZoom - 1;
-                        const cartoMap = mapContext.getMap();
-                        const projection = dataSource.getProjection();
-                        const screenBounds = toNativeScreenBounds({
-                            min: { x: cartoMap.getMeasuredWidth(), y: 0 },
-                            max: { x: 0, y: cartoMap.getMeasuredHeight() }
-                        });
-                        const bounds = new MapBounds(
-                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMin()) as any),
-                            projection.fromWgs84(cartoMap.screenToMap(screenBounds.getMax()) as any)
-                        );
+            await new Promise<void>((resolve, reject) => {
+                try {
+                    this.currentlyDownloadind = { source, provider };
+                    const zoom = maxZoom ?? provider.sourceOptions.maxZoom - 1;
+                    const camera = mapContext.getMap().camera();
+                    const bounds = camera.bounds();
 
-                        DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, cartoMap.getZoom(), zoom);
-                        dataSource.startDownloadArea(bounds, minZoom ?? cartoMap.getZoom(), zoom, {
-                            onDownloadCompleted: () => {
-                                DEV_LOG && console.log('onDownloadCompleted');
-                                this.currentlyDownloadind = null;
-                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                                if (itemIndex) {
-                                    const item = this.customSources.getItem(itemIndex);
-                                    delete item.downloading;
-                                    delete item.downloadProgress;
-                                    this.customSources.setItem(itemIndex, item);
-                                }
-                                // ensure we hide the progress
-                                this.notify({
-                                    eventName: 'datasource_download_progress',
-                                    object: this,
-                                    data: 0
-                                });
-                                this.notify({
-                                    eventName: 'datasource_dowload_finished',
-                                    object: this,
-                                    data: { provider, dataSource }
-                                });
-                                resolve();
-                            },
-                            onDownloadFailed(tile: { x: number; y: number; tileId: number }) {
-                                // this.notify({
-                                //     eventName: 'dowload_finished',
-                                //     object: this,
-                                //     data: {provider, dataSource}
-                                // });
-                                // const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                                // if (itemIndex) {
-                                //     const item = this.customSources.getItem(itemIndex);
-                                //     delete item.downloading;
-                                //     delete item.downloadProgress;
-                                //     this.customSources.setItem(itemIndex, item);
-                                // }
-                            },
-                            onDownloadProgress: (progress: number) => {
-                                // DEV_LOG && console.log('onDownloadProgress', progress);
-                                this.notify({
-                                    eventName: 'datasource_download_progress',
-                                    object: this,
-                                    data: progress
-                                });
-                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                                if (itemIndex) {
-                                    const item = this.customSources.getItem(itemIndex);
-                                    item.downloadProgress = progress;
-                                    this.customSources.setItem(itemIndex, item);
-                                }
-                            },
-                            onDownloadStarting: (tileCount: number) => {
-                                DEV_LOG && console.log('onDownloadStarting', tileCount);
-                                const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
-                                if (itemIndex) {
-                                    const item = this.customSources.getItem(itemIndex);
-                                    item.downloading = true;
-                                    item.downloadProgress = 0;
-                                    this.customSources.setItem(itemIndex, item);
-                                }
-                                this.notify({
-                                    eventName: 'datasource_dowload_started',
-                                    object: this,
-                                    data: { provider, dataSource }
-                                });
+                    source.on('download.started', (e) => {
+                        DEV_LOG && console.log('onDownloadStarting', e.tileCount);
+                        const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                        if (itemIndex >= 0) {
+                            const item = this.customSources.getItem(itemIndex);
+                            item.downloading = true;
+                            item.downloadProgress = 0;
+                            this.customSources.setItem(itemIndex, item);
+                        }
+                        this.notify({ eventName: 'datasource_dowload_started', object: this, data: { provider, source } });
+                    });
+                    // throttled: the SDK reports per tile, and the list only has to keep up with the eye
+                    source.subscribe(
+                        'download.progress',
+                        (e) => {
+                            const progress = e.progress;
+                            this.notify({ eventName: 'datasource_download_progress', object: this, data: progress });
+                            const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
+                            if (itemIndex >= 0) {
+                                const item = this.customSources.getItem(itemIndex);
+                                item.downloadProgress = progress;
+                                this.customSources.setItem(itemIndex, item);
                             }
-                        });
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            }
+                        },
+                        { throttle: 100 }
+                    );
+                    source.on('download.completed', () => {
+                        DEV_LOG && console.log('onDownloadCompleted');
+                        this.currentlyDownloadind = null;
+                        this.clearDownloadingRow(provider);
+                        this.notify({ eventName: 'datasource_download_progress', object: this, data: 0 });
+                        this.notify({ eventName: 'datasource_dowload_finished', object: this, data: { provider, source } });
+                        resolve();
+                    });
+
+                    DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, camera.zoom(), zoom);
+                    source.call('startDownloadArea', bounds as never, Math.round(minZoom ?? camera.zoom()), zoom, 0);
+                } catch (error) {
+                    reject(error);
+                }
+            });
         } catch (err) {
             showError(err);
         }

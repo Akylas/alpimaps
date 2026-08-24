@@ -1,25 +1,12 @@
 import '@nativescript/core/globals';
 import { BaseWorker, WorkerEvent } from '@akylas/nativescript-app-utils/worker/BaseWorker';
-import { GeoJSONGeometryReader } from '@nativescript-community/ui-carto/geometry/reader';
-import { EPSG4326 } from '@nativescript-community/ui-carto/projections/epsg4326';
+import { geometryBounds } from '~/utils/geo';
 
 // try {
 //     const test = require('~/services/pdf/PDFExportCanvas');
 // } catch (error) {
 //     console.error(error, error.stack);
 // }
-
-const reader = new GeoJSONGeometryReader({
-    targetProjection: new EPSG4326()
-});
-
-function getRouteItemGeometry(item) {
-    let geometry = reader.readGeometry(JSON.stringify(item.geometry));
-    if (geometry['getGeometryCount']) {
-        geometry = geometry['getGeometry'](0);
-    }
-    return geometry;
-}
 
 const context: Worker = self as any;
 const TAG = '[TransitLinesWorker]';
@@ -61,11 +48,12 @@ class TransitLinesWorker extends BaseWorker {
                             if (f.geometry && !f.geometry.type) {
                                 f.geometry = null;
                             } else {
-                                const geometry = getRouteItemGeometry(f);
-                                const bounds = geometry?.getBounds();
-                                const min = bounds.getMin() as any;
-                                const max = bounds.getMax() as any;
-                                f.properties.extent = [min.getX(), min.getY(), max.getX(), max.getY()];
+                                // plain arithmetic on the GeoJSON: this worker no longer loads the
+                                // SDK at all, which is what it was doing to read one bounding box
+                                const bounds = geometryBounds(f.geometry);
+                                if (bounds) {
+                                    f.properties.extent = [bounds.southwest.lon, bounds.southwest.lat, bounds.northeast.lon, bounds.northeast.lat];
+                                }
                             }
                         } else {
                             features.splice(index, 1);
