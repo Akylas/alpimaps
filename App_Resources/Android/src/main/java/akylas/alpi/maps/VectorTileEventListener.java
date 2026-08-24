@@ -6,7 +6,6 @@ import android.util.Log;
 import com.massifmaps.ui.VectorTileClickInfo;
 import com.massifmaps.core.Variant;
 import com.massifmaps.geometry.Geometry;
-import com.nativescript.massifmaps.additions.MapView;
 import com.nativescript.massifmaps.additions.SynchronousHandler;
 
 public class VectorTileEventListener extends com.nativescript.massifmaps.additions.VectorTileEventListener {
@@ -35,7 +34,7 @@ public class VectorTileEventListener extends com.nativescript.massifmaps.additio
         ) {
             return false;
         }
-        if (MapView.RUN_ON_MAIN_THREAD) {
+        if (SynchronousHandler.RUN_ON_MAIN_THREAD) {
             final Object[] arr = new Object[1];
             if (mainHandler == null) {
                 mainHandler = new Handler(android.os.Looper.getMainLooper());
