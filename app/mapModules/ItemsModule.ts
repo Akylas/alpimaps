@@ -1,13 +1,5 @@
 import { shareFile } from '@akylas/nativescript-app-utils/share';
-import { GenericMapPos, MapBounds } from '@nativescript-community/ui-massifmaps/core';
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
-import { PolygonGeometry } from '@nativescript-community/ui-massifmaps/geometry';
-import { VectorTileFeatureCollection } from '@nativescript-community/ui-massifmaps/geometry/feature';
-import { GeoJSONGeometryWriter } from '@nativescript-community/ui-massifmaps/geometry/writer';
-import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
-import { VectorTileSearchService } from '@nativescript-community/ui-massifmaps/search';
-import { MassifMap } from '@nativescript-community/ui-massifmaps/ui';
-import { Point, PointStyleBuilder, PointStyleBuilderOptions } from '@nativescript-community/ui-massifmaps/vectorelements/point';
+import type { MassifLayer, MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { getImagePipeline } from '@nativescript-community/ui-image';
 import { ShareFile } from '@nativescript-community/ui-share-file';
 import { ApplicationSettings, File, Folder, ImageSource, Screen, knownFolders, path, profile } from '@nativescript/core';
@@ -29,9 +21,16 @@ import { showSnack } from '~/utils/ui';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
 import MapModule, { getMapContext } from './MapModule';
+import { type MapPos, fromBounds, fromPosition, toPosition } from '~/utils/geo';
 const mapContext = getMapContext();
 
-let writer: GeoJSONGeometryWriter<LatLonKeys>;
+/** Element and request ids have to be unique in the registry; a counter is the cheapest way to be. */
+let localPointId = 0;
+
+/** A closed GeoJSON polygon from four corners, which is all a search bound ever is here. */
+function ring(corners: [number, number][]): GeoJSON.Polygon {
+    return { type: 'Polygon', coordinates: [[...corners, corners[0]]] };
+}
 
 const TAG = '[ItemsModule]';
 
@@ -58,10 +57,10 @@ declare type Mutable<T extends object> = {
     -readonly [K in keyof T]: T[K];
 };
 export default class ItemsModule extends MapModule {
-    localVectorDataSource: GeoJSONVectorTileDataSource;
+    localVectorDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
     // currentLayerFeatures: ItemFeature[] = [];
     currentItems: IItem[] = [];
-    localVectorLayer: VectorTileLayer;
+    localVectorLayer: MassifLayer<'massif::VectorTileLayer'>;
     db: NSQLDatabase;
     itemRepository: ItemRepository;
     groupsRepository: GroupRepository;
@@ -110,8 +109,8 @@ export default class ItemsModule extends MapModule {
             showError(err);
         }
     }
-    onMapReady(mapView: MassifMap<LatLonKeys>) {
-        super.onMapReady(mapView);
+    onMapReady(map: MassifMap) {
+        super.onMapReady(map);
         DEV_LOG && console.log(TAG, 'onMapReady', !!this.localVectorLayer);
         // if (this.localVectorLayer) {
         //     mapContext.addLayer(this.localVectorLayer, 'items');
@@ -134,7 +133,8 @@ export default class ItemsModule extends MapModule {
             this.localVectorDataSource = null;
         }
         if (this.localVectorLayer) {
-            this.localVectorLayer.setVectorTileEventListener(null);
+            // destroying the object drops its subscriptions with it
+            this.localVectorLayer.destroy();
             this.localVectorLayer = null;
         }
     }
@@ -147,54 +147,42 @@ export default class ItemsModule extends MapModule {
     }
     getOrCreateLocalVectorLayer(add = true) {
         if (!this.localVectorLayer) {
+            const map = mapContext.getMap();
             if (!this.localVectorDataSource) {
-                this.localVectorDataSource = new GeoJSONVectorTileDataSource({
-                    simplifyTolerance: 2,
-                    minZoom: 0,
-                    maxZoom: 24
-                });
+                this.localVectorDataSource = map.source('source.items', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
                 this.localVectorDataSource.createLayer('items');
                 this.localVectorDataSource.createLayer('poi');
             }
-            // this.localVectorDataSource.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier({ tolerance: 2 }));
-            this.localVectorLayer = new VectorTileLayer({
+            this.localVectorLayer = map.buildLayer('layer.items', {
+                type: 'vector',
+                source: this.localVectorDataSource.id,
+                style: mapContext.innerDecoder.id,
                 labelBlendingSpeed: 0,
                 layerBlendingSpeed: 0,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
-                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
-                dataSource: this.localVectorDataSource,
-                decoder: mapContext.innerDecoder
+                labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
+                clickRadius: ApplicationSettings.getNumber('route_click_radius', 16)
             });
-            mapContext.innerDecoder.once('change', this.updateLocalLayer, this);
-            this.localVectorLayer.setVectorTileEventListener<LatLonKeys>(
-                {
-                    onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
-                        return mapContext.vectorTileElementClicked(info);
-                    }
-                },
-                mapContext.getProjection()
-            );
+            this.localVectorLayer.onFeatureClick((e) => {
+                e.consumed = mapContext.vectorTileElementClicked(mapContext.featureClickData(e as never));
+            });
             if (add) {
                 mapContext.addLayer(this.localVectorLayer, 'items');
             }
         }
     }
     setVisibility(value: boolean) {
-        if (this.localVectorLayer) {
-            this.localVectorLayer.visible = value;
-        }
+        this.localVectorLayer?.visible(value);
     }
-    createLocalPoint(position: GenericMapPos<LatLonKeys>, options: PointStyleBuilderOptions) {
-        const styleBuilder = new PointStyleBuilder(options);
-        return new Point({ position, projection: mapContext.getProjection(), styleBuilder });
+    /** A dot on the map. The style is a spec, so a bigger pin is a number in JSON. */
+    createLocalPoint(position: MapPos, style: { [key: string]: any }) {
+        return mapContext.getMap().object('element', `element.point.${++localPointId}`, { type: 'point', position: toPosition(position), style: { type: 'point', ...style } } as never);
     }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
         // DEV_LOG && console.log('addItemToLayer', `${item.properties.color}`, JSON.stringify(item.properties));
         // this.currentLayerFeatures.push({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         if (autoUpdate) {
-            this.getLocalVectorDataSource().addGeoJSONStringFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
-            // this.updateGeoJSONLayer();
+            this.getLocalVectorDataSource().addFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
         }
     }
     getFeature(id: string) {
@@ -207,7 +195,7 @@ export default class ItemsModule extends MapModule {
     setLayerGeoJSONString() {
         this.getOrCreateLocalVectorLayer();
         // DEV_LOG && console.log('updateGeoJSONLayer', str);
-        this.getLocalVectorDataSource().setLayerGeoJSONString(1, {
+        this.getLocalVectorDataSource().setGeoJSON(1, {
             type: 'FeatureCollection',
             features: this.currentItems.map((item) => ({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }))
         });
@@ -219,7 +207,7 @@ export default class ItemsModule extends MapModule {
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
             if (autoUpdateLayer && item.onMap !== 0) {
-                this.getLocalVectorDataSource().updateGeoJSONStringFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
+                this.getLocalVectorDataSource().updateFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
             }
             if (item.route && updatePicture) {
                 this.takeItemPicture(item);
@@ -240,18 +228,27 @@ export default class ItemsModule extends MapModule {
             animated: true // optional iOS
         });
     }
+    /**
+     * Every piece of an OSM route, searched out of the tiles it is drawn from.
+     *
+     * A route in vector tiles is many features - one per tile, often several per tile - so this
+     * finds them all by id and stitches them together. The search is bounded by the route's own
+     * extent when it has one, and by what is on screen otherwise: unbounded it would scan the world
+     * at tile zoom.
+     */
     async getRoutePositions(item: IItem) {
         const layer = item.layer;
         const properties = item.properties;
-        const projection = layer.dataSource.getProjection();
-        const mapProjection = mapContext.getProjection();
-        const searchService = new VectorTileSearchService({
-            minZoom: layer.dataSource.maxZoom,
-            maxZoom: layer.dataSource.maxZoom,
-            layer
-        });
+        const source = layer.child('dataSource' as never);
+        const maxZoom = source.get('maxZoom' as never) as number;
+        const searchService = mapContext.getMap().object('search', 'search.routePositions', {
+            type: 'vectortile',
+            layer: layer.id,
+            minZoom: maxZoom,
+            maxZoom
+        } as never);
         let extent: [number, number, number, number] = item.properties.extent as any;
-        let boundsGeo;
+        let boundsGeoJSON: GeoJSON.Polygon;
         if (extent) {
             if (typeof extent === 'string') {
                 if (extent[0] !== '[') {
@@ -259,48 +256,43 @@ export default class ItemsModule extends MapModule {
                 }
                 extent = JSON.parse(extent as any);
             }
-            boundsGeo = new PolygonGeometry<LatLonKeys>({
-                poses: [
-                    { lat: extent[1], lon: extent[0] },
-                    { lat: extent[3], lon: extent[0] },
-                    { lat: extent[3], lon: extent[2] },
-                    { lat: extent[1], lon: extent[2] }
-                ]
-            });
+            boundsGeoJSON = ring([
+                [extent[0], extent[1]],
+                [extent[0], extent[3]],
+                [extent[2], extent[3]],
+                [extent[2], extent[1]]
+            ]);
         } else {
-            const position = getMapContext().getMap().getFocusPos();
-            const mpp = getMetersPerPixel(position, mapContext.getMap().getZoom());
+            const camera = mapContext.getMap().camera();
+            const position = fromPosition(camera.position());
+            const mpp = getMetersPerPixel(position, camera.zoom());
             const searchRadius = Math.min(Math.max(mpp * Screen.mainScreen.widthPixels * 2, mpp * Screen.mainScreen.heightPixels * 2), 50000); //meters;
             const bounds = getBoundsOfDistance(position, searchRadius);
-            boundsGeo = new PolygonGeometry<LatLonKeys>({
-                poses: [bounds.northeast, { lat: bounds.northeast.lat, lon: bounds.southwest.lon }, bounds.southwest, { lat: bounds.southwest.lat, lon: bounds.northeast.lon }]
-            });
+            boundsGeoJSON = ring([
+                [bounds.northeast.lon, bounds.northeast.lat],
+                [bounds.southwest.lon, bounds.northeast.lat],
+                [bounds.southwest.lon, bounds.southwest.lat],
+                [bounds.northeast.lon, bounds.southwest.lat]
+            ]);
         }
         const key = ['route_id', 'osmid', 'id'].find((k) => properties.hasOwnProperty(k));
-        const featureCollection = await new Promise<VectorTileFeatureCollection>((resolve) =>
-            searchService.findFeatures(
-                {
-                    projection: mapProjection,
-                    filterExpression: `${key}='${properties[key]}'`,
-                    geometry: boundsGeo
-                },
-                resolve
-            )
-        );
-        const count = featureCollection.getFeatureCount();
-        if (count === 0) {
+        const request = mapContext.getMap().object('search', `search.request.route.${++localPointId}`, {
+            type: 'request',
+            filterExpression: `${key}='${properties[key]}'`,
+            geometry: { type: 'geojson', geojson: boundsGeoJSON }
+        } as never);
+        // One geometry per feature, read while the result is alive: the collection dies with the
+        // delivery, so nothing here can hand it back.
+        const geometries = (await searchService.callAsync('findFeatures' as never, [request.handle] as never, ((collection) =>
+            collection.collect((feature) => feature.get('geometryGeoJSON'))) as never)) as unknown as string[];
+        request.destroy();
+        source.destroy();
+        if (!geometries?.length) {
             return null;
         }
-        if (!writer) {
-            writer = new GeoJSONGeometryWriter<LatLonKeys>({
-                sourceProjection: projection
-            });
-        }
-        const jsonStr = writer.writeFeatureCollection(featureCollection);
-
-        // this.shareFile(jsonStr, 'test2.json');
-        const geojson: GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.MultiLineString> = JSON.parse(jsonStr);
-
+        const geojson = { features: geometries.map((geometry) => ({ type: 'Feature', geometry: JSON.parse(geometry) })) } as GeoJSON.FeatureCollection<
+            GeoJSON.LineString | GeoJSON.MultiLineString
+        >;
         const features = geojson.features;
 
         const listCoordinates: GeoJSON.Position[][] = [];
@@ -495,10 +487,10 @@ export default class ItemsModule extends MapModule {
             }
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
-            this.getLocalVectorDataSource().setLayerGeoJSONString(2, data);
+            this.getLocalVectorDataSource().setGeoJSON(2, data);
             // DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
-            this.getLocalVectorDataSource().setLayerGeoJSONString(2, { type: 'FeatureCollection', features: [] });
+            this.getLocalVectorDataSource().setGeoJSON(2, { type: 'FeatureCollection', features: [] });
         }
     }
     async hideItem(item: IItem) {
@@ -509,7 +501,7 @@ export default class ItemsModule extends MapModule {
         if (index > -1) {
             // this.currentLayerFeatures.splice(index, 1);
             this.currentItems.splice(index, 1);
-            this.getLocalVectorDataSource().removeGeoJSONFeature(1, item.id);
+            this.getLocalVectorDataSource().removeFeature(1, item.id);
             // this.updateGeoJSONLayer();
         }
         return this.updateItem(item, { onMap: 0 }, false, false);
@@ -523,7 +515,7 @@ export default class ItemsModule extends MapModule {
         if (index > -1) {
             // this.currentLayerFeatures.splice(index, 1);
             this.currentItems.splice(index, 1);
-            this.getLocalVectorDataSource().removeGeoJSONFeature(1, item.id);
+            this.getLocalVectorDataSource().removeFeature(1, item.id);
             // this.updateGeoJSONLayer();
         }
 
@@ -546,7 +538,7 @@ export default class ItemsModule extends MapModule {
         let mapBounds;
         if (restore) {
             oldItem = mapContext.getSelectedItem();
-            mapBounds = mapContext.getMap().getMapBounds();
+            mapBounds = mapContext.getMap().camera().bounds();
         }
         if (item.image_path && File.exists(item.image_path)) {
             // we need to evict from image cache
@@ -554,8 +546,8 @@ export default class ItemsModule extends MapModule {
         }
         return new Promise<void>((resolve) => {
             let done = false;
-            const mapView = mapContext.getMap();
-            mapContext.innerDecoder.setStyleParameter('hide_unselected', '1');
+            const map = mapContext.getMap();
+            mapContext.innerDecoder.call('setStyleParameter', 'hide_unselected', '1');
             mapContext.selectItem({ item, isFeatureInteresting: true, preventZoom: false });
             const onDone = async () => {
                 if (timer) {
@@ -571,16 +563,16 @@ export default class ItemsModule extends MapModule {
                 try {
                     // DEV_LOG && console.log('takeItemPicture', 'onMapStable');
                     // const startTime = Date.now();
-                    image = await mapView.captureRendering(true);
+                    image = await map.capture(true);
                     // DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
                     image.saveToFile(item.image_path, 'jpg');
                     // restore everyting
-                    mapContext.innerDecoder.setStyleParameter('hide_unselected', '0');
+                    mapContext.innerDecoder.call('setStyleParameter', 'hide_unselected', '0');
                     if (restore) {
                         if (oldItem) {
                             mapContext.selectItem({ item: oldItem, isFeatureInteresting: true, preventZoom: true });
                         }
-                        mapContext.getMap().moveToFitBounds(mapBounds, undefined, true, true, true, 0);
+                        map.camera().fitBounds(mapBounds, { integerZoom: true, resetRotation: true, resetTilt: true });
                     }
                     resolve();
                 } catch (error) {
@@ -593,7 +585,8 @@ export default class ItemsModule extends MapModule {
                 }
             };
             let timer = setTimeout(onDone, 1500) as any;
-            mapContext.getMap().once('mapStable', onDone);
+            // once: the screenshot is taken the first time the camera settles, not on every later one
+            mapContext.getMap().once('map.stable', onDone);
         });
     }
 
@@ -720,7 +713,7 @@ export default class ItemsModule extends MapModule {
                 lat: -Number.MAX_SAFE_INTEGER,
                 lon: -Number.MAX_SAFE_INTEGER
             }
-        } as any as MapBounds<LatLonKeys>;
+        } as any as IMapBounds;
         const tracks = [];
         items.forEach((item) => {
             const bounds = item.properties.zoomBounds;

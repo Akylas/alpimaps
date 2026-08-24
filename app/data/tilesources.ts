@@ -1,6 +1,4 @@
-import { HTTPTileDataSourceOptions } from '@nativescript-community/ui-massifmaps/datasources/http';
-import { RasterTileLayerOptions } from '@nativescript-community/ui-massifmaps/layers/raster';
-import { VectorTileLayerOptions } from '@nativescript-community/ui-massifmaps/layers/vector';
+import type { SpecArg } from '@nativescript-community/ui-massifmaps/api';
 
 export interface DataProviderOptions {
     [k: string]: any;
@@ -27,8 +25,20 @@ export interface Provider {
     category?: string;
     attribution?: string;
     legend?: string;
-    sourceOptions?: Partial<HTTPTileDataSourceOptions>;
-    layerOptions?: Partial<RasterTileLayerOptions | VectorTileLayerOptions>;
+    /**
+     * Everything but the url, which comes from `url` above after its tokens are substituted.
+     *
+     * A source SPEC's keys: the SDK's own property names, so `httpHeaders` is the one exception -
+     * it is spelled `HTTPHeaders` on the source and is translated when the spec is built.
+     */
+    sourceOptions?: Partial<Omit<SpecArg<'source', 'http'>, 'type' | 'url' | 'subdomains'>> & {
+        httpHeaders?: { [key: string]: string };
+        encoding?: string;
+        /** `'abcd'` is read as one letter per subdomain, which is how these tables have always spelled it */
+        subdomains?: string | string[];
+    };
+    /** A layer spec's keys, minus what the provider itself decides (`type`, `source`, `style`). */
+    layerOptions?: { [key: string]: any };
     variants?: { [k: string]: Provider | string };
 }
 

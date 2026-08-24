@@ -1,11 +1,6 @@
 import { lc } from '@nativescript-community/l';
-import { MapPos, MapPosVector, fromNativeMapPos, fromNativeScreenPos, toNativeScreenPos } from '@nativescript-community/ui-massifmaps/core';
-import { LocalVectorDataSource } from '@nativescript-community/ui-massifmaps/datasources/vector';
-import { VectorLayer } from '@nativescript-community/ui-massifmaps/layers/vector';
-import { Marker } from '@nativescript-community/ui-massifmaps/vectorelements/marker';
-import { BillboardOrientation, BillboardScaling } from '@nativescript-community/ui-massifmaps/vectorelements';
+import type { MassifLayer, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-import { Polygon } from '@nativescript-community/ui-massifmaps/vectorelements/polygon';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
 import { ApplicationSettings, Color, ImageSource, Utils } from '@nativescript/core';
@@ -15,10 +10,9 @@ import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } f
 import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-import { EARTH_RADIUS, PI_X2, TO_DEG, TO_RAD } from '~/utils/geo';
+import { EARTH_RADIUS, type MapPos, PI_X2, TO_DEG, TO_RAD, toPosition } from '~/utils/geo';
 import { requestScreenRefresh } from '~/utils/screen';
-import MapModule, { getMapContext } from './MapModule';
-import { MapInteractionInfo } from '@nativescript-community/ui-massifmaps/ui';
+import MapModule, { type MapInteraction, getMapContext } from './MapModule';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
@@ -101,21 +95,21 @@ export const userFollowStore = writable(false);
 const mapContext = getMapContext();
 
 export default class UserLocationModule extends MapModule {
-    localBackVectorDataSource: LocalVectorDataSource;
-    localVectorDataSource: LocalVectorDataSource;
-    localBackVectorLayer: VectorLayer;
-    localVectorLayer: VectorLayer;
+    localBackVectorDataSource: MassifSource<'massif::LocalVectorDataSource'>;
+    localVectorDataSource: MassifSource<'massif::LocalVectorDataSource'>;
+    localBackVectorLayer: MassifLayer<'massif::VectorLayer'>;
+    localVectorLayer: MassifLayer<'massif::VectorLayer'>;
     /**
      * One marker for both modes. The heading arrow and the dot used to be three separate elements kept
      * in sync by showing and hiding each other, which meant every mode change had to remember to touch
      * all of them — and a marker whose look depended on a fix that had not arrived yet simply stayed
      * wrong. Now the look is a style swapped on the single marker, so there is nothing to keep in sync.
      */
-    userMarker: Marker<LatLonKeys>;
+    userMarker: MassifObject<'massif::Marker'>;
     /** which look the marker currently wears, so the style is only rebuilt when it actually changes */
     private userMarkerStyleKey: string = null;
     /** the halo stays its own element: it is a ground circle in meters, not a screen sized billboard */
-    accuracyMarker: Polygon<LatLonKeys>;
+    accuracyMarker: MassifObject<'massif::Polygon'>;
     /** last heading we were given, so a fix without one does not swing the arrow back to north */
     private lastKnownBearing = 0;
     mUserFollow = false;
@@ -152,7 +146,7 @@ export default class UserLocationModule extends MapModule {
         super.onMapDestroyed();
         this.localVectorLayer = null;
         if (this.localVectorDataSource) {
-            this.localVectorDataSource.clear();
+            this.localVectorDataSource.call('clear');
             this.localVectorDataSource = null;
         }
         // the elements belonged to that data source: kept around, the next `updateMarkers` would update
@@ -162,39 +156,35 @@ export default class UserLocationModule extends MapModule {
         this.accuracyMarker = null;
     }
 
-    getCirclePoints(loc: Partial<MapPos<LatLonKeys> & { horizontalAccuracy: number }>) {
+    getCirclePoints(loc: Partial<MapPos & { horizontalAccuracy: number }>) {
         const centerLat = loc.lat;
         const centerLon = loc.lon;
         const radius = loc.horizontalAccuracy;
         const N = Math.min(radius * 8, 100);
 
-        const points = new MapPosVector<LatLonKeys>();
-
+        // `[lng, lat]` pairs, which is what an element spec's `poses` takes
+        const points: [number, number][] = [];
         for (let i = 0; i <= N; i++) {
             const angle = (PI_X2 * (i % N)) / N;
             const dx = radius * Math.cos(angle);
             const dy = radius * Math.sin(angle);
             const lat = centerLat + TO_DEG * (dy / EARTH_RADIUS);
             const lon = centerLon + (TO_DEG * (dx / EARTH_RADIUS)) / Math.cos(centerLat * TO_RAD);
-            points.add({ lat, lon } as any);
+            points.push([lon, lat]);
         }
-
         return points;
     }
     getOrCreateLocalVectorLayer() {
         if (!this.localVectorLayer) {
-            const projection = this.mapView.projection;
-            this.localVectorDataSource = new LocalVectorDataSource({ projection });
-
-            this.localVectorLayer = new VectorLayer({ visibleZoomRange: [0, 24], dataSource: this.localVectorDataSource });
-            this.localVectorLayer.setVectorElementEventListener<LatLonKeys>({
-                onVectorElementClicked: (data) => mapContext.vectorElementClicked(data)
-            });
-            this.localBackVectorDataSource = new LocalVectorDataSource({ projection });
-
-            this.localBackVectorLayer = new VectorLayer({
-                visibleZoomRange: [0, 24],
-                dataSource: this.localBackVectorDataSource
+            const map = mapContext.getMap();
+            // Two layers, so the accuracy halo draws UNDER the marker: the SDK draws a layer at a
+            // time, and one source cannot order two elements against each other.
+            this.localBackVectorDataSource = map.source('source.userLocation.back', { type: 'local', projection: { type: 'EPSG:4326' } });
+            this.localBackVectorLayer = map.buildLayer('layer.userLocation.back', { type: 'elements', source: this.localBackVectorDataSource.id, visibleZoomRange: [0, 24] });
+            this.localVectorDataSource = map.source('source.userLocation', { type: 'local', projection: { type: 'EPSG:4326' } });
+            this.localVectorLayer = map.buildLayer('layer.userLocation', { type: 'elements', source: this.localVectorDataSource.id, visibleZoomRange: [0, 24] });
+            this.localVectorLayer.onElementClick((e) => {
+                e.consumed = mapContext.vectorElementClicked(mapContext.elementClickData(e as never));
             });
 
             // always add it at 1 to respect local order
@@ -202,10 +192,10 @@ export default class UserLocationModule extends MapModule {
             mapContext.addLayer(this.localVectorLayer, 'userLocation');
         }
     }
-    override onMapInteraction(e: { data: MapInteractionInfo }) {
-        const interaction = e.data.interaction;
-        // DEV_LOG && console.log('onMapInteraction', interaction);
-        if (!interaction.isZoomAction && interaction.isPanAction && e.data.userAction) {
+    override onMapInteraction(e: { data: MapInteraction }) {
+        const interaction = e.data;
+        // a pan the user made, not a zoom and not an animation the app started
+        if (!interaction.zoomAction && interaction.panAction && !interaction.animationStarted) {
             this.userFollow = false;
         }
     }
@@ -233,7 +223,7 @@ export default class UserLocationModule extends MapModule {
         };
         // the heading is part of what the marker draws, so a fix that only turned is not "the same fix"
         if (
-            !this.mapView ||
+            !this.map ||
             (this.lastUserLocation &&
                 this.lastUserLocation.lat === geoPos.lat &&
                 this.lastUserLocation.lon === geoPos.lon &&
@@ -295,24 +285,25 @@ export default class UserLocationModule extends MapModule {
         this.getOrCreateLocalVectorLayer();
 
         if (accuracyMarkerEnabled) {
+            const poses = this.getCirclePoints(position);
             if (!this.accuracyMarker) {
-                this.accuracyMarker = new Polygon<LatLonKeys>({
-                    positions: this.getCirclePoints(position),
-                    styleBuilder: {
-                        size: 16,
-                        color: new Color(70, 14, 122, 254),
-                        lineStyleBuilder: {
-                            color: new Color(150, 14, 122, 254),
-                            width: 1
-                        }
+                // The border is a nested elementstyle spec: a polygon style takes its line inline,
+                // so nothing here registers a LineStyle of its own.
+                this.accuracyMarker = mapContext.getMap().object('element', 'element.userLocation.accuracy', {
+                    type: 'polygon',
+                    poses,
+                    style: {
+                        type: 'polygon',
+                        color: new Color(70, 14, 122, 254).argb,
+                        lineStyle: { type: 'line', color: new Color(150, 14, 122, 254).argb, width: 1 }
                     }
-                });
-                this.localBackVectorDataSource.add(this.accuracyMarker);
+                } as never) as never;
+                this.localBackVectorDataSource.call('add', this.accuracyMarker.handle);
             } else {
-                this.accuracyMarker.positions = this.getCirclePoints(position);
+                this.accuracyMarker.set('geometry.poses' as never, poses as never);
             }
             // the halo belongs to the dot: around the arrow it just draws a circle that never goes away
-            this.accuracyMarker.visible = !useArrow && accuracy > 20;
+            this.accuracyMarker.set('visible', !useArrow && accuracy > 20);
         }
 
         const { colorOnPrimary, colorPrimary } = get(colors);
@@ -322,28 +313,29 @@ export default class UserLocationModule extends MapModule {
         const size = useArrow ? ARROW_MARKER_SIZE : accuracyMarkerEnabled ? DOT_MARKER_SIZE : accuracySize;
         const styleKey = `${kind}|${color}|${size}`;
         if (!this.userMarker) {
-            this.userMarker = new Marker<LatLonKeys>({
-                metaData: {
-                    userMarker: 'true'
-                },
-                position: newPos,
-                styleBuilder: this.userMarkerStyle(kind, color, size, colorOnPrimary)
-            });
-            this.localVectorDataSource.add(this.userMarker);
+            this.userMarker = mapContext.getMap().object('element', 'element.userLocation', {
+                type: 'marker',
+                position: toPosition(newPos),
+                style: this.userMarkerStyle(kind, color, size, colorOnPrimary),
+                metaData: { userMarker: 'true' }
+            } as never) as never;
+            this.localVectorDataSource.call('add', this.userMarker.handle);
         } else if (styleKey !== this.userMarkerStyleKey) {
             // rebuilding a style means rebuilding its bitmap, so only ever on a real change of look
-            this.userMarker.styleBuilder = this.userMarkerStyle(kind, color, size, colorOnPrimary);
+            const style = mapContext.getMap().object('elementstyle', `elementstyle.userLocation.${styleKey}`, this.userMarkerStyle(kind, color, size, colorOnPrimary) as never);
+            this.userMarker.set('style', style.handle as never);
         }
         this.userMarkerStyleKey = styleKey;
-        this.userMarker.position = newPos;
+        this.userMarker.set('geometry.pos' as never, toPosition(newPos) as never);
         // the dot has no heading to show, and a chevron pointing north while the map points elsewhere
         // is worse than one holding the last direction we were actually given
-        this.userMarker.rotation = useArrow ? -this.lastKnownBearing : 0;
-        this.userMarker.visible = true;
+        this.userMarker.set('rotation', useArrow ? -this.lastKnownBearing : 0);
+        this.userMarker.set('visible', true);
     }
 
     private userMarkerStyle(kind: UserMarkerKind, color: string, size: number, outlineColor: string) {
         return {
+            type: 'marker',
             size,
             bitmap: getUserBitmap(kind, color, outlineColor),
             // carto anchors a marker at (0, -1) — its bottom edge — because a marker is usually a pin
@@ -352,40 +344,44 @@ export default class UserLocationModule extends MapModule {
             anchorPointX: 0,
             anchorPointY: 0,
             // GROUND so the chevron turns with the map rather than staying upright on screen
-            orientationMode: BillboardOrientation.GROUND,
-            scalingMode: BillboardScaling.CONST_SCREEN_SIZE
+            orientationMode: 'BILLBOARD_ORIENTATION_GROUND',
+            scalingMode: 'BILLBOARD_SCALING_CONST_SCREEN_SIZE'
         };
     }
     /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
     navigationZoom = 0;
 
+    /**
+     * Puts the camera on the user.
+     *
+     * ONE move, not four: position, zoom, rotation and tilt used to be set separately with the same
+     * duration, and four animations over the same camera visibly fight each other - which is what
+     * made a navigation recentre look like a stutter.
+     */
     moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
             return;
         }
-        if (this.navigationZoom > 0) {
-            this.mapView.setZoom(this.navigationZoom, duration);
-        } else {
-            this.mapView.setZoom(Math.max(this.mapView.zoom, 10), duration);
+        const map = mapContext.getMap();
+        const camera = map.camera();
+        const zoom = this.navigationZoom > 0 ? this.navigationZoom : Math.max(camera.zoom(), 10);
+        const target = toPosition(this.mLastUserLocation);
+        if (!this.navigationMode) {
+            camera.moveTo(target, { zoom, duration });
+            return;
         }
-        if (this.navigationMode) {
-            const options = mapContext.getMap().getOptions();
-            options.setFocusPointOffset(
-                toNativeScreenPos({
-                    x: mapContext.focusOffset.x,
-                    y: mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
-                })
-            );
-            this.mapView.setFocusPos(this.mLastUserLocation, duration);
-
-            this.mapView.setBearing(-this.mLastUserLocation.bearing, duration);
-            const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
-            if (tilt > 0) {
-                this.mapView.setTilt(tilt, duration);
-            }
-        } else {
-            this.mapView.setFocusPos(this.mLastUserLocation, duration);
-        }
+        // the user sits low on the screen while navigating, so there is road ahead to look at
+        map.set('focusPointOffset', {
+            x: mapContext.focusOffset.x,
+            y: mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
+        } as never);
+        const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
+        camera.moveTo(target, {
+            zoom,
+            rotation: -this.mLastUserLocation.bearing,
+            tilt: tilt > 0 ? tilt : undefined,
+            duration
+        });
     }
     onLocation(event: UserLocationdEventData) {
         // const { android, ios, ...toPrint } = data.location;
