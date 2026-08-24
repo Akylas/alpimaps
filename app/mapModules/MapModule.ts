@@ -54,7 +54,9 @@ const appPath = knownFolders.currentApp().path;
  * the APK, where no file path reaches them. `assets://` is the SDK's scheme for that.
  */
 function assetUrl(relativePath: string) {
-    const filePath = path.join(appPath, relativePath);
+    // An absolute path is passed through rather than joined onto appPath: joining twice produced
+    // `assets://app//data/data/.../…`, which reads as a missing asset rather than a bad call.
+    const filePath = relativePath.startsWith('/') ? relativePath : path.join(appPath, relativePath);
     return File.exists(filePath) ? `file://${filePath}` : `assets://app/${relativePath}`;
 }
 
@@ -131,8 +133,8 @@ export function featureClickData(e: MassifEventData<'massif::VectorTileLayer', '
         featurePosition: fromPosition(e.getPos('featurePos') as Position),
         featureData: (e.get('feature.properties') ?? {}) as { [k: string]: any },
         featureGeometry: e.get('feature.geometryGeoJSON') as never,
-        featureId: e.featureId as number,
-        featureLayerName: e.featureLayerName as string,
+        featureId: e.featureId,
+        featureLayerName: e.featureLayerName,
         layer: undefined
     };
 }
@@ -317,7 +319,9 @@ const mapContext: MapContext = {
         if (isEInk) {
             // An inline bitmap spec: the SDK decodes the bytes the url gives, so nothing here
             // builds an image.
-            map.set('backgroundBitmap', { type: 'url', url: assetUrl('assets/images/eink-map-background.png') } as never);
+            // assetUrl takes an APP-RELATIVE path - it joins appPath itself. Handing it an
+            // absolute one joins twice and falls through to assets://app/<absolute path>.
+            map.set('backgroundBitmap', { type: 'url', url: assetUrl('assets/images/eink-map-background.png') });
         }
     },
     onOtherAppTextSelected: createGlobalEventListener('onOtherAppTextSelected'),

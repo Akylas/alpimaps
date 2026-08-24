@@ -145,10 +145,12 @@ export default class UserLocationModule extends MapModule {
     override onMapDestroyed() {
         super.onMapDestroyed();
         this.localVectorLayer = null;
-        if (this.localVectorDataSource) {
+        // `valid` first: on an activity destroy the map released what it owned before the modules
+        // are told, so the handle is already gone and the call would throw out of teardown
+        if (this.localVectorDataSource?.valid) {
             this.localVectorDataSource.call('clear');
-            this.localVectorDataSource = null;
         }
+        this.localVectorDataSource = null;
         // the elements belonged to that data source: kept around, the next `updateMarkers` would update
         // markers attached to nothing and never add them to the layer the new map builds
         this.userMarker = null;
