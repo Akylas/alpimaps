@@ -141,7 +141,7 @@ const nutiParams = {
     show_routes: {
         title: lc('show_routes'),
         settingsOptionsType: 'boolean',
-        defaultValue: true,
+        defaultValue: false,
         icon: 'mdi-routes',
         visible: (capabilities) => !!capabilities?.hasRoute,
         onLongPress: tryCatchFunction(async (event) => {

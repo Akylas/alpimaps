@@ -31,7 +31,6 @@
         "river_min_zoom":4,
         "polygons_border": 0,
         "wetland_pattern_zoom":13,
-        "rock_pattern_zoom":10,
         "scree_pattern_zoom":12,
         "scrub_pattern_zoom":12,
         "forest_pattern_zoom":11,
