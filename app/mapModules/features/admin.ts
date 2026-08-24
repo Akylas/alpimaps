@@ -1,6 +1,4 @@
-import { TileSubstitutionPolicy } from '@nativescript-community/ui-massifmaps/layers';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-massifmaps/layers/vector';
-import { TileLayer } from '@nativescript-community/ui-massifmaps/layers';
+import type { MassifLayer } from '@nativescript-community/ui-massifmaps/api';
 import { showError } from '@shared/utils/showError';
 import { derived, get, writable } from 'svelte/store';
 import { lc } from '~/helpers/locale';
@@ -13,29 +11,37 @@ import { colors } from '~/variables';
 /** Whether the administrative-boundary overlay is on. */
 const showAdmins = writable(false);
 
-let adminLayer: VectorTileLayer;
+let adminLayer: MassifLayer<'massif::VectorTileLayer'>;
 
 /**
  * The overlay reuses the base map's datasource with a different decoder, so it can only exist once a
  * map layer does — which is why it is created on first use rather than up front.
+ *
+ * `child('dataSource')` hands the base layer's source over rather than naming or rebuilding it, and
+ * a spec takes that handle straight: the boundaries come out of the tiles already on screen.
  */
 function createAdminLayer() {
     const mapContext = getMapContext();
     const baseLayer = mapContext.getLayers('map')[0]?.layer;
-    if (!(baseLayer instanceof TileLayer)) {
+    const source = baseLayer?.child('dataSource' as never);
+    if (!source) {
         return null;
     }
-    const layer = new VectorTileLayer({
+    // Built, not placed: LayerStack decides where 'admin' sits in the stack.
+    const layer = mapContext.getMap().buildLayer('admin', {
+        type: 'vector',
+        source: source.handle as never,
+        style: createTileDecoder('admin').handle as never,
         layerBlendingSpeed: 3,
         labelBlendingSpeed: 3,
         preloading: get(preloading),
-        tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-        labelRenderOrder: VectorTileRenderOrder.LAST,
-        dataSource: baseLayer.dataSource,
-        decoder: createTileDecoder('admin')
+        tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
+        labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST'
     });
-    // boundaries are context, not something to select: swallow the click without handling it
-    layer.setVectorTileEventListener<LatLonKeys>({ onVectorTileClicked: () => false }, mapContext.getProjection());
+    // boundaries are context, not something to select: claim the click so nothing behind acts on it
+    layer.onFeatureClick((e) => {
+        e.consumed = true;
+    });
     return layer;
 }
 
@@ -51,13 +57,13 @@ function applyVisibility(visible: boolean) {
                 }
                 mapContext.addLayer(adminLayer, 'admin');
             } else {
-                adminLayer.visible = true;
+                adminLayer.visible(true);
             }
         } else if (adminLayer) {
-            adminLayer.visible = false;
+            adminLayer.visible(false);
         }
         if (adminLayer) {
-            mapContext.mapDecoder?.setStyleParameter('hide_admins', adminLayer.visible ? '1' : '0');
+            mapContext.mapDecoder?.call('setStyleParameter', 'hide_admins', adminLayer.visible() ? '1' : '0');
         }
     } catch (error) {
         showAdmins.set(false);
