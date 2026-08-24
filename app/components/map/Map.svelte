@@ -1004,7 +1004,9 @@
     //   }
     //    $: customLayersModule?.toggleHillshadeSlope($showSlopePercentages);
     $: itemModule?.setVisibility($showItemsLayer);
-    $: massifMap?.set('rotatable', $rotateEnabled);
+    // `rotationGestures`, not `rotatable`: the latter is checked in CameraRotationEvent and stops
+    // EVERY rotation, so the compass reset stopped working when the user turned rotation off
+    $: massifMap?.set('rotationGestures', $rotateEnabled);
     $: massifMap?.set('tiltRange', [$pitchEnabled ? 30 : 90, 90]);
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
