@@ -176,7 +176,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                         <stacklayout verticalAlignment="center">
                             <label
                                 ios:class="ignoreA11yFontScale"
-                                color={item.layer.opacity === 0 ? colorOnSurfaceVariant : colorOnSurface}
+                                color={item.layer.opacity() === 0 ? colorOnSurfaceVariant : colorOnSurface}
                                 fontSize={13 * $fontScaleMaxed}
                                 fontWeight="bold"
                                 lineBreak="end"
@@ -198,7 +198,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                             marginRight={10}
                             maxValue={1}
                             minValue={0}
-                            value={item.layer.opacity}
+                            value={item.layer.opacity()}
                             verticalAlignment="middle"
                             on:valueChange={(event) => onLayerOpacityChanged(item, event)} />
                         <IconButton
