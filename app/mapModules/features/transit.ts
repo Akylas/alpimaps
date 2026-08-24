@@ -1,13 +1,11 @@
-import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-import { TileSubstitutionPolicy } from '@nativescript-community/ui-carto/layers';
-import { VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
+import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { Color } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
 import { closePopover } from '@nativescript-community/ui-popover/svelte';
 import { derived, get, writable } from 'svelte/store';
 import { lc } from '~/helpers/locale';
-import { getMapContext } from '~/mapModules/MapModule';
+import { type FeatureClickData, getMapContext } from '~/mapModules/MapModule';
 import { FeaturePicker, isPickerPending } from '~/mapModules/featurePicker';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import type { IItem } from '~/models/Item';
@@ -18,8 +16,8 @@ import { colors } from '~/variables';
 /** Whether the transit overlay is on. Toggled from the map's overflow menu. */
 const showingTransitLines = writable(false);
 
-let dataSource: GeoJSONVectorTileDataSource;
-let transitLayer: VectorTileLayer;
+let dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
+let transitLayer: MassifLayer<'massif::VectorTileLayer'>;
 let fetching = false;
 
 const transitPicker = new FeaturePicker({
@@ -44,7 +42,7 @@ export function isTransitPickerPending() {
     return isPickerPending('transit');
 }
 
-function onTransitTileClicked({ featureData, featureGeometry, featureId, featureLayerName }) {
+function onTransitTileClicked({ featureData, featureGeometry, featureId, featureLayerName }: FeatureClickData) {
     // a tap on a road that also carries transit belongs to the road
     if (isPickerPending('routes')) {
         return;
@@ -68,35 +66,47 @@ function onTransitTileClicked({ featureData, featureGeometry, featureId, feature
             ...featureData
         },
         route: { osmid: id } as any,
-        _nativeGeometry: featureGeometry,
+        geometry: featureGeometry,
         layer: transitLayer
     } as IItem);
     return false;
 }
 
-/** The layer holds a decoder that gets rebuilt on style changes, so it is rebuilt with it. */
-function updateTransitLayer() {
+/**
+ * The layer holds a decoder that gets rebuilt on style changes, so it is rebuilt with it.
+ *
+ * Called from the map's `vectorTileDecoderChanged` hook rather than from an event on the decoder:
+ * the decoder is destroyed as part of the change.
+ */
+export function updateTransitLayer() {
     const oldLayer = transitLayer;
+    if (!oldLayer) {
+        return;
+    }
     transitLayer = null;
     createTransitLayer(false);
     getMapContext().replaceLayer(oldLayer, transitLayer);
+    oldLayer.destroy();
 }
 
 function createTransitLayer(add = true) {
     const mapContext = getMapContext();
-    transitLayer = new VectorTileLayer({
+    transitLayer = mapContext.getMap().buildLayer('layer.transit', {
+        type: 'vector',
+        source: dataSource.id,
+        style: mapContext.innerDecoder.id,
         visibleZoomRange: [7, 24],
         layerBlendingSpeed: 3,
         labelBlendingSpeed: 3,
         preloading: get(preloading),
-        tileSubstitutionPolicy: TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE,
-        labelRenderOrder: VectorTileRenderOrder.LAST,
-        dataSource,
-        decoder: mapContext.innerDecoder
+        tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
+        labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST'
     });
-    mapContext.innerDecoder.once('change', updateTransitLayer);
-    transitLayer.setVectorTileEventListener<LatLonKeys>({ onVectorTileClicked: onTransitTileClicked }, mapContext.getProjection());
-    mapContext.innerDecoder.setStyleParameter('default_transit_color', transitService.defaultTransitLineColor);
+    transitLayer.onFeatureClick((e) => {
+        // claimed either way: a transit tap is this overlay's, handled or not
+        e.consumed = onTransitTileClicked(mapContext.featureClickData(e)) !== false;
+    });
+    mapContext.innerDecoder.call('setStyleParameter', 'default_transit_color', transitService.defaultTransitLineColor);
     if (add) {
         mapContext.addLayer(transitLayer, 'transit');
     }
@@ -105,7 +115,7 @@ function createTransitLayer(add = true) {
 async function showTransitLines() {
     try {
         if (transitLayer) {
-            transitLayer.visible = true;
+            transitLayer.visible(true);
             return;
         }
         if (fetching) {
@@ -114,10 +124,10 @@ async function showTransitLines() {
         fetching = true;
         const result = await transitService.getTransitLines();
         if (!dataSource) {
-            dataSource = new GeoJSONVectorTileDataSource({ minZoom: 0, maxZoom: 24 });
+            dataSource = getMapContext().getMap().source('source.transit', { type: 'geojson', minZoom: 0, maxZoom: 24 });
             dataSource.createLayer('routes');
         }
-        dataSource.setLayerGeoJSONString(1, result);
+        dataSource.setGeoJSON(1, result);
         if (!transitLayer) {
             createTransitLayer();
         }
@@ -133,7 +143,7 @@ showingTransitLines.subscribe((showing) => {
     if (showing) {
         showTransitLines();
     } else if (transitLayer) {
-        transitLayer.visible = false;
+        transitLayer.visible(false);
     }
 });
 

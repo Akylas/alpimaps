@@ -1,4 +1,4 @@
-@name: [nuti::lang] ? ([name:[nuti::lang]] ? [name:[nuti::lang]] : ([name:[nuti::fallback_lang]] ? [name:[nuti::fallback_lang]] : [name])) : [name];
+@name: [param::lang] ? ([name:[param::lang]] ? [name:[param::lang]] : ([name:[param::fallback_lang]] ? [name:[param::fallback_lang]] : [name])) : [name];
 @color: [color];
 
 #boundary {
@@ -17,7 +17,7 @@
     [admin_level>=5][zoom>=7][zoom<=14] {
 
             text-placement-priority: -10000000;
-			text-placement: nutibillboard;
+			text-placement: billboard;
             text-name: @name + '\n' + [ref];
             text-face-name: @mont_md;
             text-wrap-character: @wrap_characters;

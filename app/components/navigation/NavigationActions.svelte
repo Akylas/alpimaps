@@ -38,7 +38,7 @@
     async function getStats() {
         try {
             await showLoading(lc('road_stats'));
-            const stats = await packageService.fetchStats({ item, projection: mapContext.getProjection() });
+            const stats = await packageService.fetchStats({ item });
             if (stats) {
                 await navigationService.updateNavigatedItem({ stats });
             }
