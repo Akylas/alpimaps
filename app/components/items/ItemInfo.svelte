@@ -240,7 +240,7 @@
                     refreshItems();
                 }
                 loading = true;
-                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom, force);
+                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom(), force);
                 // DEV_LOG && console.log('result', result);
                 if (result) {
                     const newProps = {};

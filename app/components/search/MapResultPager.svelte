@@ -30,7 +30,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import type { ElementClickData, FeatureClickData } from '~/mapModules/MapModule';
     import { openUrl } from '@nativescript/core/utils';
     import { compose } from '@nativescript/email';
     import { openLink } from '@shared/utils/ui';
@@ -214,7 +214,7 @@
     async function getItemDetails(item) {
         try {
             const itemsModule = mapContext.mapModule('items');
-            const result = await itemsModule.getOSMDetails(item, mapContext.getMap().zoom);
+            const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom());
             if (result) {
                 const ignoredKeys = itemsModule.ignoredOSMKeys;
                 const itemProperties = { ...item.properties };
@@ -345,7 +345,7 @@
             const itemToChangeIndex = selectedPageIndex;
             const addressIndex = itemProperties.osmid ? 0 : 1;
             const toUpdate = await Promise.all(
-                [].concat(itemProperties.osmid ? [] : [getItemDetails(item).catch((e) => {})]).concat(itemProperties.address ? [] : [packageService.getItemAddress(item, mapContext.getProjection())])
+                [].concat(itemProperties.osmid ? [] : [getItemDetails(item).catch((e) => {})]).concat(itemProperties.address ? [] : [packageService.getItemAddress(item)])
             );
             const newItem = toUpdate[0] ?? item;
             if (toUpdate[addressIndex]) {
@@ -428,7 +428,7 @@
         }
     }
 
-    export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
+    export function onVectorTileClicked(data: FeatureClickData) {
         const { featurePosition } = data;
         const index = oItems.findIndex((i) => getDistanceSimple(i.geometry.coordinates, featurePosition) <= 10);
         DEV_LOG && console.log('onVectorTileClicked', featurePosition, oItems.length, index);
@@ -438,16 +438,16 @@
         }
     }
 
-    export function onVectorElementClicked(data: VectorElementEventData<LatLonKeys>) {
-        const { elementPos } = data;
-        const index = oItems.findIndex((i) => getDistanceSimple(i.geometry.coordinates, elementPos) <= 10);
+    export function onVectorElementClicked(data: ElementClickData) {
+        const { elementPosition } = data;
+        const index = oItems.findIndex((i) => getDistanceSimple(i.geometry.coordinates, elementPosition) <= 10);
         DEV_LOG &&
             console.log(
                 'onVectorElementClicked',
-                elementPos,
+                elementPosition,
                 oItems.length,
                 index,
-                oItems.map((i) => getDistanceSimple(i.geometry.coordinates, elementPos))
+                oItems.map((i) => getDistanceSimple(i.geometry.coordinates, elementPosition))
             );
         if (index >= 0) {
             selectedPageIndex = index;

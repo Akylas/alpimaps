@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { MapPos } from '@nativescript-community/ui-massifmaps/core';
+    import type { MapPos } from '~/utils/geo';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { onMount } from 'svelte';
@@ -14,7 +14,7 @@
     import { fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
-    export let position: MapPos<LatLonKeys>;
+    export let position: MapPos;
     export let name: string;
 
     $: ({ bottom: windowInsetBottom } = $windowInset);

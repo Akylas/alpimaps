@@ -4,10 +4,8 @@
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
-    import { GenericMapPos } from '@nativescript-community/ui-massifmaps/core';
-    import { TileDataSource } from '@nativescript-community/ui-massifmaps/datasources';
-    import { RasterTileLayer } from '@nativescript-community/ui-massifmaps/layers/raster';
-    import type { VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
+    import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
+    import type { MapPos } from '~/utils/geo';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
@@ -96,7 +94,7 @@
     let itemCanBeAdded = false;
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
-    let currentLocation: GenericMapPos<LatLonKeys> = null;
+    let currentLocation: MapPos = null;
 
     onMount(() => {
         updateSteps();
@@ -112,16 +110,14 @@
 
     let dataToUpdateOnItemSelect = null;
 
-    mapContext.onVectorTileElementClicked((data: VectorTileEventData<LatLonKeys>) => {
-        const { feature, featureData, position } = data;
-        // DEV_LOG && console.log('BottomSheetInner onVectorTileElementClicked', item?.id, featureData, feature.properties);
+    mapContext.onVectorTileElementClicked((data) => {
+        const { featureData, position } = data;
         if (featureData?.route) {
-            if (item && item.id && feature.properties?.id === item.id) {
-                // DEV_LOG && console.log('onVectorTileElementClicked updateRouteItemWithPosition', position);
+            if (item && item.id && featureData.id === item.id) {
                 updateRouteItemWithPosition(item, position, false);
             } else {
                 // we can update with position once the item is selected
-                dataToUpdateOnItemSelect = { id: feature.properties?.id, position };
+                dataToUpdateOnItemSelect = { id: featureData.id, position };
             }
         }
     });
@@ -189,7 +185,7 @@
         try {
             if (item && !itemIsRoute) {
                 const geometry = item.geometry as Point;
-                openURL(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().zoom)}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
+                openURL(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().camera().zoom())}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
             }
         } catch (error) {
             showError(error);
@@ -351,7 +347,7 @@
         highlightChartFromProgress($navigationProgress);
     }
 
-    function updateRouteItemWithPosition(routeItem: Item, location: GenericMapPos<LatLonKeys>, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
+    function updateRouteItemWithPosition(routeItem: Item, location: MapPos, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
             // ignore routes from osm
@@ -459,7 +455,7 @@
     async function getTrackInstructions() {
         try {
             updatingItem = true;
-            const instructions = await packageService.computeTrackInstructions({ item, projection: mapContext.getProjection() });
+            const instructions = await packageService.computeTrackInstructions({ item });
             if (!instructions) {
                 showSnack({ message: lc('no_directions_found_for_track') });
                 return;
@@ -543,8 +539,7 @@
                 item['_parsedProfile'] = profile;
             }
             if (editingItem.stats && !ApplicationSettings.getBoolean('auto_fetch_stats', false)) {
-                const projection = mapContext.getProjection();
-                const stats = await packageService.fetchStats({ item, projection });
+                const stats = await packageService.fetchStats({ item });
                 item['_parsedStats'] = stats;
                 needsChartUpdate = true;
             }
@@ -606,8 +601,7 @@
     async function getStats(updateView = true) {
         try {
             updatingItem = true;
-            const projection = mapContext.getProjection();
-            const stats = await packageService.fetchStats({ item, projection });
+            const stats = await packageService.fetchStats({ item });
             if (stats) {
                 // item.route.profile = profile;
                 if (item.id !== undefined) {
@@ -805,19 +799,18 @@
             if (!position.altitude) {
                 position.altitude = item.properties.ele || (await packageService.getElevation(position));
             }
-            const hillshadeDatasource = packageService.hillshadeLayer?.dataSource;
-            const vectorDataSource = packageService.localVectorTileLayer?.dataSource;
+            // the sources themselves, shared rather than rebuilt: the peak finder's native client
+            // reads the same tiles the map is showing
+            const hillshadeDatasource = packageService.hillshadeLayer?.source();
+            const vectorDataSource = packageService.localVectorTileLayer?.source();
             const customSources = mapContext.mapModules.customLayers.customSources;
-            let rasterDataSource: TileDataSource<any, any>;
+            let rasterDataSource: MassifSource;
             customSources.some((s) => {
-                if (s.layer instanceof RasterTileLayer) {
-                    rasterDataSource = s.layer.options.dataSource;
+                if (s.layer.is('massif::RasterTileLayer')) {
+                    rasterDataSource = s.layer.source();
                     return true;
                 }
             });
-            if (!rasterDataSource) {
-                rasterDataSource = await mapContext.mapModules.customLayers.getDataSource('openstreetmap');
-            }
             // const { default: component } = await import('~/components/PeakFinder.svelte');
             const component = (await import('~/components/peaks/PeakFinder.svelte')).default;
             navigate({
@@ -825,7 +818,7 @@
                 props: {
                     terrarium: false,
                     position,
-                    bearing: mapContext.getMap().bearing,
+                    bearing: mapContext.getMap().camera().rotation(),
                     vectorDataSource,
                     dataSource: hillshadeDatasource,
                     rasterDataSource
@@ -850,7 +843,7 @@
                     position,
                     pitch: 70,
                     zoom: 13,
-                    bearing: mapContext.getMap().bearing
+                    bearing: mapContext.getMap().camera().rotation()
                 }
             });
         } catch (err) {
