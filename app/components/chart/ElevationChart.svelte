@@ -2,8 +2,7 @@
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { MapBounds } from '@nativescript-community/ui-massifmaps/core';
-    import { LineChart } from '@nativescript-community/ui-chart/charts';
+        import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
@@ -139,23 +138,17 @@
             dataSet.ignoreFiltered = false;
             const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
             const region = getBounds(positions);
-            mapContext.getMap().moveToFitBounds(
-                new MapBounds(
-                    {
-                        lat: region.maxLat,
-                        lon: region.maxLng
-                    },
-                    {
-                        lat: region.minLat,
-                        lon: region.minLng
-                    }
-                ),
-                undefined,
-                true,
-                false,
-                false,
-                0
-            );
+            // `[min, max]`, which is what the facade's bounds are everywhere
+            mapContext
+                .getMap()
+                .camera()
+                .fitBounds(
+                    [
+                        [region.minLng, region.minLat],
+                        [region.maxLng, region.maxLat]
+                    ],
+                    { integerZoom: true }
+                );
         } catch (error) {
             console.error(error, error.stack);
         }
