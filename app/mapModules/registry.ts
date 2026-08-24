@@ -1,12 +1,9 @@
-import type { MapInteractionInfo } from '@nativescript-community/ui-massifmaps/ui';
-import { MapClickInfo, MassifMap } from '@nativescript-community/ui-massifmaps/ui';
-import type { MapPos } from '@nativescript-community/ui-massifmaps/core';
-import type { VectorElementEventData, VectorTileEventData } from '@nativescript-community/ui-massifmaps/layers/vector';
-import type { MBVectorTileDecoder } from '@nativescript-community/ui-massifmaps/vectortiles';
+import type { MassifMap } from '@nativescript-community/ui-massifmaps/api';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { globalObservable } from '@shared/utils/svelte/ui';
 import type { GeoHandler } from '~/handlers/GeoHandler';
 import type { IItem } from '~/models/Item';
+import type { ElementClickData, FeatureClickData, MapClickData, MapDecoder, MapInteraction, MapMoveReason } from '~/mapModules/MapModule';
 
 /**
  * Every hook the map dispatches, with the arguments it dispatches them with.
@@ -19,21 +16,21 @@ import type { IItem } from '~/models/Item';
  * A hook returning a truthy value means "handled, stop" — see `runOnModules`.
  */
 export interface MapModuleHooks {
-    onMapReady: [MassifMap<LatLonKeys>];
+    onMapReady: [MassifMap];
     onMapDestroyed: [];
     onServiceLoaded: [GeoHandler];
     onServiceUnloaded: [GeoHandler];
-    onMapMove: [{ data: { userAction: boolean } }];
-    onMapInteraction: [{ data: MapInteractionInfo }];
-    onMapClicked: [{ data: MapClickInfo<MapPos<LatLonKeys>> }];
+    onMapMove: [{ data: { reason: MapMoveReason } }];
+    onMapInteraction: [{ data: MapInteraction }];
+    onMapClicked: [{ data: MapClickData }];
     onMapIdle: [unknown];
-    onMapStable: [unknown];
+    onMapStable: [{ data: { reason: MapMoveReason } }];
     onSelectedItem: [IItem, IItem];
-    onVectorTileClicked: [VectorTileEventData<LatLonKeys>];
-    onVectorElementClicked: [VectorElementEventData<LatLonKeys>];
-    onVectorTileElementClicked: [VectorTileEventData<LatLonKeys>];
+    onVectorTileClicked: [FeatureClickData];
+    onVectorElementClicked: [ElementClickData];
+    onVectorTileElementClicked: [FeatureClickData];
     reloadMapStyle: [];
-    vectorTileDecoderChanged: [MBVectorTileDecoder, MBVectorTileDecoder];
+    vectorTileDecoderChanged: [MapDecoder, MapDecoder];
 }
 
 export type MapModuleHook = keyof MapModuleHooks;
