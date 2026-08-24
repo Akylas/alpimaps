@@ -70,9 +70,19 @@ export function geometryBounds(geometry: GeoJSON.Geometry): MapBounds {
     return boundsOfCoordinates(geometryCoordinates(geometry));
 }
 
-/** The same over a whole FeatureCollection - what a detail map frames when it opens. */
+/**
+ * The same over a whole FeatureCollection - what a detail map frames when it opens.
+ *
+ * `forEach` rather than `flatMap`: callers pass an ObservableArray of features through a cast, and
+ * ObservableArray has forEach but none of the newer Array methods.
+ */
 export function geoJSONBounds(collection: GeoJSON.FeatureCollection): [Position, Position] {
-    const coordinates = collection.features.flatMap((feature) => (feature.geometry ? geometryCoordinates(feature.geometry) : []));
+    const coordinates: number[][] = [];
+    collection.features.forEach((feature) => {
+        if (feature.geometry) {
+            coordinates.push(...geometryCoordinates(feature.geometry));
+        }
+    });
     const bounds = boundsOfCoordinates(coordinates);
     return bounds && toBounds(bounds);
 }
