@@ -69,7 +69,6 @@
         "@nativescript-community/text": "1.6.25",
         "@nativescript-community/ui-canvas": "4.6.52",
         "@nativescript-community/ui-canvaslabel": "1.2.55",
-        "@nativescript-community/ui-carto": "2.1.0",
         "@nativescript-community/ui-chart": "2.0.30",
         "@nativescript-community/ui-checkbox": "2.0.18",
         "@nativescript-community/ui-collectionview": "6.0.25",
@@ -79,6 +78,7 @@
         "@nativescript-community/ui-image": "4.6.20",
         "@nativescript-community/ui-label": "2.0.1",
         "@nativescript-community/ui-lottie": "5.0.11",
+        "@nativescript-community/ui-massifmaps": "2.1.0",
         "@nativescript-community/ui-material-activityindicator": "7.3.2",
         "@nativescript-community/ui-material-bottomsheet": "7.3.2",
         "@nativescript-community/ui-material-button": "7.3.2",
@@ -132,11 +132,11 @@
         "@akylas/nativescript-android-runtime": "8.9.2",
         "@akylas/nativescript-ios-runtime": "9.0.3",
         "@akylas/nativescript-webpack": "5.0.35",
-        "@nativescript/android": "9.0.6-next.2026-08-15-31910596854",
+        "@nativescript/android": "/Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz",
         "@nativescript/core": "9.0.20",
-        "@nativescript/ios": "next",
+        "@nativescript/ios": "9.0.3",
         "@sentry/cli": "3.5.0",
-        "@swc/core": "1.16.0",
+        "@swc/core": "1.16.1",
         "@types/geojson": "^7946.0.14",
         "@types/offscreencanvas": "^2019.7.3",
         "@types/suncalc": "^1.9.2",
@@ -158,6 +158,7 @@
     ],
     "packageManager": "yarn@4.9.4+sha512.7b1cb0b62abba6a537b3a2ce00811a843bea02bcf53138581a6ae5b1bf563f734872bd47de49ce32a9ca9dcaff995aa789577ffb16811da7c603dcf69e73750b",
     "resolutions": {
-        "webpack": "5.107.2"
+        "webpack": "5.107.2",
+        "@nativescript-community/ui-massifmaps": "portal:../ui-carto/packages/ui-massifmaps"
     }
 }

@@ -48,10 +48,10 @@
     let timezoneOffset;
 
     if (!timezone) {
-        const result = packageService.getTimezone(location);
-        if (result?.getFeatureCount() > 0) {
-            timezone = result?.getFeature(0).properties['tzid'];
-        }
+        // the search runs on a worker, so the name arrives after the first render
+        packageService.getTimezone(location)?.then((features) => {
+            timezone = (features as any[])?.[0]?.['tzid'];
+        });
     }
     if (timezone) {
         if (__ANDROID__) {

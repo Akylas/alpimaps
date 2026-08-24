@@ -1,15 +1,7 @@
 <script context="module" lang="ts">
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import type { MapPos } from '@nativescript-community/ui-carto/core';
-    import { ClickType } from '@nativescript-community/ui-carto/core';
-    import { GeoJSONVectorTileDataSource } from '@nativescript-community/ui-carto/datasources';
-    import { LineGeometry } from '@nativescript-community/ui-carto/geometry';
-    import { GeoJSONGeometryWriter } from '@nativescript-community/ui-carto/geometry/writer';
-    import { VectorTileEventData, VectorTileLayer, VectorTileRenderOrder } from '@nativescript-community/ui-carto/layers/vector';
-    import { MultiValhallaOfflineRoutingService, RoutingResult, ValhallaOnlineRoutingService, ValhallaProfile } from '@nativescript-community/ui-carto/routing';
-    import { MapClickInfo } from '@nativescript-community/ui-carto/ui';
-    import { isLocationOnPath } from '@nativescript-community/ui-carto/utils';
+    import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
@@ -43,6 +35,9 @@
         valhallaSettingColor,
         valhallaSettingIcon
     } from '~/utils/routing';
+    import type { ValhallaProfile } from '~/utils/routing';
+    import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
+    import { ClickType, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
     import { showSliderPopover } from '~/utils/ui';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
@@ -103,7 +98,7 @@
         return steps;
     }
 
-    function routingResultToJSON(result: RoutingResult<LatLonKeys>, costing_options, waypoints, positions) {
+    function routingResultToJSON(result, costing_options, waypoints, positions: MapPos[]) {
         DEV_LOG && console.log('routingResultToJSON', waypoints);
         const instructions = instructionsFromResult(result);
         const route = {
@@ -129,8 +124,8 @@
     $: ({ colorOnPrimary, colorPrimary, colorSurfaceTint } = $colors);
     const mapContext = getMapContext();
     const dispatch = createEventDispatcher();
-    let _routeDataSource: GeoJSONVectorTileDataSource;
-    let _routeLayer: VectorTileLayer;
+    let _routeDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
+    let _routeLayer: MassifLayer<'massif::VectorTileLayer'>;
     let waypoints: ObservableArray<WayPoint> = new ObservableArray([]);
     let nbWayPoints = 0;
     let features: ItemFeature[] = [];
@@ -139,7 +134,6 @@
     let pedestrian_type: 'normal' | 'mountainairing' | 'running' = ApplicationSettings.getString('pedestrian_type', 'normal') as any;
     const showOptions = true;
     let loading = false;
-    let writer: GeoJSONGeometryWriter<LatLonKeys>;
     let loaded = false;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let topLayout: NativeViewElementNode<StackLayout>;
@@ -330,12 +324,7 @@
 
     function getRouteDataSource() {
         if (!_routeDataSource) {
-            _routeDataSource = new GeoJSONVectorTileDataSource({
-                defaultLayerBuffer: 0,
-                simplifyTolerance: 2,
-                minZoom: 0,
-                maxZoom: 24
-            });
+            _routeDataSource = mapContext.getMap().source('source.directions', { type: 'geojson', defaultLayerBuffer: 0, simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
             _routeDataSource.createLayer('directions');
         }
         return _routeDataSource;
@@ -350,28 +339,25 @@
     }
     function getRouteLayer(add = true) {
         if (!_routeLayer) {
-            _routeLayer = new VectorTileLayer({
-                dataSource: getRouteDataSource(),
-                decoder: mapContext.innerDecoder,
-                labelRenderOrder: VectorTileRenderOrder.LAST,
+            _routeLayer = mapContext.getMap().buildLayer(`layer.directions.${mapContext.innerDecoder.handle}`, {
+                type: 'vector',
+                source: getRouteDataSource().id,
+                style: mapContext.innerDecoder.id,
+                labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
                 clickRadius: ApplicationSettings.getNumber('route_click_radius', 16),
                 layerBlendingSpeed: 0,
                 labelBlendingSpeed: 0
             });
-            mapContext.innerDecoder.once('change', updateRouteLayer);
-            _routeLayer.setVectorTileEventListener<LatLonKeys>(
-                {
-                    onVectorTileClicked(info: VectorTileEventData<LatLonKeys>) {
-                        const feature = features.find((f) => f.properties.id === info.featureData.id);
-                        if (feature) {
-                            mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
-                            return true;
-                        }
-                        return mapContext.vectorTileElementClicked(info);
-                    }
-                },
-                mapContext.getProjection()
-            );
+            _routeLayer.onFeatureClick((e) => {
+                const info = mapContext.featureClickData(e as never);
+                const feature = features.find((f) => f.properties.id === info.featureData.id);
+                if (feature) {
+                    mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
+                    e.consumed = true;
+                    return;
+                }
+                e.consumed = mapContext.vectorTileElementClicked(info);
+            });
             if (add) {
                 mapContext.addLayer(_routeLayer, 'directions');
             }
@@ -397,7 +383,7 @@
         }
     }
 
-    function addInternalWayPoint(position: MapPos<LatLonKeys>, metaData?) {
+    function addInternalWayPoint(position: MapPos, metaData?) {
         const id = Date.now() + '';
         const toAdd: ItemFeature = {
             type: 'Feature',
@@ -449,7 +435,7 @@
             lastWp = w;
         });
     }
-    export function addInternalStartPoint(position: MapPos<LatLonKeys>, metaData?) {
+    export function addInternalStartPoint(position: MapPos, metaData?) {
         const firstPoint = waypoints.getItem(0);
         if (firstPoint?.properties.isStart) {
             firstPoint.properties.isStart = false;
@@ -477,7 +463,7 @@
     $: pedestrianIcon = formatter.getRouteIcon('pedestrian', pedestrian_type);
     $: bicycleIcon = formatter.getRouteIcon('bicycle', bicycle_type);
 
-    function addInternalStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+    function addInternalStopPoint(position: MapPos, metaData?) {
         const lastPoint = waypoints.getItem(waypoints.length - 1);
         if (lastPoint.geometry.coordinates[0] === position.lon && lastPoint.geometry.coordinates[1] === position.lat) {
             return;
@@ -592,11 +578,11 @@
     }
     export let visible = false;
     $: visible = translationY > 0;
-    export async function addStartPoint(position: MapPos<LatLonKeys>, metaData?) {
+    export async function addStartPoint(position: MapPos, metaData?) {
         addInternalStartPoint(position, metaData);
     }
     export const START_DIRECTION_DEST = 'startDirDest';
-    export async function addStartOrStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+    export async function addStartOrStopPoint(position: MapPos, metaData?) {
         const startDirectionWithDestination = ApplicationSettings.getBoolean(START_DIRECTION_DEST, false); // if (waypoints.length === 0 ) {
         if (waypoints.length === 0) {
             if (startDirectionWithDestination) {
@@ -612,10 +598,10 @@
             }
         }
     }
-    export async function addStopPoint(position: MapPos<LatLonKeys>, metaData?) {
+    export async function addStopPoint(position: MapPos, metaData?) {
         addInternalStopPoint(position, metaData);
     }
-    export async function addWayPoint(position: MapPos<LatLonKeys>, metaData?, canBeStartStop = true) {
+    export async function addWayPoint(position: MapPos, metaData?, canBeStartStop = true) {
         const startDirectionWithDestination = ApplicationSettings.getBoolean(START_DIRECTION_DEST, false); // if (waypoints.length === 0 ) {
         // mapContext.getMap().getOptions().setClickTypeDetection(true);
         // }
@@ -636,7 +622,7 @@
         mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected: true });
     }
 
-    export function onVectorTileClicked(data: VectorTileEventData<LatLonKeys>) {
+    export function onVectorTileClicked(data: FeatureClickData) {
         const { clickType, featureData, featureLayerName, position } = data;
         if (clickType === ClickType.LONG && waypoints.length > 0) {
             mapContext.unFocusSearch();
@@ -648,7 +634,7 @@
         }
     }
 
-    export function onMapClicked(e: { data: MapClickInfo<MapPos<LatLonKeys>> }) {
+    export function onMapClicked(e: { data: MapClickData }) {
         const { clickType, position } = e.data;
         if (clickType === ClickType.LONG && waypoints.length > 0) {
             // executeOnMainThread(() => {
@@ -745,7 +731,7 @@
         }
     }
 
-    async function computeAndAddRoute(service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService, optionsWithStyle: { [k: string]: any; style?: any } = {}) {
+    async function computeAndAddRoute(optionsWithStyle: { [k: string]: any; style?: any } = {}) {
         if (waypoints.length <= 1) {
             return;
         }
@@ -796,48 +782,30 @@
             });
 
             let startTime = Date.now();
-            const projection = mapContext.getProjection();
-            const customOptions = {
-                language: $fullLangStore,
-                costing_options
-            };
-            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(customOptions));
+            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(costing_options));
             try {
-                const result = await service.calculateRoute<LatLonKeys>(
-                    {
-                        projection,
-                        points,
-                        customOptions
-                    },
-                    profile
-                );
-                DEV_LOG && console.log('got route', result.getTotalDistance(), result.getTotalTime(), Date.now() - startTime, 'ms');
-                positions = result.getPoints();
+                // One call: the service, the request and its costing options are all the facade's,
+                // and the result is read out while it is alive.
+                const computed = await packageService.computeRoute({ points, profile, costingOptions: costing_options });
+                DEV_LOG && console.log('got route', computed.totalDistance, computed.totalTime, Date.now() - startTime, 'ms');
+                positions = computed.positions;
                 startTime = Date.now();
-                route = routingResultToJSON(result, costing_options, waypoints.toJSON().slice(0), positions);
+                route = routingResultToJSON(computed.result, costing_options, waypoints.toJSON().slice(0), positions);
                 DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
                 if (requestStats) {
-                    route.stats = await packageService.fetchStats({ positions, projection, route: route.route, profile });
+                    route.stats = await packageService.fetchStats({ positions, route: route.route, profile });
                 }
                 if (requestProfile) {
                     route.profile = await packageService.getElevationProfile(null, positions);
                 }
             } catch (error) {
                 showError(error, { forcedMessage: 'error computing route: ' + ellipsiseString(error.message, 30), showAsSnack: true });
-                console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(customOptions));
+                console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(costing_options));
                 return;
             }
         }
 
         if (route && positions) {
-            const geometry = new LineGeometry<LatLonKeys>({
-                poses: positions
-            });
-            if (!writer) {
-                writer = new GeoJSONGeometryWriter<LatLonKeys>({
-                    sourceProjection: mapContext.getProjection()
-                });
-            }
             const startTime = Date.now();
             const id = Date.now();
             const totalDist = route.route.totalDistance;
@@ -865,7 +833,7 @@
                     hasRealName: false,
                     class: profile,
                     id,
-                    zoomBounds: geometry.getBounds(),
+                    zoomBounds: boundsOfPositions(positions),
                     route: {
                         ...route.route,
                         type: profile,
@@ -874,7 +842,8 @@
                     ...(style ? { style: { color: style.color } } : {}),
                     ...(route.profile ? { profile: { dplus: route.profile.dplus, dmin: route.profile.dmin } } : {})
                 },
-                _geometry: writer.writeGeometry(geometry),
+                // the positions are already ours: a LineString is the shape, not a serialisation
+                _geometry: JSON.stringify({ type: 'LineString', coordinates: positions.map(toPosition) }),
                 get geometry() {
                     if (!this._parsedGeometry) {
                         this._parsedGeometry = JSON.parse(this._geometry);
@@ -903,10 +872,7 @@
             clearCurrentRoutes(false);
             clearWaypointLines(false);
             let itemToFocus: ItemFeature;
-            const service: MultiValhallaOfflineRoutingService | ValhallaOnlineRoutingService = forceOnline
-                ? packageService.onlineRoutingSearchService()
-                : packageService.offlineRoutingSearchService() || packageService.onlineRoutingSearchService();
-            const usingOnline = service instanceof ValhallaOnlineRoutingService;
+            const usingOnline = forceOnline || !packageService.offlineRoutingSearchService();
             DEV_LOG && console.log('usingOnline', usingOnline);
             if (computeMultiple) {
                 let options = [];
@@ -939,15 +905,15 @@
                 }
                 const results = usingOnline
                     ? await promiseSeq(
-                          options.map((opts) => () => computeAndAddRoute(service, opts)),
+                          options.map((opts) => () => computeAndAddRoute(opts)),
                           500 // we add a delay or we will get a Too Many requests error
                       )
-                    : await Promise.all(options.map((opts) => computeAndAddRoute(service, opts)));
+                    : await Promise.all(options.map((opts) => computeAndAddRoute(opts)));
                 itemToFocus = results.reduce(function (prev, current) {
                     return prev?.route?.totalTime > current?.route?.totalTime ? current : prev;
                 });
             } else {
-                itemToFocus = await computeAndAddRoute(service);
+                itemToFocus = await computeAndAddRoute();
             }
             setLayerGeoJSONString();
             if (itemToFocus) {
@@ -971,7 +937,7 @@
         ensureRouteLayer();
         // TODO: fix the timeout should not be needed, but without the first setLayerGeoJSONString wont show anything
         setTimeout(() => {
-            _routeDataSource.setLayerGeoJSONString(1, {
+            _routeDataSource.setGeoJSON(1, {
                 type: 'FeatureCollection',
                 features
             });
@@ -1251,7 +1217,7 @@
     async function openSearchFromItem(event, item: WayPoint) {
         try {
             const SearchModal = (await import('~/components/search/SearchModal.svelte')).default;
-            const position = mapContext.getMap().focusPos as GeoLocation;
+            const position = fromPosition(mapContext.getMap().camera().position()) as GeoLocation;
             // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
             const anchorView = event.object as View;
             const result: any = await showPopover({
