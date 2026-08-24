@@ -283,7 +283,8 @@ export default class CustomLayersModule extends MapModule {
         const minVisibleZoom = ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0);
         const maxVisibleZoom = ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 18);
 
-        const tileFilterMode = tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR';
+        const tileFilterMode =
+            tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR';
 
         return mapContext.getMap().buildLayer(id, {
             type: 'hillshade',
@@ -291,6 +292,7 @@ export default class CustomLayersModule extends MapModule {
             tileFilterMode,
             visibleZoomRange: [minVisibleZoom, maxVisibleZoom],
             contrast,
+            // tileBlendingSpeed: isEInk ? 0 : 3,
             normalMapLightingShader: getDefaultShader(),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
@@ -460,6 +462,7 @@ export default class CustomLayersModule extends MapModule {
         const layerId = `layer.custom.${id}`;
 
         let layer: MassifLayer;
+        let spec: any;
         if (provider.hillshade) {
             Object.assign(options, HILLSHADE_OPTIONS);
             layer = this.createHillshadeTileLayer(layerId, id, sourceSpec, {
@@ -474,12 +477,15 @@ export default class CustomLayersModule extends MapModule {
                 this.hasTerrain = true;
             }
         } else if (vectorDataSource) {
-            layer = map.buildLayer(layerId, {
+            // Kept, not inlined: `vectorTileDecoderChanged` rebuilds the layer from this on a style
+            // change, and an item without it is silently skipped - which is what made switching
+            // style do nothing for every provider-backed base map.
+            spec = {
                 type: 'vector',
                 source: sourceSpec,
                 style: mapContext.mapDecoder.id,
                 zoomLevelBias: ApplicationSettings.getNumber(`${id}_zoomLevelBias`, 0),
-                labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
+                labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
                 visible: opacity !== 0,
                 layerBlendingSpeed: isEInk ? 0 : 3,
                 labelBlendingSpeed: isEInk ? 0 : 3,
@@ -488,20 +494,23 @@ export default class CustomLayersModule extends MapModule {
                 preloading: get(preloading),
                 clickHandlerLayerFilter: get(clickHandlerLayerFilter),
                 ...provider.layerOptions
-            } as never);
+            };
+            layer = map.buildLayer(layerId, spec as never);
             layer.onFeatureClick((e) => {
                 e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
             });
         } else {
-            layer = map.buildLayer(layerId, {
+            spec = {
                 type: 'raster',
                 source: sourceSpec,
                 preloading: get(preloading),
+                tileBlendingSpeed: isEInk ? 0 : 3,
                 zoomLevelBias,
                 opacity,
                 visible: opacity !== 0,
                 ...provider.layerOptions
-            } as never);
+            };
+            layer = map.buildLayer(layerId, spec as never);
         }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
@@ -512,6 +521,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             options,
             layer,
+            spec,
             provider
         };
     }
@@ -808,13 +818,20 @@ export default class CustomLayersModule extends MapModule {
      * with the new decoder's id.
      */
     vectorTileDecoderChanged(oldDecoder: MapDecoder, newDecoder: MapDecoder) {
+        const generation = ++this.decoderGeneration;
         this.customSources.forEach((item) => {
             if (!item.spec || item.spec.type !== 'vector') {
                 return;
             }
             const oldLayer = item.layer;
-            item.spec = { ...item.spec, style: newDecoder.id };
-            const layer = mapContext.getMap().buildLayer(`${oldLayer.id}.${newDecoder.handle}`, item.spec);
+            // The SOURCE is handed over, not rebuilt from its spec: a provider's spec describes a
+            // persistent cache, and building it again opens a SECOND cache on the same file.
+            const source = oldLayer.source();
+            item.spec = { ...item.spec, ...(source ? { source: source.handle } : {}), style: newDecoder.id };
+            // A fresh id per generation, from the layer's own base: appending to the previous id
+            // grew a segment on every style switch and kept each one registered.
+            const baseId = String(oldLayer.id).replace(/#\d+$/, '');
+            const layer = mapContext.getMap().buildLayer(`${baseId}#${generation}`, item.spec);
             layer.onFeatureClick((e) => {
                 e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
             });
@@ -823,6 +840,7 @@ export default class CustomLayersModule extends MapModule {
             item.layer = layer;
         });
     }
+    private decoderGeneration = 0;
     hillshadeLayer: MassifLayer<'massif::HillshadeRasterTileLayer'>;
     needsAttribution = false;
     addDataSource(item: SourceItem, save = true) {
@@ -897,7 +915,12 @@ export default class CustomLayersModule extends MapModule {
                             sources.map((s) => s.path)
                         );
                     if (sources.length) {
-                        mbtiles.push(this.createMergeDataSource(sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)), worldMbtilesEntity ? 5 : undefined));
+                        mbtiles.push(
+                            this.createMergeDataSource(
+                                sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                                worldMbtilesEntity ? 5 : undefined
+                            )
+                        );
                     }
 
                     const terrain = subentities.find((e) => e.name.endsWith('.etiles'));
@@ -933,13 +956,16 @@ export default class CustomLayersModule extends MapModule {
                     sourceSpec = this.createOrderedTileDataSource([worldSpec, multi.handle]);
                 }
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
-                const spec = {
-                    type: 'vector' as const,
+                // SpecArg<'layer', 'vector'> is what gives the literal its typings: every key is
+                // checked, enums complete to their constant names, and an unknown one is an error.
+                const spec: SpecArg<'layer', 'vector'> = {
+                    type: 'vector',
                     source: sourceSpec,
                     style: mapContext.mapDecoder.id,
-                    layerBlendingSpeed: 3,
-                    labelBlendingSpeed: 3,
-                    labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
+
+                    layerBlendingSpeed: isEInk ? 0 : 3,
+                    labelBlendingSpeed: isEInk ? 0 : 3,
+                    labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
                     opacity,
                     preloading: get(preloading),
                     clickRadius: layerProps['clickRadius'],
@@ -948,7 +974,7 @@ export default class CustomLayersModule extends MapModule {
                     tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
                     visible: opacity !== 0
                 };
-                const layer = map.buildLayer('layer.local', spec as never);
+                const layer = map.buildLayer('layer.local', spec);
                 layer.onFeatureClick((e) => {
                     e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
                 });
@@ -987,13 +1013,13 @@ export default class CustomLayersModule extends MapModule {
                 const data = {
                     name,
                     opacity,
-                    layer: layer as never,
+                    layer,
                     local: true,
                     options: HILLSHADE_OPTIONS,
                     provider: { name }
                 };
                 this.customSources.push(data);
-                mapContext.addLayer(layer as never, 'map');
+                mapContext.addLayer(layer, 'map');
             }
         } catch (err) {
             console.error('loadLocalMbtiles', err);
@@ -1061,7 +1087,7 @@ export default class CustomLayersModule extends MapModule {
                     source.subscribe(
                         'download.progress',
                         (e) => {
-                            const progress = e.progress as number;
+                            const progress = e.progress;
                             this.notify({ eventName: 'datasource_download_progress', object: this, data: progress });
                             const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
                             if (itemIndex >= 0) {
