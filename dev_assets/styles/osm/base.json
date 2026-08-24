@@ -43,7 +43,8 @@
         "orchard_pattern_zoom":15,
         "orchard_pattern":"symbols/orchard.png"
     },
-    "nutiparameters": {
+    "styleparameters": {
+        "polygons_border": 0,
         "campsite_allow_overlap":1,
         "show_tram": 1,
         "show_underground": 0,
@@ -70,7 +71,7 @@
         "city_min_zoom": 4,
         "fallback_lang": "en",
         "route_shields": 0,
-        "show_routes": 1,
+        "show_routes": 0,
         "routes_type": 0,
         "routes_dash_min_zoom": 14,
         "show_caravan_site": 1,
