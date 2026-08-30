@@ -915,5 +915,6 @@
     "navigation_maneuver_refresh_distance": "",
     "navigation_arrow_marker_desc": "",
     "navigation_auto_pause_delay": "",
-    "thank_you": ""
+    "thank_you": "",
+    "navigation_position_offset": ""
 }
