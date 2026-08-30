@@ -915,5 +915,7 @@
     "guidepost": "",
     "tower_cantilever_communication": "",
     "navigation_auto_pause_delay": "",
-    "thank_you": ""
+    "thank_you": "",
+    "move_items_data_files": "",
+    "missing_manage_permission": ""
 }
