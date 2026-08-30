@@ -917,5 +917,8 @@
     "dog_park": "",
     "debug_gpu_picking": "",
     "americanaosm_presentation_detailed": "",
-    "navigation_position_offset": ""
+    "navigation_position_offset": "",
+    "app": {
+        "name": ""
+    }
 }
