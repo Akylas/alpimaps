@@ -919,5 +919,6 @@
     "move_items_data_files": "",
     "missing_manage_permission": "",
     "debug_gpu_picking": "",
-    "americanaosm_presentation_detailed": ""
+    "americanaosm_presentation_detailed": "",
+    "navigation_position_offset": ""
 }
