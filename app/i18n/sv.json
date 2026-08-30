@@ -909,5 +909,9 @@
     "tower_cantilever_communication": "",
     "navigation_auto_pause_delay": "",
     "thank_you": "",
-    "ENE": ""
+    "ENE": "",
+    "missing_api_token": "",
+    "location_notification_desc": "",
+    "move_items_data_files": "",
+    "missing_manage_permission": ""
 }
