@@ -916,5 +916,6 @@
     "missing_manage_permission": "",
     "dog_park": "",
     "debug_gpu_picking": "",
-    "americanaosm_presentation_detailed": ""
+    "americanaosm_presentation_detailed": "",
+    "navigation_position_offset": ""
 }
