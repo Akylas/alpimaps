@@ -910,5 +910,10 @@
     "debug_gpu_picking": "",
     "ENE": "",
     "donate": "",
-    "duration": ""
+    "duration": "",
+    "gps_not_authorized": "",
+    "missing_api_token": "",
+    "location_notification_desc": "",
+    "move_items_data_files": "",
+    "missing_manage_permission": ""
 }
