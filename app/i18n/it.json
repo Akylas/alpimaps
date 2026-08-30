@@ -917,5 +917,6 @@
     "navigation_auto_pause_delay": "",
     "thank_you": "",
     "move_items_data_files": "",
-    "missing_manage_permission": ""
+    "missing_manage_permission": "",
+    "debug_gpu_picking": ""
 }
