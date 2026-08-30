@@ -919,5 +919,6 @@
     "navigation_maneuver_refresh_distance": "",
     "navigation_arrow_marker_desc": "",
     "guidepost": "",
-    "navigation_auto_pause_delay": ""
+    "navigation_auto_pause_delay": "",
+    "location_notification_desc": ""
 }
