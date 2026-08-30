@@ -917,5 +917,8 @@
     "donate": "",
     "dog_park": "",
     "debug_gpu_picking": "",
-    "navigation_position_offset": ""
+    "navigation_position_offset": "",
+    "app": {
+        "name": ""
+    }
 }
