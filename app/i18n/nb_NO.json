@@ -916,5 +916,6 @@
     "location_notification_desc": "",
     "move_items_data_files": "",
     "missing_manage_permission": "",
-    "americanaosm_presentation_detailed": ""
+    "americanaosm_presentation_detailed": "",
+    "navigation_position_offset": ""
 }
