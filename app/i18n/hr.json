@@ -917,5 +917,6 @@
     "tower_cantilever_communication": "",
     "N": "",
     "navigation_auto_pause_delay": "",
-    "thank_you": ""
+    "thank_you": "",
+    "debug_gpu_picking": ""
 }
