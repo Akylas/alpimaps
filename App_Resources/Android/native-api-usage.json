@@ -2,6 +2,7 @@
     "whitelist-plugins-usages": true,
     "whitelist": [
         "akylas.alpi.maps*:*",
+        "android.view:OrientationEventListener",
         "fi.iki.elonen:NanoHTTPD",
         "android.content.pm:ServiceInfo",
         "android.view:View.OnApplyWindowInsetsListener",
