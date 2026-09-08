@@ -103,7 +103,7 @@
             //     })
             // });
             _searchLayer.onFeatureClick((e) => {
-                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
             });
             mapContext.addLayer(_searchLayer, 'search');
         }
