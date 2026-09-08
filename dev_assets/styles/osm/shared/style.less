@@ -86,6 +86,17 @@
 @shield-spacing: 50;
 @shield-margin: 20;
 
+// Road ref plate. Drawn by text-background-*, so the ref is ONE text symbolizer and no longer needs
+// a road_shield_<length>.svg per ref length. Defaults suit a light basemap; a variant that needs
+// its own set defines these in its own style.less, which is loaded first and therefore wins.
+@road_shield_label: #ffffff;
+@road_shield_border: #ffffffcc;
+@road_shield_radius: 3;
+@motorway_shield_fill: #c62b5b;
+@trunk_shield_fill: #b8452a;
+@primary_shield_fill: #8f6800;
+@secondary_shield_fill: #63700a;
+
 @hiking_route_fill:[network] = 4 ? yellow:   [network] <= 3 ? red:   #8800ff;
 @hiking_route_dasharray: none;
 @route_width: linear([view::zoom], (4, 0.3), (14, 1.1), (15, 1.2), (18, 3));
