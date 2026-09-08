@@ -70,6 +70,20 @@
 @poi_national_park_label_width:@poi_icon_width;
 @poi_national_park_wrap_width:@poi_label_wrap_width;
 
+// A POI is ONE shield: the icon glyph and the name are a single label, so the name can no longer
+// lose the race for pixels against its own icon, and the pair no longer needs a shared feature-id
+// to be culled together. The name takes the first free side in this order and, where no side is
+// free, `shield-text-optional` leaves the icon alone rather than hiding both.
+@poi_anchors: 'bottom,right,left,top';
+// A shield whose name is the LITERAL empty string is dropped by the translator - symbolizer, icon
+// and all - so a rule that wants its icon alone cannot just leave the name unset. This evaluates to
+// nothing without BEING the empty literal, which is what gets the icon-only zooms their icon back.
+// The renderer is fine with it: a label survives on its icon run alone.
+@no_name: [_shield_name_unset] ?? '';
+// Gap between the icon's EDGE and the name, mirrored per side. It replaces the old @poi_label_dy,
+// which was an offset from the anchor and so had to carry half the icon in it.
+@poi_label_gap: 2;
+
 @border_country_width: linear([view::zoom], (3, 0.5), (6, 1), (10, 1.5), (20, 3));
 @border_region_width: linear([view::zoom], (5, 0.7), (6, 0.8), (7, 0.9), (8, 0.9), (9, 1), (10, 1.2));
 @border_region_opacity: linear([view::zoom], (5, 0.8), (6, 0.9));
