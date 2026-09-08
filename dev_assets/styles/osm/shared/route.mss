@@ -1,7 +1,6 @@
 @osm_id: [osmid] +'';
 @is_selected: [param::selected_id]=@osm_id;
 
-@route_shield_file: 'shields/route_shield_' + max(min(5, length([ref])), 2) + '.svg';
 #route['param::show_routes'>0]['param::routes_type'=0],
 #route['param::show_routes'>0]['param::routes_type'=1][class=bicycle],
 #route['param::show_routes'>0]['param::routes_type'=2][class=hiking] {
@@ -48,14 +47,19 @@
                 // text-spacing: [param::road_shield_spacing];
                 text-min-distance: [param::road_shield_min_dist];
                 text-face-name: @mont_bd;
-				text-background-fill: #fff;
-				text-background-border-fill: #000;
-				text-background-border-width: 1;
-				text-background-radius: 5;
-				text-background-padding-x:1;
-				text-background-padding-y:-1;
-                // text-file: @route_shield_file;
+                // the plate IS the shield, drawn by text-background-*: no route_shield_<length>.svg.
+                // Border takes the route's own colour, so the ref says which route it belongs to
+                // while the ref itself stays black on white and readable at @shield-size.
+                text-background-fill: #fff;
+                text-background-border-fill: @symbolColor;
+                text-background-border-width: 1.5;
+                text-background-radius: @road_shield_radius;
+                text-background-padding-x: 4;
+                text-background-padding-y: 2;
                 text-fill: #000000;
+                [class=bicycle] {
+                    text-background-border-fill: @biking_symbolColor;
+                }
             }
         }
 			[name !=null][zoom>=15] {

@@ -2,8 +2,6 @@
 @osm_icon: [param::osm-[subclass]] ?? [param::osm-[class]] ??[param::osm-symbol-dot];
 @featureId: [name]+[subclass];
 
-@shield_file: 'shields/road_shield_' + max(min(5, length([ref])), 2) + '.svg';
-
 #landcover_name[class!=ice],
 #landuse_name
 {
@@ -370,13 +368,24 @@
     //   text-spacing: [param::road_shield_spacing];
       text-min-distance: [param::road_shield_min_dist];
       text-face-name: @mont_bd;
-	  text-background-fill: #000;
-	  text-background-border-fill: #fff;
+      // the plate IS the shield: one text symbolizer, no road_shield_<length>.svg per ref length.
+      // The class is what the plate colour says, so the ref stays readable against every one of them.
+      text-fill: @road_shield_label;
+      text-background-fill: @motorway_shield_fill;
+      text-background-border-fill: @road_shield_border;
       text-background-border-width: 1;
-	  text-background-radius: 5;
-	  text-background-padding-x:1;
-	  text-background-padding-y:-1;
-      text-fill: #000;
+      text-background-radius: @road_shield_radius;
+      text-background-padding-x: 4;
+      text-background-padding-y: 2;
+      [class=trunk] {
+        text-background-fill: @trunk_shield_fill;
+      }
+      [class=primary] {
+        text-background-fill: @primary_shield_fill;
+      }
+      [class=secondary] {
+        text-background-fill: @secondary_shield_fill;
+      }
     }
   }
 
