@@ -118,6 +118,19 @@ export interface MapClickData {
     position: MapPos;
 }
 
+/** The clicked feature's shape, or undefined for a payload that carries none. */
+function parseFeatureGeometry(geoJSON: string): GeoJSONGeometry | undefined {
+    if (!geoJSON) {
+        return undefined;
+    }
+    try {
+        return JSON.parse(geoJSON) as GeoJSONGeometry;
+    } catch (error) {
+        DEV_LOG && console.error('unreadable feature geometry', geoJSON, error);
+        return undefined;
+    }
+}
+
 /**
  * Flattens a facade click payload into the shape the modules read.
  *
@@ -129,10 +142,12 @@ export interface MapClickData {
 export function featureClickData(e: MassifEventData<'massif::VectorTileLayer', 'vectortile.clicked'>): FeatureClickData {
     return {
         clickType: e.clickType as ClickType,
-        position: fromPosition(e.getPos('clickPos') as Position),
-        featurePosition: fromPosition(e.getPos('featurePos') as Position),
+        position: fromPosition(e.getPos('clickPos')),
+        featurePosition: fromPosition(e.getPos('featurePos')),
         featureData: (e.get('feature.properties') ?? {}) as { [k: string]: any },
-        featureGeometry: e.get('feature.geometryGeoJSON') as never,
+        // `geometryGeoJSON` is the SERIALISED shape - the SDK hands it over as text, and every
+        // consumer here wants the document
+        featureGeometry: parseFeatureGeometry(e.get('feature.geometryGeoJSON')),
         featureId: e.featureId,
         featureLayerName: e.featureLayerName,
         layer: undefined
@@ -143,8 +158,8 @@ export function featureClickData(e: MassifEventData<'massif::VectorTileLayer', '
 export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vectorelement.clicked'>): ElementClickData {
     return {
         clickType: e.clickType as ClickType,
-        position: fromPosition(e.getPos('clickPos') as Position),
-        elementPosition: fromPosition(e.getPos('elementClickPos') as Position),
+        position: fromPosition(e.getPos('clickPos')),
+        elementPosition: fromPosition(e.getPos('elementClickPos')),
         metaData: (e.get('vectorElement.metaData') ?? {}) as { [k: string]: any },
         layer: undefined
     };
@@ -157,8 +172,10 @@ export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vect
  * They share its source rather than opening the same files again - `child('dataSource')` hands it
  * over and a spec takes the handle - and its decoder by id.
  */
-export function cloneLayerSpec(layer: MassifLayer): { [key: string]: any } | null {
-    const source = layer?.child('dataSource' as never);
+export type ClonedLayerSpec = api.SpecArg<'layer', 'vector'> | api.SpecArg<'layer', 'hillshade'> | api.SpecArg<'layer', 'raster'>;
+
+export function cloneLayerSpec(layer: MassifLayer): ClonedLayerSpec | null {
+    const source = layer?.child('dataSource');
     if (!source) {
         return null;
     }

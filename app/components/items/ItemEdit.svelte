@@ -119,7 +119,7 @@
             layers.forEach((l, index) => {
                 const spec = cloneLayerSpec(l.layer);
                 if (spec) {
-                    massifMap.addLayer(`layer.itemEdit.base${index}`, spec as never);
+                    massifMap.addLayer(`layer.itemEdit.base${index}`, spec);
                 }
             });
 
@@ -173,7 +173,9 @@
             }
         } else {
             const geometry = item.geometry as GeoJSONPoint;
-            massifMap.camera().moveTo(geometry.coordinates as never, { zoom: 14 });
+            // named rather than the raw GeoJSON pair: `coordinates` is a plain number[], which is
+            // neither of AnyPosition's two shapes
+            massifMap.camera().moveTo({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, { zoom: 14 });
         }
     }
 

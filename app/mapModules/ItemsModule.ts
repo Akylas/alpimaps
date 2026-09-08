@@ -163,7 +163,7 @@ export default class ItemsModule extends MapModule {
                 clickRadius: ApplicationSettings.getNumber('route_click_radius', 16)
             });
             this.localVectorLayer.onFeatureClick((e) => {
-                e.consumed = mapContext.vectorTileElementClicked(mapContext.featureClickData(e as never));
+                e.consumed = mapContext.vectorTileElementClicked(mapContext.featureClickData(e));
             });
             if (add) {
                 mapContext.addLayer(this.localVectorLayer, 'items');
@@ -175,7 +175,7 @@ export default class ItemsModule extends MapModule {
     }
     /** A dot on the map. The style is a spec, so a bigger pin is a number in JSON. */
     createLocalPoint(position: MapPos, style: { [key: string]: any }) {
-        return mapContext.getMap().object('element', `element.point.${++localPointId}`, { type: 'point', position: toPosition(position), style: { type: 'point', ...style } } as never);
+        return mapContext.getMap().object('element', `element.point.${++localPointId}`, { type: 'point', position: toPosition(position), style: { type: 'point', ...style } });
     }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
@@ -239,14 +239,14 @@ export default class ItemsModule extends MapModule {
     async getRoutePositions(item: IItem) {
         const layer = item.layer;
         const properties = item.properties;
-        const source = layer.child('dataSource' as never);
-        const maxZoom = source.get('maxZoom' as never) as number;
+        const source = layer.child('dataSource');
+        const maxZoom = source.get('maxZoom') as number;
         const searchService = mapContext.getMap().object('search', 'search.routePositions', {
             type: 'vectortile',
             layer: layer.id,
             minZoom: maxZoom,
             maxZoom
-        } as never);
+        });
         let extent: [number, number, number, number] = item.properties.extent as any;
         let boundsGeoJSON: GeoJSON.Polygon;
         if (extent) {
@@ -280,11 +280,11 @@ export default class ItemsModule extends MapModule {
             type: 'request',
             filterExpression: `${key}='${properties[key]}'`,
             geometry: { type: 'geojson', geojson: boundsGeoJSON }
-        } as never);
+        });
         // One geometry per feature, read while the result is alive: the collection dies with the
         // delivery, so nothing here can hand it back.
-        const geometries = (await searchService.callAsync('findFeatures' as never, [request.handle] as never, ((collection) =>
-            collection.collect((feature) => feature.get('geometryGeoJSON'))) as never)) as unknown as string[];
+        const geometries = (await searchService.callAsync('findFeatures', [request.handle], ((collection) =>
+            collection.collect((feature) => feature.get('geometryGeoJSON'))))) as unknown as string[];
         request.destroy();
         source.destroy();
         if (!geometries?.length) {

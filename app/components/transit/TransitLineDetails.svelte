@@ -110,7 +110,7 @@
             layers.forEach((l, index) => {
                 const spec = cloneLayerSpec(l.layer);
                 if (spec) {
-                    massifMap.addLayer(`layer.transitLine.base${index}`, spec as never);
+                    massifMap.addLayer(`layer.transitLine.base${index}`, spec);
                 }
             });
             refresh();

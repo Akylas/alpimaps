@@ -57,7 +57,7 @@
             source: { type: 'maptiler', key: 'V7KGiDaKQBCWTYsgsmxh' },
             capacity: 300 * 1024 * 1024,
             databasePath: path.join(cacheFolder.path, 'cache.db')
-        } as never);
+        });
     }
 
     function formatSecondsInDay(value) {
