@@ -170,6 +170,8 @@ export interface SourceItem {
     id?: string;
     local?: boolean;
     layer: MassifLayer;
+    /** the persistent tile cache's sqlite file, when the source has one */
+    databasePath?: string;
     /** the spec it was built from, so a style change can rebuild it with the new decoder */
     spec?: any;
     provider: Provider;
@@ -267,8 +269,8 @@ export default class CustomLayersModule extends MapModule {
     /**
      * The hillshade layer, with every knob the settings panel exposes.
      *
-     * The elevation decoder is not named here: it comes from the source's own `encoding`, which is
-     * what the terrarium/mapbox choice already sets.
+     * The elevation decoder is not named here: it comes from the source's own
+     * `metaData.dem_encoding`, which is what the terrarium/mapbox choice sets.
      */
     createHillshadeTileLayer(id: string, name: string, sourceSpec: any, options: { [key: string]: any } = {}) {
         const contrast = ApplicationSettings.getNumber(`${name}_contrast`, 0.5);
@@ -303,7 +305,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             visible: opacity !== 0,
             ...options
-        } as never);
+        });
     }
     toggleHillshadeSlope(value: boolean) {
         const layer = this.hillshadeLayer;
@@ -415,31 +417,42 @@ export default class CustomLayersModule extends MapModule {
         const vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
         // `httpHeaders` is spelled HTTPHeaders on the SDK's own property, which is what a spec key
         // has to be: the facade resolves against the declared name, not the plugin's old option.
-        const { httpHeaders, subdomains, ...sourceOptions } = (provider.sourceOptions ?? {}) as any;
+        const { encoding, httpHeaders, subdomains, ...sourceOptions } = (provider.sourceOptions ?? {}) as any;
         const httpSpec = {
             type: 'http' as const,
             url,
             ...sourceOptions,
             ...(httpHeaders ? { HTTPHeaders: httpHeaders } : {}),
             // the tables spell a subdomain set as 'abcd'; the SDK's property is a list
-            ...(subdomains ? { subdomains: typeof subdomains === 'string' ? subdomains.split('') : subdomains } : {})
+            ...(subdomains ? { subdomains: typeof subdomains === 'string' ? subdomains.split('') : subdomains } : {}),
+            // A DEM's encoding is META DATA, not a property: `ElevationDecoder::Resolve` reads
+            // `dem_encoding` off the tile, then off its data source. There is no `encoding` property
+            // on a TileDataSource, so the key this used to pass was dropped with a warning and every
+            // terrarium source was decoded as mapbox - which is what made mapterhorn's relief wrong.
+            ...(encoding ? { metaData: { dem_encoding: encoding } } : {})
         };
         const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
         const cacheable = provider.cacheable || !PRODUCTION;
         const cacheSize = ApplicationSettings.getNumber(`${id}_cacheSize`, 300);
+        const cached = cacheable !== false || downloadable;
         return {
-            sourceSpec:
-                cacheable !== false || downloadable
-                    ? {
-                          type: 'persistent-cache' as const,
-                          source: httpSpec,
-                          databasePath,
-                          cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
-                          capacity: cacheSize * 1024 * 1024,
-                          // the cache serves the tiles, so it has to declare what they encode
-                          ...(sourceOptions.encoding ? { encoding: sourceOptions.encoding } : {})
-                      }
-                    : httpSpec,
+            sourceSpec: cached
+                ? {
+                      type: 'persistent-cache' as const,
+                      source: httpSpec,
+                      databasePath,
+                      cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
+                      capacity: cacheSize * 1024 * 1024
+                      // No `dem_encoding` here: `CacheTileDataSource::getMetaDataPtr` answers with
+                      // the wrapped source's map when it has none of its own, so the http source
+                      // above is the one place it has to be said - and the only place that also
+                      // covers a provider served without a cache.
+                  }
+                : httpSpec,
+            // Handed back rather than read off the source later: `databasePath` is a CONSTRUCTOR
+            // argument of PersistentCacheTileDataSource and not one of its properties, so there is
+            // no path that reads it back - the sheet showing the cache size has to be told.
+            databasePath: cached ? databasePath : undefined,
             vectorDataSource
         };
     }
@@ -457,7 +470,7 @@ export default class CustomLayersModule extends MapModule {
             }
         };
 
-        const { sourceSpec, vectorDataSource } = await this.createDataSource(id, provider);
+        const { databasePath, sourceSpec, vectorDataSource } = await this.createDataSource(id, provider);
         const map = mapContext.getMap();
         const layerId = `layer.custom.${id}`;
 
@@ -473,7 +486,7 @@ export default class CustomLayersModule extends MapModule {
                 ...(provider.layerOptions as any)
             });
             if (!this.hillshadeLayer) {
-                this.hillshadeLayer = packageService.hillshadeLayer = layer as never;
+                this.hillshadeLayer = packageService.hillshadeLayer = layer;
                 this.hasTerrain = true;
             }
         } else if (vectorDataSource) {
@@ -495,9 +508,9 @@ export default class CustomLayersModule extends MapModule {
                 clickHandlerLayerFilter: get(clickHandlerLayerFilter),
                 ...provider.layerOptions
             };
-            layer = map.buildLayer(layerId, spec as never);
+            layer = map.buildLayer(layerId, spec);
             layer.onFeatureClick((e) => {
-                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
             });
         } else {
             spec = {
@@ -510,7 +523,7 @@ export default class CustomLayersModule extends MapModule {
                 visible: opacity !== 0,
                 ...provider.layerOptions
             };
-            layer = map.buildLayer(layerId, spec as never);
+            layer = map.buildLayer(layerId, spec);
         }
 
         // console.log('createRasterLayer', id, opacity, provider.url, provider.sourceOptions, dataSource, dataSource.maxZoom, dataSource.minZoom);
@@ -521,6 +534,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             options,
             layer,
+            databasePath,
             spec,
             provider
         };
@@ -808,7 +822,7 @@ export default class CustomLayersModule extends MapModule {
      * they do not have is not an error here - it is simply not theirs.
      */
     updateVectorTileLayerProperty(key: string, value) {
-        mapContext.getLayers().forEach((data) => data.layer?.trySet(key as never, value as never));
+        mapContext.getLayers().forEach((data) => data.layer?.trySet(key, value));
     }
     /**
      * The decoder was rebuilt, so every layer holding the old one has to be rebuilt too.
@@ -833,7 +847,7 @@ export default class CustomLayersModule extends MapModule {
             const baseId = String(oldLayer.id).replace(/#\d+$/, '');
             const layer = mapContext.getMap().buildLayer(`${baseId}#${generation}`, item.spec);
             layer.onFeatureClick((e) => {
-                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+                e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
             });
             mapContext.replaceLayer(oldLayer, layer);
             oldLayer.destroy();
@@ -976,10 +990,10 @@ export default class CustomLayersModule extends MapModule {
                 };
                 const layer = map.buildLayer('layer.local', spec);
                 layer.onFeatureClick((e) => {
-                    e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e as never));
+                    e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
                 });
                 if (!packageService.localVectorTileLayer) {
-                    packageService.localVectorTileLayer = layer as never;
+                    packageService.localVectorTileLayer = layer;
                 }
                 this.customSources.push({
                     layer,
@@ -1009,7 +1023,7 @@ export default class CustomLayersModule extends MapModule {
                     sourceSpec = this.createOrderedTileDataSource([multi.handle, mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path))]);
                 }
 
-                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer('layer.hillshade.local', name, sourceSpec) as never);
+                const layer = (this.hillshadeLayer = packageService.hillshadeLayer = this.createHillshadeTileLayer('layer.hillshade.local', name, sourceSpec));
                 const data = {
                     name,
                     opacity,
@@ -1108,7 +1122,7 @@ export default class CustomLayersModule extends MapModule {
                     });
 
                     DEV_LOG && console.log('startDownloadArea', provider, bounds, minZoom, maxZoom, camera.zoom(), zoom);
-                    source.call('startDownloadArea', bounds as never, Math.round(minZoom ?? camera.zoom()), zoom, 0);
+                    source.call('startDownloadArea', bounds, Math.round(minZoom ?? camera.zoom()), zoom, 0);
                 } catch (error) {
                     reject(error);
                 }
