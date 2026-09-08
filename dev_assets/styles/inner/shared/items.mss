@@ -25,11 +25,10 @@
         // while navigating, the route being followed is drawn by the navigation layer on top, so the
         // item under it goes back to the plain look instead of fighting it with the selected one
         when ([param::selected_id]=[id])['param::navigating'=1]::navigating {
-            back/line-color: white;
-            back/line-width: @bicycle_line_width + 2;
-            back/line-join: round;
-            back/line-cap: round;
-            back/line-opacity: @itemBackLineOpacity;
+            // white backing folded into the line as its border: 1px per side, which is the
+            // +2 the separate `back/` line used to add across both
+            line-border-color: white;
+            line-border-width: 1;
             line-color: @lineColor;
             line-join: round;
             line-cap: round;
@@ -44,20 +43,22 @@
     }
 
     when ([param::selected_id]=[id])['param::navigating'=0]::selected {
-        back/line-color: white;
-        back/line-width: @bicycle_line_width + 5;
-        back/line-join: round;
-        back/line-cap: round;
+        // white backing folded into the line as its border: the + 5 backing against a + 2 line is
+        // 1.5 per side. The border shares the fill's geometry, so it is mitered with it - the
+        // backing used to be joined round on its own.
+        line-border-color: white;
+        line-border-width: 1.5;
         line-join: miter;
         line-cap: round;
         line-color: @lineColor;
         line-width: @bicycle_line_width + 2;
         ['param::hide_unselected'=1] {
+            // the line used to grow past the backing and hide it completely: no border to draw
             line-width: @bicycle_line_width + 7;
+            line-border-width: 0;
         }
 
         ['param::hide_unselected'=0] {
-            back/line-opacity: @itemSelectedBackLineOpacity;
             line-opacity: @itemSelectedLineOpacity;
 
             [zoom>=13] {
