@@ -1,9 +1,10 @@
 import { lc } from '@nativescript-community/l';
+import type * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import { Tween } from '@nativescript-community/ui-chart/animation/Tween';
 import { showSnack } from '~/utils/ui';
-import { ApplicationSettings, Color, ImageSource, Utils } from '@nativescript/core';
+import { ApplicationSettings, Color, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get, writable } from 'svelte/store';
 import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
@@ -36,21 +37,22 @@ const DOT_MARKER_SIZE = 20;
 /** what the user's position looks like: a heading chevron while navigating, a ringed dot otherwise */
 type UserMarkerKind = 'arrow' | 'dot';
 
-const userBitmaps: { [key: string]: ImageSource } = {};
+const userBitmapUrls: { [key: string]: string } = {};
 /**
  * The marker image, drawn into an offscreen canvas rather than shipped as an asset so it follows the
  * theme colors and needs no extra image files. One per look, cached: the dot's colour follows the fix
  * accuracy, so there are a handful of them.
  *
- * Android gets a *copy* every time, and never the cached image itself: carto's `getMassifBitmap`
- * recycles the android bitmap it is handed (see `@nativescript-community/ui-massifmaps/index.android`).
- * Handing it the cached one recycles a bitmap the offscreen Canvas still owns — leaving the cache
- * pointing at a recycled bitmap for the next marker, and the canvas free to release it a second time.
+ * Written to a FILE and passed to the style as a url, which is the only in-memory image a spec can
+ * carry: a bitmap spec decodes bytes a url gives (`buildBitmap`), and `create` serialises the spec
+ * as JSON - an `ImageSource` put straight in it stringifies to nothing the SDK can read, and the
+ * marker fell back to carto's default pin. Same reason the android copy is gone: nothing hands the
+ * canvas' own bitmap to native any more, so there is nothing left for `getMassifBitmap` to recycle.
  */
-function getUserBitmap(kind: UserMarkerKind, color: string, outlineColor: string) {
+function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: string) {
     const key = `${kind}|${color}|${outlineColor}`;
-    let bitmap = userBitmaps[key];
-    if (!bitmap) {
+    let url = userBitmapUrls[key];
+    if (!url) {
         const size = USER_BITMAP_SIZE;
         const canvas = new Canvas(size, size);
         const paint = new Paint();
@@ -77,13 +79,12 @@ function getUserBitmap(kind: UserMarkerKind, color: string, outlineColor: string
             paint.setColor(color);
             canvas.drawCircle(size / 2, size / 2, size * 0.32, paint);
         }
-        bitmap = new ImageSource(canvas.getImage());
-        userBitmaps[key] = bitmap;
+        // a name per look, so the file is written once and reused across launches
+        url = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
+        new ImageSource(canvas.getImage()).saveToFile(url, 'png');
+        userBitmapUrls[key] = url;
     }
-    if (__ANDROID__) {
-        return new ImageSource(android.graphics.Bitmap.createBitmap(bitmap.android));
-    }
-    return bitmap;
+    return url;
 }
 
 export const navigationModeStore = writable(false);
@@ -186,7 +187,7 @@ export default class UserLocationModule extends MapModule {
             this.localVectorDataSource = map.source('source.userLocation', { type: 'local', projection: { type: 'EPSG:4326' } });
             this.localVectorLayer = map.buildLayer('layer.userLocation', { type: 'elements', source: this.localVectorDataSource.id, visibleZoomRange: [0, 24] });
             this.localVectorLayer.onElementClick((e) => {
-                e.consumed = mapContext.vectorElementClicked(mapContext.elementClickData(e as never));
+                e.consumed = mapContext.vectorElementClicked(mapContext.elementClickData(e));
             });
 
             // always add it at 1 to respect local order
@@ -299,10 +300,13 @@ export default class UserLocationModule extends MapModule {
                         color: new Color(70, 14, 122, 254).argb,
                         lineStyle: { type: 'line', color: new Color(150, 14, 122, 254).argb, width: 1 }
                     }
-                } as never) as never;
+                });
                 this.localBackVectorDataSource.call('add', this.accuracyMarker.handle);
             } else {
-                this.accuracyMarker.set('geometry.poses' as never, poses as never);
+                // The whole GEOMETRY, not `geometry.poses`: PolygonGeometry exposes its poses
+                // read-only - `Polygon::setPoses` is not in the SDK's property table - so writing
+                // through the path failed, and the halo froze at the first fix it was given.
+                this.accuracyMarker.set('geometry', { type: 'polygon', poses });
             }
             // the halo belongs to the dot: around the arrow it just draws a circle that never goes away
             this.accuracyMarker.set('visible', !useArrow && accuracy > 20);
@@ -320,26 +324,27 @@ export default class UserLocationModule extends MapModule {
                 position: toPosition(newPos),
                 style: this.userMarkerStyle(kind, color, size, colorOnPrimary),
                 metaData: { userMarker: 'true' }
-            } as never) as never;
+            });
             this.localVectorDataSource.call('add', this.userMarker.handle);
         } else if (styleKey !== this.userMarkerStyleKey) {
             // rebuilding a style means rebuilding its bitmap, so only ever on a real change of look
-            const style = mapContext.getMap().object('elementstyle', `elementstyle.userLocation.${styleKey}`, this.userMarkerStyle(kind, color, size, colorOnPrimary) as never);
-            this.userMarker.set('style', style.handle as never);
+            const style = mapContext.getMap().object('elementstyle', `elementstyle.userLocation.${styleKey}`, this.userMarkerStyle(kind, color, size, colorOnPrimary));
+            this.userMarker.set('style', style.handle);
         }
         this.userMarkerStyleKey = styleKey;
-        this.userMarker.set('geometry.pos' as never, toPosition(newPos) as never);
+        // as above: PointGeometry's `pos` is read-only, so the marker is moved by its geometry
+        this.userMarker.set('geometry', { type: 'point', pos: toPosition(newPos) });
         // the dot has no heading to show, and a chevron pointing north while the map points elsewhere
         // is worse than one holding the last direction we were actually given
         this.userMarker.set('rotation', useArrow ? -this.lastKnownBearing : 0);
         this.userMarker.set('visible', true);
     }
 
-    private userMarkerStyle(kind: UserMarkerKind, color: string, size: number, outlineColor: string) {
+    private userMarkerStyle(kind: UserMarkerKind, color: string, size: number, outlineColor: string): api.SpecArg<'elementstyle', 'marker'> {
         return {
             type: 'marker',
             size,
-            bitmap: getUserBitmap(kind, color, outlineColor),
+            bitmap: { type: 'url', url: getUserBitmapUrl(kind, color, outlineColor) },
             // carto anchors a marker at (0, -1) — its bottom edge — because a marker is usually a pin
             // whose tip points at the place. This one *is* the place, so it is centred on it instead:
             // left as it was, the whole marker sat half its own height north of the actual fix
@@ -373,10 +378,12 @@ export default class UserLocationModule extends MapModule {
             return;
         }
         // the user sits low on the screen while navigating, so there is road ahead to look at
-        map.set('focusPointOffset', {
-            x: mapContext.focusOffset.x,
-            y: mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
-        } as never);
+        // a ScreenPos is `[x, y]`: StructCodec reads two numbers out of an array, and an {x, y}
+        // object decodes to nothing, which left the focus point at the centre while navigating
+        map.set('focusPointOffset', [
+            mapContext.focusOffset.x,
+            mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
+        ]);
         const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
         camera.moveTo(target, {
             zoom,
