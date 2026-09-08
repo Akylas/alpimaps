@@ -21,10 +21,11 @@
     {
         when ([param::selected_id_str]=[route_id]) {
             // line-opacity:linear([view::zoom], (16, 1), (18, 0.4));
-            casing/line-color: white;
-            casing/line-width: @transit_route_casing_width + @transit_route_width + 2.0;
-            casing/line-join: round;
-            casing/line-cap: round;
+            // The selected route's casing is the line's own border. Width is per SIDE, and the
+            // selected line is already @transit_route_width + 1 wide, so what is left over is
+            // (@transit_route_casing_width + 1) split between the two sides.
+            line-border-color: white;
+            line-border-width: (@transit_route_casing_width + 1.0) / 2;
             // text-name: [route_short_name];
             // text-fill: @transitLineColor;
             // text-size:linear([view::zoom], (13, 7), (16, 12));
