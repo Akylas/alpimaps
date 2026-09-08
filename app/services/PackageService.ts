@@ -13,7 +13,7 @@ import { EARTH_RADIUS, type MapPos, TO_RAD, computeDistanceBetween, fromPosition
 const toLngLat = (positions: MapPos[]): [number, number][] => positions.map((p) => [p.lon, p.lat]);
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
-import { type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
+import { type RawInstruction, type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
@@ -50,6 +50,15 @@ import { fullLangStore } from '~/helpers/locale';
 import { isPointInsideBounds } from '~/helpers/geolib';
 
 export type PackageType = 'geo' | 'routing' | 'map';
+
+/**
+ * The two offline geocoders, as one type.
+ *
+ * They are separate SDK classes but declare the same `calculateAddresses`, and everything here
+ * treats them alike - so a union is what the callers actually want. It cannot be narrowed back:
+ * a handle's brand is invariant, so `MassifObject<A | B>` is neither an `A` nor a `B`.
+ */
+export type GeocodingService = MassifObject<'massif::MultiOSMOfflineGeocodingService' | 'massif::MultiOSMOfflineReverseGeocodingService'>;
 
 export interface GeoResult extends Item {
     geometry: Point;
@@ -250,7 +259,7 @@ class PackageService extends Observable {
             }
             const properties = feature.properties as any;
             result.push({
-                properties: { layer: properties?.layerName, ...properties } as any,
+                properties: { layer: properties?.layerName, ...properties },
                 geometry: { type: 'Point', coordinates: [position.lon, position.lat] },
                 distance: properties?.distance
             } as GeoResult);
@@ -287,15 +296,22 @@ class PackageService extends Observable {
      * `calculateAddresses` is blocking - the offline geocoder reads sqlite - so it goes through
      * callAsync, which runs it on a worker and resolves when the answer arrives.
      */
-    async searchInGeocodingService(service: MassifObject, options: { query?: string; location?: MapPos; searchRadius?: number }): Promise<GeoJSON.Feature[]> {
+    async searchInGeocodingService(service: GeocodingService, options: { query?: string; location?: MapPos; searchRadius?: number }): Promise<GeoJSON.Feature[]> {
         if (!service) {
             return null;
         }
         const request = options.location
-            ? api.create('geocoding', `geocoding.request.${++geocodingRequestId}`, { type: 'reverse-request', location: toPosition(options.location), searchRadius: options.searchRadius }, 'massif::ReverseGeocodingRequest')
+            ? api.create(
+                  'geocoding',
+                  `geocoding.request.${++geocodingRequestId}`,
+                  { type: 'reverse-request', location: toPosition(options.location), searchRadius: options.searchRadius },
+                  'massif::ReverseGeocodingRequest'
+              )
             : api.create('geocoding', `geocoding.request.${++geocodingRequestId}`, { type: 'request', query: options.query, searchRadius: options.searchRadius }, 'massif::GeocodingRequest');
         try {
-            const collection = (await service.callAsync('calculateAddresses' as never, [request.handle] as never)) as unknown as GeoJSON.FeatureCollection;
+            // The result type is named rather than inferred: the SDK declares `calculateAddresses`
+            // as returning `Json`, which is all a property table can say about a document.
+            const collection = await service.callAsync<'calculateAddresses', GeoJSON.FeatureCollection>('calculateAddresses', [request.handle]);
             return collection?.features ?? [];
         } finally {
             request.destroy();
@@ -322,7 +338,7 @@ class PackageService extends Observable {
      * One database per area, found by scanning, so they are added after construction - which is
      * why the service takes none in its spec.
      */
-    private buildGeocoder(id: string, type: 'multi-osm-offline' | 'multi-osm-offline-reverse') {
+    private buildGeocoder(id: string, type: 'multi-osm-offline' | 'multi-osm-offline-reverse'): GeocodingService | null {
         const files = this.findFilesWithExtension('.nutigeodb');
         if (!files.length) {
             return null;
@@ -333,20 +349,20 @@ class PackageService extends Observable {
         return service;
     }
 
-    mLocalOSMOfflineGeocodingService: MassifObject<'massif::MultiOSMOfflineGeocodingService'>;
+    mLocalOSMOfflineGeocodingService: GeocodingService;
     hasLocalOSMOfflineGeocodingService = true;
     get localOSMOfflineGeocodingService() {
         if (this.hasLocalOSMOfflineGeocodingService && !this.mLocalOSMOfflineGeocodingService) {
-            this.mLocalOSMOfflineGeocodingService = this.buildGeocoder('geocoding.osm', 'multi-osm-offline') as never;
+            this.mLocalOSMOfflineGeocodingService = this.buildGeocoder('geocoding.osm', 'multi-osm-offline');
             this.hasLocalOSMOfflineGeocodingService = !!this.mLocalOSMOfflineGeocodingService;
         }
         return this.mLocalOSMOfflineGeocodingService;
     }
-    mLocalOSMOfflineReverseGeocodingService: MassifObject<'massif::MultiOSMOfflineReverseGeocodingService'>;
+    mLocalOSMOfflineReverseGeocodingService: GeocodingService;
     hasLocalOSMOfflineReverseGeocodingService = true;
     get localOSMOfflineReverseGeocodingService() {
         if (this.hasLocalOSMOfflineReverseGeocodingService && !this.mLocalOSMOfflineReverseGeocodingService) {
-            this.mLocalOSMOfflineReverseGeocodingService = this.buildGeocoder('geocoding.osm.reverse', 'multi-osm-offline-reverse') as never;
+            this.mLocalOSMOfflineReverseGeocodingService = this.buildGeocoder('geocoding.osm.reverse', 'multi-osm-offline-reverse');
             this.hasLocalOSMOfflineReverseGeocodingService = !!this.mLocalOSMOfflineReverseGeocodingService;
         }
         return this.mLocalOSMOfflineReverseGeocodingService;
@@ -364,7 +380,7 @@ class PackageService extends Observable {
                 preventDuplicates: true,
                 sortByDistance: true,
                 layers: ['poi', 'place', 'mountain_peak', 'transportation_name', 'landcover_name', 'landuse_name', 'park', 'water_name', 'building_name']
-            } as never) as never;
+            });
         }
         return this._vectorTileSearchService;
     }
@@ -387,7 +403,7 @@ class PackageService extends Observable {
                     maxZoom: 3,
                     preventDuplicates: true,
                     sortByDistance: true
-                } as never) as never;
+                });
             }
         }
         return this._timezoneTileSearchService;
@@ -479,30 +495,31 @@ class PackageService extends Observable {
         const restore: { [key: string]: any } = {};
         for (const key of Object.keys(options)) {
             if (VECTORTILESEARCH_OPTIONS.indexOf(key) !== -1) {
-                restore[key] = service.get(key as never);
-                service.set(key as never, options[key] as never);
+                restore[key] = service.get(key as any);
+                service.set(key as any, options[key]);
             }
         }
         const request = this.buildSearchRequest(options);
         try {
-            const features = await service.callAsync('findFeatures' as never, [request.handle] as never, ((collection) =>
+            const features = await service.callAsync('findFeatures', [request.handle], (collection) =>
                 collection.collect((feature) => ({
                     type: 'Feature',
-                    geometry: JSON.parse(feature.get('geometryGeoJSON') as string),
+                    geometry: JSON.parse(feature.get('geometryGeoJSON')),
                     properties: { ...(feature.get('properties') as object), layerName: feature.get('layerName'), distance: feature.get('distance') }
-                }))) as never);
-            return features as unknown as GeoJSON.Feature[];
+                }))
+            );
+            return features as GeoJSON.Feature[];
         } finally {
             request.destroy();
             for (const key of Object.keys(restore)) {
-                service.set(key as never, restore[key] as never);
+                service.set(key as any, restore[key]);
             }
         }
     }
 
     /** A search request: a centre or a bounding geometry, a radius, and the filters. */
     private buildSearchRequest(options: SearchOptions): MassifObject<'massif::SearchRequest'> {
-        const spec: { [key: string]: any } = { type: 'request' };
+        const spec: api.SpecArg<'search', api.SpecType<'search'>> = { type: 'request' };
         if (options.searchRadius !== undefined) {
             spec.searchRadius = options.searchRadius;
         }
@@ -517,7 +534,7 @@ class PackageService extends Observable {
         } else if (options.geometry) {
             spec.geometry = { type: 'geojson', geojson: options.geometry };
         }
-        return api.create('search', `search.request.${++searchRequestId}`, spec as never) as never;
+        return api.create('search', `search.request.${++searchRequestId}`, spec);
     }
 
     getTimezone(position: MapPos) {
@@ -527,7 +544,7 @@ class PackageService extends Observable {
         }
         const request = this.buildSearchRequest({ position, searchRadius: 10 });
         try {
-            return service.callAsync('findFeatures' as never, [request.handle] as never, ((collection) => collection.collect((feature) => feature.get('properties'))) as never);
+            return service.callAsync('findFeatures', [request.handle], (collection) => collection.collect((feature) => feature.get('properties')));
         } finally {
             request.destroy();
         }
@@ -571,13 +588,21 @@ class PackageService extends Observable {
      *
      * Only a hillshade layer answers. The values come back as real doubles - the layer interpolates,
      * and rounding them destroys the grade the profile is differentiated from.
+     *
+     * On a WORKER, through callAsync: `ElevationManager::getElevations` loads the DEM tiles it needs
+     * on the calling thread, and a track profile is thousands of samples over mbtiles - on the UI
+     * thread that is a visible freeze. The manager documents itself as thread-safe and guards its
+     * grid cache with a mutex, so the worker is where this belongs.
      */
-    getElevations(positions: MapPos[]): number[] {
-        return this.hillshadeLayer ? this.hillshadeLayer.elevations(positions.map(toPosition)) : null;
+    async getElevations(positions: MapPos[]): Promise<number[]> {
+        if (!this.hillshadeLayer) {
+            return null;
+        }
+        return this.hillshadeLayer.callAsync('getElevations', [positions.map(toPosition)]);
     }
 
-    getElevation(pos: MapPos): number {
-        const elevations = this.getElevations([pos]);
+    async getElevation(pos: MapPos): Promise<number> {
+        const elevations = await this.getElevations([pos]);
         const value = elevations?.[0];
         // -10000 is the layer's "no data here"
         return value === undefined || value === -10000 ? null : Math.max(-100, Math.round(value));
@@ -769,7 +794,7 @@ class PackageService extends Observable {
 
     getItemCenter(item: Item) {
         if (item?.route) {
-            const bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+            const bounds = geometryBounds(item.geometry);
             return bounds && { lat: (bounds.northeast.lat + bounds.southwest.lat) / 2, lon: (bounds.northeast.lon + bounds.southwest.lon) / 2 };
         }
         return (item.geometry as Point).coordinates;
@@ -792,7 +817,7 @@ class PackageService extends Observable {
             return null;
         }
         if (this.hillshadeLayer) {
-            const result = this.computeProfileFromHeights(positions, this.getElevations(positions));
+            const result = this.computeProfileFromHeights(positions, await this.getElevations(positions));
             DEV_LOG && console.log('getElevations done', Date.now() - startTime, 'ms');
             return result;
         }
@@ -840,9 +865,9 @@ class PackageService extends Observable {
                 if (profile) {
                     service.set('profile', profile);
                 }
-                const raw = await service.callAsync('matchRoute' as never, [request.handle] as never, ((result) => result.get('rawResult')) as never);
+                const raw = await service.callAsync('matchRoute', [request.handle], (result) => result.get('rawResult'));
                 DEV_LOG && console.log('got trace attributes', Date.now() - startTime, 'ms');
-                return JSON.parse(raw as unknown as string).edges;
+                return JSON.parse(raw).edges;
             } finally {
                 request.destroy();
             }
@@ -946,10 +971,10 @@ class PackageService extends Observable {
         }
         const points = sampleTrackForRouting(trackPositions);
         DEV_LOG && console.log('computeTrackInstructions', trackSize, 'track points ->', points.length, 'via points');
-        const { positions: routePoints, result } = await this.computeRoute({ points, profile });
+        const { instructions: raw, positions: routePoints } = await this.computeRoute({ points, profile });
 
         let lastTrackIndex = -1;
-        const instructions = instructionsFromResult(result, (pointIndex) => {
+        const instructions = instructionsFromResult(raw, (pointIndex) => {
             const routePoint = routePoints[pointIndex];
             // a generous tolerance: the routed line and the recorded track never overlap exactly
             const projected = projectOnRoute(routePoint, trackPositions, { fromIndex: lastTrackIndex, tolerance: TRACK_INSTRUCTION_TOLERANCE });
@@ -995,19 +1020,27 @@ class PackageService extends Observable {
             service.set('profile', profile);
             // The result is destroyed with the delivery, so everything the caller needs is read
             // out here - the path in one flat array, through the bulk channel.
-            const route = await service.callAsync('calculateRoute' as never, [request.handle] as never, ((result) => ({
-                instructionsJSON: result.get('instructionsJSON'),
-                flat: result.getDoubles(),
+            const route = await service.callAsync('calculateRoute', [request.handle], (result) => ({
+                // `instructionsJSON` is TEXT - the SDK serialises the whole maneuver list into one
+                // string so a mountain route is not a call per field.
+                instructionsJSON: JSON.parse(result.get('instructionsJSON') || '[]') as RawInstruction[],
+                // `getPoints`, not `getDoubles`: the doubles channel reads a handle whose registered
+                // class IS std::vector<double>, which is what the METHOD's result is. Asked of the
+                // RoutingResult itself, Context::getDoubles answers RESULT_UNSUPPORTED_TYPE, and the
+                // bridge turns that into an empty array - so the route came back with no points at
+                // all, and nothing downstream of `positions` had anything to draw.
+                flat: result.call('getPoints'),
                 totalDistance: result.get('totalDistance'),
                 totalTime: result.get('totalTime')
-            })) as never) as unknown as { instructionsJSON: any; flat: number[]; totalDistance: number; totalTime: number };
+            }));
             const positions: MapPos[] = [];
             for (let index = 0; index < route.flat.length; index += 2) {
                 positions.push({ lat: route.flat[index + 1], lon: route.flat[index] });
             }
             return {
-                // what instructionsFromResult reads, without the result object having to outlive it
-                result: { get: (path: string) => (path === 'instructionsJSON' ? route.instructionsJSON : undefined) } as never,
+                // the maneuvers themselves, read while the result was alive: it is destroyed with
+                // its delivery, so nothing here can hand the object back
+                instructions: route.instructionsJSON ?? [],
                 positions,
                 totalDistance: route.totalDistance,
                 totalTime: route.totalTime
@@ -1022,7 +1055,9 @@ class PackageService extends Observable {
             const files = this.findFilesWithExtension('.vtiles');
             const currentLanguage = get(fullLangStore);
             if (files.length) {
-                const service = (this.mLocalOfflineRoutingSearchService = api.create('routing', 'routing.offline', { type: 'multi-valhalla-offline' }) as MassifObject<'massif::MultiValhallaOfflineRoutingService'>);
+                const service = (this.mLocalOfflineRoutingSearchService = api.create('routing', 'routing.offline', {
+                    type: 'multi-valhalla-offline'
+                }));
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN, DEFAULT_VALHALLA_MAX_DISTANCE_PEDESTRIAN);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_AUTO, DEFAULT_VALHALLA_MAX_DISTANCE_AUTO);
                 this.setValhallaSetting(SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE, DEFAULT_VALHALLA_MAX_DISTANCE_BICYCLE);
