@@ -172,12 +172,18 @@ export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vect
  * They share its source rather than opening the same files again - `child('dataSource')` hands it
  * over and a spec takes the handle - and its decoder by id.
  */
-export type ClonedLayerSpec = api.SpecArg<'layer', 'vector'> | api.SpecArg<'layer', 'hillshade'> | api.SpecArg<'layer', 'raster'>;
+export type ClonedLayerSpec = api.SpecArg<'layer', 'composite-vector'> | api.SpecArg<'layer', 'vector'> | api.SpecArg<'layer', 'hillshade'> | api.SpecArg<'layer', 'raster'>;
 
 export function cloneLayerSpec(layer: MassifLayer): ClonedLayerSpec | null {
     const source = layer?.child('dataSource');
     if (!source) {
         return null;
+    }
+    // Before the VectorTileLayer branch: composite IS one, so `is` matches both, and a composite
+    // cloned as a plain vector layer loses the hillshade and contour slots. The clone's slots are
+    // its own - the caller wires them with customLayers.attachTerrain.
+    if (layer.is('massif::CompositeVectorTileLayer')) {
+        return { type: 'composite-vector', source: source.handle, style: mapContext.mapDecoder.id };
     }
     if (layer.is('massif::VectorTileLayer')) {
         return { type: 'vector', source: source.handle, style: mapContext.mapDecoder.id };

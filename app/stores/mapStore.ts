@@ -95,7 +95,9 @@ const nutiParams = {
         defaultValue: true,
         icon: 'mdi-bullseye',
         showAsIcon: true,
-        visible: (capabilities) => !!capabilities?.hasLocalData,
+        // hasTerrain, not hasLocalData: the lines are traced from the DEM now, so they are there
+        // for an online-only map too, and absent from an offline one with no elevation packages
+        visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event) => {
             await showSliderPopover({
                 debounceDuration: 100,

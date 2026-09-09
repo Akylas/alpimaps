@@ -119,7 +119,8 @@
             layers.forEach((l, index) => {
                 const spec = cloneLayerSpec(l.layer);
                 if (spec) {
-                    massifMap.addLayer(`layer.itemEdit.base${index}`, spec);
+                    // its own composite, so it needs its own hillshade and contour children
+                    mapContext.mapModule('customLayers')?.attachTerrain(massifMap.addLayer(`layer.itemEdit.base${index}`, spec));
                 }
             });
 

@@ -4,10 +4,10 @@ import type { MassifLayer, MassifMap } from '@nativescript-community/ui-massifma
  * Every kind of layer the map can hold. A feature that needs its own layer adds its id here and
  * to LAYERS_ORDER — the position in LAYERS_ORDER is what decides what draws on top of what.
  */
-export type LayerType = 'map' | 'routes' | 'customLayers' | 'hillshade' | 'selection' | 'items' | 'directions' | 'navigation' | 'userLocation' | 'search' | 'transit' | 'admin';
+export type LayerType = 'map' | 'routes' | 'customLayers' | 'selection' | 'items' | 'directions' | 'navigation' | 'userLocation' | 'search' | 'transit' | 'admin';
 
 /** Bottom to top: the first entry draws underneath everything else. */
-export const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'hillshade', 'items', 'directions', 'navigation', 'search', 'selection', 'userLocation'];
+export const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'items', 'directions', 'navigation', 'search', 'selection', 'userLocation'];
 
 export interface AddedLayer {
     layer: MassifLayer;
