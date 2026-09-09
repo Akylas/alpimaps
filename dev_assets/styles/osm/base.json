@@ -19,6 +19,7 @@
         "mountain_peak",
         "place",
         "aeroway",
+        "hillshade",
         "landuse",
         "landcover",
         "landuse_under"

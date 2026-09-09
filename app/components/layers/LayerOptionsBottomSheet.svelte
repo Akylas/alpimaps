@@ -78,7 +78,7 @@
             }
             ApplicationSettings.setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
-            // argb, the same form createHillshadeTileLayer builds these colours with
+            // argb, the form every colour property on a layer is written in
             item.layer.set(name, newColor.argb);
         } catch (err) {
             showError(err);

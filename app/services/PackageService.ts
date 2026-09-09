@@ -192,7 +192,8 @@ function sampleTrackForRouting(positions: MapPos[]) {
 
 class PackageService extends Observable {
     hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
-    localVectorTileLayer?: MassifLayer<'massif::VectorTileLayer'>;
+    /** The local base map. A composite since the terrain moved into its style's own layer order. */
+    localVectorTileLayer?: MassifLayer<'massif::CompositeVectorTileLayer'>;
 
     mLocalOfflineRoutingSearchService: MassifObject<'massif::MultiValhallaOfflineRoutingService'>;
     mOnlineRoutingSearchService: MassifObject<'massif::ValhallaOnlineRoutingService'>;
