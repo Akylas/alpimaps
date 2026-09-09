@@ -49,7 +49,7 @@
         Object.keys(result).forEach((k) => {
             // a surface handle has no JS properties: reading one gives undefined, and transformBack
             // then dereferences it
-            const value = layer.get(k as never);
+            const value = layer.get(k);
             result[k].value = opts[k].transformBack ? opts[k].transformBack(value) : value;
         });
         options = result;
@@ -68,7 +68,7 @@
         if (options[name].transform) {
             newValue = options[name].transform(newValue);
         }
-        item.layer.set(name as never, newValue as never);
+        item.layer.set(name, newValue);
     }
     async function pickOptionColor(name, color: Color) {
         try {
@@ -78,8 +78,8 @@
             }
             ApplicationSettings.setString(`${item.name}_${name}`, newColor.hex);
             options[name].value = newColor.hex;
-            // argb, the same form createHillshadeTileLayer builds these colours with
-            item.layer.set(name as never, newColor.argb as never);
+            // argb, the form every colour property on a layer is written in
+            item.layer.set(name, newColor.argb);
         } catch (err) {
             showError(err);
         }
@@ -159,7 +159,7 @@
                     if (result) {
                         const customLayers = mapContext.mapModule('customLayers');
                         if (customLayers && source) {
-                            customLayers.downloadDataSource({ source: source as never, provider: item.provider, minZoom, maxZoom });
+                            customLayers.downloadDataSource({ source, provider: item.provider, minZoom, maxZoom });
                         }
                     }
                     break;
@@ -175,13 +175,13 @@
                             // use native for now
                             switch (result) {
                                 case 'bicubic':
-                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_BICUBIC' as never);
+                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_BICUBIC');
                                     break;
                                 case 'bilinear':
-                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_BILINEAR' as never);
+                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_BILINEAR');
                                     break;
                                 case 'nearest':
-                                    item.layer.set('tileFilterMode' as never, 'RASTER_TILE_FILTER_MODE_NEAREST' as never);
+                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_NEAREST');
                                     break;
                             }
                         }
@@ -198,7 +198,9 @@
     function getTitle() {
         let result = item.name.toUpperCase();
         if (persistent) {
-            const databasePath = source.get('databasePath' as never) as string;
+            // from the item, not the source: `databasePath` is a constructor argument of
+            // PersistentCacheTileDataSource, so no path reads it back off the built object
+            const { databasePath } = item;
             if (databasePath && File.exists(databasePath)) {
                 result += ` (${formatSize(File.fromPath(databasePath).size)})`;
             }

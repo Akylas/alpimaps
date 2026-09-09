@@ -21,20 +21,6 @@ module.exports = {
     },
     ios: {
         // runtimePackageName: '@akylas/nativescript-ios-runtime',
-        SPMPackages: [
-            {
-                name: 'carto-mobile-sdk',
-                libs: ['CartoMobileSDK'],
-                repositoryURL: 'https://github.com/Akylas/mobile-sdk-ios-swift.git',
-                version: '5.2.3'
-            },
-            {
-                name: 'carto-SwiftTryCatch-sdk',
-                libs: ['SwiftTryCatch'],
-                repositoryURL: 'https://github.com/farfromrefug/SwiftTryCatch.git',
-                version: '1.0.0'
-            }
-        ]
     },
     android: {
         // runtimePackageName: '@akylas/nativescript-android-runtime',

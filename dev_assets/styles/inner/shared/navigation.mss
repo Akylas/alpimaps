@@ -11,11 +11,10 @@
 
 #navigation['mapnik::geometry_type'=2] {
 	[class='route'] {
-		casing/line-color: @nav_casing_color;
-		casing/line-width: @directions_casing_width;
-		casing/line-join: round;
-		casing/line-cap: round;
-		casing/line-opacity: @directions_casing_opacity;
+		// casing folded into the line as its border - see directions.mss. Above z15 the casing now
+		// fades with the route, since a border takes the line's own opacity.
+		line-border-color: @nav_casing_color;
+		line-border-width: (@directions_casing_width - @directions_line_width) / 2;
 		line-color: @nav_line_color;
 		line-width: @directions_line_width;
 		line-opacity: @directions_line_opacity;
@@ -34,7 +33,9 @@
 	}
 
 	// same width as the route it replaces, dashed so which part of the line is a detour is obvious
-	// without relying on colour, which a black and white screen cannot show
+	// without relying on colour, which a black and white screen cannot show.
+	// The casing stays a symbolizer of its own here: a border shares the fill's dash pattern, and a
+	// casing broken into the same dashes stops reading as a casing at all.
 	[class='detour'] {
 		casing/line-color: @nav_casing_color;
 		casing/line-width: @directions_casing_width;

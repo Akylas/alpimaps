@@ -23,13 +23,16 @@
 		[class !='waypointline'] {
 			when ([param::selected_id]=[id])::selected,
 			{
-				casing/line-color:  @is_selected ? [param::main_darker_color]: @directions_casing_color;
-				casing/line-width: @directions_casing_width;
-				casing/line-join: round;
-				casing/line-cap: round;
-				casing/line-opacity: @directions_casing_opacity;
+				// The casing is this line's own border, not a second line under it: the renderer runs
+				// the border pass for the whole batch before the fill pass, so it still sits under
+				// every route while sharing the fill's geometry, joins and caps.
+				// line-border-width is the casing on EACH side, hence the halved difference.
+				line-border-color: @is_selected ? [param::main_darker_color]: @directions_casing_color;
+				line-border-width: (@directions_casing_width - @directions_line_width) / 2;
 				line-color: @is_selected ? [param::main_color]: ([style.color]? [style.color]:@directions_line_color);
 				line-width: @directions_line_width;
+				// the border takes the line's opacity - a border cannot carry its own - so above z15
+				// the casing now fades with the route instead of staying opaque under it
 				line-opacity: @directions_line_opacity;
 				line-join: round;
 				line-cap: round;
