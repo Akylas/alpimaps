@@ -466,14 +466,13 @@
 		}
 	}
 
-	// Casing folded into the line as its border. ::aerial is an attachment of its own carrying this
-	// one style, so it can never split across geometries and the border pass always runs under the
-	// fill pass. line-border-width is per SIDE, hence the halved casing width.
 	[class=aerialway][zoom>=13]::aerial {
-		line-width: @aerial-width;
-		line-color: @aerial-fill;
-		line-border-width: @aerial-casing-width / 2;
-		line-border-color: @aerial-casing-fill;
+		
+		line-width: @aerial-width + @aerial-casing-width;
+		line-color: @aerial-casing-fill;
+		line/line-width: @aerial-width;
+		line/line-color: @aerial-fill;
+		
 	}
 }
 
