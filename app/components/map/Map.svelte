@@ -93,7 +93,9 @@
     let selectedOSMId: string;
     let selectedId: string;
     let selectedMapId: string;
-    let selectedPosMarker: MassifObject;
+    // narrowed on purpose: an unparameterised MassifObject accepts ANY path, which is how the
+    // read-only `geometry.pos` write below went unnoticed
+    let selectedPosMarker: MassifObject<'massif::Point'>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
     let didIgnoreAlreadySelected = false;
@@ -622,7 +624,7 @@
             mapContext.runOnModules('onMapStable', { data: { reason: e.reason as MapMoveReason } });
         });
         massifMap.onIdle((e) => mapContext.runOnModules('onMapIdle', e));
-        massifMap.onClick((e) => onMainMapClicked({ data: { clickType: e.clickType as ClickType, position: fromPosition(e.getPos('clickPos') as never) } }));
+        massifMap.onClick((e) => onMainMapClicked({ data: { clickType: e.clickType as ClickType, position: fromPosition(e.getPos('clickPos')) } }));
     }
 
     function onMainMapClicked(e: { data: MapClickData }) {
@@ -763,7 +765,9 @@
                         if (!selectedPosMarker) {
                             getOrCreateLocalVectorLayer(position);
                         } else {
-                            selectedPosMarker.set('geometry.pos' as never, toPosition(position) as never);
+                            // the whole geometry: PointGeometry's `pos` is read-only, so writing
+                            // through the path failed and the selection circle never moved
+                            selectedPosMarker.set('geometry', { type: 'point', pos: toPosition(position) });
                             selectedPosMarker.set('visible', true);
                         }
                         if (setMapSelected) {
@@ -1035,7 +1039,8 @@
     $: {
         if (activeSheetHeight >= 0) {
             mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
-            massifMap?.set('focusPointOffset', mapContext.focusOffset as never);
+            // a ScreenPos crosses as `[x, y]`, not as the {x, y} the rest of the app passes around
+            massifMap?.set('focusPointOffset', [mapContext.focusOffset.x, mapContext.focusOffset.y]);
         }
     }
 
@@ -1133,7 +1138,10 @@
                     properties: { featureId, ...featureData },
                     geometry: {
                         type: 'Point',
-                        coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry.constructor.name) ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
+                        // the geometry's own `type`, not its constructor's name: it is a GeoJSON
+                        // document now, so every shape read back as "String" and a line or a
+                        // polygon took the point branch
+                        coordinates: isFeatureInteresting && !/Line|Polygon/.test(featureGeometry?.type ?? '') ? [featurePosition.lon, featurePosition.lat] : [position.lon, position.lat]
                     }
                 };
                 selectItem({

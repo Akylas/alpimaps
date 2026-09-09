@@ -1,12 +1,17 @@
-import type { MassifObject } from '@nativescript-community/ui-massifmaps/api';
 import { ApplicationSettings, Color } from '@nativescript/core';
 import { type RouteInstruction, RoutingAction } from '~/models/Item';
 
 /** The costing models valhalla answers to. */
 export type ValhallaProfile = 'car' | 'auto' | 'bus' | 'bicycle' | 'pedestrian' | 'truck' | 'motorcycle';
 
-/** One maneuver, as the SDK hands the whole list over. */
-interface RawInstruction {
+/**
+ * One maneuver, as the SDK hands the whole list over.
+ *
+ * `action` is the enum's ORDINAL, whatever the property's doc string says: `getInstructionsJSON`
+ * writes `static_cast<int>(instruction.getAction())`. It lines up with `RoutingAction` here, which
+ * is why this is stored straight through.
+ */
+export interface RawInstruction {
     action: RoutingAction;
     pointIndex: number;
     streetName: string;
@@ -23,16 +28,20 @@ interface RawInstruction {
  * Shared because three callers need exactly this and each used to carry its own copy: the directions
  * panel, turning a recorded track into instructions, and rerouting during navigation.
  *
+ * Takes the maneuver LIST rather than the RoutingResult it came off: the result is destroyed with
+ * its delivery, so `computeRoute` has already read `instructionsJSON` out of it by the time any of
+ * these callers run. It used to be handed a stand-in object with one `get` on it, which is a
+ * RoutingResult only as far as this function happens to look.
+ *
  * The whole list arrives as one `instructionsJSON` read. Walking it instruction by instruction was
  * a call per maneuver plus one per field, and a mountain route has hundreds.
  *
  * `mapIndex` rewrites the point index a maneuver refers to, for the callers whose polyline is not the
  * result's own. Returning null from it drops the maneuver.
  */
-export function instructionsFromResult(result: MassifObject<'massif::RoutingResult'>, mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
-    const raw = (result.get('instructionsJSON') ?? []) as unknown as RawInstruction[];
+export function instructionsFromResult(raw: RawInstruction[], mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
     const instructions: RouteInstruction[] = [];
-    for (const instruction of raw) {
+    for (const instruction of raw ?? []) {
         const pointIndex = mapIndex ? mapIndex(instruction.pointIndex) : instruction.pointIndex;
         if (pointIndex === null || pointIndex === undefined) {
             continue;

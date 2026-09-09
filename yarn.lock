@@ -100,15 +100,15 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@akylas/nativescript-app-utils@npm:2.2.14":
-  version: 2.2.14
-  resolution: "@akylas/nativescript-app-utils@npm:2.2.14"
+"@akylas/nativescript-app-utils@npm:2.2.15":
+  version: 2.2.15
+  resolution: "@akylas/nativescript-app-utils@npm:2.2.15"
   dependencies:
     "@nativescript-community/https": "npm:^4.1.32"
     "@nativescript-community/l": "npm:^4.3.11"
     "@nativescript-community/ui-share-file": "npm:^1.3.3"
     make-error: "npm:1.3.6"
-  checksum: 10/f1838bab88cba04126b3633f94f80ae69dc5671d4acd62ceec11b3f28e9d4fc117ace2fe40cee8591836d4b71e86353473db92d668fd830c48e51c90c6e6492a
+  checksum: 10/4890436596dcb064ec6ced5bc77b9dc2c8ee8be073df818f7e927d236b164c85fc2c103cf42a479fd01ca3506016758ea479a6588041aca9746a308175c86497
   languageName: node
   linkType: hard
 
@@ -2753,7 +2753,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/gesturehandler@npm:2.0.44, @nativescript-community/gesturehandler@npm:^2.0.43, @nativescript-community/gesturehandler@npm:^2.0.44, @nativescript-community/gesturehandler@npm:^2.0.8":
+"@nativescript-community/gesturehandler@npm:2.0.45":
+  version: 2.0.45
+  resolution: "@nativescript-community/gesturehandler@npm:2.0.45"
+  dependencies:
+    "@nativescript-community/observable": "npm:^2.0.10"
+  checksum: 10/e45f984d59f73d30494287a4ffa282335ac0685d3f56aee7beecb5a664109fbcfb6f165c0adb3fa4f4ee5b1076e4cae5154b6db47427ed2df1e361b0d89433df
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/gesturehandler@npm:^2.0.43, @nativescript-community/gesturehandler@npm:^2.0.44, @nativescript-community/gesturehandler@npm:^2.0.8":
   version: 2.0.44
   resolution: "@nativescript-community/gesturehandler@npm:2.0.44"
   dependencies:
@@ -2899,10 +2908,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/systemui@npm:1.1.24":
-  version: 1.1.24
-  resolution: "@nativescript-community/systemui@npm:1.1.24"
-  checksum: 10/79b8ca034f5859ad2d2473f77e87ca1933b184eb5bb5a9757be9d4c0cc63ff584ec1401c0fb81ac3b232d0ccfb4d255b60f585cc4c831df7c1a43fccae0b59ab
+"@nativescript-community/systemui@npm:1.1.25":
+  version: 1.1.25
+  resolution: "@nativescript-community/systemui@npm:1.1.25"
+  checksum: 10/42fd950e7d6de803f8f88144a6acd79a75a1f03517a1798441970e307b6461c985c32eb65af006700e40be51534f0f897c93e49edde016520bedc0390230a343
   languageName: node
   linkType: hard
 
@@ -2982,7 +2991,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-drawer@npm:0.1.31, @nativescript-community/ui-drawer@npm:^0.1.31":
+"@nativescript-community/ui-drawer@npm:0.1.32":
+  version: 0.1.32
+  resolution: "@nativescript-community/ui-drawer@npm:0.1.32"
+  dependencies:
+    "@nativescript-community/gesturehandler": "npm:^2.0.8"
+  checksum: 10/15cf82db7e84a57199c884e23262dd2b6e1f6e3e8ce66084900e4cf8312cbf9ae5b58696b39fbd876a4052ae246753ed4addd3530788570743bd51787287304d
+  languageName: node
+  linkType: hard
+
+"@nativescript-community/ui-drawer@npm:^0.1.31":
   version: 0.1.31
   resolution: "@nativescript-community/ui-drawer@npm:0.1.31"
   dependencies:
@@ -2998,12 +3016,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-label@npm:2.0.1":
-  version: 2.0.1
-  resolution: "@nativescript-community/ui-label@npm:2.0.1"
+"@nativescript-community/ui-label@npm:2.0.4":
+  version: 2.0.4
+  resolution: "@nativescript-community/ui-label@npm:2.0.4"
   dependencies:
     "@nativescript-community/text": "npm:^1.6.25"
-  checksum: 10/b3d5e2eb8f1b38889b8f9cf09949f70bf820db1834bb714a7cb8a3438db382fb3ee1fd67f71bf6f7a0bf457cb6ad78cbca935f2b22de380f1b23474dc19a878a
+  checksum: 10/e46af600c046505836ee81ff902765b4ef20efdcf307a9746e41b81389852b09f5be422cb832afaab0eed9a926eb3176c1ce3920052ccdce3ac72fb3846ca756
   languageName: node
   linkType: hard
 
@@ -3137,12 +3155,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-persistent-bottomsheet@npm:0.1.11":
-  version: 0.1.11
-  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.1.11"
+"@nativescript-community/ui-persistent-bottomsheet@npm:0.1.13":
+  version: 0.1.13
+  resolution: "@nativescript-community/ui-persistent-bottomsheet@npm:0.1.13"
   dependencies:
     "@nativescript-community/gesturehandler": "npm:^2.0.43"
-  checksum: 10/746a356f09b954ef4c45ae8cb45ff564f70dc1daeb52d527d2718f8804a2e8b5760bfeafc2844c59b4e89e40ee93779653ac55520487e75f13bbe940849c11b2
+  checksum: 10/73ad78ec386cf8f4e06c4456bc96f47138fa82cd297ec2c383f32fd5403915f126721d3c3838256db8d7827371ab20834234e41286e34a85fdf5f0ad4927c65d
   languageName: node
   linkType: hard
 
@@ -3198,6 +3216,13 @@ __metadata:
   version: 0.0.3
   resolution: "@nativescript-use/nativescript-clipboard@npm:0.0.3"
   checksum: 10/24de8ea56d2e3d1d7a9fc79f31bb569bcb0c4443b09e6eda80825ebbab002da1a1f5f0c4231220768db96de7e04b7fb71cff48a652323c1636576a13a21de166
+  languageName: node
+  linkType: hard
+
+"@nativescript/android-quickjs-ng@npm:^0.0.1":
+  version: 0.0.1
+  resolution: "@nativescript/android-quickjs-ng@npm:0.0.1"
+  checksum: 10/59ce2c4181758d2ed47f35633562deb8c803be21f42f1c6fcba65899b017435937e520eccc9657d888afa30ee56bc5f8b447069d46658934eb1beb859ac9c9ff
   languageName: node
   linkType: hard
 
@@ -14695,7 +14720,7 @@ __metadata:
     "@akylas/nativescript": "npm:9.0.23"
     "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "portal:tools"
-    "@akylas/nativescript-app-utils": "npm:2.2.14"
+    "@akylas/nativescript-app-utils": "npm:2.2.15"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:9.0.3"
@@ -14707,7 +14732,7 @@ __metadata:
     "@nativescript-community/css-theme": "npm:1.2.14"
     "@nativescript-community/extendedinfo": "npm:1.3.1"
     "@nativescript-community/geocoding": "npm:3.2.1"
-    "@nativescript-community/gesturehandler": "npm:2.0.44"
+    "@nativescript-community/gesturehandler": "npm:2.0.45"
     "@nativescript-community/gps": "npm:3.1.10"
     "@nativescript-community/https": "npm:4.1.35"
     "@nativescript-community/l": "npm:4.3.12"
@@ -14719,7 +14744,7 @@ __metadata:
     "@nativescript-community/sentry": "npm:4.6.49"
     "@nativescript-community/sqlite": "npm:3.5.9"
     "@nativescript-community/svelte-native": "npm:1.0.32"
-    "@nativescript-community/systemui": "npm:1.1.24"
+    "@nativescript-community/systemui": "npm:1.1.25"
     "@nativescript-community/text": "npm:1.6.25"
     "@nativescript-community/ui-canvas": "npm:4.6.52"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.55"
@@ -14728,9 +14753,9 @@ __metadata:
     "@nativescript-community/ui-collectionview": "npm:6.0.25"
     "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.25"
     "@nativescript-community/ui-document-picker": "npm:1.1.29"
-    "@nativescript-community/ui-drawer": "npm:0.1.31"
+    "@nativescript-community/ui-drawer": "npm:0.1.32"
     "@nativescript-community/ui-image": "npm:4.6.20"
-    "@nativescript-community/ui-label": "npm:2.0.1"
+    "@nativescript-community/ui-label": "npm:2.0.4"
     "@nativescript-community/ui-lottie": "npm:5.0.11"
     "@nativescript-community/ui-massifmaps": "npm:2.1.0"
     "@nativescript-community/ui-material-activityindicator": "npm:7.3.2"
@@ -14746,7 +14771,7 @@ __metadata:
     "@nativescript-community/ui-material-textfield": "npm:7.3.2"
     "@nativescript-community/ui-material-textview": "npm:7.3.2"
     "@nativescript-community/ui-pager": "npm:14.1.42"
-    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.1.11"
+    "@nativescript-community/ui-persistent-bottomsheet": "npm:0.1.13"
     "@nativescript-community/ui-popover": "npm:0.1.22"
     "@nativescript-community/ui-share-file": "npm:1.3.3"
     "@nativescript-community/ui-svg": "npm:0.2.24"
@@ -14755,6 +14780,7 @@ __metadata:
     "@nativescript-community/universal-links": "npm:3.0.2"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
     "@nativescript/android": /Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz
+    "@nativescript/android-quickjs-ng": "npm:^0.0.1"
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"

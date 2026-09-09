@@ -338,6 +338,10 @@
 @poi-restaurant-fill: #BC7729; 
 @poi-shop-fill: #9F43A7;
 @poi_halo_radius:1;
+// this variant never defined them, so the POI icon halo silently failed to compile - same values
+// the other variants derive
+@poi_icon_halo_radius:@poi_halo_radius + 1;
+@poi_icon_halo: @poi_halo;
 
 
 @poi_national_park_label_width:@poi_icon_width;

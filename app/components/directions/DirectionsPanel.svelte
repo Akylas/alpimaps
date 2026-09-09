@@ -98,9 +98,9 @@
         return steps;
     }
 
-    function routingResultToJSON(result, costing_options, waypoints, positions: MapPos[]) {
+    function routingResultToJSON(computed: Awaited<ReturnType<typeof packageService.computeRoute>>, costing_options, waypoints, positions: MapPos[]) {
         DEV_LOG && console.log('routingResultToJSON', waypoints);
-        const instructions = instructionsFromResult(result);
+        const instructions = instructionsFromResult(computed.instructions);
         const route = {
             costing_options,
             waypoints: waypoints.map((w) => {
@@ -109,8 +109,8 @@
                 }
                 return w;
             }),
-            totalTime: result.getTotalTime(),
-            totalDistance: result.getTotalDistance()
+            totalTime: computed.totalTime,
+            totalDistance: computed.totalDistance
         } as Route;
 
         return { route, instructions };
@@ -349,7 +349,7 @@
                 labelBlendingSpeed: 0
             });
             _routeLayer.onFeatureClick((e) => {
-                const info = mapContext.featureClickData(e as never);
+                const info = mapContext.featureClickData(e);
                 const feature = features.find((f) => f.properties.id === info.featureData.id);
                 if (feature) {
                     mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
@@ -790,7 +790,7 @@
                 DEV_LOG && console.log('got route', computed.totalDistance, computed.totalTime, Date.now() - startTime, 'ms');
                 positions = computed.positions;
                 startTime = Date.now();
-                route = routingResultToJSON(computed.result, costing_options, waypoints.toJSON().slice(0), positions);
+                route = routingResultToJSON(computed, costing_options, waypoints.toJSON().slice(0), positions);
                 DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
                 if (requestStats) {
                     route.stats = await packageService.fetchStats({ positions, route: route.route, profile });

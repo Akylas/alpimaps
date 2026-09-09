@@ -23,15 +23,15 @@ let adminLayer: MassifLayer<'massif::VectorTileLayer'>;
 function createAdminLayer() {
     const mapContext = getMapContext();
     const baseLayer = mapContext.getLayers('map')[0]?.layer;
-    const source = baseLayer?.child('dataSource' as never);
+    const source = baseLayer?.child('dataSource');
     if (!source) {
         return null;
     }
     // Built, not placed: LayerStack decides where 'admin' sits in the stack.
     const layer = mapContext.getMap().buildLayer('admin', {
         type: 'vector',
-        source: source.handle as never,
-        style: createTileDecoder('admin').handle as never,
+        source: source.handle,
+        style: createTileDecoder('admin').handle,
         layerBlendingSpeed: 3,
         labelBlendingSpeed: 3,
         preloading: get(preloading),

@@ -108,6 +108,40 @@
 	}
 }
 
+// The hillshade SLOT. Its position in base.json's "layers" is what puts the shading over the
+// landcover/landuse fills and under everything else; this block is what makes the slot exist at
+// all - a hillshade child with no config symbolizer resolves as invisible and is never drawn.
+// Declares the SLOT and nothing else. Every appearance property is deliberately absent: a config
+// symbolizer is re-applied to the child layer EVERY FRAME, so anything named here would overwrite
+// what the layer options sheet writes on the layer a moment later. The hillshade is an ordinary
+// map layer to the app - opacity, contrast, colours and illumination all live on the layer object,
+// exactly as they do for a raster source - and the style only says where it is drawn.
+//
+// One property is still required: a hillshade child whose layer carries no config symbolizer at all
+// resolves as invisible and is never drawn.
+#hillshade {
+	hillshade-visible: true;
+}
+
+// Generation parameters for the ContourTileDataSource feeding the #contour slot. Applied to the
+// SOURCE rather than per frame, so a change re-traces tiles; the rule's zoom range is also what
+// bounds the child layer, which is why it starts at 12 like the lines below.
+//
+// Its OWN attachment, not a rule inside #contour: that style is filter-mode="first", so a rule
+// carrying only the config symbolizer matches any contour feature and wins over the drawing rules
+// below it - every contour whose div the earlier rules do not name would silently stop drawing.
+// NO zoom filter on this rule. Its zoom range is what the composite clamps the child layer's
+// visibleZoomRange to, and a child clamped out of range stops LOADING without dropping the tiles it
+// already drew - contours then stayed put on the tiles that had them and never appeared on the
+// rest. `contour-min-visible-zoom` is the right control: below it the source returns an empty tile
+// cheaply, with no DEM fetch and no tracing, and the map draws nothing.
+#contour::config {
+	contour-base-interval: 10;
+	contour-resolution: 128;
+	contour-min-visible-zoom: 12;
+	contour-simplify-tolerance: 1;
+}
+
 #contour['param::contours'>0] {
 	[div=10][zoom>=14],
 	[div=20][zoom>=14] {

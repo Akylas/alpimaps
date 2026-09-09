@@ -692,7 +692,7 @@ export class NavigationService extends Observable {
         navigationRerouting.set(true);
         try {
             DEV_LOG && console.log(TAG, 'back to route', auto ? '(auto)' : '(asked)', 'to index', target.index);
-            const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
+            const { instructions, positions, totalDistance, totalTime } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, target.position],
                 profile,
                 costingOptions
@@ -702,7 +702,7 @@ export class NavigationService extends Observable {
                 DEV_LOG && console.log(TAG, 'back to route dropped, no longer needed');
                 return false;
             }
-            this.setDetour({ positions, instructions: instructionsFromResult(result), rejoinIndex: target.index, totalDistance, totalTime });
+            this.setDetour({ positions, instructions: instructionsFromResult(instructions), rejoinIndex: target.index, totalDistance, totalTime });
             this.notify({ eventName: NavigationReroutedEvent, object: this, data: { auto, kind: 'detour' } });
             if (__ANDROID__ && this.appInBackground) {
                 this.refreshScreen('rerouted back to the route');
@@ -730,7 +730,12 @@ export class NavigationService extends Observable {
         navigationRerouting.set(true);
         try {
             DEV_LOG && console.log(TAG, 'rerouting to the destination');
-            const { positions, result, totalDistance, totalTime } = await packageService.computeRoute({
+            const {
+                instructions: raw,
+                positions,
+                totalDistance,
+                totalTime
+            } = await packageService.computeRoute({
                 points: [{ lat: location.lat, lon: location.lon }, destination],
                 profile,
                 costingOptions
@@ -749,7 +754,7 @@ export class NavigationService extends Observable {
                 },
                 geometry: positionsToGeoJSONLine(positions),
                 route: { ...route.item.route, totalTime, totalDistance, waypoints: undefined, steps: undefined },
-                instructions: instructionsFromResult(result)
+                instructions: instructionsFromResult(raw)
             };
             route.replaceBase(item, positions);
             this.offRouteDetector.reset();

@@ -2,7 +2,11 @@
     import { lc } from '@nativescript-community/l';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ContentView, GridLayout, TouchGestureEventData } from '@nativescript/core';
+    import { ContentView, GridLayout } from '@nativescript/core';
+    // from gestures-types, not the barrel: ui/gestures/index.d.ts re-exports it but also declares a
+    // TouchGestureEventData of its own, and that one's getAllPointers() returns a Pointer declared
+    // locally and never exported - so the pointer handed to startDragging was a different type
+    import type { TouchGestureEventData } from '@nativescript/core/ui/gestures/gestures-types';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
     import { debounce } from '@nativescript/core/utils';
