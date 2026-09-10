@@ -310,8 +310,6 @@
         wikipedia: { tap: () => openWikipedia() },
         weather: { tap: () => checkWeather(), long: () => openWeather() },
         astronomy: { tap: () => showAstronomy() },
-        peaks: { tap: () => openPeakFinder() },
-        threed: { tap: () => open3DMap() },
         compass: { tap: () => openCompass() },
         transit: { tap: () => getTransitLines() },
         share: { tap: (event) => shareItem(event) }
@@ -334,14 +332,20 @@
         { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
         { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
-        { id: 'peaks', when: WITH_PEAK_FINDER && __ANDROID__ && packageService.hasElevation() && !itemIsRoute, text: 'mdi-summit', tooltip: lc('peaks') },
-        { id: 'threed', when: WITH_3D_MAP && __ANDROID__ && packageService.hasElevation() && !itemIsRoute, text: 'mdi-video-3d', tooltip: lc('threed_map') },
+        // `peaks` is now contributed by ~/mapModules/features/peakFinder (it turns the live map into a
+        // panorama rather than opening a WebView), and 3D terrain is a map mode with its own side
+        // button — neither belongs in this hard-coded row any more.
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
         { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
     ]
+        // Numbered BEFORE the filter, so an entry's position does not depend on which of the others
+        // happen to apply to this item. Spaced 10 apart so a feature can slot BETWEEN two built-ins
+        // rather than only landing at the end — `peaks` sits at 115, where it has always been.
+        .map((action, index) => ({ ...action, order: index * 10 }))
         .filter((action) => action.when)
-        .concat(featureItemActions(item) as any);
+        .concat(featureItemActions(item) as any)
+        .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
     $: if ($isNavigating && $navigationProgress && graphAvailable) {
         highlightChartFromProgress($navigationProgress);
@@ -792,64 +796,6 @@
         }
     }
 
-    async function openPeakFinder() {
-        try {
-            const geometry = item.geometry as Point;
-            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            if (!position.altitude) {
-                position.altitude = item.properties.ele || (await packageService.getElevation(position));
-            }
-            // the sources themselves, shared rather than rebuilt: the peak finder's native client
-            // reads the same tiles the map is showing
-            const hillshadeDatasource = packageService.hillshadeLayer?.source();
-            const vectorDataSource = packageService.localVectorTileLayer?.source();
-            const customSources = mapContext.mapModules.customLayers.customSources;
-            let rasterDataSource: MassifSource;
-            customSources.some((s) => {
-                if (s.layer.is('massif::RasterTileLayer')) {
-                    rasterDataSource = s.layer.source();
-                    return true;
-                }
-            });
-            // const { default: component } = await import('~/components/PeakFinder.svelte');
-            const component = (await import('~/components/peaks/PeakFinder.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    terrarium: false,
-                    position,
-                    bearing: mapContext.getMap().camera().rotation(),
-                    vectorDataSource,
-                    dataSource: hillshadeDatasource,
-                    rasterDataSource
-                }
-            });
-        } catch (err) {
-            showError(err);
-        }
-    }
-    async function open3DMap() {
-        try {
-            const geometry = item.geometry as Point;
-            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-            if (!position.altitude) {
-                position.altitude = item.properties.ele || (await packageService.getElevation(position));
-            }
-            // const { default: component } = await import('~/components/PeakFinder.svelte');
-            const component = (await import('~/components/3d/3DMap.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    position,
-                    pitch: 70,
-                    zoom: 13,
-                    bearing: mapContext.getMap().camera().rotation()
-                }
-            });
-        } catch (err) {
-            showError(err);
-        }
-    }
     async function openCompass() {
         try {
             const selected = mapContext.getSelectedItem();

@@ -2922,6 +2922,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nativescript-community/ui-cameraview@npm:0.7.0":
+  version: 0.7.0
+  resolution: "@nativescript-community/ui-cameraview@npm:0.7.0"
+  checksum: 10/45514350b0f66a0ccb0d553024a318e67a48f0fc1ba10822e855208a883b014c434d7e86473719610788f031a182df6bae817ca249f8129327404381c0f79378
+  languageName: node
+  linkType: hard
+
 "@nativescript-community/ui-canvas@npm:4.6.52, @nativescript-community/ui-canvas@npm:^4.6.46, @nativescript-community/ui-canvas@npm:^4.6.52":
   version: 4.6.52
   resolution: "@nativescript-community/ui-canvas@npm:4.6.52"
@@ -14746,6 +14753,7 @@ __metadata:
     "@nativescript-community/svelte-native": "npm:1.0.32"
     "@nativescript-community/systemui": "npm:1.1.25"
     "@nativescript-community/text": "npm:1.6.25"
+    "@nativescript-community/ui-cameraview": "npm:0.7.0"
     "@nativescript-community/ui-canvas": "npm:4.6.52"
     "@nativescript-community/ui-canvaslabel": "npm:1.2.55"
     "@nativescript-community/ui-chart": "npm:2.0.30"
