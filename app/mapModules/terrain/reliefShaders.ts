@@ -5,23 +5,21 @@
  * shader with `vec4 surfaceColor()`, and a full-screen `PostProcessEffect` with an offscreen colour
  * buffer plus the packed terrain depth — and the application decides what the map looks like.
  *
- * Started from the SDK demo's shaders (`integrations/nativescript/demo-snippets/svelte/common/
- * shaders.ts`) and then moved towards the render of THIS app's web peak finder (`geo-three/webapp`),
- * which is the picture users already know. The two differ in ways worth writing down, because they
- * are not obvious from either source alone:
+ * Ported VERBATIM from the android demo (`scripts/android-dev/.../demo/DemoStyles.java`,
+ * `reliefSurfaceShader` / `reliefOutlineShader`) — the peak finder is meant to look exactly like it.
+ * Two places where that source differs from the plugin's `demo-snippets` copy, which is a revision
+ * behind and was what this file started from:
  *
- *  1. The web draws NO SHADED SURFACE. `MaterialHeightShader.ts:622` returns a fully transparent
- *     fragment unless `drawTexture` is on, and `app.ts:849` leaves it off for the shipped defaults.
- *     So the web picture is ink on blank paper — `shadows: true` in its settings never shows,
- *     because there is no lit surface for a shadow to fall on. Hence PAPER_SURFACE_SHADER, and
- *     hence `peakFinderLinesOnly` defaulting to true.
- *  2. The web inks BOTH sides of a depth break and lifts weak differences with a fractional
- *     exponent; the demo inks only the nearer side and thresholds weak ones away. Both are in the
- *     outline shader below, chosen by `uSymmetric`.
- *  3. The web reads a full-resolution scene depth buffer. The SDK hands this effect a HALF
- *     resolution terrain depth with nearest filtering, which is why the step is floored at
- *     `uDepthTexelSize`. Distant hairlines are therefore coarser than the web's, and no amount of
- *     parameter tuning changes that — it needs full-res terrain depth from the SDK.
+ *  - the surface shader does NOT apply fog. The SDK applies the frame's own fog to whatever
+ *    `surfaceColor()` returns, so the snippet's extra `mix(color, u_fogColor, fogAmount(v_dist))`
+ *    applied it twice and washed the near ground out.
+ *  - there is no symmetric / gamma-lifted depth path. The silhouette test is one-sided on purpose:
+ *    testing the absolute difference draws every ridge TWICE, once on each side, which merges into a
+ *    smear at the horizon.
+ *
+ * The one thing no parameter can change: this effect reads a HALF resolution terrain depth with
+ * nearest filtering (`TerrainRenderer::BUFFER_DOWNSCALE`), which is why the sampling step below is
+ * floored at `uDepthTexelSize`.
  *
  * What a surface shader may read (redeclaring any of them is a compile error, and a shader that
  * fails to compile is silently dropped):
@@ -59,11 +57,18 @@ export function reliefPalette(dark: boolean): ReliefPalette {
     return dark ? RELIEF_PALETTE.dark : RELIEF_PALETTE.light;
 }
 
-/** Surface knobs with no setting of their own — the look, not a taste. */
+/**
+ * Knobs with no setting of their own, straight from `DemoConfig`: the look, not a taste.
+ *
+ * `uIntensity` is the demo's constant 1.0, and `depthTexelSize` / `grazingFloor` describe the depth
+ * buffer rather than the style, so none of the three belong in the settings sheet.
+ */
 export const RELIEF_DEFAULTS = {
+    /** RELIEF_AMBIENT: light left on a slope facing away from the sun. */
     ambient: 0.35,
+    /** RELIEF_HAZE_DISTANCE, metres. */
     hazeDistance: 60000,
-    /** Silhouette sensitivity of the demo's asymmetric path. */
+    /** RELIEF_DEPTH_THRESHOLD: silhouette sensitivity. */
     depthThreshold: 1,
     /** The depth texture is half resolution, so a narrower step samples the same texel twice. */
     depthTexelSize: 2,
@@ -72,23 +77,11 @@ export const RELIEF_DEFAULTS = {
 };
 
 /**
- * The web peak finder's surface: none at all.
+ * The shaded relief the ink lines are drawn over: Lambert shading between a paper and a shade colour,
+ * with the distance pulling everything back towards the paper — so a panorama reads as a stack of ever
+ * paler ridges.
  *
- * Flat paper rather than a transparent fragment, because in this SDK the terrain surface is what the
- * sky is seen against — returning alpha 0 shows the sky THROUGH the mountains. The fog is still
- * mixed in, so the aerial perspective that makes a panorama read as receding ridges survives.
- * Uniforms: uPaperColor.
- */
-export const PAPER_SURFACE_SHADER = `
-uniform vec4 uPaperColor;
-vec4 surfaceColor() {
-    return vec4(mix(uPaperColor.rgb, u_fogColor.rgb, fogAmount(v_dist)), 1.0);
-}`;
-
-/**
- * The demo's shaded relief: Lambert shading between a paper and a shade colour, the distance pulling
- * everything back towards the paper, and the resolved fog on top — so a panorama reads as a stack of
- * ever paler ridges. The nicer picture in some light, which is why it is kept beside the web look.
+ * No fog term: the SDK applies the frame's own fog to whatever this returns.
  * Uniforms: uPaperColor, uShadeColor, uShadeStrength, uAmbient, uHaze, uHazeDistance.
  */
 export const RELIEF_SURFACE_SHADER = `
@@ -104,29 +97,16 @@ vec4 surfaceColor() {
     float light = mix(uAmbient, 1.0, lambert);
     vec3 color = mix(uShadeColor.rgb, uPaperColor.rgb, clamp(1.0 - uShadeStrength * (1.0 - light), 0.0, 1.0));
     color = mix(color, uPaperColor.rgb, clamp(v_dist / max(uHazeDistance, 1.0), 0.0, 1.0) * uHaze);
-    color = mix(color, u_fogColor.rgb, fogAmount(v_dist));
     return vec4(color, 1.0);
 }`;
 
 /**
  * The ridge lines: silhouettes and creases reconstructed from the packed terrain depth the renderer
- * hands the effect. Without this the surface is a flat wash — this is the whole picture in lines-only
- * mode. Needs `terrainDepthRequired = true`.
- *
- * Carries BOTH depth models, because the app's own web version and the SDK demo disagree:
- *
- *   uSymmetric = 1  the web's. Sum of |Δdepth| over the four neighbours, scaled by uDepthGain and
- *                   then raised to uDepthBias — an exponent BELOW 1, which lifts weak differences
- *                   hard and is what keeps far ridges drawing continuous hairlines. Ink lands on
- *                   both sides of a break, giving the soft double line the web has.
- *   uSymmetric = 0  the demo's. Only a neighbour FURTHER away counts, so the line belongs to the
- *                   nearer side of a break, and a relative smoothstep threshold drops weak
- *                   differences. Crisper, and it needs uDistanceFade below 1 to keep the horizon
- *                   the boldest line.
+ * hands the effect. Without this the shaded surface is a grey wash, which is what makes it look like
+ * the mode did not come on at all. Needs `terrainDepthRequired = true`.
  *
  * Uniforms: uIntensity, uOutlineWidth, uHorizonBoost, uDepthThreshold, uCreaseStrength,
- * uDepthTexelSize, uGrazingFloor, uDistanceFade, uHaze, uSymmetric, uDepthGain, uDepthBias,
- * uInkColor, uPaperColor.
+ * uDepthTexelSize, uGrazingFloor, uDistanceFade, uHaze, uInkColor, uPaperColor.
  */
 export const RELIEF_OUTLINE_SHADER = `#version 100
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -149,9 +129,6 @@ uniform float uDepthTexelSize;
 uniform float uGrazingFloor;
 uniform float uDistanceFade;
 uniform float uHaze;
-uniform float uSymmetric;
-uniform float uDepthGain;
-uniform float uDepthBias;
 uniform vec4 uInkColor;
 uniform vec4 uPaperColor;
 
@@ -204,26 +181,17 @@ void main(void) {
         grazing = abs(dot(normalize(-p0), surfaceNormal));
     }
 
-    // How much of a line this pixel is on, by whichever of the two models is selected.
-    float edge;
-    // Coverage of the four neighbours: outside the terrain there is no depth to difference against,
-    // and reading the far plane as a depth break rings the whole silhouette twice.
-    float cover = min(min(cx0.a, cx1.a), min(cy0.a, cy1.a)) * c0.a;
-    if (uSymmetric > 0.5) {
-        // The web's: symmetric, gain, then a gamma BELOW 1 that lifts the weak differences.
-        float diff = abs(d0 - dx0) + abs(d0 - dx1) + abs(d0 - dy0) + abs(d0 - dy1);
-        edge = clamp(pow(clamp(diff * uDepthGain, 0.0, 1.0), uDepthBias), 0.0, 1.0) * cover;
-    } else {
-        // The demo's: only a neighbour FURTHER away counts, so the line belongs to the nearer side of
-        // a break. The threshold is relative to the depth, or the far half of the view draws no line
-        // at all - and it is relaxed where the surface is seen EDGE-ON, because there the depth runs
-        // away between neighbouring pixels without anything being in front of anything.
-        float behind = max(max(dx0 - d0, dx1 - d0), max(dy0 - d0, dy1 - d0));
-        float threshold = uDepthThreshold * (0.0008 + 0.02 * d0) / max(grazing, uGrazingFloor);
-        edge = smoothstep(threshold, threshold * 2.0, behind);
-    }
-    // Terrain-against-terrain lines fade with distance so the horizon is the boldest line. At 1 this
-    // is the web, which does not fade them.
+    // Silhouette: the line belongs to the NEARER side of a depth break, so only a neighbour FURTHER
+    // away counts. Testing the absolute difference draws the same ridge twice, once on each side,
+    // which at the horizon merges into a smear. The threshold is relative to the depth, or the far
+    // half of the view draws no line at all - and it is relaxed where the surface is seen EDGE-ON,
+    // because there the depth runs away between neighbouring pixels without anything being in front
+    // of anything: flat ground at its own horizon drew a solid black band.
+    float behind = max(max(dx0 - d0, dx1 - d0), max(dy0 - d0, dy1 - d0));
+    float threshold = uDepthThreshold * (0.0008 + 0.02 * d0) / max(grazing, uGrazingFloor);
+    float edge = smoothstep(threshold, threshold * 2.0, behind);
+    // Terrain-against-terrain lines fade with distance so that the horizon - the sky silhouette
+    // below, which does not fade - is the boldest line in the frame.
     edge *= mix(1.0, uDistanceFade, d0);
     // ...and terrain against the sky always is one (coverage, not depth: a sky pixel is at the far
     // plane, which a relative threshold would forgive and a difference would saturate).
@@ -234,7 +202,8 @@ void main(void) {
 
     // Ridges and valleys: the two tangent directions away from this pixel point straight apart on a
     // flat surface (dot -1) and fold together over a crest. Done on eye positions rather than on
-    // depth, so a merely oblique slope does not read as a fold. Off at 0, which is the web.
+    // depth, so a merely oblique slope - which is most of a panorama - does not read as a fold.
+    float cover = min(min(cx0.a, cx1.a), min(cy0.a, cy1.a)) * c0.a;
     if (uCreaseStrength > 0.0 && cover > 0.0) {
         float fold = 0.0;
         if (length(tx0) > minLength && length(tx1) > minLength) {

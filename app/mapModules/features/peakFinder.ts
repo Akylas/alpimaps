@@ -11,7 +11,7 @@ import { ensureTerrain, is3D, setTerrain3DImmediate } from '~/mapModules/feature
 import type { AddedLayer } from '~/mapModules/layerStack';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
-import { PAPER_SURFACE_SHADER, RELIEF_DEFAULTS, RELIEF_OUTLINE_SHADER, RELIEF_SURFACE_SHADER, reliefPalette } from '~/mapModules/terrain/reliefShaders';
+import { RELIEF_DEFAULTS, RELIEF_OUTLINE_SHADER, RELIEF_SURFACE_SHADER, reliefPalette } from '~/mapModules/terrain/reliefShaders';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
 import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
@@ -20,8 +20,6 @@ import {
     peakFinderArActive,
     peakFinderCreaseStrength,
     peakFinderDark,
-    peakFinderDepthBias,
-    peakFinderDepthGain,
     peakFinderDistanceFade,
     peakFinderElevation,
     peakFinderEnabled,
@@ -37,17 +35,16 @@ import {
     peakFinderLabelMaxDistance,
     peakFinderLabelPinTop,
     peakFinderLabelRows,
-    peakFinderLinesOnly,
     peakFinderOcclusion,
-    peakFinderOutlineSymmetric,
     peakFinderOutlineWidth,
+    peakFinderScreenOrientation,
     peakFinderSelectedPeak,
     peakFinderShadeStrength,
     peakFinderTilt,
     peakFinderViewDistance
 } from '~/stores/terrainStore';
 import { type MapPos, TO_RAD, bearingBetween, computeDistanceBetween, fromPosition, toPosition } from '~/utils/geo';
-import { lockLandscape, unlockOrientation } from '~/utils/orientation';
+import { lockOrientation } from '~/utils/orientation';
 
 /**
  * The peak finder, as a MODE of the live map rather than a screen of its own.
@@ -65,8 +62,9 @@ import { lockLandscape, unlockOrientation } from '~/utils/orientation';
  * Entering is ONE flight: the camera flies to the item at the panorama's zoom and tilt while the
  * viewpoint climbs, and the terrain, the relief and the names come up on the same clock.
  *
- * Modelled on the native demo (`DemoMap.flyToPeakFinder` / `setPeakFinderMode` / `setArMode`), with
- * the LOOK aimed at this app's own web version — see `terrain/reliefShaders.ts`.
+ * Modelled on the android demo (`DemoMap.flyToPeakFinder` / `setPeakFinderMode` / `setArMode`) down to
+ * its defaults, and the shaders are that demo's verbatim — the mode is meant to look exactly like it.
+ * See `terrain/reliefShaders.ts` and `stores/terrainStore.ts`.
  */
 
 const PEAKS_LAYER_ID = 'layer.peaks';
@@ -241,27 +239,26 @@ function rebuildPeaksLayer() {
 // --- the relief look -------------------------------------------------------------------------
 
 /**
- * The shaded (or flat) terrain surface.
+ * The shaded terrain surface the ink lines are drawn over.
  *
- * The shader SOURCE is a facade property; its parameters are not — the surface API has no method
- * table for `TerrainOptions` — so the uniforms go through the object API on the view.
+ * The shader SOURCE is a facade property; its parameters are not — the surface API has no method table
+ * for `TerrainOptions` — so the uniforms go through the object API on the view. The parameters are
+ * written whether or not the shader is attached, exactly as the demo's `applyReliefSurface` does: they
+ * are cheap, and it keeps the two calls from having to agree about order.
  */
 function applyReliefSurface() {
     const terrainOptions = mapContext().getMapView()?.getTerrainOptions();
     const colors = palette();
-    const linesOnly = get(peakFinderLinesOnly);
-    terrain().set('surfaceShaderSource', linesOnly ? PAPER_SURFACE_SHADER : RELIEF_SURFACE_SHADER);
+    terrain().set('surfaceShaderSource', RELIEF_SURFACE_SHADER);
     if (!terrainOptions) {
         return;
     }
     terrainOptions.setSurfaceColorParameter('uPaperColor', colors.paper);
-    if (!linesOnly) {
-        terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
-        terrainOptions.setSurfaceParameter('uShadeStrength', get(peakFinderShadeStrength));
-        terrainOptions.setSurfaceParameter('uAmbient', RELIEF_DEFAULTS.ambient);
-        terrainOptions.setSurfaceParameter('uHaze', get(peakFinderHaze));
-        terrainOptions.setSurfaceParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
-    }
+    terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
+    terrainOptions.setSurfaceParameter('uShadeStrength', get(peakFinderShadeStrength));
+    terrainOptions.setSurfaceParameter('uAmbient', RELIEF_DEFAULTS.ambient);
+    terrainOptions.setSurfaceParameter('uHaze', get(peakFinderHaze));
+    terrainOptions.setSurfaceParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
 }
 
 function clearReliefSurface() {
@@ -298,10 +295,6 @@ function applyReliefOutline() {
     effect.setFloatParameter('uDepthTexelSize', RELIEF_DEFAULTS.depthTexelSize);
     effect.setFloatParameter('uGrazingFloor', RELIEF_DEFAULTS.grazingFloor);
     effect.setFloatParameter('uDistanceFade', get(peakFinderDistanceFade));
-    // The two that pick the web's depth model over the demo's.
-    effect.setFloatParameter('uSymmetric', get(peakFinderOutlineSymmetric) ? 1 : 0);
-    effect.setFloatParameter('uDepthGain', get(peakFinderDepthGain));
-    effect.setFloatParameter('uDepthBias', get(peakFinderDepthBias));
     effect.setColorParameter('uInkColor', colors.ink);
     effect.setColorParameter('uPaperColor', colors.paper);
     view.setPostProcessEffect(effect);
@@ -312,22 +305,25 @@ function clearReliefOutline() {
     effect = null;
 }
 
-/** In the relief view the sky is part of the palette: a light one over the paper, a night one over
- *  the ink. The fog is long, and the paper's colour, so the panorama fades into the page. */
+/**
+ * In the relief view the sky is part of the palette: a light one over the paper, a night one over the
+ * ink. This is the demo's `applySkyOptions` relief branch and nothing more.
+ *
+ * No FOG, deliberately. The demo's peak finder leaves `FogOptions` alone (`FOG_ENABLED` is false), and
+ * the surface shader already pulls the distance back towards the paper through `uHaze` — a long paper
+ * fog on top of that was a guess from an older port, and it flattened the far ranges.
+ *
+ * The sky's own SHADER is cleared: a generated day-cycle shader owns the sky's colours, and while one
+ * is attached the palette's sky is not visible at all.
+ */
 function applyAtmosphere() {
     const map = mapContext().getMap();
     const colors = palette();
     const transparent = get(peakFinderArActive);
     map.sky({ type: 'sky' }).apply({
         enabled: !transparent,
-        skyColor: argb(colors.sky),
-        horizonColor: argb(colors.paper)
-    });
-    map.fog({ type: 'fog' }).apply({
-        enabled: true,
-        rangeStart: 20000,
-        rangeEnd: 120000,
-        color: argb(colors.paper)
+        shaderSource: '',
+        skyColor: argb(colors.sky)
     });
     // A fully transparent clear colour turns the frame into a hole, which is what the camera preview
     // behind it shows through.
@@ -450,7 +446,7 @@ export const enterPeakFinder = tryCatchFunction(async (item: IItem) => {
     applyReliefOutline();
     applyAtmosphere();
     buildPeaksLayer();
-    lockLandscape();
+    lockOrientation(get(peakFinderScreenOrientation));
 
     // The flight. `climbHeight` is what makes the viewpoint rise over the way there like a plane
     // instead of straight to its final elevation.
@@ -493,17 +489,17 @@ export const exitPeakFinder = tryCatchFunction(async () => {
         viewDistanceFactor: saved.viewDistanceFactor
     });
     map?.sky().set('enabled', saved.skyEnabled);
-    map?.fog().set('enabled', false);
     map?.set('skyColor', saved.mapSkyColor);
     map?.set('clearColor', saved.clearColor);
 
     // The layers come back before the camera moves, so the map is not empty during the flight out.
     saved.layers.forEach((added) => mapContext().addLayer(added.layer, added.layerId));
 
-    // Back to the ground, and to a top-down camera unless 3D was already on when we came in.
+    // Back to the ground, and to a top-down camera unless 3D was already on when we came in. Half the
+    // fly-in's duration: coming back is not the part worth watching.
     const here = fromPosition(camera().position());
     camera()
-        .animate(600)
+        .animate(get(peakFinderFlyDuration) * 500)
         .moveTo(toPosition({ lat: here.lat, lon: here.lon }), { tilt: saved.was3D ? saved.tilt : TILT_2D });
     if (!saved.was3D) {
         setTerrain3DImmediate(false);
@@ -511,7 +507,7 @@ export const exitPeakFinder = tryCatchFunction(async () => {
 
     peakFinderElevation.set(0);
     viewpoint = null;
-    unlockOrientation();
+    lockOrientation('auto');
     saved = null;
 });
 
@@ -659,15 +655,11 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
 }
 
 applyLive(peakFinderDark, applyPalette);
-applyLive(peakFinderLinesOnly, applyReliefSurface);
 applyLive(peakFinderShadeStrength, applyReliefSurface);
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
 applyLive(peakFinderCreaseStrength, applyReliefOutline);
 applyLive(peakFinderDistanceFade, applyReliefOutline);
-applyLive(peakFinderOutlineSymmetric, applyReliefOutline);
-applyLive(peakFinderDepthGain, applyReliefOutline);
-applyLive(peakFinderDepthBias, applyReliefOutline);
 applyLive(peakFinderHaze, () => {
     applyReliefSurface();
     applyReliefOutline();
@@ -680,6 +672,8 @@ applyLive(peakFinderLabelBand, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
 applyLive(peakFinderLabelRows, rebuildPeaksLayer);
 applyLive(peakFinderLabelMaxDistance, rebuildPeaksLayer);
+// Changed from the settings sheet while the panorama is up: turn now rather than on the next entry.
+applyLive(peakFinderScreenOrientation, () => lockOrientation(get(peakFinderScreenOrientation)));
 // AR turns the sky and the clear colour into a hole for the camera preview to show through, and takes
 // over the tilt as well as the rotation — a panorama held up at the sky has to be able to look up.
 applyLive(peakFinderArActive, () => {
