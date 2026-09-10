@@ -10,6 +10,10 @@ import { registerMapModule } from '~/mapModules/registry';
 import { packageService } from '~/services/PackageService';
 import {
     TERRAIN_AUTO_FLATTEN_TILT,
+    TERRAIN_DRAPE_RESOLUTION,
+    TERRAIN_MAX_TILE_ZOOM_COARSENING,
+    TERRAIN_NO_DRAPE_FILTER,
+    TERRAIN_TILE_WAIT_TIMEOUT_MS,
     terrain3dActive,
     terrain3dEnabled,
     terrain3dTilt,
@@ -18,6 +22,7 @@ import {
     terrainExaggeration,
     terrainFlattenModeFull,
     terrainFog,
+    terrainLighting,
     terrainMeshResolution,
     terrainSky,
     terrainSwitchDuration,
@@ -105,7 +110,20 @@ export function ensureTerrain(): boolean {
         exaggeration: get(terrainExaggeration),
         meshResolution: get(terrainMeshResolution),
         viewDistanceFactor: get(terrainViewDistanceFactor),
-        cameraClearance: get(terrainCameraClearance)
+        cameraClearance: get(terrainCameraClearance),
+        // Which style layers are drawn LIVE instead of being baked into the drape texture. Contours
+        // have to be: a baked contour survives in the drape tiles that are already cached, so it stays
+        // on screen after a zoom out past the level the style stops drawing it at.
+        noDrapeLayerFilter: TERRAIN_NO_DRAPE_FILTER,
+        drapeFillsEnabled: true,
+        drapeLinesEnabled: true,
+        drapeResolution: TERRAIN_DRAPE_RESOLUTION,
+        maxTileZoomCoarsening: TERRAIN_MAX_TILE_ZOOM_COARSENING,
+        // Occlusion is on for the whole map, as in the demo; only the TOLERANCE is a mode's business.
+        billboardOcclusionEnabled: true,
+        tileEdgeStitchingEnabled: true,
+        seamlessTileEdgesEnabled: true,
+        elevationPrefetchEnabled: true
     });
     terrainAttached = true;
     attachedSourceId = source.id;
@@ -140,17 +158,24 @@ export function setTerrain3DImmediate(on: boolean): boolean {
 }
 
 /**
- * Waits for the terrain to finish loading the tiles 3D needs, then runs `then`.
+ * Waits for the terrain to finish loading the tiles 3D needs, then runs `then` — but never for longer
+ * than `TERRAIN_TILE_WAIT_TIMEOUT_MS`.
  *
  * Rising has something to wait for and sinking does not: driving the ratio up before the switch stops
  * holding the ground flat is held anyway, and the animation then starts with a jump.
+ *
+ * The DEADLINE is not a safety net, it is load-bearing. `switching` does not always come back down —
+ * with `flattenMode` FULL a switch re-decodes every visible tile, and when they are already decoded
+ * for the terrain (switching back and forth) there is nothing left to finish and the flag can sit
+ * true. Waiting on it unconditionally is what made a FULL switch hang. Same value and same reason as
+ * the demo's `TERRAIN_ANIM_TILE_TIMEOUT_MS`.
  */
-function whenTilesReady(then: () => void) {
-    if (terrain()?.get('switching') !== true) {
+function whenTilesReady(then: () => void, deadline = Date.now() + TERRAIN_TILE_WAIT_TIMEOUT_MS) {
+    if (terrain()?.get('switching') !== true || Date.now() >= deadline) {
         then();
         return;
     }
-    rampTimer = setTimeout(() => whenTilesReady(then), TICK_MS);
+    rampTimer = setTimeout(() => whenTilesReady(then, deadline), TICK_MS);
 }
 
 function stopRamp() {
@@ -161,8 +186,17 @@ function stopRamp() {
     switching = false;
 }
 
-/** The sky, fog and terrain lighting that make 3D read as 3D. A short view distance without fog ends
- *  the ground on a hard edge, which is why they are switched together. */
+/**
+ * The sky, the fog and the terrain lighting that go with 3D.
+ *
+ * All three are OFF by default, which is what the demo ships (`FOG_ENABLED` and `TERRAIN_LIGHTING` are
+ * both false) — only the sky is on. Terrain lighting in particular is not something the switch should
+ * turn on behind the user's back: it lights and SHADOWS the mesh, which is a real cost and a different
+ * picture, and shading the ground is not what makes a map read as 3D.
+ *
+ * A short view distance with fog off ends the ground on a hard edge, which is the one reason to want
+ * the fog — hence the setting rather than a constant.
+ */
 function applyAtmosphere(on: boolean) {
     const map = getMapContext().getMap();
     if (!map) {
@@ -170,7 +204,7 @@ function applyAtmosphere(on: boolean) {
     }
     map.sky({ type: 'sky' }).set('enabled', on && get(terrainSky));
     map.fog({ type: 'fog' }).apply({ enabled: on && get(terrainFog), rangeStart: 2.2, rangeEnd: 8 });
-    map.light({ type: 'light' }).set('terrainLightingEnabled', on);
+    map.light({ type: 'light' }).set('terrainLightingEnabled', on && get(terrainLighting));
 }
 
 /**
@@ -324,6 +358,7 @@ applyLive(terrainAutoFlattenByTilt, (value) => terrain().set('autoFlattenTilt', 
 // Only meaningful while 3D is up, and `applyAtmosphere` is what decides that.
 applyLive(terrainSky, () => applyAtmosphere(is3D()));
 applyLive(terrainFog, () => applyAtmosphere(is3D()));
+applyLive(terrainLighting, () => applyAtmosphere(is3D()));
 
 registerMapModule('terrain3d', { onMapDestroyed, onTerrainSourceChanged });
 

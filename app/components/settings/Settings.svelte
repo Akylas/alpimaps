@@ -21,8 +21,6 @@
     import {
         peakFinderCreaseStrength,
         peakFinderDark,
-        peakFinderDepthBias,
-        peakFinderDepthGain,
         peakFinderDistanceFade,
         peakFinderEnabled,
         peakFinderFlyElevation,
@@ -33,10 +31,10 @@
         peakFinderLabelMaxDistance,
         peakFinderLabelPinTop,
         peakFinderLabelRows,
-        peakFinderLinesOnly,
         peakFinderOcclusion,
-        peakFinderOutlineSymmetric,
         peakFinderOutlineWidth,
+        peakFinderScreenOrientation,
+        peakFinderShadeStrength,
         peakFinderTilt,
         peakFinderViewDistance,
         terrain3dEnabled,
@@ -46,6 +44,7 @@
         terrainExaggeration,
         terrainFlattenModeFull,
         terrainFog,
+        terrainLighting,
         terrainMeshResolution,
         terrainSky,
         terrainSwitchDuration,
@@ -418,29 +417,43 @@
                     storeSlider(terrainExaggeration, lc('exageration'), 0.5, 3, 0.05, (value) => `${value.toFixed(2)}×`),
                     storeSlider(terrainMeshResolution, lc('mesh_resolution'), 16, 256, 16),
                     storeSlider(terrainViewDistanceFactor, lc('view_distance_factor'), 0.5, 6, 0.1, (value) => `${value.toFixed(1)}×`),
-                    storeSlider(terrainCameraClearance, lc('camera_clearance'), 10, 400, 10, formatDistance),
+                    // from 0, which disables the clamp entirely — the demo's default
+                    storeSlider(terrainCameraClearance, lc('camera_clearance'), 0, 400, 10, formatDistance),
                     storeSlider(terrainSwitchDuration, lc('switch_duration'), 0, 6, 0.1, (value) => `${value.toFixed(1)} s`),
                     storeSlider(terrain3dTilt, lc('threed_tilt'), 5, 80, 1, (value) => `${Math.round(value)}°`),
                     storeSwitch(terrainFlattenModeFull, lc('threed_flatten_mode_full'), lc('threed_flatten_mode_full_desc')),
                     storeSwitch(terrainAutoFlattenByTilt, lc('auto_3d_by_tilt'), lc('auto_3d_by_tilt_desc')),
                     storeSwitch(terrainSky, lc('sky')),
-                    storeSwitch(terrainFog, lc('fog'))
+                    storeSwitch(terrainFog, lc('fog'), lc('terrain_fog_desc')),
+                    storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc'))
                 ];
             case 'peak_finder':
                 return [
                     storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')),
                     storeSwitch(peakFinderDark, lc('dark_mode')),
+                    {
+                        id: 'setting',
+                        key: 'peakFinderScreenOrientation',
+                        title: lc('screen_orientation'),
+                        description: lc('screen_orientation_desc'),
+                        store: peakFinderScreenOrientation,
+                        valueType: 'string',
+                        currentValue: () => get(peakFinderScreenOrientation),
+                        rightValue: () => lc(get(peakFinderScreenOrientation)),
+                        values: [
+                            { title: lc('auto'), value: 'auto' },
+                            { title: lc('landscape'), value: 'landscape' },
+                            { title: lc('portrait'), value: 'portrait' }
+                        ]
+                    },
                     storeSlider(peakFinderTilt, lc('tilt'), 1, 80, 1, (value) => `${Math.round(value)}°`),
                     storeSlider(peakFinderFlyElevation, lc('viewpoint_elevation'), 0, 6000, 50, formatDistance),
                     storeSlider(peakFinderViewDistance, lc('view_distance_factor'), 0.5, 6, 0.5, (value) => `${value.toFixed(1)}×`),
                     storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
-                    // The render. Defaults match the WebView peak finder rather than the SDK demo — see
-                    // ~/mapModules/terrain/reliefShaders.ts for what each of these does.
-                    storeSwitch(peakFinderLinesOnly, lc('lines_only'), lc('lines_only_desc')),
-                    storeSwitch(peakFinderOutlineSymmetric, lc('outline_symmetric'), lc('outline_symmetric_desc')),
+                    // The relief. Every default is the android demo's, and the shaders are its own —
+                    // see ~/mapModules/terrain/reliefShaders.ts.
+                    storeSlider(peakFinderShadeStrength, lc('shade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderDepthGain, lc('depth_gain'), 1, 40, 0.5, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderDepthBias, lc('depth_biais'), 0.05, 2, 0.01, (value) => value.toFixed(2)),
                     storeSlider(peakFinderDistanceFade, lc('distance_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.1, (value) => value.toFixed(1)),
                     storeSlider(peakFinderCreaseStrength, lc('crease_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),

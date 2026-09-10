@@ -19,30 +19,67 @@ export const terrain3dEnabled = settingsStore('terrain3dEnabled', true);
 export const peakFinderEnabled = settingsStore('peakFinderEnabled', true);
 
 // --- 3D terrain mode --------------------------------------------------------------------------
+//
+// Every default is the android demo's (`DemoConfig.TERRAIN_*`), because that is the render this is
+// meant to reproduce. Where the demo and the SDK disagree the demo wins — its mesh resolution of 64
+// is tangram's own, and 128 measured 8.5 fps against 15.2 on a Crosscall.
 export const terrainExaggeration = settingsStore('terrainExaggeration', 1);
-export const terrainMeshResolution = settingsStore('terrainMeshResolution', 128);
-/** How far the ground goes on, as a multiple of the camera-to-focus distance. Pair with fog. */
-export const terrainViewDistanceFactor = settingsStore('terrainViewDistanceFactor', 1.6);
-/** Metres the camera is held above the ground. The SDK's 200 swings a close view into a hillside. */
-export const terrainCameraClearance = settingsStore('terrainCameraClearance', 40);
+export const terrainMeshResolution = settingsStore('terrainMeshResolution', 64);
+/** How far the ground goes on, as a multiple of the camera-to-focus distance. */
+export const terrainViewDistanceFactor = settingsStore('terrainViewDistanceFactor', 1);
+/** Metres the camera is held above the ground. 0 disables the clamp, as the demo does. */
+export const terrainCameraClearance = settingsStore('terrainCameraClearance', 0);
 /** Seconds the 2D/3D switch takes — the camera flight and the ground's rise share this one number. */
-export const terrainSwitchDuration = settingsStore('terrainSwitchDuration', 2.5);
-/** FULL: a flat map costs nothing but re-decodes on each switch. RENDER: free switch, 3D's cost. */
-export const terrainFlattenModeFull = settingsStore('terrainFlattenModeFull', true);
+export const terrainSwitchDuration = settingsStore('terrainSwitchDuration', 0.7);
+/**
+ * FULL: a flat map decodes and culls as a plain 2D one, at the cost of a re-decode per switch.
+ * RENDER: only the terrain passes stop, so switching is free but flat still carries 3D's triangles.
+ *
+ * OFF, which is the demo's `TERRAIN_FULL_SWITCH`. FULL makes every switch wait on a full re-decode.
+ */
+export const terrainFlattenModeFull = settingsStore('terrainFlattenModeFull', false);
 export const terrainAutoFlattenByTilt = settingsStore('terrainAutoFlattenByTilt', false);
 /** In this SDK tilt 90 is straight down, so a landscape view is a LOW tilt. */
 export const terrain3dTilt = settingsStore('terrain3dTilt', 20);
 export const terrainSky = settingsStore('terrainSky', true);
-export const terrainFog = settingsStore('terrainFog', true);
+/** `FOG_ENABLED` is false in the demo: the fog values stay configured while the switch is off. */
+export const terrainFog = settingsStore('terrainFog', false);
+/**
+ * Terrain lighting, and with it the sun's shadows on the ground.
+ *
+ * OFF, as `TERRAIN_LIGHTING` is in the demo. It is a real cost and a real change of look — shading
+ * the mesh is not what makes a map read as 3D — so it is opt-in rather than something the switch
+ * turns on behind the user's back.
+ */
+export const terrainLighting = settingsStore('terrainLighting', false);
 
 /** The tilt the auto rule switches at. Not a setting: it is the rule's definition, not a taste. */
 export const TERRAIN_AUTO_FLATTEN_TILT = 88;
+/** Style layers kept OUT of the drape bake and drawn live (`TERRAIN_NO_DRAPE_FILTER`).
+ *  Contours MUST be in here: baked into a drape texture they survive in the tiles already cached, so
+ *  they stay on screen below the zoom the style stops drawing them at. */
+export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*';
+/** Per-tile drape texture resolution. 0 follows the screen and gets clamped to 512. */
+export const TERRAIN_DRAPE_RESOLUTION = 1024;
+/** How many zoom levels below the camera a tile may coarsen to (`TERRAIN_MAX_TILE_ZOOM_COARSENING`). */
+export const TERRAIN_MAX_TILE_ZOOM_COARSENING = 8;
+/**
+ * How long the switch waits for terrain-decoded tiles before ramping anyway, ms.
+ *
+ * There has to be a timeout: when every visible tile is ALREADY decoded for the terrain — switching
+ * back and forth — the wait never ends on its own, and the switch hangs. Same value and same reason
+ * as the demo's `TERRAIN_ANIM_TILE_TIMEOUT_MS`.
+ */
+export const TERRAIN_TILE_WAIT_TIMEOUT_MS = 2500;
 
 // --- peak finder: the view --------------------------------------------------------------------
+//
+// `DemoConfig.PEAK_FINDER_*`, except the flight duration.
 export const peakFinderTilt = settingsStore('peakFinderTilt', 25);
 export const peakFinderFlyElevation = settingsStore('peakFinderFlyElevation', 1000);
 export const peakFinderFlyZoom = settingsStore('peakFinderFlyZoom', 13.6);
-export const peakFinderFlyDuration = settingsStore('peakFinderFlyDuration', 3.5);
+/** Seconds. The demo's 3.5 is a demo: it shows the flight off. 1.2 gets out of the way. */
+export const peakFinderFlyDuration = settingsStore('peakFinderFlyDuration', 1.2);
 /** Extra height at the middle of the fly-in: the viewpoint climbs over the way there like a plane. */
 export const peakFinderFlyClimb = settingsStore('peakFinderFlyClimb', 1500);
 /**
@@ -58,27 +95,18 @@ export const peakFinderDark = settingsStore('peakFinderDark', false);
 
 // --- peak finder: the render ------------------------------------------------------------------
 //
-// See app/mapModules/terrain/reliefShaders.ts. The defaults here are the WEB peak finder's look, not
-// the native demo's: the web draws no shaded surface at all and inks both sides of every depth break
-// with a gamma-lifted difference, which is why linesOnly starts true and the demo's three
-// distance/horizon/crease terms start neutral.
-export const peakFinderLinesOnly = settingsStore('peakFinderLinesOnly', true);
-/** Only used when linesOnly is off: how far slopes go from paper towards the shade colour. */
+// `DemoConfig.RELIEF_*`, so the mode looks like the android demo out of the box. See
+// app/mapModules/terrain/reliefShaders.ts — the shaders themselves are that demo's, verbatim.
+/** How far the slopes go from the paper colour towards the shade colour. */
 export const peakFinderShadeStrength = settingsStore('peakFinderShadeStrength', 0.55);
+/** Base ink line width, px. */
 export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1.2);
-/** The web's `depthMultiplier`: how hard a depth difference counts before the gamma below. */
-export const peakFinderDepthGain = settingsStore('peakFinderDepthGain', 11);
-/** The web's `depthBiais`. BELOW 1 on purpose — it lifts weak differences, which is what keeps the
- *  far ranges drawing continuous hairlines instead of dropping out. */
-export const peakFinderDepthBias = settingsStore('peakFinderDepthBias', 0.23);
-/** Ink both sides of a break (the web) rather than only the nearer one (the demo). */
-export const peakFinderOutlineSymmetric = settingsStore('peakFinderOutlineSymmetric', true);
-/** 1 = no fade, the web behaviour. Below 1 fades far lines so the horizon reads as the boldest. */
-export const peakFinderDistanceFade = settingsStore('peakFinderDistanceFade', 1);
-/** Extra width for the sky silhouette. 0 = the web, which gives it none. */
-export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 0);
-/** Ridge/valley folds. 0 = the web, which has no crease term. */
-export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength', 0);
+/** How much terrain-against-terrain lines fade with distance, so the horizon stays the boldest. */
+export const peakFinderDistanceFade = settingsStore('peakFinderDistanceFade', 0.45);
+/** Extra width for the sky silhouette — the horizon line, the one drawn wide. */
+export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
+/** Strength of the ridge/valley fold lines. */
+export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength', 0.6);
 /** How much of the distance washes out towards the paper colour. */
 export const peakFinderHaze = settingsStore('peakFinderHaze', 0.7);
 
@@ -92,6 +120,16 @@ export const peakFinderLabelAngle = settingsStore('peakFinderLabelAngle', 55);
 export const peakFinderLabelRows = settingsStore('peakFinderLabelRows', 1);
 /** 0 = no limit. */
 export const peakFinderLabelMaxDistance = settingsStore('peakFinderLabelMaxDistance', 0);
+
+/**
+ * Which way up the panorama is held.
+ *
+ * `auto` leaves the orientation alone — the device decides, and the user's own rotation lock is
+ * respected. A panorama is a wide picture so landscape suits it, but forcing it is the kind of thing
+ * that annoys people holding a phone one-handed, hence `auto` rather than `landscape` by default.
+ */
+export type PeakFinderOrientation = 'auto' | 'landscape' | 'portrait';
+export const peakFinderScreenOrientation = settingsStore<PeakFinderOrientation>('peakFinderScreenOrientation', 'auto');
 
 // --- live state, deliberately NOT persisted ---------------------------------------------------
 //

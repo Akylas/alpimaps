@@ -16,6 +16,7 @@
         terrainExaggeration,
         terrainFlattenModeFull,
         terrainFog,
+        terrainLighting,
         terrainMeshResolution,
         terrainSky,
         terrainSwitchDuration,
@@ -41,6 +42,7 @@
         <StoreSwitch description={lc('threed_flatten_mode_full_desc')} store={terrainFlattenModeFull} title={lc('threed_flatten_mode_full')} />
         <StoreSwitch description={lc('auto_3d_by_tilt_desc')} store={terrainAutoFlattenByTilt} title={lc('auto_3d_by_tilt')} />
         <StoreSwitch store={terrainSky} title={lc('sky')} />
-        <StoreSwitch store={terrainFog} title={lc('fog')} />
+        <StoreSwitch description={lc('terrain_fog_desc')} store={terrainFog} title={lc('fog')} />
+        <StoreSwitch description={lc('terrain_lighting_desc')} store={terrainLighting} title={lc('terrain_lighting')} />
     </stacklayout>
 </scrollview>
