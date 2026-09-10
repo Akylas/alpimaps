@@ -11,6 +11,7 @@ import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
 import MapModule, { type MapDecoder, getMapContext } from '~/mapModules/MapModule';
+import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
 import { clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
@@ -1082,6 +1083,9 @@ export default class CustomLayersModule extends MapModule {
                 })
             );
         this.updateTerrainAttachment();
+        // The 3D mesh reads the same DEM as the hillshade, so it has to follow this: the source it was
+        // attached to may just have been replaced. Optional — the feature may not be registered.
+        getMapModule('terrain3d')?.onTerrainSourceChanged();
     }
 
     /**

@@ -3,6 +3,7 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifLayer, MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
@@ -42,6 +43,8 @@
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
+    import '~/mapModules/features/terrain3d';
+    import { exitPeakFinder } from '~/mapModules/features/peakFinder';
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
@@ -55,7 +58,8 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -78,6 +82,12 @@
     let page: NativeViewElementNode<Page>;
     let widgetsHolder: NativeViewElementNode<GridLayout>;
     let massifMap: MassifMap;
+    /**
+     * The plugin's own view, kept because the surface API deliberately has no verb for a couple of
+     * things — a terrain surface shader's parameters and a post-process effect are object-API only.
+     * Handed out through `mapContext.getMapView()` so callers do not have to cast `massifMap.view`.
+     */
+    let mapViewInstance: MassifMapView;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -140,6 +150,22 @@
         navigationViewComponent = navigationView.default;
         maneuverViewComponent = maneuverView.default;
         offRoutePanelComponent = offRoutePanel.default;
+    }
+    /**
+     * The peak finder's own chrome, loaded the first time the mode is entered and then kept — the map
+     * is the app's root component, so nothing that is only needed in a mode belongs on the startup path.
+     */
+    let peakFinderOverlayComponent = null;
+    async function loadPeakFinderOverlay() {
+        if (peakFinderOverlayComponent) {
+            return;
+        }
+        peakFinderOverlayComponent = (await import('~/components/peaks/PeakFinderOverlay.svelte')).default;
+    }
+    $: if ($peakFinderActive) {
+        loadPeakFinderOverlay();
+        // the mode owns the whole screen: an open item sheet would sit on top of the panorama
+        bottomSheetStepIndex = 0;
     }
     let topTranslationY;
     let networkConnected = false;
@@ -342,6 +368,7 @@
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => massifMap,
+            getMapView: () => mapViewInstance,
             getMainPage: () => page,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
@@ -451,7 +478,11 @@
                     return;
                 }
                 data.cancel = true;
-                if (searchView && searchView.hasFocus()) {
+                // First: the peak finder is a full-screen mode, so back means "leave it", not "leave
+                // the app" — and its chrome is hidden, so there is nothing else back could mean.
+                if ($peakFinderActive) {
+                    exitPeakFinder();
+                } else if (searchView && searchView.hasFocus()) {
                     searchView.unfocus();
                 } else if (directionsPanelVisible) {
                     directionsPanel.cancel();
@@ -521,6 +552,7 @@
     async function onMainMapReady(e) {
         try {
             // The whole map, through one handle: options, layers, camera and events.
+            mapViewInstance = e.object;
             massifMap = api.attach(e.object);
             api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
             mapContext.setMapDefaultOptions(massifMap);
@@ -1011,7 +1043,10 @@
     // `rotationGestures`, not `rotatable`: the latter is checked in CameraRotationEvent and stops
     // EVERY rotation, so the compass reset stopped working when the user turned rotation off
     $: massifMap?.set('rotationGestures', $rotateEnabled);
-    $: massifMap?.set('tiltRange', [$pitchEnabled ? 30 : 90, 90]);
+    // Derived rather than written here: the 3D and peak-finder modes have an opinion about this too,
+    // and this line could only see `pitchEnabled` — so toggling that setting while a mode was up put
+    // the range back and broke the mode. See mapTiltRange in stores/terrainStore.
+    $: massifMap?.set('tiltRange', $mapTiltRange);
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
     // the two sheets swap places: the item one steps aside while a route is being followed, and comes
@@ -1402,6 +1437,8 @@
     $: navigationTopOffset = $isNavigationRunning && (!!$navigationProgress?.instruction || !!$navigationProgress?.offRoute) ? Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
     $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
+    /** The peak finder is a full-screen mode: it brings its own controls and hides the map's. */
+    $: hideChromeForPeakFinder = $peakFinderActive;
 
     let scrollingWidgetsOpacity = 1;
     let mapTranslation = 0;
@@ -1861,6 +1898,12 @@
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
+        <!-- The peak finder's camera preview, UNDER the map: a translucent GL surface can only reveal
+             another surface below it, so this has to be a sibling that comes first, not part of the
+             overlay. `{#if}` rather than `visibility`, so no camera is held open outside the mode. -->
+        {#if $peakFinderArActive}
+            <cameraview />
+        {/if}
         <massifmap
             accessibilityLabel="massifMap"
             zoom={16}
@@ -1909,7 +1952,8 @@
                     horizontalAlignment="left"
                     marginLeft={5}
                     marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
-                    verticalAlignment="top" />
+                    verticalAlignment="top"
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
@@ -1918,7 +1962,7 @@
                     marginLeft={40}
                     marginTop={90 + navigationTopOffset}
                     verticalAlignment="top"
-                    visibility={$isNavigating ? 'collapse' : 'visible'} />
+                    visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -1927,7 +1971,7 @@
                     item={$selectedItem}
                     margin={10}
                     verticalAlignment="top"
-                    visibility={hideChromeForNavigation ? 'collapse' : 'visible'}
+                    visibility={hideChromeForNavigation || hideChromeForPeakFinder ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
                 {#if maneuverViewComponent}
                     <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
@@ -1952,7 +1996,7 @@
                     ios:marginTop={66 + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
-                    visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
+                    visibility={currentMapRotation !== 0 && !$peakFinderActive ? 'visible' : 'collapse'}
                     on:tap={resetBearing}>
                     <label class="mdi" color={colorPrimary} rotate={currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
                 </mdcardview>
@@ -1967,7 +2011,15 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} />
+                <MapScrollingWidgets
+                    bind:this={mapScrollingWidgets}
+                    isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    opacity={scrollingWidgetsOpacity}
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
+                <!-- the peak finder's own chrome, over the map and above every other widget -->
+                {#if peakFinderOverlayComponent}
+                    <svelte:component this={peakFinderOverlayComponent} style="z-index:1002;" visibility={$peakFinderActive ? 'visible' : 'collapse'} />
+                {/if}
                 <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
                      over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
                 <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">

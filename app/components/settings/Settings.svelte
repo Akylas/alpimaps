@@ -16,6 +16,41 @@
     import dayjs from 'dayjs';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
+    import { get } from 'svelte/store';
+    import type { SettingsStore } from '~/stores/settingsStore';
+    import {
+        peakFinderCreaseStrength,
+        peakFinderDark,
+        peakFinderDepthBias,
+        peakFinderDepthGain,
+        peakFinderDistanceFade,
+        peakFinderEnabled,
+        peakFinderFlyElevation,
+        peakFinderHaze,
+        peakFinderHorizonBoost,
+        peakFinderLabelAngle,
+        peakFinderLabelBand,
+        peakFinderLabelMaxDistance,
+        peakFinderLabelPinTop,
+        peakFinderLabelRows,
+        peakFinderLinesOnly,
+        peakFinderOcclusion,
+        peakFinderOutlineSymmetric,
+        peakFinderOutlineWidth,
+        peakFinderTilt,
+        peakFinderViewDistance,
+        terrain3dEnabled,
+        terrain3dTilt,
+        terrainAutoFlattenByTilt,
+        terrainCameraClearance,
+        terrainExaggeration,
+        terrainFlattenModeFull,
+        terrainFog,
+        terrainMeshResolution,
+        terrainSky,
+        terrainSwitchDuration,
+        terrainViewDistanceFactor
+    } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
@@ -112,6 +147,33 @@
                 save();
             }
         };
+    }
+
+    /**
+     * A slider row backed by a svelte store rather than by a raw `ApplicationSettings` key.
+     *
+     * The terrain and peak-finder values are read by the map modules through their stores, so writing
+     * the key behind their back would persist the value without anything acting on it. `BaseSettingsPage`
+     * writes `item.store` when there is one, which both persists and notifies.
+     */
+    function storeSlider(store: SettingsStore<number>, title: string, min: number, max: number, step: number, formatter?: (value: number) => string) {
+        return {
+            id: 'setting',
+            type: 'slider',
+            key: title,
+            title,
+            store,
+            min,
+            max,
+            step,
+            formatter,
+            valueFormatter: formatter,
+            currentValue: () => get(store),
+            rightValue: () => (formatter ? formatter(get(store)) : get(store) + '')
+        };
+    }
+    function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
+        return { type: 'switch', key: title, title, description, store, value: get(store) };
     }
 
     function getSubSettings(id: string): any[] {
@@ -350,6 +412,47 @@
                         return setting.formatter ? setting.formatter(value) : value + '';
                     }
                 }));
+            case 'terrain_3d':
+                return [
+                    storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')),
+                    storeSlider(terrainExaggeration, lc('exageration'), 0.5, 3, 0.05, (value) => `${value.toFixed(2)}×`),
+                    storeSlider(terrainMeshResolution, lc('mesh_resolution'), 16, 256, 16),
+                    storeSlider(terrainViewDistanceFactor, lc('view_distance_factor'), 0.5, 6, 0.1, (value) => `${value.toFixed(1)}×`),
+                    storeSlider(terrainCameraClearance, lc('camera_clearance'), 10, 400, 10, formatDistance),
+                    storeSlider(terrainSwitchDuration, lc('switch_duration'), 0, 6, 0.1, (value) => `${value.toFixed(1)} s`),
+                    storeSlider(terrain3dTilt, lc('threed_tilt'), 5, 80, 1, (value) => `${Math.round(value)}°`),
+                    storeSwitch(terrainFlattenModeFull, lc('threed_flatten_mode_full'), lc('threed_flatten_mode_full_desc')),
+                    storeSwitch(terrainAutoFlattenByTilt, lc('auto_3d_by_tilt'), lc('auto_3d_by_tilt_desc')),
+                    storeSwitch(terrainSky, lc('sky')),
+                    storeSwitch(terrainFog, lc('fog'))
+                ];
+            case 'peak_finder':
+                return [
+                    storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')),
+                    storeSwitch(peakFinderDark, lc('dark_mode')),
+                    storeSlider(peakFinderTilt, lc('tilt'), 1, 80, 1, (value) => `${Math.round(value)}°`),
+                    storeSlider(peakFinderFlyElevation, lc('viewpoint_elevation'), 0, 6000, 50, formatDistance),
+                    storeSlider(peakFinderViewDistance, lc('view_distance_factor'), 0.5, 6, 0.5, (value) => `${value.toFixed(1)}×`),
+                    storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
+                    // The render. Defaults match the WebView peak finder rather than the SDK demo — see
+                    // ~/mapModules/terrain/reliefShaders.ts for what each of these does.
+                    storeSwitch(peakFinderLinesOnly, lc('lines_only'), lc('lines_only_desc')),
+                    storeSwitch(peakFinderOutlineSymmetric, lc('outline_symmetric'), lc('outline_symmetric_desc')),
+                    storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderDepthGain, lc('depth_gain'), 1, 40, 0.5, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderDepthBias, lc('depth_biais'), 0.05, 2, 0.01, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderDistanceFade, lc('distance_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.1, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderCreaseStrength, lc('crease_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderHaze, lc('haze'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    // The summit labels. Each of these rebuilds the label decoder, which is why they are
+                    // grouped last: they are the expensive ones to drag.
+                    storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),
+                    storeSlider(peakFinderLabelBand, lc('label_band'), 0, 0.6, 0.05, (value) => `${Math.round(value * 100)}%`),
+                    storeSlider(peakFinderLabelAngle, lc('label_angle'), 0, 90, 5, (value) => `${Math.round(value)}°`),
+                    storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 4, 1),
+                    storeSlider(peakFinderLabelMaxDistance, lc('label_max_distance'), 0, 300000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value)))
+                ];
             case 'map_data':
                 return (
                     dataPathsAvailable
@@ -543,6 +646,20 @@
                         title: lc('map_data'),
                         description: lc('map_data_settings'),
                         options: () => getSubSettings('map_data')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-video-3d',
+                        title: lc('terrain_3d'),
+                        description: lc('terrain_3d_settings'),
+                        options: () => getSubSettings('terrain_3d')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-summit',
+                        title: lc('peak_finder'),
+                        description: lc('peak_finder_settings'),
+                        options: () => getSubSettings('peak_finder')
                     },
                     {
                         id: 'sub_settings',

@@ -2,6 +2,9 @@ import { l } from '@nativescript-community/l';
 import Observable from '@nativescript-community/observable';
 import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifEventData, MassifLayer, MassifMap, MassifObject, SpecArg } from '@nativescript-community/ui-massifmaps/api';
+// type-only: the `ui` module carries the view class, and importing it for real would pull it onto
+// the startup path for every module that imports this file
+import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
@@ -221,6 +224,16 @@ export interface MapContext {
     onVectorTileElementClicked(callback: ContextCallback<FeatureClickData>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => MassifMap;
+    /**
+     * The plugin's own map view, for the handful of things the surface API has no verb for.
+     *
+     * `getMap().view` is typed as the narrow `MapViewLike`, which does not carry
+     * `getTerrainOptions()` / `setPostProcessEffect()` — the surface API deliberately has no method
+     * table for `TerrainOptions` or `PostProcessEffect` (see `schema.js`), so a shaded terrain
+     * surface's parameters and a post-process effect are object-API only. This hands back the real
+     * view rather than making every caller cast.
+     */
+    getMapView: () => MassifMapView;
     setBottomSheetStepIndex: (value: number) => void;
     startEditingItem: (item: IItem) => void;
     selectItem: (args: {
