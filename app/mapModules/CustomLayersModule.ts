@@ -400,17 +400,18 @@ export default class CustomLayersModule extends MapModule {
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
         const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000'));
-        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#00000000'));
+        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#000000'));
         const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000'));
         layer.apply({
             tileFilterMode:
                 tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR',
             visibleZoomRange: [ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0), ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 24)],
             contrast: ApplicationSettings.getNumber(`${name}_contrast`, 0.5),
-            heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, 1.0),
+            heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, 0.2),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_ALL',
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
             highlightColor: highlightColor.argb,
+            hillshadeMethod: 'IGOR',
             shadowColor: shadowColor.argb,
             accentColor: accentColor.argb,
             opacity,

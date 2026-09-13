@@ -116,7 +116,7 @@ const nutiParams = {
         icon: 'mdi-bullseye',
         description: lc('contour_lines_opacity_desc'),
         settingsOptionsType: 'number',
-        defaultValue: 1
+        defaultValue: 0.4
     },
     buildings: {
         title: lc('buildings_3d'),
