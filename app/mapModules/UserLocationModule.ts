@@ -391,7 +391,11 @@ export default class UserLocationModule extends MapModule {
         const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
         camera.moveTo(target, {
             zoom,
-            rotation: -this.mLastUserLocation.bearing,
+            // the last bearing we were actually given, which is also what the arrow is drawn with, so
+            // the camera and the marker never point different ways. The fix's own bearing is missing
+            // on a phone standing still — `-undefined` is NaN, JSON writes that as null, and the
+            // native argument decoder refused the whole flyTo as a bad spec
+            rotation: -this.lastKnownBearing,
             tilt: tilt > 0 ? tilt : undefined,
             duration
         });
