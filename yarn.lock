@@ -34,13 +34,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript-android-runtime@npm:8.9.2":
-  version: 8.9.2
-  resolution: "@akylas/nativescript-android-runtime@npm:8.9.2"
-  checksum: 10/3d1cd13b1a3e2256d139c97699097a8fe37e1a05771d17849b6b0a3b07c4784f1160c791e09aed023b14178cff70b6f305562e9e46a8e8594eda218a97dfc3af
-  languageName: node
-  linkType: hard
-
 "@akylas/nativescript-app-tools@portal:tools::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
   resolution: "@akylas/nativescript-app-tools@portal:tools::locator=root-workspace-0b6124%40workspace%3A."
@@ -3039,9 +3032,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-massifmaps@portal:../ui-carto/packages/ui-massifmaps::locator=root-workspace-0b6124%40workspace%3A.":
+"@nativescript-community/ui-massifmaps@portal:../../carto/mobile-sdk/integrations/nativescript/packages/ui-massifmaps::locator=root-workspace-0b6124%40workspace%3A.":
   version: 0.0.0-use.local
-  resolution: "@nativescript-community/ui-massifmaps@portal:../ui-carto/packages/ui-massifmaps::locator=root-workspace-0b6124%40workspace%3A."
+  resolution: "@nativescript-community/ui-massifmaps@portal:../../carto/mobile-sdk/integrations/nativescript/packages/ui-massifmaps::locator=root-workspace-0b6124%40workspace%3A."
   languageName: node
   linkType: soft
 
@@ -3226,17 +3219,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript/android-quickjs-ng@npm:^0.0.1":
-  version: 0.0.1
-  resolution: "@nativescript/android-quickjs-ng@npm:0.0.1"
-  checksum: 10/59ce2c4181758d2ed47f35633562deb8c803be21f42f1c6fcba65899b017435937e520eccc9657d888afa30ee56bc5f8b447069d46658934eb1beb859ac9c9ff
+"@nativescript/android-quickjs-ng@npm:9.0.0-alpha.1":
+  version: 9.0.0-alpha.1
+  resolution: "@nativescript/android-quickjs-ng@npm:9.0.0-alpha.1"
+  checksum: 10/3ec65b91b2e5999bd992e783e3ac57765cbc3a699ba5843c1678e8dfd9828863554e664bb6c8239ae37076923107f6f7bb04fef79f08b8d54b7e4ee5cb0eabf8
   languageName: node
   linkType: hard
 
-"@nativescript/android@file:/Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz::locator=root-workspace-0b6124%40workspace%3A.":
-  version: 9.0.0
-  resolution: "@nativescript/android@file:/Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz#/Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz::hash=636ac3&locator=root-workspace-0b6124%40workspace%3A."
-  checksum: 10/ff1ff906ba92827e59b86ddf83678731842891ca8c4e8b8beca95c37e245c2a1c9ae9de39222e0b7aecf223cfe61dfadcc90a148b47ea5d5058d2271ab2843a7
+"@nativescript/android@npm:9.0.5":
+  version: 9.0.5
+  resolution: "@nativescript/android@npm:9.0.5"
+  checksum: 10/5d9e18834aea70b90c888d4e0b1e7c496770ea5d121c371959414608a1b6c908870e9df08d73916dedb983e9ebc213cbb8f628982d9d017c9b4623b3bf7e5b6c
   languageName: node
   linkType: hard
 
@@ -4452,7 +4445,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/geojson@npm:*, @types/geojson@npm:^7946.0.14, @types/geojson@npm:^7946.0.15, @types/geojson@npm:^7946.0.7":
+"@types/geojson@npm:*, @types/geojson@npm:^7946.0.14, @types/geojson@npm:^7946.0.15, @types/geojson@npm:^7946.0.16, @types/geojson@npm:^7946.0.7":
   version: 7946.0.16
   resolution: "@types/geojson@npm:7946.0.16"
   checksum: 10/34d07421bdd60e7b99fa265441d17ac6e9aef48e3ce22d04324127d0de1daf7fbaa0bd3be1cece2092eb6995f21da84afa5231e24621a2910ff7340bc98f496f
@@ -14725,7 +14718,6 @@ __metadata:
     "@akylas/address-formatter": "npm:5.3.1"
     "@akylas/kiss-orm": "npm:2.1.14"
     "@akylas/nativescript": "npm:9.0.23"
-    "@akylas/nativescript-android-runtime": "npm:8.9.2"
     "@akylas/nativescript-app-tools": "portal:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.15"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
@@ -14765,7 +14757,7 @@ __metadata:
     "@nativescript-community/ui-image": "npm:4.6.20"
     "@nativescript-community/ui-label": "npm:2.0.4"
     "@nativescript-community/ui-lottie": "npm:5.0.11"
-    "@nativescript-community/ui-massifmaps": "npm:2.1.0"
+    "@nativescript-community/ui-massifmaps": "npm:3.0.1"
     "@nativescript-community/ui-material-activityindicator": "npm:7.3.2"
     "@nativescript-community/ui-material-bottomsheet": "npm:7.3.2"
     "@nativescript-community/ui-material-button": "npm:7.3.2"
@@ -14787,8 +14779,8 @@ __metadata:
     "@nativescript-community/ui-webview-rtc": "npm:1.6.2"
     "@nativescript-community/universal-links": "npm:3.0.2"
     "@nativescript-use/nativescript-clipboard": "npm:^0.0.3"
-    "@nativescript/android": /Volumes/dev/nativescript/napi-ios/build/npm-tarballs/nativescript-android_quickjs_napi-9.0.0.tgz
-    "@nativescript/android-quickjs-ng": "npm:^0.0.1"
+    "@nativescript/android": "npm:9.0.5"
+    "@nativescript/android-quickjs-ng": "npm:9.0.0-alpha.1"
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"
@@ -14796,7 +14788,7 @@ __metadata:
     "@sentry/cli": "npm:3.5.0"
     "@swc/core": "npm:1.16.1"
     "@tmcw/togeojson": "npm:7.1.2"
-    "@types/geojson": "npm:^7946.0.14"
+    "@types/geojson": "npm:^7946.0.16"
     "@types/offscreencanvas": "npm:^2019.7.3"
     "@types/suncalc": "npm:^1.9.2"
     "@types/three": "npm:0.171.0"
