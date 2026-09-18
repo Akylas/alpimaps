@@ -1144,14 +1144,17 @@
     //     // clickedFeatures = [];
     // }
 
-    function onVectorTileClicked(data: FeatureClickData) {
+    // The result is written straight into `e.consumed`, which the facade hands back to native code as
+    // a Boolean. `undefined` there unboxes to a null Boolean and takes the UI thread down, so every
+    // path out of these three handlers has to be a real boolean - `runOnModules` answers `unknown`.
+    function onVectorTileClicked(data: FeatureClickData): boolean {
         DEV_LOG && console.log('onVectorTileClicked', data);
         if (isTransitPickerPending()) {
-            return;
+            return false;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
-        const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
+        const handledByModules = !!mapContext.runOnModules('onVectorTileClicked', data);
         DEV_LOG &&
             console.log(
                 'onVectorTileClicked',
@@ -1231,7 +1234,7 @@
         }
         return handledByModules;
     }
-    function onVectorElementClicked(data: ElementClickData) {
+    function onVectorElementClicked(data: ElementClickData): boolean {
         const { clickType, elementPosition, metaData, position } = data;
         DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
@@ -1268,7 +1271,7 @@
         }
         return !!handledByModules;
     }
-    function onVectorTileElementClicked(data: FeatureClickData) {
+    function onVectorTileElementClicked(data: FeatureClickData): boolean {
         const { clickType, featureData, featurePosition, position } = data;
         DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const feature = itemModule.getFeature(featureData.id);
@@ -1280,7 +1283,7 @@
         //         feature.properties[k] = JSON.parse(feature.properties[k]);
         //     }
         // });
-        const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data) as boolean;
+        const handledByModules = !!mapContext.runOnModules('onVectorTileElementClicked', data);
         // if (DEV_LOG) {
         //     console.log('handledByModules', handledByModules);
         // }
