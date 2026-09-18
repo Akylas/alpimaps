@@ -490,7 +490,7 @@ module.exports = (env, params = {}) => {
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
-    const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/variables.scss')).toString());
+    const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/_alpimaps.scss')).toString());
     const appIcons = {};
     appSymbols.variables
         .filter((v) => v.name.startsWith('$icon-'))
@@ -661,7 +661,7 @@ module.exports = (env, params = {}) => {
             //     : undefined
         },
         {
-            from: 'css/osm.scss',
+            from: 'css/_osm.scss',
             to: 'osm_icons.json',
             globOptions,
             transform: {
@@ -670,7 +670,7 @@ module.exports = (env, params = {}) => {
                     const symbols = symbolsParser.parseSymbols(manifestBuffer.toString());
                     const icons = symbols.variables.reduce(function (acc, value) {
                         if (value.name.startsWith('$osm-')) {
-                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(11, -2), 16));
+                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
                         }
                         return acc;
                     }, {});
@@ -679,7 +679,7 @@ module.exports = (env, params = {}) => {
             }
         },
         {
-            from: 'css/variables.scss',
+            from: 'node_modules/@mdi/font/scss/_variables.scss',
             to: 'material_icons.json',
             globOptions,
             transform: {
