@@ -311,12 +311,15 @@ export default class CustomLayersModule extends MapModule {
     /**
      * Slope colouring, on the composite's own hillshade child.
      *
-     * Held rather than read back from `showSlopePercentages`, because that store cannot be read:
-     * its proxy answers null for a value sitting at its default, so a default of `true` reads as
-     * off everywhere in the UI. Starting at false is what the map has always done - the mode used
-     * to be applied only when the button was pressed - and this keeps it across a re-attach.
+     * Read from the STORE, not from `layerProps['showSlopePercentages']`: the proxy answers null for
+     * a value sitting at its default, and this one defaults to `true` - so starting this at false
+     * left the button drawn as selected with no shader on the layer, and the first press turned
+     * "off" what was already off. The store carries the persisted value, or the default.
+     *
+     * Held rather than read on every call so the mode survives a re-attach, where the composite
+     * builds a brand new child.
      */
-    private slopeMode = false;
+    private slopeMode = !!get(layerProps.getStore('showSlopePercentages'));
     toggleHillshadeSlope(value: boolean) {
         this.slopeMode = value;
         this.applySlopeMode(this.terrainAttachedTo);
