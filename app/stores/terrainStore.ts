@@ -174,6 +174,20 @@ export const terrainFogVerticalEnd = settingsStore('terrainFogVerticalEnd', 2500
 export const terrainLighting = settingsStore('terrainLighting', false);
 
 /**
+ * Where the sun stands, in degrees — clockwise from north, and above the horizon.
+ *
+ * The SDK's own defaults (315 / 45): the classic cartographic light, from the north-west and half way
+ * up. They are what the SHADOWS are cast from, so they are the lighting's two most visible knobs —
+ * a low sun is what puts a ridge's shadow across the valley next to it.
+ *
+ * Written only while `terrainLighting` is on, and with `sunOverridingStyle` moving with it: a style
+ * states its own sun (a converted mapbox one does, per light preset) and that is what lights the flat
+ * map, so an override left standing would change the 2D map for a setting that belongs to 3D.
+ */
+export const terrainSunAzimuth = settingsStore('terrainSunAzimuth', 315);
+export const terrainSunAltitude = settingsStore('terrainSunAltitude', 45);
+
+/**
  * The sun's shadows of the terrain ON the terrain — ridges shading valleys at a low sun.
  *
  * SUBORDINATE to `terrainLighting`: the shadow is a factor on the DIRECT light, so with the terrain
@@ -255,8 +269,19 @@ export const TERRAIN_AUTO_FLATTEN_TILT = 88;
  *  Contours MUST be in here: baked into a drape texture they survive in the tiles already cached, so
  *  they stay on screen below the zoom the style stops drawing them at. */
 export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*';
-/** Per-tile drape texture resolution. 0 follows the screen and gets clamped to 512. */
-export const TERRAIN_DRAPE_RESOLUTION = 1024;
+/**
+ * Per-tile drape texture resolution, in pixels — how sharp the map layers are ON the ground.
+ *
+ * Draped content is rasterized into a texture of this size per tile and resampled onto the mesh, so
+ * it trades the sharpness of thin content (lines, outlines, labels) against video memory, at
+ * `resolution² × 4` bytes per visible tile. The SDK clamps it to [128, 2048].
+ *
+ * 0 — the default — takes it from the SCREEN instead, which is what the drape cache budget is sized
+ * for: the LOD refines a tile until it covers at most a 2×2 block, so `2 × tileDrawSize × pixelScale`
+ * texels is one texel per screen pixel. A fixed value is either coarser than the screen (draped fills
+ * stair-step as you zoom in) or finer than it can show.
+ */
+export const terrainDrapeResolution = settingsStore('terrainDrapeResolution', 0);
 /** How many zoom levels below the camera a tile may coarsen to (`TERRAIN_MAX_TILE_ZOOM_COARSENING`). */
 export const TERRAIN_MAX_TILE_ZOOM_COARSENING = 8;
 /**

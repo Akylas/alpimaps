@@ -13,7 +13,6 @@ import { registerMapModule } from '~/mapModules/registry';
 import { packageService } from '~/services/PackageService';
 import {
     TERRAIN_AUTO_FLATTEN_TILT,
-    TERRAIN_DRAPE_RESOLUTION,
     TERRAIN_FOG,
     TERRAIN_FOG_EINK,
     TERRAIN_MAX_TILE_ZOOM_COARSENING,
@@ -29,6 +28,7 @@ import {
     terrain3dTilt,
     terrainAutoFlattenByTilt,
     terrainCameraClearance,
+    terrainDrapeResolution,
     terrainExaggeration,
     terrainFlattenModeFull,
     terrainFog,
@@ -44,6 +44,8 @@ import {
     terrainShadowStrength,
     terrainShadows,
     terrainSky,
+    terrainSunAltitude,
+    terrainSunAzimuth,
     terrainSwitchDuration,
     terrainTouchMode,
     terrainViewDistanceFactor,
@@ -163,7 +165,7 @@ export function ensureTerrain(): boolean {
         noDrapeLayerFilter: TERRAIN_NO_DRAPE_FILTER,
         drapeFillsEnabled: true,
         drapeLinesEnabled: true,
-        // drapeResolution: TERRAIN_DRAPE_RESOLUTION,
+        drapeResolution: get(terrainDrapeResolution),
         maxTileZoomCoarsening: TERRAIN_MAX_TILE_ZOOM_COARSENING,
         // Occlusion is on for the whole map, as in the demo; only the TOLERANCE is a mode's business.
         billboardOcclusionEnabled: true,
@@ -319,6 +321,12 @@ function applyAtmosphere(on: boolean) {
     // is written whether or not shadows are on, so the switch is the only thing that has to move.
     map.light({ type: 'light' }).apply({
         terrainLightingEnabled: lit,
+        // The sun the shadows are cast from. `sunOverridingStyle` moves WITH the lighting switch: a
+        // style states its own sun and that is what lights the flat map, so an override left standing
+        // would change the 2D map for a setting that belongs to 3D.
+        sunOverridingStyle: lit,
+        sunAzimuth: get(terrainSunAzimuth),
+        sunAltitude: get(terrainSunAltitude),
         shadowStrength: lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
         shadowDistance: get(terrainShadowDistance),
         shadowMapSize: get(terrainShadowMapSize),
@@ -566,6 +574,7 @@ function applyLive<T>(store: { subscribe: (run: (value: T) => void) => unknown }
 
 applyLive(terrainExaggeration, (value) => terrain().set('exaggeration', value));
 applyLive(terrainMeshResolution, (value) => terrain().set('meshResolution', value));
+applyLive(terrainDrapeResolution, (value) => terrain().set('drapeResolution', value));
 applyLive(terrainViewDistanceFactor, (value) => terrain().set('viewDistanceFactor', value));
 applyLive(terrainCameraClearance, (value) => terrain().set('cameraClearance', value));
 applyLive(terrainFlattenModeFull, () => terrain().set('flattenMode', terrainFlattenMode()));
@@ -579,6 +588,9 @@ applyLive(terrainFogVerticalEnd, () => applyAtmosphere(is3D()));
 applyLive(terrainViewDistanceMetres, () => applyViewDistance(is3D()));
 applyLive(terrainViewDistanceMax, () => applyViewDistance(is3D()));
 applyLive(terrainLighting, () => applyAtmosphere(is3D()));
+// The sun goes through the same rule: it is written on the same call, and only while the ground is lit.
+applyLive(terrainSunAzimuth, () => applyAtmosphere(is3D()));
+applyLive(terrainSunAltitude, () => applyAtmosphere(is3D()));
 // The shadow knobs go through the same rule, since the strength depends on the lighting switch too.
 applyLive(terrainShadows, () => applyAtmosphere(is3D()));
 applyLive(terrainShadowStrength, () => applyAtmosphere(is3D()));
