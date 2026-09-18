@@ -872,42 +872,39 @@
                     })();
                 }
                 if (setSelected && !route) {
-                    const toUpdate = {} as Record<string, any>;
-                    Promise.all([
+                    // elevation and address are two independent lookups that each update the
+                    // selection when they land. They used to share one Promise.all, so the sheet's
+                    // elevation waited on the (much slower) geocoder before showing.
+                    if (props && 'ele' in props === false && packageService.hasElevation()) {
                         (async () => {
-                            if (!props.address?.['city']) {
-                                const r = await packageService.getItemAddress(item);
-                                if (r && $selectedItem.geometry === item.geometry) {
-                                    // DEV_LOG && console.log('found addresses', JSON.stringify(r));
-                                    toUpdate.address = r;
-                                    // $selectedItem.properties.address = r;
-                                    if (r.name && !$selectedItem.properties.name) {
-                                        toUpdate.name = r.name;
-                                        //     $selectedItem.properties.name = r.name;
-                                    }
-                                    return true;
-                                }
+                            const geometry = item.geometry as GeoJSONPoint;
+                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                            const ele = await packageService.getElevation(position);
+                            if (ele && $selectedItem?.geometry === item.geometry) {
+                                // DEV_LOG && console.log('found elevation', ele);
+                                setSelectedItem($selectedItem, { ele });
                             }
-                        })(),
-                        (async () => {
-                            if (props && 'ele' in props === false && packageService.hasElevation()) {
-                                const geometry = item.geometry as GeoJSONPoint;
-                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                const r = await packageService.getElevation(position);
-                                if (r && $selectedItem.geometry === item.geometry) {
-                                    // DEV_LOG && console.log('found elevation', r);
-                                    toUpdate.ele = r;
-                                    // $selectedItem.properties = $selectedItem.properties || {};
-                                    // $selectedItem.properties['ele'] = r;
-                                    return true;
-                                }
+                        })();
+                    }
+                    if (!props.address?.['city']) {
+                        // off the selection tick on purpose: the offline geocoder is built and its
+                        // databases opened synchronously on first use, which held the item sheet
+                        // back until the lookup was under way
+                        setTimeout(async () => {
+                            if ($selectedItem?.geometry !== item.geometry) {
+                                return;
                             }
-                        })()
-                    ]).then((r) => {
-                        if (r.some((d) => d === true)) {
-                            setSelectedItem($selectedItem, toUpdate);
-                        }
-                    });
+                            const address = await packageService.getItemAddress(item);
+                            if (address && $selectedItem?.geometry === item.geometry) {
+                                // DEV_LOG && console.log('found addresses', JSON.stringify(address));
+                                const toUpdate = { address } as Record<string, any>;
+                                if (address.name && !$selectedItem.properties.name) {
+                                    toUpdate.name = address.name;
+                                }
+                                setSelectedItem($selectedItem, toUpdate);
+                            }
+                        }, 0);
+                    }
                     // if (props && 'timezone' in props === false) {
                     //     const geometry = item.geometry as GeoJSONPoint;
                     //     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
