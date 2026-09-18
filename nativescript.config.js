@@ -23,7 +23,7 @@ module.exports = {
         // runtimePackageName: '@akylas/nativescript-ios-runtime',
     },
     android: {
-        // runtimePackageName: '@akylas/nativescript-android-runtime',
+        // runtimePackageName: '@nativescript/android-quickjs-ng',
         gradleVersion: '8.14.3',
         markingMode: 'none',
         codeCache: true,

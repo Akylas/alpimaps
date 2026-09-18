@@ -168,12 +168,8 @@ dependencies {
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
     def kotlinVersion = computeKotlinVersion()
 
-    // if (project.hasProperty('debugMassif')) {
-    //   implementation project(path: ':massif')
-    // }
     implementation "com.github.skydoves:colorpickerview:2.2.4"
     implementation 'androidx.core:core-splashscreen:1.0.1'
-    // implementation 'androidx.documentfile:documentfile:1.0.1'
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
@@ -184,7 +180,6 @@ dependencies {
     }
     implementation "androidx.profileinstaller:profileinstaller:1.4.1"
     baselineProfile project(':baselineprofile')
-    // implementation project(':massif')
 }
 
 if (project.hasProperty("sentryEnabled")) {

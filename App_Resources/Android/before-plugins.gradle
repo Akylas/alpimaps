@@ -25,5 +25,5 @@ ext {
     licenseReporterVersion = "2.4"
     sentryVersion = "7.22.6"
     sentryGradleVersion = "4.14.1"
-    massifSDKVersion = "6.0.0"
+    massifSDKVersion = "6.0.2"
 }
