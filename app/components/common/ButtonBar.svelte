@@ -85,33 +85,36 @@
             console.error(err, err.stack);
         }
     }
+    /**
+     * Which button the gesture landed on, or null.
+     *
+     * The bounds check is not defensive: the canvas is `buttonsLength * buttonSize` long but the
+     * handlers report a position anywhere in the view, and a press in the padding under the last
+     * button gave an index past the end — `visibleButtons()[index]` undefined, and the call on it
+     * threw out of the gesture callback.
+     */
+    function buttonAt(event) {
+        const currentButtons = visibleButtons();
+        const index = Math.floor((orientation === 'vertical' ? event.getY() : event.getX()) / buttonSize);
+        return index >= 0 && index < currentButtons.length ? currentButtons[index] : null;
+    }
     function onTap(event) {
-        let index;
-        if (orientation === 'vertical') {
-            index = Math.floor(event.getY() / buttonSize);
-        } else {
-            index = Math.floor(event.getX() / buttonSize);
-        }
-        console.log('onTap', index);
-        if (index >= 0) {
-            const button = visibleButtons()[index];
-            button.onTap?.(event, button);
-        }
+        // Two of these per gesture have been seen on android. Same coordinates a few ms apart means
+        // one gesture delivered twice; different ones mean two gestures.
+        DEV_LOG && console.log('ButtonBar tap', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
+        const button = buttonAt(event);
+        button?.onTap?.(event, button);
     }
     function onLongPress(event) {
-        let index;
-        if (orientation === 'vertical') {
-            index = Math.floor(event.getY() / buttonSize);
-        } else {
-            index = Math.floor(event.getX() / buttonSize);
+        DEV_LOG && console.log('ButtonBar longPress', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
+        const button = buttonAt(event);
+        if (!button) {
+            return;
         }
-        if (index >= 0) {
-            const button = visibleButtons()[index];
-            if (button.onLongPress) {
-                button.onLongPress(event, button);
-            } else if (button.tooltip) {
-                showToolTip(button.tooltip);
-            }
+        if (button.onLongPress) {
+            button.onLongPress(event, button);
+        } else if (button.tooltip) {
+            showToolTip(button.tooltip);
         }
     }
     function onTouch(event) {
