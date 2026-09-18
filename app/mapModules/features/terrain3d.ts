@@ -468,6 +468,46 @@ function rampWithFlight(leaving3D: boolean) {
 }
 
 /**
+ * True once the auto rule has moved the mode and the two expensive halves of the switch still owe it.
+ */
+let autoFlattenPending = false;
+
+/**
+ * The 3D state the SDK reached on its OWN, brought back to the app.
+ *
+ * `autoFlattenTilt` is a rule INSIDE the SDK: past it the terrain un-flattens, under it flattens
+ * again, and there is no event to say so. So everything the button's switch does besides raising the
+ * ground — the store the side-bar button is drawn from, the sky, the fog, the lighting, the touch
+ * model, the view distance and the tilt range — simply never happened, and a map tilted into 3D by
+ * hand was 3D geometry under a flat map's atmosphere with an unselected button over it.
+ *
+ * POLLED from the move events rather than driven by one: the rule writes `flattened` when it fires
+ * (the RATIO is what animates), so reading it on a move is as prompt as an event would be.
+ *
+ * `settled` is the gesture having ended, and two of them wait for it. The touch model, because
+ * changing the gesture scheme under a finger that is still dragging is the one thing it must not do;
+ * the view distance, because it is a tile walk, and mid-tilt is when the map can least afford one.
+ */
+function syncAutoFlattenState(settled: boolean) {
+    // `switching` is the button's own flight, which applies all of this itself.
+    if (switching || !terrainAttached) {
+        return;
+    }
+    const on = is3D();
+    if (on !== get(terrain3dActive)) {
+        terrain3dActive.set(on);
+        applyAtmosphere(on);
+        applyTiltRange();
+        autoFlattenPending = true;
+    }
+    if (settled && autoFlattenPending) {
+        autoFlattenPending = false;
+        applyTouchMode(on);
+        applyViewDistance(on);
+    }
+}
+
+/**
  * `CustomLayersModule` swapped the DEM holding the hillshade slot.
  *
  * The terrain cannot simply be re-pointed — its source is spec-only — so this drops the attachment and
@@ -507,6 +547,7 @@ function onMapDestroyed() {
     stopRamp();
     terrainAttached = false;
     attachedSourceId = null;
+    autoFlattenPending = false;
     savedSkyColor = null;
     savedClearColor = null;
     terrain3dActive.set(false);
@@ -568,11 +609,16 @@ applyLive(terrainShadowCasterMargin, () => applyAtmosphere(is3D()));
 // Same: the touch model only applies while the 3D mode is the one on screen.
 applyLive(terrainTouchMode, () => applyTouchMode(is3D()));
 
-registerMapModule('terrain3d', { onMapDestroyed, onTerrainSourceChanged });
+registerMapModule('terrain3d', {
+    onMapDestroyed,
+    onTerrainSourceChanged,
+    onMapMove: () => syncAutoFlattenState(false),
+    onMapStable: () => syncAutoFlattenState(true)
+});
 
 declare module '~/mapModules/registry' {
     interface MapModules {
-        terrain3d: { onMapDestroyed: () => void; onTerrainSourceChanged: () => void };
+        terrain3d: { onMapDestroyed: () => void; onTerrainSourceChanged: () => void; onMapMove: () => void; onMapStable: () => void };
     }
 }
 
