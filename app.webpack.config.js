@@ -660,6 +660,17 @@ module.exports = (env, params = {}) => {
             //       }
             //     : undefined
         },
+        // The direction-corrected faces the MAP reads, written by the fontforge step of a
+        // `buildstyle` build. `force` because they override what the two patterns above already
+        // emitted - app/fonts/osm.ttf and the raw MDI - which is also what a clone with no
+        // `buildstyle` build behind it falls back to.
+        {
+            from: 'dev_assets/fonts/*.ttf',
+            to: 'fonts/[name][ext]',
+            force: true,
+            noErrorOnMissing: true,
+            globOptions
+        },
         {
             from: 'css/_osm.scss',
             to: 'osm_icons.json',
@@ -890,8 +901,12 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildStart: {
                     scripts: [
-                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/styles/inner/fonts/osm.ttf',
-                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/styles/base/fonts/materialdesignicons-webfont.ttf',
+                        // The two faces the styles name that no device carries. They no longer
+                        // travel in a style asset package - the decoder is handed them as fallback
+                        // fonts (APP_FONTS in MapModule.ts) - so one direction-corrected copy under
+                        // dev_assets/fonts serves both the map and the app UI.
+                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/fonts/osm.ttf',
+                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/fonts/materialdesignicons-webfont.ttf',
                         `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
@@ -901,25 +916,7 @@ module.exports = (env, params = {}) => {
                         `./${css2xmlBin} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
-                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
-                        'cd ./dev_assets/styles/base && zip -r ../../../app/assets/styles/base.zip ./* && cd -'
-                    ],
-                    blocking: true,
-                    parallel: false
-                },
-                safe: true
-            })
-        );
-        config.plugins.unshift(
-            new WebpackShellPluginNext({
-                onBuildExit: {
-                    scripts: [
-                        //     `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
-                        // `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                        `cp dev_assets/styles/inner/fonts/osm.ttf ${join(dist, 'fonts')}`,
-                        `cp dev_assets/styles/inner/fonts/osm.ttf dev_assets/styles/osm/fonts`
-                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/osm/fonts')}`
+                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -'
                     ],
                     blocking: true,
                     parallel: false

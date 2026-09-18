@@ -64,13 +64,38 @@ function assetUrl(relativePath: string) {
 }
 
 /**
- * The shared base style assets - the fonts every style needs.
+ * The app's own faces, for the names the styles use that no device font carries.
  *
- * A spec, not an object: the app used to subclass ZippedAssetPackage to supply `loadAsset` and
- * `getAssetNames`, and neither was ever a real option on it (they typechecked as errors), so the
- * subclass was doing nothing the plain archive does not.
+ * `osm.ttf` is the map's icon font (`@osm`) and MDI is what a saved item's `mapFontFamily` points
+ * at. A fallback font is registered in the decoder's font manager under the name its OWN name table
+ * gives - `osm` and `Material Design Icons` - so a style reaches them by `face-name` exactly as it
+ * did when they were packaged, and the text faces come from the device.
+ *
+ * This is what replaced the shared `base.zip` asset package chained under every style: it carried
+ * these two fonts plus a text family, and a style asset package was the only way to supply a face.
  */
-const BASE_ASSETS: SpecArg<'assets', 'zip'> = { type: 'zip', data: { type: 'url', url: assetUrl('assets/styles/base.zip') } };
+const APP_FONTS = ['fonts/osm.ttf', 'fonts/materialdesignicons-webfont.ttf'];
+
+/**
+ * Hands the app fonts to a decoder.
+ *
+ * Read through the spec API rather than by hand: `create` returns the SAME object for an id built
+ * with an identical spec, so the bytes are read once and every decoder shares them. Registered for
+ * good on purpose - a decoder holds its fonts for as long as it draws.
+ */
+function addAppFonts(decoder: MapDecoder) {
+    for (const relativePath of APP_FONTS) {
+        const font = api.create(
+            'data',
+            `font.${relativePath}`,
+            { type: 'url', url: assetUrl(relativePath) },
+            // A hand-written factory, so it is the untyped `create` overload: `data` is bytes from a
+            // URL rather than a constructor the schema could describe.
+            'massif::BinaryData'
+        );
+        decoder.call('addFallbackFont', font.handle);
+    }
+}
 
 /** A click, whatever it landed on. The facade reports the enum by its constant name. */
 export const ClickType = {
@@ -298,7 +323,7 @@ declare module '~/mapModules/registry' {
  *
  * A style is an asset package plus the name of one style inside it, and both forms the app ships -
  * a folder on disk while developing, a zip in a release build - are the same two lines of JSON.
- * `base` chains the shared fonts underneath.
+ * No font travels in it any more: see `APP_FONTS`.
  */
 function styleSpec(name: string, style: string): SpecArg<'style', 'mbvt'> {
     const stylePath = name.startsWith('/') ? name : `${appPath}/assets/styles/${name}`;
@@ -310,9 +335,7 @@ function styleSpec(name: string, style: string): SpecArg<'style', 'mbvt'> {
         project: {
             type: 'project',
             name: style,
-            assets: useZip
-                ? { type: 'zip', data: { type: 'url', url: isZip ? `file://${stylePath}` : assetUrl(`assets/styles/${name}.zip`) }, base: BASE_ASSETS }
-                : { type: 'dir', path: stylePath, base: BASE_ASSETS }
+            assets: useZip ? { type: 'zip', data: { type: 'url', url: isZip ? `file://${stylePath}` : assetUrl(`assets/styles/${name}.zip`) } } : { type: 'dir', path: stylePath }
         }
     };
 }
@@ -328,7 +351,9 @@ export function createTileDecoder(name: string, style: string = 'voyager', id = 
     try {
         const existing = api.find('style', id, 'massif::MBVectorTileDecoder');
         existing?.destroy();
-        return api.create('style', id, styleSpec(name, style)) as MapDecoder;
+        const decoder = api.create('style', id, styleSpec(name, style)) as MapDecoder;
+        addAppFonts(decoder);
+        return decoder;
     } catch (error) {
         showError(error);
     }
