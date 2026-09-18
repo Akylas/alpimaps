@@ -19,7 +19,9 @@
     import { get } from 'svelte/store';
     import type { SettingsStore } from '~/stores/settingsStore';
     import {
+        peakFinderCreaseFade,
         peakFinderCreaseStrength,
+        peakFinderCreaseThreshold,
         peakFinderDark,
         peakFinderDistanceFade,
         peakFinderEnabled,
@@ -29,14 +31,20 @@
         peakFinderLabelAngle,
         peakFinderLabelBand,
         peakFinderLabelMaxDistance,
+        peakFinderLabelMinDistance,
         peakFinderLabelPinTop,
         peakFinderLabelRows,
+        peakFinderMeshResolution,
         peakFinderOcclusion,
         peakFinderOutlineWidth,
         peakFinderScreenOrientation,
         peakFinderShadeStrength,
+        peakFinderSlopeBias,
+        peakFinderSlopeMultiplier,
+        peakFinderSlopeStrength,
         peakFinderTilt,
         peakFinderViewDistance,
+        peakFinderViewDistanceMetres,
         terrain3dEnabled,
         terrain3dTilt,
         terrainAutoFlattenByTilt,
@@ -44,11 +52,23 @@
         terrainExaggeration,
         terrainFlattenModeFull,
         terrainFog,
+        terrainFogVerticalEnd,
+        terrainFogVerticalStart,
         terrainLighting,
         terrainMeshResolution,
+        terrainShadowCascades,
+        terrainShadowCasterMargin,
+        terrainShadowDistance,
+        terrainShadowMapSize,
+        terrainShadowSoftness,
+        terrainShadowStrength,
+        terrainShadows,
         terrainSky,
         terrainSwitchDuration,
-        terrainViewDistanceFactor
+        terrainTouchMode,
+        terrainViewDistanceFactor,
+        terrainViewDistanceMax,
+        terrainViewDistanceMetres
     } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
@@ -421,11 +441,39 @@
                     storeSlider(terrainCameraClearance, lc('camera_clearance'), 0, 400, 10, formatDistance),
                     storeSlider(terrainSwitchDuration, lc('switch_duration'), 0, 6, 0.1, (value) => `${value.toFixed(1)} s`),
                     storeSlider(terrain3dTilt, lc('threed_tilt'), 5, 80, 1, (value) => `${Math.round(value)}°`),
+                    {
+                        id: 'setting',
+                        key: 'terrainTouchMode',
+                        title: lc('touch_mode'),
+                        description: lc('touch_mode_desc'),
+                        store: terrainTouchMode,
+                        valueType: 'string',
+                        currentValue: () => get(terrainTouchMode),
+                        rightValue: () => lc(`touch_mode_${get(terrainTouchMode)}`),
+                        values: [
+                            { title: lc('touch_mode_classic'), value: 'classic' },
+                            { title: lc('touch_mode_look'), value: 'look' },
+                            { title: lc('touch_mode_fps'), value: 'fps' }
+                        ]
+                    },
                     storeSwitch(terrainFlattenModeFull, lc('threed_flatten_mode_full'), lc('threed_flatten_mode_full_desc')),
                     storeSwitch(terrainAutoFlattenByTilt, lc('auto_3d_by_tilt'), lc('auto_3d_by_tilt_desc')),
+                    // a floor and a ceiling: the first can only extend the view, the second is what limits it
+                    storeSlider(terrainViewDistanceMetres, lc('viewing_distance'), 0, 400000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
+                    storeSlider(terrainViewDistanceMax, lc('viewing_distance_max'), 0, 400000, 5000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
                     storeSwitch(terrainSky, lc('sky')),
                     storeSwitch(terrainFog, lc('fog'), lc('terrain_fog_desc')),
-                    storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc'))
+                    storeSlider(terrainFogVerticalStart, lc('fog_vertical_start'), 0, 4000, 100, formatDistance),
+                    storeSlider(terrainFogVerticalEnd, lc('fog_vertical_end'), 0, 6000, 100, formatDistance),
+                    storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc')),
+                    storeSwitch(terrainShadows, lc('shadows'), lc('shadows_desc')),
+                    storeSlider(terrainShadowStrength, lc('shadow_strength'), 0, 2, 0.05, (value) => value.toFixed(2)),
+                    // 0 is the SDK's own 4.5, hence the label rather than a number
+                    storeSlider(terrainShadowDistance, lc('shadow_distance'), 0, 12, 0.5, (value) => (value === 0 ? lc('auto') : `${value.toFixed(1)}×`)),
+                    storeSlider(terrainShadowMapSize, lc('shadow_map_size'), 256, 4096, 256, (value) => `${Math.round(value)} px`),
+                    storeSlider(terrainShadowCascades, lc('shadow_cascades'), 1, 4, 1),
+                    storeSlider(terrainShadowSoftness, lc('shadow_softness'), 0, 8, 0.5, (value) => value.toFixed(1)),
+                    storeSlider(terrainShadowCasterMargin, lc('shadow_caster_margin'), 0, 8, 1)
                 ];
             case 'peak_finder':
                 return [
@@ -449,21 +497,30 @@
                     storeSlider(peakFinderTilt, lc('tilt'), 1, 80, 1, (value) => `${Math.round(value)}°`),
                     storeSlider(peakFinderFlyElevation, lc('viewpoint_elevation'), 0, 6000, 50, formatDistance),
                     storeSlider(peakFinderViewDistance, lc('view_distance_factor'), 0.5, 6, 0.5, (value) => `${value.toFixed(1)}×`),
+                    storeSlider(peakFinderViewDistanceMetres, lc('viewing_distance'), 10000, 400000, 10000, formatDistance),
+                    storeSlider(peakFinderMeshResolution, lc('mesh_resolution'), 32, 512, 32),
                     storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
                     // The relief. Every default is the android demo's, and the shaders are its own —
                     // see ~/mapModules/terrain/reliefShaders.ts.
+                    // the slope ink, which is what draws the relief between the ridges
+                    storeSlider(peakFinderSlopeStrength, lc('slope_lines'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderSlopeMultiplier, lc('slope_lines_amount'), 0, 40, 0.5, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderSlopeBias, lc('slope_lines_contrast'), 0.05, 2, 0.01, (value) => value.toFixed(2)),
                     storeSlider(peakFinderShadeStrength, lc('shade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
                     storeSlider(peakFinderDistanceFade, lc('distance_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.1, (value) => value.toFixed(1)),
                     storeSlider(peakFinderCreaseStrength, lc('crease_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderCreaseThreshold, lc('crease_threshold'), 0.02, 0.5, 0.01, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderCreaseFade, lc('crease_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderHaze, lc('haze'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     // The summit labels. Each of these rebuilds the label decoder, which is why they are
                     // grouped last: they are the expensive ones to drag.
                     storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),
                     storeSlider(peakFinderLabelBand, lc('label_band'), 0, 0.6, 0.05, (value) => `${Math.round(value * 100)}%`),
                     storeSlider(peakFinderLabelAngle, lc('label_angle'), 0, 90, 5, (value) => `${Math.round(value)}°`),
-                    storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 4, 1),
+                    storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 6, 1),
+                    storeSlider(peakFinderLabelMinDistance, lc('label_min_distance'), 0, 40, 1, (value) => (value === 0 ? lc('no_limit') : `${Math.round(value)} px`)),
                     storeSlider(peakFinderLabelMaxDistance, lc('label_max_distance'), 0, 300000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value)))
                 ];
             case 'map_data':

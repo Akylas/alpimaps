@@ -1,8 +1,11 @@
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { tryCatchFunction } from '@shared/utils/ui';
+import type { FreeRoamMode, Position } from '@nativescript-community/ui-massifmaps/api';
+import { Color } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
 import { lc } from '~/helpers/locale';
+import { isEInk } from '~/helpers/theme';
 import { getMapContext } from '~/mapModules/MapModule';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
@@ -11,9 +14,16 @@ import { packageService } from '~/services/PackageService';
 import {
     TERRAIN_AUTO_FLATTEN_TILT,
     TERRAIN_DRAPE_RESOLUTION,
+    TERRAIN_FOG,
+    TERRAIN_FOG_EINK,
     TERRAIN_MAX_TILE_ZOOM_COARSENING,
     TERRAIN_NO_DRAPE_FILTER,
     TERRAIN_TILE_WAIT_TIMEOUT_MS,
+    TILTED_RANGE,
+    type TerrainTouchMode,
+    mapTiltRange,
+    mapTiltTransition,
+    peakFinderActive,
     terrain3dActive,
     terrain3dEnabled,
     terrain3dTilt,
@@ -22,11 +32,23 @@ import {
     terrainExaggeration,
     terrainFlattenModeFull,
     terrainFog,
+    terrainFogVerticalEnd,
+    terrainFogVerticalStart,
     terrainLighting,
     terrainMeshResolution,
+    terrainShadowCascades,
+    terrainShadowCasterMargin,
+    terrainShadowDistance,
+    terrainShadowMapSize,
+    terrainShadowSoftness,
+    terrainShadowStrength,
+    terrainShadows,
     terrainSky,
     terrainSwitchDuration,
-    terrainViewDistanceFactor
+    terrainTouchMode,
+    terrainViewDistanceFactor,
+    terrainViewDistanceMax,
+    terrainViewDistanceMetres
 } from '~/stores/terrainStore';
 import { clearTimeout, setTimeout } from '~/utils/utils';
 
@@ -42,19 +64,43 @@ import { clearTimeout, setTimeout } from '~/utils/utils';
  * same length, so a dropped frame or an interrupted flight cannot leave the two out of step.
  */
 
-/** How often the matched ramp samples the flight, ms. */
-const TICK_MS = 32;
+/** How often the matched ramp samples the flight, ms — one frame, since the switch is short. */
+const TICK_MS = 16;
 /** 2D is straight down in this SDK's convention. */
 const TILT_2D = 90;
+/** E-ink has no greys to spend on a gradient, so the sky is paper. */
+const EINK_SKY = new Color('#ffffff').argb;
+/**
+ * A transparent sky colour is not a colour, it is a SWITCH.
+ *
+ * `Options::getSkyBitmap` and `VectorTileLayer::getSkyBitmap` both read it to generate the legacy sky
+ * band as a GRADIENT from the style's background colour up to it, and a transparent one is the only
+ * value that means "no band at all". Writing white therefore did not give a white sky — it gave a
+ * gradient that ENDED white, which on e-ink is dithered noise.
+ */
+const NO_SKY_BITMAP = 0;
+/** The setting's values as the SDK's own. */
+const FREE_ROAM_MODES: Record<TerrainTouchMode, FreeRoamMode> = {
+    classic: 'FREE_ROAM_MODE_OFF',
+    look: 'FREE_ROAM_MODE_LOOK',
+    fps: 'FREE_ROAM_MODE_FIRST_PERSON'
+};
 
 let terrainAttached = false;
 let attachedSourceId: string = null;
 let rampTimer: NodeJS.Timeout = null;
 /** True while `toggle3D` owns the terrain, so the store subscriptions below do not fight the ramp. */
 let switching = false;
+/** The map's own sky and clear colours, kept while the e-ink switch is overriding them. */
+let savedSkyColor: number = null;
+let savedClearColor: number = null;
 
 function terrain() {
     return getMapContext().getMap()?.terrain();
+}
+
+function argb(color: string) {
+    return new Color(color).argb;
 }
 
 function camera() {
@@ -117,10 +163,11 @@ export function ensureTerrain(): boolean {
         noDrapeLayerFilter: TERRAIN_NO_DRAPE_FILTER,
         drapeFillsEnabled: true,
         drapeLinesEnabled: true,
-        drapeResolution: TERRAIN_DRAPE_RESOLUTION,
+        // drapeResolution: TERRAIN_DRAPE_RESOLUTION,
         maxTileZoomCoarsening: TERRAIN_MAX_TILE_ZOOM_COARSENING,
         // Occlusion is on for the whole map, as in the demo; only the TOLERANCE is a mode's business.
         billboardOcclusionEnabled: true,
+        billboardOcclusionTolerance: 0.2,
         tileEdgeStitchingEnabled: true,
         seamlessTileEdgesEnabled: true,
         elevationPrefetchEnabled: true
@@ -129,6 +176,31 @@ export function ensureTerrain(): boolean {
     attachedSourceId = source.id;
     DEV_LOG && console.log('terrain3d attached', source.id);
     return true;
+}
+
+/**
+ * Pushes the tilt range the modes agree on onto the map, NOW.
+ *
+ * `Map.svelte` also writes `mapTiltRange`, but from a reactive statement — which runs on svelte's
+ * next flush, i.e. after the camera call the mode makes in the same turn. That is not a cosmetic
+ * difference: `CameraTiltEvent::calculate` clamps the tilt to the range on every frame, so a flight
+ * started while the range is still the flat map's `[90, 90]` is pinned at 90 for its whole run. This
+ * is what every mode switch calls before it moves the camera.
+ */
+export function applyTiltRange() {
+    getMapContext().getMap()?.set('tiltRange', get(mapTiltRange));
+}
+
+/** Opens the range for a transition's flight and pushes it, so leaving a mode animates. */
+export function beginTiltTransition() {
+    mapTiltTransition.set(true);
+    getMapContext().getMap()?.set('tiltRange', TILTED_RANGE);
+}
+
+/** The flight has landed: back to whatever the modes now in play allow. */
+export function endTiltTransition() {
+    mapTiltTransition.set(false);
+    applyTiltRange();
 }
 
 function terrainFlattenMode() {
@@ -153,7 +225,10 @@ export function setTerrain3DImmediate(on: boolean): boolean {
     stopRamp();
     terrain().apply({ flattened: !on, flattenRatio: on ? 0 : 1 });
     applyAtmosphere(on);
+    applyTouchMode(on);
+    applyViewDistance(on);
     terrain3dActive.set(on);
+    applyTiltRange();
     return true;
 }
 
@@ -189,22 +264,128 @@ function stopRamp() {
 /**
  * The sky, the fog and the terrain lighting that go with 3D.
  *
- * All three are OFF by default, which is what the demo ships (`FOG_ENABLED` and `TERRAIN_LIGHTING` are
- * both false) — only the sky is on. Terrain lighting in particular is not something the switch should
+ * The sky and the fog are ON, the terrain lighting is not. Lighting is not something the switch should
  * turn on behind the user's back: it lights and SHADOWS the mesh, which is a real cost and a different
- * picture, and shading the ground is not what makes a map read as 3D.
+ * picture, and shading the ground is not what makes a map read as 3D. The fog is the opposite — with
+ * it off the ground ends on a hard edge at the view distance and the sky meets it on a seam, so it is
+ * part of what 3D looks like. Its values are mapbox's, see `TERRAIN_FOG`.
  *
- * A short view distance with fog off ends the ground on a hard edge, which is the one reason to want
- * the fog — hence the setting rather than a constant.
+ * E-ink gets NO sky at all, whatever the setting says: a gradient it cannot render is dithered noise
+ * above the horizon, and the ridges are what the view is read by. Paper white instead — the shader sky
+ * off AND the legacy band off (see `NO_SKY_BITMAP`), which leaves the band above the horizon showing
+ * the CLEAR colour, so that is what carries the white.
  */
 function applyAtmosphere(on: boolean) {
     const map = getMapContext().getMap();
     if (!map) {
         return;
     }
-    map.sky({ type: 'sky' }).set('enabled', on && get(terrainSky));
-    map.fog({ type: 'fog' }).apply({ enabled: on && get(terrainFog), rangeStart: 2.2, rangeEnd: 8 });
-    map.light({ type: 'light' }).set('terrainLightingEnabled', on && get(terrainLighting));
+    map.sky({ type: 'sky' }).set('enabled', on && !isEInk && get(terrainSky));
+    if (isEInk) {
+        if (on) {
+            if (savedSkyColor === null) {
+                savedSkyColor = map.get('skyColor');
+                savedClearColor = map.get('clearColor');
+            }
+            map.set('skyColor', NO_SKY_BITMAP);
+            map.set('clearColor', EINK_SKY);
+        } else if (savedSkyColor !== null) {
+            map.set('skyColor', savedSkyColor);
+            map.set('clearColor', savedClearColor);
+            savedSkyColor = null;
+            savedClearColor = null;
+        }
+    }
+    // Every colour on the same call as the switch: `FogOptions` starts them all transparent and a fog
+    // with no alpha does not draw (`ResolvedFog::active`), so enabling it on its own does nothing.
+    // The peak finder is excluded here as well as in its own `applyAtmosphere`: this runs from the
+    // setting's live subscription too, and toggling the fog while the panorama is up must not reach it.
+    map.fog({ type: 'fog' }).apply({
+        enabled: on && !get(peakFinderActive) && get(terrainFog),
+        rangeStart: TERRAIN_FOG.rangeStart,
+        rangeEnd: TERRAIN_FOG.rangeEnd,
+        horizonBlend: TERRAIN_FOG.horizonBlend,
+        starIntensity: TERRAIN_FOG.starIntensity,
+        // The altitudes the haze fades out between: what leaves a summit standing clear of it.
+        verticalRangeStart: get(terrainFogVerticalStart),
+        verticalRangeEnd: get(terrainFogVerticalEnd),
+        color: argb(TERRAIN_FOG.color),
+        highColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.highColor),
+        spaceColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.spaceColor)
+    });
+    const lit = on && get(terrainLighting);
+    // Everything on one call, and the strength is where OFF lives: `LightOptions` has no shadow
+    // switch, and a shadow with no strength is the only way to say "lit ground, no shadows". The rest
+    // is written whether or not shadows are on, so the switch is the only thing that has to move.
+    map.light({ type: 'light' }).apply({
+        terrainLightingEnabled: lit,
+        shadowStrength: lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
+        shadowDistance: get(terrainShadowDistance),
+        shadowMapSize: get(terrainShadowMapSize),
+        shadowCascades: get(terrainShadowCascades),
+        shadowSoftness: get(terrainShadowSoftness),
+        shadowCasterMargin: get(terrainShadowCasterMargin)
+    });
+}
+
+/**
+ * The touch model, which the 3D mode owns while it is up — and only while it is up: a free roam drag
+ * on a flat map turns a view that has nothing to turn.
+ *
+ * NOT applied while the peak finder is up: a panorama is first person by definition, so that mode
+ * forces it and puts this back on its way out. The state is read from the store rather than from the
+ * peak finder module, which imports this file.
+ */
+function applyTouchMode(on: boolean) {
+    if (get(peakFinderActive)) {
+        return;
+    }
+    getMapContext()
+        .getMap()
+        ?.set('freeRoamMode', on ? FREE_ROAM_MODES[get(terrainTouchMode)] : 'FREE_ROAM_MODE_OFF');
+}
+
+/** Puts the touch model back to what the mode now on screen asks for. The peak finder's way out. */
+export function refreshTouchMode() {
+    applyTouchMode(is3D());
+}
+
+/**
+ * How far the ground is drawn in METRES, which only the 3D mode wants — both ends of it.
+ *
+ * `viewDistance` is a FLOOR: `ViewState::calculateViewDistance` returns `max(rule × factor, metres)`,
+ * so it can only ever extend the view and turning it down does nothing. `viewDistanceMax` is the
+ * ceiling, applied last, and the only metric way to make the map reach less far than tangram's rule —
+ * which from a hillside is already tens of kilometres and from a summit past a hundred.
+ *
+ * Both are 0 while 3D is off: on a flat map the same metres reach the horizon at every zoom, which is
+ * a tile walk with nothing to show for it, and a ceiling on a map seen from above would end the
+ * ground in a disc inside the screen. The peak finder sets its own, hence the guard.
+ */
+function applyViewDistance(on: boolean) {
+    if (get(peakFinderActive)) {
+        return;
+    }
+    terrain()?.apply({
+        viewDistance: on ? get(terrainViewDistanceMetres) : 0,
+        viewDistanceMax: on ? get(terrainViewDistanceMax) : 0
+    });
+}
+
+/** The metres the mode now on screen asks for. The peak finder's way out, with the touch model. */
+export function refreshViewDistance() {
+    applyViewDistance(is3D());
+}
+
+/**
+ * Re-asserts the sky, the fog and the lighting for whatever the terrain is showing right now.
+ *
+ * For the peak finder's way out: it saved the map's sky and clear colours on the way IN — before this
+ * file had touched them — and puts those back, which on e-ink undoes the white sky 3D still wants
+ * underneath. Nothing else has an opinion, so re-running the rule is the whole fix.
+ */
+export function refreshAtmosphere() {
+    applyAtmosphere(is3D());
 }
 
 /**
@@ -225,8 +406,21 @@ export const toggle3D = tryCatchFunction(async () => {
     // the tilt the map is already at, the rule never crosses its threshold, and nothing moves.
     const in3D = is3D();
     switching = true;
+    // Before the store flip, and before anything touches the camera: the flight passes through every
+    // tilt between the two, and the flat map's range would clamp it to 90 the whole way.
+    beginTiltTransition();
     terrain3dActive.set(!in3D);
-    applyAtmosphere(!in3D);
+    // Entering, the atmosphere goes up WITH the ground. Leaving, it stays until the flight lands
+    // (`rampWithFlight`): the sky is what fills the screen above the horizon, and taking it away at
+    // tilt 20 leaves the band showing the CLEAR colour — black — for the length of the animation.
+    // At the end of the flight the camera is straight down and there is no horizon left to see.
+    if (!in3D) {
+        applyAtmosphere(true);
+    }
+    // Classic for the flight itself, whichever way it goes, and the setting's model once it lands: in
+    // first person `setTilt` turns the view about the CAMERA, so the switch's own tilt would spin the
+    // view where it stands instead of raising or lowering the ground under it.
+    applyTouchMode(false);
 
     if (in3D) {
         // Sinking has nothing to wait for.
@@ -244,16 +438,23 @@ export const toggle3D = tryCatchFunction(async () => {
 });
 
 /**
- * The camera flight.
+ * The camera flight: the TILT, and nothing else.
  *
- * Entering 3D keeps the FOCUS point — what the user was looking at stays what they are looking at.
- * Leaving it targets where the camera IS instead: at a low tilt the focus is kilometres out in front,
- * so re-centring on it swings the map forward as it flattens.
+ * Both directions keep the focus point, the zoom and the rotation, so 2D → 3D → 2D lands back on the
+ * camera it started from — which is the whole point of a mode switch. Leaving used to target
+ * `eyePosition()` instead, and that is kilometres in front of the focus at a low tilt: every round
+ * trip walked the map forward by that much.
+ *
+ * Leaving drops the focus's ALTITUDE, and entering keeps it. A flat map's focus belongs on the plane,
+ * so coming back puts it there — and going up again then keeps whatever the terrain has since made of
+ * it, rather than forcing it to sea level with the ground two kilometres above.
  */
 function fly(leaving3D: boolean) {
     const mapCamera = camera();
-    const target = leaving3D ? mapCamera.eyePosition() : mapCamera.position();
+    const position = mapCamera.position();
+    const target: Position = leaving3D ? [position[0], position[1]] : position;
     mapCamera.animate(get(terrainSwitchDuration) * 1000).moveTo(target, {
+        zoom: mapCamera.zoom(),
         rotation: mapCamera.rotation(),
         tilt: leaving3D ? TILT_2D : get(terrain3dTilt)
     });
@@ -280,6 +481,16 @@ function rampWithFlight(leaving3D: boolean) {
         flattened: leaving3D
     });
     stopRamp();
+    endTiltTransition();
+    // The sky and the fog come down here rather than at the start of the flight, for the same reason
+    // the touch model does: the animation still has a horizon in it (see `toggle3D`).
+    if (leaving3D) {
+        applyAtmosphere(false);
+    }
+    applyTouchMode(!leaving3D);
+    // Once the flight has landed, like the touch model: a hundred kilometres of ground asked for
+    // mid-switch is a tile walk against the frames the switch itself needs.
+    applyViewDistance(!leaving3D);
 }
 
 /**
@@ -301,6 +512,8 @@ function onTerrainSourceChanged() {
         attachedSourceId = null;
         terrain()?.set('enabled', false);
         terrain3dActive.set(false);
+        applyTouchMode(false);
+        applyViewDistance(false);
         return;
     }
     if (source.id === attachedSourceId) {
@@ -320,7 +533,10 @@ function onMapDestroyed() {
     stopRamp();
     terrainAttached = false;
     attachedSourceId = null;
+    savedSkyColor = null;
+    savedClearColor = null;
     terrain3dActive.set(false);
+    mapTiltTransition.set(false);
 }
 
 const show3DSettings = tryCatchFunction(async () => {
@@ -358,7 +574,21 @@ applyLive(terrainAutoFlattenByTilt, (value) => terrain().set('autoFlattenTilt', 
 // Only meaningful while 3D is up, and `applyAtmosphere` is what decides that.
 applyLive(terrainSky, () => applyAtmosphere(is3D()));
 applyLive(terrainFog, () => applyAtmosphere(is3D()));
+applyLive(terrainFogVerticalStart, () => applyAtmosphere(is3D()));
+applyLive(terrainFogVerticalEnd, () => applyAtmosphere(is3D()));
+applyLive(terrainViewDistanceMetres, () => applyViewDistance(is3D()));
+applyLive(terrainViewDistanceMax, () => applyViewDistance(is3D()));
 applyLive(terrainLighting, () => applyAtmosphere(is3D()));
+// The shadow knobs go through the same rule, since the strength depends on the lighting switch too.
+applyLive(terrainShadows, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowStrength, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowDistance, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowMapSize, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowCascades, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowSoftness, () => applyAtmosphere(is3D()));
+applyLive(terrainShadowCasterMargin, () => applyAtmosphere(is3D()));
+// Same: the touch model only applies while the 3D mode is the one on screen.
+applyLive(terrainTouchMode, () => applyTouchMode(is3D()));
 
 registerMapModule('terrain3d', { onMapDestroyed, onTerrainSourceChanged });
 

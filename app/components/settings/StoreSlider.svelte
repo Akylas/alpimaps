@@ -12,6 +12,7 @@
     import { colors } from '~/variables';
 
     export let title: string;
+    export let description: string = null;
     export let store: Writable<number>;
     export let min: number;
     export let max: number;
@@ -61,8 +62,11 @@
     }
 </script>
 
-<gridlayout columns="*,auto" padding="6 16 0 16" rows="auto,auto" {...$$restProps}>
+<gridlayout columns="*,auto" padding="6 16 0 16" rows="auto,auto,auto" {...$$restProps}>
     <label colSpan={2} color={colorOnSurface} fontSize={16} text={title} />
-    <slider col={0} maxValue={max * factor} minValue={min * factor} row={1} stepSize={step * factor} value={$store * factor} on:valueChange={onValueChange} />
-    <label col={1} color={colorOnSurfaceVariant} fontSize={14} marginLeft={10} row={1} text={display($store)} verticalTextAlignment="center" width={70} on:tap={promptForValue} />
+    {#if description}
+        <label colSpan={2} color={colorOnSurfaceVariant} fontSize={13} row={1} text={description} textWrap={true} />
+    {/if}
+    <slider col={0} maxValue={max * factor} minValue={min * factor} row={2} stepSize={step * factor} value={$store * factor} on:valueChange={onValueChange} />
+    <label col={1} color={colorOnSurfaceVariant} fontSize={14} marginLeft={10} row={2} text={display($store)} verticalTextAlignment="center" width={70} on:tap={promptForValue} />
 </gridlayout>
