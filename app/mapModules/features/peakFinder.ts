@@ -1,15 +1,13 @@
 import * as api from '@nativescript-community/ui-massifmaps/api';
-import type { FreeRoamMode, MassifLayer, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifMap, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
+import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { Color } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { showToast, tryCatchFunction } from '@shared/utils/ui';
 import { get } from 'svelte/store';
 import { lc } from '~/helpers/locale';
-import { isEInk } from '~/helpers/theme';
-import { type FeatureClickData, getMapContext } from '~/mapModules/MapModule';
-import { beginTiltTransition, endTiltTransition, ensureTerrain, is3D, refreshAtmosphere, refreshTouchMode, refreshViewDistance, setTerrain3DImmediate } from '~/mapModules/features/terrain3d';
-import type { AddedLayer } from '~/mapModules/layerStack';
+import { type FeatureClickData, featureClickData, getMapContext } from '~/mapModules/MapModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
 import { RELIEF_DEFAULTS, RELIEF_OUTLINE_SHADER, RELIEF_SURFACE_SHADER, reliefPalette } from '~/mapModules/terrain/reliefShaders';
@@ -18,6 +16,7 @@ import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
 import { nutiProps } from '~/stores/mapStore';
 import {
+    PANORAMA_RANGE,
     peakFinderActive,
     peakFinderArActive,
     peakFinderCreaseFade,
@@ -27,8 +26,6 @@ import {
     peakFinderDistanceFade,
     peakFinderElevation,
     peakFinderEnabled,
-    peakFinderFlyClimb,
-    peakFinderFlyDuration,
     peakFinderFlyElevation,
     peakFinderFlyZoom,
     peakFinderHaze,
@@ -51,98 +48,84 @@ import {
     peakFinderSlopeStrength,
     peakFinderTilt,
     peakFinderViewDistance,
-    peakFinderViewDistanceMetres
+    peakFinderViewDistanceMetres,
+    terrainCameraClearance,
+    terrainExaggeration
 } from '~/stores/terrainStore';
 import { type MapPos, bearingBetween, computeDistanceBetween, toPosition } from '~/utils/geo';
 import { lockOrientation } from '~/utils/orientation';
-import { clearTimeout, setTimeout } from '~/utils/utils';
 
 /**
- * The peak finder, as a MODE of the live map rather than a screen of its own.
+ * The peak finder, on a MAP OF ITS OWN.
  *
- * It is not one SDK feature but a combination, and each piece on its own looks like nothing happens:
+ * It used to be a mode of the live map: the layers were hidden, the camera flown to the viewpoint, the
+ * atmosphere and the terrain rewritten, and every one of those changes undone again on the way out. It
+ * worked, but it meant the panorama paid for everything the live map is — its layers' decoded tiles,
+ * its drape, its label sets — and the way out was a long list of things to put back, each of which was
+ * a bug waiting to happen. It also MOVED the map: the user came back to wherever the panorama had
+ * wandered to rather than where they left.
  *
- *  - the terrain SURFACE only shows where NO tile layer paints, so the mode takes the map layers off;
- *  - the ridge lines are a POST-PROCESS effect reading the packed terrain depth — without it the
- *    surface is a flat wash, which is what makes it look like the mode did not work;
- *  - summit names need a view that HAS summits in it, so the camera is put near the ground looking at
- *    the horizon (tilt 90 is straight down in this SDK, so a panorama is a LOW tilt) and lifted a few
- *    hundred metres above it;
- *  - and a panorama wants the far ranges, which is what viewDistanceFactor buys.
+ * So the panorama is now a second `massifmap`, mounted over the live one while the mode is up and
+ * destroyed with it (`components/peaks/PeakFinderMap.svelte`). What that buys:
  *
- * Entering is ONE flight: the camera flies to the item at the panorama's zoom and tilt while the
- * viewpoint climbs, and the terrain, the relief and the names come up on the same clock.
+ *  - the live map is not touched at all — not its camera, not its layers, not its atmosphere. It is
+ *    also not DRAWN: the SDK renders when dirty, so an idle map under an opaque one costs nothing.
+ *  - the panorama starts from nothing rather than from a map: one vector layer for the summit names
+ *    and the terrain, no base map, no drape, no sky.
+ *  - there is nothing to restore, so there is no exit path to get wrong. The map is destroyed, and
+ *    every id it built goes with it.
+ *  - no animation anywhere: the camera is placed where it belongs before the first frame is drawn.
  *
- * Modelled on the android demo (`DemoMap.flyToPeakFinder` / `setPeakFinderMode` / `setArMode`) down to
- * its defaults, and the shaders are that demo's verbatim — the mode is meant to look exactly like it.
- * See `terrain/reliefShaders.ts` and `stores/terrainStore.ts`.
+ * What it does NOT re-fetch is the point of the design: the DEM and the vector tiles are the SAME
+ * data sources the live map is drawing, handed over by handle, so the tiles already in their caches
+ * are the tiles the panorama meshes and labels from.
+ *
+ * The look is unchanged — the relief surface shader, the ridge-line post-process effect and the
+ * callout summit labels are the android demo's, see `terrain/reliefShaders.ts` and `terrain/peaksStyle.ts`.
  */
 
+/** The registry id the panorama's map takes. Two maps in one app must not share the `map` one. */
+export const PANORAMA_MAP_ID = 'map.peakFinder';
 const PEAKS_LAYER_ID = 'layer.peaks';
 const PEAKS_DECODER_ID = 'decoder.peaks';
 const EFFECT_ID = 'relief_outline';
-/** Straight down, which is where a 2D map's camera is. */
-const TILT_2D = 90;
-/** How often the fly-in's lift ramp samples the flight, ms — one frame, as `terrain3d` does. */
-const LIFT_RAMP_TICK_MS = 16;
 /** A transparent sky colour is how the legacy sky BITMAP is turned off — see `applyAtmosphere`. */
 const NO_SKY_BITMAP = 0;
-
-/** See where it is applied in `enterPeakFinder`: it is the package's peak zoom range, not a budget. */
+/**
+ * How many zoom levels below the camera a far tile may coarsen to.
+ *
+ * A DATA limit rather than a performance one. The live map lets a distant tile fall to
+ * `cameraTileZoom - 8`, which in a panorama is z5 or z6 — and the package carries `mountain_peak`
+ * from z6 only, with just the famous summits at that zoom. Past the distance where the cut reached z5
+ * there were no peak features left to label, whatever the culler did.
+ */
 const PEAKS_MAX_TILE_ZOOM_COARSENING = 4;
 
-/** What entering the mode changed, so leaving it can put everything back. */
-interface SavedState {
-    /** The tile layers we took off the map, with the layer type each was added under. */
-    layers: AddedLayer[];
-    /** The whole camera, so leaving the mode gives the map back exactly as it was handed over. */
-    position: Position;
-    zoom: number;
-    rotation: number;
-    tilt: number;
-    was3D: boolean;
-    viewDistanceFactor: number;
-    viewDistance: number;
-    viewDistanceMax: number;
-    meshResolution: number;
-    occlusionEnabled: boolean;
-    occlusionTolerance: number;
-    maxTileZoomCoarsening: number;
-    skyEnabled: boolean;
-    mapSkyColor: number;
-    clearColor: number;
-    labelViewDistance: number;
-    drapeFills: boolean;
-    drapeLines: boolean;
-    /** The map's background bitmap, held so putting it back does not need a handle we cannot read. */
-    backgroundBitmap: api.MassifObject<'massif::Bitmap'>;
-}
-
-let saved: SavedState = null;
-/** Bumped per rebuild, so a new layer/decoder pair never collides with the one still on the map. */
-let peaksGeneration = 0;
+/** The panorama's own map, from the moment its view is ready until the mode is left. */
+let panorama: MassifMap = null;
+/** Its view, for the two things the surface API has no verb for: the effect and the surface shader. */
+let panoramaView: MassifMapView = null;
+/** The live map's sources, held by handle while the panorama draws from them. */
+let demSource: MassifSource = null;
+let peaksSource: MassifSource = null;
 let peaksLayer: MassifLayer = null;
 let peaksDecoder: api.MassifObject<'massif::MBVectorTileDecoder'> = null;
+/** Bumped per rebuild, so a new layer/decoder pair never collides with the one still on the map. */
+let peaksGeneration = 0;
 let effect = null;
-/** Where the panorama is looking FROM, in lon/lat — the flight's target, kept for distances. */
+/** Where the panorama is looking FROM, in lon/lat — what distances are measured against. */
 let viewpoint: MapPos = null;
-/** Clears the transition's open tilt range once a fly-in or fly-out has landed. */
-let transitionTimer: NodeJS.Timeout = null;
-/** Runs the fly-in's climb; see `rampLiftWithFlight`. */
-let liftRampTimer: NodeJS.Timeout = null;
+/** The bearing the panorama opens on, taken from the live map so the view starts as the map looked. */
+let initialRotation = 0;
 /** Whether AR is what started the orientation sensors, so turning it off knows to stop them. */
 let arStartedFollowing = false;
 
-function mapContext() {
-    return getMapContext();
-}
-
 function terrain() {
-    return mapContext().getMap()?.terrain();
+    return panorama?.terrain();
 }
 
 function camera() {
-    return mapContext().getMap()?.camera();
+    return panorama?.camera();
 }
 
 /**
@@ -152,9 +135,6 @@ function camera() {
  * nearly black (#14141a) — which over a photograph of a mountain is the one colour that cannot be
  * seen. The dark palette's is nearly white, and on e-ink `einkDark` is pure white, so the pair that
  * reads over a preview is the same pair either way.
- *
- * The switch therefore does nothing while AR is on. That is deliberate: the paper it picks between is
- * not drawn in AR at all, so the only thing left for it to choose is an unreadable ink.
  */
 function palette() {
     return reliefPalette(get(peakFinderArActive) || get(peakFinderDark));
@@ -168,22 +148,33 @@ export function isPeakFinderActive() {
     return get(peakFinderActive);
 }
 
-// --- the summit label layer -------------------------------------------------------------------
+// --- the data the live map already has ---------------------------------------------------------
 
 /**
- * A vector source with the app's own tiles in it.
+ * The DEM the live map is shading with, as a source the panorama can mesh from.
+ *
+ * `CustomLayersModule` already resolved which DEM holds the hillshade slot and set its
+ * `metaData.dem_encoding`, so the elevation decoder resolves itself. Sharing the SOURCE rather than
+ * opening the file again is what makes the panorama's terrain appear at once: the tiles the live map
+ * has read are already in that source's caches.
+ */
+function findDemSource(): MassifSource {
+    return packageService.hillshadeLayer?.source() ?? null;
+}
+
+/**
+ * A vector source with the app's own tiles in it, for the summit names.
  *
  * The offline package first, because that is what the mode is for; otherwise the first vector layer
- * the user has switched on. The peaks layer draws from the SAME source the map is showing rather than
- * fetching its own, so the labels agree with the map and cost nothing extra.
+ * the user has switched on. Shared with the live map for the same reason the DEM is.
  */
-function vectorSource(): MassifSource {
+function findPeaksSource(): MassifSource {
     const local = packageService.localVectorTileLayer;
     if (local?.valid) {
         return local.source();
     }
     let found: MassifSource = null;
-    mapContext()
+    getMapContext()
         .mapModule('customLayers')
         ?.customSources.some((source) => {
             if (source.layer?.is('massif::CompositeVectorTileLayer') || source.layer?.is('massif::VectorTileLayer')) {
@@ -194,6 +185,8 @@ function vectorSource(): MassifSource {
         });
     return found;
 }
+
+// --- the summit label layer -------------------------------------------------------------------
 
 /** The map's own label size preference, so the summit names match its labels. See `peaksStyle`. */
 function mapFontScale(): number {
@@ -219,23 +212,20 @@ function currentPeaksStyle() {
  *
  * The ids carry a GENERATION rather than being fixed: a rebuild has to stand its new layer up while
  * the old one is still on the map, and building an id that is already registered with a different
- * spec is refused. Counting means the two never collide, and the old pair is released afterwards.
+ * spec is refused. Both belong to the panorama's map, so its `destroy()` releases them.
  */
 function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif::MBVectorTileDecoder'> } {
-    const source = vectorSource();
-    if (!source) {
-        DEV_LOG && console.log('peakFinder: no vector source, so no summit labels');
+    if (!panorama || !peaksSource) {
         return null;
     }
     peaksGeneration += 1;
-    // No cast: `create` infers the class from the spec's `type`.
-    const decoder = api.create('style', `${PEAKS_DECODER_ID}.${peaksGeneration}`, {
+    const decoder = panorama.style(`${PEAKS_DECODER_ID}.${peaksGeneration}`, {
         type: 'mbvt',
         cartocss: { type: 'cartocss', css: currentPeaksStyle() }
     });
-    const layer = mapContext().getMap().buildLayer(`${PEAKS_LAYER_ID}.${peaksGeneration}`, {
+    const layer = panorama.buildLayer(`${PEAKS_LAYER_ID}.${peaksGeneration}`, {
         type: 'vector',
-        source: source.handle,
+        source: peaksSource.handle,
         style: decoder.id,
         preloading: true,
         // The labels are the only thing drawn over the relief, so they go last.
@@ -243,7 +233,7 @@ function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif:
         tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE'
     });
     layer.onFeatureClick((e) => {
-        e.consumed = onPeakClicked(mapContext().featureClickData(e));
+        e.consumed = onPeakClicked(featureClickData(e));
     });
     return { layer, decoder };
 }
@@ -251,32 +241,22 @@ function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif:
 function buildPeaksLayer() {
     const built = createPeaks();
     if (!built) {
+        DEV_LOG && console.log('peakFinder: no vector source, so no summit labels');
         return;
     }
     peaksLayer = built.layer;
     peaksDecoder = built.decoder;
-    mapContext().addLayer(peaksLayer, 'peaks');
-}
-
-function destroyPeaksLayer() {
-    if (peaksLayer) {
-        mapContext().removeLayer(peaksLayer);
-        peaksLayer.destroy();
-        peaksLayer = null;
-    }
-    peaksDecoder?.destroy();
-    peaksDecoder = null;
+    panorama.add(peaksLayer);
 }
 
 /**
  * Rebuilds the layer with a new decoder.
  *
- * Every label knob is style TEXT, so there is no property to write — the decoder has to be built
- * again, exactly as the native demo's `rebuildPeaksLayer` does. Swapped in place so it keeps its
+ * Every label knob is style TEXT, so there is no property to write. Swapped in place so it keeps its
  * position in the stack, and the old pair is released only once the new one is standing.
  */
 function rebuildPeaksLayer() {
-    if (!peaksLayer || !isPeakFinderActive()) {
+    if (!panorama || !peaksLayer) {
         return;
     }
     const previousLayer = peaksLayer;
@@ -287,7 +267,8 @@ function rebuildPeaksLayer() {
     }
     peaksLayer = built.layer;
     peaksDecoder = built.decoder;
-    mapContext().replaceLayer(previousLayer, peaksLayer);
+    panorama.removeLayer(previousLayer);
+    panorama.add(peaksLayer);
     previousLayer.destroy();
     previousDecoder?.destroy();
 }
@@ -297,18 +278,19 @@ function rebuildPeaksLayer() {
 /**
  * The shaded terrain surface the ink lines are drawn over.
  *
- * The shader SOURCE is a facade property; its parameters are not — the surface API has no method table
- * for `TerrainOptions` — so the uniforms go through the object API on the view. The parameters are
- * written whether or not the shader is attached, exactly as the demo's `applyReliefSurface` does: they
- * are cheap, and it keeps the two calls from having to agree about order.
+ * The shader SOURCE is a facade property; its parameters are not — the surface API has no method
+ * table for `TerrainOptions` — so the uniforms go through the object API on the view.
  */
 function applyReliefSurface() {
-    const terrainOptions = mapContext().getMapView()?.getTerrainOptions();
+    if (!panorama) {
+        return;
+    }
     const colors = palette();
     // NO surface shader in AR: the shader's job is to paint the ground, and in AR the ground is the
     // camera preview. The relief still reads, because the ridge lines are drawn by the post-process
     // effect off the packed terrain DEPTH, which is rendered whether or not the surface is painted.
     terrain().set('surfaceShaderSource', get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER);
+    const terrainOptions = panoramaView?.getTerrainOptions();
     if (!terrainOptions) {
         return;
     }
@@ -320,11 +302,6 @@ function applyReliefSurface() {
     terrainOptions.setSurfaceParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
 }
 
-function clearReliefSurface() {
-    // An EMPTY shader is how the renderer's own default comes back.
-    terrain()?.set('surfaceShaderSource', '');
-}
-
 /**
  * The ridge lines.
  *
@@ -332,8 +309,7 @@ function clearReliefSurface() {
  * and the shader is the look. Object API only: the surface API carries no `postProcessEffect`.
  */
 function applyReliefOutline() {
-    const view = mapContext().getMapView();
-    if (!view) {
+    if (!panoramaView) {
         return;
     }
     const colors = palette();
@@ -355,8 +331,7 @@ function applyReliefOutline() {
     // NO slope ink in AR, and this is the grey veil over the camera preview. The slope term is a
     // depth GRADIENT lifted by `pow(·, 0.23)`, so it inks every surface that is not square-on to the
     // camera — which is nearly the whole frame. On paper that IS the relief; over a photograph it is
-    // a sheet of translucent ink with the picture behind it. AR keeps the terms that draw LINES (the
-    // silhouette and the creases) and drops the one that fills.
+    // a sheet of translucent ink with the picture behind it.
     effect.setFloatParameter('uSlopeStrength', get(peakFinderArActive) ? 0 : get(peakFinderSlopeStrength));
     effect.setFloatParameter('uSlopeMultiplier', get(peakFinderSlopeMultiplier));
     effect.setFloatParameter('uSlopeBias', get(peakFinderSlopeBias));
@@ -368,75 +343,48 @@ function applyReliefOutline() {
     effect.setFloatParameter('uDistanceFade', get(peakFinderDistanceFade));
     effect.setColorParameter('uInkColor', colors.ink);
     effect.setColorParameter('uPaperColor', colors.paper);
-    view.setPostProcessEffect(effect);
-}
-
-function clearReliefOutline() {
-    mapContext().getMapView()?.setPostProcessEffect(null);
-    effect = null;
+    panoramaView.setPostProcessEffect(effect);
 }
 
 /**
- * In the relief view the sky is part of the palette: a light one over the paper, a night one over the
- * ink. This is the demo's `applySkyOptions` relief branch and nothing more.
+ * The sky, which in this mode there is none of.
  *
- * No FOG, and now it has to be said rather than assumed: the 3D mode ships one (mapbox's) and this mode
- * is entered THROUGH the 3D switch, so it arrives already on. The relief has its own distance haze in
- * the surface shader (`uHaze`) and the SDK applies the frame's fog on top of whatever `surfaceColor()`
- * returns, so leaving it on means the distance is washed out twice and the far ranges go flat.
+ * Above the horizon the panorama is paper (or ink), the same flat tone as the ground it is read
+ * against. Three separate things have to be off to get that, and each one alone leaves a band:
  *
- * The sky's own SHADER is cleared: a generated day-cycle shader owns the sky's colours, and while one
- * is attached the palette's sky is not visible at all.
+ *  - the shader sky, which is what draws a gradient;
+ *  - the legacy sky BITMAP, whose switch is a TRANSPARENT `skyColor` — `Options::getSkyBitmap`
+ *    generates a gradient from the style's background up to that colour, so any real colour there is
+ *    a gradient, and white gave a gradient that merely ended white;
+ *  - and the background PLANE: `BackgroundRenderer` draws it before any layer from the first layer's
+ *    style background, and with no base map to ask it falls back to the SDK's own default bitmap —
+ *    the block pattern. It reads `Options.backgroundBitmap` only to decide whether the app has an
+ *    opinion, so nulling it is what takes the plane off altogether.
  *
- * E-ink gets a FLAT white sky, and getting there takes both of the sky colours off:
- *
- *  - the shader sky is off, as it was — a screen with no greys to spend renders its gradient as noise;
- *  - and the map's `skyColor` goes TRANSPARENT, which is not a colour here but a switch. Both
- *    `Options::getSkyBitmap` and `VectorTileLayer::getSkyBitmap` read it to generate the legacy sky
- *    band as a GRADIENT from the style's background colour up to it, and only a transparent one means
- *    "no bitmap at all". Setting it white therefore did not give a white sky, it gave the gradient the
- *    mode was reported with — black (the peaks style has no background colour) up to white.
- *
- * With no sky bitmap and no shader sky, the band above the horizon is the CLEAR colour, so that is
- * what carries the paper white.
+ * With all three off the band above the horizon shows the CLEAR colour, so that is what carries the
+ * tone. In AR it is fully TRANSPARENT instead, which turns the frame into a hole for the camera
+ * preview — and the terrain's own background fill has to go with it, or it paints the ground opaque
+ * under the relief and the preview never appears.
  */
 function applyAtmosphere() {
-    const map = mapContext().getMap();
-    const colors = palette();
+    if (!panorama) {
+        return;
+    }
     const transparent = get(peakFinderArActive);
-    // The palette's own paper, e-ink included: `reliefPalette` has a pair for that screen now, so
-    // forcing white here is what kept the dark switch from reaching the background.
-    const paper = argb(colors.paper);
-    // NO SKY, on any screen. Not a gradient, not an atmosphere, not even a colour of its own: above
-    // the horizon this mode is paper (or ink), the same flat tone as the ground it is read against.
-    // Three separate things have to be off to get that, and each one alone leaves a band:
-    //  - the shader sky, which is what draws a gradient;
-    //  - the legacy sky BITMAP, whose switch is a TRANSPARENT `skyColor` — `Options::getSkyBitmap`
-    //    generates a gradient from the style's background up to that colour, so any real colour
-    //    there is a gradient, and white gave a gradient that merely ended white;
-    //  - and with both off the band shows the CLEAR colour, so that is what carries the tone.
-    map.sky({ type: 'sky' }).apply({ enabled: false, shaderSource: '' });
-    map.fog({ type: 'fog' }).set('enabled', false);
-    map.set('skyColor', NO_SKY_BITMAP);
-    // ...and a FOURTH thing, which is the one that was still painting: the background PLANE.
-    // `BackgroundRenderer` draws it before any layer, from the first layer's style background — and
-    // when that comes back empty it falls back to the SDK's own default bitmap, which is the block
-    // pattern that showed through this mode. It reads `Options.backgroundBitmap` only to decide
-    // whether the app has an opinion, so nulling it is what takes the plane off altogether.
-    map.set('backgroundBitmap', null);
-    // A fully transparent clear colour turns the frame into a hole, which is what the camera preview
-    // behind it shows through. The terrain's own background fill has to go with it, or it paints the
-    // ground opaque under the relief and the preview never appears.
-    map.set('clearColor', transparent ? 0 : paper);
+    const paper = argb(palette().paper);
+    panorama.sky({ type: 'sky' }).apply({ enabled: false, shaderSource: '' });
+    panorama.fog({ type: 'fog' }).set('enabled', false);
+    panorama.apply({
+        skyColor: NO_SKY_BITMAP,
+        backgroundBitmap: null,
+        clearColor: transparent ? 0 : paper
+    });
     terrain().set('backgroundColor', transparent ? 0 : paper);
 }
 
-/** Re-applies everything that the light/dark switch touches. The label palette is style text, so the
+/** Re-applies everything the light/dark switch touches. The label palette is style text, so the
  *  decoder is rebuilt with it. */
 function applyPalette() {
-    if (!isPeakFinderActive()) {
-        return;
-    }
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
@@ -449,20 +397,13 @@ function applyPalette() {
  * How high the eye stands above the ground, which is the one thing a peak finder is about.
  *
  * NOT a camera position. With a terrain attached the renderer OWNS the focus height — it sits the
- * focus on the ground, as mapbox does (`transform._centerAltitude`), and recomputes it on every
- * frame and on every camera event (`MapRenderer::constrainCameraToClearance`, and the frame's own
- * `CameraClearance::focusFollow` rule). A focus position written with an altitude in it therefore
- * lasted until the next frame and no longer, which is why the elevation arrows stopped doing
- * anything: they were writing a height the renderer threw away.
+ * focus on the ground, as mapbox does, and recomputes it on every frame and on every camera event. A
+ * focus position written with an altitude in it therefore lasts until the next frame and no longer.
  *
  * `TerrainOptions.focusLift` is the lift that survives. It is ADDED on top of whatever the
  * ground-following rule decides, so the clearance shell keeps working underneath it and the value
  * means the same thing at every zoom and tilt: this many metres above the ground the viewpoint
- * stands over. In METRES — the mercator stretch and the display scale are the SDK's business now,
- * which is why the latitude term and the DEM sampling this file used to do are gone.
- *
- * Nothing else can buy that view: at the panorama's tilt the camera looks at the horizon, so its
- * orbit is almost horizontal and zooming out moves the eye sideways rather than up.
+ * stands over.
  */
 function setFocusLift(metres: number) {
     terrain()?.set('focusLift', Math.max(0, metres));
@@ -470,49 +411,12 @@ function setFocusLift(metres: number) {
 
 /** Lifts the viewpoint to `metres` above the ground under it, without moving it horizontally. */
 export const applyViewpointElevation = tryCatchFunction(async (metres: number) => {
-    if (!isPeakFinderActive()) {
-        return;
-    }
-    stopLiftRamp();
     setFocusLift(metres);
 });
 
 /** The viewpoint's height above the ground, read back from the SDK rather than from our own store. */
 export function currentViewpointElevation(): number {
     return terrain()?.get('focusLift') ?? 0;
-}
-
-/**
- * The fly-in's climb, as a ramp on the lift driven by the FLIGHT's own progress.
- *
- * The flight cannot carry it: `flyTo` interpolates a focus position, and its height is the one thing
- * the renderer overwrites (see `setFocusLift`) — which is what `climbHeight` was arching, so that
- * argument had no effect either. Same shape all the same: the lift rises to the viewpoint's
- * elevation over the way there, arched by `peakFinderFlyClimb` so it goes over the ridges in between
- * like a plane rather than straight to its final height.
- *
- * Sampling the camera instead of a clock of our own is `terrain3d`'s `rampWithFlight`, for its
- * reason: a dropped frame or an interrupted flight cannot leave the two out of step.
- */
-function rampLiftWithFlight(target: number) {
-    const mapCamera = camera();
-    const progress = mapCamera?.progress() ?? -1;
-    if (progress < 0) {
-        setFocusLift(target);
-        liftRampTimer = null;
-        return;
-    }
-    // sin gives 0 at both ends, so the arch adds nothing to where the flight starts or lands.
-    const arch = Math.sin(Math.PI * progress) * get(peakFinderFlyClimb);
-    setFocusLift(target * progress + arch);
-    liftRampTimer = setTimeout(() => rampLiftWithFlight(target), LIFT_RAMP_TICK_MS);
-}
-
-function stopLiftRamp() {
-    if (liftRampTimer) {
-        clearTimeout(liftRampTimer);
-        liftRampTimer = null;
-    }
 }
 
 // --- entering and leaving ---------------------------------------------------------------------
@@ -523,261 +427,177 @@ function itemPosition(item: IItem): MapPos {
 }
 
 /**
- * Enters the mode and flies in, as one move.
+ * Enters the mode.
+ *
+ * Nothing here touches a map. Flipping the store is what mounts `PeakFinderMap.svelte`, and the map
+ * it creates calls `setupPanorama` once its view is ready — so this only records what the panorama
+ * has to be built FOR.
  */
 export const enterPeakFinder = tryCatchFunction(async (item: IItem) => {
     if (isPeakFinderActive()) {
         return;
     }
-    const map = mapContext().getMap();
-    if (!map) {
-        return;
-    }
-    if (!ensureTerrain()) {
-        // The item action is gated on `hasElevation`, so this only happens if the DEM went away between
-        // the row being built and the tap. Say so rather than doing nothing at all.
+    if (!packageService.hasElevation()) {
+        // The item action is gated on this, so it only happens if the DEM went away between the row
+        // being built and the tap. Say so rather than doing nothing at all.
         showToast(lc('no_elevation_data'));
         return;
     }
-    const position = itemPosition(item);
-    const was3D = is3D();
-    // The fly-in tilts from straight down to the panorama's, and every frame of it is clamped to the
-    // map's tilt range — which is still the flat map's `[90, 90]` until something says otherwise.
-    // That clamp is why the mode used to land at tilt 90 with no panorama at all.
-    beginTiltTransition();
+    viewpoint = itemPosition(item);
+    // The live map's bearing, so the panorama opens facing the way the map was read.
+    initialRotation = getMapContext().getMap()?.camera().rotation() ?? 0;
+    peakFinderSelectedPeak.set(null);
+    peakFinderElevation.set(get(peakFinderFlyElevation));
+    lockOrientation(get(peakFinderScreenOrientation));
+    peakFinderActive.set(true);
+});
 
-    saved = {
-        layers: [...mapContext().getLayers('map'), ...mapContext().getLayers('customLayers')],
-        position: camera().position(),
-        zoom: camera().zoom(),
-        rotation: camera().rotation(),
-        tilt: camera().tilt(),
-        was3D,
-        viewDistanceFactor: terrain().get('viewDistanceFactor') ?? 1,
-        viewDistance: terrain().get('viewDistance') ?? 0,
-        viewDistanceMax: terrain().get('viewDistanceMax') ?? 0,
-        meshResolution: terrain().get('meshResolution') ?? 64,
-        occlusionEnabled: terrain().get('billboardOcclusionEnabled') ?? false,
-        occlusionTolerance: terrain().get('billboardOcclusionTolerance') ?? 0.02,
-        maxTileZoomCoarsening: terrain().get('maxTileZoomCoarsening') ?? 8,
-        labelViewDistance: map.get('labelViewDistance') ?? 5,
-        drapeFills: terrain().get('drapeFillsEnabled') ?? true,
-        drapeLines: terrain().get('drapeLinesEnabled') ?? true,
-        // `child` hands the bitmap over as an object WE own, which is what keeps it alive while the
-        // option below is null — and the only way to get it back, since an object property cannot be
-        // read with `get`.
-        backgroundBitmap: map.child('backgroundBitmap'),
-        skyEnabled: map.sky().get('enabled') ?? false,
-        mapSkyColor: map.get('skyColor'),
-        clearColor: map.get('clearColor')
-    };
-
-    // 3D first, and without an animation of its own: the single flight below carries the whole move,
-    // and a second animated switch underneath it would fight that.
-    setTerrain3DImmediate(true);
-
-    // The surface only shows where no tile layer paints, so the map layers have to stop painting.
-    //
-    // HIDDEN, not removed. A hidden layer costs the same as a removed one while the mode is up —
-    // `TileLayer::calculateVisibleTiles` returns immediately on `!isVisible()`, so nothing is culled,
-    // fetched or decoded — but it KEEPS its decoded tiles. Removing them threw those away, and the
-    // map then had to decode the whole screen again on the way out, which is the wait on exit.
-    saved.layers.forEach((added) => added.layer.set('visible', false));
+/**
+ * Builds the panorama, on the map the component just created.
+ *
+ * Everything is written BEFORE the camera is placed and the layer added, so the first frame the view
+ * draws is already the panorama — there is no animation anywhere in this mode, and nothing to wait
+ * for but the tiles.
+ */
+export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: MassifMapView) => {
+    panorama = map;
+    panoramaView = view;
+    demSource = findDemSource();
+    peaksSource = findPeaksSource();
+    // The view is created from the store, so in principle it can arrive after the mode was left again.
+    if (!viewpoint) {
+        return;
+    }
+    if (!demSource) {
+        showToast(lc('no_elevation_data'));
+        exitPeakFinder();
+        return;
+    }
 
     // Labels, however far away they are. The culler drops any label past `labelViewDistance`
     // multiples of the camera-to-focus distance (maplibre's own rule, 5) — and in a panorama the
-    // focus sits a couple of kilometres in front of a low camera, so that cut lands around ten and
-    // took every summit on the horizon with it. Mont Blanc from Grenoble is 108 km out.
-    // 0 = no limit, leaving `text-max-distance` (peakFinderLabelMaxDistance) the only bound.
+    // focus sits a couple of kilometres in front of a low camera, so that cut lands around ten
+    // kilometres and took every summit on the horizon with it. Mont Blanc from Grenoble is 108 km
+    // out. 0 = no limit, leaving `text-max-distance` the only bound. Its own call: the option is a
+    // property rather than part of the options SPEC, so `apply` does not carry it.
     map.set('labelViewDistance', 0);
+    map.apply({
+        // A panorama reaches UP past the horizon (a negative tilt is a look up), and every frame of a
+        // drag is clamped to this. A floor at the horizon would stop the drag dead there.
+        tiltRange: PANORAMA_RANGE,
+        layersLabelsProcessedInReverseOrder: true,
+        restrictedPanning: true,
+        kineticRotation: false
+    });
 
-    terrain().apply({
-        // A summit sitting ON a ridge, or a metre behind it, is exactly what this view is for, so the
-        // label occlusion is deliberately generous here.
-        billboardOcclusionEnabled: true,
-        billboardOcclusionTolerance: get(peakFinderOcclusion),
-        // A panorama wants the far ranges: tangram's rule stops the ground a few kilometres out, which
-        // is most of what the view is about.
+    // The terrain, from the live map's own DEM. `flattened` false from the start: this map has never
+    // been flat, so there is no switch to animate and nothing decodes twice.
+    map.terrain({ type: 'terrain', source: demSource.handle }).apply({
+        enabled: true,
+        flattened: false,
+        flattenRatio: 0,
+        // The rule belongs to the live map's 2D/3D button; a panorama is never anything but 3D.
+        autoFlattenTilt: 0,
+        autoFlattenParallax: 0,
+        exaggeration: get(terrainExaggeration),
+        cameraClearance: get(terrainCameraClearance),
+        // A finer mesh than the live map runs: the outline effect draws the skyline off the terrain
+        // depth, so the mesh IS the ridge line here.
+        meshResolution: get(peakFinderMeshResolution),
+        // A panorama wants the far ranges: tangram's rule stops the ground a few kilometres out,
+        // which is most of what the view is about...
         viewDistanceFactor: get(peakFinderViewDistance),
         // ...and the factor alone cannot reach them, because that rule shrinks as the viewpoint comes
         // down towards the ground. The metres are what puts Mont Blanc on the horizon from Grenoble.
         viewDistance: get(peakFinderViewDistanceMetres),
-        // Whatever ceiling the 3D map is run with, it is not this mode's: a ceiling is a trade against
-        // how far the view reaches, and reaching is what a panorama IS.
+        // A ceiling is a trade against how far the view reaches, and reaching is what a panorama IS.
         viewDistanceMax: 0,
-        // No DRAPE. Hiding the layers stops them drawing, but the terrain's drape is baked from them
-        // and painted onto the surface by the terrain itself — which is why the roads and the
-        // contours came back when the mode stopped removing the layers outright. With draping off
-        // the surface shader is the only thing painting the ground, and the layers keep their
-        // decoded tiles for the way out.
+        // NO DRAPE, and nothing to drape: this map carries no base layers. The surface shader is the
+        // only thing painting the ground.
         drapeFillsEnabled: false,
         drapeLinesEnabled: false,
-        // A finer mesh than the live map runs: the outline effect draws the skyline off the terrain
-        // depth, so the mesh IS the ridge line here.
-        meshResolution: get(peakFinderMeshResolution),
-        // How coarse a FAR tile is allowed to get, and here it is a DATA limit rather than a
-        // performance one. The live map lets a distant tile fall to `cameraTileZoom - 8`, which in a
-        // panorama is z5 or z6 — and the package carries `mountain_peak` from z6 only, with just the
-        // famous summits at that zoom. So past the distance where the cut reached z5 there were no
-        // peak features at all to label, whatever the culler did. Four levels keeps the far ground on
-        // tiles that still carry summits, and it costs almost nothing here because the peaks layer is
-        // the only visible one in this mode.
-        maxTileZoomCoarsening: PEAKS_MAX_TILE_ZOOM_COARSENING
+        // A summit sitting ON a ridge, or a metre behind it, is exactly what this view is for, so the
+        // label occlusion is deliberately generous here.
+        billboardOcclusionEnabled: true,
+        billboardOcclusionTolerance: get(peakFinderOcclusion),
+        maxTileZoomCoarsening: PEAKS_MAX_TILE_ZOOM_COARSENING,
+        elevationPrefetchEnabled: true
     });
 
-    peakFinderActive.set(true);
-    peakFinderSelectedPeak.set(null);
+    // The camera, placed rather than flown. Before the touch model below: in first person `setTilt`
+    // and `setMapRotation` turn the view in PLACE, so a camera set afterwards would spin the view
+    // where it stands instead of pointing it at the panorama.
+    camera().moveTo(toPosition(viewpoint), {
+        zoom: get(peakFinderFlyZoom),
+        rotation: initialRotation,
+        tilt: get(peakFinderTilt)
+    });
+    setFocusLift(get(peakFinderElevation));
+    // FIRST PERSON is what standing on a summit and turning your head is: a one-finger drag turns the
+    // view about the CAMERA on both axes and the position never changes. The map's own model — the
+    // ground dragged under a camera orbiting its focus — sends that focus kilometres away at this tilt.
+    map.set('freeRoamMode', 'FREE_ROAM_MODE_FIRST_PERSON');
+
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
     buildPeaksLayer();
-    lockOrientation(get(peakFinderScreenOrientation));
-    // The 3D mode may have left its own touch model on (it is a setting), and the flight below wants
-    // the plain one — see `setFreeRoamMode`, which puts first person on once the flight has landed.
-    setFreeRoamMode('FREE_ROAM_MODE_OFF');
-
-    // The flight, and the viewpoint's climb ON it. The position carries no height: the eye's height
-    // above the ground is the terrain's `focusLift` now, and the ramp raises it over the flight —
-    // see `rampLiftWithFlight` for why the flight itself cannot carry it.
-    const elevation = get(peakFinderFlyElevation);
-    viewpoint = position;
-    peakFinderElevation.set(elevation);
-    setFocusLift(0);
-    const duration = get(peakFinderFlyDuration) * 1000;
-    camera().moveTo(toPosition(position), {
-        zoom: get(peakFinderFlyZoom),
-        rotation: camera().rotation(),
-        tilt: get(peakFinderTilt),
-        duration
-    });
-    rampLiftWithFlight(elevation);
-    endTransitionAfter(duration, () => setFreeRoamMode('FREE_ROAM_MODE_FIRST_PERSON'));
+    // A tap on empty ground clears the chip, the way tapping the map elsewhere deselects.
+    map.onClick(() => peakFinderSelectedPeak.set(null));
+    // AR survives a rebuild of the view (a rotation, an activity re-create), so the hole has to be
+    // re-opened on the new surface.
+    if (get(peakFinderArActive)) {
+        setMapTranslucent(true);
+    }
 });
 
-/** The open tilt range lasts exactly as long as the flight it was opened for. */
-function endTransitionAfter(durationMs: number, onLanded?: () => void) {
-    if (transitionTimer) {
-        clearTimeout(transitionTimer);
-    }
-    transitionTimer = setTimeout(() => {
-        transitionTimer = null;
-        endTiltTransition();
-        onLanded?.();
-    }, durationMs);
-}
-
 /**
- * The panorama's touch model.
+ * Releases the panorama, when its component goes.
  *
- * FIRST PERSON is what standing on a summit and turning your head is: a one-finger drag turns the view
- * about the CAMERA on both axes and the position never changes, and a two-finger drag walks forward or
- * strafes. The map's own model — dragging the ground under a camera that orbits its focus point — is
- * the wrong one here: at the panorama's tilt one finger sends the focus kilometres away.
- *
- * Turned on only once the fly-in has LANDED. In first person the camera model applies to every source,
- * not just to touch: `setTilt` and `setMapRotation` turn the view in place too, so the flight's own
- * tilt would spin the view where it stands instead of raising the panorama.
+ * `map.destroy()` releases the map's registration and every id it built — the layer, the decoder, the
+ * terrain options — so the only thing left to hand back is the two SOURCE handles, which belong to
+ * the live map's layers and were only borrowed.
  */
-function setFreeRoamMode(mode: FreeRoamMode | number) {
-    mapContext().getMap()?.set('freeRoamMode', mode);
+export function teardownPanorama() {
+    panoramaView?.setPostProcessEffect(null);
+    effect = null;
+    peaksLayer = null;
+    peaksDecoder = null;
+    panorama?.destroy();
+    panorama = null;
+    panoramaView = null;
+    demSource?.destroy();
+    demSource = null;
+    peaksSource?.destroy();
+    peaksSource = null;
 }
 
 /**
- * Leaves the mode and puts back everything `enterPeakFinder` changed.
+ * Leaves the mode.
+ *
+ * There is nothing to put back: the live map was never touched, and the panorama's map is destroyed
+ * with the component the store below unmounts.
  */
 export const exitPeakFinder = tryCatchFunction(async () => {
-    if (!isPeakFinderActive() || !saved) {
+    if (!isPeakFinderActive()) {
         return;
     }
-    const map = mapContext().getMap();
     stopOrientationFollowing();
-    // Before the fly-out, for the same reason it was turned on only after the fly-in: in first person
-    // the flight's tilt turns the view in place rather than moving the camera. What the map is left
-    // with afterwards is the 3D mode's business, and `refreshTouchMode` below asks it once we land.
-    setFreeRoamMode('FREE_ROAM_MODE_OFF');
-    // Opened before the stores flip: without it the range narrows back to the flat map's the moment
-    // `peakFinderActive` goes false, and the fly-out snaps to tilt 90 instead of animating there.
-    beginTiltTransition();
-    // Before the store, so the surface stops being a hole while the preview is still behind it —
-    // the other way round leaves one frame of transparent map over nothing.
+    // Before the store, so the surface stops being a hole while the preview is still behind it.
     setMapTranslucent(false);
     peakFinderArActive.set(false);
-    peakFinderActive.set(false);
     peakFinderSelectedPeak.set(null);
-
-    clearReliefOutline();
-    clearReliefSurface();
-    destroyPeaksLayer();
-
-    // The lift belongs to this mode alone: left standing, the 3D map underneath would keep the eye
-    // hundreds of metres off the ground it is meant to sit on.
-    stopLiftRamp();
-    terrain()?.apply({
-        focusLift: 0,
-        billboardOcclusionEnabled: saved.occlusionEnabled,
-        billboardOcclusionTolerance: saved.occlusionTolerance,
-        viewDistanceFactor: saved.viewDistanceFactor,
-        viewDistance: saved.viewDistance,
-        viewDistanceMax: saved.viewDistanceMax,
-        drapeFillsEnabled: saved.drapeFills,
-        drapeLinesEnabled: saved.drapeLines,
-        maxTileZoomCoarsening: saved.maxTileZoomCoarsening,
-        meshResolution: saved.meshResolution
-    });
-    // The layers come back before the camera moves, so the map is not empty during the flight out.
-    // They were only hidden, so the tiles they had decoded on the way in are still theirs.
-    saved.layers.forEach((added) => added.layer.set('visible', true));
-
-    // Back to the ground, and to a top-down camera unless 3D was already on when we came in. Half the
-    // fly-in's duration: coming back is not the part worth watching.
-    if (!saved.was3D) {
-        setTerrain3DImmediate(false);
-    }
-    // Back to the camera the mode was ENTERED from, not to wherever the panorama ended up. The mode
-    // moves the viewpoint — the fly-in alone lands a kilometre or more from the item, and the fly-to
-    // and the elevation arrows go on moving it — so leaving with only the tilt put back left the map
-    // somewhere the user never navigated to.
-    const target: Position = saved.was3D ? saved.position : [saved.position[0], saved.position[1]];
-    const duration = get(peakFinderFlyDuration) * 500;
-    camera()
-        .animate(duration)
-        .moveTo(target, {
-            zoom: saved.zoom,
-            rotation: saved.rotation,
-            tilt: saved.was3D ? saved.tilt : TILT_2D
-        });
-    // Held in locals: `saved` is cleared below, while the callback runs a flight later.
-    const { backgroundBitmap, clearColor, labelViewDistance, mapSkyColor, skyEnabled } = saved;
-    endTransitionAfter(duration, () => {
-        // The atmosphere comes down only once the flight has landed, as the 2D/3D switch does it
-        // (`terrain3d.toggle3D`): the fly-out still has a horizon in it, and a sky taken away while
-        // the camera is tilted leaves the band above it showing the clear colour — black.
-        // These are the colours the map had BEFORE 3D was switched on, so if 3D is still up
-        // underneath — the mode was entered from it — its own atmosphere has to be asserted again.
-        map?.set('labelViewDistance', labelViewDistance);
-        map?.sky().set('enabled', skyEnabled);
-        map?.set('skyColor', mapSkyColor);
-        map?.set('clearColor', clearColor);
-        // The background plane comes back with them — and our own reference to the bitmap is released
-        // only AFTER the option holds it again, or the last owner would be gone mid-assignment.
-        map?.set('backgroundBitmap', backgroundBitmap?.handle ?? null);
-        backgroundBitmap?.destroy();
-        refreshAtmosphere();
-        refreshTouchMode();
-        refreshViewDistance();
-    });
-
     peakFinderElevation.set(0);
+    peakFinderActive.set(false);
     viewpoint = null;
     lockOrientation('auto');
-    saved = null;
 });
 
 // --- the selected summit ---------------------------------------------------------------------
 
 /** A tap on a summit label fills the overlay's chip instead of opening the item sheet. */
 function onPeakClicked({ featureData, featurePosition }: FeatureClickData): boolean {
-    if (!isPeakFinderActive() || !featurePosition) {
+    if (!featurePosition) {
         return false;
     }
     const name = featureData?.name;
@@ -794,20 +614,26 @@ function onPeakClicked({ featureData, featurePosition }: FeatureClickData): bool
     return true;
 }
 
-/** Turns the camera to look at the selected summit, without moving the viewpoint. */
+/**
+ * Turns the view to look at the selected summit, without moving the viewpoint.
+ *
+ * The VIEW's setter, not the camera's: `camera().rotation(deg)` is `moveTo(position(), …)`
+ * underneath, and a `moveTo` in first person hands the camera a focus to walk around rather than
+ * turning it where it stands.
+ */
 export const focusSelectedPeak = tryCatchFunction(async () => {
     const peak = get(peakFinderSelectedPeak);
-    if (!peak || !viewpoint) {
+    if (!peak || !viewpoint || !panoramaView) {
         return;
     }
-    camera().animate(600).rotation(bearingBetween(viewpoint, peak.position));
+    panoramaView.setMapRotation(bearingBetween(viewpoint, peak.position), 0);
 });
 
 /**
  * Moves the viewpoint TO the selected summit, keeping the panorama's camera.
  *
  * `moveTo` takes the FOCUS, and at a panorama's tilt the focus is kilometres in front of the camera —
- * so flying the focus to the summit parked the eye short of it, looking at it from the side. That is
+ * so moving the focus to the summit parks the eye short of it, looking at it from the side. That is
  * right for a map and wrong for a peak finder: standing ON the summit is the point.
  *
  * The offset is measured rather than derived from the tilt and the zoom: `eyePosition()` is where the
@@ -820,7 +646,7 @@ export const focusSelectedPeak = tryCatchFunction(async () => {
  */
 export const flyToSelectedPeak = tryCatchFunction(async () => {
     const peak = get(peakFinderSelectedPeak);
-    if (!peak) {
+    if (!peak || !panorama) {
         return;
     }
     viewpoint = peak.position;
@@ -829,11 +655,7 @@ export const flyToSelectedPeak = tryCatchFunction(async () => {
     const focus = mapCamera.position();
     const eye = mapCamera.eyePosition();
     const target: Position = [summit[0] + (focus[0] - eye[0]), summit[1] + (focus[1] - eye[1])];
-    mapCamera.moveTo(target, {
-        zoom: get(peakFinderFlyZoom),
-        tilt: get(peakFinderTilt),
-        duration: get(peakFinderFlyDuration) * 1000
-    });
+    mapCamera.moveTo(target, { zoom: get(peakFinderFlyZoom), tilt: get(peakFinderTilt) });
     peakFinderSelectedPeak.set(null);
 });
 
@@ -857,14 +679,14 @@ export const toggleHeadingFollowing = tryCatchFunction(async () => {
  * AR: the relief view over the camera preview.
  *
  * Every piece is an ordinary SDK feature the app puts together — a transparent clear colour (the frame
- * becomes a hole), a TRANSLUCENT GL surface so the hole shows what is behind it, the sky off, the dark
- * palette, and the device's orientation aiming the camera. What is in FRONT does not change at all;
- * only what is behind it does.
+ * becomes a hole), a TRANSLUCENT GL surface so the hole shows what is behind it, the sky off, the
+ * light-ink palette, and the device's orientation aiming the view.
  *
  * `setTranslucent` also raises the surface's z-order (`MapView.setTranslucent` calls
  * `setZOrderMediaOverlay`), which is the part that matters: a `SurfaceView` is composited BELOW the
  * window, so the only thing a translucent map can reveal is another surface under it. `Map.svelte`
- * puts a `<cameraview>` there — CameraX's `PreviewView` is a `SurfaceView` in its default mode.
+ * puts a `<cameraview>` there and takes the LIVE map out of the way while AR is on — three surfaces
+ * have no defined order between them, and the one that must be behind the panorama is the preview.
  */
 export const toggleArMode = tryCatchFunction(async () => {
     if (get(peakFinderArActive)) {
@@ -887,7 +709,7 @@ export const toggleArMode = tryCatchFunction(async () => {
         showToast(lc('missing_camera_permission'));
         return;
     }
-    // The view is created by the `{#if}` in Map.svelte reacting to this, so the surface has to be made
+    // The preview is created by the `{#if}` in Map.svelte reacting to this, so the surface is made
     // translucent after it — otherwise there is nothing behind the hole yet and the map goes black.
     arStartedFollowing = !get(peakFinderHeadingFollowing);
     peakFinderArActive.set(true);
@@ -895,7 +717,7 @@ export const toggleArMode = tryCatchFunction(async () => {
 });
 
 function setMapTranslucent(translucent: boolean) {
-    const nativeMapView = mapContext().getMapView()?.mapView;
+    const nativeMapView = panoramaView?.mapView;
     // Guarded: `setTranslucent` is on the SDK's own MapView, not on the NativeScript wrapper.
     if (nativeMapView?.setTranslucent) {
         nativeMapView.setTranslucent(translucent);
@@ -921,6 +743,16 @@ export function stopOrientationFollowing() {
         .catch((error) => DEV_LOG && console.log('peakFinder: stopping the orientation sensors', error));
 }
 
+/** The panorama's view, for the orientation sensors: they turn the VIEW, not the camera. */
+export function panoramaMapView(): MassifMapView {
+    return panoramaView;
+}
+
+/** Where the panorama stands, `[lon, lat, alt]` — what the magnetic declination is worked out from. */
+export function panoramaPosition(): Position {
+    return camera()?.position() ?? null;
+}
+
 // --- settings, and the entry point ------------------------------------------------------------
 
 export const showPeakFinderSettings = tryCatchFunction(async () => {
@@ -931,7 +763,7 @@ export const showPeakFinderSettings = tryCatchFunction(async () => {
 /** The look changes that are live property writes. The label ones rebuild the decoder instead. */
 function applyLive(store: { subscribe: (run: (value) => void) => unknown }, apply: () => void) {
     store.subscribe(() => {
-        if (!isPeakFinderActive()) {
+        if (!panorama) {
             return;
         }
         try {
@@ -961,7 +793,7 @@ applyLive(peakFinderOcclusion, () => terrain().set('billboardOcclusionTolerance'
 applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(peakFinderViewDistance)));
 applyLive(peakFinderViewDistanceMetres, () => terrain().set('viewDistance', get(peakFinderViewDistanceMetres)));
 applyLive(peakFinderMeshResolution, () => terrain().set('meshResolution', get(peakFinderMeshResolution)));
-applyLive(peakFinderTilt, () => camera().animate(400).tilt(get(peakFinderTilt)));
+applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
 applyLive(peakFinderLabelPinTop, rebuildPeaksLayer);
 applyLive(peakFinderLabelBand, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
@@ -970,52 +802,34 @@ applyLive(peakFinderLabelMinDistance, rebuildPeaksLayer);
 applyLive(peakFinderLabelMaxDistance, rebuildPeaksLayer);
 // Changed from the settings sheet while the panorama is up: turn now rather than on the next entry.
 applyLive(peakFinderScreenOrientation, () => lockOrientation(get(peakFinderScreenOrientation)));
-// AR turns the sky and the clear colour into a hole for the camera preview to show through, and takes
-// over the tilt as well as the rotation — a panorama held up at the sky has to be able to look up.
+// AR turns the clear colour into a hole for the camera preview to show through, and takes over the
+// tilt as well as the rotation — a panorama held up at the sky has to be able to look up.
 applyLive(peakFinderArActive, () => {
     // EVERYTHING the look is made of, not the atmosphere alone: AR is a hole in the frame, and what
     // paints over a hole is the terrain's surface shader (`applyReliefSurface` clears it in AR) and
     // the effect's own alpha (`uTransparent`). The summit labels go with them, because AR forces the
     // light-ink palette and their colours are style TEXT — see `palette` and `rebuildPeaksLayer`.
     applyPalette();
+    // A panorama held up at the sky has to be able to look straight up, which the panorama's own
+    // range stops short of.
+    panorama.set('tiltRange', get(peakFinderArActive) ? [-90, 90] : PANORAMA_RANGE);
     setOrientationTilt(get(peakFinderArActive)).catch((error) => showError(error));
 });
 
-/**
- * A tap on empty ground clears the chip, the way tapping the map elsewhere deselects.
- *
- * CONSUMED, so the map's own handler does not run. The only selection this mode has is a summit
- * label, and that arrives through the peaks layer's feature click — a bare tap on the panorama would
- * otherwise put the item sheet up behind chrome that is hidden, over a map with no layers on it.
- */
-function onMapClicked() {
-    if (!isPeakFinderActive()) {
-        return false;
-    }
-    peakFinderSelectedPeak.set(null);
-    return true;
-}
-
+/** The live map going away takes the panorama with it — the app is shutting down or re-creating. */
 function onMapDestroyed() {
     stopOrientationFollowing();
-    destroyPeaksLayer();
-    if (transitionTimer) {
-        clearTimeout(transitionTimer);
-        transitionTimer = null;
-    }
-    stopLiftRamp();
-    effect = null;
-    saved = null;
+    teardownPanorama();
     viewpoint = null;
     peakFinderActive.set(false);
     peakFinderArActive.set(false);
 }
 
-registerMapModule('peakFinder', { onMapClicked, onMapDestroyed });
+registerMapModule('peakFinder', { onMapDestroyed });
 
 declare module '~/mapModules/registry' {
     interface MapModules {
-        peakFinder: { onMapClicked: () => boolean; onMapDestroyed: () => void };
+        peakFinder: { onMapDestroyed: () => void };
     }
 }
 

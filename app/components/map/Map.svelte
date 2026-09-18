@@ -166,14 +166,24 @@
      * is the app's root component, so nothing that is only needed in a mode belongs on the startup path.
      */
     let peakFinderOverlayComponent = null;
-    async function loadPeakFinderOverlay() {
-        if (peakFinderOverlayComponent) {
-            return;
+    /**
+     * The panorama's MAP, which is a second map view of its own — see `PeakFinderMap.svelte`.
+     *
+     * The component class is kept once loaded, but the view itself is behind an `{#if}` on the mode:
+     * a second GL surface with its own terrain is not something to hold open for a mode that is not
+     * on screen.
+     */
+    let peakFinderMapComponent = null;
+    async function loadPeakFinderComponents() {
+        if (!peakFinderOverlayComponent) {
+            peakFinderOverlayComponent = (await import('~/components/peaks/PeakFinderOverlay.svelte')).default;
         }
-        peakFinderOverlayComponent = (await import('~/components/peaks/PeakFinderOverlay.svelte')).default;
+        if (!peakFinderMapComponent) {
+            peakFinderMapComponent = (await import('~/components/peaks/PeakFinderMap.svelte')).default;
+        }
     }
     $: if ($peakFinderActive) {
-        loadPeakFinderOverlay();
+        loadPeakFinderComponents();
         // the mode owns the whole screen: an open item sheet would sit on top of the panorama
         bottomSheetStepIndex = 0;
     }
@@ -1929,7 +1939,18 @@
         {#if $peakFinderArActive}
             <cameraview height="100%" width="100%" />
         {/if}
-        <massifmap accessibilityLabel="massifMap" zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
+        <!-- Taken out of the way while AR is on: a translucent map reveals the surface UNDER it, and
+             three surfaces (preview, live map, panorama) have no defined order between them. The live
+             map keeps its camera, its layers and its decoded tiles either way — collapsing it only
+             costs the GL resources, which it rebuilds when it comes back. -->
+        <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
+
+        <!-- The peak finder's own map, over the live one. An `{#if}`, so outside the mode there is no
+             second map at all - and inside it the live map is not touched, merely covered: the SDK
+             renders when dirty, so an idle map under an opaque one costs nothing. -->
+        {#if $peakFinderActive && peakFinderMapComponent}
+            <svelte:component this={peakFinderMapComponent} />
+        {/if}
 
         <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
              kept fighting over the single sheet they used to share -->

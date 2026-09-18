@@ -12,24 +12,13 @@
     import { formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
-    import {
-        applyViewpointElevation,
-        currentViewpointElevation,
-        exitPeakFinder,
-        flyToSelectedPeak,
-        focusSelectedPeak,
-        showPeakFinderSettings,
-        toggleArMode,
-        toggleHeadingFollowing
-    } from '~/mapModules/features/peakFinder';
-    import { getMapContext } from '~/mapModules/MapModule';
+    import { applyViewpointElevation, exitPeakFinder, flyToSelectedPeak, focusSelectedPeak, showPeakFinderSettings, toggleArMode, toggleHeadingFollowing } from '~/mapModules/features/peakFinder';
     import {
         PEAK_FINDER_ELEVATION_MAX,
         PEAK_FINDER_ELEVATION_RAMP,
         PEAK_FINDER_ELEVATION_RATE,
         PEAK_FINDER_ELEVATION_RATE_MAX,
         PEAK_FINDER_ELEVATION_STEP,
-        peakFinderActive,
         peakFinderArActive,
         peakFinderDark,
         peakFinderElevation,
@@ -56,35 +45,6 @@
     function truncate(text: string, maxLength: number) {
         return text.length > maxLength ? text.slice(0, maxLength - 1) + '…' : text;
     }
-
-    /**
-     * While the fly-in runs, the elevation readout follows the FLIGHT rather than a clock of its own —
-     * the camera is climbing, and a number that ignored that would disagree with the view.
-     */
-    let flightTimer = null;
-    function followFlight() {
-        stopFollowingFlight();
-        flightTimer = setInterval(() => {
-            const camera = getMapContext().getMap()?.camera();
-            if (!camera || camera.progress() < 0) {
-                stopFollowingFlight();
-                return;
-            }
-            peakFinderElevation.set(Math.round(currentViewpointElevation()));
-        }, 100);
-    }
-    function stopFollowingFlight() {
-        if (flightTimer) {
-            clearInterval(flightTimer);
-            flightTimer = null;
-        }
-    }
-    $: if ($peakFinderActive) {
-        followFlight();
-    } else {
-        stopFollowingFlight();
-    }
-    onDestroy(stopFollowingFlight);
 
     /**
      * The viewpoint's elevation, as the two arrows peakfinder.com uses rather than a slider.
@@ -149,8 +109,6 @@
     function onElevationTouch(event, direction: number) {
         switch (event.action) {
             case 'down':
-                // The user owns the elevation from here on, so the fly-in's own follow lets go of it.
-                stopFollowingFlight();
                 holdStartY = event.getY();
                 changeElevation(direction * PEAK_FINDER_ELEVATION_STEP);
                 startHolding(direction);

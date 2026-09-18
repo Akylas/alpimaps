@@ -1,6 +1,6 @@
 import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
 import { get } from 'svelte/store';
-import { getMapContext } from '~/mapModules/MapModule';
+import { panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
 import { peakFinderHeadingFollowing } from '~/stores/terrainStore';
 import { TO_DEG } from '~/utils/geo';
 
@@ -41,23 +41,22 @@ let appliedHeading: number = null;
 let appliedPitch = 0;
 let followTilt = false;
 
-function camera() {
-    return getMapContext().getMap()?.camera();
-}
-
 /**
- * The map VIEW, which is what can turn the view without moving it.
+ * The map VIEW the sensors aim, which is the PANORAMA's — not the live map's.
  *
- * The facade's `camera().rotation(deg)` and `camera().tilt(deg)` are both `moveTo(position(), …)`
- * underneath (`api/index.common.ts`), and `moveTo` writes a FOCUS POSITION — in first person the focus
- * is derived from the camera, so handing it back the focus from the previous reading walked the camera
- * around it. That is the "looking left and right MOVES me" this used to do. The view's own
- * `setMapRotation(value, duration)` and `setTilt(value, duration)` carry no target, and a
- * `CameraRotationEvent` without one turns about the CAMERA in first person
- * (`CameraRotationEvent.cpp`) — the same path a one-finger drag takes.
+ * The peak finder runs on a map of its own (`features/peakFinder.ts`), so following the device has to
+ * reach that one; turning the live map underneath would move the user's map behind their back.
+ *
+ * The view rather than the camera, and that is the second half of it: the facade's
+ * `camera().rotation(deg)` and `camera().tilt(deg)` are both `moveTo(position(), …)` underneath, and
+ * `moveTo` writes a FOCUS POSITION — in first person the focus is derived from the camera, so handing
+ * it back the focus from the previous reading walked the camera around it. That is the "looking left
+ * and right MOVES me" this used to do. The view's own `setMapRotation(value, duration)` and
+ * `setTilt(value, duration)` carry no target, and a `CameraRotationEvent` without one turns about the
+ * CAMERA in first person (`CameraRotationEvent.cpp`) — the same path a one-finger drag takes.
  */
 function mapView() {
-    return getMapContext().getMapView();
+    return panoramaMapView();
 }
 
 /** The shortest way round from `from` to `to`, in degrees. Without this, crossing north swings the
@@ -131,7 +130,7 @@ function onHeading(data, sensor: string) {
     if (__ANDROID__ && !('trueHeading' in data)) {
         // Android reports MAGNETIC north here; the declination is what turns it into true north, and
         // the plugin can work it out from where we are.
-        const position = camera() ? camera().position() : null;
+        const position = panoramaPosition();
         if (position) {
             const field = estimateMagneticField(position[1], position[0], position[2] ?? 0);
             if (field) {
@@ -177,7 +176,7 @@ export async function startOrientationFollowing(withTilt: boolean) {
     smoothedHeading = null;
     smoothedPitch = null;
     appliedHeading = null;
-    appliedPitch = camera()?.tilt() ?? 0;
+    appliedPitch = mapView()?.tilt ?? 0;
     headingListener = onHeading;
     // headingFilter 0: every reading, because the smoothing here is what decides how calm it is.
     await startListeningForSensor('heading', headingListener, 100, 0, { headingFilter: 0 });

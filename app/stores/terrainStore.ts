@@ -295,19 +295,18 @@ export const TERRAIN_TILE_WAIT_TIMEOUT_MS = 500;
 
 // --- peak finder: the view --------------------------------------------------------------------
 //
-// `DemoConfig.PEAK_FINDER_*`, except the flight duration.
+// `DemoConfig.PEAK_FINDER_*`. No flight settings: the panorama has a map of its own now, so the
+// camera is PLACED rather than flown to — there is nothing to animate and nothing to time.
 /**
  * 0 is the HORIZON in this SDK's convention (90 is straight down), which is where a panorama looks:
  * anything above it spends screen on the ground in front instead of the ranges behind it. The demo's
  * `PEAK_FINDER_TILT` is 25, which still shows the valley you are standing over.
  */
 export const peakFinderTilt = settingsStore('peakFinderTilt', 0);
+/** How high the viewpoint opens above the ground it stands on. */
 export const peakFinderFlyElevation = settingsStore('peakFinderFlyElevation', 1000);
+/** The zoom the panorama opens at, which is what one screen width of horizon covers. */
 export const peakFinderFlyZoom = settingsStore('peakFinderFlyZoom', 13.6);
-/** Seconds. The demo's 3.5 is a demo: it shows the flight off. 1.2 gets out of the way. */
-export const peakFinderFlyDuration = settingsStore('peakFinderFlyDuration', 1.2);
-/** Extra height at the middle of the fly-in: the viewpoint climbs over the way there like a plane. */
-export const peakFinderFlyClimb = settingsStore('peakFinderFlyClimb', 1500);
 /**
  * How far behind the terrain a label anchor may sit and still be labelled, as a fraction of its
  * distance. 0.02 is the SDK default; a summit sitting right ON a ridge is exactly what this view is
@@ -516,20 +515,11 @@ export const TILTED_RANGE: [number, number] = [1, 90];
  */
 export const PANORAMA_RANGE: [number, number] = [-45, 90];
 
-export const mapTiltRange = derived(
-    [pitchEnabled, terrain3dActive, peakFinderActive, peakFinderArActive, mapTiltTransition],
-    ([$pitchEnabled, $terrain3dActive, $peakFinderActive, $peakFinderArActive, $mapTiltTransition]): [number, number] => {
-        // A NEGATIVE tilt is how the SDK looks UP, which is the whole point of holding the phone at the
-        // sky in AR.
-        if ($peakFinderArActive) {
-            return [-90, 90];
-        }
-        if ($peakFinderActive) {
-            return PANORAMA_RANGE;
-        }
-        if ($terrain3dActive || $mapTiltTransition) {
-            return TILTED_RANGE;
-        }
-        return [$pitchEnabled ? 30 : 90, 90];
+export const mapTiltRange = derived([pitchEnabled, terrain3dActive, mapTiltTransition], ([$pitchEnabled, $terrain3dActive, $mapTiltTransition]): [number, number] => {
+    // The peak finder has no say here any more: it runs on a map of its OWN, which sets
+    // `PANORAMA_RANGE` on itself. This is the live map's range, and the live map keeps it.
+    if ($terrain3dActive || $mapTiltTransition) {
+        return TILTED_RANGE;
     }
-);
+    return [$pitchEnabled ? 30 : 90, 90];
+});

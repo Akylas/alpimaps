@@ -22,7 +22,6 @@ import {
     type TerrainTouchMode,
     mapTiltRange,
     mapTiltTransition,
-    peakFinderActive,
     terrain3dActive,
     terrain3dEnabled,
     terrain3dTilt,
@@ -300,10 +299,8 @@ function applyAtmosphere(on: boolean) {
     }
     // Every colour on the same call as the switch: `FogOptions` starts them all transparent and a fog
     // with no alpha does not draw (`ResolvedFog::active`), so enabling it on its own does nothing.
-    // The peak finder is excluded here as well as in its own `applyAtmosphere`: this runs from the
-    // setting's live subscription too, and toggling the fog while the panorama is up must not reach it.
     map.fog({ type: 'fog' }).apply({
-        enabled: on && !get(peakFinderActive) && get(terrainFog),
+        enabled: on && get(terrainFog),
         rangeStart: TERRAIN_FOG.rangeStart,
         rangeEnd: TERRAIN_FOG.rangeEnd,
         horizonBlend: TERRAIN_FOG.horizonBlend,
@@ -339,23 +336,11 @@ function applyAtmosphere(on: boolean) {
 /**
  * The touch model, which the 3D mode owns while it is up — and only while it is up: a free roam drag
  * on a flat map turns a view that has nothing to turn.
- *
- * NOT applied while the peak finder is up: a panorama is first person by definition, so that mode
- * forces it and puts this back on its way out. The state is read from the store rather than from the
- * peak finder module, which imports this file.
  */
 function applyTouchMode(on: boolean) {
-    if (get(peakFinderActive)) {
-        return;
-    }
     getMapContext()
         .getMap()
         ?.set('freeRoamMode', on ? FREE_ROAM_MODES[get(terrainTouchMode)] : 'FREE_ROAM_MODE_OFF');
-}
-
-/** Puts the touch model back to what the mode now on screen asks for. The peak finder's way out. */
-export function refreshTouchMode() {
-    applyTouchMode(is3D());
 }
 
 /**
@@ -368,32 +353,13 @@ export function refreshTouchMode() {
  *
  * Both are 0 while 3D is off: on a flat map the same metres reach the horizon at every zoom, which is
  * a tile walk with nothing to show for it, and a ceiling on a map seen from above would end the
- * ground in a disc inside the screen. The peak finder sets its own, hence the guard.
+ * ground in a disc inside the screen.
  */
 function applyViewDistance(on: boolean) {
-    if (get(peakFinderActive)) {
-        return;
-    }
     terrain()?.apply({
         viewDistance: on ? get(terrainViewDistanceMetres) : 0,
         viewDistanceMax: on ? get(terrainViewDistanceMax) : 0
     });
-}
-
-/** The metres the mode now on screen asks for. The peak finder's way out, with the touch model. */
-export function refreshViewDistance() {
-    applyViewDistance(is3D());
-}
-
-/**
- * Re-asserts the sky, the fog and the lighting for whatever the terrain is showing right now.
- *
- * For the peak finder's way out: it saved the map's sky and clear colours on the way IN — before this
- * file had touched them — and puts those back, which on e-ink undoes the white sky 3D still wants
- * underneath. Nothing else has an opinion, so re-running the rule is the whole fix.
- */
-export function refreshAtmosphere() {
-    applyAtmosphere(is3D());
 }
 
 /**
