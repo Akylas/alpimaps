@@ -49,6 +49,7 @@
         terrain3dTilt,
         terrainAutoFlattenByTilt,
         terrainCameraClearance,
+        terrainDrapeResolution,
         terrainExaggeration,
         terrainFlattenModeFull,
         terrainFog,
@@ -64,6 +65,8 @@
         terrainShadowStrength,
         terrainShadows,
         terrainSky,
+        terrainSunAltitude,
+        terrainSunAzimuth,
         terrainSwitchDuration,
         terrainTouchMode,
         terrainViewDistanceFactor,
@@ -436,6 +439,8 @@
                     storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')),
                     storeSlider(terrainExaggeration, lc('exageration'), 0.5, 3, 0.05, (value) => `${value.toFixed(2)}×`),
                     storeSlider(terrainMeshResolution, lc('mesh_resolution'), 16, 256, 16),
+                    // 0 is the AUTOMATIC resolution (the screen's), not a size
+                    storeSlider(terrainDrapeResolution, lc('drape_resolution'), 0, 2048, 128, (value) => (value === 0 ? lc('auto') : `${Math.round(value)} px`)),
                     storeSlider(terrainViewDistanceFactor, lc('view_distance_factor'), 0.5, 6, 0.1, (value) => `${value.toFixed(1)}×`),
                     // from 0, which disables the clamp entirely — the demo's default
                     storeSlider(terrainCameraClearance, lc('camera_clearance'), 0, 400, 10, formatDistance),
@@ -466,6 +471,9 @@
                     storeSlider(terrainFogVerticalStart, lc('fog_vertical_start'), 0, 4000, 100, formatDistance),
                     storeSlider(terrainFogVerticalEnd, lc('fog_vertical_end'), 0, 6000, 100, formatDistance),
                     storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc')),
+                    // the sun the shadows are cast from, written only while the ground is lit
+                    storeSlider(terrainSunAzimuth, lc('sun_azimuth'), 0, 360, 1, (value) => `${Math.round(value)}°`),
+                    storeSlider(terrainSunAltitude, lc('sun_altitude'), 0, 90, 1, (value) => `${Math.round(value)}°`),
                     storeSwitch(terrainShadows, lc('shadows'), lc('shadows_desc')),
                     storeSlider(terrainShadowStrength, lc('shadow_strength'), 0, 2, 0.05, (value) => value.toFixed(2)),
                     // 0 is the SDK's own 4.5, hence the label rather than a number

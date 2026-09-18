@@ -23,6 +23,7 @@
         terrain3dTilt,
         terrainAutoFlattenByTilt,
         terrainCameraClearance,
+        terrainDrapeResolution,
         terrainExaggeration,
         terrainFlattenModeFull,
         terrainFog,
@@ -38,6 +39,8 @@
         terrainShadowStrength,
         terrainShadows,
         terrainSky,
+        terrainSunAltitude,
+        terrainSunAzimuth,
         terrainSwitchDuration,
         terrainTouchMode,
         terrainViewDistanceFactor,
@@ -76,6 +79,17 @@
         section(header(lc('terrain_3d'))),
         { type: 'slider', store: terrainExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
         { type: 'slider', store: terrainMeshResolution, title: lc('mesh_resolution'), min: 16, max: 256, step: 16, format: (value) => String(Math.round(value)) },
+        {
+            type: 'slider',
+            store: terrainDrapeResolution,
+            title: lc('drape_resolution'),
+            description: lc('drape_resolution_desc'),
+            // 0 is not a resolution but the AUTOMATIC one, and the SDK clamps anything else to [128, 2048]
+            min: 0,
+            max: 2048,
+            step: 128,
+            format: (value) => (value === 0 ? lc('auto') : `${Math.round(value)} px`)
+        },
         { type: 'slider', store: terrainViewDistanceFactor, title: lc('view_distance_factor'), min: 0.5, max: 6, step: 0.1, format: (value) => `${value.toFixed(1)}×` },
         {
             type: 'slider',
@@ -113,6 +127,13 @@
 
         section(header(lc('lighting'))),
         { type: 'switch', store: terrainLighting, title: lc('terrain_lighting'), description: lc('terrain_lighting_desc') },
+        // the sun is only written while the ground is lit, so it is only worth showing there
+        ...($terrainLighting
+            ? ([
+                  { type: 'slider', store: terrainSunAzimuth, title: lc('sun_azimuth'), description: lc('sun_azimuth_desc'), min: 0, max: 360, step: 1, format: degrees },
+                  { type: 'slider', store: terrainSunAltitude, title: lc('sun_altitude'), description: lc('sun_altitude_desc'), min: 0, max: 90, step: 1, format: degrees }
+              ] as SettingRow[])
+            : []),
         { type: 'switch', store: terrainShadows, title: lc('shadows'), description: lc('shadows_desc') },
         ...($terrainShadows
             ? ([
