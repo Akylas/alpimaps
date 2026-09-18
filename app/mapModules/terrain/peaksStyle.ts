@@ -16,6 +16,8 @@ import { reliefPalette } from '~/mapModules/terrain/reliefShaders';
  */
 export interface PeaksStyleOptions {
     dark?: boolean;
+    /** The map's own font scale, so the names match the map's labels on every device. */
+    fontScale?: number;
     minZoom?: number;
     textSize?: number;
     /** Rotation of the label text, degrees, off the leader line. */
@@ -45,7 +47,12 @@ export interface PeaksStyleOptions {
  * down they line up on the bottom left corner they are anchored by, and read up and to the right.
  */
 export function peaksStyle(options: PeaksStyleOptions = {}) {
-    const { band = 0.25, dark = false, maxDistance = 0, maxRows = 1, minDistance = 14, minZoom = 8, pinTop = true, textAngle = 55, textSize = 16, topOffset = 0.03 } = options;
+    // minZoom 0, not 8: the gate was OURS, and it is what hid the far summits. With terrain up a
+    // layer's far tiles are allowed to coarsen to `cameraTileZoom - maxTileZoomCoarsening`
+    // (TileLayer, 8 levels in this app), so a range a hundred kilometres out is drawn from z6/z7
+    // tiles — and a zoom gate at 8 dropped every peak on them. The summit standing on the horizon
+    // is exactly the one the mode exists for, so the only limit left is the data's own.
+    const { band = 0.25, dark = false, fontScale = 1, maxDistance = 0, maxRows = 1, minDistance = 14, minZoom = 0, pinTop = true, textAngle = 55, textSize = 16, topOffset = 0.03 } = options;
     const palette = reliefPalette(dark);
     const align = pinTop ? 'top-right' : 'bottom-left';
     return [
@@ -54,14 +61,21 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // the elevation as a second run of text: same label, same plate, smaller font
         "  text-secondary-name: [ele]+'m';",
         '  text-secondary-scale: 0.62;',
-        '  text-secondary-fill: #6b7280;',
+        `  text-secondary-fill: ${palette.labelSecondary};`,
         '  text-secondary-dx: 3;',
         '  text-secondary-dy: 0;',
-        `  text-size: ${textSize};`,
+        // The map's `_fontscale` style parameter, applied by hand. The SDK already scales every label
+        // by the DPI (`VectorTileLayer` hands the decoder `dpi / UNSCALED_DPI`), so this is not a
+        // density term — it is the USER's size preference, which the app's own style takes as a
+        // parameter and this inline one cannot, being a style of its own. Two devices set to
+        // different scales therefore drew map labels at one size and summit names at another.
+        `  text-size: ${(textSize * fontScale).toFixed(1)};`,
         `  text-fill: ${palette.ink};`,
         `  text-halo-fill: ${palette.paper};`,
         '  text-halo-radius: 1.5;',
-        // the plate behind the name; it follows the palette so the names stay readable in both
+        // the plate the name sits on. Pure white under the light palettes for contrast against the
+        // ground, the palette's own paper under the dark ones — where white would be the brightest
+        // thing on the screen. The leader line has no colour of its own: it takes `text-fill`.
         `  text-background-fill: ${dark ? palette.paper : '#ffffff'};`,
         '  text-background-opacity: 0.85;',
         '  text-background-radius: 6;',
@@ -72,9 +86,11 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // happened to offer first, and a 700 m hill hides a 2000 m one behind it
         '  text-placement-priority: [ele];',
         minDistance > 0 ? `  text-min-distance: ${minDistance};` : '',
-        // ...and the nearer of two summits of the same height wins the slot. '0 - x', not '-x': in
-        // CartoCSS a leading minus in front of a field is read as a literal '-'.
-        '  text-rank: [ele] + [view::distance]/100;',
+        // ...and the nearer of two summits of the same height wins the slot. The culler sorts on
+        // priority DESCENDING (`LabelCuller.cpp`, `priority1 > priority2`), so distance is
+        // SUBTRACTED — adding it, as this did, handed the slot to whichever of the two was further
+        // away. 100 m of distance trades against a metre of height.
+        '  text-rank: [ele] - [view::distance]/1000;',
         `  text-orientation: ${textAngle};`,
         '  text-callout-line-anchor: bottom-left;',
         `  text-callout-align: ${align};`,

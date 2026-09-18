@@ -45,6 +45,21 @@ function camera() {
     return getMapContext().getMap()?.camera();
 }
 
+/**
+ * The map VIEW, which is what can turn the view without moving it.
+ *
+ * The facade's `camera().rotation(deg)` and `camera().tilt(deg)` are both `moveTo(position(), …)`
+ * underneath (`api/index.common.ts`), and `moveTo` writes a FOCUS POSITION — in first person the focus
+ * is derived from the camera, so handing it back the focus from the previous reading walked the camera
+ * around it. That is the "looking left and right MOVES me" this used to do. The view's own
+ * `setMapRotation(value, duration)` and `setTilt(value, duration)` carry no target, and a
+ * `CameraRotationEvent` without one turns about the CAMERA in first person
+ * (`CameraRotationEvent.cpp`) — the same path a one-finger drag takes.
+ */
+function mapView() {
+    return getMapContext().getMapView();
+}
+
 /** The shortest way round from `from` to `to`, in degrees. Without this, crossing north swings the
  *  view through a full turn. */
 function shortestDelta(from: number, to: number) {
@@ -74,8 +89,8 @@ function pitchFromQuaternion(quaternion: number[]): number {
 
 /** Writes the smoothed pose, unless nothing moved enough to be worth a frame. */
 function applyPose() {
-    const mapCamera = camera();
-    if (!mapCamera || smoothedHeading === null) {
+    const view = mapView();
+    if (!view || smoothedHeading === null) {
         return;
     }
     const headingSettled = appliedHeading !== null && Math.abs(shortestDelta(appliedHeading, smoothedHeading)) < DEAD_ZONE_DEGREES;
@@ -89,7 +104,7 @@ function applyPose() {
             return;
         }
         appliedHeading = smoothedHeading;
-        mapCamera.rotation(rotation);
+        view.setMapRotation(rotation, 0);
         return;
     }
 
@@ -101,8 +116,11 @@ function applyPose() {
     }
     appliedHeading = smoothedHeading;
     appliedPitch = tilt;
-    // ONE move: a rotation and a tilt written separately animate against each other.
-    mapCamera.moveTo(mapCamera.position(), { rotation, tilt });
+    // The VIEW's setters, which carry no target position — see `mapView` for why the facade's
+    // `camera().rotation()`/`camera().tilt()` cannot be used here. Duration 0: the sensor is already
+    // smoothed, and an animation would be overwritten by the next reading anyway.
+    view.setMapRotation(rotation, 0);
+    view.setTilt(tilt, 0);
 }
 
 function onHeading(data, sensor: string) {

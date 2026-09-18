@@ -35,7 +35,17 @@
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
-    import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData, type MapDecoder, type MapMoveReason, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import {
+        ClickType,
+        type ElementClickData,
+        type FeatureClickData,
+        type MapClickData,
+        type MapDecoder,
+        type MapMoveReason,
+        getMapContext,
+        handleMapAction,
+        setMapContext
+    } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
@@ -554,6 +564,7 @@
             // The whole map, through one handle: options, layers, camera and events.
             mapViewInstance = e.object;
             massifMap = api.attach(e.object);
+            // massifMap.set('drawDistance', 4);
             api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
@@ -639,11 +650,11 @@
             }
             mapContext.runOnModules('onMapInteraction', {
                 data: {
-                    panAction: e.panAction as boolean,
-                    zoomAction: e.zoomAction as boolean,
-                    rotateAction: e.rotateAction as boolean,
-                    tiltAction: e.tiltAction as boolean,
-                    animationStarted: e.animationStarted as boolean
+                    panAction: e.panAction,
+                    zoomAction: e.zoomAction,
+                    rotateAction: e.rotateAction,
+                    tiltAction: e.tiltAction,
+                    animationStarted: e.animationStarted
                 }
             });
             mapMoved = true;
@@ -716,6 +727,13 @@
         forceZoomOut?: boolean;
     }) {
         try {
+            // The peak finder has one selection of its own — the summit chip — and its own layer
+            // raises it. Everything else that reaches here (a tap on the panorama, a marker on the
+            // items layer, which stays on the map) would put the item sheet up behind chrome that
+            // the mode hides.
+            if ($peakFinderActive) {
+                return;
+            }
             if (isFeatureInteresting && setSelected && $itemLock && $selectedItem) {
                 return;
             }
@@ -939,12 +957,18 @@
                 }
                 extent = JSON.parse(extent as any);
             }
-            camera.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], { screen, integerZoom: true, resetRotation: true, duration: 200 });
+            camera.fitBounds(
+                [
+                    [extent[0], extent[1]],
+                    [extent[2], extent[3]]
+                ],
+                { screen, integerZoom: true, resetRotation: true, duration: 200 }
+            );
         } else if (item.route) {
             // the item's own GeoJSON: no SDK geometry to build, and nothing to convert out of a
             // projection - what used to make this "not perfect as vectorTile geometry might not
             // represent the whole route" is gone with it
-            const bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+            const bounds = geometryBounds(item.geometry);
             if (bounds) {
                 camera.fitBounds(toBounds(bounds), { screen, integerZoom: true, resetRotation: true, duration: 200 });
             }
@@ -1111,6 +1135,7 @@
     // }
 
     function onVectorTileClicked(data: FeatureClickData) {
+        DEV_LOG && console.log('onVectorTileClicked', data);
         if (isTransitPickerPending()) {
             return;
         }
@@ -1375,7 +1400,7 @@
                 try {
                     // the archive, only to list what is in it: `assetNames` is a plain property
                     const pack = api.create('assets', `assets.probe.${e.name}`, { type: 'zip', data: { type: 'url', url: `file://${e.path}` } });
-                    const assetsNames = pack.get('assetNames') as string[];
+                    const assetsNames = pack.get('assetNames');
                     pack.destroy();
                     // DEV_LOG && console.log('assetsNames', assetsNames);
                     styles.push(
@@ -1902,13 +1927,9 @@
              another surface below it, so this has to be a sibling that comes first, not part of the
              overlay. `{#if}` rather than `visibility`, so no camera is held open outside the mode. -->
         {#if $peakFinderArActive}
-            <cameraview />
+            <cameraview height="100%" width="100%" />
         {/if}
-        <massifmap
-            accessibilityLabel="massifMap"
-            zoom={16}
-            on:mapReady={onMainMapReady}
-            on:layoutChanged={reportFullyDrawn} />
+        <massifmap accessibilityLabel="massifMap" zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
 
         <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
              kept fighting over the single sheet they used to share -->
