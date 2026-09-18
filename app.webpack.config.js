@@ -35,8 +35,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 production: env.production !== false,
                 buildstyle: true,
                 sentry: true,
@@ -53,8 +51,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 noconsole: true,
@@ -70,8 +66,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 testlog: true,
@@ -89,8 +83,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 sentry: false,
@@ -121,8 +113,6 @@ module.exports = (env, params = {}) => {
         devlog,
         testlog,
         fork = true,
-        buildpeakfinder,
-        build3dmap,
         buildstyle = false,
         report,
         disableoffline = false,
@@ -450,8 +440,6 @@ module.exports = (env, params = {}) => {
         __INAPP_PURCHASE_ID_PREFIX__: `""`,
         FALLBACK_LOCALE: `"${locale}"`,
         WITH_BUS_SUPPORT: busSupport,
-        WITH_PEAK_FINDER: buildpeakfinder,
-        WITH_3D_MAP: build3dmap,
         DEFAULT_THEME: `"${theme}"`,
         SENTRY_ENABLED: !!sentry,
         MATERIAL_MAP_FONT_FAMILY: "'Material Design Icons'",
@@ -1014,17 +1002,5 @@ module.exports = (env, params = {}) => {
         })
     ];
     const configs = [config];
-    if (buildpeakfinder) {
-        if (env.adhoc || env.adhoc_sentry) {
-            config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', 'peakfinder', 'index.html'), 100, 60000));
-        }
-        configs.push(require('./peakfinder/webpack.config.js')(env, params));
-    }
-    if (build3dmap) {
-        if (env.adhoc || env.adhoc_sentry) {
-            config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', '3dmap', 'index.html'), 100, 60000));
-        }
-        configs.push(require('./3dmap/webpack.config.js')(env, params));
-    }
     return configs;
 };
