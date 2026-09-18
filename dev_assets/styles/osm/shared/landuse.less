@@ -274,11 +274,11 @@ Map {
 	}
 }
 #building['mapnik::geometry_type'=3]['param::buildings'>0][zoom>='param::building_min_zoom'] {
-  ['param::buildings'>1][hide_3d!=true][zoom>=16]::3d  {
+  ['param::buildings'>1][hide_3d!=true][zoom>=14]::3d  {
       building-height: [render_height] ? [render_height] : 5;
       building-min-height: [render_min_height];
       building-fill: @building-fill;
-      building-fill-opacity: 0.45;
+      building-fill-opacity: 0.85;
   } 
   
   polygon-fill: @building-fill;
