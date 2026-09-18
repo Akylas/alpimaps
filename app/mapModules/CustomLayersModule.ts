@@ -26,6 +26,7 @@ import { openLink } from '~/utils/ui';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
+import { CLog } from '@nativescript-community/sentry';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -1111,6 +1112,14 @@ export default class CustomLayersModule extends MapModule {
         // changed - most calls here are an unrelated overlay being added or moved. Turning a slot
         // off goes through setSlotVisible instead, which costs nothing.
         if (target?.handle === this.terrainAttachedTo?.handle && this.terrainSource === this.attachedSource) {
+            // Nothing to re-wire — but the ITEM's layer still has to be re-pointed at the child.
+            // `updateTerrain` just set it back to `item.terrainLayer`, which for the woven DEM is the
+            // DETACHED elevation layer: it is on no map, so the menu's opacity slider and the options
+            // sheet were writing to a layer nothing draws. Every call that lands here is one of those
+            // — a source toggled, a layer added, reordered or rebuilt — and after the first of them
+            // the hillshade controls silently stopped doing anything until the attachment happened to
+            // change. This is the only half that is cheap: no external source is added or removed.
+            this.setHillshadeChild(this.terrainAttachedTo);
             return;
         }
         if (this.terrainAttachedTo) {
@@ -1300,11 +1309,11 @@ export default class CustomLayersModule extends MapModule {
                     const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
                     this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
 
-                    DEV_LOG &&
-                        console.log(
-                            'sources',
-                            sources.map((s) => s.path)
-                        );
+                    // DEV_LOG &&
+                    //     console.log(
+                    //         'sources',
+                    //         sources.map((s) => s.path)
+                    //     );
                     if (sources.length) {
                         mbtiles.push(
                             this.createMergeDataSource(
