@@ -80,8 +80,12 @@ function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: str
             canvas.drawCircle(size / 2, size / 2, size * 0.32, paint);
         }
         // a name per look, so the file is written once and reused across launches
-        url = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
-        new ImageSource(canvas.getImage()).saveToFile(url, 'png');
+        const filePath = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
+        new ImageSource(canvas.getImage()).saveToFile(filePath, 'png');
+        // `file://`, not the bare path: URLFileLoader reads http, https, assets and file, and rejects
+        // anything else as an unsupported schema. Handed a plain path it loaded nothing, the bitmap
+        // failed to build, and the style fell back to carto's default pin — the white marker
+        url = `file://${filePath}`;
         userBitmapUrls[key] = url;
     }
     return url;
