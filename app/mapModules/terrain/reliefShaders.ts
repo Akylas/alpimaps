@@ -1,3 +1,5 @@
+import { isEInk } from '~/helpers/theme';
+
 /**
  * The peak finder's look, as shader source.
  *
@@ -47,13 +49,44 @@
  * sky all read from these, so one switch changes the lot.
  */
 export const RELIEF_PALETTE = {
-    light: { ink: '#14141a', paper: '#f7f7f4', shade: '#6c7280', sky: '#9fc6e8' },
-    dark: { ink: '#e8ecf5', paper: '#10131a', shade: '#5a6070', sky: '#070a12' }
+    light: { ink: '#14141a', paper: '#f7f7f4', shade: '#6c7280', sky: '#9fc6e8', labelSecondary: '#6b7280' },
+    dark: { ink: '#e8ecf5', paper: '#10131a', shade: '#5a6070', sky: '#070a12', labelSecondary: '#9aa3b2' },
+    /**
+     * E-ink, where the light palette reads as a grey wash.
+     *
+     * `shade` is the one that matters: the surface shader mixes the ground from `paper` towards it by
+     * the Lambert term, so a mid slate (#6c7280) puts most of the ground in the mid tones — which a
+     * screen with sixteen greys and no backlight renders as dither, and dither over the whole picture
+     * is what makes the ridge lines hard to find. A LIGHT grey keeps the shading as faint hatching
+     * and leaves the reading to the ink, which is also how the geo-three webapp looks: a pale ground
+     * with black lines on it, not a grey relief.
+     *
+     * Paper is pure white and ink pure black for the same reason — anything else is a grey to dither.
+     */
+    eink: { ink: '#000000', paper: '#ffffff', shade: '#c0c0c0', sky: '#ffffff', labelSecondary: '#000000' },
+    /**
+     * E-ink at night, which is the same picture with the two ends swapped.
+     *
+     * Not `dark`: that palette is built out of mid tones (#10131a paper, #5a6070 shade) and mid tones
+     * are what an e-ink screen dithers. Pure white ink on pure black, and a shade DARK enough to stay
+     * on the black side of the paper — the inverse of the `eink` reasoning above, for the same reason.
+     */
+    einkDark: { ink: '#ffffff', paper: '#000000', shade: '#404040', sky: '#000000', labelSecondary: '#ffffff' }
 };
 
 export type ReliefPalette = (typeof RELIEF_PALETTE)['light'];
 
+/**
+ * E-ink takes its own PAIR of palettes: the switch still switches, but between two two-tone looks
+ * rather than between the mid-tone ones, which that screen can only dither.
+ *
+ * It used to return `eink` whatever the switch said, which is why the dark switch did nothing at all
+ * on the devices this mode is mostly used on.
+ */
 export function reliefPalette(dark: boolean): ReliefPalette {
+    if (isEInk) {
+        return dark ? RELIEF_PALETTE.einkDark : RELIEF_PALETTE.eink;
+    }
     return dark ? RELIEF_PALETTE.dark : RELIEF_PALETTE.light;
 }
 
@@ -106,7 +139,12 @@ vec4 surfaceColor() {
  * the mode did not come on at all. Needs `terrainDepthRequired = true`.
  *
  * Uniforms: uIntensity, uOutlineWidth, uHorizonBoost, uDepthThreshold, uCreaseStrength,
- * uDepthTexelSize, uGrazingFloor, uDistanceFade, uHaze, uInkColor, uPaperColor.
+ * uCreaseThreshold, uCreaseFade, uDepthTexelSize, uGrazingFloor, uDistanceFade, uHaze, uInkColor,
+ * uPaperColor.
+ *
+ * Diverges from the android demo in one place, and deliberately: the crease test's threshold and its
+ * distance fade are parameters here rather than the demo's two constants. They are what separates a
+ * ridge from a TILE SEAM — see `peakFinderCreaseThreshold`.
  */
 export const RELIEF_OUTLINE_SHADER = `#version 100
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -125,6 +163,12 @@ uniform float uOutlineWidth;
 uniform float uHorizonBoost;
 uniform float uDepthThreshold;
 uniform float uCreaseStrength;
+uniform float uCreaseThreshold;
+uniform float uCreaseFade;
+uniform float uTransparent;
+uniform float uSlopeStrength;
+uniform float uSlopeMultiplier;
+uniform float uSlopeBias;
 uniform float uDepthTexelSize;
 uniform float uGrazingFloor;
 uniform float uDistanceFade;
@@ -203,6 +247,11 @@ void main(void) {
     // Ridges and valleys: the two tangent directions away from this pixel point straight apart on a
     // flat surface (dot -1) and fold together over a crest. Done on eye positions rather than on
     // depth, so a merely oblique slope - which is most of a panorama - does not read as a fold.
+    //
+    // uCreaseThreshold is where a fold starts counting, and it is the tile-seam control: the mesh
+    // kinks where two tiles meet at different levels, and that kink is a SMALL fold where a crest is
+    // a large one. uCreaseFade is the creases' own distance fade, separate from the silhouettes':
+    // tiles coarsen with distance, so the kinks grow exactly where the folds are worth least.
     float cover = min(min(cx0.a, cx1.a), min(cy0.a, cy1.a)) * c0.a;
     if (uCreaseStrength > 0.0 && cover > 0.0) {
         float fold = 0.0;
@@ -212,7 +261,42 @@ void main(void) {
         if (length(ty0) > minLength && length(ty1) > minLength) {
             fold = max(fold, 1.0 + dot(normalize(ty0), normalize(ty1)));
         }
-        edge = max(edge, smoothstep(0.05, 0.4, fold) * uCreaseStrength * grazing * mix(1.0, uDistanceFade, d0));
+        float creaseRamp = smoothstep(uCreaseThreshold, uCreaseThreshold + 0.35, fold);
+        edge = max(edge, creaseRamp * uCreaseStrength * grazing * mix(1.0, uCreaseFade, d0));
+    }
+
+    // SLOPES, which is what the two terms above cannot draw: geo-three's whole outline effect
+    // (webapp/app.ts, CustomOutlineEffect), which is a symmetric depth GRADIENT rather than a
+    // silhouette test.
+    //
+    //     depthDiff = sum of |depth - neighbour| over the four taps
+    //     ink       = pow(depthDiff * depthMultiplier, depthBiais)
+    //
+    // Two things make it paint the relief where ours painted nothing. It is SYMMETRIC - a neighbour
+    // nearer counts as much as one further, so the face turned away from the camera inks as well as
+    // the edge in front of it. And the exponent is far BELOW one (0.23), which lifts small
+    // differences hard: a gentle slope whose depth changes by a thousandth between neighbouring
+    // pixels comes out at a third of full ink instead of nothing. What stays white is ground
+    // square-on to the camera, where the depth barely changes across a pixel - so the flat valley
+    // floor reads as paper and every slope above it carries a line.
+    //
+    // Deliberately NOT multiplied by the grazing term, unlike the crease: obliqueness is the signal
+    // here, not the thing to compensate for. The same four taps as the silhouette, rather than a
+    // stroke width of its own, so the term costs arithmetic and not four more texture fetches.
+    if (uSlopeStrength > 0.0 && cover > 0.0) {
+        float depthDiff = abs(d0 - dx0) + abs(d0 - dx1) + abs(d0 - dy0) + abs(d0 - dy1);
+        float slopeInk = pow(clamp(depthDiff * uSlopeMultiplier, 0.0, 1.0), uSlopeBias);
+        edge = max(edge, slopeInk * uSlopeStrength);
+    }
+
+    // AR: the ink and NOTHING else. The frame is a hole for the camera preview, so paper, haze and
+    // the surface's own shading would all be a sheet drawn over the picture. Alpha carries the
+    // lines, which is the whole output - and it is why this term cannot just be a colour: the
+    // effect writes every pixel, so an opaque alpha here hid the preview however transparent the
+    // clear colour was.
+    if (uTransparent > 0.5) {
+        gl_FragColor = vec4(uInkColor.rgb, edge * uInkColor.a * uIntensity);
+        return;
     }
 
     // Aerial perspective: the surface fades into the paper with distance, so the far ranges read as
