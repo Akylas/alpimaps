@@ -24,8 +24,8 @@ export const queryingLocation = writable(false);
 export const projectionModeSpherical = settingsStore('showGlobe', false);
 
 export const preloading = settingsStore('preloading', true);
-export const rotateEnabled = settingsStore('mapRotateEnabled', false);
-export const pitchEnabled = settingsStore('mapPitchEnabled', false);
+export const rotateEnabled = settingsStore('mapRotateEnabled', true);
+export const pitchEnabled = settingsStore('mapPitchEnabled', true);
 
 export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
 export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);

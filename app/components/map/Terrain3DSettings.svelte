@@ -206,7 +206,7 @@
     }
 </script>
 
-<gesturerootview backgroundColor={colorSurfaceContainer} height={Math.round(screenHeightDips * 0.6)}>
+<gesturerootview backgroundColor={colorSurfaceContainer} height={Math.round(screenHeightDips * 0.3)}>
     <!-- the inset goes on the content: the collectionview scrolls under it -->
     <collectionview {itemTemplateSelector} items={rows} ios:contentInsetAdjustmentBehavior={2} paddingBottom={10 + (__ANDROID__ ? $windowInset.bottom : 0)} paddingTop={10}>
         <Template key="sectionheader" let:item>
