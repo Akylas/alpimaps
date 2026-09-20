@@ -32,6 +32,8 @@
         peakFinderLabelMinDistance,
         peakFinderLabelPinTop,
         peakFinderLabelRows,
+        peakFinderLensCorrection,
+        peakFinderMaxFieldOfView,
         peakFinderMeshResolution,
         peakFinderOcclusion,
         peakFinderOutlineWidth,
@@ -79,6 +81,17 @@
         // itself, which has to move the camera as it is dragged
         { type: 'slider', store: peakFinderFlyElevation, title: lc('viewpoint_elevation'), min: 0, max: 6000, step: 50, format: (value) => `${Math.round(value)} m` },
         { type: 'slider', store: peakFinderTilt, title: lc('tilt'), min: 0, max: 80, step: 1, format: degrees },
+        {
+            type: 'slider',
+            store: peakFinderMaxFieldOfView,
+            title: lc('max_field_of_view'),
+            description: lc('max_field_of_view_desc'),
+            min: 0,
+            max: 140,
+            step: 5,
+            format: (value) => (value === 0 ? lc('match_camera') : degrees(value))
+        },
+        { type: 'switch', store: peakFinderLensCorrection, title: lc('lens_correction'), description: lc('lens_correction_desc') },
         { type: 'slider', store: peakFinderViewDistance, title: lc('view_distance_factor'), min: 0.5, max: 6, step: 0.5, format: (value) => `${value.toFixed(1)}×` },
         {
             type: 'slider',
@@ -128,7 +141,7 @@
             title: lc('slope_lines_amount'),
             description: lc('slope_lines_amount_desc'),
             min: 0,
-            max: 40,
+            max: 100,
             step: 0.5,
             format: (value) => value.toFixed(1)
         },

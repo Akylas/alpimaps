@@ -308,6 +308,56 @@ export const peakFinderFlyElevation = settingsStore('peakFinderFlyElevation', 10
 /** The zoom the panorama opens at, which is what one screen width of horizon covers. */
 export const peakFinderFlyZoom = settingsStore('peakFinderFlyZoom', 13.6);
 /**
+ * The widest the panorama may be HORIZONTALLY, degrees — and the answer to why the mode was several
+ * times slower in landscape.
+ *
+ * The SDK's field of view is the VERTICAL one (`Options.fieldOfViewY`, default 70) and the
+ * horizontal one is derived from the viewport: `_tanHalfFOVX = aspect * _tanHalfFOVY`
+ * (`ViewState.cpp`). A phone turned on its side goes from an aspect of about 0.46 to about 2.17, so
+ * with fovY held at 70 the horizontal field opens from ~36° to ~113°. Nothing is WRONG in landscape;
+ * the mode is simply asking for the ground inside a frustum nearly five times wider, 150 km deep,
+ * and almost every cost here — tiles walked, meshes built, summit labels placed — is proportional to
+ * exactly that.
+ *
+ * So this is a CEILING on the horizontal field, applied by lowering `fieldOfViewY`. It can only ever
+ * narrow the view, never widen it: in portrait the derived limit is well over 100°, so the ceiling
+ * does not bind and portrait is untouched. In landscape it holds the picture to this many degrees
+ * across — still wider than portrait, at a fraction of the work.
+ *
+ * 0 means the BACK CAMERA's own field, which is the default: a peak finder is read against the view
+ * it is held up to, so a summit should be the size it is through the phone. That lands around 65°,
+ * inside the range that measured smooth in landscape, and it is the same figure AR matches exactly.
+ *
+ * It is a CROP and nothing more: the camera is left exactly where the uncapped field put it (see
+ * `zoomForFieldOfView`), so narrowing this does not change how far the ground is drawn, which tiles
+ * are loaded or how big a label is.
+ *
+ * A panorama is the right place for such a cap: its horizontal reach is what the picture IS, and a
+ * 113° frustum on a phone is a fisheye of it. peakfinder.org pans a fixed horizontal field for the
+ * same reason.
+ *
+ * IGNORED IN AR. There the field of view is not a preference but a measurement of the camera behind
+ * the frame — it is what makes a summit the same size in the terrain as in the preview — so
+ * `arGeometry` in `features/peakFinder.ts` takes over.
+ */
+export const peakFinderMaxFieldOfView = settingsStore('peakFinderMaxFieldOfView', 0);
+/**
+ * Warp the AR terrain by the camera's own lens distortion.
+ *
+ * A photograph is not a rectilinear projection and the terrain is: a phone's wide lens barrels by
+ * several percent at the frame corners, which once the field of view matches is by far the largest
+ * thing left between the outline and the ridge it is meant to sit on. The correction is a resampling
+ * of the whole rendered frame (`distortUv` in `mapModules/terrain/reliefShaders.ts`) by the
+ * coefficients the platform reports.
+ *
+ * ANDROID ONLY, and only on devices that report them: `LENS_DISTORTION` is a Camera2 characteristic,
+ * whereas AVFoundation delivers a lens model only alongside a PHOTO capture, never for a preview
+ * session. Where there are no coefficients the warp is exactly the identity, so this switch is there
+ * for the case it makes things worse rather than better — a device whose reported coefficients do
+ * not describe the stream the preview is actually showing.
+ */
+export const peakFinderLensCorrection = settingsStore('peakFinderLensCorrection', true);
+/**
  * How far behind the terrain a label anchor may sit and still be labelled, as a fraction of its
  * distance. 0.02 is the SDK default; a summit sitting right ON a ridge is exactly what this view is
  * for, so the mode is deliberately generous.
@@ -468,6 +518,14 @@ export const terrain3dActive = writable(false);
 export const peakFinderActive = writable(false);
 export const peakFinderArActive = writable(false);
 export const peakFinderHeadingFollowing = writable(false);
+/**
+ * Where the panorama is LOOKING, degrees clockwise from north.
+ *
+ * Published by the mode from the panorama's own camera (the map's rotation is the opposite of the
+ * heading), so the overlay's compass reads the view rather than the device — they are the same thing
+ * only while the compass or AR is following.
+ */
+export const peakFinderHeading = writable(0);
 /** Metres the viewpoint is currently lifted above the ground. */
 export const peakFinderElevation = writable(0);
 /**

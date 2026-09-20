@@ -54,7 +54,8 @@
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
     import '~/mapModules/features/terrain3d';
-    import { exitPeakFinder } from '~/mapModules/features/peakFinder';
+    import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
+    import type { PreviewGeometrySource } from '~/utils/cameraFov';
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
@@ -174,6 +175,14 @@
      * on screen.
      */
     let peakFinderMapComponent = null;
+    /**
+     * The AR preview, handed to the peak finder when its session opens.
+     *
+     * Only the view owning the capture session can report what the preview is actually doing — the
+     * stream's resolution, its rotation, how it is fitted into the view, the live zoom — and the peak
+     * finder needs all four to draw the terrain at the same scale as the photograph.
+     */
+    let arCameraPreview: PreviewGeometrySource = null;
     async function loadPeakFinderComponents() {
         if (!peakFinderOverlayComponent) {
             peakFinderOverlayComponent = (await import('~/components/peaks/PeakFinderOverlay.svelte')).default;
@@ -1937,7 +1946,14 @@
              another surface below it, so this has to be a sibling that comes first, not part of the
              overlay. `{#if}` rather than `visibility`, so no camera is held open outside the mode. -->
         {#if $peakFinderArActive}
-            <cameraview height="100%" width="100%" />
+            <!-- `cameraOpen` is when the capture session exists, and so when its chosen format's
+                 field of view can be read: matching the terrain to the preview is what makes a
+                 summit the same size in both pictures.
+                 `enablePinchZoom` is off EXPLICITLY, not incidentally. A zoom changes the preview's
+                 field of view, and the live ratio is the one thing about the preview that neither
+                 Camera2's static characteristics nor `AVCaptureDevice` can be asked for on Android -
+                 it lives on the CameraX camera the plugin owns. Pinned at 1 it needs no asking. -->
+            <cameraview bind:this={arCameraPreview} enablePinchZoom={false} height="100%" width="100%" on:cameraOpen={() => onArCameraOpen(arCameraPreview)} />
         {/if}
         <!-- Taken out of the way while AR is on: a translucent map reveals the surface UNDER it, and
              three surfaces (preview, live map, panorama) have no defined order between them. The live
