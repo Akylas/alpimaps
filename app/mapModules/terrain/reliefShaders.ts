@@ -175,9 +175,64 @@ uniform float uDistanceFade;
 uniform float uHaze;
 uniform vec4 uInkColor;
 uniform vec4 uPaperColor;
+// Lens distortion, for AR. k1..k3 radial and p1, p2 tangential, exactly as Camera2's LENS_DISTORTION
+// states them; uDistortCenter* is the principal point's offset in the same tangent units. Every
+// coefficient zero - the default, and every non-AR frame - makes distortUv the identity.
+// Scalars and not vectors because PostProcessEffect carries float and colour uniforms only.
+uniform float uDistortK1;
+uniform float uDistortK2;
+uniform float uDistortK3;
+uniform float uDistortP1;
+uniform float uDistortP2;
+uniform float uDistortCenterX;
+uniform float uDistortCenterY;
+// Half-field TANGENTS: what the camera frame spans on SCREEN, and what this frame was RENDERED to
+// span. The render is the wider of the two, by exactly enough that undistorting the screen's corners
+// still lands inside it - see arGeometry in features/peakFinder.ts. Equal when there is no warp.
+uniform float uDistortScreenTanX;
+uniform float uDistortScreenTanY;
+uniform float uDistortRenderTanX;
+uniform float uDistortRenderTanY;
+// 1 when the view is a quarter turn from the camera's own landscape frame, which is what a portrait
+// AR view is. The COORDINATES are rotated rather than the coefficients: that way k1..k3 and p1, p2
+// are used exactly as the platform states them, and only this one mapping carries the orientation.
+uniform float uDistortRotate;
 
 float unpackDepth(vec4 c) {
     return dot(c.rgb, vec3(1.0, 1.0 / 255.0, 1.0 / 65025.0));
+}
+
+// Where to sample the RECTILINEAR render for the pixel a distorted camera would put here.
+//
+// The camera's picture is distorted and the render is not, so for an output pixel the render has to
+// be read at the IDEAL position that the lens maps onto it - the inverse of Brown-Conrady. There is
+// no closed form, so it is the standard fixed-point iteration: divide out the radial term at the
+// current estimate and repeat. Phone-scale distortion converges in two or three rounds.
+//
+// The render covers a wider field than the screen, which is what makes this possible at all: barrel
+// distortion pulls the periphery inwards, so the ideal position for a screen CORNER lies outside the
+// screen's own field, and a render that stopped at the screen's field would have nothing there to
+// read but its own edge.
+vec2 distortUv(vec2 uv) {
+    if (abs(uDistortK1) + abs(uDistortK2) + abs(uDistortK3) + abs(uDistortP1) + abs(uDistortP2) == 0.0) {
+        return uv;
+    }
+    vec2 center = vec2(uDistortCenterX, uDistortCenterY);
+    // Screen NDC into the tangent space the coefficients are stated in, about the principal point.
+    vec2 viewTan = (uv * 2.0 - 1.0) * vec2(uDistortScreenTanX, uDistortScreenTanY);
+    vec2 distorted = (uDistortRotate > 0.5 ? vec2(viewTan.y, -viewTan.x) : viewTan) - center;
+    vec2 ideal = distorted;
+    for (int i = 0; i < 3; i++) {
+        float r2 = dot(ideal, ideal);
+        float radial = 1.0 + r2 * (uDistortK1 + r2 * (uDistortK2 + r2 * uDistortK3));
+        vec2 tangential = vec2(2.0 * uDistortP1 * ideal.x * ideal.y + uDistortP2 * (r2 + 2.0 * ideal.x * ideal.x),
+                               uDistortP1 * (r2 + 2.0 * ideal.y * ideal.y) + 2.0 * uDistortP2 * ideal.x * ideal.y);
+        ideal = (distorted - tangential) / max(radial, 0.1);
+    }
+    // ...back into the view's frame, and out through the RENDER's field, which is the wider one.
+    vec2 idealView = ideal + center;
+    idealView = uDistortRotate > 0.5 ? vec2(-idealView.y, idealView.x) : idealView;
+    return (idealView / vec2(uDistortRenderTanX, uDistortRenderTanY)) * 0.5 + 0.5;
 }
 
 // Eye-space position of a pixel from the packed linear depth.
@@ -187,7 +242,10 @@ vec3 eyePos(vec2 uv, float depth) {
 }
 
 void main(void) {
-    vec2 uv = gl_FragCoord.xy * uInvScreenSize;
+    // The ONE place the lens warp is applied. Everything below reads the scene, the terrain depth,
+    // the edge neighbours and the eye positions through this coordinate, so the whole picture -
+    // terrain, ridge lines and summit labels alike - is resampled together and stays registered.
+    vec2 uv = distortUv(gl_FragCoord.xy * uInvScreenSize);
     vec4 color = texture2D(uColorTex, uv);
     vec4 c0 = texture2D(uTerrainDepthTex, uv);
     float d0 = unpackDepth(c0);
@@ -289,13 +347,30 @@ void main(void) {
         edge = max(edge, slopeInk * uSlopeStrength);
     }
 
-    // AR: the ink and NOTHING else. The frame is a hole for the camera preview, so paper, haze and
-    // the surface's own shading would all be a sheet drawn over the picture. Alpha carries the
-    // lines, which is the whole output - and it is why this term cannot just be a colour: the
-    // effect writes every pixel, so an opaque alpha here hid the preview however transparent the
-    // clear colour was.
+    // AR: the ink and the LABELS, and nothing else. The frame is a hole for the camera preview, so
+    // paper, haze and the surface's own shading would each be a sheet drawn over the picture. Alpha
+    // carries the result - and it is why this cannot just be a colour: the effect writes every
+    // pixel, so an opaque alpha here hid the preview however transparent the clear colour was.
+    //
+    // uColorTex is NOT discarded here, which it used to be. Everything that is not terrain surface
+    // is in it - and in this mode that means the summit names, their plates and their leader lines,
+    // which is most of what the mode is for. Throwing the buffer away drew the ridge lines alone and
+    // no labels at all.
+    //
+    // PREMULTIPLIED on both sides, which is not a detail. The SDK renders with
+    // glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA) (MapRenderer::initializeRenderState), so the
+    // offscreen buffer is already premultiplied and composites with a plain source-over. And the
+    // OUTPUT has to be premultiplied too: a translucent GL surface is composited by the system that
+    // way (SurfaceFlinger on android, CoreAnimation on iOS), so a straight colour with a low alpha
+    // is added at FULL strength over what is behind it. Between the lines the alpha is near zero and
+    // the rgb was still the ink's, which the compositor read as a sheet of ink over the whole
+    // preview - the grey veil, darkest under the light palette whose ink is near black.
     if (uTransparent > 0.5) {
-        gl_FragColor = vec4(uInkColor.rgb, edge * uInkColor.a * uIntensity);
+        float inkAlpha = edge * uInkColor.a * uIntensity;
+        vec4 ink = vec4(uInkColor.rgb * inkAlpha, inkAlpha);
+        // Labels OVER the lines: a name crossed by the ridge it belongs to is unreadable, and the
+        // plate exists to sit on top of the picture.
+        gl_FragColor = color + ink * (1.0 - color.a);
         return;
     }
 

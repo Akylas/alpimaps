@@ -29,6 +29,7 @@ import {
     peakFinderFlyElevation,
     peakFinderFlyZoom,
     peakFinderHaze,
+    peakFinderHeading,
     peakFinderHeadingFollowing,
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
@@ -37,6 +38,8 @@ import {
     peakFinderLabelMinDistance,
     peakFinderLabelPinTop,
     peakFinderLabelRows,
+    peakFinderLensCorrection,
+    peakFinderMaxFieldOfView,
     peakFinderMeshResolution,
     peakFinderOcclusion,
     peakFinderOutlineWidth,
@@ -52,6 +55,7 @@ import {
     terrainCameraClearance,
     terrainExaggeration
 } from '~/stores/terrainStore';
+import { type CameraFieldOfView, type CameraPreviewInfo, type LensDistortion, type PreviewGeometrySource, cameraFieldOfView } from '~/utils/cameraFov';
 import { type MapPos, bearingBetween, computeDistanceBetween, toPosition } from '~/utils/geo';
 import { lockOrientation } from '~/utils/orientation';
 
@@ -119,6 +123,16 @@ let viewpoint: MapPos = null;
 let initialRotation = 0;
 /** Whether AR is what started the orientation sensors, so turning it off knows to stop them. */
 let arStartedFollowing = false;
+/**
+ * The AR camera preview, while it is up.
+ *
+ * Held because the preview's GEOMETRY — the stream's resolution, the quarter turns, how it is fitted
+ * into the view and the live zoom — is session state that only the view owning the session can
+ * report. The lens's own field of view and distortion come from the device instead, and need no view
+ * at all (`~/utils/cameraFov`). The preview lives in `Map.svelte`, one level above the panorama, so
+ * it is handed over rather than looked up.
+ */
+let arPreview: PreviewGeometrySource = null;
 
 function terrain() {
     return panorama?.terrain();
@@ -126,6 +140,298 @@ function terrain() {
 
 function camera() {
     return panorama?.camera();
+}
+
+/** The SDK's own vertical field of view, which is the widest this mode ever asks for. */
+const DEFAULT_FIELD_OF_VIEW_Y = 70;
+
+/** Degrees ↔ radians, for the field-of-view arithmetic below. */
+const TO_RADIANS = Math.PI / 180;
+const TO_DEGREES = 180 / Math.PI;
+
+/**
+ * The vertical field of view the panorama should draw at, degrees.
+ *
+ * The SDK only takes the VERTICAL one and derives the horizontal from the viewport
+ * (`_tanHalfFOVX = aspect * _tanHalfFOVY`, `ViewState.cpp`), so every horizontal figure here has to
+ * be converted: a horizontal half-angle H over an aspect A is a vertical half-angle
+ * `atan(tan(H) / A)`.
+ *
+ * In AR that horizontal figure is the CAMERA's, and it is not a preference — see `arGeometry`.
+ * Outside AR it is `peakFinderMaxFieldOfView`, or the camera's own field when that is 0, applied as
+ * a ceiling: `min` with the SDK default, so it can only ever narrow the view.
+ */
+function fieldOfViewY(viewAspect: number): number {
+    const matched = arGeometry(viewAspect);
+    if (matched) {
+        return 2 * Math.atan(matched.renderTan[1]) * TO_DEGREES;
+    }
+    const preference = get(peakFinderMaxFieldOfView);
+    const horizontal = preference > 0 ? Math.max(10, Math.min(170, preference)) : cameraHorizontalField();
+    const halfHorizontal = (horizontal / 2) * TO_RADIANS;
+    return Math.min(DEFAULT_FIELD_OF_VIEW_Y, 2 * Math.atan(Math.tan(halfHorizontal) / viewAspect) * TO_DEGREES);
+}
+
+/** Memoised: reading it enumerates the device's cameras, and a lens does not change. */
+let cameraLens: CameraFieldOfView | null | undefined;
+
+/**
+ * The back camera's horizontal field, degrees — what the panorama draws at by default.
+ *
+ * A peak finder is read against the view it is held up to, so the picture should be the size that
+ * view is. Falls back to the SDK default's horizontal equivalent where there is no camera to ask.
+ */
+function cameraHorizontalField(): number {
+    if (cameraLens === undefined) {
+        cameraLens = cameraFieldOfView();
+    }
+    return cameraLens?.horizontal > 0 ? cameraLens.horizontal : DEFAULT_FIELD_OF_VIEW_Y;
+}
+
+/**
+ * What the AR preview is doing with the lens, or null when there is no preview to ask.
+ *
+ * Everything here is a decision the platform makes when it opens the session — which resolution it
+ * picked for the stream, which way round it is, how it is fitted into the view, where the zoom sits —
+ * so it is reported rather than computed. Before the plugin exposed it this was assumed: the sensor
+ * array's aspect stood in for the stream's, and the zoom was pinned off so that 1 was safe to assume.
+ */
+function arPreviewInfo(): CameraPreviewInfo | null {
+    // Optional on purpose. `getPreviewInfo` is newer than the ui-cameraview release this app resolves,
+    // so where it is missing the mode falls back to what it did before: the sensor array's aspect
+    // stands in for the stream's, and the zoom is 1 because the preview pins pinch zoom off. Both are
+    // right on a phone; see `arGeometry`.
+    if (typeof arPreview?.getPreviewInfo !== 'function') {
+        return null;
+    }
+    try {
+        return arPreview.getPreviewInfo();
+    } catch (error) {
+        DEV_LOG && console.log('peakFinder: no preview geometry', error);
+        return null;
+    }
+}
+
+/** What the camera asks the panorama to draw, for a view of this shape. */
+interface ArGeometry {
+    /** Half-field tangents of what the preview SHOWS, (horizontal, vertical), in view orientation. */
+    screenTan: [number, number];
+    /** ...and of what has to be RENDERED so the lens warp has something to read at the corners. */
+    renderTan: [number, number];
+    /** Whether the view is a quarter turn from the camera's landscape frame. */
+    rotated: boolean;
+    distortion: LensDistortion | null;
+}
+
+/**
+ * Brown-Conrady, ideal to distorted, exactly as the shader's loop inverts it.
+ *
+ * The one place the model is written in TypeScript: the render's field is chosen by UNDISTORTING the
+ * screen's corner, which needs the same arithmetic the fragment shader runs, and two copies of a
+ * distortion model that disagree is a warp that does not cancel.
+ */
+function undistort(point: [number, number], distortion: LensDistortion): [number, number] {
+    const target: [number, number] = [point[0] - distortion.centerX, point[1] - distortion.centerY];
+    let ideal: [number, number] = [target[0], target[1]];
+    for (let iteration = 0; iteration < 3; iteration++) {
+        const radiusSquared = ideal[0] * ideal[0] + ideal[1] * ideal[1];
+        const radial = 1 + radiusSquared * (distortion.k1 + radiusSquared * (distortion.k2 + radiusSquared * distortion.k3));
+        const tangentialX = 2 * distortion.p1 * ideal[0] * ideal[1] + distortion.p2 * (radiusSquared + 2 * ideal[0] * ideal[0]);
+        const tangentialY = distortion.p1 * (radiusSquared + 2 * ideal[1] * ideal[1]) + 2 * distortion.p2 * ideal[0] * ideal[1];
+        ideal = [(target[0] - tangentialX) / Math.max(radial, 0.1), (target[1] - tangentialY) / Math.max(radial, 0.1)];
+    }
+    return [ideal[0] + distortion.centerX, ideal[1] + distortion.centerY];
+}
+
+/**
+ * The field of view that makes a summit the same size on the terrain as in the camera preview.
+ *
+ * Matching the camera is NOT "use the camera's field of view": what has to match is the field of the
+ * picture actually VISIBLE ON SCREEN, and the preview frame is transformed twice before it gets
+ * there.
+ *
+ *  1. It is ROTATED into the view's orientation, by the quarter turns the platform reports.
+ *  2. It is SCALED to cover the view (or to fit inside it) and whatever overflows is cropped,
+ *     symmetrically about the optical axis.
+ *
+ * The visible fraction of the frame per axis is `view / (frame * s)` where `s` is the fit scale —
+ * `max` of the two ratios for a cover fit, `min` for a contain fit. Both preserve the aspect, so one
+ * axis comes out at exactly 1 and the other is the crop. Multiply the frame's half-field tangent by
+ * that fraction and the vertical field is settled; the SDK derives the horizontal from the view's
+ * aspect, which is consistent because a rectilinear frame satisfies
+ * `tan(hfov/2)/tan(vfov/2) = aspect` and a centre crop to the view's shape makes that ratio the
+ * VIEW's aspect. So one number matches both axes.
+ *
+ * NONE of that is assumed: the stream's own resolution, the quarter turns, the fit and the live zoom
+ * all come from `CameraView.getPreviewInfo()`, because they are decisions the platform makes at
+ * session time and an application cannot compute them. Only the LENS — the field of view and the
+ * distortion — is read from the device characteristics.
+ *
+ * Then the lens itself. A photograph is not a rectilinear projection and the render is: the camera's
+ * barrel distortion is several percent at the frame corners, far more than anything else left in the
+ * match. It is corrected by warping the render (`distortUv` in `reliefShaders.ts`), and that only
+ * works if the render covers MORE than the screen — barrel pulls the periphery inwards, so the ideal
+ * direction for a screen corner lies outside the screen's own field, and a render stopping at the
+ * screen's field would have nothing there to read. Hence two fields: what the screen shows, and the
+ * wider one actually rendered, scaled by exactly the corners' undistortion.
+ *
+ * Deliberately NOT capped by `peakFinderMaxFieldOfView`: in AR the field is a measurement, and
+ * narrowing it is precisely the mismatch this exists to remove.
+ */
+function arGeometry(viewAspect: number): ArGeometry | null {
+    if (!get(peakFinderArActive)) {
+        return null;
+    }
+    const lens = cameraFieldOfView();
+    if (!lens) {
+        return null;
+    }
+    const preview = arPreviewInfo();
+    // The lens's field is the UNZOOMED one; a zoom of Z narrows the tangent by Z.
+    const zoom = preview?.zoomRatio > 0 ? preview.zoomRatio : 1;
+    const tanHalfWide = Math.tan((lens.horizontal / 2) * TO_RADIANS) / zoom;
+    // The stream's aspect, not the sensor array's: a 16:9 preview is a vertical crop of a 4:3 sensor,
+    // keeping its width, so the same horizontal field over a taller aspect.
+    const frameAspect = preview && preview.width > 0 && preview.height > 0 ? Math.max(preview.width, preview.height) / Math.min(preview.width, preview.height) : lens.aspect;
+    const tanHalfNarrow = tanHalfWide / frameAspect;
+    // The turns the platform says it applies, rather than guessed from the view being portrait.
+    const rotated = preview ? preview.rotation === 90 || preview.rotation === 270 : viewAspect < 1;
+    const streamTan: [number, number] = rotated ? [tanHalfNarrow, tanHalfWide] : [tanHalfWide, tanHalfNarrow];
+    const streamAspect = streamTan[0] / streamTan[1];
+    // Cover or contain. Both keep the aspect, so this one expression covers the two: `fit` leaves the
+    // whole stream on screen with the view seeing PAST it, which is a fraction above 1 — and drawing
+    // terrain where the preview shows letterbox is right, not a bug to guard.
+    const covers = !preview || (preview.stretch !== 'aspectFit' && preview.stretch !== 'fitCenter' && preview.stretch !== 'fitStart' && preview.stretch !== 'fitEnd');
+    const fitScale = covers ? Math.max(viewAspect / streamAspect, 1) : Math.min(viewAspect / streamAspect, 1);
+    const screenTan: [number, number] = [(streamTan[0] * viewAspect) / (streamAspect * fitScale), streamTan[1] / fitScale];
+
+    const distortion = get(peakFinderLensCorrection) ? lens.distortion : null;
+    if (!distortion) {
+        return { screenTan, renderTan: screenTan, rotated, distortion: null };
+    }
+    // A corner is the largest radius on screen, so undistorting one is what bounds the surplus the
+    // render needs — and ALL FOUR of them, because the principal point is not exactly the frame's
+    // centre and the distortion is measured about the principal point, so the four are not the same
+    // distance out. Never below 1: a pincushion lens asks for a narrower render than the screen, and
+    // there the screen's own field is already enough.
+    let scale = 1;
+    for (const signX of [-1, 1]) {
+        for (const signY of [-1, 1]) {
+            const cornerView: [number, number] = [signX * screenTan[0], signY * screenTan[1]];
+            const ideal = undistort(rotated ? [cornerView[1], -cornerView[0]] : cornerView, distortion);
+            const idealView: [number, number] = rotated ? [-ideal[1], ideal[0]] : ideal;
+            scale = Math.max(scale, Math.abs(idealView[0]) / screenTan[0], Math.abs(idealView[1]) / screenTan[1]);
+        }
+    }
+    // ...and a hair more, so the outermost pixel reads inside the render rather than off its clamped
+    // edge. Half a percent of field costs nothing and the inverse above is itself only accurate to
+    // about that.
+    scale *= 1.005;
+    return { screenTan, renderTan: [screenTan[0] * scale, screenTan[1] * scale], rotated, distortion };
+}
+
+/**
+ * Writes the field of view for the view's current shape.
+ *
+ * Re-applied on every layout: a rotation changes the aspect and nothing else, and the aspect is the
+ * whole of what both rules above depend on.
+ *
+ * Written UNROUNDED. `Options::setFieldOfViewY` takes a float — it used to be an int, which at the
+ * narrow vertical field a landscape AR view asks for quantised the tangent by about 3% a degree, so
+ * half a degree of rounding was ~1.6% of scale, or some twenty pixels at the frame edge.
+ */
+function applyFieldOfView() {
+    if (!panorama || !panoramaView) {
+        return;
+    }
+    const width = panoramaView.getMeasuredWidth();
+    const height = panoramaView.getMeasuredHeight();
+    if (!(width > 0) || !(height > 0)) {
+        return;
+    }
+    panorama.set('fieldOfViewY', currentFieldOfViewY());
+    // ...and put the camera back where it was. See `zoomForFieldOfView`.
+    panoramaView.setZoom(effectiveZoom(), 0);
+    applyLensCorrection();
+}
+
+/** The field of view the view's current shape asks for, or the SDK's own before it has been measured. */
+function currentFieldOfViewY(): number {
+    const width = panoramaView?.getMeasuredWidth() ?? 0;
+    const height = panoramaView?.getMeasuredHeight() ?? 0;
+    if (!(width > 0) || !(height > 0)) {
+        return DEFAULT_FIELD_OF_VIEW_Y;
+    }
+    return Math.max(10, fieldOfViewY(width / height));
+}
+
+/**
+ * The zoom to place the camera with — `peakFinderFlyZoom`, corrected for the field of view in force.
+ *
+ * Every camera write in this mode goes through it, so the viewpoint stands in the same place whatever
+ * the field of view is. See `zoomForFieldOfView`.
+ */
+function effectiveZoom(): number {
+    return zoomForFieldOfView(currentFieldOfViewY());
+}
+
+/**
+ * The zoom that keeps the CAMERA where it would be at the SDK's own field of view.
+ *
+ * The two are coupled, and not obviously: `ZoomConvention::zoom0Distance` is
+ * `screenHeight/2 · worldSize / (tilePixels · tan(fovY/2))`, and the camera sits at
+ * `zoom0Distance / 2^zoom`. So tan(fovY/2) divides it — narrow the field and the camera moves FURTHER
+ * at the same zoom, by the same ratio.
+ *
+ * That is not what a field-of-view cap is for. Moving the camera changes the camera-to-focus distance,
+ * which is tangram's view-distance rule (how far the ground is drawn), the tile LOD's reference, and
+ * the denominator a callout label's size is cancelled by — so capping the field quietly changed how
+ * far the panorama reaches and how big its summit names are. Adding `log2` of the ratio to the zoom
+ * cancels it exactly, leaving the cap as what it claims to be: a crop.
+ */
+function zoomForFieldOfView(fovY: number): number {
+    const base = get(peakFinderFlyZoom);
+    const tanDefault = Math.tan((DEFAULT_FIELD_OF_VIEW_Y / 2) * TO_RADIANS);
+    const tanActual = Math.tan((fovY / 2) * TO_RADIANS);
+    if (!(tanActual > 0) || !(tanDefault > 0)) {
+        return base;
+    }
+    return base + Math.log2(tanDefault / tanActual);
+}
+
+/**
+ * Hands the lens warp its numbers — the two fields and the coefficients (`distortUv` in
+ * `reliefShaders.ts`).
+ *
+ * Always writes all of them, zeroes included: an effect keeps the parameters it was last given, so a
+ * frame that stops being AR has to say so or it keeps warping.
+ *
+ * Applied alongside the field of view, because the two are one decision: the render is deliberately
+ * WIDER than the screen and the warp is what brings it back, so a field written without matching
+ * coefficients — or the reverse — is a picture at the wrong scale, not merely an uncorrected one.
+ */
+function applyLensCorrection() {
+    if (!effect) {
+        return;
+    }
+    const width = panoramaView?.getMeasuredWidth() ?? 0;
+    const height = panoramaView?.getMeasuredHeight() ?? 0;
+    const geometry = width > 0 && height > 0 ? arGeometry(width / height) : null;
+    const distortion = geometry?.distortion;
+    effect.setFloatParameter('uDistortK1', distortion?.k1 ?? 0);
+    effect.setFloatParameter('uDistortK2', distortion?.k2 ?? 0);
+    effect.setFloatParameter('uDistortK3', distortion?.k3 ?? 0);
+    effect.setFloatParameter('uDistortP1', distortion?.p1 ?? 0);
+    effect.setFloatParameter('uDistortP2', distortion?.p2 ?? 0);
+    effect.setFloatParameter('uDistortCenterX', distortion?.centerX ?? 0);
+    effect.setFloatParameter('uDistortCenterY', distortion?.centerY ?? 0);
+    // 1 rather than 0 when there is no warp: these are divisors, and the shader's early return means
+    // they are never read in that case anyway.
+    effect.setFloatParameter('uDistortScreenTanX', geometry?.screenTan[0] ?? 1);
+    effect.setFloatParameter('uDistortScreenTanY', geometry?.screenTan[1] ?? 1);
+    effect.setFloatParameter('uDistortRenderTanX', geometry?.renderTan[0] ?? 1);
+    effect.setFloatParameter('uDistortRenderTanY', geometry?.renderTan[1] ?? 1);
+    effect.setFloatParameter('uDistortRotate', geometry?.rotated ? 1 : 0);
 }
 
 /**
@@ -328,11 +634,14 @@ function applyReliefOutline() {
     effect.setFloatParameter('uCreaseStrength', get(peakFinderCreaseStrength));
     effect.setFloatParameter('uCreaseThreshold', get(peakFinderCreaseThreshold));
     effect.setFloatParameter('uCreaseFade', get(peakFinderCreaseFade));
-    // NO slope ink in AR, and this is the grey veil over the camera preview. The slope term is a
-    // depth GRADIENT lifted by `pow(·, 0.23)`, so it inks every surface that is not square-on to the
-    // camera — which is nearly the whole frame. On paper that IS the relief; over a photograph it is
-    // a sheet of translucent ink with the picture behind it.
-    effect.setFloatParameter('uSlopeStrength', get(peakFinderArActive) ? 0 : get(peakFinderSlopeStrength));
+    // Slope ink in AR TOO, which it was not: the term was blamed for the grey veil over the camera
+    // preview and turned off, and the veil was the shader writing a STRAIGHT colour into a
+    // premultiplied surface — the ink's rgb at a near-zero alpha, which the system compositor added
+    // at full strength over the whole preview. That is fixed where it belongs (see the shader's AR
+    // branch), so the relief can be drawn over the photograph as it is on paper. It is a wide ink —
+    // a depth gradient lifted by `pow(·, 0.23)` marks every surface not square-on to the camera — so
+    // the strength slider is how much of the picture it is allowed to cover.
+    effect.setFloatParameter('uSlopeStrength', get(peakFinderSlopeStrength));
     effect.setFloatParameter('uSlopeMultiplier', get(peakFinderSlopeMultiplier));
     effect.setFloatParameter('uSlopeBias', get(peakFinderSlopeBias));
     effect.setFloatParameter('uHaze', get(peakFinderHaze));
@@ -343,6 +652,7 @@ function applyReliefOutline() {
     effect.setFloatParameter('uDistanceFade', get(peakFinderDistanceFade));
     effect.setColorParameter('uInkColor', colors.ink);
     effect.setColorParameter('uPaperColor', colors.paper);
+    applyLensCorrection();
     panoramaView.setPostProcessEffect(effect);
 }
 
@@ -407,6 +717,31 @@ function applyPalette() {
  */
 function setFocusLift(metres: number) {
     terrain()?.set('focusLift', Math.max(0, metres));
+}
+
+/**
+ * Publishes where the view is pointed, for the overlay's compass.
+ *
+ * The map's ROTATION is the opposite of the heading — turning the view right turns the map left — so
+ * this is the one place the two are converted into each other. Kept in a store rather than read by
+ * the overlay, because the overlay has no map: this one is the panorama's.
+ */
+function publishHeading() {
+    const rotation = camera()?.rotation() ?? 0;
+    peakFinderHeading.set(((-rotation % 360) + 360) % 360);
+}
+
+/**
+ * Re-reads the camera's field of view, for the moment the preview session actually opens.
+ *
+ * On iOS `AVCaptureDevice.activeFormat` is the format the SESSION chose only once there is a session;
+ * before that it is whatever the device was last left on, so the value read when AR was switched on
+ * can be the wrong one. On Android it changes nothing — Camera2 characteristics are static — but one
+ * read costs nothing either.
+ */
+export function onArCameraOpen(preview: PreviewGeometrySource) {
+    arPreview = preview;
+    applyFieldOfView();
 }
 
 /** Lifts the viewpoint to `metres` above the ground under it, without moving it horizontally. */
@@ -481,6 +816,10 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // out. 0 = no limit, leaving `text-max-distance` the only bound. Its own call: the option is a
     // property rather than part of the options SPEC, so `apply` does not carry it.
     map.set('labelViewDistance', 0);
+    applyFieldOfView();
+    // A rotation changes the view's aspect and nothing else, and the aspect is the whole of what the
+    // field-of-view cap is about.
+    view.on('layoutChanged', applyFieldOfView);
     map.apply({
         // A panorama reaches UP past the horizon (a negative tilt is a look up), and every frame of a
         // drag is clamped to this. A floor at the horizon would stop the drag dead there.
@@ -528,7 +867,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // and `setMapRotation` turn the view in PLACE, so a camera set afterwards would spin the view
     // where it stands instead of pointing it at the panorama.
     camera().moveTo(toPosition(viewpoint), {
-        zoom: get(peakFinderFlyZoom),
+        zoom: effectiveZoom(),
         rotation: initialRotation,
         tilt: get(peakFinderTilt)
     });
@@ -544,6 +883,10 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     buildPeaksLayer();
     // A tap on empty ground clears the chip, the way tapping the map elsewhere deselects.
     map.onClick(() => peakFinderSelectedPeak.set(null));
+    // What the overlay's compass reads. Throttled: the view turns with every frame of a drag, and
+    // the readout is a number on screen.
+    publishHeading();
+    map.onMove(publishHeading, { throttle: 100 });
     // AR survives a rebuild of the view (a rotation, an activity re-create), so the hole has to be
     // re-opened on the new surface.
     if (get(peakFinderArActive)) {
@@ -559,6 +902,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
  * the live map's layers and were only borrowed.
  */
 export function teardownPanorama() {
+    panoramaView?.off('layoutChanged', applyFieldOfView);
     panoramaView?.setPostProcessEffect(null);
     effect = null;
     peaksLayer = null;
@@ -655,7 +999,7 @@ export const flyToSelectedPeak = tryCatchFunction(async () => {
     const focus = mapCamera.position();
     const eye = mapCamera.eyePosition();
     const target: Position = [summit[0] + (focus[0] - eye[0]), summit[1] + (focus[1] - eye[1])];
-    mapCamera.moveTo(target, { zoom: get(peakFinderFlyZoom), tilt: get(peakFinderTilt) });
+    mapCamera.moveTo(target, { zoom: effectiveZoom(), tilt: get(peakFinderTilt) });
     peakFinderSelectedPeak.set(null);
 });
 
@@ -794,6 +1138,8 @@ applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(
 applyLive(peakFinderViewDistanceMetres, () => terrain().set('viewDistance', get(peakFinderViewDistanceMetres)));
 applyLive(peakFinderMeshResolution, () => terrain().set('meshResolution', get(peakFinderMeshResolution)));
 applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
+applyLive(peakFinderMaxFieldOfView, applyFieldOfView);
+applyLive(peakFinderLensCorrection, applyFieldOfView);
 applyLive(peakFinderLabelPinTop, rebuildPeaksLayer);
 applyLive(peakFinderLabelBand, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
@@ -810,6 +1156,9 @@ applyLive(peakFinderArActive, () => {
     // the effect's own alpha (`uTransparent`). The summit labels go with them, because AR forces the
     // light-ink palette and their colours are style TEXT — see `palette` and `rebuildPeaksLayer`.
     applyPalette();
+    // In AR the field of view stops being a preference and becomes a MEASUREMENT of the camera
+    // behind the frame, which is the only way a summit is the same size in both pictures.
+    applyFieldOfView();
     // A panorama held up at the sky has to be able to look straight up, which the panorama's own
     // range stops short of.
     panorama.set('tiltRange', get(peakFinderArActive) ? [-90, 90] : PANORAMA_RANGE);
