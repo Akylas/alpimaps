@@ -332,13 +332,28 @@ export default class CustomLayersModule extends MapModule {
      *
      * An EMPTY shader is how the built-in one comes back - the renderer substitutes its default for
      * it - which is why turning slopes off does not hand back a shader of ours.
+     *
+     * The normal map has to be built at TRUE scale for this, which is what `heightScale` 1 and the
+     * exaggeration off mean: the shader reads the slope ANGLE straight off the normal
+     * (`acos(dot(normal, surfaceNormal))`) and compares it against degrees. The SDK builds the map
+     * as `decoderScale * heightScale * pixelsPerMetre`, so the hillshade's artistic `heightScale`
+     * - 0.2 here - damps every slope to a fifth of itself, and a real 40 deg read as ~11 deg:
+     * under the lowest step, so the shader painted nothing anywhere. The legacy pre-MapLibre
+     * formula carried a x160 that hid this; the true-slope one is the default now.
      */
     private applySlopeMode(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         this.withExternalChild(composite, HILLSHADE_SLOT, (result) => {
             const child = api.wrap(result.handle, 'massif::HillshadeRasterTileLayer');
-            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode) {
+            // Back to what the sheet persisted when slopes go off - `applyHillshadeSettings` reads
+            // the same key, and this is the only other thing that writes it.
+            const heightScale = this.slopeMode ? 1 : ApplicationSettings.getNumber(`${this.slotItem?.name}_heightScale`, 0.2);
+            // Guarded because BOTH of these rebuild every normal map the layer holds
+            // (`updateTiles`), and this runs on every attach. The shader itself only redraws, so it
+            // rides along rather than being worth a check of its own.
+            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode || child.get('heightScale') !== heightScale) {
                 child.apply({
                     exagerateHeightScaleEnabled: !this.slopeMode,
+                    heightScale,
                     normalMapLightingShader: this.slopeMode ? getSlopeHillshadeShader() : ''
                 });
             }
