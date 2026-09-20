@@ -26,16 +26,20 @@ export const terrainExaggeration = settingsStore('terrainExaggeration', 1);
 /**
  * Grid cells per tile edge, for the DRAPED surface — the one carrying the map layers.
  *
- * 128, over the demo's 64 (tangram's own): a ridge drawn at 64 is visibly faceted and its tile edges
- * show, which is what the geo-three webapp avoids by meshing at 320 on mobile and 512 elsewhere. Not
- * free — 128 measured 8.5 fps against 15.2 at 64 on a Crosscall — hence a setting.
+ * 64, the demo's and tangram's own. This was 128 for a while — a ridge at 64 is visibly faceted and
+ * its tile edges show, which is what the geo-three webapp avoids by meshing at 320 on mobile and 512
+ * elsewhere — but it is not a cosmetic knob, it is the multiplier on everything the surface costs.
+ * Measured: 8.5 fps against 15.2 on a Crosscall, and with cast shadows on it multiplies the shadow
+ * passes too, since the receiver's cost is per surface vertex. Galaxy S22, Grenoble city camera with
+ * buildings and shadows, rotating: 78.0 fps at 128 against 93.6 at 64, GPU 7.35 ms against 4.49,
+ * `shadowCast` 2.88 against 1.13, `shadowMask` 1.26 against 0.46. Raise it on a device that can pay.
  *
  * Two ceilings above it, both in the SDK: `TerrainOptions::setMeshResolution` clamps to 256, and the
  * grid is never finer than the DEM has texels for that tile. And it only reaches this far in the
  * draped path (`TileRenderer`'s regular grid); the bare surface and the depth pre-pass are
  * `TerrainRenderer`'s, which caps at `MAX_MESH_GRID_SIZE` = 96 — see `peakFinderMeshResolution`.
  */
-export const terrainMeshResolution = settingsStore('terrainMeshResolution', 128);
+export const terrainMeshResolution = settingsStore('terrainMeshResolution', 64);
 /** How far the ground goes on, as a factor on tangram's rule. */
 export const terrainViewDistanceFactor = settingsStore('terrainViewDistanceFactor', 1);
 /**
