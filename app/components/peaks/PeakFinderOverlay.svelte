@@ -10,6 +10,7 @@
      */
     import { onDestroy } from 'svelte';
     import { formatDistance } from '~/helpers/formatter';
+    import { getCompassInfo } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { applyViewpointElevation, exitPeakFinder, flyToSelectedPeak, focusSelectedPeak, showPeakFinderSettings, toggleArMode, toggleHeadingFollowing } from '~/mapModules/features/peakFinder';
@@ -22,6 +23,7 @@
         peakFinderArActive,
         peakFinderDark,
         peakFinderElevation,
+        peakFinderHeading,
         peakFinderHeadingFollowing,
         peakFinderSelectedPeak
     } from '~/stores/terrainStore';
@@ -41,6 +43,15 @@
     const peakChipBackground = isEInk ? 'white' : '#4465be94';
     const peakChipColor = isEInk ? 'black' : 'white';
     const peakChipBorderWidth = isEInk ? 1 : 0;
+
+    /**
+     * Where the view is pointed, as a needle and a bearing.
+     *
+     * The needle points NORTH — it is a compass, not a heading arrow — so it is turned by MINUS the
+     * view's own bearing: looking east puts north to the left of the screen. The text is the other
+     * half, the direction being looked AT, which is what a panorama is read by.
+     */
+    $: compass = getCompassInfo($peakFinderHeading);
 
     function truncate(text: string, maxLength: number) {
         return text.length > maxLength ? text.slice(0, maxLength - 1) + '…' : text;
@@ -202,6 +213,27 @@
         <mdbutton class="small-floating-btn" color={colorOnSurface} text="mdi-close" on:tap={() => exitPeakFinder()} on:longPress={() => showToolTip(lc('close'))} />
     </stacklayout>
 
-    <!-- the compass needs calibrating: the same hint the WebView version showed -->
-    <activityindicator busy={true} horizontalAlignment="right" marginBottom={$windowInset.bottom} verticalAlignment="bottom" visibility={$peakFinderHeadingFollowing ? 'visible' : 'collapse'} />
+    <!-- where the view is pointed: the needle holds north, the text is the direction being looked at.
+         Top left, which is the one corner this mode leaves empty - the summit labels are pinned under
+         the top edge and the buttons hang bottom left. -->
+    <stacklayout
+        backgroundColor={colorWidgetBackground}
+        borderRadius={26}
+        horizontalAlignment="left"
+        marginLeft={$windowInset.left + 10}
+        marginTop={$windowInset.top + 10}
+        padding="6 8"
+        verticalAlignment="top">
+        <label
+            color={$peakFinderHeadingFollowing ? colorPrimary : colorOnSurface}
+            fontFamily={$fonts.mdi}
+            fontSize={28}
+            height={32}
+            rotate={-$peakFinderHeading}
+            text="mdi-navigation"
+            textAlignment="center"
+            verticalTextAlignment="center"
+            width={36} />
+        <label color={colorOnSurface} fontSize={11} text={`${Math.round($peakFinderHeading)}° ${compass.exact}`} textAlignment="center" width={36} />
+    </stacklayout>
 </gridlayout>
