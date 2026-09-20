@@ -23,6 +23,7 @@
         terrain3dTilt,
         terrainAutoFlattenByTilt,
         terrainCameraClearance,
+        terrainDrapeCacheSize,
         terrainDrapeResolution,
         terrainExaggeration,
         terrainFlattenModeFull,
@@ -89,6 +90,19 @@
             max: 2048,
             step: 128,
             format: (value) => (value === 0 ? lc('auto') : `${Math.round(value)} px`)
+        },
+        {
+            type: 'slider',
+            store: terrainDrapeCacheSize,
+            title: lc('drape_cache_size'),
+            description: lc('drape_cache_size_desc'),
+            // Right below the resolution, because the two are one setting: the cache has to hold two
+            // covers at whatever the resolution costs per tile, or it evicts every frame. Which is why
+            // 0 - the default - follows the resolution rather than standing still while it moves.
+            min: 0,
+            max: 512,
+            step: 32,
+            format: (value) => (value === 0 ? lc('auto') : `${Math.round(value)} MB`)
         },
         { type: 'slider', store: terrainViewDistanceFactor, title: lc('view_distance_factor'), min: 0.5, max: 6, step: 0.1, format: (value) => `${value.toFixed(1)}×` },
         {

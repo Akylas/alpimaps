@@ -280,21 +280,78 @@ export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*';
  * refines a tile until it covers at most a 2×2 block, so `2 × tileDrawSize × pixelScale` texels is
  * one texel per screen pixel.
  *
- * 2048 all the same — the ceiling. The automatic rule is right about how many texels a tile needs at
- * the LOD's own bound, and wrong about this map: the contours and the road casings are hairlines, and
- * a tile the LOD leaves a level coarser than that bound (which is most of them, most of the time)
- * halves their resolution again.
+ * 1024, not the automatic rule: the rule is right about how many texels a tile needs at the LOD's own
+ * bound, and wrong about this map — the contours and the road casings are hairlines, and a tile the
+ * LOD leaves a level coarser than that bound (which is most of them, most of the time) halves their
+ * resolution again.
  *
- * What it COSTS has to be said, because a fixed value is the one case the SDK does not size against
- * the cache: `TileRenderer::resolveDrapeResolution` returns any non-zero setting as asked, and only
- * the automatic rule is fitted to `DrapeCacheSize`. At 2048 a drape texture is 16 MB, so the SDK's
- * default 96 MB budget holds six of them — against a visible cover of twenty or more, and a cache
- * that has to keep the generation it just replaced as well. Below that the leaves whose own bake has
- * not landed are painted in the flat background colour, which is the ground blinking during a zoom.
- * So this is the sharpness end of a trade whose other end is `TerrainOptions.drapeCacheSize`, which
- * the app does not expose yet.
+ * It was 2048 — the ceiling — and that is not payable, because a fixed value is the one case the SDK
+ * does not size against the cache: `TileRenderer::resolveDrapeResolution` returns any non-zero
+ * setting as asked, and only the automatic rule is fitted to `drapeCacheSize`. Worse, the cache's own
+ * floor then raises the BUDGET to match: `TerrainDrapeCache::endFrame` takes
+ * `max(drapeCacheSize, MIN_ENTRIES x resolution²x4)`, which at 2048 is `max(96 MB, 384 MB)`. Measured
+ * on a Galaxy S22, rotating: `drapeCache colour=28/24 bytes=458752/393216 res=2048` — 448 MB of drape
+ * textures against a 384 MB ceiling, over the count cap, evicting every frame. At 1024 with the
+ * budget below it lands `colour=48/48 bytes=196608/196608`, exactly at budget and stable.
+ *
+ * That eviction IS the stutter when the camera turns fast, because it is what a rotation renames
+ * most: same camera and the same interleaved runs, 65.6 fps median at 2048 against 75.7 at 1024, and
+ * the worst frame per second-window fell from 74-91 ms to 43-48.
+ *
+ * 2048 remains selectable, and `terrainDrapeCacheSize` follows it on its own so that it stays
+ * payable — picking a resolution is picking a memory cost, and the two must not be set apart.
  */
-export const terrainDrapeResolution = settingsStore('terrainDrapeResolution', 2048);
+export const terrainDrapeResolution = settingsStore('terrainDrapeResolution', 1024);
+/**
+ * What the drape cache may hold, in MEGABYTES — `TerrainOptions.drapeCacheSize`, the other end of the
+ * trade `terrainDrapeResolution` sets up. **0 follows the resolution**, which is the default.
+ *
+ * The cache keeps a generation of tiles alive past the visible cover, because a pan or a zoom walks
+ * the cover back and forth over the same tiles and re-acquiring one means re-baking every layer of
+ * it. So it has to hold TWO covers, not one: the live leaves plus the generation the stand-ins are
+ * drawn from. A cover here is twenty-odd leaves, so 192 MB at 4 MB a tile (1024² x RGBA) is 48
+ * entries — two covers with room to spare, and the measured `colour=48/48`.
+ *
+ * Which is exactly why it should not be a number the user carries from one resolution to the next:
+ * the same 192 MB is two covers at 1024 and twelve tiles at 2048, so a budget left behind by an
+ * earlier choice is the thrash this was written to stop. `resolveDrapeCacheSize` derives it instead,
+ * and a non-zero value here overrides that for anyone who wants to spend differently.
+ */
+export const terrainDrapeCacheSize = settingsStore('terrainDrapeCacheSize', 0);
+/** Drape tiles the cache should hold: the live cover, twenty-odd leaves, plus the generation behind it. */
+const DRAPE_CACHE_TILES = 48;
+/** Never below the SDK's own default (`TerrainDrapeCache::MAX_BYTES`), MB. */
+const DRAPE_CACHE_MIN_MB = 96;
+/**
+ * ...and never above this, MB.
+ *
+ * `TerrainDrapeCache` has a floor of its own — `endFrame` takes
+ * `max(drapeCacheSize, MIN_ENTRIES x resolution² x 4)`, MIN_ENTRIES being 24 — so at 2048 it will
+ * allocate 384 MB whatever is asked for here. Asking for the 768 MB that 48 tiles would actually need
+ * there buys nothing the floor does not already give, and no phone has it to spare.
+ */
+const DRAPE_CACHE_MAX_MB = 384;
+
+/**
+ * The cache budget that goes with a drape resolution, in MB.
+ *
+ * Free of the map and of NativeScript so it can be reasoned about on its own: this is the whole rule.
+ *
+ * @param resolution `terrainDrapeResolution`; 0 is the SDK's automatic rule, which sizes ITSELF
+ *   against the budget, so handing it a derived budget would be circular — it gets 0 back and the two
+ *   automatic ends meet at the SDK's own default.
+ * @param setting `terrainDrapeCacheSize`; anything above 0 is the user's and is returned untouched.
+ */
+export function resolveDrapeCacheSize(resolution: number, setting: number): number {
+    if (setting > 0) {
+        return setting;
+    }
+    if (resolution <= 0) {
+        return 0;
+    }
+    const megabytes = (DRAPE_CACHE_TILES * resolution * resolution * 4) / (1024 * 1024);
+    return Math.min(DRAPE_CACHE_MAX_MB, Math.max(DRAPE_CACHE_MIN_MB, Math.round(megabytes)));
+}
 /** How many zoom levels below the camera a tile may coarsen to (`TERRAIN_MAX_TILE_ZOOM_COARSENING`). */
 export const TERRAIN_MAX_TILE_ZOOM_COARSENING = 8;
 /**
