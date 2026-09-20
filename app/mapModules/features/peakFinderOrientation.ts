@@ -11,29 +11,67 @@ import { TO_DEG } from '~/utils/geo';
  * barometer — it runs its own thread and covers both platforms. The MATHS is the native demo's
  * (`DemoOrientation.java`); none of its `SensorManager` plumbing is needed here.
  *
- * TWO sensors, not one, and the reason is a platform difference that is easy to walk into:
+ * TWO sensors, with the work split the way an AR view needs it — which is NOT the way it was.
  *
- *  - `'heading'` gives the AZIMUTH. It is the one this app's compass already uses, and it is absolute
- *    on both platforms.
- *  - `'rotation'` gives the PITCH, from the fused rotation vector. Its azimuth is NOT usable on iOS:
- *    the plugin starts CoreMotion with `XArbitraryCorrectedZVertical` (`index.ios.js:318`), so the
- *    yaw origin is wherever the device happened to be. Z is vertical in both frames, though, so the
- *    pitch is sound on both.
+ *  - `'rotation'` is the FUSED orientation, and it drives BOTH the heading and the pitch. On android
+ *    it is `TYPE_ROTATION_VECTOR` (`SensorManager.java:652`): gyroscope, accelerometer and
+ *    magnetometer fused by the platform, so it is fast and smooth and the magnetometer only trims its
+ *    slow drift. On iOS it is CoreMotion device motion, which is the same thing.
+ *  - `'heading'` gives the ABSOLUTE azimuth, and is used ONLY to pin the offset of the above. On
+ *    android the plugin computes it from the RAW magnetometer and RAW accelerometer with no gyroscope
+ *    at all (`calculateBearing(field, gravity)`, `SensorManager.java:852`) — which is exactly why it
+ *    cannot drive an AR view: it lags, it jitters, and it arrives at whatever rate the magnetometer
+ *    manages. Turning the phone used to move the view through this one sensor, smoothed again on top,
+ *    and the result was the "dead slow" look-around.
  *
- * And the quaternion's component order differs by platform — Android's `getQuaternionFromVector` puts
- * w FIRST (`SensorManager.java:657`), CoreMotion puts it LAST (`index.ios.js:132`). Reading it the
- * wrong way round does not fail, it just tilts wrongly, which is why this is spelled out.
+ * So: the rotation vector gives a heading that MOVES correctly, and the magnetometer says where north
+ * is. A complementary filter — fast relative yaw plus a slowly corrected offset — which is what every
+ * AR view does and what the geo-three webapp does.
+ *
+ * The offset also absorbs the one platform difference that used to rule the rotation vector's yaw
+ * out: iOS starts CoreMotion with `XArbitraryCorrectedZVertical` (`index.ios.js:318`), so its yaw
+ * origin is wherever the device happened to be. On android the yaw is already absolute against
+ * MAGNETIC north, so the offset converges to the declination. Same code, both platforms, and neither
+ * needs to know which it is.
+ *
+ * The quaternion's component order differs by platform — android's `getQuaternionFromVector` puts w
+ * FIRST (`SensorManager.java:657`), CoreMotion puts it LAST (`index.ios.js:132`). Reading it the wrong
+ * way round does not fail, it just aims wrongly, which is why this is spelled out.
  */
 
-/** Smoothing of the fused reading: 1 = raw, smaller = calmer and laggier. */
-const SMOOTHING = 0.2;
+/**
+ * Smoothing of the FUSED reading: 1 = raw, smaller = calmer and laggier.
+ *
+ * Light, because the rotation vector is already fused and smooth — the platform's own filter has done
+ * the work, and a second one here only adds lag. This used to be 0.2 applied at the magnetometer
+ * heading's ~10 Hz, a time constant near half a second on top of a sensor that was itself slow.
+ */
+const SMOOTHING = 0.5;
+/**
+ * Smoothing of the OFFSET between the fused yaw and magnetic north: very slow on purpose.
+ *
+ * The magnetometer's job here is to say where north is, not to move the view. At this rate a bad
+ * reading moves the picture by a fraction of a degree and a steady bias is still absorbed within a
+ * couple of seconds.
+ */
+const OFFSET_SMOOTHING = 0.02;
 /** Below this much movement, in degrees, the camera is left alone so a still phone stops redrawing. */
-const DEAD_ZONE_DEGREES = 0.3;
+const DEAD_ZONE_DEGREES = 0.2;
 /** Highest the view may be aimed, in degrees above the horizon. */
 const LOOK_UP_LIMIT = 90;
+/**
+ * Below this, the look direction is too close to straight up or down for its own azimuth to mean
+ * anything — the horizontal part of the axis vanishes and `atan2` returns noise. The last heading is
+ * kept instead, which is what a phone pointed at the sky should do.
+ */
+const MIN_HORIZONTAL = 0.05;
 
 let headingListener: (data, sensor: string) => void = null;
 let rotationListener: (data, sensor: string) => void = null;
+/** The fused yaw, as the rotation vector reports it — absolute on android, arbitrary on iOS. */
+let fusedYaw: number = null;
+/** ...plus this, which is what makes it absolute on both. See the note at the top of this file. */
+let northOffset: number = null;
 let smoothedHeading: number = null;
 let smoothedPitch: number = null;
 /** Last pose written, so the dead zone has something to compare against. */
@@ -66,24 +104,50 @@ function shortestDelta(from: number, to: number) {
 }
 
 /**
- * How far above the horizon the BACK of the device points, in degrees.
+ * Where the BACK of the device points, in the world frame.
  *
- * The phone is held up like a window, so the axis pointing out of its back is what aims the view: that
- * is the device's -Z axis, rotated into the world frame. Only its vertical component is needed, and
- * for a unit quaternion that reduces to the expression below — no matrix, and no dependence on how the
- * device is rolled, which is why this needs no screen-orientation term at all. (The web version does
- * carry one, because it builds a full camera orientation including roll; a map camera has no roll.)
+ * The phone is held up like a window, so the axis out of its back is what aims the view: the device's
+ * -Z axis, rotated into the world. For a unit quaternion that is minus the rotation matrix's third
+ * column, which is the expression below — no matrix built, and all three components come out of the
+ * one calculation that the heading and the pitch then read.
  */
-function pitchFromQuaternion(quaternion: number[]): number {
+function lookDirection(quaternion: number[]): { east: number; north: number; vertical: number } {
     if (!quaternion || quaternion.length < 4) {
         return null;
     }
     // w first on Android, last on iOS — see the note at the top of this file.
+    const w = __ANDROID__ ? quaternion[0] : quaternion[3];
     const x = __ANDROID__ ? quaternion[1] : quaternion[0];
     const y = __ANDROID__ ? quaternion[2] : quaternion[1];
-    // The world-frame Z of the device's -Z axis: 2(x² + y²) - 1.
-    const vertical = 2 * (x * x + y * y) - 1;
-    return Math.asin(Math.max(-1, Math.min(1, vertical))) * TO_DEG;
+    const z = __ANDROID__ ? quaternion[3] : quaternion[2];
+    // Minus the third column of the rotation matrix, which for a unit quaternion is this. The world
+    // frame is X east, Y north, Z up on both platforms.
+    return { east: -2 * (x * z + w * y), north: 2 * (w * x - y * z), vertical: 2 * (x * x + y * y) - 1 };
+}
+
+/**
+ * How far above the horizon the back of the device points, in degrees.
+ *
+ * Only the vertical component is needed, and it does not depend on how the device is ROLLED — which is
+ * why this needs no screen-orientation term at all. (The web version does carry one, because it builds
+ * a full camera orientation including roll; a map camera has no roll.)
+ */
+function pitchFromLook(look: { vertical: number }): number {
+    return Math.asin(Math.max(-1, Math.min(1, look.vertical))) * TO_DEG;
+}
+
+/**
+ * Which way the back of the device points, in degrees clockwise from the frame's own north.
+ *
+ * ABSOLUTE on android (the rotation vector is referenced to magnetic north) and arbitrary on iOS; both
+ * are turned into a true-north heading by `northOffset`. null when the device is aimed so close to
+ * straight up or down that the azimuth is meaningless.
+ */
+function yawFromLook(look: { east: number; north: number }): number {
+    if (Math.hypot(look.east, look.north) < MIN_HORIZONTAL) {
+        return null;
+    }
+    return (((Math.atan2(look.east, look.north) * TO_DEG) % 360) + 360) % 360;
 }
 
 /** Writes the smoothed pose, unless nothing moved enough to be worth a frame. */
@@ -122,6 +186,13 @@ function applyPose() {
     view.setTilt(tilt, 0);
 }
 
+/**
+ * The magnetometer reading, which only ever moves the OFFSET.
+ *
+ * Nothing here touches the view directly — see the note at the top of this file for why driving an AR
+ * view off this sensor is what made the look-around unusable. It answers one question, slowly: how far
+ * is the fused frame's north from the real one.
+ */
 function onHeading(data, sensor: string) {
     if (sensor !== 'heading') {
         return;
@@ -138,22 +209,42 @@ function onHeading(data, sensor: string) {
             }
         }
     }
-    if (heading === undefined || heading === null || isNaN(heading)) {
+    if (heading === undefined || heading === null || isNaN(heading) || fusedYaw === null) {
         return;
     }
-    smoothedHeading = smoothedHeading === null ? heading : smoothedHeading + SMOOTHING * shortestDelta(smoothedHeading, heading);
-    applyPose();
+    const offset = shortestDelta(fusedYaw, heading);
+    if (northOffset === null) {
+        // Taken WHOLE the first time, and the smoothed heading is reset with it. On iOS the fused
+        // frame's north is wherever the device happened to be, so the correction can be most of a
+        // turn: without the reset the view would SWING round to it on entry.
+        northOffset = offset;
+        smoothedHeading = null;
+        return;
+    }
+    northOffset += OFFSET_SMOOTHING * shortestDelta(northOffset, offset);
 }
 
+/**
+ * The fused orientation, which is what actually aims the view — heading and pitch both.
+ */
 function onRotation(data, sensor: string) {
     if (sensor !== 'rotation') {
         return;
     }
-    const pitch = pitchFromQuaternion(data?.quaternion);
-    if (pitch === null || isNaN(pitch)) {
+    const look = lookDirection(data?.quaternion);
+    if (!look) {
         return;
     }
-    smoothedPitch = smoothedPitch === null ? pitch : smoothedPitch + SMOOTHING * (pitch - smoothedPitch);
+    const yaw = yawFromLook(look);
+    if (yaw !== null && !isNaN(yaw)) {
+        fusedYaw = yaw;
+        const heading = (((yaw + (northOffset ?? 0)) % 360) + 360) % 360;
+        smoothedHeading = smoothedHeading === null ? heading : smoothedHeading + SMOOTHING * shortestDelta(smoothedHeading, heading);
+    }
+    const pitch = pitchFromLook(look);
+    if (!isNaN(pitch)) {
+        smoothedPitch = smoothedPitch === null ? pitch : smoothedPitch + SMOOTHING * (pitch - smoothedPitch);
+    }
     applyPose();
 }
 
@@ -166,26 +257,23 @@ function onRotation(data, sensor: string) {
 export async function startOrientationFollowing(withTilt: boolean) {
     followTilt = withTilt;
     if (headingListener) {
-        // Already running — only the tilt half may need adding.
-        if (withTilt && !rotationListener) {
-            rotationListener = onRotation;
-            await startListeningForSensor('rotation', rotationListener, 40);
-        }
-        return;
+        return; // already running; `setFollowTilt` is what adds or drops the pitch
     }
+    fusedYaw = null;
+    northOffset = null;
     smoothedHeading = null;
     smoothedPitch = null;
     appliedHeading = null;
     appliedPitch = mapView()?.tilt ?? 0;
     headingListener = onHeading;
-    // headingFilter 0: every reading, because the smoothing here is what decides how calm it is.
+    // headingFilter 0: every reading, because the offset filter here is what decides how calm it is.
+    // Rate is not critical any more — this sensor no longer moves the view, it only trims the offset.
     await startListeningForSensor('heading', headingListener, 100, 0, { headingFilter: 0 });
-    if (withTilt) {
-        rotationListener = onRotation;
-        // ~25 Hz: the rotation vector is already fused and smooth, so this is about how often the view
-        // should move, not how much data is needed.
-        await startListeningForSensor('rotation', rotationListener, 40);
-    }
+    rotationListener = onRotation;
+    // ALWAYS, and at ~60 Hz: this is the sensor that aims the view now, on both axes, so its rate is
+    // the rate the picture follows the phone at. `withTilt` decides whether the PITCH is written, not
+    // whether the sensor runs.
+    await startListeningForSensor('rotation', rotationListener, 16);
     peakFinderHeadingFollowing.set(true);
 }
 
@@ -205,9 +293,9 @@ export async function stopOrientationFollowing() {
     peakFinderHeadingFollowing.set(false);
 }
 
-/** Whether the tilt half is running, so AR can be turned off without stopping the compass. */
+/** Whether the pitch is being written, so AR can be turned off without stopping the compass. */
 export function isFollowingTilt() {
-    return !!rotationListener;
+    return followTilt;
 }
 
 /** Adds or drops the tilt half in place. */
@@ -215,14 +303,8 @@ export async function setFollowTilt(withTilt: boolean) {
     if (!get(peakFinderHeadingFollowing)) {
         return;
     }
+    // A flag and nothing else: the rotation sensor drives the HEADING too, so it keeps running either
+    // way. It used to be started and stopped here, which is also why the compass-only mode fell back
+    // to the magnetometer.
     followTilt = withTilt;
-    if (withTilt && !rotationListener) {
-        rotationListener = onRotation;
-        await startListeningForSensor('rotation', rotationListener, 40);
-    } else if (!withTilt && rotationListener) {
-        const listener = rotationListener;
-        rotationListener = null;
-        await stopListeningForSensor('rotation', listener);
-        smoothedPitch = null;
-    }
 }
