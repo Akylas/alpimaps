@@ -239,7 +239,7 @@ while being shown using bottomsheet. We remove it with paddingTop -->
                     <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
                 </StoreValue>
             {/each}
-            <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
+            <!-- <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} /> -->
             <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
         </stacklayout>
     </gridlayout>
