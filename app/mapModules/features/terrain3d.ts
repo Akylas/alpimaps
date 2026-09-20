@@ -129,7 +129,7 @@ function demSource() {
  * @returns whether there is a terrain to work with.
  */
 export function ensureTerrain(): boolean {
-    const map = getMapContext().getMap();
+    const map = getMapContext()?.getMap();
     const source = demSource();
     if (!map || !source) {
         return false;
@@ -336,11 +336,29 @@ function applyAtmosphere(on: boolean) {
 /**
  * The touch model, which the 3D mode owns while it is up — and only while it is up: a free roam drag
  * on a flat map turns a view that has nothing to turn.
+ *
+ * With it, how fast a drag moves the ground. The default (`ANCHORED`) is the grab-the-world pan with
+ * its scale frozen at the point the gesture STARTED, and on a tilted map that point decides
+ * everything: the ray through a finger near the horizon meets the ground kilometres away, so the same
+ * centimetre of travel moves the map by tens of kilometres, while a finger at the bottom of the
+ * screen barely moves it.
+ *
+ * Mapbox does not solve this by damping the drag — their pan keeps the grabbed point exactly under
+ * the finger too (`setLocationAtPoint`). They BOUND it instead: the pitch is capped at 60 by default
+ * and the camera is constrained so the horizon never comes into view (`_horizonShift`), so a ray can
+ * never graze the ground. This map is deliberately allowed the low tilts they refuse — that is what a
+ * mountain view is — so the other half of their answer is the one available here, and the SDK has it:
+ * `PANNING_SPEED_MODE_CONSTANT` measures the scale at the CENTRE of the screen, so a pan moves the
+ * ground at one rate wherever the finger is. On a flat map all three modes agree, so this follows the
+ * 3D switch rather than being a setting.
  */
 function applyTouchMode(on: boolean) {
     getMapContext()
         .getMap()
-        ?.set('freeRoamMode', on ? FREE_ROAM_MODES[get(terrainTouchMode)] : 'FREE_ROAM_MODE_OFF');
+        ?.apply({
+            freeRoamMode: on ? FREE_ROAM_MODES[get(terrainTouchMode)] : 'FREE_ROAM_MODE_OFF',
+            panningSpeedMode: on ? 'PANNING_SPEED_MODE_CONSTANT' : 'PANNING_SPEED_MODE_ANCHORED'
+        });
 }
 
 /**
@@ -516,6 +534,14 @@ function syncAutoFlattenState(settled: boolean) {
  */
 function onTerrainSourceChanged() {
     if (!terrainAttached) {
+        // `autoFlattenTilt` is a rule INSIDE the terrain object, so a map with nothing attached has
+        // no rule at all and the first tilt gesture did nothing - the button had to be pressed once
+        // before tilting worked. This hook is what fires when the DEM first lands, and attaching
+        // here costs nothing: `ensureTerrain` opens flat and FULL-flattened, which decodes and culls
+        // exactly as a map with no terrain does.
+        if (get(terrainAutoFlattenByTilt)) {
+            ensureTerrain();
+        }
         return;
     }
     const source = demSource();
@@ -586,7 +612,19 @@ applyLive(terrainViewDistanceFactor, (value) => terrain().set('viewDistanceFacto
 applyLive(terrainCameraClearance, (value) => terrain().set('cameraClearance', value));
 applyLive(terrainFlattenModeFull, () => terrain().set('flattenMode', terrainFlattenMode()));
 applyLive(terrainSwitchDuration, (value) => terrain().apply({ autoFlattenDuration: value, autoFlattenRiseDuration: value }));
-applyLive(terrainAutoFlattenByTilt, (value) => terrain().set('autoFlattenTilt', value ? TERRAIN_AUTO_FLATTEN_TILT : 0));
+// Not `applyLive`: this one has to ATTACH, not just write. Turning the setting on while nothing is
+// attached has to build the terrain - flat - or there is no rule for the tilt gesture to cross. With
+// no map or no DEM yet `ensureTerrain` answers false and `onTerrainSourceChanged` picks it up.
+terrainAutoFlattenByTilt.subscribe((value) => {
+    try {
+        if (value ? !ensureTerrain() : !terrainAttached) {
+            return;
+        }
+        terrain().set('autoFlattenTilt', value ? TERRAIN_AUTO_FLATTEN_TILT : 0);
+    } catch (error) {
+        showError(error);
+    }
+});
 // Only meaningful while 3D is up, and `applyAtmosphere` is what decides that.
 applyLive(terrainSky, () => applyAtmosphere(is3D()));
 applyLive(terrainFog, () => applyAtmosphere(is3D()));
