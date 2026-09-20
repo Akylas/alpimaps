@@ -276,12 +276,25 @@ export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*';
  * it trades the sharpness of thin content (lines, outlines, labels) against video memory, at
  * `resolution² × 4` bytes per visible tile. The SDK clamps it to [128, 2048].
  *
- * 0 — the default — takes it from the SCREEN instead, which is what the drape cache budget is sized
- * for: the LOD refines a tile until it covers at most a 2×2 block, so `2 × tileDrawSize × pixelScale`
- * texels is one texel per screen pixel. A fixed value is either coarser than the screen (draped fills
- * stair-step as you zoom in) or finer than it can show.
+ * 0 takes it from the SCREEN instead, which is what the drape cache budget is sized for: the LOD
+ * refines a tile until it covers at most a 2×2 block, so `2 × tileDrawSize × pixelScale` texels is
+ * one texel per screen pixel.
+ *
+ * 2048 all the same — the ceiling. The automatic rule is right about how many texels a tile needs at
+ * the LOD's own bound, and wrong about this map: the contours and the road casings are hairlines, and
+ * a tile the LOD leaves a level coarser than that bound (which is most of them, most of the time)
+ * halves their resolution again.
+ *
+ * What it COSTS has to be said, because a fixed value is the one case the SDK does not size against
+ * the cache: `TileRenderer::resolveDrapeResolution` returns any non-zero setting as asked, and only
+ * the automatic rule is fitted to `DrapeCacheSize`. At 2048 a drape texture is 16 MB, so the SDK's
+ * default 96 MB budget holds six of them — against a visible cover of twenty or more, and a cache
+ * that has to keep the generation it just replaced as well. Below that the leaves whose own bake has
+ * not landed are painted in the flat background colour, which is the ground blinking during a zoom.
+ * So this is the sharpness end of a trade whose other end is `TerrainOptions.drapeCacheSize`, which
+ * the app does not expose yet.
  */
-export const terrainDrapeResolution = settingsStore('terrainDrapeResolution', 0);
+export const terrainDrapeResolution = settingsStore('terrainDrapeResolution', 2048);
 /** How many zoom levels below the camera a tile may coarsen to (`TERRAIN_MAX_TILE_ZOOM_COARSENING`). */
 export const TERRAIN_MAX_TILE_ZOOM_COARSENING = 8;
 /**
@@ -419,7 +432,7 @@ export const peakFinderDistanceFade = settingsStore('peakFinderDistanceFade', 0.
 /** Extra width for the sky silhouette — the horizon line, the one drawn wide. */
 export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
 /** Strength of the ridge/valley fold lines. */
-export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength', 0.6);
+export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength', 0);
 /**
  * How sharp a fold has to be before it is drawn as a crease — and with it, the TILE SEAM control.
  *
@@ -463,7 +476,7 @@ export const peakFinderSlopeStrength = settingsStore('peakFinderSlopeStrength', 
  * view reaches: a shorter view spreads the same relief over a larger share of the depth range and
  * inks harder. Hence a setting rather than a constant.
  */
-export const peakFinderSlopeMultiplier = settingsStore('peakFinderSlopeMultiplier', 11);
+export const peakFinderSlopeMultiplier = settingsStore('peakFinderSlopeMultiplier', 50);
 /**
  * The exponent the amplified difference is raised to — their `depthBiais`, 0.23.
  *
@@ -471,7 +484,7 @@ export const peakFinderSlopeMultiplier = settingsStore('peakFinderSlopeMultiplie
  * thousandth of the depth range comes out at a third of full ink) while leaving the large ones
  * saturated. Above 1 it does the opposite and only the steepest faces draw.
  */
-export const peakFinderSlopeBias = settingsStore('peakFinderSlopeBias', 0.23);
+export const peakFinderSlopeBias = settingsStore('peakFinderSlopeBias', 0.8);
 /** How much of the distance washes out towards the paper colour. */
 export const peakFinderHaze = settingsStore('peakFinderHaze', 0.7);
 
