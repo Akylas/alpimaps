@@ -22,11 +22,13 @@ import {
     type TerrainTouchMode,
     mapTiltRange,
     mapTiltTransition,
+    resolveDrapeCacheSize,
     terrain3dActive,
     terrain3dEnabled,
     terrain3dTilt,
     terrainAutoFlattenByTilt,
     terrainCameraClearance,
+    terrainDrapeCacheSize,
     terrainDrapeResolution,
     terrainExaggeration,
     terrainFlattenModeFull,
@@ -165,6 +167,10 @@ export function ensureTerrain(): boolean {
         drapeFillsEnabled: true,
         drapeLinesEnabled: true,
         drapeResolution: get(terrainDrapeResolution),
+        // Written WITH the resolution, never without it: a fixed resolution is the one case the SDK
+        // does not size against the cache, and the cache's own floor then raises the budget to match.
+        // See `resolveDrapeCacheSize`.
+        drapeCacheSize: resolveDrapeCacheSize(get(terrainDrapeResolution), get(terrainDrapeCacheSize)),
         maxTileZoomCoarsening: TERRAIN_MAX_TILE_ZOOM_COARSENING,
         // Occlusion is on for the whole map, as in the demo; only the TOLERANCE is a mode's business.
         billboardOcclusionEnabled: true,
@@ -607,7 +613,16 @@ function applyLive<T>(store: { subscribe: (run: (value: T) => void) => unknown }
 
 applyLive(terrainExaggeration, (value) => terrain().set('exaggeration', value));
 applyLive(terrainMeshResolution, (value) => terrain().set('meshResolution', value));
-applyLive(terrainDrapeResolution, (value) => terrain().set('drapeResolution', value));
+// One call for both, from EITHER store: a resolution is a memory cost, so moving it has to move the
+// budget that pays for it. Only a non-zero cache setting escapes that, and then it is the user's.
+function applyDrape() {
+    terrain().apply({
+        drapeResolution: get(terrainDrapeResolution),
+        drapeCacheSize: resolveDrapeCacheSize(get(terrainDrapeResolution), get(terrainDrapeCacheSize))
+    });
+}
+applyLive(terrainDrapeResolution, applyDrape);
+applyLive(terrainDrapeCacheSize, applyDrape);
 applyLive(terrainViewDistanceFactor, (value) => terrain().set('viewDistanceFactor', value));
 applyLive(terrainCameraClearance, (value) => terrain().set('cameraClearance', value));
 applyLive(terrainFlattenModeFull, () => terrain().set('flattenMode', terrainFlattenMode()));

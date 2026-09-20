@@ -263,6 +263,8 @@
     "download_suggestion": "download suggestion",
     "downloading": "donwloading",
     "downloading_area": "downloading area: %1$s%%",
+    "drape_cache_size": "drape cache",
+    "drape_cache_size_desc": "video memory the ground textures may use. Auto follows the drape resolution, which is what keeps two screenfuls cached instead of re-baking them while you turn",
     "drape_resolution": "drape resolution",
     "drape_resolution_desc": "how sharp the map is on the ground. Auto follows the screen; a fixed size costs video memory per tile",
     "draw_elevations": "draw elevations",
