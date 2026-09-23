@@ -40,6 +40,32 @@ export const terrainExaggeration = settingsStore('terrainExaggeration', 1);
  * `TerrainRenderer`'s, which caps at `MAX_MESH_GRID_SIZE` = 96 — see `peakFinderMeshResolution`.
  */
 export const terrainMeshResolution = settingsStore('terrainMeshResolution', 64);
+/**
+ * The resolution of the HEIGHT FIELD, which is not the resolution of the mesh — `TerrainOptions.
+ * surfaceNodeResolution`. 0 follows `terrainMeshResolution`, which is what the SDK did before the
+ * two could be asked for separately.
+ *
+ * They are not the same thing and only this one carries relief. The vertex stage never samples the
+ * DEM: it samples the node field, the DEM box-filtered to this many cells per edge of a **DEM** tile.
+ * The mesh is a lattice per **render** tile. Once the camera is past the DEM's max zoom the render
+ * tile covers a fraction of a DEM tile — at z16 on a z12 source, 32 texels — so even 96 cells is
+ * finer than the data, and everything that looked like "the mesh is too coarse" was the field.
+ *
+ * With the source at z12 and 512-texel tiles, this value against a 6.9 km tile at Grenoble:
+ *
+ * | value | nodes / DEM tile | spacing | box  |
+ * |-------|------------------|---------|------|
+ * | 64    | 128              | 54 m    | 108 m|
+ * | 96    | 192              | 36 m    | 72 m |
+ * | 256   | 512              | 13.5 m  | 27 m | ← one node per texel, the source's own limit
+ *
+ * 256 with `terrainMeshResolution` at 64-96 is the point: the detail of 256 at the panning cost of
+ * 96, because the lattice was never the constraint. What it costs is memory — ~790 KB of node field
+ * per cached DEM grid against ~150 KB at 96 — which is what a mesh of 256 was already paying for.
+ *
+ * Above 256 buys nothing here: the field cannot be finer than one node per DEM texel.
+ */
+export const terrainNodeResolution = settingsStore('terrainNodeResolution', 256);
 /** How far the ground goes on, as a factor on tangram's rule. */
 export const terrainViewDistanceFactor = settingsStore('terrainViewDistanceFactor', 1);
 /**
@@ -473,6 +499,17 @@ export const peakFinderViewDistanceMetres = settingsStore('peakFinderViewDistanc
  */
 export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 256);
 /**
+ * The panorama's height field resolution — `terrainNodeResolution` for this mode, and see it for what
+ * the field is and why it is not the mesh.
+ *
+ * Stated rather than inherited, which matters here more than on the map: the field followed
+ * `MeshResolution`, and this mode asks for 256 knowing `TerrainRenderer` will clamp the drawn mesh to
+ * 96. So the field has always been at the source's own limit — by accident of a number chosen for the
+ * mesh. Lowering `peakFinderMeshResolution` to buy frames would have silently taken the relief with
+ * it, which is the trade nobody would have meant to make.
+ */
+export const peakFinderNodeResolution = settingsStore('peakFinderNodeResolution', 256);
+/**
  * Ground distance the surface normals are measured over, metres — **the tile-seam fix**.
  *
  * `TerrainOptions::setNormalSampleDistance`. 0 takes the gradient from the mesh, which is what makes
@@ -519,10 +556,22 @@ export const peakFinderNormalSampleDistance = settingsStore('peakFinderNormalSam
  *    that disagree.
  *
  * Pinned, the height field resolves once and stays. peakfinder.com does the same thing by loading
- * the DEM for its viewpoint once and never refining it. The price is detail close to the eye, which
- * a view reaching a hundred kilometres mostly does not spend.
+ * the DEM for its viewpoint once and never refining it. The price is detail close to the eye.
+ *
+ * 14, NOT 12 — 12 was paying that price twice over. The cut is what sets the triangle, because
+ * `TerrainRenderer` caps the grid at `MAX_MESH_GRID_SIZE` (96) cells per tile whatever
+ * `peakFinderMeshResolution` says: at z12 a tile is 6.9 km at Grenoble's latitude, so the mesh is
+ * 72 m triangles — the faceting the near ridges showed, against a DEM holding 13.5 m. And the cut
+ * also decides the GRID: a z12 tile resolves the z11 DEM (one level for the 512-texel source's zoom
+ * bias), so the heights came from 27 m texels rather than the file's own 13.5 m.
+ *
+ * At 14 a tile is 1.7 km, the triangle is 18 m and the grid is z12 — the source's maximum. 15 halves
+ * the triangle again for nothing the DEM can fill, and `calculateVisibleTiles` will not go past
+ * `sourceMaxZoom + 3` in any case. What the two extra levels cost is tiles: the budget below is half
+ * of `peakFinderMeshCacheSize`, and a cut that overflows it coarsens a level everywhere, which hands
+ * the detail straight back.
  */
-export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom', 12);
+export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom', 14);
 /**
  * The panorama's elevation GRID cache, megabytes. 0 hands the SDK's own rule back.
  *

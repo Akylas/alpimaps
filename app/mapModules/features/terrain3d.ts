@@ -37,6 +37,7 @@ import {
     terrainFogVerticalStart,
     terrainLighting,
     terrainMeshResolution,
+    terrainNodeResolution,
     terrainShadowCascades,
     terrainShadowCasterMargin,
     terrainShadowDistance,
@@ -100,6 +101,33 @@ let savedClearColor: number = null;
 
 function terrain() {
     return getMapContext().getMap()?.terrain();
+}
+
+/**
+ * The terrain options' NATIVE object, for an option the bridge has no name for yet.
+ *
+ * The bridge resolves a property against the plugin's generated schema, which only learns a new SDK
+ * option when the typings are regenerated — so `apply({ surfaceNodeResolution })` is silently
+ * dropped. Same route `peakFinder.applyNormalSampleDistance` takes, and for the same reason.
+ */
+function terrainNative(): Record<string, (value: unknown) => void> {
+    return (terrain() as { native?: Record<string, (value: unknown) => void> })?.native;
+}
+
+/**
+ * The height field's resolution, which is NOT the mesh's — see `terrainNodeResolution`.
+ *
+ * Written on attach as well as live: it is read when a DEM grid is DECODED, so a value that arrives
+ * after the first grids are cached only applies to whatever is decoded next.
+ */
+function applyNodeResolution() {
+    const native = terrainNative();
+    if (typeof native?.setSurfaceNodeResolution !== 'function') {
+        DEV_LOG && console.log('terrain3d: node resolution not in this SDK build, the height field follows the mesh');
+        return;
+    }
+    native.setSurfaceNodeResolution(get(terrainNodeResolution));
+    DEV_LOG && console.log('terrain3d: height field resolution set to', get(terrainNodeResolution));
 }
 
 function argb(color: string) {
@@ -185,6 +213,8 @@ export function ensureTerrain(): boolean {
     });
     terrainAttached = true;
     attachedSourceId = source.id;
+    // After the flag: it goes through the native object, which needs the terrain to exist.
+    applyNodeResolution();
     DEV_LOG && console.log('terrain3d attached', source.id);
     return true;
 }
@@ -617,6 +647,9 @@ function applyLive<T>(store: { subscribe: (run: (value: T) => void) => unknown }
 
 applyLive(terrainExaggeration, (value) => terrain().set('exaggeration', value));
 applyLive(terrainMeshResolution, (value) => terrain().set('meshResolution', value));
+// The field, not the lattice: this is the one that moves the relief. Both re-decode every cached DEM
+// grid, so neither is free to drag.
+applyLive(terrainNodeResolution, applyNodeResolution);
 // One call for both, from EITHER store: a resolution is a memory cost, so moving it has to move the
 // budget that pays for it. Only a non-zero cache setting escapes that, and then it is the user's.
 function applyDrape() {
