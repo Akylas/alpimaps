@@ -377,8 +377,13 @@ export const TERRAIN_TILE_WAIT_TIMEOUT_MS = 500;
  * `PEAK_FINDER_TILT` is 25, which still shows the valley you are standing over.
  */
 export const peakFinderTilt = settingsStore('peakFinderTilt', 0);
-/** How high the viewpoint opens above the ground it stands on. */
-export const peakFinderFlyElevation = settingsStore('peakFinderFlyElevation', 1000);
+/**
+ * How high the viewpoint opens above the ground it stands on.
+ *
+ * 0, not 1000: this mode means STAND on the summit, and 1000 m put the eye a kilometre over it,
+ * looking down at the range instead of across it. The slider still goes to 6000 for the fly-over.
+ */
+export const peakFinderFlyElevation = settingsStore('peakFinderFlyElevation', 0);
 /** The zoom the panorama opens at, which is what one screen width of horizon covers. */
 export const peakFinderFlyZoom = settingsStore('peakFinderFlyZoom', 13.6);
 /**
@@ -467,16 +472,159 @@ export const peakFinderViewDistanceMetres = settingsStore('peakFinderViewDistanc
  * 320/512, so this is where the two cannot be made to match without raising that constant.
  */
 export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 256);
+/**
+ * Ground distance the surface normals are measured over, metres — **the tile-seam fix**.
+ *
+ * `TerrainOptions::setNormalSampleDistance`. 0 takes the gradient from the mesh, which is what makes
+ * the seams: a tile carries the same cell count whatever ground it covers, so the differentiation
+ * step halves with every zoom level and two tiles meeting at an LOD boundary smooth the same hillside
+ * by different amounts. Their normals then disagree along the whole shared edge. Shading never
+ * notices; `ridge_strength` reads `|∇normal|` across a pixel and inks every boundary in the view.
+ *
+ * At a fixed distance the normal is a property of the DEM instead, so both sides sample the same two
+ * points and agree — nothing to draw. It is what peakfinder.com gets for nothing by having no tiles
+ * in its geometry at all: one panorama mesh over a DEM texture array, one sampling rate everywhere.
+ *
+ * Costs four cached elevation lookups per mesh vertex, once per mesh rather than per frame. Planar
+ * only — the globe's sample offsets are not the local frame's, so a spherical surface falls back to
+ * the mesh gradient and this stops working. The panorama is therefore pinned to the plane; see the
+ * globe note further down for the measurements.
+ *
+ * 60–150 m reads ridges without inking every DEM step.
+ *
+ * It must not be finer than the DEM: `ensureSurfaceAttribs` cannot differentiate below the texel of
+ * the grid a tile stands on, so it clamps `step = max(asked, gridTexel)`, and a tile on a coarse
+ * ANCESTOR then samples at that ancestor's rate — the per-tile variation this setting exists to
+ * remove. 90 m is well inside the source's own z12 (`DEM source zoom range 0..12`, logged on device),
+ * so the clamp only binds while a tile is still standing on an ancestor. Raising this to hide that
+ * is the wrong lever: it costs real detail everywhere to paper over tiles that simply have not
+ * loaded. The measured 82% clamp rate (1x=23 2x=24 4x=17 8x+=62) is a LOADING result, not a data
+ * ceiling — see the prefetch queue in `ElevationManager`.
+ */
+export const peakFinderNormalSampleDistance = settingsStore('peakFinderNormalSampleDistance', 90);
+/**
+ * Tile zoom the panorama's terrain mesh is cut at. 0 lets the distance rule and the budget decide.
+ *
+ * `TerrainOptions::setMaxZoom`, and the answer to three complaints at once, because all three come
+ * from the same thing: a ground-level camera subdivides what is in front of it as deep as the data
+ * allows, and keeps subdividing as finer elevation tiles arrive, so the height field never settles.
+ *
+ *  - **names are not constant.** A label is anchored to the ground under its summit, so when that
+ *    ground moves the label moves (`vt::Label::updateElevation`) and a placement that had settled is
+ *    re-decided. Measured: `elevReanchor` 7-102 per second while tiles stream.
+ *  - **the view rises and sinks while tiles load.** The camera is held above the terrain, and the
+ *    terrain keeps moving.
+ *  - **tile seams.** Mid-refinement, neighbouring tiles resolve to DIFFERENT elevation grids — each
+ *    takes the finest one resident for it — so their shared edge is built from two height fields
+ *    that disagree.
+ *
+ * Pinned, the height field resolves once and stays. peakfinder.com does the same thing by loading
+ * the DEM for its viewpoint once and never refining it. The price is detail close to the eye, which
+ * a view reaching a hundred kilometres mostly does not spend.
+ */
+export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom', 12);
+/**
+ * The panorama's elevation GRID cache, megabytes. 0 hands the SDK's own rule back.
+ *
+ * The SDK sizes this by grid COUNT — `ElevationManager::MIN_CACHED_GRIDS`, 192 — which is a map's
+ * working set: the ground around one viewpoint at one zoom. A panorama sees a hundred kilometres at
+ * once, so 192 grids is a fraction of what it reads. Measured on a Crosscall, mid-session:
+ * `bytes=335MB capacity=336MB` (full, permanently), 9–11 grid inserts a second that never stopped,
+ * and `distinctEver` past 850 against 192 slots. Every eviction was refetched immediately.
+ *
+ * The price is paid in CPU, not memory. Each `ElevationManager` runs three decode threads, and a
+ * cache that never holds its working set keeps them all busy for as long as the mode is open. Six
+ * such threads (two managers' worth) burned ~34,600 CPU ticks against the render thread's 3,094 —
+ * eleven times the renderer — which is why looking around hung while the renderer was idle.
+ *
+ * 768 rather than more: the grids this DEM serves are 1796 KB, so this is ~430 of them against the
+ * default 192. Raise it on a device with headroom; a wide view is what this pays for.
+ */
+/**
+ * How many terrain surface MESHES the panorama may cache. 0 keeps the SDK's rule (160).
+ *
+ * The SDK's number is a map's working set. A panorama's is several times that, and not because it
+ * draws more tiles: looking around changes each tile's LOD STITCHING MASK, which is part of the mesh
+ * cache key, so panning mints new keys faster than a 160-entry cache holds them. Measured on the
+ * Crosscall at 160, while panning: `RenderStats terrainMesh` builds=72 evictions=72 in one second —
+ * every build threw one out — and each rebuild re-bakes the surface normals for 4225 vertices, which
+ * on the fixed-scale path is four DEM reads apiece. That showed up as `PROF PRELUDE` spikes of
+ * 200-290 ms, all of it in `surface`, which is the hang while looking around.
+ *
+ * Half of this is also the VISIBLE CUT's budget, so it sets the LOD floor: the cut coarsens a whole
+ * zoom level whenever it overflows, and a small cache therefore makes the panorama keep dropping and
+ * regaining detail — which is the patchwork of differently-shaded tiles.
+ */
+export const peakFinderMeshCacheSize = settingsStore('peakFinderMeshCacheSize', 640);
+export const peakFinderElevationCacheSize = settingsStore('peakFinderElevationCacheSize', 768);
 /** false = ink on paper, true = paper on ink (and what AR wants). */
 export const peakFinderDark = settingsStore('peakFinderDark', false);
 
+/*
+ * THE GLOBE, AND WHY THE PANORAMA DOES NOT USE IT.
+ *
+ * `peakFinderSpherical` used to live here and is gone. What it was for is real and still open: on the
+ * Mercator plane the earth does not curve away, so a summit a hundred kilometres out is drawn at its
+ * full height above the eye instead of sunk behind the bulge. The drop is `distance² / (2R)` — some
+ * 900 metres at the 108 km Mont Blanc stands from Grenoble — and everything the mode is about is
+ * wrong by that: how high a far summit sits, whether a nearer ridge hides it, where its leader line
+ * lands.
+ *
+ * RENDER_PROJECTION_MODE_SPHERICAL was the wrong way to buy it, and the device says so. Panorama on a
+ * Crosscall: 3-7x the surface fill draws, 74 ms frames against 27, every reopen worse than the last.
+ * And it turned the mode's own mechanism off - `TerrainRenderer::ensureSurfaceAttribs` reads
+ *     bool fixedScale = normalSampleDistance > 0 && !spherical;
+ * so on a globe the fixed-distance normals are unreachable and the surface falls back to the mesh
+ * gradient, which inks every LOD tile boundary. That is exactly what
+ * `peakFinderNormalSampleDistance` exists to prevent, so the setting defeated the feature it was
+ * meant to sit beside. It also makes `BaseMapView::moveCameraTo` land close rather than exact,
+ * because on a sphere a translation is a rotation.
+ *
+ * The right mechanism is the one peakfinder.com uses, and we already know their constant: their
+ * terrain vertex shader drops each vertex by `distance² · 6.54443e-08`, which is `1 / (2R)` for
+ * R = 7640 km - the earth's radius times 6/5, the standard atmospheric REFRACTION correction (light
+ * bends towards the ground, so a far summit stands about an eighth higher than geometry alone says).
+ * A term in the terrain vertex shader costs one multiply-add per vertex, changes no projection, no
+ * tile transformer and no tessellation, and keeps the fixed-distance normals. That is the feature
+ * worth having; the globe was not.
+ *
+ * The stored key is deliberately no longer READ. It was persisted true on at least one device, so
+ * changing a default here would not have reached it.
+ */
+
 /** One tap of an elevation arrow, metres (`DemoConfig.PEAK_FINDER_ELEVATION_STEP`). */
 export const PEAK_FINDER_ELEVATION_STEP = 200;
-/** Metres per second the viewpoint climbs while an arrow is HELD, and what that ramps up to. */
+/** Metres per second the viewpoint climbs while an arrow is HELD, at the FLOOR. */
 export const PEAK_FINDER_ELEVATION_RATE = 400;
+/**
+ * How much of the current height is added to that rate, per second.
+ *
+ * The climb used to ramp with how long the arrow had been HELD, which is the wrong variable: it
+ * makes the control's speed depend on history rather than on where the eye is. Standing 40 m up,
+ * 400 m/s overshoots the valley in a tenth of a second; at 6 km it takes fifteen seconds to get
+ * anywhere. Scaling the rate by the height itself makes it a GEOMETRIC climb — a constant fraction
+ * per second, so the same drag covers the same proportion of the way up wherever it starts, and the
+ * control has the same feel at 50 m and at 9 km.
+ *
+ * 0.6 doubles the height about every 1.2 s once clear of the floor.
+ */
+export const PEAK_FINDER_ELEVATION_GROWTH = 0.6;
+/** Metres per second the climb is capped at, however high the eye is. */
 export const PEAK_FINDER_ELEVATION_RATE_MAX = 4000;
-/** Seconds of holding after which the rate has reached its maximum. */
-export const PEAK_FINDER_ELEVATION_RAMP = 2.5;
+/**
+ * How far above the GROUND the viewpoint sits at its lowest, metres.
+ *
+ * Not zero, which is where the panorama used to open and what made the arrows read "0 m". Standing
+ * exactly on the height field puts the eye inside the surface's own sampling error, so the nearest
+ * cell hides everything behind it and half the panorama is the ground a metre in front of the face.
+ * peakfinder.com carries the same idea as a setting of its own — `minimalelevation` in their wasm,
+ * alongside `elevationoffset` (the arrows' value) and the `elevation_above_ground` label, which is
+ * also why their read-out is a height above the ground rather than an absolute one.
+ *
+ * Their number is compiled in, not a string, so it is not recoverable from the binary; 50 m is a
+ * head above the nearest ridge without being a viewpoint nobody could stand at.
+ */
+export const peakFinderMinElevation = settingsStore('peakFinderMinElevation', 50);
 /** As high as the arrows go. Above this the panorama is a map again. */
 export const PEAK_FINDER_ELEVATION_MAX = 9000;
 
@@ -484,12 +632,94 @@ export const PEAK_FINDER_ELEVATION_MAX = 9000;
 //
 // `DemoConfig.RELIEF_*`, so the mode looks like the android demo out of the box. See
 // app/mapModules/terrain/reliefShaders.ts — the shaders themselves are that demo's, verbatim.
-/** How far the slopes go from the paper colour towards the shade colour. */
-export const peakFinderShadeStrength = settingsStore('peakFinderShadeStrength', 0.55);
+/**
+ * How much of the shading comes from the SUN, as opposed to from the slope below.
+ *
+ * Lowered under the slope term deliberately. The sun term is the only part of the picture that
+ * depends on which way the camera points — it shades by ASPECT, so turning on the spot swaps a
+ * sunlit range for a shaded one — and leaning on it is what made the panorama read completely
+ * differently to the left and to the right. The slope term says the same thing from every angle.
+ */
+export const peakFinderShadeStrength = settingsStore('peakFinderShadeStrength', 0.18);
+/**
+ * SLOPE SHADING — darkness proportional to how STEEP the ground is, with no sun in it.
+ *
+ * peakfinder.com's, read off their panorama fragment shader: `length(normal.xz) * P1.z` added into the
+ * same darkness the lighting writes. It is what puts relief inside their ridges, and it is not
+ * hillshading — nothing here depends on a light direction, so a face keeps its shading on the shadow
+ * side and the picture does not change through the day.
+ *
+ * Worth having on top of `peakFinderShadeStrength` because Lambert alone cannot draw a panorama: with
+ * the sun anywhere but across the view, half the ranges are lit flat and read as blank paper. The
+ * slope term is the one that always has something to say. 0.35 puts a 45° face a quarter of the way
+ * to the shade colour, which is about where their picture sits; 0 is the look before this existed.
+ */
+export const peakFinderSlopeShade = settingsStore('peakFinderSlopeShade', 0.22);
 /** Base ink line width, px. */
 export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1.2);
-/** How much terrain-against-terrain lines fade with distance, so the horizon stays the boldest. */
-export const peakFinderDistanceFade = settingsStore('peakFinderDistanceFade', 0.45);
+/**
+ * How far the ink reaches, IN METRES. peakfinder.com's distance CUTOFF, in absolute units.
+ *
+ * Metres and not a fraction of the far plane, which is what this was and which made the whole
+ * picture change as you turned on the spot: the far plane is recomputed every frame from where the
+ * view's rays meet the ground, so it is short looking into a valley and long looking down a range.
+ * The same hillside therefore landed at a different normalised depth depending only on the azimuth,
+ * and its ink came and went. peakfinder.com can normalise by their far plane because theirs is
+ * fixed; ours is not.
+ *
+ * Theirs is `min(value, 1 - smoothstep(p - 0.05, p + 0.15, depth))` and the shape is what matters.
+ * The two linear fades this replaces (`peakFinderDistanceFade`, `peakFinderCreaseFade`) ramped to a
+ * floor, so every distance still carried some ink — and out where ridges are a pixel apart, "some
+ * ink on every ridge" is a solid black band whatever the floor is. A smoothstep reaches exactly
+ * zero, so past this there is shaded surface and nothing else, which is how the reference's far
+ * ranges stay pale.
+ *
+ * The sky silhouette is outside it: the horizon draws at any distance.
+ */
+export const peakFinderInkDistance = settingsStore('peakFinderInkDistance', 50000);
+/**
+ * Where a depth gradient starts counting as a SILHOUETTE, in metres of depth change across one tap.
+ *
+ * peakfinder.com gates theirs at a constant `smoothstep(0.005, 0.020, dLen)` on a depth normalised
+ * over a fixed ~173 km far plane — so about 865 m, which is this default. Ours has to be absolute
+ * because our far plane is recomputed every frame.
+ *
+ * Raise it to keep only the big skyline breaks; lower it to ink every small step in the terrain.
+ */
+export const peakFinderSilhouetteGate = settingsStore('peakFinderSilhouetteGate', 865);
+/**
+ * How far the ink is capped by how dark the SURFACE under it already is. 0 is uncapped.
+ *
+ * NOT peakfinder.com's `min(value, lightning)`, though it was written as a port of it and shipped
+ * at 1, which removed every ridge line in the panorama. Theirs caps a single greyscale channel that
+ * already contains their slope shading; ours has the shading in a separate surface shader, so
+ * capping the ink alone by that surface is a different operation — and against a near-white paper
+ * the surface darkness is ~0 over most of the frame, so the cap erased everything.
+ *
+ * Left as a knob because a little of it is a fair way to stop ink stacking on already-dark ground.
+ * See `reliefShaders.ts` for the full reasoning.
+ */
+export const peakFinderInkShadeCap = settingsStore('peakFinderInkShadeCap', 0);
+/**
+ * Dump one intermediate term of the relief shader as an image, instead of the finished picture.
+ *
+ * For working out WHICH stage is wrong rather than inferring it from the result — every guess made
+ * from a finished screenshot so far has been wrong at least once, because half a dozen terms
+ * multiply together and any of them going to zero looks the same in the output.
+ *
+ *  0 — off, draw normally
+ *  1 — SLOPE, `length(n.xy)` off the packed normal. Black = the tile's normals are flat, which kills
+ *      the ridge ink and the slope shading together. This is the one to look at first.
+ *  2 — the final ink (`edge`), after every gate and fade
+ *  3 — HAZE, how far this pixel is pulled to the paper
+ *  4 — distance, white at 100 km
+ *  5 — raw packed depth × 20
+ *  6 — the normal as colour. A seam between tiles shows as a colour break; a flat tile is pure blue.
+ *  7 — the SURFACE shader's own slope, off `v_normal` rather than off the packed buffer. Against
+ *      view 1 this isolates the normal-packing pass: both black means the mesh attribute is flat,
+ *      only 1 black means the packing pass is losing it.
+ */
+export const peakFinderDebugView = settingsStore('peakFinderDebugView', 0);
 /** Extra width for the sky silhouette — the horizon line, the one drawn wide. */
 export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
 /** Strength of the ridge/valley fold lines. */
@@ -508,44 +738,77 @@ export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength'
  * LOD kinks measured on a panorama and well below a crest.
  */
 export const peakFinderCreaseThreshold = settingsStore('peakFinderCreaseThreshold', 0.12);
-/**
- * How much the CREASES fade with distance, apart from the silhouettes.
- *
- * The other half of the seam story: tiles coarsen with distance, so the kinks are worst exactly where
- * the folds matter least — the far ranges are read by their skyline, not by their gullies. This fades
- * the fold lines out faster than `peakFinderDistanceFade` does the terrain-against-terrain ones,
- * while the sky silhouette (which fades not at all) keeps the horizon.
- */
-export const peakFinderCreaseFade = settingsStore('peakFinderCreaseFade', 0.15);
 
 /**
- * SLOPE ink — the term that draws the relief between the ridges, and geo-three's whole outline
- * effect (`webapp/app.ts`, `CustomOutlineEffect`).
+ * Draw the interior ridges off the terrain's own NORMAL instead of reconstructing folds from depth.
  *
- * Our silhouette test is one-sided and the crease test is damped by how square-on the surface is, so
- * between them they drew the skyline and the crests and left every slope blank — the panorama read as
- * a set of outlines with nothing inside them. This is the other technique: ink proportional to how
- * fast the DEPTH changes across a pixel, symmetric, with no regard for which side is nearer.
+ * The reason the two settings above exist is that the fold test cannot tell a crest from a tile
+ * seam, so `peakFinderCreaseStrength` is 0 and the panorama has no interior lines at all — which is
+ * the most visible difference between it and peakfinder.com, whose picture is full of them. Theirs
+ * is the screen-space gradient of the surface normal, and the normal is data rather than a guess, so
+ * an LOD change is not a fold in it.
  *
- * 1 is the webapp's look at full strength; 0 turns it off and leaves the outlines alone.
+ * What it costs is a different terrain pre-pass: `PostProcessEffect.terrainNormalsRequired` packs
+ * 16-bit depth and the normal into the one buffer instead of 24-bit depth and a coverage bit. The
+ * app falls back on its own where the SDK in the build does not have it, so this can be on by
+ * default — see `useNormalBuffer` in `features/peakFinder.ts`.
+ *
+ * Panorama only. The live map's post-processing does not ask for terrain depth at all.
  */
-export const peakFinderSlopeStrength = settingsStore('peakFinderSlopeStrength', 1);
+export const peakFinderNormalEdges = settingsStore('peakFinderNormalEdges', true);
 /**
- * How much the depth difference is amplified before the curve below — their `depthMultiplier`, 11.
+ * Whether the map engine in THIS build can actually pack the normals — a fact, not a preference.
  *
- * Their depth is normalised over the whole view (`far` 173 km), so this number is tied to how far the
- * view reaches: a shorter view spreads the same relief over a larger share of the depth range and
- * inks harder. Hence a setting rather than a constant.
+ * `undefined` until the panorama has looked. It is published because the alternative was worse than
+ * useless: with the buffer missing the effect falls back to the depth-fold shader, where
+ * `peakFinderRidgeStrength` names a uniform nothing reads, so the ridge sliders do nothing at all
+ * and the only control that still responds is the crease one — which inks tile seams. Silence there
+ * reads as "these settings are broken", and it is one rebuild away from being right.
  */
-export const peakFinderSlopeMultiplier = settingsStore('peakFinderSlopeMultiplier', 50);
+export const peakFinderNormalEdgesAvailable = writable<boolean>(undefined);
 /**
- * The exponent the amplified difference is raised to — their `depthBiais`, 0.23.
+ * Strength of those ridge lines — a straight MULTIPLIER on how far the surface turned, now that the
+ * term is linear like the reference's (`length(gradN) * params1.x`) instead of a smoothstep.
  *
- * BELOW one, which is the point: it lifts the small differences that a gentle slope produces (a
- * thousandth of the depth range comes out at a third of full ink) while leaving the large ones
- * saturated. Above 1 it does the opposite and only the steepest faces draw.
+ * Bigger than it used to be because the smoothstep it replaces was doing most of the gain: it
+ * stretched the band [threshold, threshold + 0.35] over the full 0..1. A real crest turns the packed
+ * normal by a few tenths, so a multiplier of about 2 puts one at full ink.
  */
-export const peakFinderSlopeBias = settingsStore('peakFinderSlopeBias', 0.8);
+export const peakFinderRidgeStrength = settingsStore('peakFinderRidgeStrength', 2);
+/**
+ * The DEADZONE under the ridge term — where the normal buffer's noise floor is, subtracted from the
+ * turn before it becomes ink.
+ *
+ * Not a contrast control and not the seam control `peakFinderCreaseThreshold` is. The octahedral
+ * pair is packed 8 bits a component, so one quantization step is 2/255 = 0.008, and a central
+ * difference spans two of them. Those steps trace closed curves across a smooth hillside exactly the
+ * way contour lines do, which is what the panorama was drawing instead of ridges. 0.05 clears the
+ * floor with margin and is far below what a crest turns through.
+ */
+export const peakFinderRidgeThreshold = settingsStore('peakFinderRidgeThreshold', 0.05);
+/**
+ * The GROUND DISTANCE the ridge turn is measured over, in metres — the stroke's physical width.
+ *
+ * The ridge term is a central difference of the packed normal, and a fixed screen-space step measures
+ * it over whatever ground a pixel happens to cover: a few metres underfoot, hundreds at the horizon.
+ * That made the ink a function of DISTANCE instead of of how sharp the ridge is — far ranges solid,
+ * near ground blank white, because underfoot the turn across one pixel falls under
+ * `peakFinderRidgeThreshold` entirely. The shader now widens the tap spacing to cover this much
+ * ground, which is what peakfinder.com's varying tap step does across the screen.
+ *
+ * 90 m to match `peakFinderNormalSampleDistance`: the normals themselves are sampled at that
+ * distance, so asking the ink to resolve anything finer only reads their interpolation. Widening
+ * only — the far field is already at or past this and keeps the stroke it has.
+ */
+export const peakFinderRidgeGroundSpan = settingsStore('peakFinderRidgeGroundSpan', 90);
+
+// There is no slope-ink setting any more. It was geo-three's depth gradient
+// (`webapp/app.ts`, `CustomOutlineEffect`), and peakfinder.com has no term like it: their pass
+// (extracted in `peakfinder-reference-shader.md`) inks the normal gradient (our ridge term), the
+// depth gradient as a SILHOUETTE with a fixed smoothstep, and the surface's own tilt —
+// `length(centreNormal.xz) * params1.z`, which `RELIEF_SURFACE_SHADER` already draws as
+// `uSlopeShade * length(n.xy)`. Measuring slope from depth instead is what greyed out the distance.
+
 /** How much of the distance washes out towards the paper colour. */
 export const peakFinderHaze = settingsStore('peakFinderHaze', 0.7);
 
@@ -553,18 +816,54 @@ export const peakFinderHaze = settingsStore('peakFinderHaze', 0.7);
 //
 // Every one of these is style TEXT, so changing one needs a NEW decoder — see rebuildPeaksLayer in
 // features/peakFinder.ts.
+/**
+ * Put each name just above its OWN summit instead of in a band, so they follow the skyline.
+ *
+ * Why a name can vanish with nothing visible near its peak: with a band, every plate sits in one
+ * horizontal row near the top of the screen, and the leader line runs down to the summit. Capacity
+ * is then screen width over plate width — about seven a row, twenty-odd over three rows — and every
+ * summit in the view competes for those twenty. The plates a name lost to are hundreds of pixels
+ * above it, nowhere near the empty sky where you expected it.
+ *
+ * Off the band the packing is two-dimensional: names spread along the ridges as well as across, so
+ * far more of them fit and a name mostly competes with its own neighbours rather than with the
+ * whole horizon. This is what peakfinder.com draws.
+ *
+ * `peakFinderLabelBand` is ignored while this is on; `peakFinderLabelPinTop` still applies.
+ *
+ * Default OFF, on the reference rather than on capacity. The band does fit fewer names — measured,
+ * `sorted=1933 visible=51` over three passes against nineteen hundred candidates, which is the
+ * row's own ceiling (screen width over plate width, times `peakFinderLabelRows`) — but skyline mode
+ * spends that capacity the wrong way: it stacks a low nearby peak's name UNDERNEATH a distant
+ * range's, which is exactly what the reference never does. peakfinder.com pins ONE row at the top
+ * of the screen and drops whatever does not fit. Readability first; the capacity argument was mine,
+ * not the reference's.
+ */
+export const peakFinderLabelFollowSkyline = settingsStore('peakFinderLabelFollowSkyline', false);
 export const peakFinderLabelPinTop = settingsStore('peakFinderLabelPinTop', true);
 export const peakFinderLabelBand = settingsStore('peakFinderLabelBand', 0.25);
-export const peakFinderLabelAngle = settingsStore('peakFinderLabelAngle', 55);
+/**
+ * Rotation of the label text off its leader line, degrees.
+ *
+ * The capacity knob once `peakFinderLabelFollowSkyline` is on, because it trades the two screen
+ * axes against each other: a name of width W laid at angle T spans `W·cos T` horizontally and
+ * `W·sin T` vertically. Horizontal is the scarce one — summits crowd along the horizon, not up it —
+ * so a steeper angle buys room. At 55 degrees a 100 px name eats 57 px of horizon; at 75 it eats 26.
+ */
+export const peakFinderLabelAngle = settingsStore('peakFinderLabelAngle', 75);
 /**
  * How many rows a colliding label may step into before it is DROPPED.
  *
  * This is the reason a panorama shows fewer summits than it holds: with one row, two names whose
  * anchors land within `peakFinderLabelMinDistance` of each other cannot both be placed, so the
- * lower summit is not drawn at all. 3 rows is three chances at a slot, and `text-callout-step`
+ * lower summit is not drawn at all. More rows is more chances at a slot, and `text-callout-step`
  * stacks them away from the screen edge.
+ *
+ * Default 1, deliberately. Extra rows are what put a small nearby peak's name BELOW a distant
+ * range's, and the reference has no second row at all: a name that does not fit the top row is
+ * simply not drawn. `text-rank` then decides which of two contenders that is - see `peaksStyle`.
  */
-export const peakFinderLabelRows = settingsStore('peakFinderLabelRows', 3);
+export const peakFinderLabelRows = settingsStore('peakFinderLabelRows', 1);
 /**
  * Shortest gap between two summit labels, px — the other half of how many names appear.
  *
@@ -572,8 +871,168 @@ export const peakFinderLabelRows = settingsStore('peakFinderLabelRows', 3);
  * 6 px lets them sit next to each other; 0 turns the rule off entirely and lets them overlap.
  */
 export const peakFinderLabelMinDistance = settingsStore('peakFinderLabelMinDistance', 6);
+/**
+ * How many placement passes a name holds its row for once it stops fitting.
+ *
+ * `text-callout-persist`, and the answer to a name that vanishes as its summit reaches the MIDDLE of
+ * the screen. A rectilinear projection puts screen x at `tan` of the view angle, so the same angular
+ * gap between two summits is about 1.4x wider at the edge of a 67-degree view than at its centre
+ * (`sec²(33.5°)`). Two names that fit on their way in stop fitting as they arrive, and the lower one
+ * loses its slot — which is why Mont Blanc never does this: `text-placement-priority: [ele]` places
+ * it first and it never has to fight for a row.
+ *
+ * peakfinder.com does not have the problem at all because its panorama is CYLINDRICAL: screen x is
+ * the angle itself, so angular spacing maps to screen spacing evenly and there is no crowded middle.
+ * Short of that projection, holding the row is what keeps the band still.
+ *
+ * A held name may sit closer than `peakFinderLabelMinDistance` while it holds, but it is re-tested
+ * against the grid every pass, so it never lands on top of a neighbour. Passes are seconds apart in
+ * this mode (`VTLabelPlacementWorker`), so a few of them is a long time on screen.
+ */
+export const peakFinderLabelPersist = settingsStore('peakFinderLabelPersist', 10);
 /** 0 = no limit. */
 export const peakFinderLabelMaxDistance = settingsStore('peakFinderLabelMaxDistance', 0);
+/**
+ * How far outside the screen summit names are placed, px — **why they stop blinking**.
+ *
+ * `Options::setLabelPadding`, and NOT style text, so it costs no decoder. Placement packs only the
+ * labels it can see: one outside the band gets no slot, so it arrives at the screen edge with the
+ * row already full and has to knock a neighbour out to appear. That eviction, a few times a second
+ * as the view turns, is the flicker — not the summit set, which the detail source already made
+ * camera-independent.
+ *
+ * Padding moves the fight off-screen. A name that enters the band half a screen early has already
+ * won or lost its row by the time it is visible, and what is on screen holds still.
+ *
+ * The SDK's own rule is 100 px scaled by sin(tilt), floored at 20 — which reasons about the GROUND,
+ * where 100 px near the horizon are kilometres of map. A panorama is the case it gets wrong: tilt is
+ * ~0 so it takes the floor of 20, and the view TURNS rather than panning, over ground already
+ * loaded. 0 here hands it back to that rule.
+ *
+ * It is not free: the band's tiles are fetched as label tiles rather than preloading ones, and every
+ * name in it is a placement and a collision test per pass.
+ */
+export const peakFinderLabelPadding = settingsStore('peakFinderLabelPadding', 200);
+
+/**
+ * Rebuild the coarse summit tiles out of the finer ones beneath them, in the map engine.
+ *
+ * `PointDetailTileDataSource`, which wraps the app's own vector source and re-emits the
+ * `mountain_peak` layer of whatever tile is asked for from the tiles at `peakFinderPeakZoom`. It is
+ * the same fix as `peakFinderStaticPeaks` and a better shape: the answer is a function of the TILE
+ * rather than of the camera, so there is nothing to refresh when the eye moves — and it moves, a
+ * two-finger drag in this mode being a walk rather than a pinch.
+ *
+ * It also works over tiles this app did not generate, which the snapshot does too but the obvious
+ * third option (loosening the thinning in the generator) does not.
+ *
+ * Where the SDK in the build has no such source this falls back on its own, and `peakFinderStaticPeaks`
+ * is what covers that case — see `ensureDetailPeaksSource` in `features/peakFinder.ts`.
+ */
+export const peakFinderDetailSource = settingsStore('peakFinderDetailSource', true);
+/**
+ * How many levels below a coarse tile that source will reach.
+ *
+ * `PointDetailTileDataSource::setMaxDetailLevels`, and the number that decides whether it is
+ * payable: a level is FOUR times the tile reads for one rebuilt tile, so 3 is 64 and 5 is 1024.
+ * Past it the tiles are read from as far down as it allows and the rest of the thinning stands.
+ */
+export const peakFinderDetailLevels = settingsStore('peakFinderDetailLevels', 3);
+/**
+ * How many summits a rebuilt tile may carry, highest first. **0 lifts the cap.**
+ *
+ * The knob that decides whether the names hold still — measured, not reasoned. With this at 2000 the
+ * SDK's own `RenderStats` reported, per placement pass:
+ *
+ *     considered=12732  sorted=10409  visible=23  collided=10386
+ *     notFacing=0  occluded=0  distCut=0  styleMaxDistCut=0
+ *
+ * 99.8% of valid candidates lose, about 450 of them per slot. Nothing is being dropped unfairly:
+ * the band is oversubscribed by two and a half orders of magnitude. Placement is greedy — highest
+ * `text-placement-priority` first, then whoever does not overlap what is already down — and at that
+ * density a pixel of camera movement changes who overlaps whom and the choice cascades through the
+ * whole chain. `visFlips` of 7-26 against `visible` of 10-40 is the visible set turning over once a
+ * second, which is exactly the flicker. Stability needs HEADROOM, and no placement tuning buys it:
+ * `peakFinderLabelPersist` cannot hold a row that a real overlap has taken.
+ *
+ * It is also the cost: `collectMs` up to 97 and `cullMs` up to 122 per second of wall clock, on a
+ * thread the panorama shares. That is why looking around got slower.
+ *
+ * 32 leaves roughly a hundred names competing for twenty-odd slots. This is what peakfinder.com
+ * does with `POIImportance` / `VisiblePOIsDBAdapter` — a small precomputed significant set, not
+ * every summit under the view handed to a culler each frame.
+ *
+ * How many names APPEAR is still `peakFinderLabelRows`, `peakFinderLabelMinDistance` and
+ * `peakFinderLabelAngle` — they decide how many fit. This decides how many fight.
+ */
+export const peakFinderDetailFeatures = settingsStore('peakFinderDetailFeatures', 32);
+
+/**
+ * Take the summit set from ONE query at the viewpoint instead of from the live vector tiles.
+ *
+ * The labels come and go as the view turns because the DATA does: a far tile is allowed to coarsen,
+ * and `mountain_peak` thins out with the zoom, so which summits exist depends on which tiles the
+ * camera has caused to be loaded. Collecting them once into a `GeoJSONVectorTileDataSource` makes
+ * the set a property of the VIEWPOINT, which is what it always was — see
+ * `mapModules/terrain/panoramaPeaks.ts`.
+ *
+ * OFF by default, and measured rather than assumed: `VectorTileSearchService::findFeatures` walks
+ * the search bounds tile by tile with no cap of its own, so a 187 km radius at z12 is some 2900
+ * tiles LOADED AND DECODED, and then several thousand features marshalled across the bridge one
+ * object at a time. On a device that is not a slow start, it is a stall — and `PointDetailTileDataSource`
+ * (`peakFinderDetailSource`) does the same job per tile, in the engine, without any of it.
+ *
+ * It is kept because it needs no native build, which is exactly the case the detail source cannot
+ * cover. Turn it on with `peakFinderPeakZoom` low and `peakFinderViewDistanceMetres` short.
+ */
+export const peakFinderStaticPeaks = settingsStore('peakFinderStaticPeaks', false);
+/**
+ * The zoom that sweep reads tiles at — the set's completeness against 4^z tiles.
+ *
+ * 13 is not an arbitrary ceiling: it is `maxzoomForRendering` in the tiles this app ships, and
+ * `MountainPeak.postProcess` takes its `zoom == maxzoomForRendering` branch there — every peak is
+ * kept, only tagged with a `rank`. Every zoom BELOW it is declustered instead, by a radius that is
+ * constant in tile pixels and therefore grows as the zoom drops:
+ *
+ *     z13  every peak            z12  ~1.1 km      z11  ~2.2 km
+ *     z10  ~4.6 km               z9   ~9.2 km
+ *
+ * (`RADIUS_DISTANCE_PX` 30 with `MAX_RANK` 3, plus `setPointLabelGridSizeAndLimit(13, 100, 5)` and a
+ * per-peak `minzoom` of `10 - ele/1000`.) So z9 is why a range on the horizon shows three names.
+ *
+ * 12 rather than 13 by default because the tile count is 4x and the last level buys the peaks that
+ * are within a kilometre of a bigger one — which a panorama cannot label anyway.
+ */
+export const peakFinderPeakZoom = settingsStore('peakFinderPeakZoom', 12);
+/** How many summits it keeps, highest first. */
+export const peakFinderPeakCount = settingsStore('peakFinderPeakCount', 2000);
+/** ...and the floor under them, metres. Filtering here rather than in the style keeps the cap useful. */
+export const peakFinderPeakMinElevation = settingsStore('peakFinderPeakMinElevation', 0);
+
+/**
+ * How many zoom levels below the camera the panorama's LIVE tiles may coarsen to.
+ *
+ * `TerrainOptions.maxTileZoomCoarsening`, which with terrain up is a FLOOR on every vector layer's
+ * tile zoom: `TileLayer::calculateVisibleTiles` sets
+ * `_terrainMinTileZoom = cameraTileZoom - coarsening`. `TerrainRenderer` does not read it at all, so
+ * on this map — which carries one vector layer and no drape — it is the summit tiles' LOD and
+ * nothing else's.
+ *
+ * Which makes it the other half of the label story, and the cheaper half. The camera sits around
+ * zoom 13, so the 4 this used to be put the far ranges on z9 tiles — where the peaks have been
+ * declustered at a 9.2 km radius before they ever reached the device (see `peakFinderPeakZoom`).
+ * 2 puts them on z11 and a 2.2 km radius; 0 asks for z13 everywhere, which is every peak there is
+ * and four times the tiles per level below it.
+ *
+ * It is a trade with the view distance, and both are sliders for that reason: tiles go as the
+ * distance SQUARED and as 4^level, so 300 km at 0 is not 150 km at 2 — it is sixteen times it.
+ *
+ * 4, which is what it was before it became a setting. It was briefly defaulted to 2 on the
+ * arithmetic alone and that was wrong of it: sixteen times the tiles is a measurement, not a
+ * calculation, and the right way round is to raise it on a device and watch. The setting is the
+ * point; the default is only where to start.
+ */
+export const peakFinderTileCoarsening = settingsStore('peakFinderTileCoarsening', 4);
 
 /**
  * Which way up the panorama is held.

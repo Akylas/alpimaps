@@ -131,7 +131,11 @@ function demSource() {
  * @returns whether there is a terrain to work with.
  */
 export function ensureTerrain(): boolean {
-    const map = getMapContext()?.getMap();
+    // `getMap?.()`, not `getMap()`: this module's store subscriptions run at IMPORT time, and the
+    // import happens from Map.svelte - so the first call lands before `setMapContext` has run and
+    // the context has no accessors yet. MapContext is assembled untyped, so the interface promising
+    // `getMap` is documentation rather than a guarantee (see .claude/CLAUDE.md).
+    const map = getMapContext()?.getMap?.();
     const source = demSource();
     if (!map || !source) {
         return false;
