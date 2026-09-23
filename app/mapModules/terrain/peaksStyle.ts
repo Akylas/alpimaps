@@ -26,14 +26,28 @@ export interface PeaksStyleOptions {
     band?: number;
     /** All labels in one row under the top edge instead of a band lower down. */
     pinTop?: boolean;
+    /**
+     * Drop the band entirely and sit each name just above its OWN summit, so the names follow the
+     * skyline. The band is ignored when this is on; `pinTop` still picks the plate's corner.
+     */
+    followSkyline?: boolean;
     /** How far below the top of the screen that row sits, as a fraction of the screen height. */
     topOffset?: number;
     /** How many rows labels may stack into when they collide. */
     maxRows?: number;
     /** Shortest gap between two labels, px. */
     minDistance?: number;
+    /** Passes a placed name holds its row for once it stops fitting. */
+    persistPasses?: number;
     /** Metres; 0 for no limit. */
     maxDistance?: number;
+    /**
+     * Rank by APPARENT ALTITUDE rather than by height: at any bearing the name on the skyline wins
+     * the slot, and a lower summit in front of it loses. See the `text-rank` comment.
+     */
+    horizonFirst?: boolean;
+    /** The eye's absolute elevation, metres. Only read when `horizonFirst` is on. */
+    eyeElevation?: number;
 }
 
 /**
@@ -52,9 +66,32 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
     // (TileLayer, 8 levels in this app), so a range a hundred kilometres out is drawn from z6/z7
     // tiles — and a zoom gate at 8 dropped every peak on them. The summit standing on the horizon
     // is exactly the one the mode exists for, so the only limit left is the data's own.
-    const { band = 0.25, dark = false, fontScale = 1, maxDistance = 0, maxRows = 1, minDistance = 14, minZoom = 0, pinTop = true, textAngle = 55, textSize = 16, topOffset = 0.03 } = options;
+    const {
+        band = 0.25,
+        dark = false,
+        eyeElevation = 0,
+        followSkyline = false,
+        fontScale = 1,
+        horizonFirst = true,
+        maxDistance = 0,
+        maxRows = 1,
+        minDistance = 14,
+        minZoom = 0,
+        persistPasses = 2,
+        pinTop = true,
+        textAngle = 55,
+        textSize = 16,
+        topOffset = 0.03
+    } = options;
     const palette = reliefPalette(dark);
-    const align = pinTop ? 'top-right' : 'bottom-left';
+    const scaledSize = textSize * fontScale;
+    const rowStep = Math.max(26, Math.round(scaledSize * 6 * Math.sin((textAngle * Math.PI) / 180) + scaledSize * 0.4));
+    // ALWAYS bottom-left, which is what peakfinder.com draws: the row sits at the top of the screen
+    // and every name reads UP and to the right from the point the leader line meets it. `pinTop`
+    // used to also swing this to top-right, so the text hung down-left from its anchor and the
+    // reference's much more readable arrangement was unreachable. `pinTop` now only decides WHERE
+    // the row is (the top offset rather than the band); the corner is not a choice.
+    const align = 'bottom-left';
     return [
         `#mountain_peak['class'='peak'][zoom>=${minZoom}] {`,
         '  text-name: [name];',
@@ -69,7 +106,7 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // density term — it is the USER's size preference, which the app's own style takes as a
         // parameter and this inline one cannot, being a style of its own. Two devices set to
         // different scales therefore drew map labels at one size and summit names at another.
-        `  text-size: ${(textSize * fontScale).toFixed(1)};`,
+        `  text-size: ${scaledSize.toFixed(1)};`,
         `  text-fill: ${palette.ink};`,
         `  text-halo-fill: ${palette.paper};`,
         '  text-halo-radius: 1.5;',
@@ -83,23 +120,52 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         '  text-background-padding-y: 2;',
         '  text-placement: callout;',
         // the higher summit claims the row: without this the winner is whichever label the tile order
-        // happened to offer first, and a 700 m hill hides a 2000 m one behind it
-        '  text-placement-priority: [ele];',
+        // happened to offer first, and a 700 m hill hides a 2000 m one behind it. Zero under
+        // `horizonFirst`, which wants the rank below to be the WHOLE ordering - the culler adds the
+        // two (`label->getPriority() + rankFunc`), so a height term here would swamp it.
+        `  text-placement-priority: ${horizonFirst ? 0 : '[ele]'};`,
         minDistance > 0 ? `  text-min-distance: ${minDistance};` : '',
-        // ...and the nearer of two summits of the same height wins the slot. The culler sorts on
-        // priority DESCENDING (`LabelCuller.cpp`, `priority1 > priority2`), so distance is
-        // SUBTRACTED — adding it, as this did, handed the slot to whichever of the two was further
-        // away. 100 m of distance trades against a metre of height.
-        '  text-rank: [ele] - [view::distance]/1000;',
+        // WHAT WINS A CONTESTED SLOT. Height is the wrong answer: at a given screen x the name the
+        // user wants is the one on the SKYLINE, and that is not the tallest summit - it is the one
+        // with the greatest apparent altitude, `atan((ele - eye) / distance)`. Ranking on the
+        // tangent of that angle gets the rule exactly, and it is self-consistent: of two summits at
+        // one bearing, the one with the larger angle is by definition the one above the other's line
+        // of sight, so it is the one on the horizon and the one in front is hidden anyway.
+        // Scaled by 1000 because the raw tangent of a far range is a few hundredths, and `+1` keeps
+        // a summit at the viewpoint out of a division by zero.
+        // The old rule (`[ele] - [view::distance]/1000`) is kept for `horizonFirst` off: strictly by
+        // height, nearest first among equals.
+        horizonFirst ? `  text-rank: 1000 * ([ele] - ${Math.round(eyeElevation)}) / ([view::distance] + 1);` : '  text-rank: [ele] - [view::distance]/1000;',
         `  text-orientation: ${textAngle};`,
         '  text-callout-line-anchor: bottom-left;',
         `  text-callout-align: ${align};`,
-        `  text-callout-screen-anchor: ${pinTop ? topOffset : band};`,
+        // A BAND is one horizontal row of plates, so its capacity is the screen width divided by a
+        // name — about seven per row, twenty-odd over three rows, whatever the terrain does. Every
+        // summit in the view competes for those, which is why a name can vanish with nothing visible
+        // anywhere near its own peak: the plates it lost to are all up in the band, hundreds of
+        // pixels above it. Omitting the anchor (the SDK reads any negative value as 'no band', see
+        // vt::Styles.h) puts each name straight above its own summit instead, so the row follows the
+        // skyline and the packing becomes two-dimensional — which is what peakfinder.com draws, and
+        // most of why it fits far more names on the same screen.
+        followSkyline ? '' : `  text-callout-screen-anchor: ${pinTop ? topOffset : band};`,
         '  text-callout-offset: 10;',
-        // pinned to the top there is no room above the row, so the extra rows go DOWN
-        `  text-callout-step: ${pinTop ? -26 : 26};`,
+        // How far apart the rows sit, and it has to clear the plate's own VERTICAL extent or the
+        // rows overlap and stacking buys nothing. A rotated plate is a diagonal bar: a name of width
+        // W at angle T spans `W·sin T` vertically, and steepening the angle to win horizontal room
+        // spends it here. At 75 degrees a 100 px name is 97 px TALL, against a step that was a fixed
+        // 26 - so rows two to five landed inside row one and `max-rows` was decorative. Derived from
+        // the font instead: a summit name with its elevation runs about six times the text size.
+        // DOWN from a row pinned at the top, up from a band lower in the screen - either way into
+        // the screen rather than off its edge.
+        `  text-callout-step: ${pinTop ? rowStep : -rowStep};`,
         `  text-callout-max-rows: ${maxRows};`,
-        '  text-callout-persist: 2;',
+        // A name that has already been placed keeps its row while the screen is crowded, rather than
+        // blinking out and back. This is what a rectilinear projection needs: screen x is `tan` of
+        // the angle, so a pair of summits is spread ~1.4x wider at the edge of a 67-degree view than
+        // at the middle of it — the same two names fit on their way in and stop fitting as they reach
+        // the centre. A held name may sit closer than `text-min-distance` while it holds, but never
+        // on top of a neighbour (LabelCuller::placeCalloutLabel re-tests the grid for it).
+        `  text-callout-persist: ${persistPasses};`,
         '  text-callout-line-width: 1;',
         maxDistance > 0 ? `  text-max-distance: ${maxDistance};` : '',
         '}'
