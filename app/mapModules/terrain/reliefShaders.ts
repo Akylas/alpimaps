@@ -221,7 +221,13 @@ vec4 surfaceColor() {
         float debugSlope = length(normalize(v_normal).xy);
         return vec4(debugSlope, debugSlope, debugSlope, 1.0);
     }
-    vec3 n = normalize(v_normal);
+    // PER FRAGMENT, off the elevation texture (terrainNormal, supplied by the SDK's surface shader
+    // prefix), not the mesh normal interpolated across a cell. A mesh carries one normal per cell
+    // corner and a cell is hundreds of metres of ground, so every ridge narrower than that was
+    // smoothed away before this shader ran - which is why the hillshade read soft next to
+    // peakfinder's and no amount of shade-strength tuning closed the gap. Falls back to v_normal
+    // wherever no elevation texture is bound yet.
+    vec3 n = terrainNormal(u_demNormalStep);
     // THE SUN TERM, BOUNDED AT BOTH ENDS - peakfinder.com's 'max(-0.2, -dot(sunDir, n)) * P2.w'.
     //
     // A plain Lambert makes the picture depend on which way you are LOOKING, because which way you
