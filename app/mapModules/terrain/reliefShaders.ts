@@ -158,6 +158,21 @@ uniform float uAmbient;
 uniform float uHaze;
 uniform float uHazeDistance;
 uniform float uDebugView;
+// THE RIDGE LINES, drawn HERE rather than in the post-process.
+//
+// The post-process reads a packed buffer at a fraction of the screen's resolution, so a line it
+// draws can never be finer than that buffer's texel however sharp the operator is. The surface pass
+// runs at full resolution and can read the elevation texture directly, which is where the crests
+// actually are - geo-three shades in the material for the same reason and leaves the post-process
+// nothing but silhouettes.
+//
+// A crest is where the height field is CONVEX: the discrete laplacian over a fixed ground span is
+// negative there and positive in a gully. Measuring it over a span in METRES rather than in texels
+// or pixels keeps a ridge the same weight whatever the DEM level under it and whatever the zoom.
+uniform float uRidgeInkStrength;
+uniform float uRidgeInkSpan;
+uniform float uRidgeInkThreshold;
+uniform vec4 uInkColor;
 // Set by TerrainRenderer::renderTiles, per tile, from the MESH: (gridSize, attribsRefined, demZoom).
 uniform vec4 u_tileDebug;
 vec4 surfaceColor() {
@@ -228,6 +243,22 @@ vec4 surfaceColor() {
     // peakfinder's and no amount of shade-strength tuning closed the gap. Falls back to v_normal
     // wherever no elevation texture is bound yet.
     vec3 n = terrainNormal(u_demNormalStep);
+    // 20: the DEM uv this fragment resolves to - red/green ramp inside [0,1], BLUE outside it. A
+    //     fragment sampling outside its elevation texture reads the clamped edge, so all four taps
+    //     return the same height and the normal comes out exactly vertical: a flat tile with a
+    //     perfectly healthy texture bound.
+    // 21: the scale the taps are spaced by. BLACK means u_demMetersPerTexel arrived as zero, which
+    //     sends the step to infinity and produces the same flat result for a different reason.
+    if (uDebugView > 19.5 && uDebugView < 20.5) {
+        vec2 uv = (v_worldPos.xy - u_demOriginSize.xy) / u_demOriginSize.zw;
+        if (u_demValid < 0.5) { return vec4(1.0, 0.0, 1.0, 1.0); }
+        bool inside = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
+        return inside ? vec4(uv, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0);
+    }
+    if (uDebugView > 20.5 && uDebugView < 21.5) {
+        float scaled = clamp(u_demMetersPerTexel / 200.0, 0.0, 1.0);
+        return vec4(scaled, scaled, scaled, 1.0);
+    }
     // THE SUN TERM, BOUNDED AT BOTH ENDS - peakfinder.com's 'max(-0.2, -dot(sunDir, n)) * P2.w'.
     //
     // A plain Lambert makes the picture depend on which way you are LOOKING, because which way you
@@ -243,6 +274,26 @@ vec4 surfaceColor() {
     float sunDarkness = max(-0.2, -dot(n, normalize(u_sunDir)));
     float darkness = clamp(uShadeStrength * (uAmbient + sunDarkness) + uSlopeShade * length(n.xy), 0.0, 1.0);
     vec3 color = mix(uPaperColor.rgb, uShadeColor.rgb, darkness);
+
+    // The crest term. Four taps of the elevation texture at +/- the span, against the centre: the
+    // laplacian is in metres of height over a span in metres, so it is a curvature and not a
+    // number that moves with the camera. Only the convex side draws - a gully is not a ridge.
+    float ridgeInk = 0.0;
+    if (uRidgeInkStrength > 0.0 && u_demValid > 0.5) {
+        float span = max(uRidgeInkSpan, 1.0);
+        vec2 stepInternal = vec2(span / max(u_demMetersPerTexel, 0.0001)) * u_demOriginSize.zw * u_demInvTexSize;
+        float centre = terrainHeightMetres(v_worldPos.xy);
+        float curvature = terrainHeightMetres(v_worldPos.xy - vec2(stepInternal.x, 0.0))
+                        + terrainHeightMetres(v_worldPos.xy + vec2(stepInternal.x, 0.0))
+                        + terrainHeightMetres(v_worldPos.xy - vec2(0.0, stepInternal.y))
+                        + terrainHeightMetres(v_worldPos.xy + vec2(0.0, stepInternal.y))
+                        - 4.0 * centre;
+        // Per span, so the threshold is a slope CHANGE and reads the same at every DEM level.
+        float convex = max(-curvature, 0.0) / span;
+        ridgeInk = clamp((convex - uRidgeInkThreshold) * uRidgeInkStrength, 0.0, 1.0);
+    }
+    color = mix(color, uInkColor.rgb, ridgeInk);
+
     color = mix(color, uPaperColor.rgb, clamp(v_dist / max(uHazeDistance, 1.0), 0.0, 1.0) * uHaze);
     // 13: TILE BOUNDARIES OVER THE REAL SHADING. Applied at the end, not as an early return, so the
     // picture is the actual one with a checker laid over it. Every per-tile property measured so far
@@ -290,6 +341,80 @@ vec4 surfaceColor() {
  * uInkShadeCap, uMetersPerUnit, uHazeDistance,
  * uHaze, uInkColor, uPaperColor.
  */
+/**
+ * The SILHOUETTE outline, and nothing else.
+ *
+ * The shading and the ridge lines are drawn by the surface shader now, at full resolution and
+ * straight off the elevation texture, so all that is left for a post-process is the one thing only
+ * it can see: where the terrain ends and something further away begins. That is a depth
+ * discontinuity, which is what geo-three's CustomOutlineEffect draws and all it draws.
+ *
+ * It reads the 24-bit depth layout rather than the 16-bit-plus-normal one: with no normals needed
+ * the whole buffer is depth, and an outline is exactly the thing that wants depth precision. Over a
+ * panorama's far plane the sqrt-encoded 16 bits quantise into steps wide enough to see, which is
+ * what made the crests stair-step.
+ *
+ * The operator is theirs: a four-tap laplacian of linear depth, then a POWER curve. The power is
+ * what makes the line thin - it crushes the shallow differences a slope produces and keeps the
+ * cliff, where a linear scale turns every gentle fold into a grey smear.
+ */
+export function reliefDepthOutlineShader() {
+    return `#version 100
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform sampler2D uColorTex;
+uniform sampler2D uTerrainDepthTex;
+uniform vec2 uInvScreenSize;
+uniform float uFar;
+uniform float uIntensity;
+uniform float uOutlineWidth;
+uniform float uOutlineGain;
+uniform float uOutlinePower;
+uniform float uInkDistance;
+uniform float uMetersPerUnit;
+uniform vec4 uInkColor;
+
+float unpackDepth(vec4 c) {
+    return dot(c.rgb, vec3(1.0, 1.0 / 255.0, 1.0 / 65025.0));
+}
+float coverage(vec4 c) {
+    return c.a;
+}
+float depthAt(vec2 uv) {
+    return unpackDepth(texture2D(uTerrainDepthTex, uv));
+}
+
+void main(void) {
+    // The post-process vertex stage passes no varying, so the uv is the fragment's own coordinate.
+    vec2 v_uv = gl_FragCoord.xy * uInvScreenSize;
+    vec4 color = texture2D(uColorTex, v_uv);
+    vec4 centre = texture2D(uTerrainDepthTex, v_uv);
+    // Sky: nothing to outline, and the neighbour test would draw the horizon twice.
+    if (coverage(centre) < 0.5) {
+        gl_FragColor = color;
+        return;
+    }
+    float depth = unpackDepth(centre);
+    vec2 offset = uInvScreenSize * max(uOutlineWidth, 1.0);
+    float diff = abs(depth - depthAt(v_uv + vec2(offset.x, 0.0)))
+               + abs(depth - depthAt(v_uv - vec2(offset.x, 0.0)))
+               + abs(depth - depthAt(v_uv + vec2(0.0, offset.y)))
+               + abs(depth - depthAt(v_uv - vec2(0.0, offset.y)));
+    // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
+    // smaller fraction of the far plane the further away it is.
+    float edge = pow(clamp(diff * uOutlineGain / max(depth, 0.0001), 0.0, 1.0), max(uOutlinePower, 0.01));
+    // The ink stops before the haze does, or the far ranges are outlined into a solid band.
+    float distMetres = depth * uFar * uMetersPerUnit;
+    edge *= 1.0 - clamp(distMetres / max(uInkDistance, 1.0), 0.0, 1.0);
+    gl_FragColor = vec4(mix(color.rgb, uInkColor.rgb, edge * uIntensity), color.a);
+}
+`;
+}
+
 export function reliefOutlineShader(normals: boolean) {
     return `#version 100
 #ifdef GL_FRAGMENT_PRECISION_HIGH
