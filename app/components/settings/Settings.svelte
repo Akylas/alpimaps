@@ -19,19 +19,20 @@
     import { get } from 'svelte/store';
     import type { SettingsStore } from '~/stores/settingsStore';
     import {
-        peakFinderCreaseFade,
         peakFinderCreaseStrength,
         peakFinderCreaseThreshold,
         peakFinderDark,
-        peakFinderDistanceFade,
         peakFinderEnabled,
         peakFinderFlyElevation,
         peakFinderHaze,
         peakFinderHorizonBoost,
+        peakFinderInkDistance,
         peakFinderLabelAngle,
         peakFinderLabelBand,
         peakFinderLabelMaxDistance,
         peakFinderLabelMinDistance,
+        peakFinderLabelPadding,
+        peakFinderLabelPersist,
         peakFinderLabelPinTop,
         peakFinderLabelRows,
         peakFinderMeshResolution,
@@ -39,9 +40,6 @@
         peakFinderOutlineWidth,
         peakFinderScreenOrientation,
         peakFinderShadeStrength,
-        peakFinderSlopeBias,
-        peakFinderSlopeMultiplier,
-        peakFinderSlopeStrength,
         peakFinderTilt,
         peakFinderViewDistance,
         peakFinderViewDistanceMetres,
@@ -510,17 +508,12 @@
                     storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
                     // The relief. Every default is the android demo's, and the shaders are its own —
                     // see ~/mapModules/terrain/reliefShaders.ts.
-                    // the slope ink, which is what draws the relief between the ridges
-                    storeSlider(peakFinderSlopeStrength, lc('slope_lines'), 0, 1, 0.05, (value) => value.toFixed(2)),
-                    storeSlider(peakFinderSlopeMultiplier, lc('slope_lines_amount'), 0, 40, 0.5, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderSlopeBias, lc('slope_lines_contrast'), 0.05, 2, 0.01, (value) => value.toFixed(2)),
                     storeSlider(peakFinderShadeStrength, lc('shade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderDistanceFade, lc('distance_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderInkDistance, lc('ink_distance'), 5000, 200000, 5000, formatDistance),
                     storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.1, (value) => value.toFixed(1)),
                     storeSlider(peakFinderCreaseStrength, lc('crease_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderCreaseThreshold, lc('crease_threshold'), 0.02, 0.5, 0.01, (value) => value.toFixed(2)),
-                    storeSlider(peakFinderCreaseFade, lc('crease_fade'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     storeSlider(peakFinderHaze, lc('haze'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     // The summit labels. Each of these rebuilds the label decoder, which is why they are
                     // grouped last: they are the expensive ones to drag.
@@ -529,6 +522,8 @@
                     storeSlider(peakFinderLabelAngle, lc('label_angle'), 0, 90, 5, (value) => `${Math.round(value)}°`),
                     storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 6, 1),
                     storeSlider(peakFinderLabelMinDistance, lc('label_min_distance'), 0, 40, 1, (value) => (value === 0 ? lc('no_limit') : `${Math.round(value)} px`)),
+                    storeSlider(peakFinderLabelPersist, lc('label_persist'), 0, 30, 1),
+                    storeSlider(peakFinderLabelPadding, lc('label_padding'), 0, 600, 25, (value) => (value === 0 ? lc('automatic') : `${Math.round(value)} px`)),
                     storeSlider(peakFinderLabelMaxDistance, lc('label_max_distance'), 0, 300000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value)))
                 ];
             case 'map_data':
