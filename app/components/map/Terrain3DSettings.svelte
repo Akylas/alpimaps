@@ -32,6 +32,7 @@
         terrainFogVerticalStart,
         terrainLighting,
         terrainMeshResolution,
+        terrainNodeResolution,
         terrainShadowCascades,
         terrainShadowCasterMargin,
         terrainShadowDistance,
@@ -80,6 +81,17 @@
         section(header(lc('terrain_3d'))),
         { type: 'slider', store: terrainExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
         { type: 'slider', store: terrainMeshResolution, title: lc('mesh_resolution'), min: 16, max: 256, step: 16, format: (value) => String(Math.round(value)) },
+        // Under the mesh, because it is the one that moves the relief: the mesh above only draws it.
+        {
+            type: 'slider',
+            store: terrainNodeResolution,
+            title: lc('node_resolution'),
+            description: lc('node_resolution_desc'),
+            min: 0,
+            max: 256,
+            step: 16,
+            format: (value) => (value <= 0 ? lc('follow_mesh') : String(Math.round(value)))
+        },
         {
             type: 'slider',
             store: terrainDrapeResolution,

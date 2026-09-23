@@ -42,6 +42,7 @@
         peakFinderLensCorrection,
         peakFinderMaxFieldOfView,
         peakFinderMeshResolution,
+        peakFinderNodeResolution,
         peakFinderNormalEdges,
         peakFinderNormalSampleDistance,
         peakFinderOcclusion,
@@ -56,6 +57,7 @@
         peakFinderSilhouetteGate,
         peakFinderSlopeShade,
         peakFinderStaticPeaks,
+        peakFinderTerrainMaxZoom,
         peakFinderTileCoarsening,
         peakFinderTilt,
         peakFinderViewDistance,
@@ -120,8 +122,31 @@
             step: 10000,
             format: formatDistance
         },
+        // Above the mesh resolution, because it OVERRIDES it: the grid is capped at 96 cells a tile,
+        // so the cut is what the triangle's size in metres actually comes from.
+        {
+            type: 'slider',
+            store: peakFinderTerrainMaxZoom,
+            title: lc('terrain_zoom_cap'),
+            description: lc('terrain_zoom_cap_desc'),
+            min: 11,
+            max: 15,
+            step: 1,
+            format: (value) => `z${Math.round(value)}`
+        },
         // 96 and no further: TerrainRenderer's MAX_MESH_GRID_SIZE clamps the un-draped surface there
         { type: 'slider', store: peakFinderMeshResolution, title: lc('mesh_resolution'), description: lc('mesh_resolution_desc'), min: 16, max: 256, step: 16, format: whole },
+        // ...which is why this one is separate: the mesh clamps, the height field does not.
+        {
+            type: 'slider',
+            store: peakFinderNodeResolution,
+            title: lc('node_resolution'),
+            description: lc('node_resolution_desc'),
+            min: 0,
+            max: 256,
+            step: 16,
+            format: (value) => (value <= 0 ? lc('follow_mesh') : whole(value))
+        },
         {
             type: 'slider',
             store: peakFinderNormalSampleDistance,

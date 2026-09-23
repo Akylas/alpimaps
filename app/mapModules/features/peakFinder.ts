@@ -52,6 +52,7 @@ import {
     peakFinderMeshCacheSize,
     peakFinderMeshResolution,
     peakFinderMinElevation,
+    peakFinderNodeResolution,
     peakFinderNormalEdges,
     peakFinderNormalEdgesAvailable,
     peakFinderNormalSampleDistance,
@@ -467,6 +468,23 @@ function applyTerrainZoomCap() {
     const zoom = get(peakFinderTerrainMaxZoom);
     native.setMaxZoom(zoom);
     DEV_LOG && console.log('peakFinder: terrain mesh zoom capped at', zoom);
+}
+
+/**
+ * The height field's resolution, which is NOT the mesh's. See `peakFinderNodeResolution`.
+ *
+ * Read when a DEM grid is DECODED, so it is written with the rest of the terrain's setup rather than
+ * after the first tiles have landed.
+ */
+function applyNodeResolution() {
+    const native = terrainNative();
+    if (typeof native?.setSurfaceNodeResolution !== 'function') {
+        DEV_LOG && console.log('peakFinder: node resolution not in this SDK build, the height field follows the mesh');
+        return;
+    }
+    const resolution = get(peakFinderNodeResolution);
+    native.setSurfaceNodeResolution(resolution);
+    DEV_LOG && console.log('peakFinder: height field resolution set to', resolution);
 }
 
 /**
@@ -1417,6 +1435,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // After the terrain exists — it is what carries these.
     applyNormalSampleDistance();
     applyTerrainZoomCap();
+    applyNodeResolution();
 
     // The camera, placed rather than flown. Before the touch model below: in first person `setTilt`
     // and `setMapRotation` turn the view in PLACE, so a camera set afterwards would spin the view
@@ -1805,6 +1824,9 @@ applyLive(peakFinderDetailFeatures, applyDetailPeaksOptions);
 // built - both of which `createPeaks` decides, so both are a rebuild.
 applyLive(peakFinderDetailSource, rebuildPeaksLayer);
 applyLive(peakFinderMeshResolution, () => terrain().set('meshResolution', get(peakFinderMeshResolution)));
+// The height field, which is what the relief actually comes from - the mesh above is only the lattice
+// drawn over it. Both re-decode every cached DEM grid.
+applyLive(peakFinderNodeResolution, applyNodeResolution);
 // Re-bakes the cached meshes' normals rather than re-decoding anything.
 applyLive(peakFinderNormalSampleDistance, applyNormalSampleDistance);
 applyLive(peakFinderTerrainMaxZoom, applyTerrainZoomCap);
