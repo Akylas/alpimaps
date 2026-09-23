@@ -26,6 +26,23 @@
     $: factor = step >= 1 ? 1 : Math.round(1 / step);
     $: decimals = factor === 1 ? 0 : String(factor).length - 1;
 
+    // The native control REJECTS a value that is not on its own grid — Material's BaseSlider throws
+    // "Value(3.6) must be equal to valueFrom(0.0) plus a multiple of stepSize(1.0)" and takes the
+    // whole page down with it. Two ways a row gets one:
+    //
+    //  - a value stored when the slider had a different step or range, which then never matches the
+    //    new grid (a stored 3.6 against a 0.5 step is exactly this);
+    //  - CollectionView RECYCLING, where a row keeps the previous row's value for the moment between
+    //    being rebound and its min/max/step catching up.
+    //
+    // Snapping and clamping here means neither can reach the control. The STORE is left alone: the
+    // off-grid value is still the user's until they move the slider, and nothing silently rewrites a
+    // setting just because a list scrolled.
+    $: scaledStep = Math.max(step * factor, 1);
+    $: scaledMin = min * factor;
+    $: scaledMax = max * factor;
+    $: sliderValue = Math.min(scaledMax, Math.max(scaledMin, scaledMin + Math.round(($store * factor - scaledMin) / scaledStep) * scaledStep));
+
     function display(value: number) {
         if (format) {
             return format(value);
@@ -67,6 +84,6 @@
     {#if description}
         <label colSpan={2} color={colorOnSurfaceVariant} fontSize={13} row={1} text={description} textWrap={true} />
     {/if}
-    <slider col={0} maxValue={max * factor} minValue={min * factor} row={2} stepSize={step * factor} value={$store * factor} on:valueChange={onValueChange} />
+    <slider col={0} maxValue={scaledMax} minValue={scaledMin} row={2} stepSize={scaledStep} value={sliderValue} on:valueChange={onValueChange} />
     <label col={1} color={colorOnSurfaceVariant} fontSize={14} marginLeft={10} row={2} text={display($store)} verticalTextAlignment="center" width={70} on:tap={promptForValue} />
 </gridlayout>

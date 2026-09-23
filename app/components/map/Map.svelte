@@ -301,6 +301,14 @@
                             item,
                             isFeatureInteresting: true
                         });
+                        // geo:lat,lon?pf=1 opens the panorama straight away. A DEBUGGING AFFORDANCE:
+                        // the peak finder's faults are run-to-run ("the same tile renders differently
+                        // each time"), and comparing runs needs the exact same viewpoint twice, which
+                        // hand-navigation cannot give. With this, a run is one adb command.
+                        if (isGeoUrl && parseUrlQueryParameters(link).pf) {
+                            const { enterPeakFinder } = await import('~/mapModules/features/peakFinder');
+                            await enterPeakFinder(item as any);
+                        }
                     } else {
                         // happens before map ready
                         ApplicationSettings.setString('mapFocusPos', JSON.stringify(pos));

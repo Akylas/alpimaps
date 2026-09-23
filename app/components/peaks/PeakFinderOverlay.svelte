@@ -15,8 +15,8 @@
     import { isEInk } from '~/helpers/theme';
     import { applyViewpointElevation, exitPeakFinder, flyToSelectedPeak, focusSelectedPeak, showPeakFinderSettings, toggleArMode, toggleHeadingFollowing } from '~/mapModules/features/peakFinder';
     import {
+        PEAK_FINDER_ELEVATION_GROWTH,
         PEAK_FINDER_ELEVATION_MAX,
-        PEAK_FINDER_ELEVATION_RAMP,
         PEAK_FINDER_ELEVATION_RATE,
         PEAK_FINDER_ELEVATION_RATE_MAX,
         PEAK_FINDER_ELEVATION_STEP,
@@ -25,6 +25,7 @@
         peakFinderElevation,
         peakFinderHeading,
         peakFinderHeadingFollowing,
+        peakFinderMinElevation,
         peakFinderSelectedPeak
     } from '~/stores/terrainStore';
     import { clearInterval, setInterval } from '~/utils/utils';
@@ -83,7 +84,7 @@
     let holdSeconds = 0;
 
     function changeElevation(delta: number) {
-        const value = Math.max(0, Math.min(PEAK_FINDER_ELEVATION_MAX, $peakFinderElevation + delta));
+        const value = Math.max($peakFinderMinElevation, Math.min(PEAK_FINDER_ELEVATION_MAX, $peakFinderElevation + delta));
         if (value === $peakFinderElevation) {
             return;
         }
@@ -102,8 +103,10 @@
             if (holdSeconds * 1000 < ELEVATION_HOLD_DELAY_MS) {
                 return;
             }
-            const ramp = Math.min(1, (holdSeconds - ELEVATION_HOLD_DELAY_MS / 1000) / PEAK_FINDER_ELEVATION_RAMP);
-            const rate = PEAK_FINDER_ELEVATION_RATE + (PEAK_FINDER_ELEVATION_RATE_MAX - PEAK_FINDER_ELEVATION_RATE) * ramp * ramp;
+            // GEOMETRIC, on the current height rather than on how long the arrow has been held: the
+            // further up the eye already is, the faster it moves. A constant fraction per second, so
+            // one drag covers the same proportion of the climb from 50 m as it does from 5 km.
+            const rate = Math.min(PEAK_FINDER_ELEVATION_RATE_MAX, PEAK_FINDER_ELEVATION_RATE + $peakFinderElevation * PEAK_FINDER_ELEVATION_GROWTH);
             changeElevation((holdDirection * rate * ELEVATION_TICK_MS) / 1000);
         }, ELEVATION_TICK_MS);
     }

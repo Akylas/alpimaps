@@ -101,12 +101,12 @@
     function onTap(event) {
         // Two of these per gesture have been seen on android. Same coordinates a few ms apart means
         // one gesture delivered twice; different ones mean two gestures.
-        DEV_LOG && console.log('ButtonBar tap', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
+        // DEV_LOG && console.log('ButtonBar tap', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
         const button = buttonAt(event);
         button?.onTap?.(event, button);
     }
     function onLongPress(event) {
-        DEV_LOG && console.log('ButtonBar longPress', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
+        // DEV_LOG && console.log('ButtonBar longPress', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
         const button = buttonAt(event);
         if (!button) {
             return;
