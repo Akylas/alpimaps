@@ -259,15 +259,10 @@ vec4 surfaceColor() {
     if (v_normal.z < 0.0) {
         return vec4(uPaperColor.rgb, 1.0);
     }
-    // NOT YET SHADEABLE. Without an elevation texture the normal falls back to the mesh's, which is
-    // the pre-per-fragment look: a visibly DIFFERENT shader for the second or two a tile takes to
-    // resolve, so the picture appears to change STYLE rather than to fill in. Measured at 99.9% of
-    // tile passes resolving a texture once settled (80557 against 72), so this costs nothing after
-    // the load it exists for. The silhouette still comes from the post-process, so the tile reads
-    // as terrain throughout. Skirts (z marked negative) keep their own normal and are exempt.
-    if (u_demValid < 0.5 && v_normal.z >= 0.0) {
-        return vec4(uPaperColor.rgb, 1.0);
-    }
+    // ONE SHADER FOR EVERY TILE. There is no mesh-normal path left to fall back to and no
+    // paper stand-in for a tile whose elevation texture has not arrived: terrainNormal returns
+    // flat until it does, so a loading tile shades as ground and then gains its relief. The
+    // picture fills in; it never changes style.
     vec3 n = terrainNormal(u_demNormalStep);
     // 20: the DEM uv this fragment resolves to - red/green ramp inside [0,1], BLUE outside it. A
     //     fragment sampling outside its elevation texture reads the clamped edge, so all four taps
