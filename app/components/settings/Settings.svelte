@@ -19,14 +19,10 @@
     import { get } from 'svelte/store';
     import type { SettingsStore } from '~/stores/settingsStore';
     import {
-        peakFinderCreaseStrength,
-        peakFinderCreaseThreshold,
         peakFinderDark,
         peakFinderEnabled,
         peakFinderFlyElevation,
-        peakFinderHaze,
         peakFinderHorizonBoost,
-        peakFinderInkDistance,
         peakFinderLabelAngle,
         peakFinderLabelBand,
         peakFinderLabelMaxDistance,
@@ -39,7 +35,6 @@
         peakFinderOcclusion,
         peakFinderOutlineWidth,
         peakFinderScreenOrientation,
-        peakFinderShadeStrength,
         peakFinderTilt,
         peakFinderViewDistance,
         peakFinderViewDistanceMetres,
@@ -506,15 +501,9 @@
                     storeSlider(peakFinderViewDistanceMetres, lc('viewing_distance'), 10000, 400000, 10000, formatDistance),
                     storeSlider(peakFinderMeshResolution, lc('mesh_resolution'), 32, 512, 32),
                     storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
-                    // The relief. Every default is the android demo's, and the shaders are its own —
-                    // see ~/mapModules/terrain/reliefShaders.ts.
-                    storeSlider(peakFinderShadeStrength, lc('shade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    // The relief: geo-three's look — see GEO_THREE in ~/mapModules/terrain/reliefShaders.ts.
                     storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderInkDistance, lc('ink_distance'), 5000, 200000, 5000, formatDistance),
-                    storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.1, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderCreaseStrength, lc('crease_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
-                    storeSlider(peakFinderCreaseThreshold, lc('crease_threshold'), 0.02, 0.5, 0.01, (value) => value.toFixed(2)),
-                    storeSlider(peakFinderHaze, lc('haze'), 0, 1, 0.05, (value) => value.toFixed(2)),
+                    storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.5, (value) => value.toFixed(1)),
                     // The summit labels. Each of these rebuilds the label decoder, which is why they are
                     // grouped last: they are the expensive ones to drag.
                     storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),

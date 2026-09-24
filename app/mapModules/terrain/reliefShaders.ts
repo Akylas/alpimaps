@@ -63,8 +63,10 @@ export const RELIEF_PALETTE = {
      * looked like the reference: pale slate slopes under black lines is not the same picture as pale
      * grey slopes under black lines, however the strengths are set.
      */
-    light: { ink: '#14141a', paper: '#f7f7f4', shade: '#14141a', sky: '#9fc6e8', labelSecondary: '#6b7280' },
-    dark: { ink: '#e8ecf5', paper: '#10131a', shade: '#e8ecf5', sky: '#070a12', labelSecondary: '#9aa3b2' },
+    // Pure black on white, and white on black: geo-three's (its outlineColor over a #fff page, and the
+    // two swapped under `dark`).
+    light: { ink: '#000000', paper: '#ffffff', shade: '#000000', sky: '#9fc6e8', labelSecondary: '#6b7280' },
+    dark: { ink: '#ffffff', paper: '#000000', shade: '#ffffff', sky: '#070a12', labelSecondary: '#9aa3b2' },
     /**
      * E-ink, where the light palette reads as a grey wash.
      *
@@ -128,6 +130,34 @@ export const RELIEF_DEFAULTS = {
     depthTexelSize: 2,
     /** How far the silhouette test is relaxed where the surface is seen edge-on. */
     grazingFloor: 0.15
+};
+
+/**
+ * The peak finder's look is geo-three's webapp, term for term (`geo-three/webapp`: `app.ts`
+ * `CustomOutlineEffect`, `MaterialHeightShader`, `LODFrustum`), for `reliefDepthOutlineShader`. The
+ * web bench's `?look=geothree` measures the port against the webapp itself; its PANORAMA-NOTES.md has
+ * the derivation of each number.
+ */
+export const GEO_THREE = {
+    /** depthMultiplier. */
+    outlineGain: 11,
+    /**
+     * depthBiais, 0.23, DOUBLED: its terrain is transparent and its outline is mixed in alpha included,
+     * so the ink is d * d / 2 - which is also why its intensity is a half and an edge may reach 2.
+     */
+    outlinePower: 0.46,
+    outlineCeiling: 2,
+    intensity: 0.5,
+    /** Its camera near and far, MERCATOR metres: multiply by cos(latitude) for real ones. */
+    depthNear: 10,
+    depthFar: 173000,
+    /** Its depth buffer is DEPTH_COMPONENT24, in a world of 1e-5 units per mercator metre. */
+    depthBits: 24,
+    depthUnitsPerMetre: 1e-5,
+    /** LODFrustum.subdivideDistance on desktop: `TerrainOptions.setSubdivideDistance`. */
+    subdivideDistance: 70,
+    /** The skyline stroke width our heavier skyline (`peakFinderHorizonBoost`) draws at, texels. */
+    horizonWidth: 3
 };
 
 /**
@@ -379,6 +409,66 @@ vec4 surfaceColor() {
  * what makes the line thin - it crushes the shallow differences a slope produces and keeps the
  * cliff, where a linear scale turns every gentle fold into a grey smear.
  */
+/**
+ * The AR lens warp, shared by both outline shaders: its uniforms and `distortUv`.
+ */
+const LENS_DISTORTION_GLSL = `// Lens distortion, for AR. k1..k3 radial and p1, p2 tangential, exactly as Camera2's LENS_DISTORTION
+// states them; uDistortCenter* is the principal point's offset in the same tangent units. Every
+// coefficient zero - the default, and every non-AR frame - makes distortUv the identity.
+// Scalars and not vectors because PostProcessEffect carries float and colour uniforms only.
+uniform float uDistortK1;
+uniform float uDistortK2;
+uniform float uDistortK3;
+uniform float uDistortP1;
+uniform float uDistortP2;
+uniform float uDistortCenterX;
+uniform float uDistortCenterY;
+// Half-field TANGENTS: what the camera frame spans on SCREEN, and what this frame was RENDERED to
+// span. The render is the wider of the two, by exactly enough that undistorting the screen's corners
+// still lands inside it - see arGeometry in features/peakFinder.ts. Equal when there is no warp.
+uniform float uDistortScreenTanX;
+uniform float uDistortScreenTanY;
+uniform float uDistortRenderTanX;
+uniform float uDistortRenderTanY;
+// 1 when the view is a quarter turn from the camera's own landscape frame, which is what a portrait
+// AR view is. The COORDINATES are rotated rather than the coefficients: that way k1..k3 and p1, p2
+// are used exactly as the platform states them, and only this one mapping carries the orientation.
+uniform float uDistortRotate;
+
+// Where to sample the RECTILINEAR render for the pixel a distorted camera would put here.
+//
+// The camera's picture is distorted and the render is not, so for an output pixel the render has to
+// be read at the IDEAL position that the lens maps onto it - the inverse of Brown-Conrady. There is
+// no closed form, so it is the standard fixed-point iteration: divide out the radial term at the
+// current estimate and repeat. Phone-scale distortion converges in two or three rounds.
+//
+// The render covers a wider field than the screen, which is what makes this possible at all: barrel
+// distortion pulls the periphery inwards, so the ideal position for a screen CORNER lies outside the
+// screen's own field, and a render that stopped at the screen's field would have nothing there to
+// read but its own edge.
+vec2 distortUv(vec2 uv) {
+    if (abs(uDistortK1) + abs(uDistortK2) + abs(uDistortK3) + abs(uDistortP1) + abs(uDistortP2) == 0.0) {
+        return uv;
+    }
+    vec2 center = vec2(uDistortCenterX, uDistortCenterY);
+    // Screen NDC into the tangent space the coefficients are stated in, about the principal point.
+    vec2 viewTan = (uv * 2.0 - 1.0) * vec2(uDistortScreenTanX, uDistortScreenTanY);
+    vec2 distorted = (uDistortRotate > 0.5 ? vec2(viewTan.y, -viewTan.x) : viewTan) - center;
+    vec2 ideal = distorted;
+    for (int i = 0; i < 3; i++) {
+        float r2 = dot(ideal, ideal);
+        float radial = 1.0 + r2 * (uDistortK1 + r2 * (uDistortK2 + r2 * uDistortK3));
+        vec2 tangential = vec2(2.0 * uDistortP1 * ideal.x * ideal.y + uDistortP2 * (r2 + 2.0 * ideal.x * ideal.x),
+                               uDistortP1 * (r2 + 2.0 * ideal.y * ideal.y) + 2.0 * uDistortP2 * ideal.x * ideal.y);
+        ideal = (distorted - tangential) / max(radial, 0.1);
+    }
+    // ...back into the view's frame, and out through the RENDER's field, which is the wider one.
+    vec2 idealView = ideal + center;
+    idealView = uDistortRotate > 0.5 ? vec2(-idealView.y, idealView.x) : idealView;
+    return (idealView / vec2(uDistortRenderTanX, uDistortRenderTanY)) * 0.5 + 0.5;
+}
+`;
+
 export function reliefDepthOutlineShader() {
     return `#version 100
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -396,6 +486,8 @@ uniform float uOutlineWidth;
 uniform float uOutlineGain;
 uniform float uOutlinePower;
 uniform float uOutlineFloor;
+uniform float uOutlineCeiling;
+uniform float uInkSky;
 uniform float uHorizonBoost;
 uniform float uHorizonWidth;
 uniform float uInkDistance;
@@ -404,8 +496,15 @@ uniform float uInkFalloff;
 // The camera range the outline measures depth over, metres. 0 keeps the old relative operator.
 uniform float uDepthNear;
 uniform float uDepthFar;
+// The reference's hardware depth: its bits (0 keeps our own linear depth) and world units per metre.
+uniform float uDepthBits;
+uniform float uDepthUnit;
 uniform float uMetersPerUnit;
 uniform vec4 uInkColor;
+// AR: the frame is a hole for the camera preview and only the ink is drawn - see reliefOutlineShader.
+uniform float uTransparent;
+
+${LENS_DISTORTION_GLSL}
 
 float unpackDepth(vec4 c) {
     return dot(c.rgb, vec3(1.0, 1.0 / 255.0, 1.0 / 65025.0));
@@ -431,16 +530,32 @@ float depthAt(vec2 uv) {
  */
 float linearDepthAt(vec2 uv) {
     float metres = depthAt(uv) * uFar * uMetersPerUnit;
+    if (uDepthBits > 0.0) {
+        // The reference's depth: a perspective depth over near..far in its own world units
+        // (uDepthUnit per metre), stored in uDepthBits bits and linearised back by three.js in
+        // float. Its step grows with the square of the distance, so far slopes band rather than
+        // shade. Same expressions as perspectiveDepthToViewZ and viewZToOrthographicDepth.
+        float near = uDepthNear * uDepthUnit;
+        float far = uDepthFar * uDepthUnit;
+        // The sky clears to 1, and nothing past the far plane is drawn.
+        float hardware = min((far / (far - near)) * (1.0 - near / max(metres * uDepthUnit, near)), 1.0);
+        float steps = exp2(uDepthBits) - 1.0;
+        hardware = floor(hardware * steps + 0.5) / steps;
+        float viewZ = (near * far) / ((far - near) * hardware - far);
+        return (viewZ + near) / (near - far);
+    }
     return clamp((metres - uDepthNear) / max(uDepthFar - uDepthNear, 1.0), 0.0, 1.0);
 }
 
 void main(void) {
-    // The post-process vertex stage passes no varying, so the uv is the fragment's own coordinate.
-    vec2 v_uv = gl_FragCoord.xy * uInvScreenSize;
+    // The post-process vertex stage passes no varying, so the uv is the fragment's own coordinate -
+    // through the lens warp, so the scene, the depth and every tap stay registered in AR.
+    vec2 v_uv = distortUv(gl_FragCoord.xy * uInvScreenSize);
     vec4 color = texture2D(uColorTex, v_uv);
     vec4 centre = texture2D(uTerrainDepthTex, v_uv);
-    // Sky: nothing to outline, and the neighbour test would draw the horizon twice.
-    if (coverage(centre) < 0.5) {
+    // Sky: nothing to outline, and the neighbour test would draw the horizon twice. uInkSky 1 runs it
+    // anyway, as the reference does: its sky is depth 1, so the skyline is inked on BOTH sides.
+    if (coverage(centre) < 0.5 && uInkSky < 0.5) {
         gl_FragColor = color;
         return;
     }
@@ -469,7 +584,11 @@ void main(void) {
     // MAGNITUDE, so the slope term it returns everywhere is not an artefact: it IS the hillshade,
     // and geo-three leans on exactly the same thing (its power is 0.23). Raising the floor turns it
     // into a pure edge detector - sharper lines, no wash - which reads as a different picture.
-    float edge = pow(clamp((relative - uOutlineFloor) * uOutlineGain, 0.0, 1.0), max(uOutlinePower, 0.01));
+    // uOutlineCeiling is how far an edge may go past 1 before uIntensity scales it (unset reads as 1).
+    // The reference's is 2: its outline is mixed into a TRANSPARENT terrain, alpha included, so its
+    // ink is min(d * d * 0.5, 1) - a strong step reaches black even at its intensity of a half.
+    float ceiling = uOutlineCeiling > 0.0 ? uOutlineCeiling : 1.0;
+    float edge = min(pow(max((relative - uOutlineFloor) * uOutlineGain, 0.0), max(uOutlinePower, 0.01)), ceiling);
     // THE FAR RANGES ARE THE POINT OF A PANORAMA, so the distance fade goes to a FLOOR rather than
     // to zero. It used to be 1 - dist/uInkDistance, which erases every line at uInkDistance exactly
     // - and the ridges a peak finder exists to name are the ones past it. uInkFar is what is left
@@ -490,6 +609,12 @@ void main(void) {
         min(coverage(texture2D(uTerrainDepthTex, v_uv + vec2(0.0, skyOffset.y))),
             coverage(texture2D(uTerrainDepthTex, v_uv - vec2(0.0, skyOffset.y)))));
     edge = max(edge, clamp(skyNeighbour * uHorizonBoost, 0.0, 1.0));
+    if (uTransparent > 0.5) {
+        // PREMULTIPLIED, and the labels over the lines, as in reliefOutlineShader.
+        float inkAlpha = clamp(edge * uIntensity, 0.0, 1.0) * uInkColor.a;
+        gl_FragColor = color + vec4(uInkColor.rgb * inkAlpha, inkAlpha) * (1.0 - color.a);
+        return;
+    }
     gl_FragColor = vec4(mix(color.rgb, uInkColor.rgb, edge * uIntensity), color.a);
 }
 `;
@@ -529,28 +654,6 @@ uniform float uHazeDistance;
 uniform float uHaze;
 uniform vec4 uInkColor;
 uniform vec4 uPaperColor;
-// Lens distortion, for AR. k1..k3 radial and p1, p2 tangential, exactly as Camera2's LENS_DISTORTION
-// states them; uDistortCenter* is the principal point's offset in the same tangent units. Every
-// coefficient zero - the default, and every non-AR frame - makes distortUv the identity.
-// Scalars and not vectors because PostProcessEffect carries float and colour uniforms only.
-uniform float uDistortK1;
-uniform float uDistortK2;
-uniform float uDistortK3;
-uniform float uDistortP1;
-uniform float uDistortP2;
-uniform float uDistortCenterX;
-uniform float uDistortCenterY;
-// Half-field TANGENTS: what the camera frame spans on SCREEN, and what this frame was RENDERED to
-// span. The render is the wider of the two, by exactly enough that undistorting the screen's corners
-// still lands inside it - see arGeometry in features/peakFinder.ts. Equal when there is no warp.
-uniform float uDistortScreenTanX;
-uniform float uDistortScreenTanY;
-uniform float uDistortRenderTanX;
-uniform float uDistortRenderTanY;
-// 1 when the view is a quarter turn from the camera's own landscape frame, which is what a portrait
-// AR view is. The COORDINATES are rotated rather than the coefficients: that way k1..k3 and p1, p2
-// are used exactly as the platform states them, and only this one mapping carries the orientation.
-uniform float uDistortRotate;
 
 ${
     normals
@@ -583,38 +686,7 @@ vec3 unpackNormal(vec4 c) {
 }`
 }
 
-// Where to sample the RECTILINEAR render for the pixel a distorted camera would put here.
-//
-// The camera's picture is distorted and the render is not, so for an output pixel the render has to
-// be read at the IDEAL position that the lens maps onto it - the inverse of Brown-Conrady. There is
-// no closed form, so it is the standard fixed-point iteration: divide out the radial term at the
-// current estimate and repeat. Phone-scale distortion converges in two or three rounds.
-//
-// The render covers a wider field than the screen, which is what makes this possible at all: barrel
-// distortion pulls the periphery inwards, so the ideal position for a screen CORNER lies outside the
-// screen's own field, and a render that stopped at the screen's field would have nothing there to
-// read but its own edge.
-vec2 distortUv(vec2 uv) {
-    if (abs(uDistortK1) + abs(uDistortK2) + abs(uDistortK3) + abs(uDistortP1) + abs(uDistortP2) == 0.0) {
-        return uv;
-    }
-    vec2 center = vec2(uDistortCenterX, uDistortCenterY);
-    // Screen NDC into the tangent space the coefficients are stated in, about the principal point.
-    vec2 viewTan = (uv * 2.0 - 1.0) * vec2(uDistortScreenTanX, uDistortScreenTanY);
-    vec2 distorted = (uDistortRotate > 0.5 ? vec2(viewTan.y, -viewTan.x) : viewTan) - center;
-    vec2 ideal = distorted;
-    for (int i = 0; i < 3; i++) {
-        float r2 = dot(ideal, ideal);
-        float radial = 1.0 + r2 * (uDistortK1 + r2 * (uDistortK2 + r2 * uDistortK3));
-        vec2 tangential = vec2(2.0 * uDistortP1 * ideal.x * ideal.y + uDistortP2 * (r2 + 2.0 * ideal.x * ideal.x),
-                               uDistortP1 * (r2 + 2.0 * ideal.y * ideal.y) + 2.0 * uDistortP2 * ideal.x * ideal.y);
-        ideal = (distorted - tangential) / max(radial, 0.1);
-    }
-    // ...back into the view's frame, and out through the RENDER's field, which is the wider one.
-    vec2 idealView = ideal + center;
-    idealView = uDistortRotate > 0.5 ? vec2(-idealView.y, idealView.x) : idealView;
-    return (idealView / vec2(uDistortRenderTanX, uDistortRenderTanY)) * 0.5 + 0.5;
-}
+${LENS_DISTORTION_GLSL}
 
 // Eye-space position of a pixel from the packed linear depth.
 vec3 eyePos(vec2 uv, float depth) {
