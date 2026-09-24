@@ -399,6 +399,8 @@ uniform float uOutlineFloor;
 uniform float uHorizonBoost;
 uniform float uHorizonWidth;
 uniform float uInkDistance;
+uniform float uInkFar;
+uniform float uInkFalloff;
 uniform float uMetersPerUnit;
 uniform vec4 uInkColor;
 
@@ -437,9 +439,14 @@ void main(void) {
     // and geo-three leans on exactly the same thing (its power is 0.23). Raising the floor turns it
     // into a pure edge detector - sharper lines, no wash - which reads as a different picture.
     float edge = pow(clamp((relative - uOutlineFloor) * uOutlineGain, 0.0, 1.0), max(uOutlinePower, 0.01));
-    // The ink stops before the haze does, or the far ranges are outlined into a solid band.
+    // THE FAR RANGES ARE THE POINT OF A PANORAMA, so the distance fade goes to a FLOOR rather than
+    // to zero. It used to be 1 - dist/uInkDistance, which erases every line at uInkDistance exactly
+    // - and the ridges a peak finder exists to name are the ones past it. uInkFar is what is left
+    // at that distance and beyond, and uInkFalloff shapes the approach: above 1 the fade holds off
+    // and then drops, which keeps the near ground from thinning while the far ranges still lighten.
     float distMetres = depth * uFar * uMetersPerUnit;
-    edge *= 1.0 - clamp(distMetres / max(uInkDistance, 1.0), 0.0, 1.0);
+    float far = clamp(distMetres / max(uInkDistance, 1.0), 0.0, 1.0);
+    edge *= mix(1.0, clamp(uInkFar, 0.0, 1.0), pow(far, max(uInkFalloff, 0.01)));
     // THE HORIZON IS THE ONE LINE THAT SHOULD BE HEAVIER. A depth operator cannot draw it at all:
     // the sky is not in the depth buffer, so the ridge against it has no neighbour to differ from
     // and comes out the same weight as an interior fold. Coverage answers what depth cannot - a
