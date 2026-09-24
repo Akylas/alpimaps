@@ -401,6 +401,9 @@ uniform float uHorizonWidth;
 uniform float uInkDistance;
 uniform float uInkFar;
 uniform float uInkFalloff;
+// The camera range the outline measures depth over, metres. 0 keeps the old relative operator.
+uniform float uDepthNear;
+uniform float uDepthFar;
 uniform float uMetersPerUnit;
 uniform vec4 uInkColor;
 
@@ -412,6 +415,23 @@ float coverage(vec4 c) {
 }
 float depthAt(vec2 uv) {
     return unpackDepth(texture2D(uTerrainDepthTex, uv));
+}
+/**
+ * The reference's depth, which is not ours.
+ *
+ * geo-three's operator reads viewZToOrthographicDepth(getViewZ(depth), cameraNear, cameraFar) -
+ * a LINEAR depth over the camera's own near..far, which its settings put at 10 m and 173 km. Ours
+ * is a fraction of a far plane that a panorama recomputes every frame and that reaches 1229 km, so
+ * the same ground step lands ~7x smaller in it. No parameter value transfers between the two: the
+ * reference's depthMultiplier of 11 means something else applied to our numbers, which is most of
+ * why matching its render by tuning never converged.
+ *
+ * uDepthFar <= 0 keeps the old behaviour (divide by the depth itself), so the render that was
+ * approved before this existed is still one uniform away.
+ */
+float linearDepthAt(vec2 uv) {
+    float metres = depthAt(uv) * uFar * uMetersPerUnit;
+    return clamp((metres - uDepthNear) / max(uDepthFar - uDepthNear, 1.0), 0.0, 1.0);
 }
 
 void main(void) {
@@ -426,13 +446,24 @@ void main(void) {
     }
     float depth = unpackDepth(centre);
     vec2 offset = uInvScreenSize * max(uOutlineWidth, 1.0);
-    float diff = abs(depth - depthAt(v_uv + vec2(offset.x, 0.0)))
-               + abs(depth - depthAt(v_uv - vec2(offset.x, 0.0)))
-               + abs(depth - depthAt(v_uv + vec2(0.0, offset.y)))
-               + abs(depth - depthAt(v_uv - vec2(0.0, offset.y)));
-    // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
-    // smaller fraction of the far plane the further away it is.
-    float relative = diff / max(depth, 0.0001);
+    float relative;
+    if (uDepthFar > 0.0) {
+        // The reference's operator, term for term: four taps of a LINEAR depth, summed as absolute
+        // differences, and no division by anything. The scale lives in uDepthNear/uDepthFar.
+        float centreLinear = linearDepthAt(v_uv);
+        relative = abs(centreLinear - linearDepthAt(v_uv + vec2(offset.x, 0.0)))
+                 + abs(centreLinear - linearDepthAt(v_uv - vec2(offset.x, 0.0)))
+                 + abs(centreLinear - linearDepthAt(v_uv + vec2(0.0, offset.y)))
+                 + abs(centreLinear - linearDepthAt(v_uv - vec2(0.0, offset.y)));
+    } else {
+        float diff = abs(depth - depthAt(v_uv + vec2(offset.x, 0.0)))
+                   + abs(depth - depthAt(v_uv - vec2(offset.x, 0.0)))
+                   + abs(depth - depthAt(v_uv + vec2(0.0, offset.y)))
+                   + abs(depth - depthAt(v_uv - vec2(0.0, offset.y)));
+        // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
+        // smaller fraction of the far plane the further away it is.
+        relative = diff / max(depth, 0.0001);
+    }
     // uOutlineFloor is a subtraction BEFORE the gain, and it is 0 by default - which is the
     // reference's behaviour and the look this mode is judged against. This operator is a gradient
     // MAGNITUDE, so the slope term it returns everywhere is not an artefact: it IS the hillshade,
