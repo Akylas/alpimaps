@@ -486,92 +486,20 @@ export const peakFinderViewDistance = settingsStore('peakFinderViewDistance', 3)
  */
 export const peakFinderViewDistanceMetres = settingsStore('peakFinderViewDistanceMetres', 150000);
 /**
- * Grid cells per tile edge while the panorama is up, over the 3D mode's own.
- *
- * A panorama is read by its RIDGE LINES and the outline effect draws them off the terrain depth, so
- * a coarse mesh does not merely look faceted — it puts a kink in every skyline. Affordable here in a
- * way it is not on the live map: the mode carries no tile layers, no labels but the summits, no drape.
- *
- * 96 and not more, because 96 is the ceiling: this mode has no draped layers, so the surface it draws
- * is `TerrainRenderer`'s, and that renderer clamps every mesh to its own `MAX_MESH_GRID_SIZE` of 96
- * (`renderers/TerrainRenderer.h`) — asking for 256 gets 96, silently. The geo-three webapp meshes at
- * 320/512, so this is where the two cannot be made to match without raising that constant.
+ * Grid cells per tile edge while the panorama is up: geo-three's `geometrySize` over three, 171, up to
+ * zoom 12, halved per level above it and never under 16 — `TerrainOptions.setSubdivideDistance`, which
+ * lifts the SDK's cap of 96 for this mesh. A panorama is read by its ridge lines and the outline draws
+ * them off the terrain depth, so the mesh IS the skyline.
  */
-export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 256);
+export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 171);
 /**
- * The panorama's height field resolution — `terrainNodeResolution` for this mode, and see it for what
- * the field is and why it is not the mesh.
+ * Tile zoom the panorama's terrain mesh is cut at. 0 lets the distance rule decide.
  *
- * Stated rather than inherited, which matters here more than on the map: the field followed
- * `MeshResolution`, and this mode asks for 256 knowing `TerrainRenderer` will clamp the drawn mesh to
- * 96. So the field has always been at the source's own limit — by accident of a number chosen for the
- * mesh. Lowering `peakFinderMeshResolution` to buy frames would have silently taken the relief with
- * it, which is the trade nobody would have meant to make.
+ * `TerrainOptions::setMaxZoom`, which caps the elevation data selected as well as the cut. 17 is
+ * geo-three's: its DEM's maximum plus the two levels it overzooms. `calculateVisibleTiles` never goes
+ * past the source's maximum + 3 anyway, so on a coarser DEM this is that bound.
  */
-export const peakFinderNodeResolution = settingsStore('peakFinderNodeResolution', 256);
-/**
- * Ground distance the surface normals are measured over, metres — **the tile-seam fix**.
- *
- * `TerrainOptions::setNormalSampleDistance`. 0 takes the gradient from the mesh, which is what makes
- * the seams: a tile carries the same cell count whatever ground it covers, so the differentiation
- * step halves with every zoom level and two tiles meeting at an LOD boundary smooth the same hillside
- * by different amounts. Their normals then disagree along the whole shared edge. Shading never
- * notices; `ridge_strength` reads `|∇normal|` across a pixel and inks every boundary in the view.
- *
- * At a fixed distance the normal is a property of the DEM instead, so both sides sample the same two
- * points and agree — nothing to draw. It is what peakfinder.com gets for nothing by having no tiles
- * in its geometry at all: one panorama mesh over a DEM texture array, one sampling rate everywhere.
- *
- * Costs four cached elevation lookups per mesh vertex, once per mesh rather than per frame. Planar
- * only — the globe's sample offsets are not the local frame's, so a spherical surface falls back to
- * the mesh gradient and this stops working. The panorama is therefore pinned to the plane; see the
- * globe note further down for the measurements.
- *
- * 60–150 m reads ridges without inking every DEM step.
- *
- * It must not be finer than the DEM: `ensureSurfaceAttribs` cannot differentiate below the texel of
- * the grid a tile stands on, so it clamps `step = max(asked, gridTexel)`, and a tile on a coarse
- * ANCESTOR then samples at that ancestor's rate — the per-tile variation this setting exists to
- * remove. 90 m is well inside the source's own z12 (`DEM source zoom range 0..12`, logged on device),
- * so the clamp only binds while a tile is still standing on an ancestor. Raising this to hide that
- * is the wrong lever: it costs real detail everywhere to paper over tiles that simply have not
- * loaded. The measured 82% clamp rate (1x=23 2x=24 4x=17 8x+=62) is a LOADING result, not a data
- * ceiling — see the prefetch queue in `ElevationManager`.
- */
-export const peakFinderNormalSampleDistance = settingsStore('peakFinderNormalSampleDistance', 90);
-/**
- * Tile zoom the panorama's terrain mesh is cut at. 0 lets the distance rule and the budget decide.
- *
- * `TerrainOptions::setMaxZoom`, and the answer to three complaints at once, because all three come
- * from the same thing: a ground-level camera subdivides what is in front of it as deep as the data
- * allows, and keeps subdividing as finer elevation tiles arrive, so the height field never settles.
- *
- *  - **names are not constant.** A label is anchored to the ground under its summit, so when that
- *    ground moves the label moves (`vt::Label::updateElevation`) and a placement that had settled is
- *    re-decided. Measured: `elevReanchor` 7-102 per second while tiles stream.
- *  - **the view rises and sinks while tiles load.** The camera is held above the terrain, and the
- *    terrain keeps moving.
- *  - **tile seams.** Mid-refinement, neighbouring tiles resolve to DIFFERENT elevation grids — each
- *    takes the finest one resident for it — so their shared edge is built from two height fields
- *    that disagree.
- *
- * Pinned, the height field resolves once and stays. peakfinder.com does the same thing by loading
- * the DEM for its viewpoint once and never refining it. The price is detail close to the eye.
- *
- * 14, NOT 12 — 12 was paying that price twice over. The cut is what sets the triangle, because
- * `TerrainRenderer` caps the grid at `MAX_MESH_GRID_SIZE` (96) cells per tile whatever
- * `peakFinderMeshResolution` says: at z12 a tile is 6.9 km at Grenoble's latitude, so the mesh is
- * 72 m triangles — the faceting the near ridges showed, against a DEM holding 13.5 m. And the cut
- * also decides the GRID: a z12 tile resolves the z11 DEM (one level for the 512-texel source's zoom
- * bias), so the heights came from 27 m texels rather than the file's own 13.5 m.
- *
- * At 14 a tile is 1.7 km, the triangle is 18 m and the grid is z12 — the source's maximum. 15 halves
- * the triangle again for nothing the DEM can fill, and `calculateVisibleTiles` will not go past
- * `sourceMaxZoom + 3` in any case. What the two extra levels cost is tiles: the budget below is half
- * of `peakFinderMeshCacheSize`, and a cut that overflows it coarsens a level everywhere, which hands
- * the detail straight back.
- */
-export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom', 14);
+export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom', 17);
 /**
  * The panorama's elevation GRID cache, megabytes. 0 hands the SDK's own rule back.
  *
@@ -679,187 +607,21 @@ export const PEAK_FINDER_ELEVATION_MAX = 9000;
 
 // --- peak finder: the render ------------------------------------------------------------------
 //
-// `DemoConfig.RELIEF_*`, so the mode looks like the android demo out of the box. See
-// app/mapModules/terrain/reliefShaders.ts — the shaders themselves are that demo's, verbatim.
+// geo-three's, so the mode looks like its webapp out of the box. See `GEO_THREE` in
+// app/mapModules/terrain/reliefShaders.ts.
+/** Ink tap distance, px: geo-three's outlineStroke. */
+export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1);
 /**
- * How much of the shading comes from the SUN, as opposed to from the slope below.
- *
- * Lowered under the slope term deliberately. The sun term is the only part of the picture that
- * depends on which way the camera points — it shades by ASPECT, so turning on the spot swaps a
- * sunlit range for a shaded one — and leaning on it is what made the panorama read completely
- * differently to the left and to the right. The slope term says the same thing from every angle.
- */
-export const peakFinderShadeStrength = settingsStore('peakFinderShadeStrength', 0.18);
-/**
- * SLOPE SHADING — darkness proportional to how STEEP the ground is, with no sun in it.
- *
- * peakfinder.com's, read off their panorama fragment shader: `length(normal.xz) * P1.z` added into the
- * same darkness the lighting writes. It is what puts relief inside their ridges, and it is not
- * hillshading — nothing here depends on a light direction, so a face keeps its shading on the shadow
- * side and the picture does not change through the day.
- *
- * Worth having on top of `peakFinderShadeStrength` because Lambert alone cannot draw a panorama: with
- * the sun anywhere but across the view, half the ranges are lit flat and read as blank paper. The
- * slope term is the one that always has something to say. 0.35 puts a 45° face a quarter of the way
- * to the shade colour, which is about where their picture sits; 0 is the look before this existed.
- */
-export const peakFinderSlopeShade = settingsStore('peakFinderSlopeShade', 0.22);
-/** Base ink line width, px. */
-export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1.2);
-/**
- * How far the ink reaches, IN METRES. peakfinder.com's distance CUTOFF, in absolute units.
- *
- * Metres and not a fraction of the far plane, which is what this was and which made the whole
- * picture change as you turned on the spot: the far plane is recomputed every frame from where the
- * view's rays meet the ground, so it is short looking into a valley and long looking down a range.
- * The same hillside therefore landed at a different normalised depth depending only on the azimuth,
- * and its ink came and went. peakfinder.com can normalise by their far plane because theirs is
- * fixed; ours is not.
- *
- * Theirs is `min(value, 1 - smoothstep(p - 0.05, p + 0.15, depth))` and the shape is what matters.
- * The two linear fades this replaces (`peakFinderDistanceFade`, `peakFinderCreaseFade`) ramped to a
- * floor, so every distance still carried some ink — and out where ridges are a pixel apart, "some
- * ink on every ridge" is a solid black band whatever the floor is. A smoothstep reaches exactly
- * zero, so past this there is shaded surface and nothing else, which is how the reference's far
- * ranges stay pale.
- *
- * The sky silhouette is outside it: the horizon draws at any distance.
- */
-export const peakFinderInkDistance = settingsStore('peakFinderInkDistance', 50000);
-/**
- * Where a depth gradient starts counting as a SILHOUETTE, in metres of depth change across one tap.
- *
- * peakfinder.com gates theirs at a constant `smoothstep(0.005, 0.020, dLen)` on a depth normalised
- * over a fixed ~173 km far plane — so about 865 m, which is this default. Ours has to be absolute
- * because our far plane is recomputed every frame.
- *
- * Raise it to keep only the big skyline breaks; lower it to ink every small step in the terrain.
- */
-export const peakFinderSilhouetteGate = settingsStore('peakFinderSilhouetteGate', 865);
-/**
- * How far the ink is capped by how dark the SURFACE under it already is. 0 is uncapped.
- *
- * NOT peakfinder.com's `min(value, lightning)`, though it was written as a port of it and shipped
- * at 1, which removed every ridge line in the panorama. Theirs caps a single greyscale channel that
- * already contains their slope shading; ours has the shading in a separate surface shader, so
- * capping the ink alone by that surface is a different operation — and against a near-white paper
- * the surface darkness is ~0 over most of the frame, so the cap erased everything.
- *
- * Left as a knob because a little of it is a fair way to stop ink stacking on already-dark ground.
- * See `reliefShaders.ts` for the full reasoning.
- */
-export const peakFinderInkShadeCap = settingsStore('peakFinderInkShadeCap', 0);
-/**
- * Dump one intermediate term of the relief shader as an image, instead of the finished picture.
- *
- * For working out WHICH stage is wrong rather than inferring it from the result — every guess made
- * from a finished screenshot so far has been wrong at least once, because half a dozen terms
- * multiply together and any of them going to zero looks the same in the output.
- *
- *  0 — off, draw normally
- *  1 — SLOPE, `length(n.xy)` off the packed normal. Black = the tile's normals are flat, which kills
- *      the ridge ink and the slope shading together. This is the one to look at first.
- *  2 — the final ink (`edge`), after every gate and fade
- *  3 — HAZE, how far this pixel is pulled to the paper
- *  4 — distance, white at 100 km
- *  5 — raw packed depth × 20
- *  6 — the normal as colour. A seam between tiles shows as a colour break; a flat tile is pure blue.
- *  7 — the SURFACE shader's own slope, off `v_normal` rather than off the packed buffer. Against
- *      view 1 this isolates the normal-packing pass: both black means the mesh attribute is flat,
- *      only 1 black means the packing pass is losing it.
+ * Dump one intermediate term of the relief SURFACE shader as an image, instead of the finished
+ * picture — the views it documents in `RELIEF_SURFACE_SHADER` (7 slope, 9 mesh density, 10 DEM
+ * zoom per tile, 13 tile boundaries). 0 draws normally.
  */
 export const peakFinderDebugView = settingsStore('peakFinderDebugView', 0);
-/** Extra width for the sky silhouette — the horizon line, the one drawn wide. */
-export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
-/** Strength of the ridge/valley fold lines. */
-export const peakFinderCreaseStrength = settingsStore('peakFinderCreaseStrength', 0);
 /**
- * How sharp a fold has to be before it is drawn as a crease — and with it, the TILE SEAM control.
- *
- * A seam and a ridge are the same thing to the outline shader: a place where the surface changes
- * slope. What tells them apart is HOW MUCH. A crest folds hard; a tile edge between two different
- * mesh levels is a slight kink, because the coarse side chords straight across ground the fine side
- * curves over — and the surface the peak finder draws has no cross-LOD stitching (that is
- * `TileRenderer`'s, for draped layers), so those kinks are real geometry, not a shader artefact.
- *
- * Raising this therefore fades the seams out and keeps the ridges: it is the fold SIZE below which
- * nothing is drawn. The shader's own floor was 0.05, which drew almost any kink. 0.12 is above the
- * LOD kinks measured on a panorama and well below a crest.
+ * The skyline's width in texels when drawn as OUR heavier stroke; 0 is geo-three's own skyline, the
+ * depth operator inking both sides of the ridge.
  */
-export const peakFinderCreaseThreshold = settingsStore('peakFinderCreaseThreshold', 0.12);
-
-/**
- * Draw the interior ridges off the terrain's own NORMAL instead of reconstructing folds from depth.
- *
- * The reason the two settings above exist is that the fold test cannot tell a crest from a tile
- * seam, so `peakFinderCreaseStrength` is 0 and the panorama has no interior lines at all — which is
- * the most visible difference between it and peakfinder.com, whose picture is full of them. Theirs
- * is the screen-space gradient of the surface normal, and the normal is data rather than a guess, so
- * an LOD change is not a fold in it.
- *
- * What it costs is a different terrain pre-pass: `PostProcessEffect.terrainNormalsRequired` packs
- * 16-bit depth and the normal into the one buffer instead of 24-bit depth and a coverage bit. The
- * app falls back on its own where the SDK in the build does not have it, so this can be on by
- * default — see `useNormalBuffer` in `features/peakFinder.ts`.
- *
- * Panorama only. The live map's post-processing does not ask for terrain depth at all.
- */
-export const peakFinderNormalEdges = settingsStore('peakFinderNormalEdges', true);
-/**
- * Whether the map engine in THIS build can actually pack the normals — a fact, not a preference.
- *
- * `undefined` until the panorama has looked. It is published because the alternative was worse than
- * useless: with the buffer missing the effect falls back to the depth-fold shader, where
- * `peakFinderRidgeStrength` names a uniform nothing reads, so the ridge sliders do nothing at all
- * and the only control that still responds is the crease one — which inks tile seams. Silence there
- * reads as "these settings are broken", and it is one rebuild away from being right.
- */
-export const peakFinderNormalEdgesAvailable = writable<boolean>(undefined);
-/**
- * Strength of those ridge lines — a straight MULTIPLIER on how far the surface turned, now that the
- * term is linear like the reference's (`length(gradN) * params1.x`) instead of a smoothstep.
- *
- * Bigger than it used to be because the smoothstep it replaces was doing most of the gain: it
- * stretched the band [threshold, threshold + 0.35] over the full 0..1. A real crest turns the packed
- * normal by a few tenths, so a multiplier of about 2 puts one at full ink.
- */
-export const peakFinderRidgeStrength = settingsStore('peakFinderRidgeStrength', 2);
-/**
- * The DEADZONE under the ridge term — where the normal buffer's noise floor is, subtracted from the
- * turn before it becomes ink.
- *
- * Not a contrast control and not the seam control `peakFinderCreaseThreshold` is. The octahedral
- * pair is packed 8 bits a component, so one quantization step is 2/255 = 0.008, and a central
- * difference spans two of them. Those steps trace closed curves across a smooth hillside exactly the
- * way contour lines do, which is what the panorama was drawing instead of ridges. 0.05 clears the
- * floor with margin and is far below what a crest turns through.
- */
-export const peakFinderRidgeThreshold = settingsStore('peakFinderRidgeThreshold', 0.05);
-/**
- * The GROUND DISTANCE the ridge turn is measured over, in metres — the stroke's physical width.
- *
- * The ridge term is a central difference of the packed normal, and a fixed screen-space step measures
- * it over whatever ground a pixel happens to cover: a few metres underfoot, hundreds at the horizon.
- * That made the ink a function of DISTANCE instead of of how sharp the ridge is — far ranges solid,
- * near ground blank white, because underfoot the turn across one pixel falls under
- * `peakFinderRidgeThreshold` entirely. The shader now widens the tap spacing to cover this much
- * ground, which is what peakfinder.com's varying tap step does across the screen.
- *
- * 90 m to match `peakFinderNormalSampleDistance`: the normals themselves are sampled at that
- * distance, so asking the ink to resolve anything finer only reads their interpolation. Widening
- * only — the far field is already at or past this and keeps the stroke it has.
- */
-export const peakFinderRidgeGroundSpan = settingsStore('peakFinderRidgeGroundSpan', 90);
-
-// There is no slope-ink setting any more. It was geo-three's depth gradient
-// (`webapp/app.ts`, `CustomOutlineEffect`), and peakfinder.com has no term like it: their pass
-// (extracted in `peakfinder-reference-shader.md`) inks the normal gradient (our ridge term), the
-// depth gradient as a SILHOUETTE with a fixed smoothstep, and the surface's own tilt —
-// `length(centreNormal.xz) * params1.z`, which `RELIEF_SURFACE_SHADER` already draws as
-// `uSlopeShade * length(n.xy)`. Measuring slope from depth instead is what greyed out the distance.
-
-/** How much of the distance washes out towards the paper colour. */
-export const peakFinderHaze = settingsStore('peakFinderHaze', 0.7);
+export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 0);
 
 // --- peak finder: the summit labels -----------------------------------------------------------
 //

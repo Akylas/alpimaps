@@ -232,7 +232,7 @@
     "debug_gpu_picking": "debug GPU picking",
     "debug_mode": "debug mode",
     "debug_view": "shader debug view",
-    "debug_view_desc": "draws one internal term of the relief shader instead of the picture. 1 slope from the normals, 2 the ink, 3 the haze, 4 distance, 5 depth, 6 the normal as colour. 0 is off",
+    "debug_view_desc": "draws one internal term of the terrain surface instead of the picture. 7 slope, 9 mesh density, 10 elevation zoom per tile, 13 tile boundaries. 0 is off",
     "debugging": "debugging",
     "debugging_settings_desc": "debugging settings",
     "defibrillator": "defibrillator",

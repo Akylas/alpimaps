@@ -18,18 +18,13 @@
     import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
     import { formatDistance } from '~/helpers/formatter';
     import {
-        peakFinderCreaseStrength,
-        peakFinderCreaseThreshold,
         peakFinderDark,
         peakFinderDebugView,
         peakFinderDetailFeatures,
         peakFinderDetailLevels,
         peakFinderDetailSource,
         peakFinderFlyElevation,
-        peakFinderHaze,
         peakFinderHorizonBoost,
-        peakFinderInkDistance,
-        peakFinderInkShadeCap,
         peakFinderLabelAngle,
         peakFinderLabelBand,
         peakFinderLabelFollowSkyline,
@@ -42,20 +37,11 @@
         peakFinderLensCorrection,
         peakFinderMaxFieldOfView,
         peakFinderMeshResolution,
-        peakFinderNodeResolution,
-        peakFinderNormalEdges,
-        peakFinderNormalSampleDistance,
         peakFinderOcclusion,
         peakFinderOutlineWidth,
         peakFinderPeakCount,
         peakFinderPeakZoom,
-        peakFinderRidgeGroundSpan,
-        peakFinderRidgeStrength,
-        peakFinderRidgeThreshold,
         peakFinderScreenOrientation,
-        peakFinderShadeStrength,
-        peakFinderSilhouetteGate,
-        peakFinderSlopeShade,
         peakFinderStaticPeaks,
         peakFinderTerrainMaxZoom,
         peakFinderTileCoarsening,
@@ -122,41 +108,17 @@
             step: 10000,
             format: formatDistance
         },
-        // Above the mesh resolution, because it OVERRIDES it: the grid is capped at 96 cells a tile,
-        // so the cut is what the triangle's size in metres actually comes from.
         {
             type: 'slider',
             store: peakFinderTerrainMaxZoom,
             title: lc('terrain_zoom_cap'),
             description: lc('terrain_zoom_cap_desc'),
             min: 11,
-            max: 15,
+            max: 17,
             step: 1,
             format: (value) => `z${Math.round(value)}`
         },
-        // 96 and no further: TerrainRenderer's MAX_MESH_GRID_SIZE clamps the un-draped surface there
         { type: 'slider', store: peakFinderMeshResolution, title: lc('mesh_resolution'), description: lc('mesh_resolution_desc'), min: 16, max: 256, step: 16, format: whole },
-        // ...which is why this one is separate: the mesh clamps, the height field does not.
-        {
-            type: 'slider',
-            store: peakFinderNodeResolution,
-            title: lc('node_resolution'),
-            description: lc('node_resolution_desc'),
-            min: 0,
-            max: 256,
-            step: 16,
-            format: (value) => (value <= 0 ? lc('follow_mesh') : whole(value))
-        },
-        {
-            type: 'slider',
-            store: peakFinderNormalSampleDistance,
-            title: lc('normal_sample_distance'),
-            description: lc('normal_sample_distance_desc'),
-            min: 0,
-            max: 400,
-            step: 10,
-            format: (value) => (value === 0 ? lc('mesh_spacing') : `${Math.round(value)} m`)
-        },
         // Sits next to the view distance on purpose: the two multiply into the tile count.
         {
             type: 'slider',
@@ -235,25 +197,9 @@
 
         section(lc('relief')),
         { type: 'slider', store: peakFinderDebugView, title: lc('debug_view'), description: lc('debug_view_desc'), min: 0, max: 14, step: 1, format: whole },
-        // The shading comes first: it is what draws the relief BETWEEN the ridges. peakfinder.com's
-        // own slope term is the surface's tilt (slope_shade), not an ink — see reliefShaders.ts.
-        { type: 'slider', store: peakFinderShadeStrength, title: lc('shade_strength'), min: 0, max: 1, step: 0.05, format: hundredths },
-        { type: 'slider', store: peakFinderSlopeShade, title: lc('slope_shade'), description: lc('slope_shade_desc'), min: 0, max: 1, step: 0.05, format: hundredths },
-        { type: 'slider', store: peakFinderHaze, title: lc('haze'), min: 0, max: 1, step: 0.05, format: hundredths },
         { type: 'slider', store: peakFinderOutlineWidth, title: lc('outline_width'), min: 0.5, max: 4, step: 0.1, format: (value) => value.toFixed(1) },
-        { type: 'slider', store: peakFinderInkDistance, title: lc('ink_distance'), description: lc('ink_distance_desc'), min: 5000, max: 200000, step: 5000, format: formatDistance },
-        { type: 'slider', store: peakFinderSilhouetteGate, title: lc('silhouette_gate'), description: lc('silhouette_gate_desc'), min: 50, max: 4000, step: 50, format: formatDistance },
-        { type: 'slider', store: peakFinderInkShadeCap, title: lc('ink_shade_cap'), description: lc('ink_shade_cap_desc'), min: 0, max: 1, step: 0.05, format: hundredths },
-        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.1, format: (value) => value.toFixed(1) },
-        // The ridge rows and the crease rows below them are the SAME line drawn two ways, and only
-        // one of the two is live: the switch picks which. Both are listed rather than swapped in and
-        // out, because the one that is off is the thing you compare the other against.
-        { type: 'switch', store: peakFinderNormalEdges, title: lc('normal_edges'), description: lc('normal_edges_desc') },
-        { type: 'slider', store: peakFinderRidgeStrength, title: lc('ridge_strength'), description: lc('ridge_strength_desc'), min: 0, max: 5, step: 0.1, format: hundredths },
-        { type: 'slider', store: peakFinderRidgeThreshold, title: lc('ridge_threshold'), description: lc('ridge_threshold_desc'), min: 0, max: 0.3, step: 0.01, format: hundredths },
-        { type: 'slider', store: peakFinderRidgeGroundSpan, title: lc('ridge_ground_span'), description: lc('ridge_ground_span_desc'), min: 0, max: 400, step: 10, format: whole },
-        { type: 'slider', store: peakFinderCreaseStrength, title: lc('crease_strength'), min: 0, max: 1, step: 0.05, format: hundredths },
-        { type: 'slider', store: peakFinderCreaseThreshold, title: lc('crease_threshold'), description: lc('crease_threshold_desc'), min: 0.02, max: 0.5, step: 0.01, format: hundredths }
+        // 0 is geo-three's own skyline; above it, our heavier stroke that many texels wide
+        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1) }
     ];
 
     function itemTemplateSelector(item: SettingRow) {

@@ -10,7 +10,7 @@ import { lc } from '~/helpers/locale';
 import { type FeatureClickData, featureClickData, getMapContext } from '~/mapModules/MapModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
-import { RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefOutlineShader, reliefPalette } from '~/mapModules/terrain/reliefShaders';
+import { GEO_THREE, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefDepthOutlineShader, reliefPalette } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
 import type { IItem } from '~/models/Item';
@@ -20,8 +20,6 @@ import {
     PANORAMA_RANGE,
     peakFinderActive,
     peakFinderArActive,
-    peakFinderCreaseStrength,
-    peakFinderCreaseThreshold,
     peakFinderDark,
     peakFinderDebugView,
     peakFinderDetailFeatures,
@@ -32,12 +30,9 @@ import {
     peakFinderEnabled,
     peakFinderFlyElevation,
     peakFinderFlyZoom,
-    peakFinderHaze,
     peakFinderHeading,
     peakFinderHeadingFollowing,
     peakFinderHorizonBoost,
-    peakFinderInkDistance,
-    peakFinderInkShadeCap,
     peakFinderLabelAngle,
     peakFinderLabelBand,
     peakFinderLabelFollowSkyline,
@@ -52,23 +47,13 @@ import {
     peakFinderMeshCacheSize,
     peakFinderMeshResolution,
     peakFinderMinElevation,
-    peakFinderNodeResolution,
-    peakFinderNormalEdges,
-    peakFinderNormalEdgesAvailable,
-    peakFinderNormalSampleDistance,
     peakFinderOcclusion,
     peakFinderOutlineWidth,
     peakFinderPeakCount,
     peakFinderPeakMinElevation,
     peakFinderPeakZoom,
-    peakFinderRidgeGroundSpan,
-    peakFinderRidgeStrength,
-    peakFinderRidgeThreshold,
     peakFinderScreenOrientation,
     peakFinderSelectedPeak,
-    peakFinderShadeStrength,
-    peakFinderSilhouetteGate,
-    peakFinderSlopeShade,
     peakFinderStaticPeaks,
     peakFinderTerrainMaxZoom,
     peakFinderTileCoarsening,
@@ -107,8 +92,8 @@ import { lockOrientation } from '~/utils/orientation';
  * data sources the live map is drawing, handed over by handle, so the tiles already in their caches
  * are the tiles the panorama meshes and labels from.
  *
- * The look is unchanged — the relief surface shader, the ridge-line post-process effect and the
- * callout summit labels are the android demo's, see `terrain/reliefShaders.ts` and `terrain/peaksStyle.ts`.
+ * The look is geo-three's webapp, term for term — see `GEO_THREE` in `terrain/reliefShaders.ts` — and
+ * the callout summit labels are the android demo's, see `terrain/peaksStyle.ts`.
  */
 
 /** The registry id the panorama's map takes. Two maps in one app must not share the `map` one. */
@@ -430,8 +415,8 @@ function applyFieldOfView() {
  * panorama is 20 px — the names blink, but nothing breaks.
  */
 function applyLabelPadding() {
-    // Same trap as `applyNormalSampleDistance`: the bridge's options object is the one the renderer
-    // reads, and the view's wrapper is not.
+    // Same trap as `terrainNative`: the bridge's options object is the one the renderer reads, and
+    // the view's wrapper is not.
     const native = (panorama as { native?: { getOptions?: () => { setLabelPadding?: (value: number) => void } } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.();
     if (typeof native?.setLabelPadding !== 'function') {
         DEV_LOG && console.log('peakFinder: label padding not in this SDK build, names will churn as the view turns');
@@ -471,42 +456,19 @@ function applyTerrainZoomCap() {
 }
 
 /**
- * The height field's resolution, which is NOT the mesh's. See `peakFinderNodeResolution`.
- *
- * Read when a DEM grid is DECODED, so it is written with the rest of the terrain's setup rather than
- * after the first tiles have landed.
+ * geo-three's terrain cut and mesh (`TerrainOptions.setSubdivideDistance`), and the FULL resolution
+ * depth its outline differentiates: at the SDK's half resolution a one-pixel tap lands in the same
+ * texel half the time and the skyline comes out as a staircase. Native, as `applyTerrainZoomCap` is:
+ * neither option is in the plugin's generated schema.
  */
-function applyNodeResolution() {
+function applyGeoThreeTerrain() {
     const native = terrainNative();
-    if (typeof native?.setSurfaceNodeResolution !== 'function') {
-        DEV_LOG && console.log('peakFinder: node resolution not in this SDK build, the height field follows the mesh');
-        return;
+    if (typeof native?.setSubdivideDistance !== 'function') {
+        DEV_LOG && console.log('peakFinder: geo-three terrain cut not in this SDK build, the SDK cut is used');
+    } else {
+        native.setSubdivideDistance(GEO_THREE.subdivideDistance);
     }
-    const resolution = get(peakFinderNodeResolution);
-    native.setSurfaceNodeResolution(resolution);
-    DEV_LOG && console.log('peakFinder: height field resolution set to', resolution);
-}
-
-/**
- * The ground distance the terrain's surface normals are measured over. See
- * `peakFinderNormalSampleDistance` — it is what keeps `ridge_strength` off the tile boundaries.
- *
- * Native, for the same reason `applyLabelPadding` is: the bridge resolves an option name against the
- * plugin's generated schema, which only learns a new one when the SDK's typings are regenerated.
- */
-function applyNormalSampleDistance() {
-    // The BRIDGE's terrain options, not `panoramaView.getTerrainOptions()`. The two are different
-    // objects: the panorama's terrain was created by `map.terrain({...})` and lives on the bridge,
-    // while the view keeps a wrapper of its own. Writing to the view's answered `typeof === function`
-    // and changed nothing the renderer ever read — the option was set on an object no pass looks at.
-    const native = terrainNative();
-    if (typeof native?.setNormalSampleDistance !== 'function') {
-        DEV_LOG && console.log('peakFinder: fixed-scale terrain normals not in this SDK build, LOD boundaries will read as ridges');
-        return;
-    }
-    const distance = get(peakFinderNormalSampleDistance);
-    native.setNormalSampleDistance(distance);
-    DEV_LOG && console.log('peakFinder: terrain normal sampling set to', distance, 'm');
+    native?.setPostProcessDownscale?.(1);
 }
 
 /** The field of view the view's current shape asks for, or the SDK's own before it has been measured. */
@@ -1035,58 +997,19 @@ function applyReliefSurface() {
     }
     terrainOptions.setSurfaceColorParameter('uPaperColor', colors.paper);
     terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
-    terrainOptions.setSurfaceParameter('uShadeStrength', get(peakFinderShadeStrength));
-    terrainOptions.setSurfaceParameter('uSlopeShade', get(peakFinderSlopeShade));
+    // FLAT: geo-three's surface is lit by an ambient light alone, and all of its relief is the ink.
+    terrainOptions.setSurfaceParameter('uShadeStrength', 0);
+    terrainOptions.setSurfaceParameter('uSlopeShade', 0);
     terrainOptions.setSurfaceParameter('uAmbient', RELIEF_DEFAULTS.ambient);
-    terrainOptions.setSurfaceParameter('uHaze', get(peakFinderHaze));
+    terrainOptions.setSurfaceParameter('uHaze', 0);
     terrainOptions.setSurfaceParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
     terrainOptions.setSurfaceParameter('uDebugView', get(peakFinderDebugView));
 }
 
-/** Which of the two outline shaders the live effect was built with. See `reliefOutlineShader`. */
-let effectUsesNormals = false;
-/** Memoised: whether this build's plugin knows about the normal buffer at all. */
-let normalBufferAvailable: boolean | undefined;
-
 /**
- * Whether the effect should ask for the terrain NORMALS rather than depth alone.
+ * The ink: geo-three's depth outline (`reliefDepthOutlineShader`).
  *
- * Two gates, and both have to pass. The setting is the user's; the other is a build question —
- * `PostProcessEffect.terrainNormalsRequired` is newer than the SDK most installs resolve, and asking
- * for a buffer the renderer will not pack means reading depth out of the wrong channels, which is a
- * black frame rather than a degraded one. The generated accessor map IS the capability: it is
- * rebuilt from the SDK's own headers, so the property is in it exactly when the pass exists.
- */
-function useNormalBuffer(): boolean {
-    if (!get(peakFinderNormalEdges)) {
-        return false;
-    }
-    if (normalBufferAvailable === undefined) {
-        // Asked of the NATIVE object, not of the plugin's generated accessor map. Those two answer
-        // differently and the difference is the whole bug: the map is a JS file in node_modules,
-        // regenerated only when the PLUGIN is rebuilt, while the capability lives in the native SDK.
-        // Rebuild the SDK alone - which is the normal thing to do - and the map still says no while
-        // the method is right there, so the effect quietly compiled the old depth shader and the
-        // ridge sliders did nothing.
-        const { PostProcessEffect } = require('@nativescript-community/ui-massifmaps/renderers');
-        const probe = new PostProcessEffect({ name: `${EFFECT_ID}.probe`, fragmentShader: 'void main(){gl_FragColor=vec4(0.0);}' });
-        normalBufferAvailable = typeof probe?.getNative?.()?.setTerrainNormalsRequired === 'function';
-        probe?.dispose?.();
-        peakFinderNormalEdgesAvailable.set(normalBufferAvailable);
-        DEV_LOG && console.log('peakFinder: terrain normal buffer', normalBufferAvailable ? 'available' : 'not in this SDK build');
-        if (!normalBufferAvailable) {
-            // Said out loud, once. Without the buffer the ridge sliders below it are inert and the
-            // crease ones draw tile seams, which is indistinguishable from the settings being broken.
-            showToast(lc('normal_edges_unavailable'));
-        }
-    }
-    return normalBufferAvailable;
-}
-
-/**
- * The ridge lines.
- *
- * The SDK gives the mechanism — an offscreen frame, the packed terrain buffer and named parameters —
+ * The SDK gives the mechanism — an offscreen frame, the packed terrain depth and named parameters —
  * and the shader is the look. Object API only: the surface API carries no `postProcessEffect`.
  */
 function applyReliefOutline() {
@@ -1094,52 +1017,39 @@ function applyReliefOutline() {
         return;
     }
     const colors = palette();
-    const wantsNormals = useNormalBuffer();
-    // A shader is compiled into the effect, so the two variants cannot be one object: switching the
-    // setting swaps the effect, and the old one goes with it.
-    if (effect && effectUsesNormals !== wantsNormals) {
-        panoramaView.setPostProcessEffect(null);
-        effect = null;
-    }
     if (!effect) {
         // Required lazily: `renderers` is object-API code that nothing else in the app pulls in.
         const { PostProcessEffect } = require('@nativescript-community/ui-massifmaps/renderers');
-        effect = new PostProcessEffect({ name: EFFECT_ID, fragmentShader: reliefOutlineShader(wantsNormals) });
+        effect = new PostProcessEffect({ name: EFFECT_ID, fragmentShader: reliefDepthOutlineShader() });
         effect.terrainDepthRequired = true;
-        effectUsesNormals = wantsNormals;
-        if (wantsNormals) {
-            // Natively, for the same reason the probe is native: the generated accessor that would
-            // make this a property assignment is only there once the PLUGIN is rebuilt, and an
-            // assignment to a property the wrapper does not know sets a field on a JS object and
-            // tells nobody.
-            effect.getNative().setTerrainNormalsRequired(true);
-        }
     }
-    effect.setFloatParameter('uIntensity', 1);
-    effect.setFloatParameter('uRidgeStrength', get(peakFinderRidgeStrength));
-    effect.setFloatParameter('uRidgeThreshold', get(peakFinderRidgeThreshold));
-    effect.setFloatParameter('uRidgeGroundSpan', get(peakFinderRidgeGroundSpan));
+    // Its near, far and depth units are MERCATOR metres; ours are real ones.
+    const mercatorCos = Math.cos(((viewpoint ?? entryPosition)?.lat ?? 0) * TO_RADIANS);
+    // Its skyline is the operator's own, inked on both sides of the ridge. A horizon boost swaps in our
+    // wider stroke instead, that many texels wide.
+    const skylineWidth = get(peakFinderHorizonBoost);
+    effect.setFloatParameter('uIntensity', GEO_THREE.intensity);
+    effect.setFloatParameter('uOutlineWidth', get(peakFinderOutlineWidth));
+    effect.setFloatParameter('uOutlineGain', GEO_THREE.outlineGain);
+    effect.setFloatParameter('uOutlinePower', GEO_THREE.outlinePower);
+    effect.setFloatParameter('uOutlineFloor', 0);
+    effect.setFloatParameter('uOutlineCeiling', GEO_THREE.outlineCeiling);
+    effect.setFloatParameter('uInkSky', skylineWidth > 0 ? 0 : 1);
+    effect.setFloatParameter('uHorizonBoost', skylineWidth > 0 ? 1 : 0);
+    effect.setFloatParameter('uHorizonWidth', Math.max(skylineWidth, 1));
+    // No distance fade: it has none.
+    effect.setFloatParameter('uInkDistance', 1);
+    effect.setFloatParameter('uInkFar', 1);
+    effect.setFloatParameter('uInkFalloff', 1);
+    effect.setFloatParameter('uDepthNear', GEO_THREE.depthNear * mercatorCos);
+    effect.setFloatParameter('uDepthFar', GEO_THREE.depthFar * mercatorCos);
+    effect.setFloatParameter('uDepthBits', GEO_THREE.depthBits);
+    effect.setFloatParameter('uDepthUnit', GEO_THREE.depthUnitsPerMetre / mercatorCos);
+    // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
+    effect.setFloatParameter('uMetersPerUnit', RELIEF_DEFAULTS.metersPerUnit);
     // AR draws the ink alone, over the camera preview — see the shader's own note.
     effect.setFloatParameter('uTransparent', get(peakFinderArActive) ? 1 : 0);
-    effect.setFloatParameter('uOutlineWidth', get(peakFinderOutlineWidth));
-    effect.setFloatParameter('uHorizonBoost', get(peakFinderHorizonBoost));
-    effect.setFloatParameter('uDepthThreshold', RELIEF_DEFAULTS.depthThreshold);
-    effect.setFloatParameter('uCreaseStrength', get(peakFinderCreaseStrength));
-    effect.setFloatParameter('uCreaseThreshold', get(peakFinderCreaseThreshold));
-    effect.setFloatParameter('uHaze', get(peakFinderHaze));
-    // The depth texture is half resolution with nearest filtering, so a narrower step than this
-    // samples the same texel twice and draws nothing.
-    effect.setFloatParameter('uDepthTexelSize', RELIEF_DEFAULTS.depthTexelSize);
-    effect.setFloatParameter('uGrazingFloor', RELIEF_DEFAULTS.grazingFloor);
-    effect.setFloatParameter('uInkDistance', get(peakFinderInkDistance));
-    effect.setFloatParameter('uInkShadeCap', get(peakFinderInkShadeCap));
-    effect.setFloatParameter('uDebugView', get(peakFinderDebugView));
-    // The outline effect's uFar is in INTERNAL units and its fades are in metres.
-    effect.setFloatParameter('uMetersPerUnit', RELIEF_DEFAULTS.metersPerUnit);
-    effect.setFloatParameter('uSilhouetteGate', get(peakFinderSilhouetteGate));
-    effect.setFloatParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
     effect.setColorParameter('uInkColor', colors.ink);
-    effect.setColorParameter('uPaperColor', colors.paper);
     applyLensCorrection();
     panoramaView.setPostProcessEffect(effect);
 }
@@ -1433,9 +1343,8 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         elevationCacheSize: get(peakFinderElevationCacheSize)
     });
     // After the terrain exists — it is what carries these.
-    applyNormalSampleDistance();
     applyTerrainZoomCap();
-    applyNodeResolution();
+    applyGeoThreeTerrain();
 
     // The camera, placed rather than flown. Before the touch model below: in first person `setTilt`
     // and `setMapRotation` turn the view in PLACE, so a camera set afterwards would spin the view
@@ -1511,7 +1420,6 @@ export function teardownPanorama() {
     panoramaView?.off('layoutChanged', applyFieldOfView);
     panoramaView?.setPostProcessEffect(null);
     effect = null;
-    effectUsesNormals = false;
     // THE LAYERS OFF THE MAP, before anything else is released. `destroy()` unregisters a facade
     // handle; it does not take the layer out of the view's native `Layers`, which holds a
     // shared_ptr. A layer that stays there keeps its TileRenderer, which keeps the
@@ -1777,27 +1685,11 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
 }
 
 applyLive(peakFinderDark, applyPalette);
-applyLive(peakFinderShadeStrength, applyReliefSurface);
-applyLive(peakFinderSlopeShade, applyReliefSurface);
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
-applyLive(peakFinderCreaseStrength, applyReliefOutline);
-applyLive(peakFinderCreaseThreshold, applyReliefOutline);
-applyLive(peakFinderRidgeStrength, applyReliefOutline);
-applyLive(peakFinderRidgeThreshold, applyReliefOutline);
-applyLive(peakFinderRidgeGroundSpan, applyReliefOutline);
-// Rebuilds the effect rather than writing a parameter: the two variants are two shaders.
-applyLive(peakFinderNormalEdges, applyReliefOutline);
-applyLive(peakFinderInkDistance, applyReliefOutline);
-applyLive(peakFinderSilhouetteGate, applyReliefOutline);
-applyLive(peakFinderInkShadeCap, applyReliefOutline);
 // BOTH passes: view 7 is drawn by the SURFACE shader and the rest by the post-process, so a knob
 // that only re-applied the outline left view 7 rendering the normal picture.
 applyLive(peakFinderDebugView, () => {
-    applyReliefSurface();
-    applyReliefOutline();
-});
-applyLive(peakFinderHaze, () => {
     applyReliefSurface();
     applyReliefOutline();
 });
@@ -1824,11 +1716,6 @@ applyLive(peakFinderDetailFeatures, applyDetailPeaksOptions);
 // built - both of which `createPeaks` decides, so both are a rebuild.
 applyLive(peakFinderDetailSource, rebuildPeaksLayer);
 applyLive(peakFinderMeshResolution, () => terrain().set('meshResolution', get(peakFinderMeshResolution)));
-// The height field, which is what the relief actually comes from - the mesh above is only the lattice
-// drawn over it. Both re-decode every cached DEM grid.
-applyLive(peakFinderNodeResolution, applyNodeResolution);
-// Re-bakes the cached meshes' normals rather than re-decoding anything.
-applyLive(peakFinderNormalSampleDistance, applyNormalSampleDistance);
 applyLive(peakFinderTerrainMaxZoom, applyTerrainZoomCap);
 // A re-cull, not a re-decode: `TileLayer` watches this one and drops its cull state when it moves.
 applyLive(peakFinderTileCoarsening, () => terrain().set('maxTileZoomCoarsening', get(peakFinderTileCoarsening)));
