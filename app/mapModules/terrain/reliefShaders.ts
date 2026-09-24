@@ -242,6 +242,32 @@ vec4 surfaceColor() {
     // smoothed away before this shader ran - which is why the hillshade read soft next to
     // peakfinder's and no amount of shade-strength tuning closed the gap. Falls back to v_normal
     // wherever no elevation texture is bound yet.
+    // 22: WHICH PATH THIS FRAGMENT TOOK, which is the only way to tell three states apart that all
+    //     look like "wrong shading": RED no elevation texture (mesh-normal fallback), GREEN a skirt
+    //     (keeps the edge normal), BLUE the per-fragment DEM normal.
+    if (uDebugView > 21.5 && uDebugView < 22.5) {
+        if (v_normal.z < 0.0) { return vec4(0.0, 1.0, 0.0, 1.0); }
+        if (u_demValid < 0.5) { return vec4(1.0, 0.0, 0.0, 1.0); }
+        return vec4(0.0, 0.0, 1.0, 1.0);
+    }
+    // A SKIRT is a crack filler, not a surface. It is a vertical wall hanging from a tile edge, and
+    // it exists only so that the gap between two tiles at different levels is not see-through - it
+    // is meant to be unnoticed, and while the tiles load it is the tallest thing on screen. Shading
+    // it means lighting a vertical face with the normal of the ground above it, and adjacent
+    // columns take adjacent edge vertices, so it bands vertically in hard black and white. Paper:
+    // it fills the crack and says nothing.
+    if (v_normal.z < 0.0) {
+        return vec4(uPaperColor.rgb, 1.0);
+    }
+    // NOT YET SHADEABLE. Without an elevation texture the normal falls back to the mesh's, which is
+    // the pre-per-fragment look: a visibly DIFFERENT shader for the second or two a tile takes to
+    // resolve, so the picture appears to change STYLE rather than to fill in. Measured at 99.9% of
+    // tile passes resolving a texture once settled (80557 against 72), so this costs nothing after
+    // the load it exists for. The silhouette still comes from the post-process, so the tile reads
+    // as terrain throughout. Skirts (z marked negative) keep their own normal and are exempt.
+    if (u_demValid < 0.5 && v_normal.z >= 0.0) {
+        return vec4(uPaperColor.rgb, 1.0);
+    }
     vec3 n = terrainNormal(u_demNormalStep);
     // 20: the DEM uv this fragment resolves to - red/green ramp inside [0,1], BLUE outside it. A
     //     fragment sampling outside its elevation texture reads the clamped edge, so all four taps
