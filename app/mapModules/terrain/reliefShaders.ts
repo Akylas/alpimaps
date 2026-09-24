@@ -395,6 +395,7 @@ uniform float uIntensity;
 uniform float uOutlineWidth;
 uniform float uOutlineGain;
 uniform float uOutlinePower;
+uniform float uOutlineFloor;
 uniform float uInkDistance;
 uniform float uMetersPerUnit;
 uniform vec4 uInkColor;
@@ -427,7 +428,13 @@ void main(void) {
                + abs(depth - depthAt(v_uv - vec2(0.0, offset.y)));
     // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
     // smaller fraction of the far plane the further away it is.
-    float edge = pow(clamp(diff * uOutlineGain / max(depth, 0.0001), 0.0, 1.0), max(uOutlinePower, 0.01));
+    float relative = diff / max(depth, 0.0001);
+    // THE FLOOR IS WHAT MAKES IT A LINE. This operator is a gradient MAGNITUDE, so on a smooth
+    // slope it returns something proportional to how steeply that slope recedes - a continuous
+    // field, not an edge. Amplify it and the whole hillside darkens, which is what gain 40 was
+    // doing: it was not drawing more lines, it was shading. Subtracting the floor first drops the
+    // smooth-slope term to zero and leaves only the steps, so gain then amplifies edges alone.
+    float edge = pow(clamp((relative - uOutlineFloor) * uOutlineGain, 0.0, 1.0), max(uOutlinePower, 0.01));
     // The ink stops before the haze does, or the far ranges are outlined into a solid band.
     float distMetres = depth * uFar * uMetersPerUnit;
     edge *= 1.0 - clamp(distMetres / max(uInkDistance, 1.0), 0.0, 1.0);
