@@ -22,6 +22,7 @@
         peakFinderDark,
         peakFinderEnabled,
         peakFinderFlyElevation,
+        peakFinderHillshade,
         peakFinderHorizonBoost,
         peakFinderLabelAngle,
         peakFinderLabelBand,
@@ -501,9 +502,10 @@
                     storeSlider(peakFinderViewDistanceMetres, lc('viewing_distance'), 10000, 400000, 10000, formatDistance),
                     storeSlider(peakFinderMeshResolution, lc('mesh_resolution'), 32, 512, 32),
                     storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
-                    // The relief: geo-three's look — see GEO_THREE in ~/mapModules/terrain/reliefShaders.ts.
+                    // The relief: peakfinder.com's look — see PEAKFINDER_LOOK in ~/mapModules/terrain/reliefShaders.ts.
                     storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
                     storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.5, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderHillshade, lc('hillshade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
                     // The summit labels. Each of these rebuilds the label decoder, which is why they are
                     // grouped last: they are the expensive ones to drag.
                     storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),

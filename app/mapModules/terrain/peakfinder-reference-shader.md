@@ -73,6 +73,24 @@ color = colors.x + (1.0 - value) * colors.y;
 gl_FragColor = vec4(color, color, color, 1.0);
 ```
 
+## Their runtime values (read 2026-09-25, `cfg=es`)
+
+Read off the live page: hook `useProgram` on its WebGL2 context, trigger a redraw, then
+`gl.getUniform` every active uniform of the programs it bound.
+
+```
+u_fragmentParams0 = [1.297, 1, 0, 1]     // cutoff past the far plane: no distance cutoff at all
+u_fragmentParams1 = [0.6, 0, 0, 8]       // ridge 0.6, slope 0, silhouette 8
+u_fragmentParams2 = [0.3, 0, 0, 0.05]    // cap 0.3, sun-elevation ambient 0, sun 0.05
+u_fragmentParams3 = [0.05, 1, 0, 0]      // shadow-buffer term 0.05
+u_fragmentColors  = [0, 0.97, 0, 0]      // paper 0.97, ink black
+u_sunDirection    = [0.7396, 0.4634, -0.4881]  // x east, y up, z NORTH, towards the sun
+line passes: u_linewidth 6 / u_color 0.1 (skyline), 2 / 0.2 with s_fbTextureDepth (silhouettes)
+```
+
+So the shading pass is faint (ink at most ~0.075, most of it on the shadow side), and the black
+lines are geometry drawn by a pass of their own. `?look=peakfinder` in the SDK web bench ports this.
+
 ## What we took (ported 2026-09-22)
 
 geo-three's outline effect is gone from `reliefShaders.ts`. Term by term, after the port:

@@ -607,9 +607,9 @@ export const PEAK_FINDER_ELEVATION_MAX = 9000;
 
 // --- peak finder: the render ------------------------------------------------------------------
 //
-// geo-three's, so the mode looks like its webapp out of the box. See `GEO_THREE` in
+// peakfinder.com's, so the mode looks like it out of the box. See `PEAKFINDER_LOOK` in
 // app/mapModules/terrain/reliefShaders.ts.
-/** Ink tap distance, px: geo-three's outlineStroke. */
+/** Line width, px: thickens the silhouettes and nothing else. */
 export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1);
 /**
  * Dump one intermediate term of the relief SURFACE shader as an image, instead of the finished
@@ -618,10 +618,14 @@ export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1)
  */
 export const peakFinderDebugView = settingsStore('peakFinderDebugView', 0);
 /**
- * The skyline's width in texels when drawn as OUR heavier stroke; 0 is geo-three's own skyline, the
- * depth operator inking both sides of the ridge.
+ * How much the slopes turned away from the sun shade (`uHillshade`): the hillshade layer's reading,
+ * relative to flat ground so the ground stays paper. The sun is the 3D mode's (`terrainSunAzimuth`,
+ * `terrainSunAltitude`). Looking towards the sun shows the shaded faces; with it behind, most of what
+ * faces the eye is lit and stays white.
  */
-export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 0);
+export const peakFinderHillshade = settingsStore('peakFinderHillshade', 0.15);
+/** The skyline stroke's width in texels, drawn on the terrain side; 0 leaves the silhouette line alone. */
+export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
 
 // --- peak finder: the summit labels -----------------------------------------------------------
 //

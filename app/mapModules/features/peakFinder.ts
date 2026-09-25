@@ -10,7 +10,7 @@ import { lc } from '~/helpers/locale';
 import { type FeatureClickData, featureClickData, getMapContext } from '~/mapModules/MapModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
-import { GEO_THREE, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefDepthOutlineShader, reliefPalette } from '~/mapModules/terrain/reliefShaders';
+import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefDepthOutlineShader, reliefPalette } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
 import type { IItem } from '~/models/Item';
@@ -32,6 +32,7 @@ import {
     peakFinderFlyZoom,
     peakFinderHeading,
     peakFinderHeadingFollowing,
+    peakFinderHillshade,
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
     peakFinderLabelBand,
@@ -61,7 +62,9 @@ import {
     peakFinderViewDistance,
     peakFinderViewDistanceMetres,
     terrainCameraClearance,
-    terrainExaggeration
+    terrainExaggeration,
+    terrainSunAltitude,
+    terrainSunAzimuth
 } from '~/stores/terrainStore';
 import { type CameraFieldOfView, type CameraPreviewInfo, type LensDistortion, type PreviewGeometrySource, cameraFieldOfView } from '~/utils/cameraFov';
 import { type MapPos, bearingBetween, computeDistanceBetween, fromPosition, toPosition } from '~/utils/geo';
@@ -92,8 +95,8 @@ import { lockOrientation } from '~/utils/orientation';
  * data sources the live map is drawing, handed over by handle, so the tiles already in their caches
  * are the tiles the panorama meshes and labels from.
  *
- * The look is geo-three's webapp, term for term — see `GEO_THREE` in `terrain/reliefShaders.ts` — and
- * the callout summit labels are the android demo's, see `terrain/peaksStyle.ts`.
+ * The look is peakfinder.com's — see `PEAKFINDER_LOOK` in `terrain/reliefShaders.ts` — on geo-three's
+ * terrain cut, and the callout summit labels are the android demo's, see `terrain/peaksStyle.ts`.
  */
 
 /** The registry id the panorama's map takes. Two maps in one app must not share the `map` one. */
@@ -401,6 +404,7 @@ function applyFieldOfView() {
         return;
     }
     panorama.set('fieldOfViewY', currentFieldOfViewY());
+    applyPixelAngle();
     // ...and put the camera back where it was. See `zoomForFieldOfView`.
     panoramaView.setZoom(effectiveZoom(), 0);
     applyLensCorrection();
@@ -456,10 +460,11 @@ function applyTerrainZoomCap() {
 }
 
 /**
- * geo-three's terrain cut and mesh (`TerrainOptions.setSubdivideDistance`), and the FULL resolution
- * depth its outline differentiates: at the SDK's half resolution a one-pixel tap lands in the same
- * texel half the time and the skyline comes out as a staircase. Native, as `applyTerrainZoomCap` is:
- * neither option is in the plugin's generated schema.
+ * geo-three's terrain cut and mesh (`TerrainOptions.setSubdivideDistance`), the FULL resolution depth
+ * the outline differentiates (at half resolution a one-pixel tap lands in the same texel half the
+ * time and the skyline staircases), and the ground span the ridge ink measures curvature over - the
+ * DEM textures carry that much of their neighbours, so it is also how far a tap may reach. Native, as
+ * `applyTerrainZoomCap` is: none of the three is in the plugin's generated schema.
  */
 function applyGeoThreeTerrain() {
     const native = terrainNative();
@@ -469,6 +474,7 @@ function applyGeoThreeTerrain() {
         native.setSubdivideDistance(GEO_THREE.subdivideDistance);
     }
     native?.setPostProcessDownscale?.(1);
+    native?.setNormalSampleDistance?.(PEAKFINDER_LOOK.normalSampleDistance);
 }
 
 /** The field of view the view's current shape asks for, or the SDK's own before it has been measured. */
@@ -997,17 +1003,27 @@ function applyReliefSurface() {
     }
     terrainOptions.setSurfaceColorParameter('uPaperColor', colors.paper);
     terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
-    // FLAT: geo-three's surface is lit by an ambient light alone, and all of its relief is the ink.
-    terrainOptions.setSurfaceParameter('uShadeStrength', 0);
+    terrainOptions.setSurfaceParameter('uRidgeInkStrength', PEAKFINDER_LOOK.ridgeInk);
     terrainOptions.setSurfaceParameter('uSlopeShade', 0);
-    terrainOptions.setSurfaceParameter('uAmbient', RELIEF_DEFAULTS.ambient);
-    terrainOptions.setSurfaceParameter('uHaze', 0);
-    terrainOptions.setSurfaceParameter('uHazeDistance', RELIEF_DEFAULTS.hazeDistance);
+    terrainOptions.setSurfaceParameter('uShadeStrength', 0);
+    terrainOptions.setSurfaceParameter('uAmbient', PEAKFINDER_LOOK.ambient);
+    terrainOptions.setSurfaceParameter('uInkCap', PEAKFINDER_LOOK.inkCap);
+    terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
     terrainOptions.setSurfaceParameter('uDebugView', get(peakFinderDebugView));
+    applyPixelAngle();
+}
+
+/** Radians per pixel, which the ridge ink scales its curvature to. Follows the field of view and the view's height. */
+function applyPixelAngle() {
+    const height = panoramaView?.getMeasuredHeight() ?? 0;
+    if (!(height > 0)) {
+        return;
+    }
+    panoramaView?.getTerrainOptions()?.setSurfaceParameter('uPixelAngle', (currentFieldOfViewY() * TO_RADIANS) / height);
 }
 
 /**
- * The ink: geo-three's depth outline (`reliefDepthOutlineShader`).
+ * The ink: silhouettes only (`reliefDepthOutlineShader`, operator 2), and the skyline stroke.
  *
  * The SDK gives the mechanism — an offscreen frame, the packed terrain depth and named parameters —
  * and the shader is the look. Object API only: the surface API carries no `postProcessEffect`.
@@ -1023,28 +1039,17 @@ function applyReliefOutline() {
         effect = new PostProcessEffect({ name: EFFECT_ID, fragmentShader: reliefDepthOutlineShader() });
         effect.terrainDepthRequired = true;
     }
-    // Its near, far and depth units are MERCATOR metres; ours are real ones.
-    const mercatorCos = Math.cos(((viewpoint ?? entryPosition)?.lat ?? 0) * TO_RADIANS);
-    // Its skyline is the operator's own, inked on both sides of the ridge. A horizon boost swaps in our
-    // wider stroke instead, that many texels wide.
     const skylineWidth = get(peakFinderHorizonBoost);
-    effect.setFloatParameter('uIntensity', GEO_THREE.intensity);
+    effect.setFloatParameter('uOperator', 2);
+    effect.setFloatParameter('uIntensity', PEAKFINDER_LOOK.silhouetteInk);
     effect.setFloatParameter('uOutlineWidth', get(peakFinderOutlineWidth));
-    effect.setFloatParameter('uOutlineGain', GEO_THREE.outlineGain);
-    effect.setFloatParameter('uOutlinePower', GEO_THREE.outlinePower);
-    effect.setFloatParameter('uOutlineFloor', 0);
-    effect.setFloatParameter('uOutlineCeiling', GEO_THREE.outlineCeiling);
-    effect.setFloatParameter('uInkSky', skylineWidth > 0 ? 0 : 1);
-    effect.setFloatParameter('uHorizonBoost', skylineWidth > 0 ? 1 : 0);
+    effect.setFloatParameter('uOutlineGain', PEAKFINDER_LOOK.silhouetteGain);
+    effect.setFloatParameter('uOutlinePower', 1);
+    effect.setFloatParameter('uOutlineFloor', PEAKFINDER_LOOK.silhouetteFloor);
+    effect.setFloatParameter('uOutlineCeiling', 1);
+    effect.setFloatParameter('uInkSky', 0);
+    effect.setFloatParameter('uHorizonBoost', skylineWidth > 0 ? PEAKFINDER_LOOK.skylineInk : 0);
     effect.setFloatParameter('uHorizonWidth', Math.max(skylineWidth, 1));
-    // No distance fade: it has none.
-    effect.setFloatParameter('uInkDistance', 1);
-    effect.setFloatParameter('uInkFar', 1);
-    effect.setFloatParameter('uInkFalloff', 1);
-    effect.setFloatParameter('uDepthNear', GEO_THREE.depthNear * mercatorCos);
-    effect.setFloatParameter('uDepthFar', GEO_THREE.depthFar * mercatorCos);
-    effect.setFloatParameter('uDepthBits', GEO_THREE.depthBits);
-    effect.setFloatParameter('uDepthUnit', GEO_THREE.depthUnitsPerMetre / mercatorCos);
     // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
     effect.setFloatParameter('uMetersPerUnit', RELIEF_DEFAULTS.metersPerUnit);
     // AR draws the ink alone, over the camera preview — see the shader's own note.
@@ -1088,6 +1093,19 @@ function applyAtmosphere() {
         clearColor: transparent ? 0 : paper
     });
     terrain().set('backgroundColor', transparent ? 0 : paper);
+}
+
+/**
+ * The sun the hillshade shades from: the 3D mode's. Overriding the style's, which would win otherwise
+ * (`resolveLighting`), and with no shadows - the surface shader draws all of the light there is.
+ */
+function applySun() {
+    panorama?.light({ type: 'light' }).apply({
+        sunOverridingStyle: true,
+        sunAzimuth: get(terrainSunAzimuth),
+        sunAltitude: get(terrainSunAltitude),
+        shadowStrength: 0
+    });
 }
 
 /** Re-applies everything the light/dark switch touches. The label palette is style text, so the
@@ -1366,6 +1384,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
+    applySun();
     // BEFORE the layer, because the style bakes the eye's altitude into `text-rank` and a style is
     // text - getting it afterwards would mean rebuilding the decoder and the layer to correct it.
     // After the camera, because the viewpoint is where we now STAND. On a worker, and on DEM tiles
@@ -1687,6 +1706,9 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
 applyLive(peakFinderDark, applyPalette);
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
+applyLive(peakFinderHillshade, applyReliefSurface);
+applyLive(terrainSunAzimuth, applySun);
+applyLive(terrainSunAltitude, applySun);
 // BOTH passes: view 7 is drawn by the SURFACE shader and the rest by the post-process, so a knob
 // that only re-applied the outline left view 7 rendering the normal picture.
 applyLive(peakFinderDebugView, () => {
