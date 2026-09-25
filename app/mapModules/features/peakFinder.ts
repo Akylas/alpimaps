@@ -1273,7 +1273,9 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         tiltRange: PANORAMA_RANGE,
         layersLabelsProcessedInReverseOrder: true,
         restrictedPanning: true,
-        kineticRotation: false
+        // In first person this is the LOOK's glide (KineticEventHandler::startLook): the view keeps
+        // turning about the eye after a flick and slows to a stop.
+        kineticRotation: true
     });
 
     // The terrain, from the live map's own DEM. `flattened` false from the start: this map has never
