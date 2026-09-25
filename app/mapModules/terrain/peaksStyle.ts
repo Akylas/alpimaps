@@ -22,7 +22,7 @@ export interface PeaksStyleOptions {
     textSize?: number;
     /** Rotation of the label text, degrees, off the leader line. */
     textAngle?: number;
-    /** Where the label band sits, as a fraction of the screen height from the top. */
+    /** The highest the label row may sit, as a fraction of the screen height from the top: it comes down to just above the highest summit. */
     band?: number;
     /** All labels in one row under the top edge instead of a band lower down. */
     pinTop?: boolean;
@@ -148,6 +148,9 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // skyline and the packing becomes two-dimensional — which is what peakfinder.com draws, and
         // most of why it fits far more names on the same screen.
         followSkyline ? '' : `  text-callout-screen-anchor: ${pinTop ? topOffset : band};`,
+        // peakfinder.com's row: just above the highest summit on screen, `band` the highest it may go.
+        // A row pinned at the top stays put.
+        followSkyline || pinTop ? '' : '  text-callout-band-follow: true;',
         '  text-callout-offset: 10;',
         // How far apart the rows sit, and it has to clear the plate's own VERTICAL extent or the
         // rows overlap and stacking buys nothing. A rotated plate is a diagonal bar: a name of width
