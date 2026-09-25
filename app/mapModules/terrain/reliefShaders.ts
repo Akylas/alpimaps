@@ -28,6 +28,7 @@ import { isEInk } from '~/helpers/theme';
  *
  *     varying vec3  v_normal;    // unit surface normal, x east, y north, z up
  *     varying vec3  v_worldPos;
+ *     varying vec2  v_demUv;     // this fragment in the tile's elevation texture
  *     varying float v_elevation; // metres, BEFORE exaggeration
  *     varying float v_dist;      // metres from the camera
  *     uniform vec3  u_sunDir;
@@ -40,6 +41,7 @@ import { isEInk } from '~/helpers/theme';
  *     uniform float u_zoom;
  *     uniform vec2  u_resolution;
  *     float fogAmount(float dist);
+ *     float terrainHeightUv(vec2 uv), vec3 terrainNormal(float stepMetres), and the u_dem* uniforms
  *
  * plus every uniform named by setSurfaceParameter / setSurfaceColorParameter.
  */
@@ -120,10 +122,6 @@ export const RELIEF_DEFAULTS = {
      * as `u_metersPerUnit`; a PostProcessEffect gets only what the app sets.
      */
     metersPerUnit: 40075016.68558 / (1 << 20),
-    /** RELIEF_AMBIENT: light left on a slope facing away from the sun. */
-    ambient: 0.35,
-    /** RELIEF_HAZE_DISTANCE, metres. */
-    hazeDistance: 60000,
     /** RELIEF_DEPTH_THRESHOLD: silhouette sensitivity. */
     depthThreshold: 1,
     /** The depth texture is half resolution, so a narrower step samples the same texel twice. */
@@ -133,51 +131,51 @@ export const RELIEF_DEFAULTS = {
 };
 
 /**
- * The peak finder's look is geo-three's webapp, term for term (`geo-three/webapp`: `app.ts`
- * `CustomOutlineEffect`, `MaterialHeightShader`, `LODFrustum`), for `reliefDepthOutlineShader`. The
- * web bench's `?look=geothree` measures the port against the webapp itself; its PANORAMA-NOTES.md has
- * the derivation of each number.
+ * The terrain the peak finder stands on is geo-three's cut and mesh (`geo-three/webapp`
+ * `LODFrustum`, `getGeometry`): `TerrainOptions.setSubdivideDistance`.
  */
 export const GEO_THREE = {
-    /** depthMultiplier. */
-    outlineGain: 11,
-    /**
-     * depthBiais, 0.23, DOUBLED: its terrain is transparent and its outline is mixed in alpha included,
-     * so the ink is d * d / 2 - which is also why its intensity is a half and an edge may reach 2.
-     */
-    outlinePower: 0.46,
-    outlineCeiling: 2,
-    intensity: 0.5,
-    /** Its camera near and far, MERCATOR metres: multiply by cos(latitude) for real ones. */
-    depthNear: 10,
-    depthFar: 173000,
-    /** Its depth buffer is DEPTH_COMPONENT24, in a world of 1e-5 units per mercator metre. */
-    depthBits: 24,
-    depthUnitsPerMetre: 1e-5,
-    /** LODFrustum.subdivideDistance on desktop: `TerrainOptions.setSubdivideDistance`. */
-    subdivideDistance: 70,
-    /** The skyline stroke width our heavier skyline (`peakFinderHorizonBoost`) draws at, texels. */
-    horizonWidth: 3
+    /** LODFrustum.subdivideDistance on desktop. */
+    subdivideDistance: 70
 };
 
 /**
- * The shaded relief the ink lines are drawn over: Lambert shading between a paper and a shade colour,
- * with the distance pulling everything back towards the paper — so a panorama reads as a stack of ever
- * paler ridges.
- *
- * Plus a SUN-INDEPENDENT slope term, which is peakfinder.com's and is most of why their panorama has
- * relief in it where ours has a flat wash. Theirs is `length(normal.xz) * P1.z` added straight into
- * the darkness (`pp_t_*_frg` in their wasm, where y is up); `length(n.xy)` is the same quantity here,
- * the sine of the slope angle, because `v_normal` is unit with z up. It reads as hillshading without
- * being one: a slope is dark because it is steep, not because it faces away from anything, so it does
- * not vanish on the shadow side and does not move when the sun does.
- *
- * Lambert stays on top of it — that is their model too (ambient + `-dot(sunDir, n)` + a cast-shadow
- * term we have no raster for). The two are ADDED before the clamp rather than multiplied, so the
- * slope term still reads on ground the sun has already darkened.
+ * The peak finder's look is peakfinder.com's (`cfg=es`, see `peakfinder-reference-shader.md`): its
+ * shading pass for `RELIEF_SURFACE_SHADER` and its silhouette lines for `reliefDepthOutlineShader`.
+ * The SDK web bench's `?look=peakfinder` measures it against a capture of theirs; its
+ * PANORAMA-NOTES.md has the derivation.
+ */
+export const PEAKFINDER_LOOK = {
+    /** Ink off the DEM's curvature, per pixel of ground (`uRidgeInkStrength`). */
+    ridgeInk: 0.3,
+    /** The curvature's ground span, metres (`TerrainOptions.normalSampleDistance`). */
+    normalSampleDistance: 40,
+    /**
+     * The most ink the ridge texture may carry, whatever the sun (`uAmbient`). It stands in for their
+     * shadow-buffer term, which we have no input for. The sun does not cap it: capped by the sun,
+     * every sunlit face is blank paper. The sun shades through the hillshade instead
+     * (`peakFinderHillshade`).
+     */
+    ambient: 0.06,
+    inkCap: 0.3,
+    /** Silhouettes only (`uOperator` 2): the relative depth jump that inks, and its gain. */
+    silhouetteFloor: 0.008,
+    silhouetteGain: 12,
+    /** Their silhouette lines are 0.2 grey and their skyline 0.1. */
+    silhouetteInk: 0.8,
+    skylineInk: 0.9
+};
+
+/**
+ * The shaded relief the ink lines are drawn over, on peakfinder.com's model: a slope term
+ * (`length(n.xy)`, the sine of the tilt) and a ridge term (how far the normal turns across a pixel)
+ * ADDED, then CAPPED by the light (ambient + a sun term bounded at -0.2), then mixed from paper
+ * towards shade. Sunlit faces stay paper; the shadow side carries the relief. A hillshade term
+ * (`uHillshade`) is added after the cap: the sun's azimuth decides which slopes it shades.
  *
  * No fog term: the SDK applies the frame's own fog to whatever this returns.
- * Uniforms: uPaperColor, uShadeColor, uShadeStrength, uSlopeShade, uAmbient, uHaze, uHazeDistance.
+ * Uniforms: uPaperColor, uShadeColor, uShadeStrength, uSlopeShade, uAmbient, uHillshade, uInkCap, uRidgeInkStrength,
+ * uPixelAngle.
  */
 export const RELIEF_SURFACE_SHADER = `
 uniform vec4 uPaperColor;
@@ -185,24 +183,58 @@ uniform vec4 uShadeColor;
 uniform float uShadeStrength;
 uniform float uSlopeShade;
 uniform float uAmbient;
-uniform float uHaze;
-uniform float uHazeDistance;
+uniform float uHillshade;
 uniform float uDebugView;
-// THE RIDGE LINES, drawn HERE rather than in the post-process.
-//
-// The post-process reads a packed buffer at a fraction of the screen's resolution, so a line it
-// draws can never be finer than that buffer's texel however sharp the operator is. The surface pass
-// runs at full resolution and can read the elevation texture directly, which is where the crests
-// actually are - geo-three shades in the material for the same reason and leaves the post-process
-// nothing but silhouettes.
-//
-// A crest is where the height field is CONVEX: the discrete laplacian over a fixed ground span is
-// negative there and positive in a gully. Measuring it over a span in METRES rather than in texels
-// or pixels keeps a ridge the same weight whatever the DEM level under it and whatever the zoom.
+// The most ink the light allows anywhere (theirs 0.3).
+uniform float uInkCap;
+// The RIDGE term: how far the surface normal turns across one screen pixel, which is peakfinder.com's
+// interior line (the screen-space gradient of their normal buffer). Measured here off the elevation
+// texture instead and scaled to the ground one pixel covers (v_dist * uPixelAngle, radians per pixel).
 uniform float uRidgeInkStrength;
-uniform float uRidgeInkSpan;
-uniform float uRidgeInkThreshold;
-uniform vec4 uInkColor;
+uniform float uPixelAngle;
+// Bilinear by hand: the texture's own filter is not exact on a packed height (terrarium's R carries
+// every 256 m), which put a ~1 m step on every 256 m contour - a spike for any derivative.
+float exactHeightUv(vec2 uv) {
+    vec2 texel = uv / u_demInvTexSize - 0.5;
+    vec2 base = floor(texel);
+    vec2 f = texel - base;
+    vec2 at = (base + 0.5) * u_demInvTexSize;
+    float h00 = terrainHeightUv(at);
+    float h10 = terrainHeightUv(at + vec2(u_demInvTexSize.x, 0.0));
+    float h01 = terrainHeightUv(at + vec2(0.0, u_demInvTexSize.y));
+    float h11 = terrainHeightUv(at + u_demInvTexSize);
+    return mix(mix(h00, h10, f.x), mix(h01, h11, f.x), f.y);
+}
+float terrainTurn() {
+    if (u_demValid < 0.5 || uRidgeInkStrength <= 0.0) {
+        return 0.0;
+    }
+    // The curvature is measured over u_demNormalStep (TerrainOptions::normalSampleDistance): the
+    // scale of relief worth a line, where a fine DEM taken texel by texel is mostly noise - and as
+    // far as the texture's border of neighbour data reaches, so no tap reads past it.
+    float equatorTexel = max(u_demMetersPerTexel, 0.0001);
+    float stepTexels = max(u_demNormalStep / equatorTexel, 1.0);
+    float mercatorY = v_worldPos.y * u_demMercatorYScale;
+    float stepMetres = stepTexels * equatorTexel * 2.0 / (exp(mercatorY) + exp(-mercatorY));
+    // In the texture's own uv (v_demUv): v_worldPos is too coarse in float for taps a texel apart.
+    vec2 tapStep = vec2(stepTexels) * u_demInvTexSize;
+    vec2 uv = v_demUv;
+    float h = exactHeightUv(uv);
+    float east = exactHeightUv(uv + vec2(tapStep.x, 0.0));
+    float west = exactHeightUv(uv - vec2(tapStep.x, 0.0));
+    float north = exactHeightUv(uv + vec2(0.0, tapStep.y));
+    float south = exactHeightUv(uv - vec2(0.0, tapStep.y));
+    float twist = exactHeightUv(uv + tapStep) - exactHeightUv(uv + vec2(tapStep.x, -tapStep.y))
+                - exactHeightUv(uv + vec2(-tapStep.x, tapStep.y)) + exactHeightUv(uv - tapStep);
+    // The hessian over the step, times the two-pixel span of their central difference.
+    float hxx = (east - 2.0 * h + west) / stepMetres;
+    float hyy = (north - 2.0 * h + south) / stepMetres;
+    float hxy = twist / (4.0 * stepMetres);
+    vec2 slope = vec2(east - west, north - south) / (2.0 * stepMetres);
+    // Then to ONE PIXEL's worth of turn, as theirs is, so a ridge inks as it does on their screen.
+    float pixelMetres = v_dist * uPixelAngle;
+    return 2.0 * sqrt(hxx * hxx + 2.0 * hxy * hxy + hyy * hyy) / (1.0 + dot(slope, slope)) * pixelMetres / stepMetres;
+}
 // Set by TerrainRenderer::renderTiles, per tile, from the MESH: (gridSize, attribsRefined, demZoom).
 uniform vec4 u_tileDebug;
 vec4 surfaceColor() {
@@ -310,42 +342,21 @@ vec4 surfaceColor() {
         float scaled = clamp(u_demMetersPerTexel / 200.0, 0.0, 1.0);
         return vec4(scaled, scaled, scaled, 1.0);
     }
-    // THE SUN TERM, BOUNDED AT BOTH ENDS - peakfinder.com's 'max(-0.2, -dot(sunDir, n)) * P2.w'.
-    //
-    // A plain Lambert makes the picture depend on which way you are LOOKING, because which way you
-    // look decides which aspects you see. 'max(dot(n, sun), 0)' saturates at both ends: a face square
-    // to the sun goes to pure paper and loses all its relief, and every face turned even slightly
-    // away is equally dark, so the shadow side has no gradation either. Turn on the spot and a range
-    // facing the sun is a white blank while the one behind you is full of detail - which is exactly
-    // the "in one direction we see it, in the other it is very light" report.
-    //
-    // Theirs clamps the LIT side at -0.2 instead of 0, so a sunward face still keeps most of its
-    // shading, and it does NOT clamp the shadow side at zero, so that side keeps grading all the way
-    // to fully-opposite. The relief then reads the same whichever way the camera points.
-    float sunDarkness = max(-0.2, -dot(n, normalize(u_sunDir)));
-    float darkness = clamp(uShadeStrength * (uAmbient + sunDarkness) + uSlopeShade * length(n.xy), 0.0, 1.0);
-    vec3 color = mix(uPaperColor.rgb, uShadeColor.rgb, darkness);
+    // PEAKFINDER.COM'S MODEL (peakfinder-reference-shader.md): the ink is the slope and the ridge
+    // terms ADDED, and then CAPPED by the light - so a face turned to the sun stays paper whatever its
+    // relief, and only the shadow side shows its gullies. The cap is what keeps the ground white at
+    // every distance, where adding the light instead greys everything out.
+    // Theirs at cfg=es: ridge 0.6, slope 0, sun 0.05, cap 0.3 (u_fragmentParams1/2, read off the page).
+    vec3 sun = normalize(u_sunDir);
+    float value = uSlopeShade * length(n.xy) + uRidgeInkStrength * terrainTurn();
+    float light = min(uAmbient + uShadeStrength * max(-0.2, -dot(n, sun)), 1.0);
+    value = min(value, min(light, uInkCap));
+    // THE HILLSHADE, on top of the cap: how much less sun a face gets than flat ground does, so flat
+    // ground stays paper, a face towards the sun stays paper, and a face turned away shades by how far
+    // it is turned - the hillshade layer's reading, and it moves with the sun's azimuth.
+    value = clamp(value + uHillshade * max(sun.z - dot(n, sun), 0.0), -1.0, 1.0);
+    vec3 color = clamp(mix(uPaperColor.rgb, uShadeColor.rgb, value), 0.0, 1.0);
 
-    // The crest term. Four taps of the elevation texture at +/- the span, against the centre: the
-    // laplacian is in metres of height over a span in metres, so it is a curvature and not a
-    // number that moves with the camera. Only the convex side draws - a gully is not a ridge.
-    float ridgeInk = 0.0;
-    if (uRidgeInkStrength > 0.0 && u_demValid > 0.5) {
-        float span = max(uRidgeInkSpan, 1.0);
-        vec2 stepInternal = vec2(span / max(u_demMetersPerTexel, 0.0001)) * u_demOriginSize.zw * u_demInvTexSize;
-        float centre = terrainHeightMetres(v_worldPos.xy);
-        float curvature = terrainHeightMetres(v_worldPos.xy - vec2(stepInternal.x, 0.0))
-                        + terrainHeightMetres(v_worldPos.xy + vec2(stepInternal.x, 0.0))
-                        + terrainHeightMetres(v_worldPos.xy - vec2(0.0, stepInternal.y))
-                        + terrainHeightMetres(v_worldPos.xy + vec2(0.0, stepInternal.y))
-                        - 4.0 * centre;
-        // Per span, so the threshold is a slope CHANGE and reads the same at every DEM level.
-        float convex = max(-curvature, 0.0) / span;
-        ridgeInk = clamp((convex - uRidgeInkThreshold) * uRidgeInkStrength, 0.0, 1.0);
-    }
-    color = mix(color, uInkColor.rgb, ridgeInk);
-
-    color = mix(color, uPaperColor.rgb, clamp(v_dist / max(uHazeDistance, 1.0), 0.0, 1.0) * uHaze);
     // 13: TILE BOUNDARIES OVER THE REAL SHADING. Applied at the end, not as an early return, so the
     // picture is the actual one with a checker laid over it. Every per-tile property measured so far
     // - gridSize, refined, demZoom, staleness - is uniform while regions still differ, so this tests
@@ -482,6 +493,9 @@ uniform sampler2D uTerrainDepthTex;
 uniform vec2 uInvScreenSize;
 uniform float uFar;
 uniform float uIntensity;
+// 0 geo-three's (linear depth over uDepthNear..uDepthFar), 1 ours relative to the depth, 2 silhouettes
+// only (peakfinder.com's lines) - see operatorAt.
+uniform float uOperator;
 uniform float uOutlineWidth;
 uniform float uOutlineGain;
 uniform float uOutlinePower;
@@ -490,10 +504,7 @@ uniform float uOutlineCeiling;
 uniform float uInkSky;
 uniform float uHorizonBoost;
 uniform float uHorizonWidth;
-uniform float uInkDistance;
-uniform float uInkFar;
-uniform float uInkFalloff;
-// The camera range the outline measures depth over, metres. 0 keeps the old relative operator.
+// The camera range the outline measures depth over, metres. uDepthFar 0 is the frame's own far plane.
 uniform float uDepthNear;
 uniform float uDepthFar;
 // The reference's hardware depth: its bits (0 keeps our own linear depth) and world units per metre.
@@ -515,6 +526,9 @@ float coverage(vec4 c) {
 float depthAt(vec2 uv) {
     return unpackDepth(texture2D(uTerrainDepthTex, uv));
 }
+float metresAt(vec4 c) {
+    return unpackDepth(c) * uFar * uMetersPerUnit;
+}
 /**
  * The reference's depth, which is not ours.
  *
@@ -525,26 +539,73 @@ float depthAt(vec2 uv) {
  * reference's depthMultiplier of 11 means something else applied to our numbers, which is most of
  * why matching its render by tuning never converged.
  *
- * uDepthFar <= 0 keeps the old behaviour (divide by the depth itself), so the render that was
- * approved before this existed is still one uniform away.
+ * The sky is 1, as its cleared depth buffer is. Ground past uDepthFar is NOT clipped to it: the
+ * reference never draws any, but a view reaching further should still ink its ranges.
  */
 float linearDepthAt(vec2 uv) {
-    float metres = depthAt(uv) * uFar * uMetersPerUnit;
+    vec4 c = texture2D(uTerrainDepthTex, uv);
+    if (coverage(c) < 0.5) {
+        return 1.0;
+    }
+    float metres = metresAt(c);
+    float farMetres = uDepthFar > 0.0 ? uDepthFar : uFar * uMetersPerUnit;
     if (uDepthBits > 0.0) {
         // The reference's depth: a perspective depth over near..far in its own world units
         // (uDepthUnit per metre), stored in uDepthBits bits and linearised back by three.js in
         // float. Its step grows with the square of the distance, so far slopes band rather than
         // shade. Same expressions as perspectiveDepthToViewZ and viewZToOrthographicDepth.
         float near = uDepthNear * uDepthUnit;
-        float far = uDepthFar * uDepthUnit;
-        // The sky clears to 1, and nothing past the far plane is drawn.
-        float hardware = min((far / (far - near)) * (1.0 - near / max(metres * uDepthUnit, near)), 1.0);
+        float far = farMetres * uDepthUnit;
+        float hardware = (far / (far - near)) * (1.0 - near / max(metres * uDepthUnit, near));
         float steps = exp2(uDepthBits) - 1.0;
         hardware = floor(hardware * steps + 0.5) / steps;
         float viewZ = (near * far) / ((far - near) * hardware - far);
         return (viewZ + near) / (near - far);
     }
-    return clamp((metres - uDepthNear) / max(uDepthFar - uDepthNear, 1.0), 0.0, 1.0);
+    return max((metres - uDepthNear) / max(farMetres - uDepthNear, 1.0), 0.0);
+}
+// 1 / distance, 0 for the sky: on any PLANE this is linear in screen space, so its laplacian is zero
+// on every slope however steep or far, and only a crease or an occlusion survives it.
+float inverseDepthAt(vec2 uv) {
+    vec4 c = texture2D(uTerrainDepthTex, uv);
+    return coverage(c) < 0.5 ? 0.0 : 1.0 / max(metresAt(c), 1.0);
+}
+
+// The outline operator at one pixel, over taps one pixel away.
+float operatorAt(vec2 uv) {
+    vec2 offset = uInvScreenSize;
+    if (uOperator > 1.5) {
+        // SILHOUETTES ONLY, which is what peakfinder.com's black lines are (a line pass of their own,
+        // not their shading). The laplacian of inverse depth, NEAR side only: negative where the
+        // neighbours are further than the plane through this pixel would put them, i.e. where this
+        // pixel hides ground behind it. Relative, so a jump of a given fraction inks the same near or
+        // far, and a sky neighbour counts as infinitely far - the skyline is a silhouette too.
+        float centre = inverseDepthAt(uv);
+        if (centre <= 0.0) {
+            return 0.0;
+        }
+        float laplacian = inverseDepthAt(uv + vec2(offset.x, 0.0)) + inverseDepthAt(uv - vec2(offset.x, 0.0))
+                        + inverseDepthAt(uv + vec2(0.0, offset.y)) + inverseDepthAt(uv - vec2(0.0, offset.y))
+                        - 4.0 * centre;
+        return max(-laplacian / centre, 0.0);
+    }
+    if (uOperator > 0.5) {
+        float depth = depthAt(uv);
+        float diff = abs(depth - depthAt(uv + vec2(offset.x, 0.0)))
+                   + abs(depth - depthAt(uv - vec2(offset.x, 0.0)))
+                   + abs(depth - depthAt(uv + vec2(0.0, offset.y)))
+                   + abs(depth - depthAt(uv - vec2(0.0, offset.y)));
+        // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
+        // smaller fraction of the far plane the further away it is.
+        return diff / max(depth, 0.0001);
+    }
+    // The reference's operator, term for term: four taps of a LINEAR depth, summed as absolute
+    // differences, and no division by anything. The scale lives in uDepthNear/uDepthFar.
+    float centreLinear = linearDepthAt(uv);
+    return abs(centreLinear - linearDepthAt(uv + vec2(offset.x, 0.0)))
+         + abs(centreLinear - linearDepthAt(uv - vec2(offset.x, 0.0)))
+         + abs(centreLinear - linearDepthAt(uv + vec2(0.0, offset.y)))
+         + abs(centreLinear - linearDepthAt(uv - vec2(0.0, offset.y)));
 }
 
 void main(void) {
@@ -559,25 +620,16 @@ void main(void) {
         gl_FragColor = color;
         return;
     }
-    float depth = unpackDepth(centre);
-    vec2 offset = uInvScreenSize * max(uOutlineWidth, 1.0);
-    float relative;
-    if (uDepthFar > 0.0) {
-        // The reference's operator, term for term: four taps of a LINEAR depth, summed as absolute
-        // differences, and no division by anything. The scale lives in uDepthNear/uDepthFar.
-        float centreLinear = linearDepthAt(v_uv);
-        relative = abs(centreLinear - linearDepthAt(v_uv + vec2(offset.x, 0.0)))
-                 + abs(centreLinear - linearDepthAt(v_uv - vec2(offset.x, 0.0)))
-                 + abs(centreLinear - linearDepthAt(v_uv + vec2(0.0, offset.y)))
-                 + abs(centreLinear - linearDepthAt(v_uv - vec2(0.0, offset.y)));
-    } else {
-        float diff = abs(depth - depthAt(v_uv + vec2(offset.x, 0.0)))
-                   + abs(depth - depthAt(v_uv - vec2(offset.x, 0.0)))
-                   + abs(depth - depthAt(v_uv + vec2(0.0, offset.y)))
-                   + abs(depth - depthAt(v_uv - vec2(0.0, offset.y)));
-        // Scaled by the depth itself, so a far ridge inks like a near one: the same ground step is a
-        // smaller fraction of the far plane the further away it is.
-        relative = diff / max(depth, 0.0001);
+    // uOutlineWidth DILATES the one-pixel operator rather than spreading its taps: wider taps measure
+    // a slope over more ground, which greyed the whole picture along with thickening the lines.
+    float relative = operatorAt(v_uv);
+    for (int ring = 1; ring < 4; ring++) {
+        if (float(ring) >= uOutlineWidth) {
+            break;
+        }
+        vec2 reach = uInvScreenSize * float(ring);
+        relative = max(relative, max(max(operatorAt(v_uv + vec2(reach.x, 0.0)), operatorAt(v_uv - vec2(reach.x, 0.0))),
+                                     max(operatorAt(v_uv + vec2(0.0, reach.y)), operatorAt(v_uv - vec2(0.0, reach.y)))));
     }
     // uOutlineFloor is a subtraction BEFORE the gain, and it is 0 by default - which is the
     // reference's behaviour and the look this mode is judged against. This operator is a gradient
@@ -588,34 +640,24 @@ void main(void) {
     // The reference's is 2: its outline is mixed into a TRANSPARENT terrain, alpha included, so its
     // ink is min(d * d * 0.5, 1) - a strong step reaches black even at its intensity of a half.
     float ceiling = uOutlineCeiling > 0.0 ? uOutlineCeiling : 1.0;
-    float edge = min(pow(max((relative - uOutlineFloor) * uOutlineGain, 0.0), max(uOutlinePower, 0.01)), ceiling);
-    // THE FAR RANGES ARE THE POINT OF A PANORAMA, so the distance fade goes to a FLOOR rather than
-    // to zero. It used to be 1 - dist/uInkDistance, which erases every line at uInkDistance exactly
-    // - and the ridges a peak finder exists to name are the ones past it. uInkFar is what is left
-    // at that distance and beyond, and uInkFalloff shapes the approach: above 1 the fade holds off
-    // and then drops, which keeps the near ground from thinning while the far ranges still lighten.
-    float distMetres = depth * uFar * uMetersPerUnit;
-    float far = clamp(distMetres / max(uInkDistance, 1.0), 0.0, 1.0);
-    edge *= mix(1.0, clamp(uInkFar, 0.0, 1.0), pow(far, max(uInkFalloff, 0.01)));
-    // THE HORIZON IS THE ONE LINE THAT SHOULD BE HEAVIER. A depth operator cannot draw it at all:
-    // the sky is not in the depth buffer, so the ridge against it has no neighbour to differ from
-    // and comes out the same weight as an interior fold. Coverage answers what depth cannot - a
-    // neighbour with none is sky - and the test runs at its own width, so the skyline is a
-    // deliberately fatter stroke rather than a brighter one.
-    vec2 skyOffset = uInvScreenSize * max(uOutlineWidth, 1.0) * max(uHorizonWidth, 1.0);
+    float edge = min(pow(max((relative - uOutlineFloor) * uOutlineGain, 0.0), max(uOutlinePower, 0.01)), ceiling) * uIntensity;
+    // THE SKYLINE, as a stroke of its own width and weight. A depth operator draws it no heavier
+    // than an interior fold; coverage says which neighbour is sky. Terrain side only, so it adds to
+    // the reference's two-sided skyline (uInkSky) rather than filling the sky.
+    vec2 skyOffset = uInvScreenSize * max(uHorizonWidth, 1.0);
     float skyNeighbour = 1.0 - min(
         min(coverage(texture2D(uTerrainDepthTex, v_uv + vec2(skyOffset.x, 0.0))),
             coverage(texture2D(uTerrainDepthTex, v_uv - vec2(skyOffset.x, 0.0)))),
         min(coverage(texture2D(uTerrainDepthTex, v_uv + vec2(0.0, skyOffset.y))),
             coverage(texture2D(uTerrainDepthTex, v_uv - vec2(0.0, skyOffset.y)))));
-    edge = max(edge, clamp(skyNeighbour * uHorizonBoost, 0.0, 1.0));
+    edge = clamp(max(edge, skyNeighbour * coverage(centre) * uHorizonBoost), 0.0, 1.0);
     if (uTransparent > 0.5) {
         // PREMULTIPLIED, and the labels over the lines, as in reliefOutlineShader.
-        float inkAlpha = clamp(edge * uIntensity, 0.0, 1.0) * uInkColor.a;
+        float inkAlpha = edge * uInkColor.a;
         gl_FragColor = color + vec4(uInkColor.rgb * inkAlpha, inkAlpha) * (1.0 - color.a);
         return;
     }
-    gl_FragColor = vec4(mix(color.rgb, uInkColor.rgb, edge * uIntensity), color.a);
+    gl_FragColor = vec4(mix(color.rgb, uInkColor.rgb, edge), color.a);
 }
 `;
 }

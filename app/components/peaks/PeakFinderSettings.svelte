@@ -24,6 +24,7 @@
         peakFinderDetailLevels,
         peakFinderDetailSource,
         peakFinderFlyElevation,
+        peakFinderHillshade,
         peakFinderHorizonBoost,
         peakFinderLabelAngle,
         peakFinderLabelBand,
@@ -47,7 +48,9 @@
         peakFinderTileCoarsening,
         peakFinderTilt,
         peakFinderViewDistance,
-        peakFinderViewDistanceMetres
+        peakFinderViewDistanceMetres,
+        terrainSunAltitude,
+        terrainSunAzimuth
     } from '~/stores/terrainStore';
     import { colors, screenHeightDips, windowInset } from '~/variables';
 
@@ -198,8 +201,11 @@
         section(lc('relief')),
         { type: 'slider', store: peakFinderDebugView, title: lc('debug_view'), description: lc('debug_view_desc'), min: 0, max: 14, step: 1, format: whole },
         { type: 'slider', store: peakFinderOutlineWidth, title: lc('outline_width'), min: 0.5, max: 4, step: 0.1, format: (value) => value.toFixed(1) },
-        // 0 is geo-three's own skyline; above it, our heavier stroke that many texels wide
-        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1) }
+        // 0 is the plain silhouette line; above it, a heavier skyline stroke that many texels wide
+        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1) },
+        { type: 'slider', store: peakFinderHillshade, title: lc('hillshade_strength'), min: 0, max: 1, step: 0.05, format: (value) => value.toFixed(2) },
+        { type: 'slider', store: terrainSunAzimuth, title: lc('sun_azimuth'), description: lc('sun_azimuth_desc'), min: 0, max: 360, step: 5, format: (value) => `${Math.round(value)}°` },
+        { type: 'slider', store: terrainSunAltitude, title: lc('sun_altitude'), description: lc('sun_altitude_desc'), min: 5, max: 90, step: 1, format: (value) => `${Math.round(value)}°` }
     ];
 
     function itemTemplateSelector(item: SettingRow) {
