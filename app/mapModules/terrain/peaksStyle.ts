@@ -22,6 +22,8 @@ export interface PeaksStyleOptions {
     textSize?: number;
     /** Rotation of the label text, degrees, off the leader line. */
     textAngle?: number;
+    /** A name longer than this many pixels breaks onto a second line; 0 never wraps. */
+    wrapWidth?: number;
     /** The highest the label row may sit, as a fraction of the screen height from the top: it comes down to just above the highest summit. */
     band?: number;
     /** All labels in one row under the top edge instead of a band lower down. */
@@ -81,7 +83,8 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         pinTop = true,
         textAngle = 55,
         textSize = 16,
-        topOffset = 0.03
+        topOffset = 0.03,
+        wrapWidth = 0
     } = options;
     const palette = reliefPalette(dark);
     const scaledSize = textSize * fontScale;
@@ -97,6 +100,10 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         '  text-name: [name];',
         // the elevation as a second run of text: same label, same plate, smaller font
         "  text-secondary-name: [ele]+'m';",
+        // A tilted name's plate is as tall as it is long, so a long one ('Mont Blanc / Monte Bianco')
+        // needs more room above the row than the screen has and is dropped (LabelCuller): wrapped,
+        // it stacks instead of reaching.
+        wrapWidth > 0 ? `  text-wrap-width: ${wrapWidth};` : '',
         '  text-secondary-scale: 0.62;',
         `  text-secondary-fill: ${palette.labelSecondary};`,
         '  text-secondary-dx: 3;',
