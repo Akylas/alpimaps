@@ -1,0 +1,436 @@
+import type { MassifLayer, MassifMap, MassifObject } from '@nativescript-community/ui-massifmaps/api';
+import { Color, Screen } from '@nativescript/core';
+import { getPosition } from 'suncalc';
+import { get, writable } from 'svelte/store';
+import { formatTime } from '~/helpers/locale';
+import { peakFinderElevation, peakFinderSun, peakFinderSunHours, peakFinderSunTime } from '~/stores/terrainStore';
+import type { MapPos } from '~/utils/geo';
+
+/**
+ * THE SUN over the panorama, as peakfinder.com draws it: the day's path across the sky, the sun where
+ * it is at the chosen time, and where it rises and sets over the TERRAIN in front of the viewpoint -
+ * not over the flat horizon - with the time written there. Hour marks on the path are optional.
+ *
+ * The SDK knows directions and the skyline; the astronomy is here (suncalc). Sky objects are
+ * depth-tested against the map, so a ridge in front of the path hides it with no work on this side,
+ * and the path is drawn as the whole day's circle, below the horizon too: wherever the eye is, it
+ * runs down into the terrain rather than stopping in mid-air.
+ *
+ * Two celestial layers, because the layer order is the z order, labels included: the path under the
+ * summit names, the sun and the times over them.
+ */
+
+const TO_DEGREES = 180 / Math.PI;
+const TO_RADIANS = Math.PI / 180;
+const SAMPLE_MINUTES = 2;
+// Where the sun can meet the skyline: a little under the flat horizon (a skyline seen from high up is
+// below it) to well above it (a valley's).
+const LOW = -4;
+const HIGH = 40;
+const HORIZON_DISTANCE = 200000;
+// Re-measured once a second besides: the terrain the skyline is measured on keeps arriving for a while
+// after a move, and a skyline measured on the first tiles is lower than the real one. Only until it
+// holds still, though - the measure runs on the UI thread, and a once-a-second stall there is a
+// hitch in every drag.
+const REPLAN_MS = 1000;
+const STABLE_MEASURES = 3;
+
+interface Sample {
+    time: number;
+    az: number;
+    alt: number;
+}
+
+export interface SunPosition {
+    azimuth: number;
+    altitude: number;
+}
+
+/** Where the sun is, degrees: azimuth clockwise from north, geometric altitude. */
+export function sunPositionAt(time: number, position: MapPos): SunPosition {
+    const { altitude, azimuth } = getPosition(new Date(time), position.lat, position.lon);
+    // suncalc's azimuth runs from the SOUTH, towards the west.
+    return { azimuth: (azimuth * TO_DEGREES + 180 + 360) % 360, altitude: altitude * TO_DEGREES };
+}
+
+/** Where the air lifts the sun to (Saemundsson), so it is compared with an apparent skyline. */
+function apparent(altitude: number) {
+    return altitude + (altitude > -2 ? 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * TO_RADIANS) / 60 : 0);
+}
+
+function colour(red: number, green: number, blue: number, alpha = 1) {
+    return new Color(Math.round(alpha * 255), red, green, blue).argb;
+}
+
+function dayStart(time: number) {
+    const date = new Date(time);
+    date.setHours(0, 0, 0, 0);
+    return date.getTime();
+}
+
+export interface PeakFinderSunContext {
+    map: MassifMap;
+    /** Where the eye stands, or null before the camera is placed. */
+    eye: () => MapPos | null;
+    dark: () => boolean;
+}
+
+/** The rise and set of the day drawn, over the terrain, for the settings row. ms, or null. */
+export const peakFinderSunTimes = writable<{ rise: number; set: number }>({ rise: null, set: null });
+
+let context: PeakFinderSunContext = null;
+// The map's terrain options as an object of our own, for calculateHorizon: the map's `terrain()` is a
+// property group, which reads and writes but has no methods.
+let terrain: MassifObject<'massif::TerrainOptions'> = null;
+let sky: MassifLayer = null;
+let skyTop: MassifLayer = null;
+let path: MassifObject<'massif::CelestialArc'> = null;
+let marks: MassifObject<'massif::CelestialArc'> = null;
+let disc: MassifObject<'massif::CelestialSprite'> = null;
+let glow: MassifObject<'massif::CelestialSprite'> = null;
+let riseLabel: MassifObject<'massif::CelestialLabel'> = null;
+let setLabel: MassifObject<'massif::CelestialLabel'> = null;
+let hourLabels: MassifObject<'massif::CelestialLabel'>[] = [];
+let samples: Sample[] = [];
+let dayKey = '';
+let planKey = '';
+let lastSignature = '';
+let stableMeasures = 0;
+let styledDark: boolean = null;
+let timer: ReturnType<typeof setInterval> = null;
+let unsubscribers: (() => void)[] = [];
+
+/** The moment drawn: the chosen one, or now. */
+export function peakFinderSunMoment() {
+    return get(peakFinderSunTime) ?? Date.now();
+}
+
+function labelStyle(plate: boolean, dark: boolean) {
+    if (plate) {
+        return {
+            fontName: 'sans-serif Bold',
+            fontSize: 15,
+            textColor: dark ? colour(251, 191, 36) : colour(146, 64, 14),
+            backgroundColor: dark ? colour(24, 24, 27, 0.9) : colour(255, 255, 255, 0.9),
+            backgroundRadius: 7,
+            paddingX: 7,
+            paddingY: 3,
+            haloWidth: 0
+        };
+    }
+    return {
+        fontName: 'sans-serif Medium',
+        fontSize: 13,
+        textColor: dark ? colour(251, 191, 36) : colour(180, 83, 9),
+        haloColor: dark ? colour(24, 24, 27, 0.95) : colour(255, 255, 255, 0.95),
+        haloWidth: 4
+    };
+}
+
+function applyStyles() {
+    const dark = context.dark();
+    if (dark === styledDark) {
+        return;
+    }
+    styledDark = dark;
+    for (const label of [riseLabel, setLabel]) {
+        label.apply(labelStyle(true, dark));
+    }
+    for (const label of hourLabels) {
+        label.apply(labelStyle(false, dark));
+    }
+    marks.set('color', dark ? colour(251, 191, 36) : colour(180, 83, 9));
+}
+
+function showLabel(label: MassifObject<'massif::CelestialLabel'>, text: string, sample?: { az: number; alt: number }) {
+    if (!text || !sample) {
+        label.set('visible', false);
+        return;
+    }
+    label.set('text', text);
+    label.call('setDirection', sample.az, sample.alt, 0);
+    label.set('visible', true);
+}
+
+/** The whole day's circle, for the eye's position and the chosen day. */
+function planPath(eye: MapPos, time: number) {
+    const start = dayStart(time);
+    const key = `${start}|${eye.lat.toFixed(3)}|${eye.lon.toFixed(3)}`;
+    if (key === dayKey) {
+        return;
+    }
+    dayKey = key;
+    samples = [];
+    for (let minute = 0; minute <= 1440; minute += SAMPLE_MINUTES) {
+        const sampleTime = start + minute * 60000;
+        const { altitude, azimuth } = sunPositionAt(sampleTime, eye);
+        samples.push({ time: sampleTime, az: azimuth, alt: apparent(altitude) });
+    }
+    path.call(
+        'setDirections',
+        samples.flatMap((sample) => [sample.az, sample.alt])
+    );
+}
+
+/**
+ * Rise and set over the TERRAIN, and the hour marks. calculateHorizon reads the elevation already
+ * loaded and is synchronous, so this runs as the viewpoint changes. It stays cheap by measuring the
+ * skyline coarsely (every 8 minutes of the path, only where the sun is low enough to meet it), then
+ * finely only across the interval where the sun crosses it.
+ */
+function planCrossings(eye: MapPos) {
+    const eyeHeight = Math.max(0, get(peakFinderElevation));
+    const skylineOf = (list: Sample[]): number[] => {
+        if (!list.length || !terrain) {
+            return list.map(() => -90);
+        }
+        const result = terrain.call(
+            'calculateHorizon',
+            [eye.lon, eye.lat],
+            eyeHeight,
+            list.map((sample) => sample.az),
+            HORIZON_DISTANCE
+        );
+        return Array.from(result ?? []);
+    };
+    const step = 8 / SAMPLE_MINUTES;
+    const coarse = samples.filter((sample, index) => index % step === 0 && sample.alt > LOW && sample.alt < HIGH);
+    const coarseSkyline = skylineOf(coarse);
+    const signature = coarseSkyline.map((value) => value.toFixed(2)).join(',');
+    stableMeasures = signature === lastSignature ? stableMeasures + 1 : 0;
+    lastSignature = signature;
+    const coarseTimes = coarse.map((sample) => sample.time);
+    const known = coarseSkyline.map((value) => (value > -90 ? value : 0));
+    // Linear between the coarse measures; under LOW the sun is under any skyline, over HIGH above it.
+    const skylineAt = (sample: Sample) => {
+        let after = coarseTimes.findIndex((time) => time >= sample.time);
+        if (after < 0) {
+            after = coarseTimes.length - 1;
+        }
+        const before = Math.max(0, coarseTimes[after] === sample.time ? after : after - 1);
+        const t0 = coarseTimes[before];
+        const t1 = coarseTimes[after];
+        const h0 = known[before] ?? 0;
+        const h1 = known[after] ?? 0;
+        return t1 === t0 ? h0 : h0 + ((h1 - h0) * (sample.time - t0)) / (t1 - t0);
+    };
+    const margin = (sample: Sample) => (sample.alt <= LOW ? -1 : sample.alt >= HIGH ? 1 : sample.alt - skylineAt(sample));
+
+    let rise: Sample = null;
+    let set: Sample = null;
+    for (let index = step; index < samples.length; index += step) {
+        const wasUp = margin(samples[index - step]) >= 0;
+        if (wasUp === margin(samples[index]) >= 0) {
+            continue;
+        }
+        // The crossing, measured finely: every sample of the interval against its own skyline.
+        const fine = samples.slice(index - step, index + 1);
+        const fineSkyline = skylineOf(fine);
+        const fineMargin = fine.map((sample, k) => sample.alt - (fineSkyline[k] > -90 ? fineSkyline[k] : 0));
+        let k = 1;
+        while (k < fine.length - 1 && fineMargin[k] >= 0 === wasUp) {
+            k++;
+        }
+        const m0 = fineMargin[k - 1];
+        const m1 = fineMargin[k];
+        const fraction = Math.max(0, Math.min(1, m0 / (m0 - m1 || 1)));
+        const crossing: Sample = {
+            time: fine[k - 1].time + fraction * (fine[k].time - fine[k - 1].time),
+            az: fine[k - 1].az + fraction * (fine[k].az - fine[k - 1].az),
+            alt: fine[k - 1].alt + fraction * (fine[k].alt - fine[k - 1].alt)
+        };
+        if (wasUp) {
+            set = crossing;
+        } else {
+            rise = rise ?? crossing;
+        }
+    }
+    showLabel(riseLabel, rise && `↑ ${formatTime(rise.time)}`, rise);
+    showLabel(setLabel, set && `↓ ${formatTime(set.time)}`, set);
+    const times = get(peakFinderSunTimes);
+    if (times.rise !== (rise?.time ?? null) || times.set !== (set?.time ?? null)) {
+        peakFinderSunTimes.set({ rise: rise?.time ?? null, set: set?.time ?? null });
+    }
+
+    // On the hour, a short stroke across the path and its time, where the sun is over the skyline
+    // and not next to a rise or a set, whose own label is there.
+    const hours = get(peakFinderSunHours);
+    const ticks: number[] = [];
+    for (let hour = 0; hour < 24; hour++) {
+        const sample = samples[(hour * 60) / SAMPLE_MINUTES];
+        const next = samples[(hour * 60) / SAMPLE_MINUTES + 1];
+        const clear = [rise, set].every((crossing) => !crossing || Math.abs(crossing.time - sample.time) > 40 * 60000);
+        if (!hours || !clear || margin(sample) < 0.5) {
+            showLabel(hourLabels[hour], null);
+            continue;
+        }
+        showLabel(hourLabels[hour], formatTime(sample.time), sample);
+        // Perpendicular to the path, a third of a degree each way.
+        const dAz = (next.az - sample.az) * Math.cos(sample.alt * TO_RADIANS);
+        const dAlt = next.alt - sample.alt;
+        const length = Math.hypot(dAz, dAlt) || 1;
+        const nAz = ((-dAlt / length) * 0.35) / Math.cos(sample.alt * TO_RADIANS);
+        const nAlt = (dAz / length) * 0.35;
+        ticks.push(sample.az - nAz, sample.alt - nAlt, sample.az + nAz, sample.alt + nAlt);
+    }
+    marks.call('setSegments', ticks);
+}
+
+/** The disc and its glow at the chosen moment, hidden once it is well down. */
+function placeSun(eye: MapPos, time: number) {
+    const { altitude, azimuth } = sunPositionAt(time, eye);
+    for (const sprite of [disc, glow]) {
+        sprite.call('setDirection', azimuth, apparent(altitude), 0);
+        sprite.set('visible', altitude > -1.5);
+    }
+}
+
+/**
+ * Re-plans what changed. `force` re-measures the skyline even when nothing moved - the terrain under
+ * it may have.
+ */
+export function updatePeakFinderSun(force = false) {
+    if (!context || !path) {
+        return;
+    }
+    const eye = context.eye();
+    if (!eye) {
+        return;
+    }
+    try {
+        applyStyles();
+        const time = peakFinderSunMoment();
+        planPath(eye, time);
+        const key = `${dayKey}|${eye.lat.toFixed(5)}|${eye.lon.toFixed(5)}|${get(peakFinderElevation).toFixed(1)}|${get(peakFinderSunHours)}`;
+        if (key !== planKey) {
+            stableMeasures = 0;
+        }
+        if ((force && stableMeasures < STABLE_MEASURES) || key !== planKey) {
+            planKey = key;
+            planCrossings(eye);
+        }
+        placeSun(eye, time);
+    } catch (error) {
+        DEV_LOG && console.log('peakFinder: sun', error);
+    }
+}
+
+// Ids carry a generation: the sun switched off and back on builds again on the same map, which still
+// holds the ids it registered.
+let generation = 0;
+
+function build() {
+    const map = context.map;
+    const scale = Screen.mainScreen.scale;
+    generation += 1;
+    const id = (name: string) => `${name}.${generation}`;
+    sky = map.buildLayer(id('layer.sky'), { type: 'celestial' });
+    // FIRST, so the terrain draws over the path...
+    map.add(sky, 0);
+    // ...and LAST, so the sun and its times read over the summit names.
+    skyTop = map.buildLayer(id('layer.sky.top'), { type: 'celestial' });
+    map.add(skyTop);
+    const add = <T extends MassifObject>(layer: MassifLayer, object: T) => {
+        layer.call('add', object.handle);
+        return object;
+    };
+    // Widths are device pixels.
+    path = add(sky, map.object('celestial', id('sky.path'), { type: 'arc', color: colour(245, 158, 11, 0.82), width: 3 * scale, belowHorizonVisible: true }));
+    marks = add(sky, map.object('celestial', id('sky.marks'), { type: 'arc', color: colour(180, 83, 9), width: 2 * scale, belowHorizonVisible: true }));
+    // In pixels, not its real half degree: a marker for where the sun is, visible at any field of view.
+    glow = add(skyTop, map.object('celestial', id('sky.glow'), { type: 'sprite', screenSize: 56 * scale, color: colour(251, 191, 36, 0.4), softness: 1 }));
+    disc = add(skyTop, map.object('celestial', id('sky.sun'), { type: 'sprite', screenSize: 20 * scale, color: colour(245, 158, 11), softness: 0.15 }));
+    // Text in the sky is drawn by the SDK from a string and a style. Anchored by the middle of its
+    // bottom edge, so it stands above the point it names; a rise or a set a little higher, and OVER
+    // the terrain rather than half hidden by the ridge it names (the rendered terrain is flat where
+    // the times take the earth's curve, so it draws the ridge a touch higher than the point computed).
+    const label = (name: string, lift: number) => {
+        const created = add(skyTop, map.object('celestial', id(name), { type: 'label', visible: false }));
+        created.call('setOffset', 0, lift);
+        return created;
+    };
+    riseLabel = label('sky.rise', 14);
+    setLabel = label('sky.set', 14);
+    for (const sunLabel of [riseLabel, setLabel]) {
+        sunLabel.set('occludedByMap', false);
+    }
+    hourLabels = Array.from({ length: 24 }, (unused, hour) => label(`sky.hour.${hour}`, 4));
+    styledDark = null;
+    terrain = map.child('terrainOptions');
+}
+
+/** Keeps the sun's top layer over a rebuilt summit layer. */
+export function raisePeakFinderSun() {
+    if (!context || !skyTop) {
+        return;
+    }
+    context.map.removeLayer(skyTop);
+    context.map.add(skyTop);
+}
+
+function drop() {
+    if (timer) {
+        clearInterval(timer);
+        timer = null;
+    }
+    for (const layer of [sky, skyTop]) {
+        if (layer) {
+            try {
+                context?.map.removeLayer(layer);
+            } catch (error) {
+                DEV_LOG && console.log('peakFinder: sun layer', error);
+            }
+        }
+    }
+    // Registered on the panorama's map, which would release them with it - released now, so a sun
+    // switched off costs nothing.
+    for (const object of [sky, skyTop, path, marks, disc, glow, riseLabel, setLabel, ...hourLabels]) {
+        object?.destroy();
+    }
+    sky = skyTop = null;
+    terrain?.destroy();
+    terrain = null;
+    path = marks = disc = glow = riseLabel = setLabel = null;
+    hourLabels = [];
+    samples = [];
+    dayKey = planKey = lastSignature = '';
+    stableMeasures = 0;
+    peakFinderSunTimes.set({ rise: null, set: null });
+}
+
+function start() {
+    build();
+    updatePeakFinderSun(true);
+    timer = setInterval(() => updatePeakFinderSun(true), REPLAN_MS);
+}
+
+export function setupPeakFinderSun(sunContext: PeakFinderSunContext) {
+    teardownPeakFinderSun();
+    context = sunContext;
+    if (get(peakFinderSun)) {
+        start();
+    }
+    let first = true;
+    unsubscribers = [
+        peakFinderSun.subscribe((enabled) => {
+            if (first || !context) {
+                return;
+            }
+            drop();
+            if (enabled) {
+                start();
+            }
+        }),
+        peakFinderSunTime.subscribe(() => !first && updatePeakFinderSun()),
+        peakFinderSunHours.subscribe(() => !first && updatePeakFinderSun(true)),
+        peakFinderElevation.subscribe(() => !first && updatePeakFinderSun())
+    ];
+    first = false;
+}
+
+export function teardownPeakFinderSun() {
+    unsubscribers.forEach((unsubscribe) => unsubscribe());
+    unsubscribers = [];
+    drop();
+    context = null;
+}

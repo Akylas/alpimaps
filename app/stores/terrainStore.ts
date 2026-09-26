@@ -477,7 +477,8 @@ export const peakFinderViewDistance = settingsStore('peakFinderViewDistance', 3)
  * camera's height above the ground — so descending towards the terrain shortens the view, which is
  * right for a map seen from above and exactly wrong for a panorama: the range on the horizon should
  * not disappear because the viewpoint came down to the ridge. `TerrainOptions.viewDistance` is the
- * absolute one, and it only ever EXTENDS the factor rule.
+ * absolute one. It only ever EXTENDS the factor rule, so the panorama sets it as the ceiling
+ * (`viewDistanceMax`) as well, and this is then exactly how far the ground goes.
  *
  * 150 km, because the point of reference is Mont Blanc seen from Grenoble — 108 km line of sight —
  * and the geo-three webapp draws to 173 km (`settings.far`). It is the mode's most expensive number:
@@ -632,40 +633,25 @@ export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.
 // Every one of these is style TEXT, so changing one needs a NEW decoder — see rebuildPeaksLayer in
 // features/peakFinder.ts.
 /**
- * Put each name just above its OWN summit instead of in a band, so they follow the skyline.
- *
- * Why a name can vanish with nothing visible near its peak: with a band, every plate sits in one
- * horizontal row near the top of the screen, and the leader line runs down to the summit. Capacity
- * is then screen width over plate width — about seven a row, twenty-odd over three rows — and every
- * summit in the view competes for those twenty. The plates a name lost to are hundreds of pixels
- * above it, nowhere near the empty sky where you expected it.
- *
- * Off the band the packing is two-dimensional: names spread along the ridges as well as across, so
- * far more of them fit and a name mostly competes with its own neighbours rather than with the
- * whole horizon. This is what peakfinder.com draws.
- *
- * `peakFinderLabelBand` is ignored while this is on; `peakFinderLabelPinTop` still applies.
- *
- * Default OFF, on the reference rather than on capacity. The band does fit fewer names — measured,
- * `sorted=1933 visible=51` over three passes against nineteen hundred candidates, which is the
- * row's own ceiling (screen width over plate width, times `peakFinderLabelRows`) — but skyline mode
- * spends that capacity the wrong way: it stacks a low nearby peak's name UNDERNEATH a distant
- * range's, which is exactly what the reference never does. peakfinder.com pins ONE row at the top
- * of the screen and drops whatever does not fit. Readability first; the capacity argument was mine,
- * not the reference's.
+ * Where the names go. `top`, the default: ONE row of names held at `peakFinderLabelBand` from the top
+ * of the screen, whatever the skyline does. `band` is peakfinder.com's: the row comes down to just
+ * above the highest summit on screen, `peakFinderLabelBand` the highest it may go. `skyline` is no row
+ * at all: each name over its own summit, which fits more names but stacks a low nearby peak's name
+ * under a distant range's.
  */
-export const peakFinderLabelFollowSkyline = settingsStore('peakFinderLabelFollowSkyline', false);
-export const peakFinderLabelPinTop = settingsStore('peakFinderLabelPinTop', true);
-export const peakFinderLabelBand = settingsStore('peakFinderLabelBand', 0.25);
+export type PeakFinderLabelLayout = 'band' | 'top' | 'skyline';
+export const peakFinderLabelLayout = settingsStore<PeakFinderLabelLayout>('peakFinderLabelLayout', 'top');
+/** The row's height, as a fraction of the screen height from the top - see `peakFinderLabelLayout`. */
+export const peakFinderLabelBand = settingsStore('peakFinderLabelBand', 0.2);
 /**
  * Rotation of the label text off its leader line, degrees.
  *
- * The capacity knob once `peakFinderLabelFollowSkyline` is on, because it trades the two screen
+ * The capacity knob in the `skyline` layout, because it trades the two screen
  * axes against each other: a name of width W laid at angle T spans `W·cos T` horizontally and
  * `W·sin T` vertically. Horizontal is the scarce one — summits crowd along the horizon, not up it —
  * so a steeper angle buys room. At 55 degrees a 100 px name eats 57 px of horizon; at 75 it eats 26.
  */
-export const peakFinderLabelAngle = settingsStore('peakFinderLabelAngle', 75);
+export const peakFinderLabelAngle = settingsStore('peakFinderLabelAngle', 45);
 /**
  * How many rows a colliding label may step into before it is DROPPED.
  *
@@ -685,7 +671,7 @@ export const peakFinderLabelRows = settingsStore('peakFinderLabelRows', 1);
  * 14 px is a plate's own height, so neighbouring summits on the same ridge knocked each other out.
  * 6 px lets them sit next to each other; 0 turns the rule off entirely and lets them overlap.
  */
-export const peakFinderLabelMinDistance = settingsStore('peakFinderLabelMinDistance', 6);
+export const peakFinderLabelMinDistance = settingsStore('peakFinderLabelMinDistance', 0);
 /**
  * How many placement passes a name holds its row for once it stops fitting.
  *
@@ -705,6 +691,10 @@ export const peakFinderLabelMinDistance = settingsStore('peakFinderLabelMinDista
  * this mode (`VTLabelPlacementWorker`), so a few of them is a long time on screen.
  */
 export const peakFinderLabelPersist = settingsStore('peakFinderLabelPersist', 10);
+/** The names' size, before the map's own font scale. */
+export const peakFinderLabelTextSize = settingsStore('peakFinderLabelTextSize', 13);
+/** A name longer than this many pixels breaks onto a second line; 0 never wraps. */
+export const peakFinderLabelWrap = settingsStore('peakFinderLabelWrap', 70);
 /** 0 = no limit. */
 export const peakFinderLabelMaxDistance = settingsStore('peakFinderLabelMaxDistance', 0);
 /**
@@ -888,6 +878,8 @@ export const mapTiltTransition = writable(false);
 
 /** The summit the user last tapped, as the overlay's chip needs it. */
 export interface SelectedPeak {
+    /** How the summit style recognises it: `name|ele`, the tile's raw values. */
+    key: string;
     name: string;
     elevation?: number;
     position: MapPos;
@@ -895,6 +887,18 @@ export interface SelectedPeak {
     distance: number;
 }
 export const peakFinderSelectedPeak = writable<SelectedPeak>(null);
+
+// --- peak finder: the sun ---------------------------------------------------------------------
+
+/** The sun's day over the panorama: its path, where it is, and its rise and set over the terrain. */
+export const peakFinderSun = settingsStore('peakFinderSun', true);
+/** A mark and a time on the path on every hour. */
+export const peakFinderSunHours = settingsStore('peakFinderSunHours', false);
+/**
+ * The moment the sun is drawn - and the relief lit - for, ms since the epoch; null follows the clock.
+ * Not persisted: a panorama opens on now.
+ */
+export const peakFinderSunTime = writable<number>(null);
 
 /**
  * The map's allowed tilt range, which three things now have an opinion about.

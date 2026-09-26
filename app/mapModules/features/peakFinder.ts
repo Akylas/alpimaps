@@ -13,6 +13,7 @@ import { registerMapModule } from '~/mapModules/registry';
 import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefPalette, reliefSilhouetteShader } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
+import { peakFinderSunMoment, raisePeakFinderSun, setupPeakFinderSun, sunPositionAt, teardownPeakFinderSun, updatePeakFinderSun } from '~/mapModules/features/peakFinderSun';
 import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
 import { nutiProps } from '~/stores/mapStore';
@@ -36,13 +37,14 @@ import {
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
     peakFinderLabelBand,
-    peakFinderLabelFollowSkyline,
+    peakFinderLabelLayout,
     peakFinderLabelMaxDistance,
     peakFinderLabelMinDistance,
     peakFinderLabelPadding,
     peakFinderLabelPersist,
-    peakFinderLabelPinTop,
     peakFinderLabelRows,
+    peakFinderLabelTextSize,
+    peakFinderLabelWrap,
     peakFinderLensCorrection,
     peakFinderMaxFieldOfView,
     peakFinderMeshCacheSize,
@@ -56,6 +58,8 @@ import {
     peakFinderScreenOrientation,
     peakFinderSelectedPeak,
     peakFinderStaticPeaks,
+    peakFinderSun,
+    peakFinderSunTime,
     peakFinderTerrainMaxZoom,
     peakFinderTileCoarsening,
     peakFinderTilt,
@@ -632,9 +636,14 @@ function currentPeaksStyle() {
         // off the camera.
         eyeElevation: eyeGroundElevation + get(peakFinderElevation),
         fontScale: mapFontScale(),
-        pinTop: get(peakFinderLabelPinTop),
-        followSkyline: get(peakFinderLabelFollowSkyline),
+        pinTop: get(peakFinderLabelLayout) === 'top',
+        followSkyline: get(peakFinderLabelLayout) === 'skyline',
         band: get(peakFinderLabelBand),
+        // A row held at a fixed height is held at the band's.
+        topOffset: get(peakFinderLabelBand),
+        textSize: get(peakFinderLabelTextSize),
+        wrapWidth: get(peakFinderLabelWrap),
+        selectedFill: get(peakFinderDark) ? '#a8c0ff' : '#2f4f9e',
         textAngle: get(peakFinderLabelAngle),
         maxRows: get(peakFinderLabelRows),
         minDistance: get(peakFinderLabelMinDistance),
@@ -676,6 +685,7 @@ function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif:
         type: 'mbvt',
         cartocss: { type: 'cartocss', css }
     });
+    applySelectedPeak(decoder);
     const layer = panorama.buildLayer(`${PEAKS_LAYER_ID}.${peaksGeneration}`, {
         type: 'vector',
         source: source.handle,
@@ -977,6 +987,7 @@ function rebuildPeaksLayer() {
     peaksDecoder = built.decoder;
     panorama.removeLayer(previousLayer);
     panorama.add(peaksLayer);
+    raisePeakFinderSun();
     previousLayer.destroy();
     previousDecoder?.destroy();
 }
@@ -1076,31 +1087,49 @@ function applyReliefOutline() {
  * preview — and the terrain's own background fill has to go with it, or it paints the ground opaque
  * under the relief and the preview never appears.
  */
+/**
+ * The background part of the atmosphere, which needs no terrain - so it can be the FIRST thing the
+ * setup does. Until it runs the view draws the SDK's default background, the block pattern.
+ */
+function applyBackground() {
+    panorama?.apply({
+        skyColor: NO_SKY_BITMAP,
+        backgroundBitmap: null,
+        clearColor: get(peakFinderArActive) ? 0 : argb(palette().paper)
+    });
+}
+
 function applyAtmosphere() {
     if (!panorama) {
         return;
     }
-    const transparent = get(peakFinderArActive);
-    const paper = argb(palette().paper);
     panorama.sky({ type: 'sky' }).apply({ enabled: false, shaderSource: '' });
     panorama.fog({ type: 'fog' }).set('enabled', false);
-    panorama.apply({
-        skyColor: NO_SKY_BITMAP,
-        backgroundBitmap: null,
-        clearColor: transparent ? 0 : paper
-    });
-    terrain().set('backgroundColor', transparent ? 0 : paper);
+    applyBackground();
+    terrain().set('backgroundColor', get(peakFinderArActive) ? 0 : argb(palette().paper));
 }
 
 /**
- * The sun the hillshade shades from: the 3D mode's. Overriding the style's, which would win otherwise
+ * The sun the hillshade shades from. With the sun drawn, the REAL one at the chosen moment, while it
+ * is up; otherwise, and at night, the 3D mode's. Overriding the style's, which would win otherwise
  * (`resolveLighting`), and with no shadows - the surface shader draws all of the light there is.
  */
+const LIT_BY_THE_SUN_ABOVE = 2;
 function applySun() {
+    let sunAzimuth = get(terrainSunAzimuth);
+    let sunAltitude = get(terrainSunAltitude);
+    const eye = viewpoint ?? entryPosition;
+    if (get(peakFinderSun) && eye) {
+        const sun = sunPositionAt(peakFinderSunMoment(), eye);
+        if (sun.altitude > LIT_BY_THE_SUN_ABOVE) {
+            sunAzimuth = sun.azimuth;
+            sunAltitude = sun.altitude;
+        }
+    }
     panorama?.light({ type: 'light' }).apply({
         sunOverridingStyle: true,
-        sunAzimuth: get(terrainSunAzimuth),
-        sunAltitude: get(terrainSunAltitude),
+        sunAzimuth,
+        sunAltitude,
         shadowStrength: 0
     });
 }
@@ -1222,6 +1251,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     }
     panorama = map;
     panoramaView = view;
+    applyBackground();
     demSource = findDemSource();
     peaksSource = findPeaksSource();
     // The view is created from the store, so in principle it can arrive after the mode was left again.
@@ -1304,8 +1334,11 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         // ...and the factor alone cannot reach them, because that rule shrinks as the viewpoint comes
         // down towards the ground. The metres are what puts Mont Blanc on the horizon from Grenoble.
         viewDistance: get(peakFinderViewDistanceMetres),
-        // A ceiling is a trade against how far the view reaches, and reaching is what a panorama IS.
-        viewDistanceMax: 0,
+        // ...and the CEILING too: `viewDistance` is only a floor, and the factor rule above reaches past
+        // it on its own - so without this a shorter setting drew just as far (Mont Blanc still on the
+        // horizon at 60 km). Both ends at one number make it THE distance, which is also the mode's
+        // biggest cost knob: it caps the tile walk, the culling and the far plane.
+        viewDistanceMax: get(peakFinderViewDistanceMetres),
         // NO DRAPE, and nothing to drape: this map carries no base layers. The surface shader is the
         // only thing painting the ground.
         drapeFillsEnabled: false,
@@ -1390,6 +1423,12 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // the terrain above has already pulled in, so this is a lookup rather than a load.
     eyeGroundElevation = await resolveEyeGroundElevation();
     buildPeaksLayer();
+    // After the summit layer, which its top layer has to stay over.
+    setupPeakFinderSun({
+        map,
+        eye: () => viewpoint,
+        dark: () => get(peakFinderArActive) || get(peakFinderDark)
+    });
     // Not awaited: the layer above already draws, and this swaps it onto the collected set when it
     // has one. See `loadStaticPeaks`.
     loadStaticPeaks();
@@ -1400,6 +1439,9 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // The camera is placed by now, so this is the first reading of the eye that means anything.
     updateViewpoint();
     publishHeading();
+    // The sun needs the eye, and lights the relief from where it is seen.
+    updatePeakFinderSun(true);
+    applySun();
     // One listener for all three: a first-person two-finger drag MOVES the camera, so the same
     // events that turn the compass are the ones that walk the eye - out from under its summit set,
     // and away from whatever the chip's distances were measured against.
@@ -1408,6 +1450,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
             updateViewpoint();
             publishHeading();
             checkStaticPeaks();
+            updatePeakFinderSun();
         },
         { throttle: 100 }
     );
@@ -1450,6 +1493,7 @@ export function teardownPanorama() {
     // TileLayer DOES reset the transformer when the terrain goes (it compares `_terrainOptions.lock()`),
     // but that check runs from the layer's own update - and once the panorama stops drawing, it never
     // runs again. So the layer has to go, not just the terrain.
+    teardownPeakFinderSun();
     try {
         panorama?.layers().clear();
     } catch (error) {
@@ -1511,6 +1555,8 @@ export const exitPeakFinder = tryCatchFunction(async () => {
     setMapTranslucent(false);
     peakFinderArActive.set(false);
     peakFinderSelectedPeak.set(null);
+    // The next panorama opens on now.
+    peakFinderSunTime.set(null);
     peakFinderElevation.set(get(peakFinderMinElevation));
     peakFinderActive.set(false);
     viewpoint = null;
@@ -1520,6 +1566,14 @@ export const exitPeakFinder = tryCatchFunction(async () => {
 });
 
 // --- the selected summit ---------------------------------------------------------------------
+
+/**
+ * The selected summit's name, bold: a parameter the summit style declares itself (see `peaksStyle`),
+ * so this is a write on the live decoder rather than a rebuild.
+ */
+function applySelectedPeak(decoder = peaksDecoder) {
+    decoder?.set('params.selected_peak', get(peakFinderSelectedPeak)?.key ?? '');
+}
 
 /** A tap on a summit label fills the overlay's chip instead of opening the item sheet. */
 function onPeakClicked({ featureData, featurePosition }: FeatureClickData): boolean {
@@ -1532,6 +1586,8 @@ function onPeakClicked({ featureData, featurePosition }: FeatureClickData): bool
     }
     const elevation = featureData.ele !== undefined ? Math.round(Number(featureData.ele)) : undefined;
     peakFinderSelectedPeak.set({
+        // What the style compares with, `[name] + '|' + [ele]` - the raw values, as the tile has them.
+        key: `${name}|${featureData.ele ?? ''}`,
         name,
         elevation,
         position: featurePosition,
@@ -1703,11 +1759,14 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
 }
 
 applyLive(peakFinderDark, applyPalette);
+applyLive(peakFinderSelectedPeak, () => applySelectedPeak());
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
 applyLive(peakFinderHillshade, applyReliefSurface);
 applyLive(terrainSunAzimuth, applySun);
 applyLive(terrainSunAltitude, applySun);
+applyLive(peakFinderSun, applySun);
+applyLive(peakFinderSunTime, applySun);
 // BOTH passes: view 7 is drawn by the SURFACE shader and the rest by the post-process, so a knob
 // that only re-applied the outline left view 7 rendering the normal picture.
 applyLive(peakFinderDebugView, () => {
@@ -1717,7 +1776,7 @@ applyLive(peakFinderDebugView, () => {
 applyLive(peakFinderOcclusion, () => terrain().set('billboardOcclusionTolerance', get(peakFinderOcclusion)));
 applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(peakFinderViewDistance)));
 applyLive(peakFinderViewDistanceMetres, () => {
-    terrain().set('viewDistance', get(peakFinderViewDistanceMetres));
+    terrain().apply({ viewDistance: get(peakFinderViewDistanceMetres), viewDistanceMax: get(peakFinderViewDistanceMetres) });
     // It sizes the collected disc as well as the ground, so the set has to be re-cut to match.
     refreshStaticPeaks();
 });
@@ -1743,13 +1802,14 @@ applyLive(peakFinderTileCoarsening, () => terrain().set('maxTileZoomCoarsening',
 applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
 applyLive(peakFinderMaxFieldOfView, applyFieldOfView);
 applyLive(peakFinderLensCorrection, applyFieldOfView);
-applyLive(peakFinderLabelPinTop, rebuildPeaksLayer);
+applyLive(peakFinderLabelLayout, rebuildPeaksLayer);
 applyLive(peakFinderLabelBand, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
 applyLive(peakFinderLabelRows, rebuildPeaksLayer);
 applyLive(peakFinderLabelMinDistance, rebuildPeaksLayer);
 applyLive(peakFinderLabelPersist, rebuildPeaksLayer);
-applyLive(peakFinderLabelFollowSkyline, rebuildPeaksLayer);
+applyLive(peakFinderLabelTextSize, rebuildPeaksLayer);
+applyLive(peakFinderLabelWrap, rebuildPeaksLayer);
 // An OPTION, not style text — so it is written, not re-decoded.
 applyLive(peakFinderLabelPadding, applyLabelPadding);
 applyLive(peakFinderLabelMaxDistance, rebuildPeaksLayer);

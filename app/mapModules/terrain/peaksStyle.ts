@@ -50,6 +50,12 @@ export interface PeaksStyleOptions {
     horizonFirst?: boolean;
     /** The eye's absolute elevation, metres. Only read when `horizonFirst` is on. */
     eyeElevation?: number;
+    /**
+     * The selected summit's name is drawn bold and in this colour. Which summit is a style PARAMETER
+     * the style declares itself, `selected_peak` = `name|ele`, so selecting one is a parameter write on
+     * the live decoder - no rebuild, no second layer. Unset, nothing is selectable.
+     */
+    selectedFill?: string;
 }
 
 /**
@@ -81,6 +87,7 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         minZoom = 0,
         persistPasses = 2,
         pinTop = true,
+        selectedFill,
         textAngle = 55,
         textSize = 16,
         topOffset = 0.03,
@@ -95,9 +102,15 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
     // reference's much more readable arrangement was unreachable. `pinTop` now only decides WHERE
     // the row is (the top offset rather than the band); the corner is not a choice.
     const align = 'bottom-left';
+    const selectable = !!selectedFill;
     return [
+        selectable ? "Map { param-selected_peak: ''; }" : '',
+        selectable ? "@selected: [name] + '|' + [ele] = [param::selected_peak];" : '',
         `#mountain_peak['class'='peak'][zoom>=${minZoom}] {`,
         '  text-name: [name];',
+        // Bold for the selected one only: an empty face keeps the decoder's own, which is what every
+        // other name has always been drawn in.
+        selectable ? "  text-face-name: @selected ? 'Roboto Bold, Helvetica Neue Bold, Arial Bold' : '';" : '',
         // the elevation as a second run of text: same label, same plate, smaller font
         "  text-secondary-name: [ele]+'m';",
         // A tilted name's plate is as tall as it is long, so a long one ('Mont Blanc / Monte Bianco')
@@ -114,7 +127,7 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // parameter and this inline one cannot, being a style of its own. Two devices set to
         // different scales therefore drew map labels at one size and summit names at another.
         `  text-size: ${scaledSize.toFixed(1)};`,
-        `  text-fill: ${palette.ink};`,
+        selectable ? `  text-fill: @selected ? ${selectedFill} : ${palette.ink};` : `  text-fill: ${palette.ink};`,
         `  text-halo-fill: ${palette.paper};`,
         '  text-halo-radius: 1.5;',
         // the plate the name sits on. Pure white under the light palettes for contrast against the
@@ -130,7 +143,8 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // happened to offer first, and a 700 m hill hides a 2000 m one behind it. Zero under
         // `horizonFirst`, which wants the rank below to be the WHOLE ordering - the culler adds the
         // two (`label->getPriority() + rankFunc`), so a height term here would swamp it.
-        `  text-placement-priority: ${horizonFirst ? 0 : '[ele]'};`,
+        // The selected one wins its slot whatever it contends with.
+        `  text-placement-priority: ${selectable ? '@selected ? 100000 : ' : ''}${horizonFirst ? 0 : '[ele]'};`,
         minDistance > 0 ? `  text-min-distance: ${minDistance};` : '',
         // WHAT WINS A CONTESTED SLOT. Height is the wrong answer: at a given screen x the name the
         // user wants is the one on the SKYLINE, and that is not the tallest summit - it is the one
