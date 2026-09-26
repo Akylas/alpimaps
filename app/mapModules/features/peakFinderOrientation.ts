@@ -1,9 +1,8 @@
 import { estimateMagneticField, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-import { showToast } from '@shared/utils/ui';
+import { Utils } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { lc } from '~/helpers/locale';
 import { panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
-import { peakFinderHeadingFollowing } from '~/stores/terrainStore';
+import { peakFinderCalibrationNeeded, peakFinderHeadingFollowing } from '~/stores/terrainStore';
 import { TO_DEG } from '~/utils/geo';
 
 /**
@@ -81,7 +80,9 @@ let gravity: number[] = null;
 let magnetic: number[] = null;
 /** Android's SENSOR_STATUS_ACCURACY_MEDIUM: below it the heading is off until a figure 8. */
 const MAGNETIC_ACCURACY_MEDIUM = 2;
-let calibrationHinted = false;
+const EARTH_FIELD_MIN = 25;
+const EARTH_FIELD_MAX = 65;
+let calibrationSuspect = false;
 
 /**
  * The 1€ filter (Casiez et al.): heavy smoothing while the phone is still, where magnetometer
@@ -117,8 +118,10 @@ class OneEuroFilter {
         return this.value;
     }
 }
-const headingFilter = new OneEuroFilter(0.4, 0.02, true);
-const pitchFilter = new OneEuroFilter(0.4, 0.02, false);
+const POSE_INTERVAL_MS = 15;
+let lastPoseTime = 0;
+const headingFilter = new OneEuroFilter(0.15, 0.01, true);
+const pitchFilter = new OneEuroFilter(0.15, 0.01, false);
 /** The fused yaw, as the rotation vector reports it — absolute on android, arbitrary on iOS. */
 let fusedYaw: number = null;
 /** ...plus this, which is what makes it absolute on both. See the note at the top of this file. */
@@ -329,9 +332,13 @@ function onGravityOrMagnetic(data, sensor: string) {
         gravity = lowPass(gravity, data);
     } else if (sensor === 'magnetometer') {
         magnetic = lowPass(magnetic, data);
-        if (!calibrationHinted && data.accuracy !== undefined && data.accuracy < MAGNETIC_ACCURACY_MEDIUM) {
-            calibrationHinted = true;
-            showToast(lc('calibration_needed'));
+        // Earth's field is 25-65 µT: far outside it the sensor is off, whatever accuracy it claims.
+        const field = Math.hypot(data.x, data.y, data.z);
+        const suspect = (data.accuracy !== undefined && data.accuracy < MAGNETIC_ACCURACY_MEDIUM) || field < EARTH_FIELD_MIN || field > EARTH_FIELD_MAX;
+        if (suspect !== calibrationSuspect) {
+            calibrationSuspect = suspect;
+            // Sensor events arrive off the main thread; the store drives the UI.
+            Utils.executeOnMainThread(() => peakFinderCalibrationNeeded.set(suspect));
         }
     } else {
         return;
@@ -359,7 +366,11 @@ function onGravityOrMagnetic(data, sensor: string) {
     if (!isNaN(pitch)) {
         smoothedPitch = pitchFilter.filter(pitch, now);
     }
-    applyPose();
+    // Both sensors run at up to 100 Hz: one write a frame, not two hundred a second beating against it.
+    if (now - lastPoseTime >= POSE_INTERVAL_MS) {
+        lastPoseTime = now;
+        applyPose();
+    }
 }
 
 /**
@@ -387,7 +398,7 @@ export async function startOrientationFollowing(withTilt: boolean) {
         headingListener = null;
         gravity = null;
         magnetic = null;
-        calibrationHinted = false;
+        calibrationSuspect = false;
         headingFilter.reset();
         pitchFilter.reset();
         gravityListener = onGravityOrMagnetic;
@@ -421,6 +432,7 @@ export async function stopOrientationFollowing() {
         gravityListener = null;
         await stopListeningForSensor(['accelerometer', 'magnetometer'], listener);
     }
+    peakFinderCalibrationNeeded.set(false);
     followTilt = false;
     peakFinderHeadingFollowing.set(false);
 }
