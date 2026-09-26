@@ -18,27 +18,9 @@
     import { formatDistance } from '~/helpers/formatter';
     import { get } from 'svelte/store';
     import type { SettingsStore } from '~/stores/settingsStore';
+    import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
     import {
-        peakFinderDark,
         peakFinderEnabled,
-        peakFinderFlyElevation,
-        peakFinderHillshade,
-        peakFinderHorizonBoost,
-        peakFinderLabelAngle,
-        peakFinderLabelBand,
-        peakFinderLabelMaxDistance,
-        peakFinderLabelMinDistance,
-        peakFinderLabelPadding,
-        peakFinderLabelPersist,
-        peakFinderLabelPinTop,
-        peakFinderLabelRows,
-        peakFinderMeshResolution,
-        peakFinderOcclusion,
-        peakFinderOutlineWidth,
-        peakFinderScreenOrientation,
-        peakFinderTilt,
-        peakFinderViewDistance,
-        peakFinderViewDistanceMetres,
         terrain3dEnabled,
         terrain3dTilt,
         terrainAutoFlattenByTilt,
@@ -190,6 +172,31 @@
     }
     function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
         return { type: 'switch', key: title, title, description, store, value: get(store) };
+    }
+    /** A shared peak finder row as this screen's list takes it. The sun's moment is the panorama's own. */
+    function peakFinderSettingItem(row: PeakFinderSettingRow) {
+        switch (row.type) {
+            case 'sectionheader':
+                return { type: 'sectionheader', title: row.title };
+            case 'switch':
+                return storeSwitch(row.store, row.title, row.description);
+            case 'slider':
+                return { ...storeSlider(row.store, row.title, row.min, row.max, row.step, row.format), description: row.description };
+            case 'segment':
+                return {
+                    id: 'setting',
+                    key: row.title,
+                    title: row.title,
+                    description: row.description,
+                    store: row.store,
+                    valueType: 'string',
+                    currentValue: () => get(row.store),
+                    rightValue: () => row.options.find((option) => option.value === get(row.store))?.title ?? get(row.store),
+                    values: row.options.map((option) => ({ title: option.title, value: option.value }))
+                };
+            default:
+                return null;
+        }
     }
 
     function getSubSettings(id: string): any[] {
@@ -478,45 +485,8 @@
                     storeSlider(terrainShadowCasterMargin, lc('shadow_caster_margin'), 0, 8, 1)
                 ];
             case 'peak_finder':
-                return [
-                    storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')),
-                    storeSwitch(peakFinderDark, lc('dark_mode')),
-                    {
-                        id: 'setting',
-                        key: 'peakFinderScreenOrientation',
-                        title: lc('screen_orientation'),
-                        description: lc('screen_orientation_desc'),
-                        store: peakFinderScreenOrientation,
-                        valueType: 'string',
-                        currentValue: () => get(peakFinderScreenOrientation),
-                        rightValue: () => lc(get(peakFinderScreenOrientation)),
-                        values: [
-                            { title: lc('auto'), value: 'auto' },
-                            { title: lc('landscape'), value: 'landscape' },
-                            { title: lc('portrait'), value: 'portrait' }
-                        ]
-                    },
-                    storeSlider(peakFinderTilt, lc('tilt'), 1, 80, 1, (value) => `${Math.round(value)}°`),
-                    storeSlider(peakFinderFlyElevation, lc('viewpoint_elevation'), 0, 6000, 50, formatDistance),
-                    storeSlider(peakFinderViewDistance, lc('view_distance_factor'), 0.5, 6, 0.5, (value) => `${value.toFixed(1)}×`),
-                    storeSlider(peakFinderViewDistanceMetres, lc('viewing_distance'), 10000, 400000, 10000, formatDistance),
-                    storeSlider(peakFinderMeshResolution, lc('mesh_resolution'), 32, 512, 32),
-                    storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
-                    // The relief: peakfinder.com's look — see PEAKFINDER_LOOK in ~/mapModules/terrain/reliefShaders.ts.
-                    storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.5, (value) => value.toFixed(1)),
-                    storeSlider(peakFinderHillshade, lc('hillshade_strength'), 0, 1, 0.05, (value) => value.toFixed(2)),
-                    // The summit labels. Each of these rebuilds the label decoder, which is why they are
-                    // grouped last: they are the expensive ones to drag.
-                    storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),
-                    storeSlider(peakFinderLabelBand, lc('label_band'), 0, 0.6, 0.05, (value) => `${Math.round(value * 100)}%`),
-                    storeSlider(peakFinderLabelAngle, lc('label_angle'), 0, 90, 5, (value) => `${Math.round(value)}°`),
-                    storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 6, 1),
-                    storeSlider(peakFinderLabelMinDistance, lc('label_min_distance'), 0, 40, 1, (value) => (value === 0 ? lc('no_limit') : `${Math.round(value)} px`)),
-                    storeSlider(peakFinderLabelPersist, lc('label_persist'), 0, 30, 1),
-                    storeSlider(peakFinderLabelPadding, lc('label_padding'), 0, 600, 25, (value) => (value === 0 ? lc('automatic') : `${Math.round(value)} px`)),
-                    storeSlider(peakFinderLabelMaxDistance, lc('label_max_distance'), 0, 300000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value)))
-                ];
+                // The same rows as the panorama's own sheet - see peakFinderSettingRows.
+                return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(peakFinderSettingItem).filter(Boolean)];
             case 'map_data':
                 return (
                     dataPathsAvailable
