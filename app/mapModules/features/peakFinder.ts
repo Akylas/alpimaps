@@ -1249,6 +1249,10 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     }
     panorama = map;
     panoramaView = view;
+    if (__ANDROID__) {
+        // Above the live map's surface from the start - see setMapTranslucent.
+        view.mapView?.setZOrderMediaOverlay?.(true);
+    }
     applyBackground();
     demSource = findDemSource();
     peaksSource = findPeaksSource();
@@ -1703,6 +1707,11 @@ function setMapTranslucent(translucent: boolean) {
     // Guarded: `setTranslucent` is on the SDK's own MapView, not on the NativeScript wrapper.
     if (nativeMapView?.setTranslucent) {
         nativeMapView.setTranslucent(translucent);
+        if (__ANDROID__) {
+            // Always the media-overlay layer, not only in AR: the live map is a surface too, and the
+            // one re-created when AR hands it back landed OVER the panorama - see-through after AR.
+            nativeMapView.setZOrderMediaOverlay(true);
+        }
     }
 }
 
@@ -1831,6 +1840,10 @@ applyLive(peakFinderArActive, () => {
     // A panorama held up at the sky has to be able to look straight up, which the panorama's own
     // range stops short of.
     panorama.set('tiltRange', get(peakFinderArActive) ? [-90, 90] : PANORAMA_RANGE);
+    if (!get(peakFinderArActive)) {
+        // Back to the panorama's own tilt, not wherever the phone last pointed (often the ground).
+        panoramaView?.setTilt(get(peakFinderTilt), 0.3);
+    }
     setOrientationTilt(get(peakFinderArActive)).catch((error) => showError(error));
 });
 

@@ -3,6 +3,7 @@
     "whitelist": [
         "akylas.alpi.maps*:*",
         "android.view:OrientationEventListener",
+        "android.view:SurfaceView",
         "fi.iki.elonen:NanoHTTPD",
         "android.content.pm:ServiceInfo",
         "android.view:View.OnApplyWindowInsetsListener",
