@@ -13,7 +13,7 @@
     import { getCompassInfo } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
-    import { applyViewpointElevation, exitPeakFinder, flyToSelectedPeak, focusSelectedPeak, showPeakFinderSettings, toggleArMode, toggleHeadingFollowing } from '~/mapModules/features/peakFinder';
+    import { applyViewpointElevation, exitPeakFinder, flyToSelectedPeak, showPeakFinderSettings, toggleArMode, toggleHeadingFollowing } from '~/mapModules/features/peakFinder';
     import {
         PEAK_FINDER_ELEVATION_GROWTH,
         PEAK_FINDER_ELEVATION_MAX,
@@ -182,7 +182,7 @@
         verticalAlignment="bottom"
         visibility={$peakFinderSelectedPeak ? 'visible' : 'hidden'}
         width="60%">
-        <canvaslabel color={peakChipColor} fontSize={13} paddingLeft={10} on:tap={() => focusSelectedPeak()}>
+        <canvaslabel color={peakChipColor} fontSize={13} paddingLeft={10}>
             <cgroup verticalAlignment="middle" verticalTextAlignment="center">
                 <cspan fontWeight="bold" text={$peakFinderSelectedPeak && truncate($peakFinderSelectedPeak.name, 25)} />
                 <cspan

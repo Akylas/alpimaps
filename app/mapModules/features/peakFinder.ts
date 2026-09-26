@@ -1599,21 +1599,6 @@ function onPeakClicked({ featureData, featurePosition }: FeatureClickData): bool
 }
 
 /**
- * Turns the view to look at the selected summit, without moving the viewpoint.
- *
- * The VIEW's setter, not the camera's: `camera().rotation(deg)` is `moveTo(position(), …)`
- * underneath, and a `moveTo` in first person hands the camera a focus to walk around rather than
- * turning it where it stands.
- */
-export const focusSelectedPeak = tryCatchFunction(async () => {
-    const peak = get(peakFinderSelectedPeak);
-    if (!peak || !viewpoint || !panoramaView) {
-        return;
-    }
-    panoramaView.setMapRotation(bearingBetween(viewpoint, peak.position), 0);
-});
-
-/**
  * Moves the viewpoint TO the selected summit, keeping the panorama's camera.
  *
  * `moveTo` takes the FOCUS, and at a panorama's tilt the focus is kilometres in front of the camera —
@@ -1630,7 +1615,7 @@ export const focusSelectedPeak = tryCatchFunction(async () => {
  */
 export const flyToSelectedPeak = tryCatchFunction(async () => {
     const peak = get(peakFinderSelectedPeak);
-    if (!peak || !panorama) {
+    if (!peak || !panorama || !panoramaView) {
         return;
     }
     // The eye is about to land ON the summit, which is what `viewpoint` means. Written here rather
@@ -1641,7 +1626,8 @@ export const flyToSelectedPeak = tryCatchFunction(async () => {
     const focus = mapCamera.position();
     const eye = mapCamera.eyePosition();
     const target: Position = [summit[0] + (focus[0] - eye[0]), summit[1] + (focus[1] - eye[1])];
-    mapCamera.moveTo(target, { zoom: effectiveZoom(), tilt: get(peakFinderTilt) });
+    // A flight, not a jump: the camera climbs over the way there, so the move reads as one.
+    panoramaView.flyTo({ longitude: target[0], latitude: target[1] }, { zoom: effectiveZoom(), tilt: get(peakFinderTilt) });
     peakFinderSelectedPeak.set(null);
 });
 
