@@ -28,12 +28,10 @@ const SAMPLE_MINUTES = 2;
 const LOW = -4;
 const HIGH = 40;
 const HORIZON_DISTANCE = 200000;
-// Re-measured once a second besides: the terrain the skyline is measured on keeps arriving for a while
-// after a move, and a skyline measured on the first tiles is lower than the real one. Only until it
-// holds still, though - the measure runs on the UI thread, and a once-a-second stall there is a
-// hitch in every drag.
-const REPLAN_MS = 1000;
-const STABLE_MEASURES = 3;
+// Re-measured whenever the panorama goes IDLE besides: the terrain the skyline is measured on keeps
+// arriving for a while after a move, and every batch that lands is drawn, then idles. Debounced, and
+// on the UI thread - but at idle, with nothing moving to hitch.
+const IDLE_DEBOUNCE_MS = 300;
 
 interface Sample {
     time: number;
@@ -95,9 +93,10 @@ let samples: Sample[] = [];
 let dayKey = '';
 let planKey = '';
 let lastSignature = '';
-let stableMeasures = 0;
 let styledDark: boolean = null;
-let timer: ReturnType<typeof setInterval> = null;
+let idleSubscription: { remove(): boolean } = null;
+/** The clock, for the sun drawn at "now": it moves a quarter of a degree a minute. */
+let clock: ReturnType<typeof setInterval> = null;
 let unsubscribers: (() => void)[] = [];
 
 /** The moment drawn: the chosen one, or now. */
@@ -196,8 +195,10 @@ function planCrossings(eye: MapPos) {
     const step = 8 / SAMPLE_MINUTES;
     const coarse = samples.filter((sample, index) => index % step === 0 && sample.alt > LOW && sample.alt < HIGH);
     const coarseSkyline = skylineOf(coarse);
-    const signature = coarseSkyline.map((value) => value.toFixed(2)).join(',');
-    stableMeasures = signature === lastSignature ? stableMeasures + 1 : 0;
+    const signature = `${planKey}|${coarseSkyline.map((value) => value.toFixed(2)).join(',')}`;
+    if (signature === lastSignature) {
+        return; // same skyline: nothing to move, and no redraw to set off another idle
+    }
     lastSignature = signature;
     const coarseTimes = coarse.map((sample) => sample.time);
     const known = coarseSkyline.map((value) => (value > -90 ? value : 0));
@@ -277,8 +278,14 @@ function planCrossings(eye: MapPos) {
 }
 
 /** The disc and its glow at the chosen moment, hidden once it is well down. */
+let placed = { azimuth: NaN, altitude: NaN };
 function placeSun(eye: MapPos, time: number) {
     const { altitude, azimuth } = sunPositionAt(time, eye);
+    // Only a visible move: each write is a redraw, and a redraw ends in the idle that calls this again.
+    if (Math.abs(azimuth - placed.azimuth) < 0.02 && Math.abs(altitude - placed.altitude) < 0.02) {
+        return;
+    }
+    placed = { azimuth, altitude };
     for (const sprite of [disc, glow]) {
         sprite.call('setDirection', azimuth, apparent(altitude), 0);
         sprite.set('visible', altitude > -1.5);
@@ -302,10 +309,7 @@ export function updatePeakFinderSun(force = false) {
         const time = peakFinderSunMoment();
         planPath(eye, time);
         const key = `${dayKey}|${eye.lat.toFixed(5)}|${eye.lon.toFixed(5)}|${get(peakFinderElevation).toFixed(1)}|${get(peakFinderSunHours)}`;
-        if (key !== planKey) {
-            stableMeasures = 0;
-        }
-        if ((force && stableMeasures < STABLE_MEASURES) || key !== planKey) {
+        if (force || key !== planKey) {
             planKey = key;
             planCrossings(eye);
         }
@@ -328,7 +332,9 @@ function build() {
     // FIRST, so the terrain draws over the path...
     map.add(sky, 0);
     // ...and LAST, so the sun and its times read over the summit names.
-    skyTop = map.buildLayer(id('layer.sky.top'), { type: 'celestial' });
+    // Out of the post-process, so the outline's ink does not cross the rise and set labels sitting on
+    // the ridge: drawn after the effect, over the lines.
+    skyTop = map.buildLayer(id('layer.sky.top'), { type: 'celestial', postProcessed: false });
     map.add(skyTop);
     const add = <T extends MassifObject>(layer: MassifLayer, object: T) => {
         layer.call('add', object.handle);
@@ -369,10 +375,10 @@ export function raisePeakFinderSun() {
 }
 
 function drop() {
-    if (timer) {
-        clearInterval(timer);
-        timer = null;
-    }
+    idleSubscription?.remove();
+    idleSubscription = null;
+    clearInterval(clock);
+    clock = null;
     for (const layer of [sky, skyTop]) {
         if (layer) {
             try {
@@ -394,14 +400,15 @@ function drop() {
     hourLabels = [];
     samples = [];
     dayKey = planKey = lastSignature = '';
-    stableMeasures = 0;
+    placed = { azimuth: NaN, altitude: NaN };
     peakFinderSunTimes.set({ rise: null, set: null });
 }
 
 function start() {
     build();
     updatePeakFinderSun(true);
-    timer = setInterval(() => updatePeakFinderSun(true), REPLAN_MS);
+    idleSubscription = context.map.onIdle(() => updatePeakFinderSun(true), { debounce: IDLE_DEBOUNCE_MS });
+    clock = setInterval(() => get(peakFinderSunTime) === null && updatePeakFinderSun(), 60000);
 }
 
 export function setupPeakFinderSun(sunContext: PeakFinderSunContext) {
