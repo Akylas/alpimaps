@@ -183,7 +183,6 @@ uniform float uShadeStrength;
 uniform float uSlopeShade;
 uniform float uAmbient;
 uniform float uHillshade;
-uniform float uDebugView;
 // The most ink the light allows anywhere (theirs 0.3).
 uniform float uInkCap;
 // The RIDGE term: how far the surface normal turns across one screen pixel, which is peakfinder.com's
@@ -197,132 +196,24 @@ float normalTurn(vec3 n) {
     return 0.0;
 #endif
 }
-// Set by TerrainRenderer::renderTiles, per tile, from the MESH: (gridSize, attribsRefined, demZoom).
-uniform vec4 u_tileDebug;
 vec4 surfaceColor() {
-    // DEBUG 9 and 10: WHAT EACH TILE ACTUALLY IS, painted on it.
-    //
-    // Which per-tile property makes one tile lighter than the one beside it has been inferred four
-    // times - mesh density, sample distance, DEM stretch, prefetch order - and each inference cost a
-    // rebuild to disprove. These two views read the answer off the picture instead: whatever the
-    // light tiles have in common is visible in one screenshot.
-    //
-    //   9:  MESH DENSITY. red 4 | orange 16 | yellow 32 | green 48 | cyan 64 | blue 96.
-    //   10: NORMAL SOURCE and DEM zoom. RED tile = still on the cheap mesh-gradient stand-in,
-    //       GREEN = DEM-refined normals; brightness rises with the DEM zoom it resolved (z4..z12).
-    if (uDebugView > 8.5 && uDebugView < 9.5) {
-        float cells = u_tileDebug.x;
-        if (cells < 8.0) { return vec4(1.0, 0.0, 0.0, 1.0); }
-        if (cells < 24.0) { return vec4(1.0, 0.5, 0.0, 1.0); }
-        if (cells < 40.0) { return vec4(1.0, 1.0, 0.0, 1.0); }
-        if (cells < 56.0) { return vec4(0.0, 0.8, 0.0, 1.0); }
-        if (cells < 80.0) { return vec4(0.0, 0.8, 1.0, 1.0); }
-        return vec4(0.0, 0.0, 1.0, 1.0);
-    }
-    // 13: ARE THIS TILE'S NORMALS STALE? Attribs are baked once and never recomputed, so a tile
-    //     refined while standing on a coarse ancestor keeps those normals after its own grid lands -
-    //     and views 9 and 10 both report it as healthy, because gridSize, refined and demZoom are all
-    //     correct. Only the stored VALUES are old, and which tiles lose the race changes every run.
-    //       GREEN  normals computed from the DEM zoom this tile has now
-    //       YELLOW one level stale | ORANGE two | RED three or more
-    //       BLACK  never refined
-    // 13: TILE BOUNDARIES, over the real shading. Every per-tile property measured so far - gridSize,
-    //     refined, demZoom, staleness - has come back uniform while regions still differ, so this
-    //     tests the assumption under all of them: that the differing regions ARE tiles. Alternate
-    //     tiles are darkened slightly, leaving the shading readable underneath. If the pale patches
-    //     line up with the checker, they are tiles and something per-tile is still unmeasured; if
-    //     they cut across it, they were never tiles and the whole per-tile search was misdirected.
-
-    if (uDebugView > 9.5 && uDebugView < 10.5) {
-        // DEM ZOOM AS BANDS, not as brightness. Encoded as brightness this read as "all green" even
-        // where the shading plainly differed - a range of zooms is invisible against a colour ramp,
-        // and an instrument that cannot be read is worse than none. One hue per zoom instead.
-        //   z<=5 red | 6 orange | 7 yellow | 8 green | 9 cyan | 10 blue | 11 magenta | 12+ white
-        // A tile with no grid at all (demZoom -1) is BLACK.
-        float demZoom = u_tileDebug.z;
-        if (demZoom < 0.0) { return vec4(0.0, 0.0, 0.0, 1.0); }
-        if (demZoom < 5.5) { return vec4(1.0, 0.0, 0.0, 1.0); }
-        if (demZoom < 6.5) { return vec4(1.0, 0.5, 0.0, 1.0); }
-        if (demZoom < 7.5) { return vec4(1.0, 1.0, 0.0, 1.0); }
-        if (demZoom < 8.5) { return vec4(0.0, 0.8, 0.0, 1.0); }
-        if (demZoom < 9.5) { return vec4(0.0, 0.8, 1.0, 1.0); }
-        if (demZoom < 10.5) { return vec4(0.0, 0.2, 1.0, 1.0); }
-        if (demZoom < 11.5) { return vec4(1.0, 0.0, 1.0, 1.0); }
-        return vec4(1.0, 1.0, 1.0, 1.0);
-    }
-    // DEBUG 7: the slope this shader sees, straight off v_normal - the SAME per-vertex attribute
-    // the normal-packing depth pass reads. Compared against debug 1, which reads the PACKED buffer,
-    // it says which side of that pass is at fault: both black means the mesh attribute itself is
-    // flat, only the packed one black means the packing pass is losing it.
-    // Bounded above as well: view 8 is a post-process view, and the surface must draw normally
-    // under it or there is nothing for the post-process to classify.
-    if (uDebugView > 6.5 && uDebugView < 7.5) {
-        float debugSlope = length(normalize(v_normal).xy);
-        return vec4(debugSlope, debugSlope, debugSlope, 1.0);
-    }
-    // 22: WHICH PATH THIS FRAGMENT TOOK, which is the only way to tell three states apart that all
-    //     look like "wrong shading": RED no elevation texture (mesh-normal fallback), GREEN a skirt
-    //     (keeps the edge normal), BLUE the per-fragment DEM normal.
-    if (uDebugView > 21.5 && uDebugView < 22.5) {
-        if (v_normal.z < 0.0) { return vec4(0.0, 1.0, 0.0, 1.0); }
-        if (u_demValid < 0.5) { return vec4(1.0, 0.0, 0.0, 1.0); }
-        return vec4(0.0, 0.0, 1.0, 1.0);
-    }
-    // A SKIRT is a crack filler, not a surface. It is a vertical wall hanging from a tile edge, and
-    // it exists only so that the gap between two tiles at different levels is not see-through - it
-    // is meant to be unnoticed, and while the tiles load it is the tallest thing on screen. Shading
-    // it means lighting a vertical face with the normal of the ground above it, and adjacent
-    // columns take adjacent edge vertices, so it bands vertically in hard black and white. Paper:
-    // it fills the crack and says nothing.
+    // A SKIRT is a crack filler, not a surface: shaded with the normal of the ground above it, it
+    // bands in hard black and white. Paper: it fills the crack and says nothing.
     if (v_normal.z < 0.0) {
         return vec4(uPaperColor.rgb, 1.0);
     }
     // THE MESH'S OWN NORMAL, baked from the DEM per vertex, and the ridge term off its screen-space
-    // derivative. Both used to be read off the elevation texture per FRAGMENT - four taps for the
-    // normal, thirty-six for the curvature - which on an Adreno 610 was 58 ms of a 100 ms frame, where
-    // this is 20 and draws the same picture: the ridge ink is capped at uAmbient (6%) anyway.
+    // derivative - per-fragment DEM taps were 58 ms of a 100 ms frame on an Adreno 610.
     vec3 n = normalize(v_normal);
-    // 20: the DEM uv this fragment resolves to - red/green ramp inside [0,1], BLUE outside it. A
-    //     fragment sampling outside its elevation texture reads the clamped edge, so all four taps
-    //     return the same height and the normal comes out exactly vertical: a flat tile with a
-    //     perfectly healthy texture bound.
-    // 21: the scale the taps are spaced by. BLACK means u_demMetersPerTexel arrived as zero, which
-    //     sends the step to infinity and produces the same flat result for a different reason.
-    if (uDebugView > 19.5 && uDebugView < 20.5) {
-        vec2 uv = (v_worldPos.xy - u_demOriginSize.xy) / u_demOriginSize.zw;
-        if (u_demValid < 0.5) { return vec4(1.0, 0.0, 1.0, 1.0); }
-        bool inside = uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
-        return inside ? vec4(uv, 0.0, 1.0) : vec4(0.0, 0.0, 1.0, 1.0);
-    }
-    if (uDebugView > 20.5 && uDebugView < 21.5) {
-        float scaled = clamp(u_demMetersPerTexel / 200.0, 0.0, 1.0);
-        return vec4(scaled, scaled, scaled, 1.0);
-    }
-    // PEAKFINDER.COM'S MODEL (peakfinder-reference-shader.md): the ink is the slope and the ridge
-    // terms ADDED, and then CAPPED by the light - so a face turned to the sun stays paper whatever its
-    // relief, and only the shadow side shows its gullies. The cap is what keeps the ground white at
-    // every distance, where adding the light instead greys everything out.
-    // Theirs at cfg=es: ridge 0.6, slope 0, sun 0.05, cap 0.3 (u_fragmentParams1/2, read off the page).
+    // PEAKFINDER.COM'S MODEL: the slope and ridge terms ADDED, then CAPPED by the light, so a face
+    // turned to the sun stays paper and only the shadow side shows its gullies.
     vec3 sun = normalize(u_sunDir);
     float value = uSlopeShade * length(n.xy) + uRidgeInkStrength * normalTurn(n);
     float light = min(uAmbient + uShadeStrength * max(-0.2, -dot(n, sun)), 1.0);
     value = min(value, min(light, uInkCap));
-    // THE HILLSHADE, on top of the cap: how much less sun a face gets than flat ground does, so flat
-    // ground stays paper, a face towards the sun stays paper, and a face turned away shades by how far
-    // it is turned - the hillshade layer's reading, and it moves with the sun's azimuth.
+    // THE HILLSHADE, on top of the cap: a face turned away from the sun shades by how far it is turned.
     value = clamp(value + uHillshade * max(sun.z - dot(n, sun), 0.0), -1.0, 1.0);
-    vec3 color = clamp(mix(uPaperColor.rgb, uShadeColor.rgb, value), 0.0, 1.0);
-
-    // 13: TILE BOUNDARIES OVER THE REAL SHADING. Applied at the end, not as an early return, so the
-    // picture is the actual one with a checker laid over it. Every per-tile property measured so far
-    // - gridSize, refined, demZoom, staleness - is uniform while regions still differ, so this tests
-    // the assumption underneath all of them: that the differing regions ARE tiles. If the pale
-    // patches line up with the checker they are tiles and something per-tile is still unmeasured; if
-    // they cut across it, they never were, and the per-tile search was misdirected from the start.
-    if (uDebugView > 12.5 && uDebugView < 13.5 && u_tileDebug.w > 0.5) {
-        color *= 0.75;
-    }
-    return vec4(color, 1.0);
+    return vec4(clamp(mix(uPaperColor.rgb, uShadeColor.rgb, value), 0.0, 1.0), 1.0);
 }`;
 
 /**

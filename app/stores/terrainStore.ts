@@ -613,12 +613,6 @@ export const PEAK_FINDER_ELEVATION_MAX = 9000;
 /** Line width, px: thickens the silhouettes and nothing else. */
 export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1);
 /**
- * Dump one intermediate term of the relief SURFACE shader as an image, instead of the finished
- * picture — the views it documents in `RELIEF_SURFACE_SHADER` (7 slope, 9 mesh density, 10 DEM
- * zoom per tile, 13 tile boundaries). 0 draws normally.
- */
-export const peakFinderDebugView = settingsStore('peakFinderDebugView', 0);
-/**
  * How much the slopes turned away from the sun shade (`uHillshade`): the hillshade layer's reading,
  * relative to flat ground so the ground stays paper. The sun is the 3D mode's (`terrainSunAzimuth`,
  * `terrainSunAltitude`). Looking towards the sun shows the shaded faces; with it behind, most of what
