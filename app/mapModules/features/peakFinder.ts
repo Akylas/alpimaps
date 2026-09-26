@@ -10,7 +10,7 @@ import { lc } from '~/helpers/locale';
 import { type FeatureClickData, featureClickData, getMapContext } from '~/mapModules/MapModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
-import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefDepthOutlineShader, reliefPalette } from '~/mapModules/terrain/reliefShaders';
+import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefPalette, reliefSilhouetteShader } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
 import type { IItem } from '~/models/Item';
@@ -145,6 +145,8 @@ let peaksDecoder: api.MassifObject<'massif::MBVectorTileDecoder'> = null;
 /** Bumped per rebuild, so a new layer/decoder pair never collides with the one still on the map. */
 let peaksGeneration = 0;
 let effect = null;
+/** Which compiled outline `effect` is - see applyReliefOutline. */
+let effectVariant = '';
 /**
  * Where the eye stands, in lon/lat — what every distance and bearing in this mode is measured from.
  *
@@ -404,7 +406,6 @@ function applyFieldOfView() {
         return;
     }
     panorama.set('fieldOfViewY', currentFieldOfViewY());
-    applyPixelAngle();
     // ...and put the camera back where it was. See `zoomForFieldOfView`.
     panoramaView.setZoom(effectiveZoom(), 0);
     applyLensCorrection();
@@ -1010,16 +1011,6 @@ function applyReliefSurface() {
     terrainOptions.setSurfaceParameter('uInkCap', PEAKFINDER_LOOK.inkCap);
     terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
     terrainOptions.setSurfaceParameter('uDebugView', get(peakFinderDebugView));
-    applyPixelAngle();
-}
-
-/** Radians per pixel, which the ridge ink scales its curvature to. Follows the field of view and the view's height. */
-function applyPixelAngle() {
-    const height = panoramaView?.getMeasuredHeight() ?? 0;
-    if (!(height > 0)) {
-        return;
-    }
-    panoramaView?.getTerrainOptions()?.setSurfaceParameter('uPixelAngle', (currentFieldOfViewY() * TO_RADIANS) / height);
 }
 
 /**
@@ -1033,11 +1024,17 @@ function applyReliefOutline() {
         return;
     }
     const colors = palette();
-    if (!effect) {
+    // The shader is COMPILED for what it draws - see reliefSilhouetteShader - so AR and a line wider
+    // than a pixel each want their own.
+    const ar = get(peakFinderArActive);
+    const rings = Math.min(3, Math.max(0, Math.ceil(get(peakFinderOutlineWidth)) - 1));
+    const variant = `${ar ? 'ar' : 'view'}.${rings}`;
+    if (!effect || effectVariant !== variant) {
         // Required lazily: `renderers` is object-API code that nothing else in the app pulls in.
         const { PostProcessEffect } = require('@nativescript-community/ui-massifmaps/renderers');
-        effect = new PostProcessEffect({ name: EFFECT_ID, fragmentShader: reliefDepthOutlineShader() });
+        effect = new PostProcessEffect({ name: `${EFFECT_ID}.${variant}`, fragmentShader: reliefSilhouetteShader({ ar, rings }) });
         effect.terrainDepthRequired = true;
+        effectVariant = variant;
     }
     const skylineWidth = get(peakFinderHorizonBoost);
     effect.setFloatParameter('uOperator', 2);

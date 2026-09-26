@@ -174,8 +174,7 @@ export const PEAKFINDER_LOOK = {
  * (`uHillshade`) is added after the cap: the sun's azimuth decides which slopes it shades.
  *
  * No fog term: the SDK applies the frame's own fog to whatever this returns.
- * Uniforms: uPaperColor, uShadeColor, uShadeStrength, uSlopeShade, uAmbient, uHillshade, uInkCap, uRidgeInkStrength,
- * uPixelAngle.
+ * Uniforms: uPaperColor, uShadeColor, uShadeStrength, uSlopeShade, uAmbient, uHillshade, uInkCap, uRidgeInkStrength.
  */
 export const RELIEF_SURFACE_SHADER = `
 uniform vec4 uPaperColor;
@@ -188,52 +187,15 @@ uniform float uDebugView;
 // The most ink the light allows anywhere (theirs 0.3).
 uniform float uInkCap;
 // The RIDGE term: how far the surface normal turns across one screen pixel, which is peakfinder.com's
-// interior line (the screen-space gradient of their normal buffer). Measured here off the elevation
-// texture instead and scaled to the ground one pixel covers (v_dist * uPixelAngle, radians per pixel).
+// interior line (the screen-space gradient of their normal buffer).
 uniform float uRidgeInkStrength;
-uniform float uPixelAngle;
-// Bilinear by hand: the texture's own filter is not exact on a packed height (terrarium's R carries
-// every 256 m), which put a ~1 m step on every 256 m contour - a spike for any derivative.
-float exactHeightUv(vec2 uv) {
-    vec2 texel = uv / u_demInvTexSize - 0.5;
-    vec2 base = floor(texel);
-    vec2 f = texel - base;
-    vec2 at = (base + 0.5) * u_demInvTexSize;
-    float h00 = terrainHeightUv(at);
-    float h10 = terrainHeightUv(at + vec2(u_demInvTexSize.x, 0.0));
-    float h01 = terrainHeightUv(at + vec2(0.0, u_demInvTexSize.y));
-    float h11 = terrainHeightUv(at + u_demInvTexSize);
-    return mix(mix(h00, h10, f.x), mix(h01, h11, f.x), f.y);
-}
-float terrainTurn() {
-    if (u_demValid < 0.5 || uRidgeInkStrength <= 0.0) {
-        return 0.0;
-    }
-    // The curvature is measured over u_demNormalStep (TerrainOptions::normalSampleDistance): the
-    // scale of relief worth a line, where a fine DEM taken texel by texel is mostly noise - and as
-    // far as the texture's border of neighbour data reaches, so no tap reads past it.
-    float equatorTexel = max(u_demMetersPerTexel, 0.0001);
-    float stepTexels = max(u_demNormalStep / equatorTexel, 1.0);
-    float mercatorY = v_worldPos.y * u_demMercatorYScale;
-    float stepMetres = stepTexels * equatorTexel * 2.0 / (exp(mercatorY) + exp(-mercatorY));
-    // In the texture's own uv (v_demUv): v_worldPos is too coarse in float for taps a texel apart.
-    vec2 tapStep = vec2(stepTexels) * u_demInvTexSize;
-    vec2 uv = v_demUv;
-    float h = exactHeightUv(uv);
-    float east = exactHeightUv(uv + vec2(tapStep.x, 0.0));
-    float west = exactHeightUv(uv - vec2(tapStep.x, 0.0));
-    float north = exactHeightUv(uv + vec2(0.0, tapStep.y));
-    float south = exactHeightUv(uv - vec2(0.0, tapStep.y));
-    float twist = exactHeightUv(uv + tapStep) - exactHeightUv(uv + vec2(tapStep.x, -tapStep.y))
-                - exactHeightUv(uv + vec2(-tapStep.x, tapStep.y)) + exactHeightUv(uv - tapStep);
-    // The hessian over the step, times the two-pixel span of their central difference.
-    float hxx = (east - 2.0 * h + west) / stepMetres;
-    float hyy = (north - 2.0 * h + south) / stepMetres;
-    float hxy = twist / (4.0 * stepMetres);
-    vec2 slope = vec2(east - west, north - south) / (2.0 * stepMetres);
-    // Then to ONE PIXEL's worth of turn, as theirs is, so a ridge inks as it does on their screen.
-    float pixelMetres = v_dist * uPixelAngle;
-    return 2.0 * sqrt(hxx * hxx + 2.0 * hxy * hxy + hyy * hyy) / (1.0 + dot(slope, slope)) * pixelMetres / stepMetres;
+// How far the normal turns across one pixel, off the screen-space derivative of the interpolated one.
+float normalTurn(vec3 n) {
+#ifdef GL_OES_standard_derivatives
+    return length(vec2(length(dFdx(n)), length(dFdy(n))));
+#else
+    return 0.0;
+#endif
 }
 // Set by TerrainRenderer::renderTiles, per tile, from the MESH: (gridSize, attribsRefined, demZoom).
 uniform vec4 u_tileDebug;
@@ -298,12 +260,6 @@ vec4 surfaceColor() {
         float debugSlope = length(normalize(v_normal).xy);
         return vec4(debugSlope, debugSlope, debugSlope, 1.0);
     }
-    // PER FRAGMENT, off the elevation texture (terrainNormal, supplied by the SDK's surface shader
-    // prefix), not the mesh normal interpolated across a cell. A mesh carries one normal per cell
-    // corner and a cell is hundreds of metres of ground, so every ridge narrower than that was
-    // smoothed away before this shader ran - which is why the hillshade read soft next to
-    // peakfinder's and no amount of shade-strength tuning closed the gap. Falls back to v_normal
-    // wherever no elevation texture is bound yet.
     // 22: WHICH PATH THIS FRAGMENT TOOK, which is the only way to tell three states apart that all
     //     look like "wrong shading": RED no elevation texture (mesh-normal fallback), GREEN a skirt
     //     (keeps the edge normal), BLUE the per-fragment DEM normal.
@@ -321,11 +277,11 @@ vec4 surfaceColor() {
     if (v_normal.z < 0.0) {
         return vec4(uPaperColor.rgb, 1.0);
     }
-    // ONE SHADER FOR EVERY TILE. There is no mesh-normal path left to fall back to and no
-    // paper stand-in for a tile whose elevation texture has not arrived: terrainNormal returns
-    // flat until it does, so a loading tile shades as ground and then gains its relief. The
-    // picture fills in; it never changes style.
-    vec3 n = terrainNormal(u_demNormalStep);
+    // THE MESH'S OWN NORMAL, baked from the DEM per vertex, and the ridge term off its screen-space
+    // derivative. Both used to be read off the elevation texture per FRAGMENT - four taps for the
+    // normal, thirty-six for the curvature - which on an Adreno 610 was 58 ms of a 100 ms frame, where
+    // this is 20 and draws the same picture: the ridge ink is capped at uAmbient (6%) anyway.
+    vec3 n = normalize(v_normal);
     // 20: the DEM uv this fragment resolves to - red/green ramp inside [0,1], BLUE outside it. A
     //     fragment sampling outside its elevation texture reads the clamped edge, so all four taps
     //     return the same height and the normal comes out exactly vertical: a flat tile with a
@@ -348,7 +304,7 @@ vec4 surfaceColor() {
     // every distance, where adding the light instead greys everything out.
     // Theirs at cfg=es: ridge 0.6, slope 0, sun 0.05, cap 0.3 (u_fragmentParams1/2, read off the page).
     vec3 sun = normalize(u_sunDir);
-    float value = uSlopeShade * length(n.xy) + uRidgeInkStrength * terrainTurn();
+    float value = uSlopeShade * length(n.xy) + uRidgeInkStrength * normalTurn(n);
     float light = min(uAmbient + uShadeStrength * max(-0.2, -dot(n, sun)), 1.0);
     value = min(value, min(light, uInkCap));
     // THE HILLSHADE, on top of the cap: how much less sun a face gets than flat ground does, so flat
@@ -420,6 +376,132 @@ vec4 surfaceColor() {
  * what makes the line thin - it crushes the shallow differences a slope produces and keeps the
  * cliff, where a linear scale turns every gentle fold into a grey smear.
  */
+/**
+ * The peak finder's own outline: `reliefDepthOutlineShader` compiled down to what the peak finder
+ * draws - silhouettes only (operator 2), a linear ink, the skyline stroke - with the AR lens warp and
+ * the dilation rings present only when they are used.
+ *
+ * Not a runtime switch: on an Adreno 610 the unused branches of the general shader cost as much as the
+ * ones that ran (register pressure is paid for the whole program), and the pass went from 36 to a
+ * fraction of that once they were gone. `rings` is `ceil(uOutlineWidth) - 1`, so a width change across
+ * an integer means a new shader. The second pixel is the far side of the edge, off the same five taps;
+ * only past 2 does the line dilate, which is what reads the wider diamond.
+ */
+export function reliefSilhouetteShader({ ar = false, rings = 0 }: { ar?: boolean; rings?: number } = {}) {
+    const ringCount = Math.max(0, Math.min(3, Math.round(rings)));
+    // Width 1 to 2, the common case: the far side of the edge as the second pixel. Relative to the
+    // nearest neighbour it equals the near side's operator across the same edge, and it costs no read.
+    const farSide = `    float c = inverseDepth(depth);
+    float e1 = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(uInvScreenSize.x, 0.0)));
+    float w1 = inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(uInvScreenSize.x, 0.0)));
+    float n1 = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(0.0, uInvScreenSize.y)));
+    float s1 = inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(0.0, uInvScreenSize.y)));
+    float laplacian = e1 + w1 + n1 + s1 - 4.0 * c;
+    float edge = ink(max(-laplacian / c, 0.0)) * clamp(uOutlineWidth, 0.0, 1.0);
+    edge = max(edge, ink(max(laplacian, 0.0) / max(max(max(e1, w1), max(n1, s1)), c)) * clamp(uOutlineWidth - 1.0, 0.0, 1.0));`;
+    // Past 2 the line dilates. The first ring shares its taps: the operator at the four neighbours
+    // needs the diamond of radius 2 around the pixel, 13 reads, where computing each one read 25.
+    const firstRing = `    {
+        vec2 o = uInvScreenSize;
+        float e2 = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(2.0 * o.x, 0.0)));
+        float w2 = inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(2.0 * o.x, 0.0)));
+        float n2 = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(0.0, 2.0 * o.y)));
+        float s2 = inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(0.0, 2.0 * o.y)));
+        float ne = inverseDepth(texture2D(uTerrainDepthTex, uv + o));
+        float nw = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(-o.x, o.y)));
+        float se = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(o.x, -o.y)));
+        float sw = inverseDepth(texture2D(uTerrainDepthTex, uv - o));
+        float ringOperator = max(max(relativeLaplacian(e1, e2, c, ne, se), relativeLaplacian(w1, c, w2, nw, sw)),
+                                 max(relativeLaplacian(n1, ne, nw, n2, c), relativeLaplacian(s1, se, sw, c, s2)));
+        edge = max(edge, ink(ringOperator) * clamp(uOutlineWidth - 2.0, 0.0, 1.0));
+    }`;
+    const ringCode = Array.from({ length: Math.max(0, ringCount - 2) }, (unused, index) => {
+        const ring = index + 2;
+        return `    {
+        vec2 reach = uInvScreenSize * ${ring}.0;
+        float ringOperator = max(max(silhouetteAt(uv + vec2(reach.x, 0.0)), silhouetteAt(uv - vec2(reach.x, 0.0))),
+                                 max(silhouetteAt(uv + vec2(0.0, reach.y)), silhouetteAt(uv - vec2(0.0, reach.y))));
+        edge = max(edge, ink(ringOperator) * clamp(uOutlineWidth - ${ring + 1}.0, 0.0, 1.0));
+    }`;
+    }).join('\n');
+    return `#version 100
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+
+uniform sampler2D uColorTex;
+uniform sampler2D uTerrainDepthTex;
+uniform vec2 uInvScreenSize;
+uniform float uFar;
+uniform float uMetersPerUnit;
+uniform float uIntensity;
+uniform float uOutlineWidth;
+uniform float uOutlineGain;
+uniform float uOutlineFloor;
+uniform float uHorizonBoost;
+uniform float uHorizonWidth;
+uniform vec4 uInkColor;
+${ar ? LENS_DISTORTION_GLSL : ''}
+// 1 / distance, 0 for the sky - see reliefDepthOutlineShader's inverseDepthAt.
+float inverseDepth(vec4 c) {
+    return c.a < 0.5 ? 0.0 : 1.0 / max(dot(c.rgb, vec3(1.0, 1.0 / 255.0, 1.0 / 65025.0)) * uFar * uMetersPerUnit, 1.0);
+}
+// The laplacian of inverse depth, near side only, relative to the centre: where this pixel hides
+// ground behind it. A sky neighbour counts as infinitely far, so the skyline is a silhouette too.
+float silhouette(vec2 uv, float centre) {
+    vec2 offset = uInvScreenSize;
+    float laplacian = inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(offset.x, 0.0))) + inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(offset.x, 0.0)))
+                    + inverseDepth(texture2D(uTerrainDepthTex, uv + vec2(0.0, offset.y))) + inverseDepth(texture2D(uTerrainDepthTex, uv - vec2(0.0, offset.y)))
+                    - 4.0 * centre;
+    return max(-laplacian / centre, 0.0);
+}
+${
+    ringCount > 1
+        ? `// The same operator off five inverse depths already read; the sky neighbour of a pixel counts as
+// infinitely far, a sky centre as no operator at all.
+float relativeLaplacian(float centre, float a, float b, float c, float d) {
+    return centre > 0.0 ? max(-(a + b + c + d - 4.0 * centre) / centre, 0.0) : 0.0;
+}
+float silhouetteAt(vec2 uv) {
+    float centre = inverseDepth(texture2D(uTerrainDepthTex, uv));
+    return centre > 0.0 ? silhouette(uv, centre) : 0.0;
+}`
+        : ''
+}
+float ink(float relative) {
+    return clamp((relative - uOutlineFloor) * uOutlineGain, 0.0, 1.0) * uIntensity;
+}
+
+void main(void) {
+    vec2 uv = ${ar ? 'distortUv(gl_FragCoord.xy * uInvScreenSize)' : 'gl_FragCoord.xy * uInvScreenSize'};
+    vec4 color = texture2D(uColorTex, uv);
+    vec4 depth = texture2D(uTerrainDepthTex, uv);
+    // Sky: nothing to outline.
+    if (depth.a < 0.5) {
+        gl_FragColor = color;
+        return;
+    }
+${ringCount > 0 ? farSide + (ringCount > 1 ? '\n' + firstRing : '') : '    float edge = ink(silhouette(uv, inverseDepth(depth))) * clamp(uOutlineWidth, 0.0, 1.0);'}
+${ringCode}
+    // THE SKYLINE, as a stroke of its own width: any sky neighbour that far away.
+    vec2 skyOffset = uInvScreenSize * max(uHorizonWidth, 1.0);
+    float skyNeighbour = 1.0 - min(
+        min(texture2D(uTerrainDepthTex, uv + vec2(skyOffset.x, 0.0)).a, texture2D(uTerrainDepthTex, uv - vec2(skyOffset.x, 0.0)).a),
+        min(texture2D(uTerrainDepthTex, uv + vec2(0.0, skyOffset.y)).a, texture2D(uTerrainDepthTex, uv - vec2(0.0, skyOffset.y)).a));
+    edge = clamp(max(edge, skyNeighbour * uHorizonBoost), 0.0, 1.0);
+${
+    ar
+        ? `    // AR: PREMULTIPLIED over the hole the camera preview shows through, labels over the lines.
+    float inkAlpha = edge * uInkColor.a;
+    gl_FragColor = color + vec4(uInkColor.rgb * inkAlpha, inkAlpha) * (1.0 - color.a);`
+        : '    gl_FragColor = vec4(mix(color.rgb, uInkColor.rgb, edge), color.a);'
+}
+}
+`;
+}
+
 /**
  * The AR lens warp, shared by both outline shaders: its uniforms and `distortUv`.
  */
@@ -608,6 +690,20 @@ float operatorAt(vec2 uv) {
          + abs(centreLinear - linearDepthAt(uv - vec2(0.0, offset.y)));
 }
 
+// The ink an operator value gives: floor, gain, power and ceiling, then the overall intensity.
+// uOutlineFloor is a subtraction BEFORE the gain, and it is 0 by default - which is the
+// reference's behaviour and the look this mode is judged against. This operator is a gradient
+// MAGNITUDE, so the slope term it returns everywhere is not an artefact: it IS the hillshade,
+// and geo-three leans on exactly the same thing (its power is 0.23). Raising the floor turns it
+// into a pure edge detector - sharper lines, no wash - which reads as a different picture.
+// uOutlineCeiling is how far an edge may go past 1 before uIntensity scales it (unset reads as 1).
+// The reference's is 2: its outline is mixed into a TRANSPARENT terrain, alpha included, so its
+// ink is min(d * d * 0.5, 1) - a strong step reaches black even at its intensity of a half.
+float inkOf(float relative) {
+    float ceiling = uOutlineCeiling > 0.0 ? uOutlineCeiling : 1.0;
+    return min(pow(max((relative - uOutlineFloor) * uOutlineGain, 0.0), max(uOutlinePower, 0.01)), ceiling) * uIntensity;
+}
+
 void main(void) {
     // The post-process vertex stage passes no varying, so the uv is the fragment's own coordinate -
     // through the lens warp, so the scene, the depth and every tap stay registered in AR.
@@ -622,25 +718,21 @@ void main(void) {
     }
     // uOutlineWidth DILATES the one-pixel operator rather than spreading its taps: wider taps measure
     // a slope over more ground, which greyed the whole picture along with thickening the lines.
-    float relative = operatorAt(v_uv);
+    // FRACTIONAL, as coverage: the ring a width reaches into is inked by how far into it the width
+    // goes, and under 1 the line itself fades - a whole-ring dilation only changed at each integer.
+    // Unset reads as the one-pixel line it always was.
+    float width = uOutlineWidth > 0.0 ? uOutlineWidth : 1.0;
+    float edge = inkOf(operatorAt(v_uv)) * clamp(width, 0.0, 1.0);
     for (int ring = 1; ring < 4; ring++) {
-        if (float(ring) >= uOutlineWidth) {
+        float weight = clamp(width - float(ring), 0.0, 1.0);
+        if (weight <= 0.0) {
             break;
         }
         vec2 reach = uInvScreenSize * float(ring);
-        relative = max(relative, max(max(operatorAt(v_uv + vec2(reach.x, 0.0)), operatorAt(v_uv - vec2(reach.x, 0.0))),
-                                     max(operatorAt(v_uv + vec2(0.0, reach.y)), operatorAt(v_uv - vec2(0.0, reach.y)))));
+        float ringOperator = max(max(operatorAt(v_uv + vec2(reach.x, 0.0)), operatorAt(v_uv - vec2(reach.x, 0.0))),
+                                 max(operatorAt(v_uv + vec2(0.0, reach.y)), operatorAt(v_uv - vec2(0.0, reach.y))));
+        edge = max(edge, inkOf(ringOperator) * weight);
     }
-    // uOutlineFloor is a subtraction BEFORE the gain, and it is 0 by default - which is the
-    // reference's behaviour and the look this mode is judged against. This operator is a gradient
-    // MAGNITUDE, so the slope term it returns everywhere is not an artefact: it IS the hillshade,
-    // and geo-three leans on exactly the same thing (its power is 0.23). Raising the floor turns it
-    // into a pure edge detector - sharper lines, no wash - which reads as a different picture.
-    // uOutlineCeiling is how far an edge may go past 1 before uIntensity scales it (unset reads as 1).
-    // The reference's is 2: its outline is mixed into a TRANSPARENT terrain, alpha included, so its
-    // ink is min(d * d * 0.5, 1) - a strong step reaches black even at its intensity of a half.
-    float ceiling = uOutlineCeiling > 0.0 ? uOutlineCeiling : 1.0;
-    float edge = min(pow(max((relative - uOutlineFloor) * uOutlineGain, 0.0), max(uOutlinePower, 0.01)), ceiling) * uIntensity;
     // THE SKYLINE, as a stroke of its own width and weight. A depth operator draws it no heavier
     // than an interior fold; coverage says which neighbour is sky. Terrain side only, so it adds to
     // the reference's two-sided skyline (uInkSky) rather than filling the sky.
