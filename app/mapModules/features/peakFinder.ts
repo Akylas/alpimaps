@@ -22,7 +22,6 @@ import {
     peakFinderActive,
     peakFinderArActive,
     peakFinderDark,
-    peakFinderDebugView,
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
     peakFinderDetailSource,
@@ -1021,7 +1020,6 @@ function applyReliefSurface() {
     terrainOptions.setSurfaceParameter('uAmbient', PEAKFINDER_LOOK.ambient);
     terrainOptions.setSurfaceParameter('uInkCap', PEAKFINDER_LOOK.inkCap);
     terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
-    terrainOptions.setSurfaceParameter('uDebugView', get(peakFinderDebugView));
 }
 
 /**
@@ -1767,12 +1765,6 @@ applyLive(terrainSunAzimuth, applySun);
 applyLive(terrainSunAltitude, applySun);
 applyLive(peakFinderSun, applySun);
 applyLive(peakFinderSunTime, applySun);
-// BOTH passes: view 7 is drawn by the SURFACE shader and the rest by the post-process, so a knob
-// that only re-applied the outline left view 7 rendering the normal picture.
-applyLive(peakFinderDebugView, () => {
-    applyReliefSurface();
-    applyReliefOutline();
-});
 applyLive(peakFinderOcclusion, () => terrain().set('billboardOcclusionTolerance', get(peakFinderOcclusion)));
 applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(peakFinderViewDistance)));
 applyLive(peakFinderViewDistanceMetres, () => {
