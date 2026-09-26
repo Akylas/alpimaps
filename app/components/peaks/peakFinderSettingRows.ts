@@ -5,6 +5,7 @@ import {
     peakFinderDark,
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
+    peakFinderDetailSource,
     peakFinderFlyElevation,
     peakFinderHillshade,
     peakFinderHorizonBoost,
@@ -25,6 +26,7 @@ import {
     peakFinderOutlineWidth,
     peakFinderPeakZoom,
     peakFinderScreenOrientation,
+    peakFinderStaticPeaks,
     peakFinderSun,
     peakFinderSunHours,
     peakFinderTerrainMaxZoom,
@@ -194,6 +196,8 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         },
         // How the summits are collected: the zoom their tiles are read at, and how many a rebuilt
         // coarse tile keeps.
+        { type: 'switch', store: peakFinderDetailSource, title: lc('detail_source'), description: lc('detail_source_desc') },
+        { type: 'switch', store: peakFinderStaticPeaks, title: lc('static_peaks'), description: lc('static_peaks_desc') },
         { type: 'slider', store: peakFinderPeakZoom, title: lc('peak_search_zoom'), description: lc('peak_search_zoom_desc'), min: 8, max: 14, step: 1, format: whole },
         { type: 'slider', store: peakFinderDetailLevels, title: lc('detail_levels'), description: lc('detail_levels_desc'), min: 0, max: 5, step: 1, format: whole },
         {
