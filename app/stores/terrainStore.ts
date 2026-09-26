@@ -850,6 +850,8 @@ export const terrain3dActive = writable(false);
 export const peakFinderActive = writable(false);
 export const peakFinderArActive = writable(false);
 export const peakFinderHeadingFollowing = writable(false);
+/** The magnetometer looks uncalibrated while following: the overlay asks for a figure 8. */
+export const peakFinderCalibrationNeeded = writable(false);
 /**
  * Where the panorama is LOOKING, degrees clockwise from north.
  *

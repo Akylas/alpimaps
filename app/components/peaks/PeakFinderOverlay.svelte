@@ -21,6 +21,7 @@
         PEAK_FINDER_ELEVATION_RATE_MAX,
         PEAK_FINDER_ELEVATION_STEP,
         peakFinderArActive,
+        peakFinderCalibrationNeeded,
         peakFinderDark,
         peakFinderElevation,
         peakFinderHeading,
@@ -215,6 +216,20 @@
         <mdbutton class="small-floating-btn" color={colorOnSurface} text="mdi-cog" on:tap={() => showPeakFinderSettings()} on:longPress={() => showToolTip(lc('settings'))} />
         <mdbutton class="small-floating-btn" color={colorOnSurface} text="mdi-close" on:tap={() => exitPeakFinder()} on:longPress={() => showToolTip(lc('close'))} />
     </stacklayout>
+
+    <!-- the compass is following on an uncalibrated magnetometer: bottom right, out of the buttons' way -->
+    <mdbutton
+        backgroundColor="orange"
+        class="small-floating-btn"
+        color="white"
+        fontFamily={$fonts.app}
+        horizontalAlignment="right"
+        marginBottom={$windowInset.bottom + 10}
+        marginRight={$windowInset.right + 10}
+        text="alpimaps-compass-calibrate"
+        verticalAlignment="bottom"
+        visibility={$peakFinderCalibrationNeeded ? 'visible' : 'collapse'}
+        on:tap={() => showToolTip(lc('calibration_needed'))} />
 
     <!-- where the view is pointed: the needle holds north, the text is the direction being looked at.
          Top left, which is the one corner this mode leaves empty - the summit labels are pinned under
