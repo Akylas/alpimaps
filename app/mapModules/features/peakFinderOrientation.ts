@@ -1,5 +1,7 @@
 import { estimateMagneticField, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+import { showToast } from '@shared/utils/ui';
 import { get } from 'svelte/store';
+import { lc } from '~/helpers/locale';
 import { panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
 import { peakFinderHeadingFollowing } from '~/stores/terrainStore';
 import { TO_DEG } from '~/utils/geo';
@@ -73,9 +75,50 @@ let rotationListener: (data, sensor: string) => void = null;
  * worked out from gravity and the magnetic field instead, each low-passed first - raw, they shook.
  */
 let gravityListener: (data, sensor: string) => void = null;
-const VECTOR_SMOOTHING = 0.12;
+// Light: only spikes, before the cross products. The real smoothing is the 1€ filter on the angles.
+const VECTOR_SMOOTHING = 0.3;
 let gravity: number[] = null;
 let magnetic: number[] = null;
+/** Android's SENSOR_STATUS_ACCURACY_MEDIUM: below it the heading is off until a figure 8. */
+const MAGNETIC_ACCURACY_MEDIUM = 2;
+let calibrationHinted = false;
+
+/**
+ * The 1€ filter (Casiez et al.): heavy smoothing while the phone is still, where magnetometer
+ * noise is all there is, and less the faster it turns, so following does not lag. Degrees.
+ */
+class OneEuroFilter {
+    private value: number = null;
+    private speed = 0;
+    private time = 0;
+    constructor(
+        private minCutoff: number,
+        private beta: number,
+        private circular: boolean
+    ) {}
+    reset() {
+        this.value = null;
+    }
+    filter(sample: number, now: number) {
+        if (this.value === null) {
+            this.value = sample;
+            this.time = now;
+            return sample;
+        }
+        const dt = Math.max(1e-3, (now - this.time) / 1000);
+        this.time = now;
+        const alpha = (cutoff: number) => 1 / (1 + 1 / (2 * Math.PI * cutoff * dt));
+        const delta = this.circular ? shortestDelta(this.value, sample) : sample - this.value;
+        this.speed += alpha(1) * (delta / dt - this.speed);
+        this.value += alpha(this.minCutoff + this.beta * Math.abs(this.speed)) * delta;
+        if (this.circular) {
+            this.value = ((this.value % 360) + 360) % 360;
+        }
+        return this.value;
+    }
+}
+const headingFilter = new OneEuroFilter(0.4, 0.02, true);
+const pitchFilter = new OneEuroFilter(0.4, 0.02, false);
 /** The fused yaw, as the rotation vector reports it — absolute on android, arbitrary on iOS. */
 let fusedYaw: number = null;
 /** ...plus this, which is what makes it absolute on both. See the note at the top of this file. */
@@ -286,6 +329,10 @@ function onGravityOrMagnetic(data, sensor: string) {
         gravity = lowPass(gravity, data);
     } else if (sensor === 'magnetometer') {
         magnetic = lowPass(magnetic, data);
+        if (!calibrationHinted && data.accuracy !== undefined && data.accuracy < MAGNETIC_ACCURACY_MEDIUM) {
+            calibrationHinted = true;
+            showToast(lc('calibration_needed'));
+        }
     } else {
         return;
     }
@@ -303,14 +350,14 @@ function onGravityOrMagnetic(data, sensor: string) {
     [hx, hy, hz] = [hx / eastLength, hy / eastLength, hz / eastLength];
     const [ux, uy, uz] = [ax / upLength, ay / upLength, az / upLength];
     const look = { east: -hz, north: -(ux * hy - uy * hx), vertical: -uz };
+    const now = Date.now();
     const yaw = yawFromLook(look);
     if (yaw !== null && !isNaN(yaw)) {
-        const heading = (((yaw + magneticDeclination()) % 360) + 360) % 360;
-        smoothedHeading = smoothedHeading === null ? heading : smoothedHeading + SMOOTHING * shortestDelta(smoothedHeading, heading);
+        smoothedHeading = headingFilter.filter((((yaw + magneticDeclination()) % 360) + 360) % 360, now);
     }
     const pitch = pitchFromLook(look);
     if (!isNaN(pitch)) {
-        smoothedPitch = smoothedPitch === null ? pitch : smoothedPitch + SMOOTHING * (pitch - smoothedPitch);
+        smoothedPitch = pitchFilter.filter(pitch, now);
     }
     applyPose();
 }
@@ -340,6 +387,9 @@ export async function startOrientationFollowing(withTilt: boolean) {
         headingListener = null;
         gravity = null;
         magnetic = null;
+        calibrationHinted = false;
+        headingFilter.reset();
+        pitchFilter.reset();
         gravityListener = onGravityOrMagnetic;
         await startListeningForSensor(['accelerometer', 'magnetometer'], gravityListener, 16);
         peakFinderHeadingFollowing.set(true);
