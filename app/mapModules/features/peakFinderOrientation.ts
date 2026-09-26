@@ -1,4 +1,4 @@
-import { estimateMagneticField, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
+import { estimateMagneticField, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
 import { get } from 'svelte/store';
 import { panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
 import { peakFinderHeadingFollowing } from '~/stores/terrainStore';
@@ -68,6 +68,14 @@ const MIN_HORIZONTAL = 0.05;
 
 let headingListener: (data, sensor: string) => void = null;
 let rotationListener: (data, sensor: string) => void = null;
+/**
+ * No fused `rotation` on a phone without a gyroscope (the Crosscall has none): the look direction is
+ * worked out from gravity and the magnetic field instead, each low-passed first - raw, they shook.
+ */
+let gravityListener: (data, sensor: string) => void = null;
+const VECTOR_SMOOTHING = 0.12;
+let gravity: number[] = null;
+let magnetic: number[] = null;
 /** The fused yaw, as the rotation vector reports it — absolute on android, arbitrary on iOS. */
 let fusedYaw: number = null;
 /** ...plus this, which is what makes it absolute on both. See the note at the top of this file. */
@@ -199,17 +207,12 @@ function onHeading(data, sensor: string) {
     }
     let heading = 'trueHeading' in data ? data.trueHeading : data.heading;
     if (__ANDROID__ && !('trueHeading' in data)) {
-        // Android reports MAGNETIC north here; the declination is what turns it into true north, and
-        // the plugin can work it out from where we are.
-        const position = panoramaPosition();
-        if (position) {
-            const field = estimateMagneticField(position[1], position[0], position[2] ?? 0);
-            if (field) {
-                heading = heading + field.getDeclination();
-            }
-        }
+        heading = heading + magneticDeclination();
     }
-    if (heading === undefined || heading === null || isNaN(heading) || fusedYaw === null) {
+    if (heading === undefined || heading === null || isNaN(heading)) {
+        return;
+    }
+    if (fusedYaw === null) {
         return;
     }
     const offset = shortestDelta(fusedYaw, heading);
@@ -249,6 +252,70 @@ function onRotation(data, sensor: string) {
 }
 
 /**
+ * Android reports MAGNETIC north; the declination is what turns it into true north, and the plugin can
+ * work it out from where we are. 0 without a position.
+ */
+let declination: number = null;
+function magneticDeclination(): number {
+    if (declination === null) {
+        const position = panoramaPosition();
+        const field = position ? estimateMagneticField(position[1], position[0], position[2] ?? 0) : null;
+        if (!field) {
+            return 0;
+        }
+        declination = field.getDeclination(); // once per session: it changes over hundreds of km
+    }
+    return declination;
+}
+
+/** Smooths a sensor vector in place, so the look direction is not rebuilt off one noisy sample. */
+function lowPass(previous: number[], data): number[] {
+    const sample = [data.x, data.y, data.z];
+    if (!previous || sample.some(isNaN)) {
+        return sample;
+    }
+    return previous.map((value, index) => value + VECTOR_SMOOTHING * (sample[index] - value));
+}
+
+/**
+ * The camera's look direction without a gyroscope: android's getRotationMatrix done here. East is
+ * magnetic x gravity, north is gravity x east, and the camera looks down the device's -Z axis.
+ */
+function onGravityOrMagnetic(data, sensor: string) {
+    if (sensor === 'accelerometer') {
+        gravity = lowPass(gravity, data);
+    } else if (sensor === 'magnetometer') {
+        magnetic = lowPass(magnetic, data);
+    } else {
+        return;
+    }
+    if (!gravity || !magnetic) {
+        return;
+    }
+    const [ax, ay, az] = gravity;
+    const [mx, my, mz] = magnetic;
+    let [hx, hy, hz] = [my * az - mz * ay, mz * ax - mx * az, mx * ay - my * ax];
+    const eastLength = Math.hypot(hx, hy, hz);
+    const upLength = Math.hypot(ax, ay, az);
+    if (!(eastLength > 0.1) || !(upLength > 0)) {
+        return; // free fall, or next to a magnet
+    }
+    [hx, hy, hz] = [hx / eastLength, hy / eastLength, hz / eastLength];
+    const [ux, uy, uz] = [ax / upLength, ay / upLength, az / upLength];
+    const look = { east: -hz, north: -(ux * hy - uy * hx), vertical: -uz };
+    const yaw = yawFromLook(look);
+    if (yaw !== null && !isNaN(yaw)) {
+        const heading = (((yaw + magneticDeclination()) % 360) + 360) % 360;
+        smoothedHeading = smoothedHeading === null ? heading : smoothedHeading + SMOOTHING * shortestDelta(smoothedHeading, heading);
+    }
+    const pitch = pitchFromLook(look);
+    if (!isNaN(pitch)) {
+        smoothedPitch = smoothedPitch === null ? pitch : smoothedPitch + SMOOTHING * (pitch - smoothedPitch);
+    }
+    applyPose();
+}
+
+/**
  * Starts following the device.
  *
  * @param withTilt also aim the view up and down, which is what AR wants. Without it this is the plain
@@ -256,11 +323,12 @@ function onRotation(data, sensor: string) {
  */
 export async function startOrientationFollowing(withTilt: boolean) {
     followTilt = withTilt;
-    if (headingListener) {
+    if (headingListener || gravityListener) {
         return; // already running; `setFollowTilt` is what adds or drops the pitch
     }
     fusedYaw = null;
     northOffset = null;
+    declination = null;
     smoothedHeading = null;
     smoothedPitch = null;
     appliedHeading = null;
@@ -268,6 +336,15 @@ export async function startOrientationFollowing(withTilt: boolean) {
     headingListener = onHeading;
     // headingFilter 0: every reading, because the offset filter here is what decides how calm it is.
     // Rate is not critical any more — this sensor no longer moves the view, it only trims the offset.
+    if (!isSensorAvailable('rotation')) {
+        headingListener = null;
+        gravity = null;
+        magnetic = null;
+        gravityListener = onGravityOrMagnetic;
+        await startListeningForSensor(['accelerometer', 'magnetometer'], gravityListener, 16);
+        peakFinderHeadingFollowing.set(true);
+        return;
+    }
     await startListeningForSensor('heading', headingListener, 100, 0, { headingFilter: 0 });
     rotationListener = onRotation;
     // ALWAYS, and at ~60 Hz: this is the sensor that aims the view now, on both axes, so its rate is
@@ -288,6 +365,11 @@ export async function stopOrientationFollowing() {
         const listener = rotationListener;
         rotationListener = null;
         await stopListeningForSensor('rotation', listener);
+    }
+    if (gravityListener) {
+        const listener = gravityListener;
+        gravityListener = null;
+        await stopListeningForSensor(['accelerometer', 'magnetometer'], listener);
     }
     followTilt = false;
     peakFinderHeadingFollowing.set(false);
