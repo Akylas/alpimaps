@@ -16,6 +16,56 @@
     import dayjs from 'dayjs';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
+    import { get } from 'svelte/store';
+    import type { SettingsStore } from '~/stores/settingsStore';
+    import {
+        peakFinderDark,
+        peakFinderEnabled,
+        peakFinderFlyElevation,
+        peakFinderHorizonBoost,
+        peakFinderLabelAngle,
+        peakFinderLabelBand,
+        peakFinderLabelMaxDistance,
+        peakFinderLabelMinDistance,
+        peakFinderLabelPadding,
+        peakFinderLabelPersist,
+        peakFinderLabelPinTop,
+        peakFinderLabelRows,
+        peakFinderMeshResolution,
+        peakFinderOcclusion,
+        peakFinderOutlineWidth,
+        peakFinderScreenOrientation,
+        peakFinderTilt,
+        peakFinderViewDistance,
+        peakFinderViewDistanceMetres,
+        terrain3dEnabled,
+        terrain3dTilt,
+        terrainAutoFlattenByTilt,
+        terrainCameraClearance,
+        terrainDrapeResolution,
+        terrainExaggeration,
+        terrainFlattenModeFull,
+        terrainFog,
+        terrainFogVerticalEnd,
+        terrainFogVerticalStart,
+        terrainLighting,
+        terrainMeshResolution,
+        terrainShadowCascades,
+        terrainShadowCasterMargin,
+        terrainShadowDistance,
+        terrainShadowMapSize,
+        terrainShadowSoftness,
+        terrainShadowStrength,
+        terrainShadows,
+        terrainSky,
+        terrainSunAltitude,
+        terrainSunAzimuth,
+        terrainSwitchDuration,
+        terrainTouchMode,
+        terrainViewDistanceFactor,
+        terrainViewDistanceMax,
+        terrainViewDistanceMetres
+    } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
@@ -112,6 +162,33 @@
                 save();
             }
         };
+    }
+
+    /**
+     * A slider row backed by a svelte store rather than by a raw `ApplicationSettings` key.
+     *
+     * The terrain and peak-finder values are read by the map modules through their stores, so writing
+     * the key behind their back would persist the value without anything acting on it. `BaseSettingsPage`
+     * writes `item.store` when there is one, which both persists and notifies.
+     */
+    function storeSlider(store: SettingsStore<number>, title: string, min: number, max: number, step: number, formatter?: (value: number) => string) {
+        return {
+            id: 'setting',
+            type: 'slider',
+            key: title,
+            title,
+            store,
+            min,
+            max,
+            step,
+            formatter,
+            valueFormatter: formatter,
+            currentValue: () => get(store),
+            rightValue: () => (formatter ? formatter(get(store)) : get(store) + '')
+        };
+    }
+    function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
+        return { type: 'switch', key: title, title, description, store, value: get(store) };
     }
 
     function getSubSettings(id: string): any[] {
@@ -350,6 +427,94 @@
                         return setting.formatter ? setting.formatter(value) : value + '';
                     }
                 }));
+            case 'terrain_3d':
+                return [
+                    storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')),
+                    storeSlider(terrainExaggeration, lc('exageration'), 0.5, 3, 0.05, (value) => `${value.toFixed(2)}×`),
+                    storeSlider(terrainMeshResolution, lc('mesh_resolution'), 16, 256, 16),
+                    // 0 is the AUTOMATIC resolution (the screen's), not a size
+                    storeSlider(terrainDrapeResolution, lc('drape_resolution'), 0, 2048, 128, (value) => (value === 0 ? lc('auto') : `${Math.round(value)} px`)),
+                    storeSlider(terrainViewDistanceFactor, lc('view_distance_factor'), 0.5, 6, 0.1, (value) => `${value.toFixed(1)}×`),
+                    // from 0, which disables the clamp entirely — the demo's default
+                    storeSlider(terrainCameraClearance, lc('camera_clearance'), 0, 400, 10, formatDistance),
+                    storeSlider(terrainSwitchDuration, lc('switch_duration'), 0, 6, 0.1, (value) => `${value.toFixed(1)} s`),
+                    storeSlider(terrain3dTilt, lc('threed_tilt'), 5, 80, 1, (value) => `${Math.round(value)}°`),
+                    {
+                        id: 'setting',
+                        key: 'terrainTouchMode',
+                        title: lc('touch_mode'),
+                        description: lc('touch_mode_desc'),
+                        store: terrainTouchMode,
+                        valueType: 'string',
+                        currentValue: () => get(terrainTouchMode),
+                        rightValue: () => lc(`touch_mode_${get(terrainTouchMode)}`),
+                        values: [
+                            { title: lc('touch_mode_classic'), value: 'classic' },
+                            { title: lc('touch_mode_look'), value: 'look' },
+                            { title: lc('touch_mode_fps'), value: 'fps' }
+                        ]
+                    },
+                    storeSwitch(terrainFlattenModeFull, lc('threed_flatten_mode_full'), lc('threed_flatten_mode_full_desc')),
+                    storeSwitch(terrainAutoFlattenByTilt, lc('auto_3d_by_tilt'), lc('auto_3d_by_tilt_desc')),
+                    // a floor and a ceiling: the first can only extend the view, the second is what limits it
+                    storeSlider(terrainViewDistanceMetres, lc('viewing_distance'), 0, 400000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
+                    storeSlider(terrainViewDistanceMax, lc('viewing_distance_max'), 0, 400000, 5000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
+                    storeSwitch(terrainSky, lc('sky')),
+                    storeSwitch(terrainFog, lc('fog'), lc('terrain_fog_desc')),
+                    storeSlider(terrainFogVerticalStart, lc('fog_vertical_start'), 0, 4000, 100, formatDistance),
+                    storeSlider(terrainFogVerticalEnd, lc('fog_vertical_end'), 0, 6000, 100, formatDistance),
+                    storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc')),
+                    // the sun the shadows are cast from, written only while the ground is lit
+                    storeSlider(terrainSunAzimuth, lc('sun_azimuth'), 0, 360, 1, (value) => `${Math.round(value)}°`),
+                    storeSlider(terrainSunAltitude, lc('sun_altitude'), 0, 90, 1, (value) => `${Math.round(value)}°`),
+                    storeSwitch(terrainShadows, lc('shadows'), lc('shadows_desc')),
+                    storeSlider(terrainShadowStrength, lc('shadow_strength'), 0, 2, 0.05, (value) => value.toFixed(2)),
+                    // 0 is the SDK's own 4.5, hence the label rather than a number
+                    storeSlider(terrainShadowDistance, lc('shadow_distance'), 0, 12, 0.5, (value) => (value === 0 ? lc('auto') : `${value.toFixed(1)}×`)),
+                    storeSlider(terrainShadowMapSize, lc('shadow_map_size'), 256, 4096, 256, (value) => `${Math.round(value)} px`),
+                    storeSlider(terrainShadowCascades, lc('shadow_cascades'), 1, 4, 1),
+                    storeSlider(terrainShadowSoftness, lc('shadow_softness'), 0, 8, 0.5, (value) => value.toFixed(1)),
+                    storeSlider(terrainShadowCasterMargin, lc('shadow_caster_margin'), 0, 8, 1)
+                ];
+            case 'peak_finder':
+                return [
+                    storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')),
+                    storeSwitch(peakFinderDark, lc('dark_mode')),
+                    {
+                        id: 'setting',
+                        key: 'peakFinderScreenOrientation',
+                        title: lc('screen_orientation'),
+                        description: lc('screen_orientation_desc'),
+                        store: peakFinderScreenOrientation,
+                        valueType: 'string',
+                        currentValue: () => get(peakFinderScreenOrientation),
+                        rightValue: () => lc(get(peakFinderScreenOrientation)),
+                        values: [
+                            { title: lc('auto'), value: 'auto' },
+                            { title: lc('landscape'), value: 'landscape' },
+                            { title: lc('portrait'), value: 'portrait' }
+                        ]
+                    },
+                    storeSlider(peakFinderTilt, lc('tilt'), 1, 80, 1, (value) => `${Math.round(value)}°`),
+                    storeSlider(peakFinderFlyElevation, lc('viewpoint_elevation'), 0, 6000, 50, formatDistance),
+                    storeSlider(peakFinderViewDistance, lc('view_distance_factor'), 0.5, 6, 0.5, (value) => `${value.toFixed(1)}×`),
+                    storeSlider(peakFinderViewDistanceMetres, lc('viewing_distance'), 10000, 400000, 10000, formatDistance),
+                    storeSlider(peakFinderMeshResolution, lc('mesh_resolution'), 32, 512, 32),
+                    storeSlider(peakFinderOcclusion, lc('label_occlusion_tolerance'), 0, 0.5, 0.01, (value) => value.toFixed(2)),
+                    // The relief: geo-three's look — see GEO_THREE in ~/mapModules/terrain/reliefShaders.ts.
+                    storeSlider(peakFinderOutlineWidth, lc('outline_width'), 0.5, 4, 0.1, (value) => value.toFixed(1)),
+                    storeSlider(peakFinderHorizonBoost, lc('horizon_boost'), 0, 6, 0.5, (value) => value.toFixed(1)),
+                    // The summit labels. Each of these rebuilds the label decoder, which is why they are
+                    // grouped last: they are the expensive ones to drag.
+                    storeSwitch(peakFinderLabelPinTop, lc('label_pin_top'), lc('label_pin_top_desc')),
+                    storeSlider(peakFinderLabelBand, lc('label_band'), 0, 0.6, 0.05, (value) => `${Math.round(value * 100)}%`),
+                    storeSlider(peakFinderLabelAngle, lc('label_angle'), 0, 90, 5, (value) => `${Math.round(value)}°`),
+                    storeSlider(peakFinderLabelRows, lc('label_rows'), 1, 6, 1),
+                    storeSlider(peakFinderLabelMinDistance, lc('label_min_distance'), 0, 40, 1, (value) => (value === 0 ? lc('no_limit') : `${Math.round(value)} px`)),
+                    storeSlider(peakFinderLabelPersist, lc('label_persist'), 0, 30, 1),
+                    storeSlider(peakFinderLabelPadding, lc('label_padding'), 0, 600, 25, (value) => (value === 0 ? lc('automatic') : `${Math.round(value)} px`)),
+                    storeSlider(peakFinderLabelMaxDistance, lc('label_max_distance'), 0, 300000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value)))
+                ];
             case 'map_data':
                 return (
                     dataPathsAvailable
@@ -543,6 +708,20 @@
                         title: lc('map_data'),
                         description: lc('map_data_settings'),
                         options: () => getSubSettings('map_data')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-video-3d',
+                        title: lc('terrain_3d'),
+                        description: lc('terrain_3d_settings'),
+                        options: () => getSubSettings('terrain_3d')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-summit',
+                        title: lc('peak_finder'),
+                        description: lc('peak_finder_settings'),
+                        options: () => getSubSettings('peak_finder')
                     },
                     {
                         id: 'sub_settings',

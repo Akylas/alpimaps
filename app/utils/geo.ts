@@ -380,6 +380,21 @@ function computeAngleBetween(from: MapPos, to: MapPos) {
 export function computeDistanceBetween(from: MapPos, to: MapPos) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
+/**
+ * The initial great-circle bearing from `from` to `to`, in degrees clockwise from north (0..360).
+ *
+ * "Initial" because a great circle does not hold a constant bearing: this is the direction to set off
+ * in, which is what aiming a camera at something wants.
+ */
+export function bearingBetween(from: MapPos, to: MapPos) {
+    const fromLat = toRadians(from.lat);
+    const toLat = toRadians(to.lat);
+    const deltaLon = toRadians(to.lon - from.lon);
+    const y = Math.sin(deltaLon) * Math.cos(toLat);
+    const x = Math.cos(fromLat) * Math.sin(toLat) - Math.sin(fromLat) * Math.cos(toLat) * Math.cos(deltaLon);
+    return mod(toDegrees(Math.atan2(y, x)), 360);
+}
+
 /** How far it is from `index` to the end of the path, in metres. */
 export function distanceToEnd(index: number, poly: MapPos[]) {
     let result = 0;

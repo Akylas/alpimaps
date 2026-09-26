@@ -57,6 +57,7 @@ The repo config files are the source of truth — follow them, don't restate the
 
 Beyond those:
 
+- Comments are rare and short (max 2-3 lines). Only to explain a hack or something not obvious from the code — never narrate what the code plainly does.
 - Prefer `const`/`let`, never `var`.
 - NEVER use a single-letter variable name — always prefer an explicit name.
 - Avoid `!` (non-null assertion) and `as SomeType` casts (`as const` is fine). Use type guards, narrowing, or restructured types instead.
@@ -94,7 +95,7 @@ Be careful: several files exist as **drifted forks** in both places (components 
 
 ### Build flags
 
-`app.webpack.config.js` injects compile-time globals via `DefinePlugin` — treat them as `if` guards that get dead-code-eliminated: `PRODUCTION`, `DEV_LOG`, `__ANDROID__` / `__IOS__`, `WITH_BUS_SUPPORT`, `WITH_PEAK_FINDER`, `WITH_3D_MAP`, `SENTRY_ENABLED`, `TEST_ZIP_STYLES`, `PLAY_STORE_BUILD`. Declarations live in [`typings/references.d.ts`](../typings/references.d.ts).
+`app.webpack.config.js` injects compile-time globals via `DefinePlugin` — treat them as `if` guards that get dead-code-eliminated: `PRODUCTION`, `DEV_LOG`, `__ANDROID__` / `__IOS__`, `WITH_BUS_SUPPORT`, `SENTRY_ENABLED`, `TEST_ZIP_STYLES`, `PLAY_STORE_BUILD`. Declarations live in [`typings/references.d.ts`](../typings/references.d.ts).
 
 **Always gate `console.log` behind `DEV_LOG &&`** — ungated logs ship.
 

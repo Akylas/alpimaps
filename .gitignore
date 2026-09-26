@@ -89,14 +89,11 @@ app/**/*.LICENSE.txt
 dev_assets/styles/osmxml_cleaned/*.xml
 dev_assets/styles/inner_cleaned/*.xml
 dev_assets/styles/mobile-sdk-styles
-dev_assets/styles/base/fonts/osm.ttf
-dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf
 dev_assets/styles/**/*.xml
 dev_assets/styles/test*
 /css2xml_*
-/dev_assets/styles/inner/fonts/osm.ttf
-/dev_assets/styles/osm/fonts/osm.ttf
-/dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf
+# fontforge output of the `buildstyle` step
+/dev_assets/fonts/
 
 #documents
 opencv/**/*
@@ -105,5 +102,4 @@ tesseract/**/*
 !tesseract/**/README.md
 /webpdfviewer/**/*.css
 /app/assets/**/*.html
-/dev_assets/styles/base/fonts/materialdesignicons-webfont.ttf
 /app/assets/peakfinder/index.html

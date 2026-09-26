@@ -11,6 +11,7 @@ import type { Provider } from '~/data/tilesources';
 import { l, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
 import MapModule, { type MapDecoder, getMapContext } from '~/mapModules/MapModule';
+import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
 import { clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
@@ -25,6 +26,7 @@ import { openLink } from '~/utils/ui';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
+import { CLog } from '@nativescript-community/sentry';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -309,12 +311,15 @@ export default class CustomLayersModule extends MapModule {
     /**
      * Slope colouring, on the composite's own hillshade child.
      *
-     * Held rather than read back from `showSlopePercentages`, because that store cannot be read:
-     * its proxy answers null for a value sitting at its default, so a default of `true` reads as
-     * off everywhere in the UI. Starting at false is what the map has always done - the mode used
-     * to be applied only when the button was pressed - and this keeps it across a re-attach.
+     * Read from the STORE, not from `layerProps['showSlopePercentages']`: the proxy answers null for
+     * a value sitting at its default, and this one defaults to `true` - so starting this at false
+     * left the button drawn as selected with no shader on the layer, and the first press turned
+     * "off" what was already off. The store carries the persisted value, or the default.
+     *
+     * Held rather than read on every call so the mode survives a re-attach, where the composite
+     * builds a brand new child.
      */
-    private slopeMode = false;
+    private slopeMode = !!get(layerProps.getStore('showSlopePercentages'));
     toggleHillshadeSlope(value: boolean) {
         this.slopeMode = value;
         this.applySlopeMode(this.terrainAttachedTo);
@@ -327,13 +332,28 @@ export default class CustomLayersModule extends MapModule {
      *
      * An EMPTY shader is how the built-in one comes back - the renderer substitutes its default for
      * it - which is why turning slopes off does not hand back a shader of ours.
+     *
+     * The normal map has to be built at TRUE scale for this, which is what `heightScale` 1 and the
+     * exaggeration off mean: the shader reads the slope ANGLE straight off the normal
+     * (`acos(dot(normal, surfaceNormal))`) and compares it against degrees. The SDK builds the map
+     * as `decoderScale * heightScale * pixelsPerMetre`, so the hillshade's artistic `heightScale`
+     * - 0.2 here - damps every slope to a fifth of itself, and a real 40 deg read as ~11 deg:
+     * under the lowest step, so the shader painted nothing anywhere. The legacy pre-MapLibre
+     * formula carried a x160 that hid this; the true-slope one is the default now.
      */
     private applySlopeMode(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         this.withExternalChild(composite, HILLSHADE_SLOT, (result) => {
             const child = api.wrap(result.handle, 'massif::HillshadeRasterTileLayer');
-            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode) {
+            // Back to what the sheet persisted when slopes go off - `applyHillshadeSettings` reads
+            // the same key, and this is the only other thing that writes it.
+            const heightScale = this.slopeMode ? 1 : ApplicationSettings.getNumber(`${this.slotItem?.name}_heightScale`, 0.2);
+            // Guarded because BOTH of these rebuild every normal map the layer holds
+            // (`updateTiles`), and this runs on every attach. The shader itself only redraws, so it
+            // rides along rather than being worth a check of its own.
+            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode || child.get('heightScale') !== heightScale) {
                 child.apply({
                     exagerateHeightScaleEnabled: !this.slopeMode,
+                    heightScale,
                     normalMapLightingShader: this.slopeMode ? getSlopeHillshadeShader() : ''
                 });
             }
@@ -399,17 +419,18 @@ export default class CustomLayersModule extends MapModule {
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
         const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000'));
-        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#00000000'));
+        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#000000'));
         const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000'));
         layer.apply({
             tileFilterMode:
                 tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR',
             visibleZoomRange: [ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0), ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 24)],
             contrast: ApplicationSettings.getNumber(`${name}_contrast`, 0.5),
-            heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, 1.0),
+            heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, 0.2),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_ALL',
             illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
             highlightColor: highlightColor.argb,
+            hillshadeMethod: 'IGOR',
             shadowColor: shadowColor.argb,
             accentColor: accentColor.argb,
             opacity,
@@ -1082,6 +1103,9 @@ export default class CustomLayersModule extends MapModule {
                 })
             );
         this.updateTerrainAttachment();
+        // The 3D mesh reads the same DEM as the hillshade, so it has to follow this: the source it was
+        // attached to may just have been replaced. Optional — the feature may not be registered.
+        getMapModule('terrain3d')?.onTerrainSourceChanged();
     }
 
     /**
@@ -1106,6 +1130,14 @@ export default class CustomLayersModule extends MapModule {
         // changed - most calls here are an unrelated overlay being added or moved. Turning a slot
         // off goes through setSlotVisible instead, which costs nothing.
         if (target?.handle === this.terrainAttachedTo?.handle && this.terrainSource === this.attachedSource) {
+            // Nothing to re-wire — but the ITEM's layer still has to be re-pointed at the child.
+            // `updateTerrain` just set it back to `item.terrainLayer`, which for the woven DEM is the
+            // DETACHED elevation layer: it is on no map, so the menu's opacity slider and the options
+            // sheet were writing to a layer nothing draws. Every call that lands here is one of those
+            // — a source toggled, a layer added, reordered or rebuilt — and after the first of them
+            // the hillshade controls silently stopped doing anything until the attachment happened to
+            // change. This is the only half that is cheap: no external source is added or removed.
+            this.setHillshadeChild(this.terrainAttachedTo);
             return;
         }
         if (this.terrainAttachedTo) {
@@ -1295,11 +1327,11 @@ export default class CustomLayersModule extends MapModule {
                     const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
                     this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
 
-                    DEV_LOG &&
-                        console.log(
-                            'sources',
-                            sources.map((s) => s.path)
-                        );
+                    // DEV_LOG &&
+                    //     console.log(
+                    //         'sources',
+                    //         sources.map((s) => s.path)
+                    //     );
                     if (sources.length) {
                         mbtiles.push(
                             this.createMergeDataSource(

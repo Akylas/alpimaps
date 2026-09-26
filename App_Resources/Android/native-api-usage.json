@@ -63,7 +63,9 @@
         "java.lang:Iterable",
         "android.text:Spannable",
         "java.lang:Long",
-        "java.util:TimeZone"
+        "java.util:TimeZone",
+        "android.hardware.camera2:CameraCharacteristics",
+        "android.hardware.camera2:CameraCharacteristics.Key"
     ],
     "blacklist": [
         "android.widget:DatePicker",

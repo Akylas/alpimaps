@@ -80,8 +80,12 @@ function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: str
             canvas.drawCircle(size / 2, size / 2, size * 0.32, paint);
         }
         // a name per look, so the file is written once and reused across launches
-        url = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
-        new ImageSource(canvas.getImage()).saveToFile(url, 'png');
+        const filePath = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
+        new ImageSource(canvas.getImage()).saveToFile(filePath, 'png');
+        // `file://`, not the bare path: URLFileLoader reads http, https, assets and file, and rejects
+        // anything else as an unsupported schema. Handed a plain path it loaded nothing, the bitmap
+        // failed to build, and the style fell back to carto's default pin — the white marker
+        url = `file://${filePath}`;
         userBitmapUrls[key] = url;
     }
     return url;
@@ -387,7 +391,11 @@ export default class UserLocationModule extends MapModule {
         const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
         camera.moveTo(target, {
             zoom,
-            rotation: -this.mLastUserLocation.bearing,
+            // the last bearing we were actually given, which is also what the arrow is drawn with, so
+            // the camera and the marker never point different ways. The fix's own bearing is missing
+            // on a phone standing still — `-undefined` is NaN, JSON writes that as null, and the
+            // native argument decoder refused the whole flyTo as a bad spec
+            rotation: -this.lastKnownBearing,
             tilt: tilt > 0 ? tilt : undefined,
             duration
         });

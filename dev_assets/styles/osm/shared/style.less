@@ -1,9 +1,15 @@
 //Fonts
-@font_face:'DIN Pro';
-@mont: @font_face + ' Regular';
+// The text faces come from the DEVICE - the style packages none. The SDK resolves an unpackaged
+// face-name through SystemFontUtils, which reads a trailing weight and style off the name: on iOS
+// CoreText answers 'Helvetica Neue Medium' with HelveticaNeue-Medium, on Android the alias table
+// maps the family to Roboto and the suffixes pick Roboto-Medium. 'Helvetica Neue Regular' would
+// drop to plain Helvetica on iOS, so the regular weight is the bare family name.
+@font_face:'Helvetica Neue';
+@mont: @font_face;
 @mont_md: @font_face + ' Medium';
 @mont_bd: @font_face + ' Bold';
 @mont_it: @font_face + ' Medium Italic';
+// The app's icon font, handed to the decoder as a fallback font (APP_FONTS in MapModule.ts).
 @osm: 'osm';
 
 //@name: [name:[param::lang]] ? [name:[param::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
@@ -74,7 +80,9 @@
 // lose the race for pixels against its own icon, and the pair no longer needs a shared feature-id
 // to be culled together. The name takes the first free side in this order and, where no side is
 // free, `shield-text-optional` leaves the icon alone rather than hiding both.
-@poi_anchors: 'bottom,right,left,top';
+@poi_anchors: bottom,right,left;
+@poi_justify: auto;
+@poi_radial_offset: 0.8;
 // A shield whose name is the LITERAL empty string is dropped by the translator - symbolizer, icon
 // and all - so a rule that wants its icon alone cannot just leave the name unset. This evaluates to
 // nothing without BEING the empty literal, which is what gets the icon-only zooms their icon back.

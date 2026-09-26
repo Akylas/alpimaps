@@ -3,6 +3,7 @@
     import { isSensorAvailable } from '@nativescript-community/sensors';
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifLayer, MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
@@ -34,7 +35,17 @@
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
-    import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData, type MapDecoder, type MapMoveReason, getMapContext, handleMapAction, setMapContext } from '~/mapModules/MapModule';
+    import {
+        ClickType,
+        type ElementClickData,
+        type FeatureClickData,
+        type MapClickData,
+        type MapDecoder,
+        type MapMoveReason,
+        getMapContext,
+        handleMapAction,
+        setMapContext
+    } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
@@ -42,6 +53,9 @@
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
+    import '~/mapModules/features/terrain3d';
+    import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
+    import type { PreviewGeometrySource } from '~/utils/cameraFov';
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
@@ -55,7 +69,8 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { innerNutiProps, itemLock, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -78,6 +93,12 @@
     let page: NativeViewElementNode<Page>;
     let widgetsHolder: NativeViewElementNode<GridLayout>;
     let massifMap: MassifMap;
+    /**
+     * The plugin's own view, kept because the surface API deliberately has no verb for a couple of
+     * things — a terrain surface shader's parameters and a post-process effect are object-API only.
+     * Handed out through `mapContext.getMapView()` so callers do not have to cast `massifMap.view`.
+     */
+    let mapViewInstance: MassifMapView;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -140,6 +161,40 @@
         navigationViewComponent = navigationView.default;
         maneuverViewComponent = maneuverView.default;
         offRoutePanelComponent = offRoutePanel.default;
+    }
+    /**
+     * The peak finder's own chrome, loaded the first time the mode is entered and then kept — the map
+     * is the app's root component, so nothing that is only needed in a mode belongs on the startup path.
+     */
+    let peakFinderOverlayComponent = null;
+    /**
+     * The panorama's MAP, which is a second map view of its own — see `PeakFinderMap.svelte`.
+     *
+     * The component class is kept once loaded, but the view itself is behind an `{#if}` on the mode:
+     * a second GL surface with its own terrain is not something to hold open for a mode that is not
+     * on screen.
+     */
+    let peakFinderMapComponent = null;
+    /**
+     * The AR preview, handed to the peak finder when its session opens.
+     *
+     * Only the view owning the capture session can report what the preview is actually doing — the
+     * stream's resolution, its rotation, how it is fitted into the view, the live zoom — and the peak
+     * finder needs all four to draw the terrain at the same scale as the photograph.
+     */
+    let arCameraPreview: PreviewGeometrySource = null;
+    async function loadPeakFinderComponents() {
+        if (!peakFinderOverlayComponent) {
+            peakFinderOverlayComponent = (await import('~/components/peaks/PeakFinderOverlay.svelte')).default;
+        }
+        if (!peakFinderMapComponent) {
+            peakFinderMapComponent = (await import('~/components/peaks/PeakFinderMap.svelte')).default;
+        }
+    }
+    $: if ($peakFinderActive) {
+        loadPeakFinderComponents();
+        // the mode owns the whole screen: an open item sheet would sit on top of the panorama
+        bottomSheetStepIndex = 0;
     }
     let topTranslationY;
     let networkConnected = false;
@@ -246,6 +301,14 @@
                             item,
                             isFeatureInteresting: true
                         });
+                        // geo:lat,lon?pf=1 opens the panorama straight away. A DEBUGGING AFFORDANCE:
+                        // the peak finder's faults are run-to-run ("the same tile renders differently
+                        // each time"), and comparing runs needs the exact same viewpoint twice, which
+                        // hand-navigation cannot give. With this, a run is one adb command.
+                        if (isGeoUrl && parseUrlQueryParameters(link).pf) {
+                            const { enterPeakFinder } = await import('~/mapModules/features/peakFinder');
+                            await enterPeakFinder(item as any);
+                        }
                     } else {
                         // happens before map ready
                         ApplicationSettings.setString('mapFocusPos', JSON.stringify(pos));
@@ -342,6 +405,7 @@
         setMapContext({
             // drawer: drawer.nativeView,
             getMap: () => massifMap,
+            getMapView: () => mapViewInstance,
             getMainPage: () => page,
             getCurrentLanguage: () => currentLanguage,
             getSelectedItem: () => $selectedItem,
@@ -451,7 +515,11 @@
                     return;
                 }
                 data.cancel = true;
-                if (searchView && searchView.hasFocus()) {
+                // First: the peak finder is a full-screen mode, so back means "leave it", not "leave
+                // the app" — and its chrome is hidden, so there is nothing else back could mean.
+                if ($peakFinderActive) {
+                    exitPeakFinder();
+                } else if (searchView && searchView.hasFocus()) {
                     searchView.unfocus();
                 } else if (directionsPanelVisible) {
                     directionsPanel.cancel();
@@ -521,7 +589,9 @@
     async function onMainMapReady(e) {
         try {
             // The whole map, through one handle: options, layers, camera and events.
+            mapViewInstance = e.object;
             massifMap = api.attach(e.object);
+            // massifMap.set('drawDistance', 4);
             api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
@@ -607,11 +677,11 @@
             }
             mapContext.runOnModules('onMapInteraction', {
                 data: {
-                    panAction: e.panAction as boolean,
-                    zoomAction: e.zoomAction as boolean,
-                    rotateAction: e.rotateAction as boolean,
-                    tiltAction: e.tiltAction as boolean,
-                    animationStarted: e.animationStarted as boolean
+                    panAction: e.panAction,
+                    zoomAction: e.zoomAction,
+                    rotateAction: e.rotateAction,
+                    tiltAction: e.tiltAction,
+                    animationStarted: e.animationStarted
                 }
             });
             mapMoved = true;
@@ -684,6 +754,13 @@
         forceZoomOut?: boolean;
     }) {
         try {
+            // The peak finder has one selection of its own — the summit chip — and its own layer
+            // raises it. Everything else that reaches here (a tap on the panorama, a marker on the
+            // items layer, which stays on the map) would put the item sheet up behind chrome that
+            // the mode hides.
+            if ($peakFinderActive) {
+                return;
+            }
             if (isFeatureInteresting && setSelected && $itemLock && $selectedItem) {
                 return;
             }
@@ -812,42 +889,39 @@
                     })();
                 }
                 if (setSelected && !route) {
-                    const toUpdate = {} as Record<string, any>;
-                    Promise.all([
+                    // elevation and address are two independent lookups that each update the
+                    // selection when they land. They used to share one Promise.all, so the sheet's
+                    // elevation waited on the (much slower) geocoder before showing.
+                    if (props && 'ele' in props === false && packageService.hasElevation()) {
                         (async () => {
-                            if (!props.address?.['city']) {
-                                const r = await packageService.getItemAddress(item);
-                                if (r && $selectedItem.geometry === item.geometry) {
-                                    // DEV_LOG && console.log('found addresses', JSON.stringify(r));
-                                    toUpdate.address = r;
-                                    // $selectedItem.properties.address = r;
-                                    if (r.name && !$selectedItem.properties.name) {
-                                        toUpdate.name = r.name;
-                                        //     $selectedItem.properties.name = r.name;
-                                    }
-                                    return true;
-                                }
+                            const geometry = item.geometry as GeoJSONPoint;
+                            const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
+                            const ele = await packageService.getElevation(position);
+                            if (ele && $selectedItem?.geometry === item.geometry) {
+                                // DEV_LOG && console.log('found elevation', ele);
+                                setSelectedItem($selectedItem, { ele });
                             }
-                        })(),
-                        (async () => {
-                            if (props && 'ele' in props === false && packageService.hasElevation()) {
-                                const geometry = item.geometry as GeoJSONPoint;
-                                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-                                const r = await packageService.getElevation(position);
-                                if (r && $selectedItem.geometry === item.geometry) {
-                                    // DEV_LOG && console.log('found elevation', r);
-                                    toUpdate.ele = r;
-                                    // $selectedItem.properties = $selectedItem.properties || {};
-                                    // $selectedItem.properties['ele'] = r;
-                                    return true;
-                                }
+                        })();
+                    }
+                    if (!props.address?.['city']) {
+                        // off the selection tick on purpose: the offline geocoder is built and its
+                        // databases opened synchronously on first use, which held the item sheet
+                        // back until the lookup was under way
+                        setTimeout(async () => {
+                            if ($selectedItem?.geometry !== item.geometry) {
+                                return;
                             }
-                        })()
-                    ]).then((r) => {
-                        if (r.some((d) => d === true)) {
-                            setSelectedItem($selectedItem, toUpdate);
-                        }
-                    });
+                            const address = await packageService.getItemAddress(item);
+                            if (address && $selectedItem?.geometry === item.geometry) {
+                                // DEV_LOG && console.log('found addresses', JSON.stringify(address));
+                                const toUpdate = { address } as Record<string, any>;
+                                if (address.name && !$selectedItem.properties.name) {
+                                    toUpdate.name = address.name;
+                                }
+                                setSelectedItem($selectedItem, toUpdate);
+                            }
+                        }, 0);
+                    }
                     // if (props && 'timezone' in props === false) {
                     //     const geometry = item.geometry as GeoJSONPoint;
                     //     const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
@@ -907,12 +981,18 @@
                 }
                 extent = JSON.parse(extent as any);
             }
-            camera.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], { screen, integerZoom: true, resetRotation: true, duration: 200 });
+            camera.fitBounds(
+                [
+                    [extent[0], extent[1]],
+                    [extent[2], extent[3]]
+                ],
+                { screen, integerZoom: true, resetRotation: true, duration: 200 }
+            );
         } else if (item.route) {
             // the item's own GeoJSON: no SDK geometry to build, and nothing to convert out of a
             // projection - what used to make this "not perfect as vectorTile geometry might not
             // represent the whole route" is gone with it
-            const bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+            const bounds = geometryBounds(item.geometry);
             if (bounds) {
                 camera.fitBounds(toBounds(bounds), { screen, integerZoom: true, resetRotation: true, duration: 200 });
             }
@@ -1011,7 +1091,10 @@
     // `rotationGestures`, not `rotatable`: the latter is checked in CameraRotationEvent and stops
     // EVERY rotation, so the compass reset stopped working when the user turned rotation off
     $: massifMap?.set('rotationGestures', $rotateEnabled);
-    $: massifMap?.set('tiltRange', [$pitchEnabled ? 30 : 90, 90]);
+    // Derived rather than written here: the 3D and peak-finder modes have an opinion about this too,
+    // and this line could only see `pitchEnabled` — so toggling that setting while a mode was up put
+    // the range back and broke the mode. See mapTiltRange in stores/terrainStore.
+    $: massifMap?.set('tiltRange', $mapTiltRange);
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
     // the two sheets swap places: the item one steps aside while a route is being followed, and comes
@@ -1075,13 +1158,17 @@
     //     // clickedFeatures = [];
     // }
 
-    function onVectorTileClicked(data: FeatureClickData) {
+    // The result is written straight into `e.consumed`, which the facade hands back to native code as
+    // a Boolean. `undefined` there unboxes to a null Boolean and takes the UI thread down, so every
+    // path out of these three handlers has to be a real boolean - `runOnModules` answers `unknown`.
+    function onVectorTileClicked(data: FeatureClickData): boolean {
+        DEV_LOG && console.log('onVectorTileClicked', data);
         if (isTransitPickerPending()) {
-            return;
+            return false;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
 
-        const handledByModules = mapContext.runOnModules('onVectorTileClicked', data) as boolean;
+        const handledByModules = !!mapContext.runOnModules('onVectorTileClicked', data);
         DEV_LOG &&
             console.log(
                 'onVectorTileClicked',
@@ -1161,7 +1248,7 @@
         }
         return handledByModules;
     }
-    function onVectorElementClicked(data: ElementClickData) {
+    function onVectorElementClicked(data: ElementClickData): boolean {
         const { clickType, elementPosition, metaData, position } = data;
         DEV_LOG && console.log('onVectorElementClicked', clickType, position, metaData);
         Object.keys(metaData).forEach((k) => {
@@ -1198,7 +1285,7 @@
         }
         return !!handledByModules;
     }
-    function onVectorTileElementClicked(data: FeatureClickData) {
+    function onVectorTileElementClicked(data: FeatureClickData): boolean {
         const { clickType, featureData, featurePosition, position } = data;
         DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
         const feature = itemModule.getFeature(featureData.id);
@@ -1210,7 +1297,7 @@
         //         feature.properties[k] = JSON.parse(feature.properties[k]);
         //     }
         // });
-        const handledByModules = mapContext.runOnModules('onVectorTileElementClicked', data) as boolean;
+        const handledByModules = !!mapContext.runOnModules('onVectorTileElementClicked', data);
         // if (DEV_LOG) {
         //     console.log('handledByModules', handledByModules);
         // }
@@ -1340,7 +1427,7 @@
                 try {
                     // the archive, only to list what is in it: `assetNames` is a plain property
                     const pack = api.create('assets', `assets.probe.${e.name}`, { type: 'zip', data: { type: 'url', url: `file://${e.path}` } });
-                    const assetsNames = pack.get('assetNames') as string[];
+                    const assetsNames = pack.get('assetNames');
                     pack.destroy();
                     // DEV_LOG && console.log('assetsNames', assetsNames);
                     styles.push(
@@ -1402,6 +1489,8 @@
     $: navigationTopOffset = $isNavigationRunning && (!!$navigationProgress?.instruction || !!$navigationProgress?.offRoute) ? Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) : 0;
     // while running, the map is what the user needs: pausing brings the whole interface back
     $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
+    /** The peak finder is a full-screen mode: it brings its own controls and hides the map's. */
+    $: hideChromeForPeakFinder = $peakFinderActive;
 
     let scrollingWidgetsOpacity = 1;
     let mapTranslation = 0;
@@ -1861,11 +1950,31 @@
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
-        <massifmap
-            accessibilityLabel="massifMap"
-            zoom={16}
-            on:mapReady={onMainMapReady}
-            on:layoutChanged={reportFullyDrawn} />
+        <!-- The peak finder's camera preview, UNDER the map: a translucent GL surface can only reveal
+             another surface below it, so this has to be a sibling that comes first, not part of the
+             overlay. `{#if}` rather than `visibility`, so no camera is held open outside the mode. -->
+        {#if $peakFinderArActive}
+            <!-- `cameraOpen` is when the capture session exists, and so when its chosen format's
+                 field of view can be read: matching the terrain to the preview is what makes a
+                 summit the same size in both pictures.
+                 `enablePinchZoom` is off EXPLICITLY, not incidentally. A zoom changes the preview's
+                 field of view, and the live ratio is the one thing about the preview that neither
+                 Camera2's static characteristics nor `AVCaptureDevice` can be asked for on Android -
+                 it lives on the CameraX camera the plugin owns. Pinned at 1 it needs no asking. -->
+            <cameraview bind:this={arCameraPreview} enablePinchZoom={false} height="100%" width="100%" on:cameraOpen={() => onArCameraOpen(arCameraPreview)} />
+        {/if}
+        <!-- Taken out of the way while AR is on: a translucent map reveals the surface UNDER it, and
+             three surfaces (preview, live map, panorama) have no defined order between them. The live
+             map keeps its camera, its layers and its decoded tiles either way — collapsing it only
+             costs the GL resources, which it rebuilds when it comes back. -->
+        <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
+
+        <!-- The peak finder's own map, over the live one. An `{#if}`, so outside the mode there is no
+             second map at all - and inside it the live map is not touched, merely covered: the SDK
+             renders when dirty, so an idle map under an opaque one costs nothing. -->
+        {#if $peakFinderActive && peakFinderMapComponent}
+            <svelte:component this={peakFinderMapComponent} />
+        {/if}
 
         <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
              kept fighting over the single sheet they used to share -->
@@ -1909,7 +2018,8 @@
                     horizontalAlignment="left"
                     marginLeft={5}
                     marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
-                    verticalAlignment="top" />
+                    verticalAlignment="top"
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
@@ -1918,7 +2028,7 @@
                     marginLeft={40}
                     marginTop={90 + navigationTopOffset}
                     verticalAlignment="top"
-                    visibility={$isNavigating ? 'collapse' : 'visible'} />
+                    visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -1927,7 +2037,7 @@
                     item={$selectedItem}
                     margin={10}
                     verticalAlignment="top"
-                    visibility={hideChromeForNavigation ? 'collapse' : 'visible'}
+                    visibility={hideChromeForNavigation || hideChromeForPeakFinder ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
                 {#if maneuverViewComponent}
                     <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
@@ -1952,7 +2062,7 @@
                     ios:marginTop={66 + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
-                    visibility={currentMapRotation !== 0 ? 'visible' : 'collapse'}
+                    visibility={currentMapRotation !== 0 && !$peakFinderActive ? 'visible' : 'collapse'}
                     on:tap={resetBearing}>
                     <label class="mdi" color={colorPrimary} rotate={currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
                 </mdcardview>
@@ -1967,7 +2077,15 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                <MapScrollingWidgets bind:this={mapScrollingWidgets} isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3} opacity={scrollingWidgetsOpacity} />
+                <MapScrollingWidgets
+                    bind:this={mapScrollingWidgets}
+                    isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    opacity={scrollingWidgetsOpacity}
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
+                <!-- the peak finder's own chrome, over the map and above every other widget -->
+                {#if peakFinderOverlayComponent}
+                    <svelte:component this={peakFinderOverlayComponent} style="z-index:1002;" visibility={$peakFinderActive ? 'visible' : 'collapse'} />
+                {/if}
                 <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
                      over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
                 <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">
