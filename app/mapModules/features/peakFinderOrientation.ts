@@ -1,6 +1,5 @@
 import { estimateMagneticField, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
 import { Utils } from '@nativescript/core';
-import { get } from 'svelte/store';
 import { panoramaInteractionTime, panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
 import { peakFinderCalibrationNeeded, peakFinderHeadingFollowing } from '~/stores/terrainStore';
 import { TO_DEG } from '~/utils/geo';
@@ -398,7 +397,7 @@ function onGravityOrMagnetic(data, sensor: string) {
 export async function startOrientationFollowing(withTilt: boolean) {
     followTilt = withTilt;
     if (headingListener || gravityListener) {
-        return; // already running; `setFollowTilt` is what adds or drops the pitch
+        return; // already running
     }
     fusedYaw = null;
     northOffset = null;
@@ -451,20 +450,4 @@ export async function stopOrientationFollowing() {
     peakFinderCalibrationNeeded.set(false);
     followTilt = false;
     peakFinderHeadingFollowing.set(false);
-}
-
-/** Whether the pitch is being written, so AR can be turned off without stopping the compass. */
-export function isFollowingTilt() {
-    return followTilt;
-}
-
-/** Adds or drops the tilt half in place. */
-export async function setFollowTilt(withTilt: boolean) {
-    if (!get(peakFinderHeadingFollowing)) {
-        return;
-    }
-    // A flag and nothing else: the rotation sensor drives the HEADING too, so it keeps running either
-    // way. It used to be started and stopped here, which is also why the compass-only mode fell back
-    // to the magnetometer.
-    followTilt = withTilt;
 }
