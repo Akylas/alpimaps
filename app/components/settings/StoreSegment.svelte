@@ -14,7 +14,7 @@
     /** In display order. `value` is what goes in the store, `title` is what the user reads. */
     export let options: { value: string; title: string }[];
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 </script>
 
 <gridlayout columns="*" padding="6 16 6 16" rows="auto,auto,auto" {...$$restProps}>
@@ -24,11 +24,13 @@
     {/if}
     <stacklayout marginTop={4} orientation="horizontal" row={2}>
         {#each options as option (option.value)}
+            <!-- the selected one filled: a coloured text alone is invisible on e-ink -->
             <label
+                backgroundColor={$store === option.value ? colorPrimary : 'transparent'}
                 borderColor={$store === option.value ? colorPrimary : colorOnSurfaceVariant}
                 borderRadius={14}
                 borderWidth={1}
-                color={$store === option.value ? colorPrimary : colorOnSurfaceVariant}
+                color={$store === option.value ? colorOnPrimary : colorOnSurfaceVariant}
                 fontSize={13}
                 marginRight={6}
                 padding="4 12 4 12"
