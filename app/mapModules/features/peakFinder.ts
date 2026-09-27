@@ -1732,11 +1732,14 @@ export const flyToSelectedPeak = tryCatchFunction(async () => {
  */
 export const toggleHeadingFollowing = tryCatchFunction(async () => {
     const orientation = await import('~/mapModules/features/peakFinderOrientation');
+    // Switched by hand, the sensors are the user's from now on: leaving AR must not stop them, and
+    // there is nothing left for it to stop if they are switched off during AR.
+    arStartedFollowing = false;
     if (get(peakFinderHeadingFollowing)) {
         await orientation.stopOrientationFollowing();
     } else {
-        // Without AR the compass turns the view but leaves the panorama's tilt alone.
-        await orientation.startOrientationFollowing(get(peakFinderArActive));
+        // The compass is AR without the camera: heading AND pitch.
+        await orientation.startOrientationFollowing(true);
     }
 });
 
@@ -1760,11 +1763,10 @@ export const toggleArMode = tryCatchFunction(async () => {
         // The sensors go with it. AR is the only thing that needs the ROTATION sensor, and if AR is
         // also what switched the compass on then the magnetometer was AR's too — leaving either
         // running kept the device polled and the view moving after the mode was off.
+        // Otherwise the compass was on before, and carries on as it was.
         if (arStartedFollowing) {
             arStartedFollowing = false;
             stopOrientationFollowing();
-        } else {
-            await setOrientationTilt(false);
         }
         return;
     }
@@ -1794,14 +1796,26 @@ function setMapTranslucent(translucent: boolean) {
     }
 }
 
-/** Follows the device fully — turning AND aiming up and down, which is what AR is for. */
-async function setOrientationTilt(withTilt: boolean) {
-    const orientation = await import('~/mapModules/features/peakFinderOrientation');
-    if (withTilt && !get(peakFinderHeadingFollowing)) {
-        await orientation.startOrientationFollowing(true);
+/** AR follows the device, turning and aiming up and down; the compass does the same without it. */
+async function startFollowingForAr() {
+    if (get(peakFinderHeadingFollowing)) {
         return;
     }
-    await orientation.setFollowTilt(withTilt);
+    const orientation = await import('~/mapModules/features/peakFinderOrientation');
+    await orientation.startOrientationFollowing(true);
+}
+
+/**
+ * Looking straight up or down is for a view the device aims (AR or the compass); a panorama the
+ * finger turns keeps its own range, and goes back to its own tilt rather than wherever the phone
+ * last pointed (often the ground).
+ */
+function applyTiltRange() {
+    const aimed = get(peakFinderArActive) || get(peakFinderHeadingFollowing);
+    panorama.set('tiltRange', aimed ? [-90, 90] : PANORAMA_RANGE);
+    if (!aimed) {
+        panoramaView?.setTilt(get(peakFinderTilt), 0.3);
+    }
 }
 
 export function stopOrientationFollowing() {
@@ -1937,15 +1951,12 @@ applyLive(peakFinderArActive, () => {
     // In AR the field of view stops being a preference and becomes a MEASUREMENT of the camera
     // behind the frame, which is the only way a summit is the same size in both pictures.
     applyFieldOfView();
-    // A panorama held up at the sky has to be able to look straight up, which the panorama's own
-    // range stops short of.
-    panorama.set('tiltRange', get(peakFinderArActive) ? [-90, 90] : PANORAMA_RANGE);
-    if (!get(peakFinderArActive)) {
-        // Back to the panorama's own tilt, not wherever the phone last pointed (often the ground).
-        panoramaView?.setTilt(get(peakFinderTilt), 0.3);
+    applyTiltRange();
+    if (get(peakFinderArActive)) {
+        startFollowingForAr().catch((error) => showError(error));
     }
-    setOrientationTilt(get(peakFinderArActive)).catch((error) => showError(error));
 });
+applyLive(peakFinderHeadingFollowing, applyTiltRange);
 
 /** The live map going away takes the panorama with it — the app is shutting down or re-creating. */
 function onMapDestroyed() {
