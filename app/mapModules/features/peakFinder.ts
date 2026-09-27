@@ -13,6 +13,7 @@ import { registerMapModule } from '~/mapModules/registry';
 import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefPalette, reliefSilhouetteShader } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
+import { setupPeakFinderMoon, teardownPeakFinderMoon, updatePeakFinderMoon } from '~/mapModules/features/peakFinderMoon';
 import { peakFinderSunMoment, raisePeakFinderSun, setupPeakFinderSun, sunPositionAt, teardownPeakFinderSun, updatePeakFinderSun } from '~/mapModules/features/peakFinderSun';
 import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
@@ -1227,6 +1228,7 @@ function applySun() {
 /** Re-applies everything the light/dark switch touches. The label palette is style text, so the
  *  decoder is rebuilt with it. */
 function applyPalette() {
+    updatePeakFinderMoon();
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
@@ -1524,6 +1526,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         eye: () => viewpoint,
         dark: () => isPeakFinderDark()
     });
+    setupPeakFinderMoon({ map, eye: () => viewpoint, dark: () => isPeakFinderDark() });
     // Not awaited: the layer above already draws, and this swaps it onto the collected set when it
     // has one. See `loadStaticPeaks`.
     loadStaticPeaks();
@@ -1536,6 +1539,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     publishHeading();
     // The sun needs the eye, and lights the relief from where it is seen.
     updatePeakFinderSun(true);
+    updatePeakFinderMoon();
     applySun();
     // One listener for all three: a first-person two-finger drag MOVES the camera, so the same
     // events that turn the compass are the ones that walk the eye - out from under its summit set,
@@ -1546,6 +1550,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
             publishHeading();
             checkStaticPeaks();
             updatePeakFinderSun();
+            updatePeakFinderMoon();
         },
         { throttle: 100 }
     );
@@ -1590,6 +1595,7 @@ export function teardownPanorama() {
     // but that check runs from the layer's own update - and once the panorama stops drawing, it never
     // runs again. So the layer has to go, not just the terrain.
     teardownPeakFinderSun();
+    teardownPeakFinderMoon();
     try {
         panorama?.layers().clear();
     } catch (error) {

@@ -25,6 +25,7 @@ import {
     peakFinderLensCorrection,
     peakFinderMaxFieldOfView,
     peakFinderMeshResolution,
+    peakFinderMoon,
     peakFinderOcclusion,
     peakFinderOutlineWidth,
     peakFinderPeakZoom,
@@ -102,6 +103,7 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         { type: 'suntime', title: lc('sun_time') },
         { type: 'switch', store: peakFinderSun, title: lc('sun_path'), description: lc('sun_path_desc') },
         { type: 'switch', store: peakFinderSunHours, title: lc('sun_hours'), description: lc('sun_hours_desc') },
+        { type: 'switch', store: peakFinderMoon, title: lc('moon_path'), description: lc('moon_path_desc') },
 
         section(lc('summit_labels')),
         {
