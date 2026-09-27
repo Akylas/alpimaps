@@ -23,6 +23,10 @@ export function lockOrientation(orientation: ScreenOrientation): boolean {
         case 'portrait':
             requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT;
             break;
+        case 'sensor':
+            // Ignores the user's rotation lock, which UNSPECIFIED respects.
+            requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
+            break;
         default:
             // UNSPECIFIED, rather than reading the manifest's value back: it hands the decision to the
             // system, which is what also restores the user's own rotation lock.

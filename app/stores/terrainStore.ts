@@ -1,4 +1,4 @@
-import { derived, writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { settingsStore } from '~/stores/settingsStore';
 import { pitchEnabled } from '~/stores/mapStore';
 import type { MapPos } from '~/utils/geo';
@@ -535,8 +535,10 @@ export const peakFinderTerrainMaxZoom = settingsStore('peakFinderTerrainMaxZoom'
  */
 export const peakFinderMeshCacheSize = settingsStore('peakFinderMeshCacheSize', 640);
 export const peakFinderElevationCacheSize = settingsStore('peakFinderElevationCacheSize', 768);
-/** false = ink on paper, true = paper on ink (and what AR wants). */
+/** false = ink on paper, true = paper on ink. */
 export const peakFinderDark = settingsStore('peakFinderDark', false);
+/** The same switch in AR, kept apart: dark by default, as black ink hardly reads over a photo. */
+export const peakFinderArDark = settingsStore('peakFinderArDark', true);
 
 /*
  * THE GLOBE, AND WHY THE PANORAMA DOES NOT USE IT.
@@ -621,6 +623,11 @@ export const peakFinderOutlineWidth = settingsStore('peakFinderOutlineWidth', 1)
 export const peakFinderHillshade = settingsStore('peakFinderHillshade', 0.15);
 /** The skyline stroke's width in texels, drawn on the terrain side; 0 leaves the silhouette line alone. */
 export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.5);
+/** The same two in AR, where a line thick enough for the relief can hide the photo. 0 = the above. */
+/** The relief's vertical scale in the panorama, apart from the 3D mode's: 1 is what the eye sees. */
+export const peakFinderExaggeration = settingsStore('peakFinderExaggeration', 1);
+export const peakFinderArOutlineWidth = settingsStore('peakFinderArOutlineWidth', 0);
+export const peakFinderArHorizonBoost = settingsStore('peakFinderArHorizonBoost', 0);
 
 // --- peak finder: the summit labels -----------------------------------------------------------
 //
@@ -635,8 +642,12 @@ export const peakFinderHorizonBoost = settingsStore('peakFinderHorizonBoost', 2.
  */
 export type PeakFinderLabelLayout = 'band' | 'top' | 'skyline';
 export const peakFinderLabelLayout = settingsStore<PeakFinderLabelLayout>('peakFinderLabelLayout', 'top');
-/** The row's height, as a fraction of the screen height from the top - see `peakFinderLabelLayout`. */
-export const peakFinderLabelBand = settingsStore('peakFinderLabelBand', 0.2);
+/**
+ * The row's height from the top, px - see `peakFinderLabelLayout`. Pixels, not a fraction of the
+ * screen: in landscape a fraction left too little room and the names were dropped. 0 = auto, the
+ * height a name wrapped at `peakFinderLabelWrap` needs, so every name fits.
+ */
+export const peakFinderLabelRowHeight = settingsStore('peakFinderLabelRowHeight', 0);
 /**
  * Rotation of the label text off its leader line, degrees.
  *
@@ -849,6 +860,15 @@ export const peakFinderScreenOrientation = settingsStore<PeakFinderOrientation>(
 export const terrain3dActive = writable(false);
 export const peakFinderActive = writable(false);
 export const peakFinderArActive = writable(false);
+/** The palette drawn: AR's own switch while it is on. */
+export const peakFinderDarkActive = derived([peakFinderArActive, peakFinderDark, peakFinderArDark], ([ar, dark, arDark]) => (ar ? arDark : dark));
+/**
+ * The same, read now. A subscriber of `peakFinderArActive` that reads the derived store can run before
+ * the derived one has updated, and draws the other mode's palette.
+ */
+export function isPeakFinderDark() {
+    return get(peakFinderArActive) ? get(peakFinderArDark) : get(peakFinderDark);
+}
 export const peakFinderHeadingFollowing = writable(false);
 /** The magnetometer looks uncalibrated while following: the overlay asks for a figure 8. */
 export const peakFinderCalibrationNeeded = writable(false);

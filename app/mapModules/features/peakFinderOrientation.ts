@@ -1,7 +1,7 @@
 import { estimateMagneticField, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
 import { Utils } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
+import { panoramaInteractionTime, panoramaMapView, panoramaPosition } from '~/mapModules/features/peakFinder';
 import { peakFinderCalibrationNeeded, peakFinderHeadingFollowing } from '~/stores/terrainStore';
 import { TO_DEG } from '~/utils/geo';
 
@@ -132,6 +132,14 @@ let smoothedPitch: number = null;
 let appliedHeading: number = null;
 let appliedPitch = 0;
 let followTilt = false;
+/**
+ * What a drag moved the view off the sensors' pose, added to it from then on: the sensors are often
+ * off by a few degrees, and the user lines the panorama up with what they see. Kept for the session.
+ */
+let headingTrim = 0;
+let pitchTrim = 0;
+/** Sensor writes wait this long after the last touch, so the finger aims the view meanwhile. */
+const INTERACTION_HOLD_MS = 300;
 
 /**
  * The map VIEW the sensors aim, which is the PANORAMA's — not the live map's.
@@ -210,9 +218,17 @@ function applyPose() {
     if (!view || smoothedHeading === null) {
         return;
     }
-    const headingSettled = appliedHeading !== null && Math.abs(shortestDelta(appliedHeading, smoothedHeading)) < DEAD_ZONE_DEGREES;
+    if (Date.now() - panoramaInteractionTime() < INTERACTION_HOLD_MS) {
+        headingTrim = shortestDelta(smoothedHeading, -view.bearing);
+        if (followTilt && smoothedPitch !== null) {
+            pitchTrim = view.tilt + smoothedPitch;
+        }
+        return;
+    }
+    const heading = (smoothedHeading + headingTrim + 360) % 360;
+    const headingSettled = appliedHeading !== null && Math.abs(shortestDelta(appliedHeading, heading)) < DEAD_ZONE_DEGREES;
     // The map's rotation is the opposite of the heading — turning right turns the view left.
-    const rotation = -smoothedHeading;
+    const rotation = -heading;
 
     // Compass only: the tilt is NOT ours. Writing it here would drag the view back to whatever it was
     // when following started, every time the user turned, and quietly undo their own tilt gesture.
@@ -220,18 +236,18 @@ function applyPose() {
         if (headingSettled) {
             return;
         }
-        appliedHeading = smoothedHeading;
+        appliedHeading = heading;
         view.setMapRotation(rotation, 0);
         return;
     }
 
     // tilt 90 is straight down in this SDK and 0 is the horizon, so looking UP is a NEGATIVE tilt —
     // the opposite sign to a pitch above the horizon.
-    const tilt = Math.max(-LOOK_UP_LIMIT, Math.min(90, -smoothedPitch));
+    const tilt = Math.max(-LOOK_UP_LIMIT, Math.min(90, -smoothedPitch + pitchTrim));
     if (headingSettled && Math.abs(tilt - appliedPitch) < DEAD_ZONE_DEGREES) {
         return;
     }
-    appliedHeading = smoothedHeading;
+    appliedHeading = heading;
     appliedPitch = tilt;
     // The VIEW's setters, which carry no target position — see `mapView` for why the facade's
     // `camera().rotation()`/`camera().tilt()` cannot be used here. Duration 0: the sensor is already

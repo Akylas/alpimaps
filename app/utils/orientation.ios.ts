@@ -65,7 +65,7 @@ function requestGeometry(mask: UIInterfaceOrientationMask): boolean {
 }
 
 export function lockOrientation(orientation: ScreenOrientation): boolean {
-    if (orientation === 'auto') {
+    if (orientation === 'auto' || orientation === 'sensor') {
         if (preferredMask === null) {
             return true;
         }

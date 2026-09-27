@@ -21,8 +21,10 @@
         PEAK_FINDER_ELEVATION_RATE_MAX,
         PEAK_FINDER_ELEVATION_STEP,
         peakFinderArActive,
+        peakFinderArDark,
         peakFinderCalibrationNeeded,
         peakFinderDark,
+        peakFinderDarkActive,
         peakFinderElevation,
         peakFinderHeading,
         peakFinderHeadingFollowing,
@@ -31,9 +33,12 @@
     } from '~/stores/terrainStore';
     import { clearInterval, setInterval } from '~/utils/utils';
     import { showToolTip } from '@shared/utils/ui';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { fonts, windowInset } from '~/variables';
 
-    $: ({ colorOnSurface, colorPrimary, colorWidgetBackground } = $colors);
+    // The panorama's light/dark style, not the app theme's: the chrome sits on the panorama.
+    $: colorOnSurface = $peakFinderDarkActive ? '#ffffff' : '#18181b';
+    // Opaque on e-ink, which dithers alpha.
+    $: colorWidgetBackground = $peakFinderDarkActive ? (isEInk ? '#000000' : '#18181be6') : isEInk ? '#ffffff' : '#ffffffe6';
 
     /**
      * The selected summit's plate.
@@ -156,7 +161,7 @@
             verticalTextAlignment="center"
             width={48}
             on:touch={(event) => onElevationTouch(event, 1)} />
-        <label color={colorOnSurface} fontSize={12} text={`${Math.round($peakFinderElevation)} m`} textAlignment="center" width={48} />
+        <label color={colorOnSurface} fontSize={12} text={`+${Math.round($peakFinderElevation)} m`} textAlignment="center" width={48} />
         <label
             color={colorOnSurface}
             fontFamily={$fonts.mdi}
@@ -194,27 +199,32 @@
         <mdbutton col={1} color={peakChipColor} fontFamily={$fonts.app} text="alpimaps-paper-plane" variant="text" width={40} on:tap={() => flyToSelectedPeak()} />
     </gridlayout>
 
-    <stacklayout horizontalAlignment="left" marginLeft={$windowInset.left + 4} orientation="vertical" verticalAlignment="bottom">
+    <!-- An active toggle shows its filled icon, its outline one otherwise: a tint is invisible on e-ink.
+         Centred: at the bottom the last button fell under the navigation bar. -->
+    <stacklayout horizontalAlignment="left" marginLeft={$windowInset.left + 4} orientation="vertical" verticalAlignment="middle">
         <mdbutton
+            backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
-            color={$peakFinderHeadingFollowing ? colorPrimary : colorOnSurface}
-            text="mdi-compass"
+            color={colorOnSurface}
+            text={$peakFinderHeadingFollowing ? 'mdi-compass' : 'mdi-compass-outline'}
             on:tap={() => toggleHeadingFollowing()}
             on:longPress={() => showToolTip(lc('compass'))} />
         <mdbutton
+            backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
-            color={$peakFinderDark ? colorPrimary : colorOnSurface}
+            color={colorOnSurface}
             text="mdi-theme-light-dark"
-            on:tap={() => peakFinderDark.set(!$peakFinderDark)}
+            on:tap={() => ($peakFinderArActive ? peakFinderArDark.set(!$peakFinderArDark) : peakFinderDark.set(!$peakFinderDark))}
             on:longPress={() => showToolTip(lc('dark_mode'))} />
         <mdbutton
+            backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
-            color={$peakFinderArActive ? colorPrimary : colorOnSurface}
-            text="mdi-camera"
+            color={colorOnSurface}
+            text={$peakFinderArActive ? 'mdi-camera' : 'mdi-camera-outline'}
             on:tap={() => toggleArMode()}
             on:longPress={() => showToolTip(lc('ar_mode'))} />
-        <mdbutton class="small-floating-btn" color={colorOnSurface} text="mdi-cog" on:tap={() => showPeakFinderSettings()} on:longPress={() => showToolTip(lc('settings'))} />
-        <mdbutton class="small-floating-btn" color={colorOnSurface} text="mdi-close" on:tap={() => exitPeakFinder()} on:longPress={() => showToolTip(lc('close'))} />
+        <mdbutton backgroundColor={colorWidgetBackground} class="small-floating-btn" color={colorOnSurface} text="mdi-cog" on:tap={() => showPeakFinderSettings()} on:longPress={() => showToolTip(lc('settings'))} />
+        <mdbutton backgroundColor={colorWidgetBackground} class="small-floating-btn" color={colorOnSurface} text="mdi-close" on:tap={() => exitPeakFinder()} on:longPress={() => showToolTip(lc('close'))} />
     </stacklayout>
 
     <!-- the compass is following on an uncalibrated magnetometer: bottom right, out of the buttons' way -->
@@ -243,7 +253,7 @@
         padding="6 8"
         verticalAlignment="top">
         <label
-            color={$peakFinderHeadingFollowing ? colorPrimary : colorOnSurface}
+            color={colorOnSurface}
             fontFamily={$fonts.mdi}
             fontSize={28}
             height={32}
