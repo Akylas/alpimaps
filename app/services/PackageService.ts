@@ -194,6 +194,8 @@ class PackageService extends Observable {
     hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
     /** The local base map. A composite since the terrain moved into its style's own layer order. */
     localVectorTileLayer?: MassifLayer<'massif::CompositeVectorTileLayer'>;
+    /** The base map files alone, regions first: what the peak finder reads its summits from. */
+    localBaseMbtiles: string[] = [];
 
     mLocalOfflineRoutingSearchService: MassifObject<'massif::MultiValhallaOfflineRoutingService'>;
     mOnlineRoutingSearchService: MassifObject<'massif::ValhallaOnlineRoutingService'>;
