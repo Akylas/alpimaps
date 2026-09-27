@@ -194,7 +194,7 @@
     $: if ($peakFinderActive) {
         loadPeakFinderComponents();
         // the mode owns the whole screen: an open item sheet would sit on top of the panorama
-        bottomSheetStepIndex = 0;
+        // bottomSheetStepIndex = 0;
     }
     let topTranslationY;
     let networkConnected = false;
@@ -1969,12 +1969,6 @@
              costs the GL resources, which it rebuilds when it comes back. -->
         <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
 
-        <!-- The peak finder's own map, over the live one. An `{#if}`, so outside the mode there is no
-             second map at all - and inside it the live map is not touched, merely covered: the SDK
-             renders when dirty, so an idle map under an opaque one costs nothing. -->
-        {#if $peakFinderActive && peakFinderMapComponent}
-            <svelte:component this={peakFinderMapComponent} />
-        {/if}
 
         <!-- two sheets, never both: the item one and the navigation one had incompatible step lists and
              kept fighting over the single sheet they used to share -->
@@ -2082,10 +2076,6 @@
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     opacity={scrollingWidgetsOpacity}
                     visibility={$peakFinderActive ? 'collapse' : 'visible'} />
-                <!-- the peak finder's own chrome, over the map and above every other widget -->
-                {#if peakFinderOverlayComponent}
-                    <svelte:component this={peakFinderOverlayComponent} style="z-index:1002;" visibility={$peakFinderActive ? 'visible' : 'collapse'} />
-                {/if}
                 <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
                      over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
                 <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">
@@ -2118,6 +2108,19 @@
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
+
+
+        <!-- The peak finder's own map, over the live one. An `{#if}`, so outside the mode there is no
+             second map at all - and inside it the live map is not touched, merely covered: the SDK
+             renders when dirty, so an idle map under an opaque one costs nothing. -->
+        {#if $peakFinderActive && peakFinderMapComponent}
+            <svelte:component this={peakFinderMapComponent} />
+        {/if}
+
+        <!-- the peak finder's own chrome, over the map and above every other widget -->
+        {#if peakFinderOverlayComponent}
+            <svelte:component this={peakFinderOverlayComponent} style="z-index:1002;" visibility={$peakFinderActive ? 'visible' : 'collapse'} />
+        {/if}
 
         <!-- {#if __IOS__ || (__ANDROID__ && SDK_VERSION >= 35)}
             <absolutelayout backgroundColor={colorBackground} ios:iosIgnoreSafeArea={false} height={__IOS__ ? 1 : windowInsetBottom} verticalAlignment="bottom" />
