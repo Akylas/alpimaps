@@ -908,6 +908,8 @@ export const peakFinderSelectedPeak = writable<SelectedPeak>(null);
 
 /** The sun's day over the panorama: its path, where it is, and its rise and set over the terrain. */
 export const peakFinderSun = settingsStore('peakFinderSun', true);
+/** The moon's day over the panorama: its path, and the moon in its phase. */
+export const peakFinderMoon = settingsStore('peakFinderMoon', true);
 /** A mark and a time on the path on every hour. */
 export const peakFinderSunHours = settingsStore('peakFinderSunHours', false);
 /**
