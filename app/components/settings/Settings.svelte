@@ -18,37 +18,9 @@
     import { formatDistance } from '~/helpers/formatter';
     import { get } from 'svelte/store';
     import type { SettingsStore } from '~/stores/settingsStore';
+    import { terrain3dSettingRows } from '~/components/map/terrain3dSettingRows';
     import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
-    import {
-        peakFinderEnabled,
-        terrain3dEnabled,
-        terrain3dTilt,
-        terrainAutoFlattenByTilt,
-        terrainCameraClearance,
-        terrainDrapeResolution,
-        terrainExaggeration,
-        terrainFlattenModeFull,
-        terrainFog,
-        terrainFogVerticalEnd,
-        terrainFogVerticalStart,
-        terrainLighting,
-        terrainMeshResolution,
-        terrainShadowCascades,
-        terrainShadowCasterMargin,
-        terrainShadowDistance,
-        terrainShadowMapSize,
-        terrainShadowSoftness,
-        terrainShadowStrength,
-        terrainShadows,
-        terrainSky,
-        terrainSunAltitude,
-        terrainSunAzimuth,
-        terrainSwitchDuration,
-        terrainTouchMode,
-        terrainViewDistanceFactor,
-        terrainViewDistanceMax,
-        terrainViewDistanceMetres
-    } from '~/stores/terrainStore';
+    import { peakFinderEnabled, terrain3dEnabled } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
@@ -173,8 +145,8 @@
     function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
         return { type: 'switch', key: title, title, description, store, value: get(store) };
     }
-    /** A shared peak finder row as this screen's list takes it. The sun's moment is the panorama's own. */
-    function peakFinderSettingItem(row: PeakFinderSettingRow) {
+    /** A shared row (peak finder, 3D terrain) as this screen's list takes it. The sun's moment is the panorama's own. */
+    function sharedSettingItem(row: PeakFinderSettingRow) {
         switch (row.type) {
             case 'sectionheader':
                 return { type: 'sectionheader', title: row.title };
@@ -436,57 +408,11 @@
                     }
                 }));
             case 'terrain_3d':
-                return [
-                    storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')),
-                    storeSlider(terrainExaggeration, lc('exageration'), 0.5, 3, 0.05, (value) => `${value.toFixed(2)}×`),
-                    storeSlider(terrainMeshResolution, lc('mesh_resolution'), 16, 256, 16),
-                    // 0 is the AUTOMATIC resolution (the screen's), not a size
-                    storeSlider(terrainDrapeResolution, lc('drape_resolution'), 0, 2048, 128, (value) => (value === 0 ? lc('auto') : `${Math.round(value)} px`)),
-                    storeSlider(terrainViewDistanceFactor, lc('view_distance_factor'), 0.5, 6, 0.1, (value) => `${value.toFixed(1)}×`),
-                    // from 0, which disables the clamp entirely — the demo's default
-                    storeSlider(terrainCameraClearance, lc('camera_clearance'), 0, 400, 10, formatDistance),
-                    storeSlider(terrainSwitchDuration, lc('switch_duration'), 0, 6, 0.1, (value) => `${value.toFixed(1)} s`),
-                    storeSlider(terrain3dTilt, lc('threed_tilt'), 5, 80, 1, (value) => `${Math.round(value)}°`),
-                    {
-                        id: 'setting',
-                        key: 'terrainTouchMode',
-                        title: lc('touch_mode'),
-                        description: lc('touch_mode_desc'),
-                        store: terrainTouchMode,
-                        valueType: 'string',
-                        currentValue: () => get(terrainTouchMode),
-                        rightValue: () => lc(`touch_mode_${get(terrainTouchMode)}`),
-                        values: [
-                            { title: lc('touch_mode_classic'), value: 'classic' },
-                            { title: lc('touch_mode_look'), value: 'look' },
-                            { title: lc('touch_mode_fps'), value: 'fps' }
-                        ]
-                    },
-                    storeSwitch(terrainFlattenModeFull, lc('threed_flatten_mode_full'), lc('threed_flatten_mode_full_desc')),
-                    storeSwitch(terrainAutoFlattenByTilt, lc('auto_3d_by_tilt'), lc('auto_3d_by_tilt_desc')),
-                    // a floor and a ceiling: the first can only extend the view, the second is what limits it
-                    storeSlider(terrainViewDistanceMetres, lc('viewing_distance'), 0, 400000, 10000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
-                    storeSlider(terrainViewDistanceMax, lc('viewing_distance_max'), 0, 400000, 5000, (value) => (value === 0 ? lc('no_limit') : formatDistance(value))),
-                    storeSwitch(terrainSky, lc('sky')),
-                    storeSwitch(terrainFog, lc('fog'), lc('terrain_fog_desc')),
-                    storeSlider(terrainFogVerticalStart, lc('fog_vertical_start'), 0, 4000, 100, formatDistance),
-                    storeSlider(terrainFogVerticalEnd, lc('fog_vertical_end'), 0, 6000, 100, formatDistance),
-                    storeSwitch(terrainLighting, lc('terrain_lighting'), lc('terrain_lighting_desc')),
-                    // the sun the shadows are cast from, written only while the ground is lit
-                    storeSlider(terrainSunAzimuth, lc('sun_azimuth'), 0, 360, 1, (value) => `${Math.round(value)}°`),
-                    storeSlider(terrainSunAltitude, lc('sun_altitude'), 0, 90, 1, (value) => `${Math.round(value)}°`),
-                    storeSwitch(terrainShadows, lc('shadows'), lc('shadows_desc')),
-                    storeSlider(terrainShadowStrength, lc('shadow_strength'), 0, 2, 0.05, (value) => value.toFixed(2)),
-                    // 0 is the SDK's own 4.5, hence the label rather than a number
-                    storeSlider(terrainShadowDistance, lc('shadow_distance'), 0, 12, 0.5, (value) => (value === 0 ? lc('auto') : `${value.toFixed(1)}×`)),
-                    storeSlider(terrainShadowMapSize, lc('shadow_map_size'), 256, 4096, 256, (value) => `${Math.round(value)} px`),
-                    storeSlider(terrainShadowCascades, lc('shadow_cascades'), 1, 4, 1),
-                    storeSlider(terrainShadowSoftness, lc('shadow_softness'), 0, 8, 0.5, (value) => value.toFixed(1)),
-                    storeSlider(terrainShadowCasterMargin, lc('shadow_caster_margin'), 0, 8, 1)
-                ];
+                // The same rows as the 3D mode's own sheet - see terrain3dSettingRows.
+                return [storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'peak_finder':
                 // The same rows as the panorama's own sheet - see peakFinderSettingRows.
-                return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(peakFinderSettingItem).filter(Boolean)];
+                return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'map_data':
                 return (
                     dataPathsAvailable
