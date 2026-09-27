@@ -3,6 +3,7 @@
     "whitelist": [
         "akylas.alpi.maps*:*",
         "android.view:OrientationEventListener",
+        "android.view:SurfaceView",
         "fi.iki.elonen:NanoHTTPD",
         "android.content.pm:ServiceInfo",
         "android.view:View.OnApplyWindowInsetsListener",
@@ -63,7 +64,9 @@
         "java.lang:Iterable",
         "android.text:Spannable",
         "java.lang:Long",
-        "java.util:TimeZone"
+        "java.util:TimeZone",
+        "android.hardware.camera2:CameraCharacteristics",
+        "android.hardware.camera2:CameraCharacteristics.Key"
     ],
     "blacklist": [
         "android.widget:DatePicker",

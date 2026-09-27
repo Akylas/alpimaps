@@ -194,6 +194,8 @@ class PackageService extends Observable {
     hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
     /** The local base map. A composite since the terrain moved into its style's own layer order. */
     localVectorTileLayer?: MassifLayer<'massif::CompositeVectorTileLayer'>;
+    /** The base map files alone, regions first: what the peak finder reads its summits from. */
+    localBaseMbtiles: string[] = [];
 
     mLocalOfflineRoutingSearchService: MassifObject<'massif::MultiValhallaOfflineRoutingService'>;
     mOnlineRoutingSearchService: MassifObject<'massif::ValhallaOnlineRoutingService'>;
@@ -416,7 +418,7 @@ class PackageService extends Observable {
             let foundAddress = false;
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
-            // DEV_LOG && console.log('fetching addresses', !!service, JSON.stringify(location), get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
+            DEV_LOG && console.log('fetching addresses', !!service, JSON.stringify(location), get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
             if (get(useOfflineGeocodeAddress) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, { location, searchRadius: radius });

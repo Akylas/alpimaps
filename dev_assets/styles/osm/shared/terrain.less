@@ -2,48 +2,23 @@
 	['mapnik::geometry_type'=1][class=peak][rank<=2],
 	['mapnik::geometry_type'=1][class=volcano][rank<=2],
 	['mapnik::geometry_type'=1][zoom>=12] {
-		// ::icon {
-		// 	text-placement: billboard;
-		// 	text-name: @peak_icon;
-		// 	text-feature-id: [name]+[ele];
-		// 	// text-placement-priority: [ele];
-		// 	text-size: @peak_icon_width + 0.0000001 * [ele] + 0.000001 * [rank]; 
-		// 	text-face-name: @osm;
-		// 	text-halo-fill: @poi_halo;
-		// 	text-halo-radius: @poi_halo_radius;
-		// 	text-fill: @peak_icon_fill;
-		// 	text-allow-overlap-same-feature-id: true;
-		// }
-		// [rank=1][zoom>=4],
-		// [rank=2][zoom>=11],
-		// [zoom>=14]::label {
-		// 	// text-placement-priority: [ele];
-		// 	text-name: @name;
-		// 	[zoom>=10] {
-		// 		text-name: @name ? ([ele] ? @name + ' ' +[ele] + 'm': @name): '';
-		// 	}
-		// 	text-feature-id: [name]+[ele];
-		// 	text-face-name: @mont_md;
-		// 	text-placement: billboard;
-		// 	text-halo-fill: @peak_halo;
-		// 	text-halo-radius: @peak_halo_radius;
-		// 	text-size: @peak_label_width + 0.0000001 *[ele] + 0.000001 * [rank];
-		// 	text-wrap-character: @wrap_characters;
-		// 	text-dy: @poi_label_dy;
-		// 	text-fill: @peak_label;
-
-		// 	[class="saddle"] {
-		// 		text-fill: @sadle_label;
-		// 		text-size: @peak_label_width + 0.0000001 *[ele] + 0.000001 * [rank] - 0.0001;
-		// 	}
-		// 	text-wrap-width: @poi_label_wrap_width;
-		// 	text-allow-overlap-same-feature-id: true;
-		// 	text-same-feature-id-dependent: true;
-		// }
 			::label {
 
-				shield-file: url(shields/[class].svg);
-				shield-name: " ";
+				// The marker is a glyph out of the 'osm' icon font, reached through the label font
+				// so it lands in the same atlas (ShieldSymbolizer::buildIconGlyphs). It replaces
+				// `shield-file: url(shields/[class].svg)` - those files never existed, so the
+				// background image resolved to nothing and the shield drew its text alone.
+				// [class] is peak / volcano / saddle here; anything else falls back to the theme's
+				// generic mountain glyph.
+				shield-icon-name: [param::osm-[class]] ?? @peak_icon;
+				shield-icon-face-name: @osm;
+				shield-icon-size: @peak_icon_width;
+				shield-icon-fill: @peak_icon_fill;
+				shield-icon-halo-fill: @poi_icon_halo;
+				shield-icon-halo-radius: @poi_icon_halo_radius;
+				// An unset name draws no glyph run, and the icon run is what keeps the label alive
+				// below the zooms that name the peak.
+				shield-name: @no_name;
 				shield-feature-id: [name]+[ele];
 
 				[rank=1][zoom>=4],
@@ -56,13 +31,20 @@
 					}
 				}
 
-				shield-unlock-image: true;
+				
+				shield-wrap-width: @poi_label_wrap_width;
+				shield-wrap-character: @wrap_characters;
+				shield-anchors: @poi_anchors;
+				text-radial-offset: @poi_radial_offset;
+				text-justify: @poi_justify;
+				shield-text-optional: true;
+
 				shield-face-name: @mont_md;
 				// shield-placement-priority: [ele];
 				shield-size: @peak_label_width + 0.0000001 *[ele];
-				shield-line-spacing: -1;
 				shield-placement: billboard;
-				shield-text-dy: @peak_label_dy;
+			  	// shield-text-dx: @poi_label_gap;
+			  	// shield-text-dy: @poi_label_gap;
 				shield-fill: @peak_label;
 
 				[class="saddle"] {
@@ -99,7 +81,7 @@
 			text-fill: @building_label;
 			text-size: 9;
 			text-dy: 5;
-			text-placement: line;
+			text-placement: billboard-line;
 			// text-spacing: 1;
 			[class=valley] {
 			//	text-placement: point;
@@ -174,6 +156,7 @@
 	[div=50][zoom>=15] {
 		text-face-name: @mont_md;
 		text-name: [ele]+' m';
+		text-placement: billboard-line;
 		text-fill: @contour_label;
 		text-spacing: 100;
 		text-placement: line;

@@ -468,7 +468,7 @@ export class NetworkService extends Observable {
                 requestParams.url = queryString(requestParams.queryParams, requestParams.url);
                 delete requestParams.queryParams;
             }
-            DEV_LOG && console.info('url', requestParams.url);
+            DEV_LOG && console.info('url', requestParams.url, typeof requestParams.url);
             requestParams.headers = requestParams.headers || {};
             if (!requestParams.headers['Content-Type']) {
                 requestParams.headers['Content-Type'] = 'application/json';
