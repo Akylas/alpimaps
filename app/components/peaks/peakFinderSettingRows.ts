@@ -2,20 +2,23 @@ import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { SettingsStore } from '~/stores/settingsStore';
 import {
+    peakFinderArHorizonBoost,
+    peakFinderArOutlineWidth,
     peakFinderDark,
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
     peakFinderDetailSource,
+    peakFinderExaggeration,
     peakFinderFlyElevation,
     peakFinderHillshade,
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
-    peakFinderLabelBand,
     peakFinderLabelLayout,
     peakFinderLabelMaxDistance,
     peakFinderLabelMinDistance,
     peakFinderLabelPadding,
     peakFinderLabelPersist,
+    peakFinderLabelRowHeight,
     peakFinderLabelRows,
     peakFinderLabelTextSize,
     peakFinderLabelWrap,
@@ -81,7 +84,7 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         },
         // the FLY-IN elevation, not the live one: the live viewpoint is the slider on the panorama
         // itself, which has to move the camera as it is dragged
-        { type: 'slider', store: peakFinderFlyElevation, title: lc('viewpoint_elevation'), min: 0, max: 6000, step: 50, format: formatDistance },
+        { type: 'slider', store: peakFinderFlyElevation, title: lc('viewpoint_elevation'), min: 0, max: 6000, step: 50, format: (value) => `+${formatDistance(value)}` },
         { type: 'slider', store: peakFinderTilt, title: lc('tilt'), min: 0, max: 80, step: 1, format: degrees },
         {
             type: 'slider',
@@ -113,13 +116,13 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         },
         {
             type: 'slider',
-            store: peakFinderLabelBand,
+            store: peakFinderLabelRowHeight,
             title: lc('label_row_height'),
             description: lc('label_row_height_desc'),
-            min: 0.05,
-            max: 0.9,
-            step: 0.01,
-            format: (value) => `${Math.round(value * 100)}%`
+            min: 0,
+            max: 400,
+            step: 5,
+            format: (value) => (value === 0 ? lc('auto') : pixels(value))
         },
         { type: 'slider', store: peakFinderLabelAngle, title: lc('label_angle'), min: 0, max: 90, step: 1, format: degrees },
         {
@@ -159,7 +162,28 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         { type: 'slider', store: peakFinderOutlineWidth, title: lc('outline_width'), min: 0.5, max: 4, step: 0.1, format: (value) => value.toFixed(1) },
         // 0 is the plain silhouette line; above it, a heavier skyline stroke that many texels wide
         { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1) },
+        {
+            type: 'slider',
+            store: peakFinderArOutlineWidth,
+            title: lc('ar_outline_width'),
+            description: lc('ar_line_default_desc'),
+            min: 0,
+            max: 4,
+            step: 0.1,
+            format: (value) => (value === 0 ? lc('same') : value.toFixed(1))
+        },
+        {
+            type: 'slider',
+            store: peakFinderArHorizonBoost,
+            title: lc('ar_horizon_boost'),
+            description: lc('ar_line_default_desc'),
+            min: 0,
+            max: 6,
+            step: 0.5,
+            format: (value) => (value === 0 ? lc('same') : value.toFixed(1))
+        },
         { type: 'slider', store: peakFinderHillshade, title: lc('hillshade_strength'), min: 0, max: 1, step: 0.05, format: hundredths },
+        { type: 'slider', store: peakFinderExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
 
         section(lc('advanced')),
         {

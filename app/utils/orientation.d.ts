@@ -5,8 +5,11 @@
  * in 16 — so it lives here as a platform split rather than inline in the peak finder.
  */
 
-/** `auto` hands the decision back to the system, which is also what respects a rotation lock. */
-export type ScreenOrientation = 'auto' | 'landscape' | 'portrait';
+/**
+ * `auto` hands the decision back to the system, which is also what respects a rotation lock. `sensor`
+ * follows the device even with the rotation locked (android; iOS cannot, and treats it as `auto`).
+ */
+export type ScreenOrientation = 'auto' | 'sensor' | 'landscape' | 'portrait';
 
 /**
  * Asks for `orientation` until something asks for `auto`.

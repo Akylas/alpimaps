@@ -2,7 +2,7 @@ import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifMap, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
 import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { Color, File, Folder, knownFolders, path } from '@nativescript/core';
+import { Color, File, Folder, Screen, knownFolders, path } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { showToast, tryCatchFunction } from '@shared/utils/ui';
 import { get } from 'svelte/store';
@@ -19,8 +19,12 @@ import { packageService } from '~/services/PackageService';
 import { nutiProps } from '~/stores/mapStore';
 import {
     PANORAMA_RANGE,
+    isPeakFinderDark,
     peakFinderActive,
     peakFinderArActive,
+    peakFinderArDark,
+    peakFinderArHorizonBoost,
+    peakFinderArOutlineWidth,
     peakFinderDark,
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
@@ -28,6 +32,7 @@ import {
     peakFinderElevation,
     peakFinderElevationCacheSize,
     peakFinderEnabled,
+    peakFinderExaggeration,
     peakFinderFlyElevation,
     peakFinderFlyZoom,
     peakFinderHeading,
@@ -35,12 +40,12 @@ import {
     peakFinderHillshade,
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
-    peakFinderLabelBand,
     peakFinderLabelLayout,
     peakFinderLabelMaxDistance,
     peakFinderLabelMinDistance,
     peakFinderLabelPadding,
     peakFinderLabelPersist,
+    peakFinderLabelRowHeight,
     peakFinderLabelRows,
     peakFinderLabelTextSize,
     peakFinderLabelWrap,
@@ -65,7 +70,6 @@ import {
     peakFinderViewDistance,
     peakFinderViewDistanceMetres,
     terrainCameraClearance,
-    terrainExaggeration,
     terrainSunAltitude,
     terrainSunAzimuth
 } from '~/stores/terrainStore';
@@ -572,16 +576,15 @@ function applyLensCorrection() {
     effect.setFloatParameter('uDistortRotate', geometry?.rotated ? 1 : 0);
 }
 
-/**
- * AR always takes the LIGHT-INK palette, whatever the switch says.
- *
- * With the camera behind it the only thing this mode draws is ink, and the light palette's ink is
- * nearly black (#14141a) — which over a photograph of a mountain is the one colour that cannot be
- * seen. The dark palette's is nearly white, and on e-ink `einkDark` is pure white, so the pair that
- * reads over a preview is the same pair either way.
- */
+/** AR has its own light/dark switch, dark by default: see `peakFinderArDark`. */
+/** `auto` turns with the device even when the system is locked to portrait: a panorama wants landscape. */
+function screenOrientation() {
+    const orientation = get(peakFinderScreenOrientation);
+    return orientation === 'auto' ? 'sensor' : orientation;
+}
+
 function palette() {
-    return reliefPalette(get(peakFinderArActive) || get(peakFinderDark));
+    return reliefPalette(isPeakFinderDark());
 }
 
 function argb(color: string) {
@@ -638,9 +641,37 @@ function mapFontScale(): number {
     return store ? get(store) || 1 : 1;
 }
 
+/**
+ * The label row as the fraction of the view's height the style wants, from `peakFinderLabelRowHeight`.
+ * Auto is how tall a name wrapped at `peakFinderLabelWrap` stands at the label angle, elevation and
+ * plate included, so the row leaves room for every name.
+ */
+let builtRowFraction = 0;
+function labelRowFraction() {
+    const height = (panoramaView?.getMeasuredHeight() ?? 0) / Screen.mainScreen.scale;
+    let row = get(peakFinderLabelRowHeight);
+    if (!(row > 0)) {
+        const size = get(peakFinderLabelTextSize) * mapFontScale();
+        const width = (get(peakFinderLabelWrap) || 160) + size * 2.5 + 10;
+        const angle = get(peakFinderLabelAngle) * TO_RADIANS;
+        row = width * Math.sin(angle) + (size * 2.6 + 4) * Math.cos(angle) + 10;
+    }
+    builtRowFraction = height > 0 ? Math.min(0.9, row / height) : 0.2;
+    return builtRowFraction;
+}
+
+/** A rotation changes the height, so the fraction: rebuilt when it moved. */
+function onPanoramaLayout() {
+    applyFieldOfView();
+    const previous = builtRowFraction;
+    if (Math.abs(labelRowFraction() - previous) > 0.005) {
+        rebuildPeaksLayer();
+    }
+}
+
 function currentPeaksStyle() {
     return peaksStyle({
-        dark: get(peakFinderDark),
+        dark: isPeakFinderDark(),
         // The skyline rank is an ANGLE from the eye, so it needs the eye's own altitude. Baked in
         // rather than read per label: CartoCSS has no camera height, and the style is rebuilt
         // whenever the viewpoint changes anyway. See `eyeGroundElevation` for why it is not read
@@ -649,12 +680,12 @@ function currentPeaksStyle() {
         fontScale: mapFontScale(),
         pinTop: get(peakFinderLabelLayout) === 'top',
         followSkyline: get(peakFinderLabelLayout) === 'skyline',
-        band: get(peakFinderLabelBand),
+        band: labelRowFraction(),
         // A row held at a fixed height is held at the band's.
-        topOffset: get(peakFinderLabelBand),
+        topOffset: labelRowFraction(),
         textSize: get(peakFinderLabelTextSize),
         wrapWidth: get(peakFinderLabelWrap),
-        selectedFill: get(peakFinderDark) ? '#a8c0ff' : '#2f4f9e',
+        selectedFill: isPeakFinderDark() ? '#a8c0ff' : '#2f4f9e',
         textAngle: get(peakFinderLabelAngle),
         maxRows: get(peakFinderLabelRows),
         minDistance: get(peakFinderLabelMinDistance),
@@ -1095,7 +1126,9 @@ function applyReliefOutline() {
     // The shader is COMPILED for what it draws - see reliefSilhouetteShader - so AR and a line wider
     // than a pixel each want their own.
     const ar = get(peakFinderArActive);
-    const rings = Math.min(3, Math.max(0, Math.ceil(get(peakFinderOutlineWidth)) - 1));
+    // AR's own widths when set, 0 falling back to the panorama's.
+    const outlineWidth = (ar && get(peakFinderArOutlineWidth)) || get(peakFinderOutlineWidth);
+    const rings = Math.min(3, Math.max(0, Math.ceil(outlineWidth) - 1));
     const variant = `${ar ? 'ar' : 'view'}.${rings}`;
     if (!effect || effectVariant !== variant) {
         // Required lazily: `renderers` is object-API code that nothing else in the app pulls in.
@@ -1104,10 +1137,10 @@ function applyReliefOutline() {
         effect.terrainDepthRequired = true;
         effectVariant = variant;
     }
-    const skylineWidth = get(peakFinderHorizonBoost);
+    const skylineWidth = (ar && get(peakFinderArHorizonBoost)) || get(peakFinderHorizonBoost);
     effect.setFloatParameter('uOperator', 2);
     effect.setFloatParameter('uIntensity', PEAKFINDER_LOOK.silhouetteInk);
-    effect.setFloatParameter('uOutlineWidth', get(peakFinderOutlineWidth));
+    effect.setFloatParameter('uOutlineWidth', outlineWidth);
     effect.setFloatParameter('uOutlineGain', PEAKFINDER_LOOK.silhouetteGain);
     effect.setFloatParameter('uOutlinePower', 1);
     effect.setFloatParameter('uOutlineFloor', PEAKFINDER_LOOK.silhouetteFloor);
@@ -1286,7 +1319,7 @@ export const enterPeakFinder = tryCatchFunction(async (item: IItem) => {
     // Never on the ground: standing exactly on the height field puts the eye inside the surface's
     // own sampling error and the nearest cell hides the panorama — see `peakFinderMinElevation`.
     peakFinderElevation.set(Math.max(get(peakFinderMinElevation), get(peakFinderFlyElevation)));
-    lockOrientation(get(peakFinderScreenOrientation));
+    lockOrientation(screenOrientation());
     peakFinderActive.set(true);
 });
 
@@ -1338,7 +1371,8 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     applyFieldOfView();
     // A rotation changes the view's aspect and nothing else, and the aspect is the whole of what the
     // field-of-view cap is about.
-    view.on('layoutChanged', applyFieldOfView);
+    view.on('layoutChanged', onPanoramaLayout);
+    view.on('mapInteraction', onPanoramaInteraction);
     map.apply({
         // PLANAR, always. The globe was offered here so the earth would curve away under the far
         // ranges, and it cost far more than it bought - device-measured, panorama on a Crosscall:
@@ -1375,7 +1409,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         // The rule belongs to the live map's 2D/3D button; a panorama is never anything but 3D.
         autoFlattenTilt: 0,
         autoFlattenParallax: 0,
-        exaggeration: get(terrainExaggeration),
+        exaggeration: get(peakFinderExaggeration),
         // NO clearance clamp — and it takes BOTH of these. `cameraClearance` is only the floor; the
         // rule underneath it is a FRACTION of the camera's altitude (a sixteenth), which models an
         // orbiting map camera and is exactly wrong here: on a 4800 m summit it forced 320 m of
@@ -1488,7 +1522,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     setupPeakFinderSun({
         map,
         eye: () => viewpoint,
-        dark: () => get(peakFinderArActive) || get(peakFinderDark)
+        dark: () => isPeakFinderDark()
     });
     // Not awaited: the layer above already draws, and this swaps it onto the collected set when it
     // has one. See `loadStaticPeaks`.
@@ -1539,7 +1573,8 @@ export function teardownPanorama() {
     if (!panorama && !panoramaView) {
         return;
     }
-    panoramaView?.off('layoutChanged', applyFieldOfView);
+    panoramaView?.off('layoutChanged', onPanoramaLayout);
+    panoramaView?.off('mapInteraction', onPanoramaInteraction);
     panoramaView?.setPostProcessEffect(null);
     effect = null;
     // THE LAYERS OFF THE MAP, before anything else is released. `destroy()` unregisters a facade
@@ -1777,6 +1812,15 @@ export function panoramaMapView(): MassifMapView {
     return panoramaView;
 }
 
+/** When the user last touched the panorama, ms: the sensors yield to the finger. */
+let lastInteraction = 0;
+function onPanoramaInteraction() {
+    lastInteraction = Date.now();
+}
+export function panoramaInteractionTime() {
+    return lastInteraction;
+}
+
 /** Where the panorama stands, `[lon, lat, alt]` — what the magnetic declination is worked out from. */
 export function panoramaPosition(): Position {
     return camera()?.position() ?? null;
@@ -1803,10 +1847,15 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
     });
 }
 
-applyLive(peakFinderDark, applyPalette);
+// Each mode's own switch, so entering AR (which re-applies the palette itself) does not do it twice.
+applyLive(peakFinderDark, () => !get(peakFinderArActive) && applyPalette());
+applyLive(peakFinderArDark, () => get(peakFinderArActive) && applyPalette());
 applyLive(peakFinderSelectedPeak, () => applySelectedPeak());
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
+applyLive(peakFinderExaggeration, () => terrain().set('exaggeration', get(peakFinderExaggeration)));
+applyLive(peakFinderArOutlineWidth, applyReliefOutline);
+applyLive(peakFinderArHorizonBoost, applyReliefOutline);
 applyLive(peakFinderHillshade, applyReliefSurface);
 applyLive(terrainSunAzimuth, applySun);
 applyLive(terrainSunAltitude, applySun);
@@ -1849,7 +1898,7 @@ applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
 applyLive(peakFinderMaxFieldOfView, applyFieldOfView);
 applyLive(peakFinderLensCorrection, applyFieldOfView);
 applyLive(peakFinderLabelLayout, rebuildPeaksLayer);
-applyLive(peakFinderLabelBand, rebuildPeaksLayer);
+applyLive(peakFinderLabelRowHeight, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
 applyLive(peakFinderLabelRows, rebuildPeaksLayer);
 applyLive(peakFinderLabelMinDistance, rebuildPeaksLayer);
@@ -1870,14 +1919,14 @@ applyLive(peakFinderStaticPeaks, () => {
     }
 });
 // Changed from the settings sheet while the panorama is up: turn now rather than on the next entry.
-applyLive(peakFinderScreenOrientation, () => lockOrientation(get(peakFinderScreenOrientation)));
+applyLive(peakFinderScreenOrientation, () => lockOrientation(screenOrientation()));
 // AR turns the clear colour into a hole for the camera preview to show through, and takes over the
 // tilt as well as the rotation — a panorama held up at the sky has to be able to look up.
 applyLive(peakFinderArActive, () => {
     // EVERYTHING the look is made of, not the atmosphere alone: AR is a hole in the frame, and what
     // paints over a hole is the terrain's surface shader (`applyReliefSurface` clears it in AR) and
-    // the effect's own alpha (`uTransparent`). The summit labels go with them, because AR forces the
-    // light-ink palette and their colours are style TEXT — see `palette` and `rebuildPeaksLayer`.
+    // the effect's own alpha (`uTransparent`). The summit labels go with them, because AR has its own
+    // light/dark switch and their colours are style TEXT — see `palette` and `rebuildPeaksLayer`.
     applyPalette();
     // In AR the field of view stops being a preference and becomes a MEASUREMENT of the camera
     // behind the frame, which is the only way a summit is the same size in both pictures.
