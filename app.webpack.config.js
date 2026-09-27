@@ -35,8 +35,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 production: env.production !== false,
                 buildstyle: true,
                 sentry: true,
@@ -53,8 +51,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 noconsole: true,
@@ -70,8 +66,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 testlog: true,
@@ -89,8 +83,6 @@ module.exports = (env, params = {}) => {
         env = Object.assign(
             {},
             {
-                build3dmap: true,
-                buildpeakfinder: true,
                 buildstyle: true,
                 production: true,
                 sentry: false,
@@ -121,8 +113,6 @@ module.exports = (env, params = {}) => {
         devlog,
         testlog,
         fork = true,
-        buildpeakfinder,
-        build3dmap,
         buildstyle = false,
         report,
         disableoffline = false,
@@ -450,8 +440,6 @@ module.exports = (env, params = {}) => {
         __INAPP_PURCHASE_ID_PREFIX__: `""`,
         FALLBACK_LOCALE: `"${locale}"`,
         WITH_BUS_SUPPORT: busSupport,
-        WITH_PEAK_FINDER: buildpeakfinder,
-        WITH_3D_MAP: build3dmap,
         DEFAULT_THEME: `"${theme}"`,
         SENTRY_ENABLED: !!sentry,
         MATERIAL_MAP_FONT_FAMILY: "'Material Design Icons'",
@@ -490,7 +478,7 @@ module.exports = (env, params = {}) => {
     const symbolsParser = require('scss-symbols-parser');
     const mdiSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'node_modules/@mdi/font/scss/_variables.scss')).toString());
     const mdiIcons = JSON.parse(`{${mdiSymbols.variables[mdiSymbols.variables.length - 1].value.replace(/" (F|0)(.*?)([,\n]|$)/g, '": "$1$2"$3')}}`);
-    const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/variables.scss')).toString());
+    const appSymbols = symbolsParser.parseSymbols(readFileSync(resolve(projectRoot, 'css/_alpimaps.scss')).toString());
     const appIcons = {};
     appSymbols.variables
         .filter((v) => v.name.startsWith('$icon-'))
@@ -660,8 +648,19 @@ module.exports = (env, params = {}) => {
             //       }
             //     : undefined
         },
+        // The direction-corrected faces the MAP reads, written by the fontforge step of a
+        // `buildstyle` build. `force` because they override what the two patterns above already
+        // emitted - app/fonts/osm.ttf and the raw MDI - which is also what a clone with no
+        // `buildstyle` build behind it falls back to.
         {
-            from: 'css/osm.scss',
+            from: 'dev_assets/fonts/*.ttf',
+            to: 'fonts/[name][ext]',
+            force: true,
+            noErrorOnMissing: true,
+            globOptions
+        },
+        {
+            from: 'css/_osm.scss',
             to: 'osm_icons.json',
             globOptions,
             transform: {
@@ -670,7 +669,7 @@ module.exports = (env, params = {}) => {
                     const symbols = symbolsParser.parseSymbols(manifestBuffer.toString());
                     const icons = symbols.variables.reduce(function (acc, value) {
                         if (value.name.startsWith('$osm-')) {
-                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(11, -2), 16));
+                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
                         }
                         return acc;
                     }, {});
@@ -679,7 +678,7 @@ module.exports = (env, params = {}) => {
             }
         },
         {
-            from: 'css/variables.scss',
+            from: 'node_modules/@mdi/font/scss/_variables.scss',
             to: 'material_icons.json',
             globOptions,
             transform: {
@@ -890,8 +889,12 @@ module.exports = (env, params = {}) => {
             new WebpackShellPluginNext({
                 onBuildStart: {
                     scripts: [
-                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/styles/inner/fonts/osm.ttf',
-                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/styles/base/fonts/materialdesignicons-webfont.ttf',
+                        // The two faces the styles name that no device carries. They no longer
+                        // travel in a style asset package - the decoder is handed them as fallback
+                        // fonts (APP_FONTS in MapModule.ts) - so one direction-corrected copy under
+                        // dev_assets/fonts serves both the map and the app UI.
+                        'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/fonts/osm.ttf',
+                        'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/fonts/materialdesignicons-webfont.ttf',
                         `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
@@ -901,25 +904,7 @@ module.exports = (env, params = {}) => {
                         `./${css2xmlBin} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
-                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
-                        'cd ./dev_assets/styles/base && zip -r ../../../app/assets/styles/base.zip ./* && cd -'
-                    ],
-                    blocking: true,
-                    parallel: false
-                },
-                safe: true
-            })
-        );
-        config.plugins.unshift(
-            new WebpackShellPluginNext({
-                onBuildExit: {
-                    scripts: [
-                        //     `cp dev_assets/styles/inner/fonts/materialdesignicons-webfont.ttf ${join(dist, 'fonts')}`,
-                        // `cp dev_assets/styles/inner_cleaned/fonts/materialdesignicons-webfont.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                        `cp dev_assets/styles/inner/fonts/osm.ttf ${join(dist, 'fonts')}`,
-                        `cp dev_assets/styles/inner/fonts/osm.ttf dev_assets/styles/osm/fonts`
-                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/inner/fonts')}`,
-                        // `cp dev_assets/styles/base/fonts/osm.ttf ${join(dist, 'assets/styles/osm/fonts')}`
+                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -'
                     ],
                     blocking: true,
                     parallel: false
@@ -1017,17 +1002,5 @@ module.exports = (env, params = {}) => {
         })
     ];
     const configs = [config];
-    if (buildpeakfinder) {
-        if (env.adhoc || env.adhoc_sentry) {
-            config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', 'peakfinder', 'index.html'), 100, 60000));
-        }
-        configs.push(require('./peakfinder/webpack.config.js')(env, params));
-    }
-    if (build3dmap) {
-        if (env.adhoc || env.adhoc_sentry) {
-            config.plugins.push(new WaitPlugin(join(projectRoot, appPath, 'assets', '3dmap', 'index.html'), 100, 60000));
-        }
-        configs.push(require('./3dmap/webpack.config.js')(env, params));
-    }
     return configs;
 };

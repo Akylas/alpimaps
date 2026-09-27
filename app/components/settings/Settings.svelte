@@ -16,6 +16,11 @@
     import dayjs from 'dayjs';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
+    import { get } from 'svelte/store';
+    import type { SettingsStore } from '~/stores/settingsStore';
+    import { terrain3dSettingRows } from '~/components/map/terrain3dSettingRows';
+    import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
+    import { peakFinderEnabled, terrain3dEnabled } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
@@ -112,6 +117,58 @@
                 save();
             }
         };
+    }
+
+    /**
+     * A slider row backed by a svelte store rather than by a raw `ApplicationSettings` key.
+     *
+     * The terrain and peak-finder values are read by the map modules through their stores, so writing
+     * the key behind their back would persist the value without anything acting on it. `BaseSettingsPage`
+     * writes `item.store` when there is one, which both persists and notifies.
+     */
+    function storeSlider(store: SettingsStore<number>, title: string, min: number, max: number, step: number, formatter?: (value: number) => string) {
+        return {
+            id: 'setting',
+            type: 'slider',
+            key: title,
+            title,
+            store,
+            min,
+            max,
+            step,
+            formatter,
+            valueFormatter: formatter,
+            currentValue: () => get(store),
+            rightValue: () => (formatter ? formatter(get(store)) : get(store) + '')
+        };
+    }
+    function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
+        return { type: 'switch', key: title, title, description, store, value: get(store) };
+    }
+    /** A shared row (peak finder, 3D terrain) as this screen's list takes it. The sun's moment is the panorama's own. */
+    function sharedSettingItem(row: PeakFinderSettingRow) {
+        switch (row.type) {
+            case 'sectionheader':
+                return { type: 'sectionheader', title: row.title };
+            case 'switch':
+                return storeSwitch(row.store, row.title, row.description);
+            case 'slider':
+                return { ...storeSlider(row.store, row.title, row.min, row.max, row.step, row.format), description: row.description };
+            case 'segment':
+                return {
+                    id: 'setting',
+                    key: row.title,
+                    title: row.title,
+                    description: row.description,
+                    store: row.store,
+                    valueType: 'string',
+                    currentValue: () => get(row.store),
+                    rightValue: () => row.options.find((option) => option.value === get(row.store))?.title ?? get(row.store),
+                    values: row.options.map((option) => ({ title: option.title, value: option.value }))
+                };
+            default:
+                return null;
+        }
     }
 
     function getSubSettings(id: string): any[] {
@@ -350,6 +407,12 @@
                         return setting.formatter ? setting.formatter(value) : value + '';
                     }
                 }));
+            case 'terrain_3d':
+                // The same rows as the 3D mode's own sheet - see terrain3dSettingRows.
+                return [storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
+            case 'peak_finder':
+                // The same rows as the panorama's own sheet - see peakFinderSettingRows.
+                return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'map_data':
                 return (
                     dataPathsAvailable
@@ -543,6 +606,20 @@
                         title: lc('map_data'),
                         description: lc('map_data_settings'),
                         options: () => getSubSettings('map_data')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-video-3d',
+                        title: lc('terrain_3d'),
+                        description: lc('terrain_3d_settings'),
+                        options: () => getSubSettings('terrain_3d')
+                    },
+                    {
+                        id: 'sub_settings',
+                        icon: 'mdi-summit',
+                        title: lc('peak_finder'),
+                        description: lc('peak_finder_settings'),
+                        options: () => getSubSettings('peak_finder')
                     },
                     {
                         id: 'sub_settings',
