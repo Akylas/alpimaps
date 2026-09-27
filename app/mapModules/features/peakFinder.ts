@@ -2,7 +2,7 @@ import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifMap, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
 import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-import { Color } from '@nativescript/core';
+import { Color, File, Folder, knownFolders, path } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { showToast, tryCatchFunction } from '@shared/utils/ui';
 import { get } from 'svelte/store';
@@ -111,6 +111,14 @@ const STATIC_PEAKS_SOURCE_ID = 'source.peaks.static';
 /** The engine-side one. Fixed too: one per panorama, released with the map that built it. */
 const DETAIL_PEAKS_SOURCE_ID = 'source.peaks.detail';
 const DETAIL_PEAKS_CACHE_ID = 'source.peaks.detail.cache';
+const DETAIL_PEAKS_BASE_ID = 'source.peaks.detail.base';
+const DETAIL_PEAKS_STORE_ID = 'source.peaks.detail.store';
+/**
+ * The rebuilt tiles on disk. A rebuild reads 64 detail tiles off the base map, 1-2 s a coarse tile on
+ * a Crosscall, so without it every visit waited seconds for its summits.
+ */
+const DETAIL_PEAKS_STORE_BYTES = 64 * 1024 * 1024;
+const DETAIL_PEAKS_STORE_FOLDER = 'peakfinder_cache';
 /**
  * Bytes the rebuilt summit tiles are held in, in front of `PointDetailTileDataSource`.
  *
@@ -141,6 +149,10 @@ let staticPeaksSource: MassifSource = null;
 let detailPeaksSource: MassifSource = null;
 /** The memory cache wrapping it — what the layer actually reads. See DETAIL_PEAKS_CACHE_BYTES. */
 let detailPeaksCache: MassifSource = null;
+/** Between the two, the rebuilt tiles on disk. See DETAIL_PEAKS_STORE_BYTES. */
+let detailPeaksStore: MassifSource = null;
+/** The base map files the detail source reads, without the contours and routes merged into the map's. */
+let detailPeaksBase: MassifSource = null;
 /** Memoised: whether this build's SDK carries `PointDetailTileDataSource` at all. */
 let detailSourceAvailable: boolean | undefined;
 let peaksLayer: MassifLayer = null;
@@ -759,9 +771,49 @@ function applyDetailPeaksOptions() {
     native.setMaxFeatures(get(peakFinderDetailFeatures));
     // What the cap ranks by, and the order a panorama is read in.
     native.setRankProperty('ele');
-    // All three change what a rebuilt tile CONTAINS, and the cache in front of it is still holding
-    // the old answer. Nothing else drops it: the decorator has no tiles of its own to invalidate.
-    detailPeaksCache?.native?.clear?.();
+}
+
+/**
+ * The base map alone. The map's own source merges the contours and routes into every tile and
+ * serialises all readers behind one lock; the summits are in the base file only. Half the time.
+ */
+function detailPeaksBaseSource(): MassifSource {
+    const files = packageService.localBaseMbtiles;
+    if (!files?.length) {
+        return peaksSource;
+    }
+    const specs = files.map((file) => ({ type: 'mbtiles' as const, path: file }));
+    const spec = specs.reduce((first, second) => ({ type: 'ordered' as const, source: first, source2: second }) as unknown as (typeof specs)[0]);
+    detailPeaksBase = panorama.source(DETAIL_PEAKS_BASE_ID, spec);
+    return detailPeaksBase;
+}
+
+/**
+ * The disk cache's file, named for everything that decides what a rebuilt tile holds - so a change
+ * opens another file rather than serving stale tiles. Older files are removed.
+ */
+function detailPeaksStorePath() {
+    const folder = Folder.fromPath(path.join(knownFolders.temp().path, DETAIL_PEAKS_STORE_FOLDER));
+    const files = packageService.localBaseMbtiles ?? [];
+    const signature = files.map((file) => `${file}:${File.exists(file) ? File.fromPath(file).size : 0}`).join('|');
+    let hash = 0;
+    for (let index = 0; index < signature.length; index++) {
+        hash = (hash * 31 + signature.charCodeAt(index)) | 0;
+    }
+    const name = `peaks.${get(peakFinderPeakZoom)}.${get(peakFinderDetailLevels)}.${get(peakFinderDetailFeatures)}.${(hash >>> 0).toString(16)}.db`;
+    folder
+        .getEntitiesSync()
+        .filter((entity) => entity.name !== name && entity.name.startsWith('peaks.'))
+        .forEach((entity) => File.fromPath(entity.path).removeSync());
+    return path.join(folder.path, name);
+}
+
+/** Drops the detail chain so the next layer build makes it again, for its current settings. */
+function resetDetailPeaksSource() {
+    for (const source of [detailPeaksCache, detailPeaksStore, detailPeaksSource, detailPeaksBase]) {
+        source?.destroy();
+    }
+    detailPeaksCache = detailPeaksStore = detailPeaksSource = detailPeaksBase = null;
 }
 
 function ensureDetailPeaksSource(): MassifSource {
@@ -775,22 +827,29 @@ function ensureDetailPeaksSource(): MassifSource {
         // Cast because the spec union is GENERATED from the SDK's own modules, and this source is
         // newer than the bindings most installs resolve - which is the same thing the try/catch is
         // here for. It types itself once the plugin is rebuilt.
-        const spec = { type: 'point-detail', source: peaksSource.handle, layer: PANORAMA_PEAKS_LAYER, detailZoom: get(peakFinderPeakZoom) } as unknown as Parameters<typeof panorama.source>[1];
+        const spec = { type: 'point-detail', source: detailPeaksBaseSource().handle, layer: PANORAMA_PEAKS_LAYER, detailZoom: get(peakFinderPeakZoom) } as unknown as Parameters<
+            typeof panorama.source
+        >[1];
         detailPeaksSource = panorama.source(DETAIL_PEAKS_SOURCE_ID, spec);
         applyDetailPeaksOptions();
+        detailPeaksStore = panorama.source(DETAIL_PEAKS_STORE_ID, {
+            type: 'persistent-cache',
+            source: detailPeaksSource.handle,
+            capacity: DETAIL_PEAKS_STORE_BYTES,
+            databasePath: detailPeaksStorePath()
+        });
         // ...and the cache is what the LAYER reads, so a tile the renderer drops and asks for again
         // is not sixty-four reads and a rebuild. See DETAIL_PEAKS_CACHE_BYTES.
         detailPeaksCache = panorama.source(DETAIL_PEAKS_CACHE_ID, {
             type: 'memory-cache',
-            source: detailPeaksSource.handle,
+            source: detailPeaksStore.handle,
             capacity: DETAIL_PEAKS_CACHE_BYTES
         });
         detailSourceAvailable = true;
         DEV_LOG && console.log('peakFinder: summit detail source built, detail zoom', get(peakFinderPeakZoom));
     } catch (error) {
         detailSourceAvailable = false;
-        detailPeaksSource = null;
-        detailPeaksCache = null;
+        resetDetailPeaksSource();
         DEV_LOG && console.log('peakFinder: no PointDetailTileDataSource in this SDK build', error);
     }
     return detailPeaksCache;
@@ -1507,8 +1566,7 @@ export function teardownPanorama() {
     // references go here. `detailSourceAvailable` is a fact about the BUILD, so it survives.
     staticPeaksSource = null;
     staticPeaksFailed = false;
-    detailPeaksSource = null;
-    detailPeaksCache = null;
+    detailPeaksCache = detailPeaksStore = detailPeaksSource = detailPeaksBase = null;
     // DETACH THE TERRAIN FIRST. `map.destroy()` releases the facade's own registration of the
     // TerrainOptions, but the VIEW keeps working by design ("Not the view: the object API's map
     // keeps working") - and the view's native Options still holds that TerrainOptions, which holds
@@ -1763,16 +1821,23 @@ applyLive(peakFinderViewDistanceMetres, () => {
 });
 // The other three knobs that decide WHAT was collected rather than how it is drawn.
 applyLive(peakFinderPeakZoom, () => {
-    // Shared with the engine-side source, where it is the zoom the tiles are READ at. Written
-    // rather than rebuilt: the source drops its own tiles when it changes.
-    detailPeaksSource?.native?.setDetailZoom?.(get(peakFinderPeakZoom));
-    detailPeaksCache?.native?.clear?.();
+    // Shared with the engine-side source, where it is the zoom the tiles are READ at - and part of
+    // the disk cache's name, so the chain is rebuilt.
+    if (detailPeaksSource) {
+        resetDetailPeaksSource();
+        rebuildPeaksLayer();
+    }
     refreshStaticPeaks();
 });
 applyLive(peakFinderPeakCount, refreshStaticPeaks);
 applyLive(peakFinderPeakMinElevation, refreshStaticPeaks);
-applyLive(peakFinderDetailLevels, applyDetailPeaksOptions);
-applyLive(peakFinderDetailFeatures, applyDetailPeaksOptions);
+// What a rebuilt tile holds, so a new disk cache: see `detailPeaksStorePath`.
+function rebuildDetailPeaks() {
+    resetDetailPeaksSource();
+    rebuildPeaksLayer();
+}
+applyLive(peakFinderDetailLevels, rebuildDetailPeaks);
+applyLive(peakFinderDetailFeatures, rebuildDetailPeaks);
 // Switching it OFF wants the layer pointed back at whatever is behind it, and ON wants the source
 // built - both of which `createPeaks` decides, so both are a rebuild.
 applyLive(peakFinderDetailSource, rebuildPeaksLayer);

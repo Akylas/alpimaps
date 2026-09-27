@@ -1313,7 +1313,9 @@ export default class CustomLayersModule extends MapModule {
 
             const terrains = [];
             const mbtiles = [];
+            const baseMbtiles: string[] = [];
             let worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
+            const worldBaseMbtiles = worldMbtilesEntity && getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path);
             const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
             let worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
 
@@ -1332,6 +1334,10 @@ export default class CustomLayersModule extends MapModule {
                     //         'sources',
                     //         sources.map((s) => s.path)
                     //     );
+                    const base = sources.find((s) => !/(routes|contours)\.mbtiles$/.test(s.name));
+                    if (base) {
+                        baseMbtiles.push(getFileNameThatICanUseInNativeCode(context, base.path));
+                    }
                     if (sources.length) {
                         mbtiles.push(
                             this.createMergeDataSource(
@@ -1400,6 +1406,7 @@ export default class CustomLayersModule extends MapModule {
                 });
                 if (!packageService.localVectorTileLayer) {
                     packageService.localVectorTileLayer = layer;
+                    packageService.localBaseMbtiles = [...baseMbtiles, worldBaseMbtiles].filter((file) => !!file);
                 }
                 this.customSources.push({
                     layer,
