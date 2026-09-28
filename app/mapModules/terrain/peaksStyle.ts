@@ -172,6 +172,8 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         // peakfinder.com's row: just above the highest summit on screen, `band` the highest it may go.
         // A row pinned at the top stays put.
         followSkyline || pinTop ? '' : '  text-callout-band-follow: true;',
+        // Looking up at the sky, a name whose summit went under the bottom edge goes with it.
+        '  text-callout-anchor-visible: true;',
         '  text-callout-offset: 10;',
         // How far apart the rows sit, and it has to clear the plate's own VERTICAL extent or the
         // rows overlap and stacking buys nothing. A rotated plate is a diagonal bar: a name of width

@@ -1,9 +1,11 @@
-import type { MassifLayer, MassifMap, MassifObject } from '@nativescript-community/ui-massifmaps/api';
-import { Color, Screen } from '@nativescript/core';
+import type { MassifLayer, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
+import { Screen } from '@nativescript/core';
 import { getPosition } from 'suncalc';
 import { get, writable } from 'svelte/store';
-import { formatTime } from '~/helpers/locale';
-import { peakFinderElevation, peakFinderSun, peakFinderSunHours, peakFinderSunTime } from '~/stores/terrainStore';
+import { formatTime, lc } from '~/helpers/locale';
+import { type PeakFinderSkyContext, addTo, celestialLifecycle, clearSkySelection, colour, listenToSkyClicks, refreshSkySelection, skyMoment } from '~/mapModules/features/peakFinderCelestial';
+import { SUN_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
+import { peakFinderElevation, peakFinderSun, peakFinderSunHours } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
 
 /**
@@ -56,27 +58,16 @@ function apparent(altitude: number) {
     return altitude + (altitude > -2 ? 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * TO_RADIANS) / 60 : 0);
 }
 
-function colour(red: number, green: number, blue: number, alpha = 1) {
-    return new Color(Math.round(alpha * 255), red, green, blue).argb;
-}
-
 function dayStart(time: number) {
     const date = new Date(time);
     date.setHours(0, 0, 0, 0);
     return date.getTime();
 }
 
-export interface PeakFinderSunContext {
-    map: MassifMap;
-    /** Where the eye stands, or null before the camera is placed. */
-    eye: () => MapPos | null;
-    dark: () => boolean;
-}
-
 /** The rise and set of the day drawn, over the terrain, for the settings row. ms, or null. */
 export const peakFinderSunTimes = writable<{ rise: number; set: number }>({ rise: null, set: null });
 
-let context: PeakFinderSunContext = null;
+let context: PeakFinderSkyContext = null;
 // The map's terrain options as an object of our own, for calculateHorizon: the map's `terrain()` is a
 // property group, which reads and writes but has no methods.
 let terrain: MassifObject<'massif::TerrainOptions'> = null;
@@ -94,15 +85,8 @@ let dayKey = '';
 let planKey = '';
 let lastSignature = '';
 let styledDark: boolean = null;
-let idleSubscription: { remove(): boolean } = null;
-/** The clock, for the sun drawn at "now": it moves a quarter of a degree a minute. */
-let clock: ReturnType<typeof setInterval> = null;
-let unsubscribers: (() => void)[] = [];
-
-/** The moment drawn: the chosen one, or now. */
-export function peakFinderSunMoment() {
-    return get(peakFinderSunTime) ?? Date.now();
-}
+let idleSubscription: Subscription = null;
+let clickSubscription: Subscription = null;
 
 function labelStyle(plate: boolean, dark: boolean) {
     if (plate) {
@@ -306,7 +290,7 @@ export function updatePeakFinderSun(force = false) {
     }
     try {
         applyStyles();
-        const time = peakFinderSunMoment();
+        const time = skyMoment();
         planPath(eye, time);
         const key = `${dayKey}|${eye.lat.toFixed(5)}|${eye.lon.toFixed(5)}|${get(peakFinderElevation).toFixed(1)}|${get(peakFinderSunHours)}`;
         if (force || key !== planKey) {
@@ -314,6 +298,7 @@ export function updatePeakFinderSun(force = false) {
             planCrossings(eye);
         }
         placeSun(eye, time);
+        refreshSkySelection();
     } catch (error) {
         DEV_LOG && console.log('peakFinder: sun', error);
     }
@@ -323,7 +308,8 @@ export function updatePeakFinderSun(force = false) {
 // holds the ids it registered.
 let generation = 0;
 
-function build() {
+function build(sunContext: PeakFinderSkyContext) {
+    context = sunContext;
     const map = context.map;
     const scale = Screen.mainScreen.scale;
     generation += 1;
@@ -336,22 +322,19 @@ function build() {
     // the ridge: drawn after the effect, over the lines.
     skyTop = map.buildLayer(id('layer.sky.top'), { type: 'celestial', postProcessed: false });
     map.add(skyTop);
-    const add = <T extends MassifObject>(layer: MassifLayer, object: T) => {
-        layer.call('add', object.handle);
-        return object;
-    };
     // Widths are device pixels.
-    path = add(sky, map.object('celestial', id('sky.path'), { type: 'arc', color: colour(245, 158, 11, 0.82), width: 3 * scale, belowHorizonVisible: true }));
-    marks = add(sky, map.object('celestial', id('sky.marks'), { type: 'arc', color: colour(180, 83, 9), width: 2 * scale, belowHorizonVisible: true }));
+    path = addTo(sky, map.object('celestial', id('sky.path'), { type: 'arc', color: colour(245, 158, 11, 0.82), width: 3 * scale, belowHorizonVisible: true }));
+    marks = addTo(sky, map.object('celestial', id('sky.marks'), { type: 'arc', color: colour(180, 83, 9), width: 2 * scale, belowHorizonVisible: true }));
     // In pixels, not its real half degree: a marker for where the sun is, visible at any field of view.
-    glow = add(skyTop, map.object('celestial', id('sky.glow'), { type: 'sprite', screenSize: 56 * scale, color: colour(251, 191, 36, 0.4), softness: 1 }));
-    disc = add(skyTop, map.object('celestial', id('sky.sun'), { type: 'sprite', screenSize: 20 * scale, color: colour(245, 158, 11), softness: 0.15 }));
+    glow = addTo(skyTop, map.object('celestial', id('sky.glow'), { type: 'sprite', screenSize: 56 * scale, color: colour(251, 191, 36, 0.4), softness: 1 }));
+    disc = addTo(skyTop, map.object('celestial', id('sky.sun'), { type: 'sprite', screenSize: 20 * scale, color: colour(245, 158, 11), softness: 0.15, clickRadius: 3, metaData: { id: 'sun' } }));
     // Text in the sky is drawn by the SDK from a string and a style. Anchored by the middle of its
     // bottom edge, so it stands above the point it names; a rise or a set a little higher, and OVER
     // the terrain rather than half hidden by the ridge it names (the rendered terrain is flat where
     // the times take the earth's curve, so it draws the ridge a touch higher than the point computed).
     const label = (name: string, lift: number) => {
-        const created = add(skyTop, map.object('celestial', id(name), { type: 'label', visible: false }));
+        // Tapped like the sun itself.
+        const created = addTo(skyTop, map.object('celestial', id(name), { type: 'label', visible: false, clickable: true, metaData: { id: 'sun' } }));
         created.call('setOffset', 0, lift);
         return created;
     };
@@ -363,6 +346,21 @@ function build() {
     hourLabels = Array.from({ length: 24 }, (unused, hour) => label(`sky.hour.${hour}`, 4));
     styledDark = null;
     terrain = map.child('terrainOptions');
+    clickSubscription = listenToSkyClicks(skyTop, (clicked) =>
+        clicked === 'sun'
+            ? {
+                  selected: { id: 'sun', kind: 'sun', name: lc('sun'), wikidata: SUN_WIKIDATA },
+                  locate: () => {
+                      const eye = context?.eye();
+                      if (!eye) {
+                          return null;
+                      }
+                      const { altitude, azimuth } = sunPositionAt(skyMoment(), eye);
+                      return { azimuth, altitude: apparent(altitude) };
+                  }
+              }
+            : null
+    );
 }
 
 /** Keeps the sun's top layer over a rebuilt summit layer. */
@@ -375,10 +373,11 @@ export function raisePeakFinderSun() {
 }
 
 function drop() {
+    clearSkySelection(['sun']);
     idleSubscription?.remove();
     idleSubscription = null;
-    clearInterval(clock);
-    clock = null;
+    clickSubscription?.remove();
+    clickSubscription = null;
     for (const layer of [sky, skyTop]) {
         if (layer) {
             try {
@@ -402,42 +401,24 @@ function drop() {
     dayKey = planKey = lastSignature = '';
     placed = { azimuth: NaN, altitude: NaN };
     peakFinderSunTimes.set({ rise: null, set: null });
-}
-
-function start() {
-    build();
-    updatePeakFinderSun(true);
-    idleSubscription = context.map.onIdle(() => updatePeakFinderSun(true), { debounce: IDLE_DEBOUNCE_MS });
-    clock = setInterval(() => get(peakFinderSunTime) === null && updatePeakFinderSun(), 60000);
-}
-
-export function setupPeakFinderSun(sunContext: PeakFinderSunContext) {
-    teardownPeakFinderSun();
-    context = sunContext;
-    if (get(peakFinderSun)) {
-        start();
-    }
-    let first = true;
-    unsubscribers = [
-        peakFinderSun.subscribe((enabled) => {
-            if (first || !context) {
-                return;
-            }
-            drop();
-            if (enabled) {
-                start();
-            }
-        }),
-        peakFinderSunTime.subscribe(() => !first && updatePeakFinderSun()),
-        peakFinderSunHours.subscribe(() => !first && updatePeakFinderSun(true)),
-        peakFinderElevation.subscribe(() => !first && updatePeakFinderSun())
-    ];
-    first = false;
-}
-
-export function teardownPeakFinderSun() {
-    unsubscribers.forEach((unsubscribe) => unsubscribe());
-    unsubscribers = [];
-    drop();
     context = null;
 }
+
+const lifecycle = celestialLifecycle({
+    enabled: peakFinderSun,
+    // The sun moves a quarter of a degree a minute.
+    clockMs: 60000,
+    start(sunContext) {
+        build(sunContext);
+        idleSubscription = context.map.onIdle(() => updatePeakFinderSun(true), { debounce: IDLE_DEBOUNCE_MS });
+    },
+    update: updatePeakFinderSun,
+    drop,
+    triggers: [
+        [peakFinderSunHours, () => updatePeakFinderSun(true)],
+        [peakFinderElevation, () => updatePeakFinderSun()]
+    ]
+});
+
+export const setupPeakFinderSun = lifecycle.setup;
+export const teardownPeakFinderSun = lifecycle.teardown;
