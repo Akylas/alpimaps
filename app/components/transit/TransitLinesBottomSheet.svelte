@@ -13,6 +13,7 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
 
     export let position: MapPos;
     export let name: string;
@@ -114,7 +115,7 @@
 </script>
 
 <gesturerootview class="bottomsheet" height={300} rows="auto,*">
-    <label fontSize={20} fontWeight="bold" padding="15 10 15 20" text={name} />
+    <PanelHeader icon="mdi-bus" title={name} />
     <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={windowInsetBottom} rowHeight={70}>
         <Template let:item>
             <gridlayout columns="auto,*,auto,auto" padding={10} rippleColor={getItemColor(item)} on:tap={() => showTimesheet(item)}>

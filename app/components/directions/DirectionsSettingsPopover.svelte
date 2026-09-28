@@ -4,19 +4,19 @@
     import { Color } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import SettingsSlider from '@shared/components/SettingsSlider.svelte';
-    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
+    import PanelPopover from '~/components/common/PanelPopover.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 </script>
 
 <script lang="ts">
     import SettingsSwitch from '../settings/SettingsSwitch.svelte';
 
-    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorWidgetBackground } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorWidgetBackground } = $colors);
+    let { colorAccentContainer, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
     // export let name: string = ull;
     export let options: { text; value; fontFamily }[] = null;
     export let settings: any[] = null;
@@ -51,13 +51,13 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="auto,*,auto" width={Math.min(screenWidthDips * 0.7 * $fontScaleMaxed, screenWidthDips * 0.9)} {...$$restProps}>
+<PanelPopover columns="*" rows="auto,*,auto" width={Math.min(screenWidthDips * 0.7 * $fontScaleMaxed, screenWidthDips * 0.9)} {...$$restProps}>
     {#if options}
         <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
             {#each options as option, index}
                 <IconButton
-                    backgroundColor={currentOption === option.value ? color : 'transparent'}
-                    color={currentOption === option.value ? inversedColor : color}
+                    backgroundColor={currentOption === option.value ? (isEInk ? color : colorAccentContainer) : colorPanel}
+                    color={currentOption === option.value ? (isEInk ? inversedColor : colorPrimary) : color}
                     fontFamily={option.fontFamily ?? $fonts.mdi}
                     text={option.text}
                     on:tap={() => onActualOptionChanged(option.value)} />
@@ -71,10 +71,10 @@
         items={settings}
         row={1}>
         <Template let:item>
-            <SettingsSlider borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {...item} />
+            <SettingsSlider borderBottomColor={colorHairline} borderBottomWidth={1} {...item} />
         </Template>
         <Template key="switch" let:item>
-            <SettingsSwitch borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {item} {onCheckBox} />
+            <SettingsSwitch borderBottomColor={colorHairline} borderBottomWidth={1} {item} {onCheckBox} />
         </Template>
     </collectionview>
     {#if onReset}
@@ -92,4 +92,4 @@
             <cspan fontSize={16} text={lc('reset_settings')} verticalAlignment="middle" />
         </mdbutton>
     {/if}
-</PopoverBackgroundView>
+</PanelPopover>

@@ -47,10 +47,10 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
-    import { showSnack } from '~/utils/ui';
+    import { panelPopoverStyle, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
-    import { fonts, imperial, unitsSettings } from '~/variables';
+    import { colors, fonts, imperial, unitsSettings } from '~/variables';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
 
@@ -1127,11 +1127,14 @@
     {id}
     {getDescription}
     {getTitle}
+    itemProps={{ fontSize: 17, subtitleFontSize: 14 }}
+    leftIconClass="listIcon"
     {onCheckBox}
     onItemLongPress={onLongPress}
     onItemTap={onTap}
     optionsProvider={getAvailableOptions}
     {searchEnabled}
+    sliderPopoverStyle={panelPopoverStyle($colors)}
     title={title || $slc('settings')}
     bind:refresh>
     <svelte:fragment slot="actionBarButtons">

@@ -5,18 +5,20 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import SimpleOpeningHours from '~/helpers/SimpleOpeningHours';
     import { formatTime, lc } from '~/helpers/locale';
+    import { isEInk } from '~/helpers/theme';
     import { colors, fonts } from '~/variables';
     const sectionsMatch = { su: 'sunday', mo: 'monday', tu: 'tuesday', we: 'wednesday', th: 'thursday', fr: 'friday', sa: 'saturday' };
     const textPaint: Paint = new Paint();
     textPaint.textSize = 16;
     const iconPaint = new Paint();
-    iconPaint.textSize = 24;
+    iconPaint.textSize = 22;
     iconPaint.setTextAlign(Align.CENTER);
+    const iconTilePaint = new Paint();
 </script>
 
 <script lang="ts">
-    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    let { colorAccentContainer, colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorBackground, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
     iconPaint.fontFamily = $fonts.mdi;
     export let height: string | number = '100%';
     export let smallHeight: number = 70;
@@ -44,9 +46,14 @@
             let leftPadding = padding;
             const rightPadding = padding;
             if (leftIcon) {
-                leftPadding += 40;
-                iconPaint.color = colorOnSurface;
-                canvas.drawText(leftIcon, 30, smallH / 2 + 10, iconPaint);
+                // the .listIcon tile: primary on a primary tint, a bare icon on e-ink
+                leftPadding += 50;
+                if (!isEInk) {
+                    iconTilePaint.color = colorAccentContainer;
+                    canvas.drawRoundRect(padding, smallH / 2 - 20, padding + 40, smallH / 2 + 20, 12, 12, iconTilePaint);
+                }
+                iconPaint.color = isEInk ? colorOnSurface : colorPrimary;
+                canvas.drawText(leftIcon, padding + 20, smallH / 2 + 8, iconPaint);
             }
             if (!nString) {
                 const spans = (

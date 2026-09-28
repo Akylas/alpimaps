@@ -391,7 +391,7 @@
     }
 </script>
 
-<gesturerootview {height} rows="*,auto">
+<gesturerootview class="bottomsheet" {height} rows="*,auto">
     <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
     <canvasview bind:this={canvas2} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
 </gesturerootview>

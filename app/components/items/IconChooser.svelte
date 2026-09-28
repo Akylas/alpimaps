@@ -28,7 +28,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorSurfaceContainer, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorPanel, colorSurfaceContainerHigh } = $colors);
     if (!items) {
         items = Object.keys(osmIcons)
             .map((k) => ({ fontFamily: 'osm', icon: osmIcons[k], name: k }))
@@ -81,7 +81,7 @@
 
 <!-- <page actionBarHidden={true}> -->
 <gesturerootview>
-    <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={8} {elevation} {margin} rows="auto,auto,250">
+    <gridlayout backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={20} borderWidth={1} {elevation} {margin} rows="auto,auto,250">
         <gridlayout margin={10} row={1}>
             <textfield
                 bind:this={textfield}

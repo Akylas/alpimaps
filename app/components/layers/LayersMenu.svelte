@@ -22,8 +22,9 @@
     import { openLink } from '~/utils/ui/index.common';
     import { colors, fontScaleMaxed } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
     import ReorderLongPressHandler from './ReorderLongPressHandler';
-    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -142,15 +143,18 @@
 </script>
 
 <!-- on iOS a bottomsheet adds a safe-area padding to the collectionview: contentInsetAdjustmentBehavior removes it -->
-<gesturerootview {...$$restProps} height={240} on:closedBottomSheet={onCloseBottomSheet}>
-    <gridlayout bind:this={gridLayout} columns="*,auto">
+<gesturerootview class="bottomsheet" {...$$restProps} height={320} rows="auto,*" on:closedBottomSheet={onCloseBottomSheet}>
+    <PanelHeader icon="mdi-layers-outline" title={lc('layers')}>
+        <IconButton color={colorPrimary} text="mdi-plus" tooltip={lc('add_source')} on:tap={addSource} />
+    </PanelHeader>
+    <gridlayout bind:this={gridLayout} columns="*,auto" row={1}>
         <collectionview
             bind:this={collectionView}
             id="scrollView"
             items={customSources}
             ios:contentInsetAdjustmentBehavior={2}
             android:reorderEnabled={true}
-            rowHeight={56 * Math.sqrt($fontScaleMaxed)}
+            rowHeight={92 * Math.sqrt($fontScaleMaxed)}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
@@ -166,52 +170,45 @@
                     openAnimationDuration={100}
                     startingSide={item.startingSide}
                     translationFunction={drawerTranslationFunction}>
-                    <gridlayout
-                        prop:mainContent
-                        backgroundColor={colorBackground}
-                        borderBottomColor={colorOutlineVariant}
-                        borderBottomWidth={1}
-                        columns="130,*,auto"
-                        paddingLeft={15}
-                        paddingRight={5}
-                        rows="*">
+                    <gridlayout prop:mainContent backgroundColor={colorBackground} columns="*,auto" padding="12 0 0 20" rows="auto,*">
                         <stacklayout verticalAlignment="center">
                             <label
                                 ios:class="ignoreA11yFontScale"
                                 color={item.layer.opacity() === 0 ? colorOnSurfaceVariant : colorOnSurface}
-                                fontSize={13 * $fontScaleMaxed}
+                                fontSize={15 * $fontScaleMaxed}
                                 fontWeight="bold"
                                 lineBreak="end"
-                                maxLines={2}
-                                text={item.name.toUpperCase()} />
+                                maxLines={1}
+                                text={item.name} />
                             <label
                                 color={colorOnSurfaceVariant}
                                 fontSize={11 * $fontScaleMaxed}
                                 html={item.provider.attribution}
                                 linkColor={colorPrimary}
-                                maxLines={2}
-                                paddingTop={3}
+                                maxLines={1}
                                 visibility={item.provider.attribution ? 'visible' : 'collapse'}
                                 on:linkTap={onLinkTap} />
                         </stacklayout>
                         <slider
-                            col={1}
-                            marginLeft={10}
-                            marginRight={10}
+                            marginBottom={10}
+                            marginLeft={-8}
+                            marginRight={4}
+                            marginTop={6}
                             maxValue={1}
                             minValue={0}
+                            row={1}
                             value={item.layer.opacity()}
                             verticalAlignment="middle"
                             on:valueChange={(event) => onLayerOpacityChanged(item, event)} />
                         <IconButton
-                            col={2}
+                            col={1}
                             gray={true}
                             onLongPress={__ANDROID__ ? (event) => onButtonLongPress(item, event) : null}
                             rowSpan={2}
                             text="mdi-dots-vertical"
                             on:tap={() => showSourceOptions(item)}
                             on:loaded={onReorderButtonLoaded} />
-                        <progress colSpan={3} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
+                        <progress colSpan={2} row={1} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
                     <mdbutton
                         prop:leftDrawer
@@ -230,8 +227,7 @@
                 </swipemenu>
             </Template>
         </collectionview>
-        <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1}>
-            <IconButton gray={true} text="mdi-plus" on:tap={addSource} />
+        <stacklayout col={1} padding="0 4">
             {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
                 <StoreValue store={option.store} let:value>
                     <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />

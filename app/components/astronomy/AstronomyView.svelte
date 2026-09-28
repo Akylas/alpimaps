@@ -457,7 +457,7 @@
     }
 </script>
 
-<gesturerootview columns="3*,4*" rows="auto,50,200,50,200">
+<gesturerootview class="bottomsheet" columns="3*,4*" rows="auto,50,200,50,200">
     {#if name}
         <gridlayout borderBottomColor={colorOutline} borderBottomWidth={1} colSpan={2} columns="*,130" height={50}>
             <label marginLeft={16} verticalTextAlignment="center">

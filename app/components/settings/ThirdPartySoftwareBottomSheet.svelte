@@ -35,7 +35,7 @@
     }
 </script>
 
-<gesturerootview height="300">
+<gesturerootview class="bottomsheet" height="300">
     <collectionView id="scrollView" ios:contentInsetAdjustmentBehavior={2} itemIdGenerator={(item, i) => i} {items}>
         <Template let:item>
             <ListItemAutoSize item={{ title: item.moduleName, subtitle: item.moduleUrl }} on:tap={() => onTap(item)} />

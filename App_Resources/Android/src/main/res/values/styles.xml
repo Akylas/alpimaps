@@ -3,10 +3,17 @@
     <style name="Preference.SwitchPreferenceCompat.Material3"
         parent="@style/Preference.SwitchPreferenceCompat.Material">
     </style>
+    <!-- the peak finder panel look: app background and 24dp top corners, matching the .bottomsheet css class -->
+    <style name="ShapeAppearance.App.Panel" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerSize">24dp</item>
+    </style>
     <style name="ModalBottomSheetDialog" parent="Widget.Material3.BottomSheet.Modal">
-        <!-- <item name="android:background">@color/colorBackground</item> -->
+        <item name="backgroundTint">?android:attr/colorBackground</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.Panel</item>
     </style>
     <style name="ModalBottomSheetDialogEInk" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">?android:attr/colorBackground</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.App.Panel</item>
         <!-- <item name="android:backgroundDimAmount">0</item>
         <item name="android:navigationBarColor">@android:color/white</item>
         <item name="android:windowTranslucentNavigation">false</item>
@@ -36,6 +43,11 @@
         <item name="bottomSheetStyle">@style/ModalBottomSheetDialogEInk</item>
         <item name="android:backgroundDimAmount">0</item>
      </style>
+    <!-- unmapped, M3 would paint dialogs with its baseline purple surface -->
+    <style name="ThemeOverlay.App.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurfaceContainerHigh">?android:attr/colorBackground</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.App.Panel</item>
+    </style>
     <!-- <style name="MaterialAlertDialog.App.Title.Text"
     parent="MaterialAlertDialog.Material3.Title.Text">
     </style>

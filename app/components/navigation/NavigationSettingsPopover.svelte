@@ -5,7 +5,7 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { onThemeChanged } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
-    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
+    import PanelPopover from '~/components/common/PanelPopover.svelte';
     import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import SettingsSwitch from '../settings/SettingsSwitch.svelte';
 </script>
@@ -13,7 +13,7 @@
 <script lang="ts">
     import { NAVIGATION_PARAMS, getNavigationQuickSettings } from '~/stores/navigationStore';
 
-    $: ({ colorOnSurface, colorOutlineVariant, colorWidgetBackground } = $colors);
+    $: ({ colorHairline, colorOnSurface } = $colors);
 
     let settings = getNavigationQuickSettings();
 
@@ -29,17 +29,17 @@
     let collectionView: NativeViewElementNode<CollectionView>;
 </script>
 
-<PopoverBackgroundView backgroundColor={colorWidgetBackground} columns="*" rows="*,auto" width={Math.min(screenWidthDips * 0.8 * $fontScaleMaxed, screenWidthDips * 0.95)} {...$$restProps}>
+<PanelPopover columns="*" rows="*,auto" width={Math.min(screenWidthDips * 0.8 * $fontScaleMaxed, screenWidthDips * 0.95)} {...$$restProps}>
     <collectionview
         bind:this={collectionView}
         height={Math.min(80 * $fontScaleMaxed * settings.length, screenHeightDips - 200)}
         itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')}
         items={settings}>
         <Template let:item>
-            <SettingsSlider borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {...item} />
+            <SettingsSlider borderBottomColor={colorHairline} borderBottomWidth={1} {...item} />
         </Template>
         <Template key="switch" let:item>
-            <SettingsSwitch borderBottomColor={colorOutlineVariant} borderBottomWidth={1} {item} {onCheckBox} />
+            <SettingsSwitch borderBottomColor={colorHairline} borderBottomWidth={1} {item} {onCheckBox} />
         </Template>
     </collectionview>
     <mdbutton
@@ -55,4 +55,4 @@
         <cspan fontFamily={$fonts.mdi} fontSize={20} text="mdi-cancel" verticalAlignment="middle" />
         <cspan fontSize={16} text={lc('reset_settings')} verticalAlignment="middle" />
     </mdbutton>
-</PopoverBackgroundView>
+</PanelPopover>
