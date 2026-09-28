@@ -63,7 +63,6 @@
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
 
-    // technique for only specific properties to get updated on store change
     $: ({ colorOnSurface, colorOutline } = $colors);
 
     function updateFiltered(filter) {
@@ -110,7 +109,7 @@
                 close(null);
             }
         } else if (item.type === 'checkbox' || item.type === 'switch') {
-            // we dont want duplicate events so let s timeout and see if we clicking diretly on the checkbox
+            // timeout: a tap directly on the checkbox would otherwise fire twice
             const checkboxView: CheckBox = ((event.object as View).parent as View).getViewById('checkbox');
             clearCheckboxTimer();
             checkboxTapTimer = setTimeout(() => {

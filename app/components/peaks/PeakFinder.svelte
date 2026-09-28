@@ -24,7 +24,6 @@
     export let position;
     export let bearing;
     export let terrarium: boolean = false;
-    /** The sources the peak finder draws from, handed over by whoever opened it. */
     export let dataSource: MassifSource;
     export let vectorDataSource: MassifSource;
     export let rasterDataSource: MassifSource;
@@ -49,7 +48,6 @@
     function truncate(str, maxlength) {
         return str.length > maxlength ? str.slice(0, maxlength - 1) + '…' : str;
     }
-    /** The fallback when the app has no offline tiles: maptiler, behind a persistent cache. */
     function getDefaultDataSource() {
         const cacheFolder = Folder.fromPath(path.join(getDataFolder(), 'carto_cache'));
         return api.createSource('source.peakfinder.default', {
@@ -395,7 +393,6 @@
     ]);
 
     function selectTemplate(item, index, items) {
-        // Your logic here
         return item.type;
     }
     callJSFunction('setSettings', 'secondsInDay', secondsInDay);

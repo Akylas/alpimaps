@@ -1,12 +1,6 @@
 /**
- * Where the stars and the planets are, for a moment and a place on Earth - the SDK demo's
- * `DemoAstro`: the standard low-precision series, worth a few arcminutes, far under the size a
- * body is drawn at. The sun and the moon stay on suncalc.
- *
- * Degrees everywhere, azimuth clockwise from north, altitude above the horizon: the frame the
- * celestial API takes. `n` is days since J2000.0 (2000-01-01 12:00 UTC).
- *
- * Pure: no NativeScript import.
+ * Low-precision star/planet series (a few arcminutes); sun and moon stay on suncalc. Pure, no NativeScript
+ * import. Degrees, azimuth clockwise from north; `n` is days since J2000.0 (2000-01-01 12:00 UTC).
  */
 
 const TO_DEGREES = 180 / Math.PI;
@@ -43,10 +37,6 @@ function obliquity(n: number) {
     return 23.4392911 - 3.563e-7 * n;
 }
 
-/**
- * Equatorial to horizon. The hour angle - local sidereal time minus the right ascension - is the
- * whole of what makes the sky turn.
- */
 export function toHorizon(rightAscensionDegrees: number, declination: number, n: number, lat: number, lon: number): Horizontal {
     const hourAngle = (gmstDegrees(n) + lon - rightAscensionDegrees) * TO_RADIANS;
     const decl = declination * TO_RADIANS;
@@ -67,9 +57,8 @@ function eclipticToEquatorial(eclipticLong: number, eclipticLat: number, n: numb
 }
 
 /**
- * JPL's approximate Keplerian elements, valid 1800-2050: a (au), e, I, L, longitude of perihelion,
- * longitude of the ascending node, then each one's rate per Julian century. Mercury, Venus, Mars,
- * Jupiter, Saturn - the order of `PLANETS` in the catalogue - and the Earth last, not drawn.
+ * JPL approximate Keplerian elements (valid 1800-2050): a (au), e, I, L, long. of perihelion, long. of
+ * ascending node, then each rate per Julian century. Same order as the catalogue's `PLANETS`, Earth last.
  */
 const PLANET_ELEMENTS = [
     [0.38709927, 0.20563593, 7.00497902, 252.2503235, 77.45779628, 48.33076593, 0.00000037, 0.00001906, -0.00594749, 149472.67411175, 0.16047689, -0.12534081],

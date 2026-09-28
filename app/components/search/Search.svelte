@@ -341,11 +341,9 @@
                 //     dataSource.add(createSearchMarker(d));
                 // });
                 ensureSearchLayer();
-                // the bounds of what we just drew, from the GeoJSON we already have
                 const mapBounds = geoJSONBounds(geojson as unknown as GeoJSON.FeatureCollection);
 
                 const viewPort = mapContext.getMapViewPort();
-                // we ensure the viewPort is squared for the screen captured
                 const screen = {
                     min: { x: viewPort.left, y: viewPort.top },
                     max: { x: viewPort.left + viewPort.width, y: viewPort.top + viewPort.height - 200 }

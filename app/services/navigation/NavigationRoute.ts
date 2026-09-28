@@ -6,11 +6,8 @@ import { computeRouteProgress, findClosestOnRoute } from '~/utils/navigation';
 import { type MapPos, distanceToEnd, toPosition } from '~/utils/geo';
 
 /**
- * A leg the user is being sent along to get back to the route.
- *
- * It is kept beside the route rather than spliced into it on purpose: the item being navigated is the
- * user's own, often saved, route, and a reroute must not rewrite its geometry, its profile, its stats
- * or its maneuver indices. Once the user is back on the route the detour is simply dropped.
+ * Kept beside the route rather than spliced in: the navigated item is the user's own, often saved,
+ * route, and a reroute must not rewrite its geometry, profile, stats or maneuver indices.
  */
 export interface NavigationDetour {
     positions: MapPos[];
@@ -21,12 +18,6 @@ export interface NavigationDetour {
     totalTime: number;
 }
 
-/**
- * GeoJSON for a position list, for the layers that draw a detour or a connector.
- *
- * Built here rather than through the SDK's writer: the positions are already JavaScript, so a
- * geometry object only to serialise it would be two crossings for a `map` call.
- */
 export function positionsToGeoJSONLine(positions: MapPos[]): LineString {
     if (!positions || positions.length < 2) {
         return null;
@@ -35,14 +26,8 @@ export function positionsToGeoJSONLine(positions: MapPos[]): LineString {
 }
 
 /**
- * The route navigation is following, which is *not* the item the user selected.
- *
- * It holds the base route plus, when one is active, the detour that takes the user back onto it, and
- * knows how to express the user's position along whichever of the two they are on in terms the rest of
- * the app already understands (`RouteProgress`, whose `onPathIndex` always refers to the base).
- *
- * Nothing here is ever persisted: the base item is used read-only, and a full reroute replaces it with
- * an in-memory one while keeping the original for display.
+ * The route navigation follows, *not* the selected item. Never persisted: the base item is read-only
+ * and a full reroute swaps in an in-memory one. `RouteProgress.onPathIndex` always refers to the base.
  */
 export class NavigationRoute {
     positions: MapPos[];
@@ -61,7 +46,6 @@ export class NavigationRoute {
     get hasDetour() {
         return !!this.detour;
     }
-    /** where the route ends, ie what a full reroute has to route to */
     get destination(): MapPos {
         return this.positions?.length ? this.positions[this.positions.length - 1] : null;
     }
@@ -73,10 +57,7 @@ export class NavigationRoute {
         this.detour = null;
     }
 
-    /**
-     * Swaps the base for a freshly computed one, keeping the user's own route for the map.
-     * `positions` skips re-parsing a geometry the caller already has natively.
-     */
+    /** `positions` skips re-parsing a geometry the caller already has natively */
     replaceBase(item: IItem, positions?: MapPos[]) {
         this.originalItem = this.originalItem ?? this.item;
         this.item = item;
@@ -90,11 +71,8 @@ export class NavigationRoute {
     }
 
     /**
-     * Turns a projection onto the active polyline into progress along the whole navigation.
-     *
-     * On a detour the maneuvers and the distance ahead come from the detour, but everything the rest of
-     * the app indexes by `onPathIndex` — the elevation chart, the ascents, the surface preview — is
-     * about the base route, so `onPathIndex` stays a base index: the point the detour rejoins at.
+     * On a detour, maneuvers and distance ahead come from the detour, but `onPathIndex` stays a base
+     * index (the rejoin point): the elevation chart, ascents and surface preview index the base route.
      */
     progressFrom(state: OffRouteState, location: MapPos): RouteProgress {
         if (state.onPathIndex === -1) {
@@ -133,10 +111,7 @@ export class NavigationRoute {
         return progress;
     }
 
-    /**
-     * Whether the detour has done its job. Reaching its last vertex is the normal case; being back
-     * within tolerance of the base at or past the rejoin point covers the user cutting the detour short.
-     */
+    /** being back on the base at or past the rejoin point covers the user cutting the detour short */
     shouldDropDetour(state: OffRouteState, location: MapPos, tolerance: number) {
         const detour = this.detour;
         if (!detour) {

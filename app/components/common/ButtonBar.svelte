@@ -85,22 +85,15 @@
             console.error(err, err.stack);
         }
     }
-    /**
-     * Which button the gesture landed on, or null.
-     *
-     * The bounds check is not defensive: the canvas is `buttonsLength * buttonSize` long but the
-     * handlers report a position anywhere in the view, and a press in the padding under the last
-     * button gave an index past the end — `visibleButtons()[index]` undefined, and the call on it
-     * threw out of the gesture callback.
-     */
+    // Bounds check needed: gestures report positions anywhere in the view, including padding
+    // past the last button.
     function buttonAt(event) {
         const currentButtons = visibleButtons();
         const index = Math.floor((orientation === 'vertical' ? event.getY() : event.getX()) / buttonSize);
         return index >= 0 && index < currentButtons.length ? currentButtons[index] : null;
     }
     function onTap(event) {
-        // Two of these per gesture have been seen on android. Same coordinates a few ms apart means
-        // one gesture delivered twice; different ones mean two gestures.
+        // Android may deliver one gesture twice (same coords a few ms apart).
         // DEV_LOG && console.log('ButtonBar tap', Date.now(), Math.round(event.getX()), Math.round(event.getY()));
         const button = buttonAt(event);
         button?.onTap?.(event, button);

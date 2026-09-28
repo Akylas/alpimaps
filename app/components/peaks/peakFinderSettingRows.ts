@@ -43,14 +43,8 @@ import {
     peakFinderViewDistanceMetres
 } from '~/stores/terrainStore';
 
-/**
- * The peak finder's settings, ONE list for both places they are shown: the sheet behind the cog in the
- * panorama (`PeakFinderSettings`) and the app's settings screen (`Settings`, `peak_finder`). Both bind
- * the same stores, so a value changed in one is the value the other shows; keeping the rows here too
- * is what keeps the two lists, their ranges and their formats from drifting apart.
- *
- * `suntime` is the panorama's own row - the moment the sky is drawn for is not a persisted setting.
- */
+// One list shared by `PeakFinderSettings` and the `Settings` screen, so rows/ranges/formats cannot drift.
+// `suntime` is panorama-only: the moment the sky is drawn for is not a persisted setting.
 export interface PeakFinderSettingRow {
     type: 'sectionheader' | 'switch' | 'slider' | 'segment' | 'suntime';
     title: string;
@@ -70,9 +64,6 @@ const whole = (value: number) => String(Math.round(value));
 const pixels = (value: number) => `${Math.round(value)} px`;
 
 export function peakFinderSettingRows(): PeakFinderSettingRow[] {
-    // The web demo's controls (mobile-sdk web/demo/panorama.html), plus what only the app has - the
-    // palette, the screen orientation and the camera match AR needs - and, last, the engine's own
-    // budgets: how far, how fine, and how the summits are collected.
     return [
         section(lc('view')),
         { type: 'switch', store: peakFinderDark, title: lc('dark_mode') },
@@ -87,8 +78,7 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
                 { value: 'portrait', title: lc('portrait') }
             ]
         },
-        // the FLY-IN elevation, not the live one: the live viewpoint is the slider on the panorama
-        // itself, which has to move the camera as it is dragged
+        // the FLY-IN elevation; the live one is the panorama's own control
         { type: 'slider', store: peakFinderFlyElevation, title: lc('viewpoint_elevation'), min: 0, max: 6000, step: 50, format: (value) => `+${formatDistance(value)}` },
         { type: 'slider', store: peakFinderTilt, title: lc('tilt'), min: 0, max: 80, step: 1, format: degrees },
         {
@@ -228,8 +218,6 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
             step: 1,
             format: (value) => (value === 0 ? lc('no_limit') : `-${Math.round(value)}`)
         },
-        // How the summits are collected: the zoom their tiles are read at, and how many a rebuilt
-        // coarse tile keeps.
         { type: 'switch', store: peakFinderDetailSource, title: lc('detail_source'), description: lc('detail_source_desc') },
         { type: 'switch', store: peakFinderStaticPeaks, title: lc('static_peaks'), description: lc('static_peaks_desc') },
         { type: 'slider', store: peakFinderPeakZoom, title: lc('peak_search_zoom'), description: lc('peak_search_zoom_desc'), min: 8, max: 14, step: 1, format: whole },

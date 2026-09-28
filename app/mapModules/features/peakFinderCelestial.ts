@@ -9,14 +9,6 @@ import { type SelectedSky, peakFinderSelectedPeak, peakFinderSelectedSky, peakFi
 import type { MapPos } from '~/utils/geo';
 import { openURL } from '~/utils/ui/index.common';
 
-/**
- * What the sun, the moon and the stars over the panorama share: the context they draw in, the
- * moment they are drawn for, the on/off-and-clock lifecycle, and the tapped object - its selection
- * ring and its Wikipedia page.
- *
- * The SDK knows directions; every body's astronomy is its own.
- */
-
 export interface PeakFinderSkyContext {
     map: MassifMap;
     /** Where the eye stands, or null before the camera is placed. */
@@ -28,23 +20,19 @@ export function colour(red: number, green: number, blue: number, alpha = 1) {
     return new Color(Math.round(alpha * 255), red, green, blue).argb;
 }
 
-/** The moment drawn: the chosen one, or now. */
 export function skyMoment() {
     return get(peakFinderSkyTime) ?? Date.now();
 }
 
-/** Adds an object to a celestial layer and hands it back. */
 export function addTo<T extends MassifObject>(layer: MassifLayer, object: T) {
     layer.call('add', object.handle);
     return object;
 }
 
 export interface CelestialBody {
-    /** The body's on/off store. */
     enabled: Readable<boolean>;
     /** How often to redraw while following the clock. */
     clockMs: number;
-    /** Builds its layers on the context's map. */
     start(context: PeakFinderSkyContext): void;
     /** `force`: re-plan even when nothing it keys on moved. */
     update(force?: boolean): void;
@@ -54,10 +42,7 @@ export interface CelestialBody {
     triggers?: [Readable<unknown>, () => void][];
 }
 
-/**
- * The lifecycle each body used to repeat: built while its switch is on, rebuilt when switched back
- * on, redrawn on the moment and on a clock while the moment is now.
- */
+// built while enabled, rebuilt when re-enabled, redrawn on the moment and on a clock while it is now
 export function celestialLifecycle(body: CelestialBody) {
     let context: PeakFinderSkyContext = null;
     let clock: ReturnType<typeof setInterval> = null;
@@ -104,8 +89,6 @@ export function celestialLifecycle(body: CelestialBody) {
     return { setup, teardown };
 }
 
-// --- the tapped object ------------------------------------------------------------------------
-
 type SkyResolver = (id: string) => { selected: SelectedSky; locate: () => Horizontal | null } | null;
 
 let selectionContext: PeakFinderSkyContext = null;
@@ -115,10 +98,7 @@ let ringDark: boolean = null;
 let locateSelected: () => Horizontal | null = null;
 let ringGeneration = 0;
 
-/**
- * Routes taps on a body's layer to the selection. The objects carry `metaData.id`; `resolve` turns
- * it into the chip's content and a way to find it again as the sky turns.
- */
+// objects carry `metaData.id`; `resolve` maps it to the chip content and a locator as the sky turns
 export function listenToSkyClicks(layer: MassifLayer, resolve: SkyResolver): Subscription {
     return layer.onCelestialClick((event) => {
         const metaData = event.get('celestialObject.metaData') as { [key: string]: unknown };

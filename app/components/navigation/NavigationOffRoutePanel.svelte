@@ -31,8 +31,6 @@
     }
 </script>
 
-<!-- one card: the state is a plain line of text, and the two ways out of it are real buttons, so what
-     is tappable is not something the user has to work out while moving -->
 <NavigationCard
     columns="*,auto,auto"
     horizontalAlignment="left"

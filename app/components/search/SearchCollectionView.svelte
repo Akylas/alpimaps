@@ -218,8 +218,6 @@
                         }
                         bounds = { southwest: { lat: extent[1], lon: extent[0] }, northeast: { lat: extent[3], lon: extent[2] } };
                     } else if (item.route) {
-                        // the item's own GeoJSON: no SDK geometry to build, and no projection to
-                        // convert back out of
                         bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
                     } else {
                         const geometry = item.geometry as GeoJSONPoint;
@@ -278,7 +276,6 @@
                 DEV_LOG && console.log('bounds', bounds);
 
                 const zoom = /peak|campsite/.test(currentQuery) ? 11 : 14;
-                // the box as a closed ring, which is what bounds a search
                 const geometry: GeoJSON.Polygon = {
                     type: 'Polygon',
                     coordinates: [

@@ -16,13 +16,8 @@ function asNumber(value): number | null {
 }
 
 /**
- * Whether the camera might be correcting its own distortion, in which case ours must not be applied
- * on top.
- *
- * `DISTORTION_CORRECTION_MODE` is a per-request control that neither this app nor CameraX sets, so
- * whatever the HAL defaults to is what happens — and the spec leaves that to the HAL. A device that
- * advertises no mode but OFF cannot be correcting anything; anything else is treated as "might be",
- * and the frame is left rectilinear rather than risk correcting it twice.
+ * Nobody sets `DISTORTION_CORRECTION_MODE`, so the HAL default applies: only a device advertising OFF
+ * alone is known not to correct, anything else is left alone rather than risk correcting twice.
  */
 function mayCorrectItsOwnDistortion(characteristics): boolean {
     const modes = characteristics.get(CHARACTERISTICS.DISTORTION_CORRECTION_AVAILABLE_MODES);
@@ -38,12 +33,8 @@ function mayCorrectItsOwnDistortion(characteristics): boolean {
 }
 
 /**
- * The lens's distortion, and where it is centred, in tangent units.
- *
- * `LENS_DISTORTION` is stated against the PRE-CORRECTION active array, which is also the array
- * `LENS_INTRINSIC_CALIBRATION` measures its focal length and principal point in — so both are read
- * from that one, and the centre offset is the principal point's distance from the array's middle
- * divided by the focal length, which is exactly the tangent units the coefficients use.
+ * In tangent units. `LENS_DISTORTION` and `LENS_INTRINSIC_CALIBRATION` are both stated against the
+ * PRE-CORRECTION active array, so the centre offset is (principal point - array middle) / focal length.
  */
 function readDistortion(characteristics): LensDistortion | null {
     if (mayCorrectItsOwnDistortion(characteristics)) {
@@ -75,25 +66,9 @@ function readDistortion(characteristics): LensDistortion | null {
 }
 
 /**
- * Camera2 exposes the lens and the sensor rather than a field of view, so it is computed. Two ways,
- * in order of preference:
- *
- *  1. From `LENS_INTRINSIC_CALIBRATION` — the CALIBRATED focal length, in pixels of the
- *     pre-correction active array: `2 * atan(arrayWidth / (2 * fx))`. This is the lens as measured,
- *     and it differs from the nominal figure below by a percent or two.
- *  2. From the sensor's geometry: `2 * atan(sensorWidth / (2 * focalLength))`. `SENSOR_INFO_PHYSICAL_SIZE`
- *     measures the whole PIXEL array while a capture only reads the ACTIVE array inside it, so the
- *     width is scaled by the ratio of the two; and a lens reporting several focal lengths is a zoom,
- *     of which the SHORTEST is the widest field and so where a preview opens.
- *
- * The aspect is the active array's, i.e. the sensor's own — 4:3 on essentially every device. A 16:9
- * preview stream is a vertical crop of it, so this over-states the frame's height; see
- * `arFieldOfViewY` in `mapModules/features/peakFinder.ts` for the one view shape where that matters.
- *
- * Read straight off `CameraManager` rather than through the preview's CameraX camera: what is in here
- * is the LENS, which is a static characteristic — it needs no view attached and no session running.
- * What the preview is actually DOING with it, the stream's own aspect and the live zoom, is session
- * state and comes from `CameraView.getPreviewInfo()` instead.
+ * Prefers the calibrated focal length, else sensor geometry (physical size covers the PIXEL array, so
+ * scaled to the ACTIVE one; shortest focal length = widest). Aspect is the sensor's (4:3): a 16:9
+ * preview is a crop of it, see `arFieldOfViewY` in `mapModules/features/peakFinder.ts`.
  */
 export function cameraFieldOfView(): CameraFieldOfView | null {
     const context = Utils.android.getApplicationContext();

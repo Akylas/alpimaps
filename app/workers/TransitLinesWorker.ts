@@ -21,7 +21,6 @@ class TransitLinesWorker extends BaseWorker {
             switch (type) {
                 case 'getTransitLines':
                     const { metroData, transitLines } = data.messageData;
-                    // TODO do that in a thread / worker
                     const featureCollection = JSON.parse(transitLines);
                     const metroDataJSON = JSON.parse(metroData);
                     const features = featureCollection.features;
@@ -48,8 +47,6 @@ class TransitLinesWorker extends BaseWorker {
                             if (f.geometry && !f.geometry.type) {
                                 f.geometry = null;
                             } else {
-                                // plain arithmetic on the GeoJSON: this worker no longer loads the
-                                // SDK at all, which is what it was doing to read one bounding box
                                 const bounds = geometryBounds(f.geometry);
                                 if (bounds) {
                                     f.properties.extent = [bounds.southwest.lon, bounds.southwest.lat, bounds.northeast.lon, bounds.northeast.lat];

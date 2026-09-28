@@ -52,7 +52,6 @@
 
     let items: ObservableArray<any>;
     function refreshItems() {
-        // because of svelte async way itemIsRoute might not be set on opening
         const newItems = [];
         const itemProperties = item.properties;
 

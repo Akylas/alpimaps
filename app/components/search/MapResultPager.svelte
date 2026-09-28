@@ -46,10 +46,8 @@
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
-    // This component is mounted lazily, long after the map registers its own modules, so it has to put
-    // itself in the registry — the map used to capture it by value while it was still undefined, which
-    // meant the two click hooks below were never dispatched at all.
-    // Registers after directionsPanel, preserving the original dispatch order for onVectorTileClicked.
+    // mounted lazily, after the map registers its modules, so it registers itself;
+    // after directionsPanel, which keeps the onVectorTileClicked dispatch order
     onMount(() => registerMapModule('mapResultsPager', { onVectorTileClicked, onVectorElementClicked }));
     onDestroy(() => unregisterMapModule('mapResultsPager'));
 
@@ -234,7 +232,6 @@
     }
 
     function getItemActions(item) {
-        // because of svelte async way itemIsRoute might not be set on opening
         const newItems = [
             {
                 id: 'info',
@@ -423,7 +420,6 @@
         }
         if (e.position === 0) {
             oItems = new ObservableArray([]);
-            // there we all also cancel search to hide results on map
             mapContext.clearSearch();
         }
     }

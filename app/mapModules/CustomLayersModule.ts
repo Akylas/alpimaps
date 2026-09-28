@@ -14,7 +14,7 @@ import MapModule, { type MapDecoder, getMapContext } from '~/mapModules/MapModul
 import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
-import { clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
+import { type NutiParamKey, type PropsChangeEvent, clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -35,7 +35,6 @@ export enum RoutesType {
     Hiking = 2
 }
 
-/** One mbtiles file, as a source spec. Specs compose, so a merge or an order is just nesting. */
 let localSourceId = 0;
 
 /** Only a persistent cache can download an area, and only it declares the download events. */
@@ -93,41 +92,23 @@ function getProviderAttribution(pr) {
 
 function templateString(str: string, data) {
     return str.replace(
-        /{(\w*)}/g, // or /{(\w*)}/g for "{this} instead of %this%"
+        /{(\w*)}/g,
         function (m, key) {
             return data.hasOwnProperty(key) ? data[key] : m;
         }
     );
 }
 
-/**
- * The style slots the terrain is woven into, and what each is drawn as.
- *
- * The names are LAYER NAMES in the style's `layers` array — `#hillshade` and `#contour` in
- * `dev_assets/styles/osm`. A name the style does not declare is registered and never drawn; the SDK
- * only warns. The numbers are `massif::CompositeSourceType`, which crosses the facade as an int
- * because it has no enum argument kind.
- */
+// slot names are LAYER NAMES in the style (`#hillshade`, `#contour`): an undeclared one is never drawn.
+// The number is `massif::CompositeSourceType`, passed as an int (the facade has no enum argument kind).
 const HILLSHADE_SLOT = 'hillshade';
 const CONTOUR_SLOT = 'contour';
 const COMPOSITE_SOURCE_TYPE_HILLSHADE = 1;
-/**
- * How far past the DEM's own max zoom contours keep being traced.
- *
- * It has to be said: a ContourTileDataSource reports the DEM's zoom range as its own and leaves
- * `maxOverzoomLevel` unset, and the composite copies that onto the child layer - so the lines would
- * stop dead at the DEM's last zoom (16 online, lower for a local .etiles package) while the map
- * goes to 20 and beyond. The hillshade child needs no equivalent: a TileLayer already defaults to
- * six levels of parent search.
- */
+// ContourTileDataSource leaves `maxOverzoomLevel` unset, so without this contours stop at the DEM's
+// max zoom (16 online, lower for a local .etiles)
 const CONTOUR_MAX_OVERZOOM = 8;
 
-/**
- * The knobs the hillshade's layer-options sheet offers.
- *
- * They are properties of the LAYER, not of the style: `#hillshade` declares the slot and nothing
- * else, precisely so a config symbolizer does not overwrite these on the next frame.
- */
+// LAYER properties, not style ones: `#hillshade` declares only the slot so a symbolizer does not overwrite them
 const HILLSHADE_OPTIONS = {
     contrast: {
         min: 0,
@@ -166,11 +147,7 @@ const HILLSHADE_OPTIONS = {
     }
 };
 
-/**
- * What the currently loaded offline data supports. Flips asynchronously while mbtiles are scanned, so
- * anything gating UI on it (the slopes and routes buttons, the contour/buildings options) must react
- * to the store rather than read a snapshot.
- */
+// flips asynchronously while mbtiles are scanned: UI must react to the store, not read a snapshot
 export const mapCapabilities = writable({ hasLocalData: false, hasTerrain: false, hasRoute: false });
 
 export interface SourceItem {
@@ -183,14 +160,8 @@ export interface SourceItem {
     local?: boolean;
     /** A DEM. Only the top-most one is woven into the base map's `#hillshade` slot. */
     terrain?: boolean;
-    /**
-     * A DEM's OWN hillshade layer, kept whether or not it is the woven one.
-     *
-     * `layer` is whatever is currently DRAWN for this item, so the layers menu and the options
-     * sheet act on the right thing: this layer while the DEM is stacked, and the composite's own
-     * child while it holds the slot. This one stays put either way, because it is also what
-     * answers elevation queries.
-     */
+    // A DEM's own hillshade layer, kept even when woven: it answers elevation queries.
+    // `layer` is what is DRAWN: this one when stacked, the composite's child when in the slot.
     terrainLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
     layer: MassifLayer;
     /** the persistent tile cache's sqlite file, when the source has one */
@@ -257,13 +228,7 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    /**
-     * Several mbtiles as ONE source, merged pairwise.
-     *
-     * Specs all the way down: a source is JSON until it is built, so composing them is nesting
-     * rather than constructing objects and holding handles. `merged-mbvt` merges two vector-tile
-     * sources tile by tile, which is how a region and its routes become one map.
-     */
+    // `merged-mbvt` merges two vector-tile sources tile by tile, so several mbtiles are nested pairwise
     createMergeDataSource(sources: any[], minZoom?: number) {
         const specs = sources.map((s) => (typeof s === 'string' ? mbTilesSourceSpec(s, minZoom) : s));
         if (specs.length === 1) {
@@ -289,67 +254,30 @@ export default class CustomLayersModule extends MapModule {
         return specs.reduce((first, second) => ({ type: 'ordered' as const, source: first, source2: second }));
     }
 
-    /**
-     * A DEM's own hillshade layer.
-     *
-     * It is built for every DEM, whatever becomes of it. Only ONE can be woven into the style -
-     * there is a single `#hillshade` slot - and that one's layer is kept OFF the map while the
-     * composite draws its own child from the same source; every other DEM is stacked with this
-     * layer, which is exactly how they all behaved before the slot existed.
-     *
-     * It is also the elevation oracle whether or not it is drawn: ElevationManager is reached
-     * THROUGH a hillshade layer, and `getElevations` builds one from the layer's data source and
-     * decoder alone, so a layer on no map still answers for elevation profiles, the peak finder,
-     * the 3D map and the tile server. The elevation decoder is not named here: it comes from the
-     * source's own `metaData.dem_encoding`, which is what the terrarium/mapbox choice sets.
-     */
+    // Built for every DEM, even the woven one kept off the map: ElevationManager is reached through a
+    // hillshade layer, so it answers elevation queries while on no map. The elevation decoder comes
+    // from the source's `metaData.dem_encoding`.
     createHillshadeLayer(id: string, name: string, sourceSpec: any) {
         const layer = mapContext.getMap().buildLayer(id, { type: 'hillshade', source: sourceSpec });
         this.applyHillshadeSettings(layer, name);
         return layer;
     }
-    /**
-     * Slope colouring, on the composite's own hillshade child.
-     *
-     * Read from the STORE, not from `layerProps['showSlopePercentages']`: the proxy answers null for
-     * a value sitting at its default, and this one defaults to `true` - so starting this at false
-     * left the button drawn as selected with no shader on the layer, and the first press turned
-     * "off" what was already off. The store carries the persisted value, or the default.
-     *
-     * Held rather than read on every call so the mode survives a re-attach, where the composite
-     * builds a brand new child.
-     */
+    // read from the store: the proxy answers null for a value at its default.
+    // Held so the mode survives a re-attach, where the composite builds a new child
     private slopeMode = !!get(layerProps.getStore('showSlopePercentages'));
     toggleHillshadeSlope(value: boolean) {
         this.slopeMode = value;
         this.applySlopeMode(this.terrainAttachedTo);
     }
-    /**
-     * Puts the slope shader on the layer a composite draws its hillshade slot with.
-     *
-     * Takes the composite rather than reading the attached one, because a second map showing the
-     * same base layer is its own composite with its own child, and it wants the same mode.
-     *
-     * An EMPTY shader is how the built-in one comes back - the renderer substitutes its default for
-     * it - which is why turning slopes off does not hand back a shader of ours.
-     *
-     * The normal map has to be built at TRUE scale for this, which is what `heightScale` 1 and the
-     * exaggeration off mean: the shader reads the slope ANGLE straight off the normal
-     * (`acos(dot(normal, surfaceNormal))`) and compares it against degrees. The SDK builds the map
-     * as `decoderScale * heightScale * pixelsPerMetre`, so the hillshade's artistic `heightScale`
-     * - 0.2 here - damps every slope to a fifth of itself, and a real 40 deg read as ~11 deg:
-     * under the lowest step, so the shader painted nothing anywhere. The legacy pre-MapLibre
-     * formula carried a x160 that hid this; the true-slope one is the default now.
-     */
+    // Takes the composite: a second map has its own child. An EMPTY shader restores the built-in one.
+    // Slopes need a TRUE-scale normal map (heightScale 1, no exaggeration): the shader reads the slope
+    // angle in degrees off the normal, and the artistic heightScale 0.2 would damp every slope.
     private applySlopeMode(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         this.withExternalChild(composite, HILLSHADE_SLOT, (result) => {
             const child = api.wrap(result.handle, 'massif::HillshadeRasterTileLayer');
-            // Back to what the sheet persisted when slopes go off - `applyHillshadeSettings` reads
-            // the same key, and this is the only other thing that writes it.
+            // slopes off: back to what the sheet persisted (same key as applyHillshadeSettings)
             const heightScale = this.slopeMode ? 1 : ApplicationSettings.getNumber(`${this.slotItem?.name}_heightScale`, 0.2);
-            // Guarded because BOTH of these rebuild every normal map the layer holds
-            // (`updateTiles`), and this runs on every attach. The shader itself only redraws, so it
-            // rides along rather than being worth a check of its own.
+            // guarded: both rebuild every normal map (`updateTiles`) and this runs on every attach
             if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode || child.get('heightScale') !== heightScale) {
                 child.apply({
                     exagerateHeightScaleEnabled: !this.slopeMode,
@@ -359,27 +287,14 @@ export default class CustomLayersModule extends MapModule {
             }
         });
     }
-    /**
-     * Shows or hides one slot WITHOUT touching the composite's source list.
-     *
-     * Adding or removing an external source rebuilds the composite's draw items and reloads the
-     * whole base map, which is far too much for a visibility toggle. An invisible child costs
-     * nothing either: TileLayer::loadData returns before it fetches anything, so hidden contours
-     * are never traced.
-     */
+    // Toggles visibility without touching the source list, which would reload the whole base map.
+    // A hidden child fetches nothing, so hidden contours are never traced.
     private setSlotVisible(slot: string, visible: boolean) {
         this.withExternalChild(this.terrainAttachedTo, slot, (child) => child.set('visible', visible));
     }
 
-    /**
-     * The hillshade child, as the terrain source item's layer.
-     *
-     * The child is what is actually DRAWN, so it is what the layers menu's opacity slider and the
-     * options sheet have to write to - the detached elevation layer answers elevation queries and
-     * is on no map, so a slider moving it would move nothing on screen. The child belongs to the
-     * composite and is built afresh on every attach, so the item's layer is re-pointed here and the
-     * persisted settings are put back on it.
-     */
+    // The child is what is DRAWN, so the menu and options sheet must write to it. It is rebuilt on
+    // every attach, so the item's layer is re-pointed here and persisted settings reapplied.
     private hillshadeChildResult: MassifObject<'massif::Layer'>;
     private setHillshadeChild(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         // the previous child is gone with the composite that owned it
@@ -395,9 +310,8 @@ export default class CustomLayersModule extends MapModule {
             DEV_LOG && console.log('setHillshadeChild', error);
             return;
         }
-        // A LAYER over the same handle, not the call result: `opacity()` and `visible()` are
-        // MassifLayer's, and the layers menu calls them on every item. The result object stays
-        // alive alongside it - destroying it would unregister the handle underneath.
+        // a LAYER over the same handle for MassifLayer's `opacity()`/`visible()`; the result stays
+        // alive, destroying it would unregister the handle
         const child = api.wrapLayer(this.hillshadeChildResult.handle, 'massif::HillshadeRasterTileLayer');
         this.applyHillshadeSettings(child, item.name);
         item.layer = child;
@@ -408,12 +322,7 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    /**
-     * Puts the settings the sheet persisted back on a freshly built hillshade child.
-     *
-     * Same keys the sheet writes - `${item.name}_<option>` - so the two stay in step; this is only
-     * the other half of them, for a layer the SDK built rather than the app.
-     */
+    // same `${name}_<option>` keys the options sheet writes
     private applyHillshadeSettings(layer: MassifLayer<'massif::HillshadeRasterTileLayer'>, name: string) {
         const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
@@ -437,12 +346,7 @@ export default class CustomLayersModule extends MapModule {
             visible: opacity !== 0
         });
     }
-    /**
-     * Runs `work` against the child layer a slot is drawn by, if there is one.
-     *
-     * A call RESULT is owned by the caller, so the handle is released again rather than
-     * accumulating one registry entry per toggle.
-     */
+    // a call RESULT is owned by the caller: released so handles do not accumulate per toggle
     private withExternalChild(composite: MassifObject<'massif::CompositeVectorTileLayer'>, slot: string, work: (child: MassifObject<'massif::Layer'>) => void) {
         if (!composite?.valid) {
             return;
@@ -560,8 +464,7 @@ export default class CustomLayersModule extends MapModule {
             }
         }
         const vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
-        // `httpHeaders` is spelled HTTPHeaders on the SDK's own property, which is what a spec key
-        // has to be: the facade resolves against the declared name, not the plugin's old option.
+        // spec keys must use the SDK's declared name: `HTTPHeaders`
         const { encoding, httpHeaders, subdomains, ...sourceOptions } = (provider.sourceOptions ?? {}) as any;
         const httpSpec = {
             type: 'http' as const,
@@ -570,10 +473,8 @@ export default class CustomLayersModule extends MapModule {
             ...(httpHeaders ? { HTTPHeaders: httpHeaders } : {}),
             // the tables spell a subdomain set as 'abcd'; the SDK's property is a list
             ...(subdomains ? { subdomains: typeof subdomains === 'string' ? subdomains.split('') : subdomains } : {}),
-            // A DEM's encoding is META DATA, not a property: `ElevationDecoder::Resolve` reads
-            // `dem_encoding` off the tile, then off its data source. There is no `encoding` property
-            // on a TileDataSource, so the key this used to pass was dropped with a warning and every
-            // terrarium source was decoded as mapbox - which is what made mapterhorn's relief wrong.
+            // DEM encoding is META DATA (`ElevationDecoder::Resolve` reads `dem_encoding`),
+            // TileDataSource has no `encoding` property
             ...(encoding ? { metaData: { dem_encoding: encoding } } : {})
         };
         const downloadable = provider.downloadable || !PRODUCTION || this.devMode;
@@ -588,15 +489,10 @@ export default class CustomLayersModule extends MapModule {
                       databasePath,
                       cacheOnlyMode: ApplicationSettings.getBoolean(`${id}_cacheOnlyMode`, false),
                       capacity: cacheSize * 1024 * 1024
-                      // No `dem_encoding` here: `CacheTileDataSource::getMetaDataPtr` answers with
-                      // the wrapped source's map when it has none of its own, so the http source
-                      // above is the one place it has to be said - and the only place that also
-                      // covers a provider served without a cache.
+                      // no `dem_encoding`: CacheTileDataSource falls back to the wrapped source's metadata
                   }
                 : httpSpec,
-            // Handed back rather than read off the source later: `databasePath` is a CONSTRUCTOR
-            // argument of PersistentCacheTileDataSource and not one of its properties, so there is
-            // no path that reads it back - the sheet showing the cache size has to be told.
+            // a constructor argument of PersistentCacheTileDataSource, not a readable property
             databasePath: cached ? databasePath : undefined,
             vectorDataSource
         };
@@ -604,9 +500,7 @@ export default class CustomLayersModule extends MapModule {
     async createDataSourceAndMapLayer(id: string, provider: Provider) {
         const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
-        // Apply zoom level bias to the raster layer.
-        // By default, bitmaps are upsampled on high-DPI screens.
-        // We will correct this by applying appropriate bias
+        // bitmaps are upsampled on high-DPI screens by default: compensate with a zoom bias
         const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(mapContext.getMap().get('DPI') / 160.0) / Math.log(2)) * 0.75);
         const options = {
             zoomLevelBias: {
@@ -624,15 +518,12 @@ export default class CustomLayersModule extends MapModule {
         let spec: any;
         let terrain = false;
         if (provider.hillshade) {
-            // Built like any other hillshade. Whether it is stacked or woven into the base map's
-            // `#hillshade` slot is decided by updateTerrain, from where it sits in the list.
+            // stacked or woven into `#hillshade` is decided by updateTerrain
             terrain = true;
             terrainLayer = this.createHillshadeLayer(layerId, id, sourceSpec);
             layer = terrainLayer;
         } else if (vectorDataSource) {
-            // Kept, not inlined: `vectorTileDecoderChanged` rebuilds the layer from this on a style
-            // change, and an item without it is silently skipped - which is what made switching
-            // style do nothing for every provider-backed base map.
+            // kept: vectorTileDecoderChanged rebuilds the layer from it, and skips items without one
             spec = {
                 type: 'composite-vector',
                 source: sourceSpec,
@@ -747,7 +638,6 @@ export default class CustomLayersModule extends MapModule {
         //     provider.devHidden = data.devHidden;
         // }
 
-        // overwrite values in provider from variant.
         if (variantName && 'variants' in data) {
             const variant = data.variants[variantName];
             if (!variant) {
@@ -784,8 +674,6 @@ export default class CustomLayersModule extends MapModule {
         } else if (provider.url.indexOf('{variant}') >= 0) {
             return;
         }
-        // replace attribution placeholders with their values from toplevel provider attribution,
-        // recursively
         const attributionReplacer = function (attr) {
             if (!attr || attr.indexOf('{attribution.') === -1) {
                 return attr;
@@ -795,7 +683,6 @@ export default class CustomLayersModule extends MapModule {
             });
         };
         provider.attribution = attributionReplacer(getProviderAttribution(provider));
-        // Compute final options combining provider options with any user overrides
         if (this.isOverlay(arg, provider)) {
             this.overlayProviders[id] = provider;
         } else {
@@ -820,7 +707,7 @@ export default class CustomLayersModule extends MapModule {
         this.sourcesLoaded = true;
     }
 
-    /** The SOURCE SPEC of a provider, for anything that wants to compose with it. */
+    /** Returns the provider's source SPEC, not a built source. */
     async createDataSourceFromId(s: string) {
         await this.getSourcesLibrary();
         const provider = this.baseProviders[s] || this.overlayProviders[s];
@@ -846,11 +733,9 @@ export default class CustomLayersModule extends MapModule {
 
     onMapReady(map: MassifMap) {
         super.onMapReady(map);
-        // `param::contours` already stops the lines DRAWING, but the child keeps tracing its tiles
-        // whether or not anything is drawn from them, so it is hidden too. Hiding, not detaching:
-        // detaching rebuilds the composite and reloads the whole base map for a visibility change.
-        // (The hillshade needs no equivalent - it is an ordinary layer, hidden by its own opacity.)
-        nutiProps.on('change', (event: { key: string; value: boolean }) => {
+        // `param::contours` only stops drawing; the child keeps tracing, so hide it too.
+        // Not detached: that would reload the whole base map.
+        nutiProps.on('change', (event: PropsChangeEvent) => {
             if (event.key === 'contours') {
                 this.setSlotVisible(CONTOUR_SLOT, !!event.value);
             }
@@ -958,8 +843,7 @@ export default class CustomLayersModule extends MapModule {
                     }
                     this.listenForSourceChanges = true;
                 }
-                // Last, once every base map and every DEM this session has is in: the slots go on
-                // the top-most composite, and which one that is is only known now.
+                // last: the slots go on the top-most composite, only known once every source is in
                 this.updateTerrain();
 
                 this.notify({ eventName: 'ready' });
@@ -971,22 +855,11 @@ export default class CustomLayersModule extends MapModule {
     updateClickHandlerLayerFilter() {
         this.updateVectorTileLayerProperty('clickHandlerLayerFilter', get(clickHandlerLayerFilter));
     }
-    /**
-     * Writes one property on every vector tile layer.
-     *
-     * `trySet` rather than `set`: the stack holds raster and hillshade layers too, and a property
-     * they do not have is not an error here - it is simply not theirs.
-     */
+    // `trySet`: the stack also holds raster and hillshade layers without that property
     updateVectorTileLayerProperty(key: string, value) {
         mapContext.getLayers().forEach((data) => data.layer?.trySet(key, value));
     }
-    /**
-     * The decoder was rebuilt, so every layer holding the old one has to be rebuilt too.
-     *
-     * `tileDecoder` is read-only on the SDK's layer - a decoder is what a layer's tiles were
-     * DECODED with, not a setting - so the layer is created again from the spec it was built from,
-     * with the new decoder's id.
-     */
+    // `tileDecoder` is read-only on the SDK layer, so layers are rebuilt from their spec
     vectorTileDecoderChanged(oldDecoder: MapDecoder, newDecoder: MapDecoder) {
         const generation = ++this.decoderGeneration;
         this.customSources.forEach((item) => {
@@ -994,12 +867,10 @@ export default class CustomLayersModule extends MapModule {
                 return;
             }
             const oldLayer = item.layer;
-            // The SOURCE is handed over, not rebuilt from its spec: a provider's spec describes a
-            // persistent cache, and building it again opens a SECOND cache on the same file.
+            // reuse the source: rebuilding a persistent-cache spec opens a SECOND cache on the same file
             const source = oldLayer.source();
             item.spec = { ...item.spec, ...(source ? { source: source.handle } : {}), style: newDecoder.id };
-            // A fresh id per generation, from the layer's own base: appending to the previous id
-            // grew a segment on every style switch and kept each one registered.
+            // fresh id per generation from the base id, so ids do not grow on every style switch
             const baseId = String(oldLayer.id).replace(/#\d+$/, '');
             const layer = mapContext.getMap().buildLayer(`${baseId}#${generation}`, item.spec);
             layer.onFeatureClick((e) => {
@@ -1024,57 +895,34 @@ export default class CustomLayersModule extends MapModule {
     /** The DEM item currently holding the slot, so a reorder can tell whether it changed. */
     private slotItem: SourceItem;
 
-    /**
-     * Decides which DEM is woven into the style and which are stacked, then wires the slots.
-     *
-     * The style declares ONE `#hillshade` slot, so only one DEM can be woven into the layer order.
-     * The top-most one wins - the same rule the base map itself follows - and every other DEM is a
-     * stacked hillshade layer, exactly as they all were before the slot existed. `customSources`
-     * runs bottom-to-top (index 0 is inserted at the bottom of the customLayers band), so the
-     * top-most DEM is the LAST one in the list.
-     *
-     * Called whenever either side can have changed: a source added, removed or reordered, a style
-     * change rebuilding every layer, the offline scan finishing.
-     */
+    // The style has ONE `#hillshade` slot: one DEM is woven in, every other is a stacked hillshade layer.
     updateTerrain() {
-        // A PLAIN array, built by hand: ObservableArray.filter answers with another ObservableArray,
-        // which holds its items internally and has no index access at all - `items[items.length-1]`
-        // on one is always undefined. That is what left the slot unclaimed, so no DEM was ever
-        // woven in, every DEM was stacked instead, and `hillshadeLayer` stayed unset - which is
-        // also why a click showed no elevation, since hasElevation() only tests that field.
+        // a PLAIN array: ObservableArray.filter returns an ObservableArray, which has no index access
         const terrainItems: SourceItem[] = [];
         this.customSources.forEach((item) => {
             if (item.terrain && item.terrainLayer) {
                 terrainItems.push(item);
             }
         });
-        // The OFFLINE DEM wins the slot whenever there is one, whatever the order: it draws and
-        // traces without a network, and an online DEM in the slot makes the hillshade and the
-        // contours depend on one. Order only decides between DEMs of the same kind, and the
-        // top-most of those wins - `customSources` runs bottom-to-top, so that is the last.
+        // an OFFLINE DEM always wins (no network needed), else the top-most; `customSources` runs
+        // bottom-to-top, so that is the last
         const slotItem = terrainItems.find((item) => item.local) ?? terrainItems[terrainItems.length - 1];
         this.hasTerrain = terrainItems.length > 0;
 
-        // Elevation queries go to the same DEM for the same reason - a profile is thousands of
-        // samples, and over an online source that is thousands of tile fetches on a worker thread.
+        // same DEM for elevation: a profile over an online source is thousands of tile fetches
         this.hillshadeLayer = packageService.hillshadeLayer = slotItem?.terrainLayer;
 
-        // Keyed on the ITEM, never on the source handle: `layer.source()` registers a NEW handle on
-        // every call, so comparing handles reported a change every time - and rebuilding the slots
-        // on every call threw the contour child away before it had finished tracing, which is
-        // CPU-seconds of work, so the contours never appeared at all.
+        // keyed on the ITEM: `layer.source()` registers a NEW handle per call, and rebuilding the
+        // slots every time discards contours before they finish tracing
         if (slotItem !== this.slotItem) {
             this.terrainSource?.destroy();
             this.terrainSource = slotItem ? slotItem.terrainLayer.source() : null;
-            // The contours are TRACED from the DEM, so a different DEM means a different trace.
-            // Rebuilt rather than reused: the id is registered against its spec, and the same id
-            // with a new source would be refused.
+            // rebuilt: the id is registered against its spec, the same id with a new source is refused
             this.contourSource?.destroy();
             this.contourSource = null;
         }
 
-        // Stacked or woven, one or the other. The woven one's own layer comes OFF the map - the
-        // composite draws its own child from the same source, and leaving both on would shade twice.
+        // the woven DEM's own layer comes OFF the map: the composite draws its child, both would shade twice
         terrainItems.forEach((item) => {
             const stacked = item !== slotItem;
             const inStack = mapContext.getLayerIndex(item.terrainLayer) !== -1;
@@ -1103,21 +951,11 @@ export default class CustomLayersModule extends MapModule {
                 })
             );
         this.updateTerrainAttachment();
-        // The 3D mesh reads the same DEM as the hillshade, so it has to follow this: the source it was
-        // attached to may just have been replaced. Optional — the feature may not be registered.
+        // the 3D mesh reads the same DEM; terrain3d may not be registered
         getMapModule('terrain3d')?.onTerrainSourceChanged();
     }
 
-    /**
-     * Wires the terrain slots to the TOP-MOST composite base layer, and off every other one.
-     *
-     * Only one: each attachment builds its own child layer over the same DEM, so leaving the slots
-     * on a base map that another one covers pays for a second hillshade nobody sees. The top-most
-     * is the one actually on screen.
-     *
-     * Called whenever either side changes - a base map added, removed or reordered, a style change
-     * rebuilding every layer, the terrain finishing its scan.
-     */
+    // only the TOP-MOST composite: each attachment builds its own child layer over the DEM
     updateTerrainAttachment() {
         const composites = mapContext
             .getLayers()
@@ -1125,18 +963,10 @@ export default class CustomLayersModule extends MapModule {
             .filter((layer) => layer?.is('massif::CompositeVectorTileLayer'));
         // getLayers is bottom-to-top, so the last one is the one drawn over the others
         const target = this.terrainSource ? composites[composites.length - 1] : null;
-        // Adding or removing an external source rebuilds the composite's draw items and reloads its
-        // tiles, so this runs only when the composite it belongs on, or the DEM in it, actually
-        // changed - most calls here are an unrelated overlay being added or moved. Turning a slot
-        // off goes through setSlotVisible instead, which costs nothing.
+        // adding/removing an external source reloads the composite's tiles: only when target or DEM changed
         if (target?.handle === this.terrainAttachedTo?.handle && this.terrainSource === this.attachedSource) {
-            // Nothing to re-wire — but the ITEM's layer still has to be re-pointed at the child.
-            // `updateTerrain` just set it back to `item.terrainLayer`, which for the woven DEM is the
-            // DETACHED elevation layer: it is on no map, so the menu's opacity slider and the options
-            // sheet were writing to a layer nothing draws. Every call that lands here is one of those
-            // — a source toggled, a layer added, reordered or rebuilt — and after the first of them
-            // the hillshade controls silently stopped doing anything until the attachment happened to
-            // change. This is the only half that is cheap: no external source is added or removed.
+            // still re-point the item's layer at the child: updateTerrain reset it to the detached
+            // elevation layer, which nothing draws
             this.setHillshadeChild(this.terrainAttachedTo);
             return;
         }
@@ -1149,47 +979,21 @@ export default class CustomLayersModule extends MapModule {
             this.terrainAttachedTo = this.attachTerrain(target);
         }
     }
-    /**
-     * The DEM the slots were last wired with, so a reorder that changes it re-wires them.
-     *
-     * Compared by IDENTITY, not by handle: `layer.source()` registers a new handle every call, so
-     * a handle comparison never matches and the slots were rebuilt on every unrelated change.
-     * updateTerrain only replaces this object when the DEM holding the slot actually changes.
-     */
+    // compared by IDENTITY: `layer.source()` registers a new handle every call
     private attachedSource: MassifSource;
 
-    /**
-     * A style parameter's real value.
-     *
-     * NOT `nutiProps[key]`: the proxy answers null for anything sitting at its default, which reads
-     * as "off" for every one of these and is the opposite of what the default says.
-     */
-    private mapOption(key: string): boolean {
+    // not `nutiProps[key]`: the proxy answers null for a value at its default
+    private mapOption(key: NutiParamKey): boolean {
         return !!get(nutiProps.getStore(key));
     }
 
-    /**
-     * Puts the DEM in the style's `#hillshade` slot and the contours it generates in `#contour`.
-     *
-     * Public because a second map showing the same base layer needs the same slots: a clone is its
-     * own composite, with its own children.
-     *
-     * The contour source WRAPS the DEM rather than being fetched: `ContourTileDataSource` traces
-     * the elevation tiles the hillshade already loaded, so the offline packages need no contour
-     * data of their own and an online-only map gets contours for the first time. It is shared
-     * across maps - one trace, however many views.
-     *
-     * Both slots go on whatever the toggles say, and a slot the user has turned off is HIDDEN
-     * rather than left off: attaching is what rebuilds the composite and reloads the base map, and
-     * that is not what a visibility toggle should cost. See setSlotVisible.
-     */
+    // Public: a cloned composite on a second map needs its own slots. The contour source wraps the DEM
+    // (traced, shared across maps). Both slots always attach; toggled-off ones are hidden, not detached.
     attachTerrain(layer: MassifLayer): MassifObject<'massif::CompositeVectorTileLayer'> | null {
         if (!this.terrainSource || !layer?.is('massif::CompositeVectorTileLayer')) {
             return null;
         }
-        // `is` is a runtime check, not a type guard, so the handle is re-typed here rather than
-        // cast - which is also what makes the composite's own methods resolve. `wrap` registers
-        // nothing, so there is nothing to release afterwards.
+        // `is` is not a type guard, so re-type via `wrap`, which registers nothing to release
         const composite = api.wrap(layer.handle, 'massif::CompositeVectorTileLayer');
         try {
             if (!this.contourSource) {
@@ -1205,7 +1009,7 @@ export default class CustomLayersModule extends MapModule {
             showError(error);
             return null;
         }
-        // The children are brand new, so what the user last chose has to be put back on them.
+        // the children are brand new: reapply the user's choices
         this.setHillshadeChild(composite);
         this.withExternalChild(composite, CONTOUR_SLOT, (child) => child.set('visible', this.mapOption('contours')));
         this.applySlopeMode(composite);
@@ -1213,16 +1017,7 @@ export default class CustomLayersModule extends MapModule {
         return composite;
     }
 
-    /**
-     * Why a slot draws nothing, answered in one line - the SDK demo's `checkCompositeSlots`.
-     *
-     * A slot is the position of a style layer NAMED after the source. A source registered under a
-     * name the style's `layers` array does not carry has nowhere to be drawn, and the SDK only
-     * warns about it in the log - so the two lists have to be compared to tell "not attached" from
-     * "attached but the style has no such layer". A compiled Mapnik XML style carries these slots
-     * as well as a CartoCSS one, so MISSING means the style does not name the layer, not that the
-     * format cannot express it.
-     */
+    // tells "not attached" from "attached but the style has no such layer" (SDK only warns about it)
     private logSlotStatus(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         try {
             const declared = mapContext.mapDecoder?.get('styleLayerNames') ?? [];
@@ -1239,10 +1034,9 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    /** Takes both slots off a composite. A name it never held is simply false, not an error. */
+    /** A name the composite never held is simply false, not an error. */
     private detachTerrain(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
-        // The child goes with the slot, so the item must not be left pointing at a dead layer -
-        // the next attach re-points it, and until then there is nothing drawn to point at.
+        // the child goes with the slot; the next attach re-points the item
         this.hillshadeChildResult?.destroy();
         this.hillshadeChildResult = null;
         if (!composite?.valid) {
@@ -1283,11 +1077,7 @@ export default class CustomLayersModule extends MapModule {
         this.updateTerrain();
         this.updateAttribution(item);
     }
-    /**
-     * Backed by a store so anything showing a control for these re-renders when offline data finishes
-     * loading. They flip asynchronously, long after the map mounts, and as plain fields they were
-     * invisible to svelte — the map had to poke its button list by hand to notice.
-     */
+    // store-backed: these flip asynchronously long after mount, and UI must re-render
     get hasLocalData() {
         return get(mapCapabilities).hasLocalData;
     }
@@ -1369,8 +1159,7 @@ export default class CustomLayersModule extends MapModule {
                 this.hasLocalData = true;
                 const name = 'Local';
                 const map = mapContext.getMap();
-                // `multi` picks the right package per tile, so a region and its neighbours read as
-                // one map. It is filled after construction: the packages are found by scanning.
+                // `multi` picks the right package per tile; filled after construction from the scan
                 const multi = map.source('source.local.multi', { type: 'multi' });
                 mbtiles.forEach((spec) => multi.call('add', map.source(`source.local.${++localSourceId}`, spec).handle, ''));
                 let sourceSpec: any = multi.handle;
@@ -1380,10 +1169,7 @@ export default class CustomLayersModule extends MapModule {
                     sourceSpec = this.createOrderedTileDataSource([worldSpec, multi.handle]);
                 }
                 const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
-                // SpecArg<'layer', 'composite-vector'> is what gives the literal its typings: every
-                // key is checked, enums complete to their constant names, and an unknown one is an
-                // error. Composite rather than plain vector so the DEM below can be woven into the
-                // style's own layer order rather than stacked over the whole map.
+                // composite so the DEM can be woven into the style's layer order rather than stacked
                 const spec: SpecArg<'layer', 'composite-vector'> = {
                     type: 'composite-vector',
                     source: sourceSpec,
@@ -1436,8 +1222,7 @@ export default class CustomLayersModule extends MapModule {
                     sourceSpec = this.createOrderedTileDataSource([multi.handle, mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path))]);
                 }
 
-                // No addLayer here: updateTerrain stacks it or weaves it into the base map's
-                // `#hillshade` slot, depending on where it ends up in the list.
+                // no addLayer: updateTerrain stacks it or weaves it into `#hillshade`
                 const layer = this.createHillshadeLayer('layer.hillshade.local', name, sourceSpec);
                 this.customSources.push({
                     name,
@@ -1459,7 +1244,6 @@ export default class CustomLayersModule extends MapModule {
     }
     currentlyDownloadind: { source: DownloadableSource; provider: Provider };
 
-    /** Marks a provider's row as no longer downloading, wherever it is in the list. */
     private clearDownloadingRow(provider: Provider) {
         const itemIndex = this.customSources.findIndex((s) => s.provider === provider);
         if (itemIndex >= 0) {
@@ -1483,13 +1267,6 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    /**
-     * Downloads what is on screen into a provider's persistent cache.
-     *
-     * The SDK reports progress through events on the source now (`download.started`,
-     * `download.progress`, `download.completed`), so there is no listener object to build - which
-     * is what made an offline download unreachable from a string API at all.
-     */
     async downloadDataSource({ maxZoom, minZoom, provider, source }: { source: DownloadableSource; provider: Provider; minZoom?: number; maxZoom?: number }) {
         try {
             if (this.currentlyDownloadind || !source) {
@@ -1659,9 +1436,7 @@ export default class CustomLayersModule extends MapModule {
         DEV_LOG && console.log('deleteSource', name, index);
         if (index !== -1) {
             const removed = this.customSources.getItem(index);
-            // By stack membership, not by kind: a DEM's layer IS in the stack unless it is the one
-            // woven into the base map, and the woven one's `layer` is the composite's child, which
-            // the composite owns and the stack never held.
+            // by stack membership: the woven DEM's `layer` is the composite's child, never in the stack
             const layer = removed.terrainLayer ?? removed.layer;
             if (mapContext.getLayerIndex(layer) !== -1) {
                 mapContext.removeLayer(layer, 'customLayers');
@@ -1700,9 +1475,7 @@ export default class CustomLayersModule extends MapModule {
         DEV_LOG && console.log('moveSource', name, index, layerIndex, newIndex);
         if (index !== -1) {
             const moved = this.customSources.getItem(index);
-            // Only a layer the stack actually holds can be moved in it. The woven DEM has none
-            // there - it is drawn by the base map - so it only changes rank in the list, and
-            // updateTerrain below is what turns that into a different DEM holding the slot.
+            // the woven DEM is not in the stack: updateTerrain turns its new rank into a slot change
             const layer = moved.terrainLayer ?? moved.layer;
             if (mapContext.getLayerIndex(layer) !== -1) {
                 // DEV_LOG && console.log('moveLayer', name, index, layerIndex, newIndex, newIndex + layerIndex);

@@ -1,7 +1,7 @@
 import { lc } from '@nativescript-community/l';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
-import { ApplicationSettings, Observable } from '@nativescript/core';
-import { get, writable } from 'svelte/store';
+import { ApplicationSettings, type EventData, Observable } from '@nativescript/core';
+import { type Writable, get, writable } from 'svelte/store';
 import type { RoutesType } from '~/mapModules/CustomLayersModule';
 import { showError } from '@shared/utils/showError';
 import { showSliderPopover, showToolTip } from '~/utils/ui';
@@ -43,7 +43,7 @@ const layersParams = {
         title: lc('show_percentage_slopes'),
         settingsOptionsType: 'boolean',
         showAsIcon: true,
-        defaultValue: true,
+        defaultValue: false,
         icon: 'mdi-signal',
         visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event, button) => {
@@ -95,8 +95,7 @@ const nutiParams = {
         defaultValue: true,
         icon: 'mdi-bullseye',
         showAsIcon: true,
-        // hasTerrain, not hasLocalData: the lines are traced from the DEM now, so they are there
-        // for an online-only map too, and absent from an offline one with no elevation packages
+        // hasTerrain, not hasLocalData: the lines are traced from the DEM
         visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event) => {
             await showSliderPopover({
@@ -291,6 +290,51 @@ const nutiParams = {
         defaultValue: -1
     }
 };
+interface StoreParam {
+    title?: string;
+    description?: string;
+    key?: string;
+    icon?: string;
+    settingsOptionsType?: string;
+    defaultValue?: boolean | number | string;
+    showAsIcon?: boolean;
+    inner?: boolean;
+    min?: number;
+    max?: number;
+    step?: number;
+    visible?: (capabilities) => boolean;
+    onLongPress?: (...args) => unknown;
+    nutiTransform?: (value) => string;
+}
+type StoreParams = Record<string, StoreParam>;
+interface RuntimeStoreParam extends StoreParam {
+    value?;
+    store?: Writable<any> & { ignoreUpdate?: boolean };
+    updateMethod?: (key: string, value) => void;
+}
+type StoreValue<P extends StoreParam> = P['defaultValue'];
+type StoreProps<P extends StoreParam> = P & { value: StoreValue<P>; store: Writable<StoreValue<P>>; updateMethod: (key: string, value: StoreValue<P>) => void };
+
+export interface PropsChangeEvent extends EventData {
+    key: string;
+    value;
+    nutiValue: string;
+}
+export type PropsStore<T extends StoreParams> = Observable & {
+    [K in keyof T]: StoreValue<T[K]> | null;
+} & {
+    getTitle(key: keyof T): string;
+    getDescription(key: keyof T): string;
+    getKey(key: keyof T): string;
+    getDefaultValue<K extends keyof T>(key: K): StoreValue<T[K]>;
+    getProps<K extends keyof T>(key: K): StoreProps<T[K]>;
+    getNutiTransform(key: keyof T): (value) => string;
+    getStore<K extends keyof T>(key: K): Writable<StoreValue<T[K]>>;
+    getNutiValue(key: keyof T): string | null;
+    getKeys(): (keyof T & string)[];
+    getSettingsOptions(key: keyof T): any;
+};
+
 function nutiTransformForType(type) {
     switch (type) {
         case 'boolean':
@@ -344,7 +388,8 @@ function nutiSettings(type, key, store) {
             };
     }
 }
-function createStore(params) {
+function createStore<T extends StoreParams>(storeParams: T): PropsStore<T> {
+    const params: Record<string, RuntimeStoreParam> = storeParams;
     const propsObj = new Observable();
     // stays null for the whole loop below: subscribing to a writable fires the callback
     // synchronously, and that first call is the store reporting its start value, not a change
@@ -397,11 +442,8 @@ function createStore(params) {
     Object.assign(propsObj, params);
 
     const keys = Object.keys(params);
-    /**
-     * Built once. The get trap runs on every property access, so returning a fresh closure from it —
-     * as this used to for each of the ten accessors, plus a bind() for anything else — allocated on
-     * reads that happen while the map is being styled.
-     */
+    // built once: the get trap runs on every property access, including reads while the map is
+    // being styled, so it must not allocate closures
     const accessors: Record<string, Function> = {
         getTitle: (key: string) => params[key].title,
         getDescription: (key: string) => params[key].description,
@@ -467,6 +509,7 @@ function createStore(params) {
         }
     }) as any;
 }
+export type NutiParamKey = keyof typeof nutiParams;
 export const nutiProps = createStore(nutiParams);
 export const innerNutiProps = createStore(innerNutiParams);
 export const layerProps = createStore(layersParams);

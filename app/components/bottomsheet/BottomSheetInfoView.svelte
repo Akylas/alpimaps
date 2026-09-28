@@ -136,10 +136,6 @@
         canvas?.nativeView.invalidate();
     });
 
-    /**
-     * The total remaining ascent hides what matters on a multi climb route: how much of the climb
-     * being climbed right now is left. Shown only while inside a climb.
-     */
     function currentAscentSpans(currentAscent: CurrentAscent) {
         if (!currentAscent || currentAscent.remainingGain <= 0) {
             return [];

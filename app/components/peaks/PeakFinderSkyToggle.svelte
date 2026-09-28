@@ -1,8 +1,5 @@
 <script lang="ts">
-    /**
-     * One switch of the sky panel, as a pill: filled and outlined in the accent when on, a faint
-     * outline when off - the outline carries it on e-ink, where a tint is invisible.
-     */
+    // the outline carries the on state on e-ink, where a tint is invisible
     import type { Writable } from 'svelte/store';
     import { fonts } from '~/variables';
 

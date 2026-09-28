@@ -30,24 +30,15 @@ import { isNavigating } from '~/stores/navigationStore';
 const LOCATION_ANIMATION_DURATION = 300;
 /** pixels of the generated marker bitmaps: big enough to stay clean when carto scales them */
 const USER_BITMAP_SIZE = 96;
-/** screen size of the heading arrow, and of the plain dot with its ring */
 const ARROW_MARKER_SIZE = 30;
 const DOT_MARKER_SIZE = 20;
 
-/** what the user's position looks like: a heading chevron while navigating, a ringed dot otherwise */
 type UserMarkerKind = 'arrow' | 'dot';
 
 const userBitmapUrls: { [key: string]: string } = {};
 /**
- * The marker image, drawn into an offscreen canvas rather than shipped as an asset so it follows the
- * theme colors and needs no extra image files. One per look, cached: the dot's colour follows the fix
- * accuracy, so there are a handful of them.
- *
- * Written to a FILE and passed to the style as a url, which is the only in-memory image a spec can
- * carry: a bitmap spec decodes bytes a url gives (`buildBitmap`), and `create` serialises the spec
- * as JSON - an `ImageSource` put straight in it stringifies to nothing the SDK can read, and the
- * marker fell back to carto's default pin. Same reason the android copy is gone: nothing hands the
- * canvas' own bitmap to native any more, so there is nothing left for `getMassifBitmap` to recycle.
+ * Written to a file and passed as a url: `create` serialises the spec as JSON, so an `ImageSource`
+ * put straight in it stringifies to nothing and the marker falls back to carto's default pin.
  */
 function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: string) {
     const key = `${kind}|${color}|${outlineColor}`;
@@ -72,7 +63,6 @@ function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: str
             paint.setColor(outlineColor);
             canvas.drawPath(path, paint);
         } else {
-            // the ring is part of the image: it used to be a second marker underneath this one
             paint.setStyle(Style.FILL);
             paint.setColor(outlineColor);
             canvas.drawCircle(size / 2, size / 2, size * 0.42, paint);
@@ -82,9 +72,7 @@ function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: str
         // a name per look, so the file is written once and reused across launches
         const filePath = path.join(knownFolders.temp().path, `userLocation.${kind}.${new Color(color).hex.slice(1)}.${new Color(outlineColor).hex.slice(1)}.png`);
         new ImageSource(canvas.getImage()).saveToFile(filePath, 'png');
-        // `file://`, not the bare path: URLFileLoader reads http, https, assets and file, and rejects
-        // anything else as an unsupported schema. Handed a plain path it loaded nothing, the bitmap
-        // failed to build, and the style fell back to carto's default pin — the white marker
+        // `file://`: URLFileLoader rejects a bare path as an unsupported schema
         url = `file://${filePath}`;
         userBitmapUrls[key] = url;
     }
@@ -104,14 +92,7 @@ export default class UserLocationModule extends MapModule {
     localVectorDataSource: MassifSource<'massif::LocalVectorDataSource'>;
     localBackVectorLayer: MassifLayer<'massif::VectorLayer'>;
     localVectorLayer: MassifLayer<'massif::VectorLayer'>;
-    /**
-     * One marker for both modes. The heading arrow and the dot used to be three separate elements kept
-     * in sync by showing and hiding each other, which meant every mode change had to remember to touch
-     * all of them — and a marker whose look depended on a fix that had not arrived yet simply stayed
-     * wrong. Now the look is a style swapped on the single marker, so there is nothing to keep in sync.
-     */
     userMarker: MassifObject<'massif::Marker'>;
-    /** which look the marker currently wears, so the style is only rebuilt when it actually changes */
     private userMarkerStyleKey: string = null;
     /** the halo stays its own element: it is a ground circle in meters, not a screen sized billboard */
     accuracyMarker: MassifObject<'massif::Polygon'>;
@@ -135,9 +116,7 @@ export default class UserLocationModule extends MapModule {
     }
     set navigationMode(value: boolean) {
         navigationModeStore.set(value);
-        // redraw now rather than on the next fix, whichever way we are going: entering navigation is
-        // the moment the user looks at the marker, and a fix can be seconds away — or never, since an
-        // unchanged position is dropped before it reaches the markers
+        // redraw now: an unchanged position is dropped before it reaches the markers, so the next fix may never come
         if (this.mLastUserLocation) {
             this.updateMarkers(this.mLastUserLocation);
         }
@@ -201,7 +180,6 @@ export default class UserLocationModule extends MapModule {
     }
     override onMapInteraction(e: { data: MapInteraction }) {
         const interaction = e.data;
-        // a pan the user made, not a zoom and not an animation the app started
         if (!interaction.zoomAction && interaction.panAction && !interaction.animationStarted) {
             this.userFollow = false;
         }
@@ -262,13 +240,6 @@ export default class UserLocationModule extends MapModule {
         }
     }
 
-    /**
-     * Everything drawn at the user's position, split out so entering navigation can redraw it at once.
-     *
-     * The marker is one element wearing one of two looks. Which look it wears follows the mode alone,
-     * not the mode *and* whether this particular fix happened to carry a heading: the arrow used to
-     * wait for a fix with a bearing, so starting navigation while standing still left the dot on screen.
-     */
     private updateMarkers(position: GeoLocation) {
         let accuracyColor = '#0e7afe';
         let accuracySize = DOT_MARKER_SIZE;
@@ -294,8 +265,7 @@ export default class UserLocationModule extends MapModule {
         if (accuracyMarkerEnabled) {
             const poses = this.getCirclePoints(position);
             if (!this.accuracyMarker) {
-                // The border is a nested elementstyle spec: a polygon style takes its line inline,
-                // so nothing here registers a LineStyle of its own.
+                // a polygon style takes its border line inline
                 this.accuracyMarker = mapContext.getMap().object('element', 'element.userLocation.accuracy', {
                     type: 'polygon',
                     poses,
@@ -307,9 +277,7 @@ export default class UserLocationModule extends MapModule {
                 });
                 this.localBackVectorDataSource.call('add', this.accuracyMarker.handle);
             } else {
-                // The whole GEOMETRY, not `geometry.poses`: PolygonGeometry exposes its poses
-                // read-only - `Polygon::setPoses` is not in the SDK's property table - so writing
-                // through the path failed, and the halo froze at the first fix it was given.
+                // the whole geometry: its poses are read-only (`Polygon::setPoses` is not in the SDK's property table)
                 this.accuracyMarker.set('geometry', { type: 'polygon', poses });
             }
             // the halo belongs to the dot: around the arrow it just draws a circle that never goes away
@@ -338,8 +306,7 @@ export default class UserLocationModule extends MapModule {
         this.userMarkerStyleKey = styleKey;
         // as above: PointGeometry's `pos` is read-only, so the marker is moved by its geometry
         this.userMarker.set('geometry', { type: 'point', pos: toPosition(newPos) });
-        // the dot has no heading to show, and a chevron pointing north while the map points elsewhere
-        // is worse than one holding the last direction we were actually given
+        // keep the last known heading: a chevron snapping back to north is worse than a stale one
         this.userMarker.set('rotation', useArrow ? -this.lastKnownBearing : 0);
         this.userMarker.set('visible', true);
     }
@@ -349,9 +316,7 @@ export default class UserLocationModule extends MapModule {
             type: 'marker',
             size,
             bitmap: { type: 'url', url: getUserBitmapUrl(kind, color, outlineColor) },
-            // carto anchors a marker at (0, -1) — its bottom edge — because a marker is usually a pin
-            // whose tip points at the place. This one *is* the place, so it is centred on it instead:
-            // left as it was, the whole marker sat half its own height north of the actual fix
+            // carto anchors at (0, -1), the pin tip; this marker *is* the place, so centre it
             anchorPointX: 0,
             anchorPointY: 0,
             // GROUND so the chevron turns with the map rather than staying upright on screen
@@ -362,13 +327,7 @@ export default class UserLocationModule extends MapModule {
     /** set by NavigationService while navigating: the speed/maneuver derived zoom to hold */
     navigationZoom = 0;
 
-    /**
-     * Puts the camera on the user.
-     *
-     * ONE move, not four: position, zoom, rotation and tilt used to be set separately with the same
-     * duration, and four animations over the same camera visibly fight each other - which is what
-     * made a navigation recentre look like a stutter.
-     */
+    /** One camera move: separate position/zoom/rotation/tilt animations fight each other and stutter. */
     moveToUserLocation(duration = LOCATION_ANIMATION_DURATION) {
         if (!this.mLastUserLocation) {
             return;
@@ -381,9 +340,8 @@ export default class UserLocationModule extends MapModule {
             camera.moveTo(target, { zoom, duration });
             return;
         }
-        // the user sits low on the screen while navigating, so there is road ahead to look at
-        // a ScreenPos is `[x, y]`: StructCodec reads two numbers out of an array, and an {x, y}
-        // object decodes to nothing, which left the focus point at the centre while navigating
+        // the user sits low on the screen while navigating. A ScreenPos is `[x, y]`: an {x, y}
+        // object decodes to nothing
         map.set('focusPointOffset', [
             mapContext.focusOffset.x,
             mapContext.focusOffset.y - Utils.layout.toDevicePixels(screenHeightDips) * ApplicationSettings.getNumber(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET)
@@ -391,10 +349,8 @@ export default class UserLocationModule extends MapModule {
         const tilt = ApplicationSettings.getNumber(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
         camera.moveTo(target, {
             zoom,
-            // the last bearing we were actually given, which is also what the arrow is drawn with, so
-            // the camera and the marker never point different ways. The fix's own bearing is missing
-            // on a phone standing still — `-undefined` is NaN, JSON writes that as null, and the
-            // native argument decoder refused the whole flyTo as a bad spec
+            // same bearing as the arrow. A fix bearing can be missing: NaN is written as null and the
+            // native decoder then rejects the whole flyTo
             rotation: -this.lastKnownBearing,
             tilt: tilt > 0 ? tilt : undefined,
             duration
@@ -428,10 +384,7 @@ export default class UserLocationModule extends MapModule {
         this.geoHandler = null;
     }
 
-    /**
-     * @param force restart even when already watching, for callers that just changed the watch
-     * options and need them applied. Without it they had to call startWatch a second time themselves.
-     */
+    /** @param force restart even when already watching, to apply changed watch options */
     async startWatchLocation({ force = false, opts = {} } = {}) {
         if (!this.geoHandler || (get(watchingLocation) && !force)) {
             return;
@@ -450,10 +403,7 @@ export default class UserLocationModule extends MapModule {
             });
         }
     }
-    /**
-     * Puts the location stores back in step with the watch actually running. Navigation drives the
-     * watch directly, so without this the button can end up saying the opposite of what the gps does.
-     */
+    /** Navigation drives the watch directly, so the stores must be resynced with the watch actually running. */
     syncWatchingState() {
         const watching = !!this.geoHandler?.isWatching();
         if (get(watchingLocation) !== watching) {

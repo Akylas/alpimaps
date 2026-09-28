@@ -8,19 +8,9 @@ import { SUN_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
 import { peakFinderElevation, peakFinderSun, peakFinderSunHours } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
 
-/**
- * THE SUN over the panorama, as peakfinder.com draws it: the day's path across the sky, the sun where
- * it is at the chosen time, and where it rises and sets over the TERRAIN in front of the viewpoint -
- * not over the flat horizon - with the time written there. Hour marks on the path are optional.
- *
- * The SDK knows directions and the skyline; the astronomy is here (suncalc). Sky objects are
- * depth-tested against the map, so a ridge in front of the path hides it with no work on this side,
- * and the path is drawn as the whole day's circle, below the horizon too: wherever the eye is, it
- * runs down into the terrain rather than stopping in mid-air.
- *
- * Two celestial layers, because the layer order is the z order, labels included: the path under the
- * summit names, the sun and the times over them.
- */
+// Sky objects are depth-tested, so ridges hide the path; drawn as the whole day's circle, it runs into
+// the terrain. Two layers because layer order is z order, labels included: the path under the summit
+// names, the sun and its times over them.
 
 const TO_DEGREES = 180 / Math.PI;
 const TO_RADIANS = Math.PI / 180;
@@ -30,9 +20,7 @@ const SAMPLE_MINUTES = 2;
 const LOW = -4;
 const HIGH = 40;
 const HORIZON_DISTANCE = 200000;
-// Re-measured whenever the panorama goes IDLE besides: the terrain the skyline is measured on keeps
-// arriving for a while after a move, and every batch that lands is drawn, then idles. Debounced, and
-// on the UI thread - but at idle, with nothing moving to hitch.
+// also re-measured when the panorama goes idle: terrain keeps arriving for a while after a move
 const IDLE_DEBOUNCE_MS = 300;
 
 interface Sample {
@@ -135,7 +123,6 @@ function showLabel(label: MassifObject<'massif::CelestialLabel'>, text: string, 
     label.set('visible', true);
 }
 
-/** The whole day's circle, for the eye's position and the chosen day. */
 function planPath(eye: MapPos, time: number) {
     const start = dayStart(time);
     const key = `${start}|${eye.lat.toFixed(3)}|${eye.lon.toFixed(3)}`;
@@ -156,10 +143,8 @@ function planPath(eye: MapPos, time: number) {
 }
 
 /**
- * Rise and set over the TERRAIN, and the hour marks. calculateHorizon reads the elevation already
- * loaded and is synchronous, so this runs as the viewpoint changes. It stays cheap by measuring the
- * skyline coarsely (every 8 minutes of the path, only where the sun is low enough to meet it), then
- * finely only across the interval where the sun crosses it.
+ * calculateHorizon is synchronous, so stay cheap: a coarse skyline (every 8 minutes, only where the sun
+ * is low enough to meet it), then fine only across the interval where the sun crosses it.
  */
 function planCrossings(eye: MapPos) {
     const eyeHeight = Math.max(0, get(peakFinderElevation));
@@ -261,7 +246,6 @@ function planCrossings(eye: MapPos) {
     marks.call('setSegments', ticks);
 }
 
-/** The disc and its glow at the chosen moment, hidden once it is well down. */
 let placed = { azimuth: NaN, altitude: NaN };
 function placeSun(eye: MapPos, time: number) {
     const { altitude, azimuth } = sunPositionAt(time, eye);
@@ -276,10 +260,7 @@ function placeSun(eye: MapPos, time: number) {
     }
 }
 
-/**
- * Re-plans what changed. `force` re-measures the skyline even when nothing moved - the terrain under
- * it may have.
- */
+/** `force` re-measures the skyline even when nothing moved: the terrain under it may have. */
 export function updatePeakFinderSun(force = false) {
     if (!context || !path) {
         return;
@@ -328,10 +309,8 @@ function build(sunContext: PeakFinderSkyContext) {
     // In pixels, not its real half degree: a marker for where the sun is, visible at any field of view.
     glow = addTo(skyTop, map.object('celestial', id('sky.glow'), { type: 'sprite', screenSize: 56 * scale, color: colour(251, 191, 36, 0.4), softness: 1 }));
     disc = addTo(skyTop, map.object('celestial', id('sky.sun'), { type: 'sprite', screenSize: 20 * scale, color: colour(245, 158, 11), softness: 0.15, clickRadius: 3, metaData: { id: 'sun' } }));
-    // Text in the sky is drawn by the SDK from a string and a style. Anchored by the middle of its
-    // bottom edge, so it stands above the point it names; a rise or a set a little higher, and OVER
-    // the terrain rather than half hidden by the ridge it names (the rendered terrain is flat where
-    // the times take the earth's curve, so it draws the ridge a touch higher than the point computed).
+    // Anchored bottom-middle, so it stands above its point. Rise/set are lifted and drawn OVER the terrain:
+    // the rendered terrain is flat where the times take the earth's curve, so the ridge draws a touch higher.
     const label = (name: string, lift: number) => {
         // Tapped like the sun itself.
         const created = addTo(skyTop, map.object('celestial', id(name), { type: 'label', visible: false, clickable: true, metaData: { id: 'sun' } }));
@@ -387,8 +366,7 @@ function drop() {
             }
         }
     }
-    // Registered on the panorama's map, which would release them with it - released now, so a sun
-    // switched off costs nothing.
+    // released now rather than with the panorama's map, so a sun switched off costs nothing
     for (const object of [sky, skyTop, path, marks, disc, glow, riseLabel, setLabel, ...hourLabels]) {
         object?.destroy();
     }

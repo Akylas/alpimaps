@@ -47,7 +47,6 @@ export class BgService extends android.app.Service {
     }
 
     onBind(intent: android.content.Intent) {
-        // a client is binding to the service with bindService()
         this.bounded = true;
         const result = new BgServiceBinder();
         result.setService(this);
@@ -56,11 +55,10 @@ export class BgService extends android.app.Service {
     onUnbind(intent: android.content.Intent) {
         this.bounded = false;
         this.removeForeground();
-        // return true if you would like to have the service's onRebind(Intent) method later called when new clients bind to it.
+        // true: onRebind() is called when new clients bind
         return true;
     }
     onRebind(intent: android.content.Intent) {
-        // a client is binding to the service with bindService(), after onUnbind() has already been called
     }
 
     onBounded(commonService: BgServiceCommon) {
@@ -125,8 +123,6 @@ export class BgService extends android.app.Service {
                     this.startForeground(NOTIFICATION_ID, this.mNotification);
                 }
                 this.showingForeground = true;
-                // the notification alone proves nothing: without the service actually being foreground
-                // android revokes location the moment the app leaves the screen
                 DEV_LOG && console.log('startForeground done');
             } catch (err) {
                 console.error('showForeground', err, err['stack']);

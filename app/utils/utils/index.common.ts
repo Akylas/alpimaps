@@ -127,7 +127,6 @@ export function getAndroidRealPath(src: string) {
             return android.os.Environment.getExternalStorageDirectory().getPath() + '/' + split[split.length - 1];
         } else {
             // if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
-            //getExternalMediaDirs() added in API 21
             const external = Utils.android.getApplicationContext().getExternalMediaDirs();
             if (external.length > 1) {
                 filePath = external[1].getAbsolutePath();

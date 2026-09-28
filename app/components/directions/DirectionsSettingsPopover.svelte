@@ -45,7 +45,6 @@
     $: inversedColor = new Color(inverse(color.argb)).setAlpha(255).hex;
 
     function inverse(figure) {
-        // inverse a RGB color
         return 0xffffff - figure;
     }
 

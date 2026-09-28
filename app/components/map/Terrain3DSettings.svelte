@@ -1,17 +1,6 @@
 <script lang="ts">
-    /**
-     * The 3D terrain mode's settings, behind a long press on its side-bar button.
-     *
-     * Every row binds a store from `~/stores/terrainStore`, and the module subscribes to those stores —
-     * so a slider moves the live map with no wiring here. The rows are shared with the app settings
-     * screen (`terrain3dSettingRows`).
-     *
-     * A COLLECTIONVIEW, like `MapOptions`, and for the same reason: the list is long enough that a
-     * stacklayout in a scrollview builds and measures every row up front, sliders included, while the
-     * bottom sheet is opening. The rows are therefore DATA — `type` picks the template — and the
-     * gesturerootview is what lets a slider drag inside a bottom sheet reach the slider instead of
-     * being taken by the sheet's own pan gesture.
-     */
+    // a collectionview so rows aren't all built while the sheet opens; the gesturerootview lets a
+    // slider drag reach the slider instead of the sheet's pan gesture
     import { Template } from '@nativescript-community/svelte-native/components';
     import { terrain3dSettingRows } from '~/components/map/terrain3dSettingRows';
     import type { PeakFinderSettingRow as SettingRow } from '~/components/peaks/peakFinderSettingRows';
@@ -23,8 +12,7 @@
 
     $: ({ colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
 
-    // The same rows as the app's settings screen - see terrain3dSettingRows. Rebuilt when lighting or
-    // shadows switch, which show or hide their knobs.
+    // rebuilt when lighting or shadows switch, which show or hide their knobs
     $: rows = terrain3dSettingRows({ lighting: $terrainLighting, shadows: $terrainShadows });
 
     function itemTemplateSelector(item: SettingRow) {

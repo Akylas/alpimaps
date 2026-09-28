@@ -116,7 +116,6 @@
             if (item && item.id && featureData.id === item.id) {
                 updateRouteItemWithPosition(item, position, false);
             } else {
-                // we can update with position once the item is selected
                 dataToUpdateOnItemSelect = { id: featureData.id, position };
             }
         }
@@ -292,11 +291,8 @@
     // a track we could navigate if it had maneuvers, ie an imported gpx
     $: itemNeedsInstructions = !$isNavigating && !!item && isNavigableRoute(item) && !item.instructions?.length;
 
-    /**
-     * Handlers kept out of the reactive statement below on purpose: referencing them there makes the
-     * linter trace into functions that assign `item`, and it is right that that would be a loop.
-     * The row's shape is reactive; what its buttons do is not.
-     */
+    // kept out of the reactive statement below: referencing them there makes the linter trace into
+    // functions that assign `item`, which would be a loop
     const actionHandlers: Record<string, { tap: (event?) => void; long?: (event?) => void }> = {
         information: { tap: () => showInformation(), long: () => openOpenStreetMap() },
         save: { tap: () => saveItem() },
@@ -315,10 +311,6 @@
         share: { tap: (event) => shareItem(event) }
     };
 
-    /**
-     * The action row as data: each entry is only listed when it applies, so the row is built rather
-     * than a fixed set of buttons each hiding itself, and features can contribute their own.
-     */
     $: itemActions = [
         { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
         { id: 'save', when: itemCanBeAdded, text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus', tooltip: lc('save') },
@@ -332,16 +324,12 @@
         { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
         { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
-        // `peaks` is now contributed by ~/mapModules/features/peakFinder (it turns the live map into a
-        // panorama rather than opening a WebView), and 3D terrain is a map mode with its own side
-        // button — neither belongs in this hard-coded row any more.
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
         { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
     ]
-        // Numbered BEFORE the filter, so an entry's position does not depend on which of the others
-        // happen to apply to this item. Spaced 10 apart so a feature can slot BETWEEN two built-ins
-        // rather than only landing at the end — `peaks` sits at 115, where it has always been.
+        // numbered before the filter so order doesn't depend on which entries apply; spaced 10 apart
+        // so a feature can slot between two built-ins
         .map((action, index) => ({ ...action, order: index * 10 }))
         .filter((action) => action.when)
         .concat(featureItemActions(item) as any)
@@ -403,7 +391,6 @@
         }
     }
 
-    /** Feeds the elevation chart from the navigation service's progress, no second polyline walk. */
     function highlightChartFromProgress(progress: RouteProgress) {
         const profile = item?.profile;
         const params = {
@@ -452,10 +439,6 @@
         instruction: RouteInstruction;
     };
 
-    /**
-     * An imported track has no maneuvers. Route through it to get some, then store them on the item
-     * so the navigate button appears and navigation can use them like any computed route.
-     */
     async function getTrackInstructions() {
         try {
             updatingItem = true;
@@ -479,7 +462,7 @@
 
     async function startNavigation() {
         try {
-            // navigation has its own sheet now: Map watches isNavigating and moves both of them
+            // Map watches isNavigating and moves both sheets
             await navigationService.start(item);
         } catch (error) {
             showError(error);
@@ -803,7 +786,6 @@
             let aimingItems: any = selected ? [selected] : [];
             let updateWithUserLocation = true;
             if (itemIsRoute && !item.id) {
-                // aim for the start point!
                 updateWithUserLocation = false;
                 const points = mapContext.mapModules.directionsPanel.getFeatures().filter((s) => s.geometry.type === 'Point');
                 location = { lat: (points[0].geometry as Point).coordinates[1], lon: (points[0].geometry as Point).coordinates[0] };

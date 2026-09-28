@@ -35,7 +35,6 @@ try {
     installWebRTC();
     initialize();
 
-    // we need to use lat lon
     setGeoLocationKeys('lat', 'lon');
 
     registerNativeViewElement('absolutelayout', () => require('@nativescript/core').AbsoluteLayout);
@@ -78,8 +77,6 @@ try {
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     registerNativeViewElement('symbolshape', () => require('~/components/common/SymbolShape').default);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
-    // the camera preview the peak finder composites its relief over. The factory is lazy, so the plugin
-    // is only loaded the first time the view is actually created.
     registerNativeViewElement('cameraview', () => require('@nativescript-community/ui-cameraview').CameraView);
     registerNativeViewElement('checkbox', () => require('@nativescript-community/ui-checkbox').CheckBox);
     registerNativeViewElement('lottie', () => require('@nativescript-community/ui-lottie').LottieView);

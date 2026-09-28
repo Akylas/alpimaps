@@ -43,19 +43,14 @@ const header = (title: string) => title.toUpperCase();
 const degrees = (value: number) => `${Math.round(value)}°`;
 
 /**
- * The 3D terrain mode's settings, ONE list for both places they are shown: the sheet behind its
- * side-bar button (`Terrain3DSettings`) and the app's settings screen (`Settings`, `terrain_3d`), as
- * `peakFinderSettingRows` does for the peak finder. Both bind the same stores.
- *
- * The sun and shadow knobs only mean something with lighting and shadows on: the sheet hides them
- * otherwise, the settings screen lists everything.
+ * Shared by the `Terrain3DSettings` sheet and the settings screen. The sheet passes `show` to hide
+ * the sun/shadow knobs while lighting/shadows are off.
  */
 export function terrain3dSettingRows(show = { lighting: true, shadows: true }): SettingRow[] {
     return [
         section(header(lc('terrain_3d'))),
         { type: 'slider', store: terrainExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
         { type: 'slider', store: terrainMeshResolution, title: lc('mesh_resolution'), min: 16, max: 256, step: 16, format: (value) => String(Math.round(value)) },
-        // Under the mesh, because it is the one that moves the relief: the mesh above only draws it.
         {
             type: 'slider',
             store: terrainNodeResolution,
@@ -82,9 +77,8 @@ export function terrain3dSettingRows(show = { lighting: true, shadows: true }): 
             store: terrainDrapeCacheSize,
             title: lc('drape_cache_size'),
             description: lc('drape_cache_size_desc'),
-            // Right below the resolution, because the two are one setting: the cache has to hold two
-            // covers at whatever the resolution costs per tile, or it evicts every frame. Which is why
-            // 0 - the default - follows the resolution rather than standing still while it moves.
+            // 0 (default) follows the drape resolution: the cache must hold two covers at that
+            // per-tile cost or it evicts every frame
             min: 0,
             max: 512,
             step: 32,
@@ -121,13 +115,11 @@ export function terrain3dSettingRows(show = { lighting: true, shadows: true }): 
         { type: 'switch', store: terrainAutoFlattenByTilt, title: lc('auto_3d_by_tilt'), description: lc('auto_3d_by_tilt_desc') },
         { type: 'switch', store: terrainSky, title: lc('sky') },
         { type: 'switch', store: terrainFog, title: lc('fog'), description: lc('terrain_fog_desc') },
-        // the altitudes the haze fades out between: what leaves the summits standing above it
         { type: 'slider', store: terrainFogVerticalStart, title: lc('fog_vertical_start'), description: lc('fog_vertical_start_desc'), min: 0, max: 4000, step: 100, format: formatDistance },
         { type: 'slider', store: terrainFogVerticalEnd, title: lc('fog_vertical_end'), description: lc('fog_vertical_end_desc'), min: 0, max: 6000, step: 100, format: formatDistance },
 
         section(header(lc('lighting'))),
         { type: 'switch', store: terrainLighting, title: lc('terrain_lighting'), description: lc('terrain_lighting_desc') },
-        // the sun is only written while the ground is lit, so it is only worth showing there
         ...(show.lighting
             ? ([
                   { type: 'slider', store: terrainSunAzimuth, title: lc('sun_azimuth'), description: lc('sun_azimuth_desc'), min: 0, max: 360, step: 1, format: degrees },

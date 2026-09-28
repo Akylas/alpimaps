@@ -3,10 +3,7 @@ import { Writable, writable } from 'svelte/store';
 
 export type SettingsStore<T> = Writable<T> & { reset: () => void };
 
-/**
- * A svelte store backed by ApplicationSettings: writing to it persists, and writing the default
- * value removes the key so the default can still move in a later version.
- */
+/** Writing the default value removes the key, so the default can still change in a later version. */
 export function settingsStore<T = any>(key: string, defaultValue: T): SettingsStore<T> {
     const tpof = typeof defaultValue;
     let updateMethod;

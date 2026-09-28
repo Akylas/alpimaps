@@ -405,7 +405,6 @@ LEFT JOIN  (
                         d.selected = true;
                         items.setItem(index, d);
                         if ((item as Item).groups?.length) {
-                            // find nb selected items in group. If 0 unselect the group
                             const group = groups[(item as Item).groups[0]];
                             if (group) {
                                 const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);
@@ -460,7 +459,6 @@ LEFT JOIN  (
                         d.selected = false;
                         items.setItem(index, d);
                         if ((item as Item).groups?.length) {
-                            // find nb selected items in group. If 0 unselect the group
                             const group = groups[(item as Item).groups[0]];
                             if (group) {
                                 const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === group.id);

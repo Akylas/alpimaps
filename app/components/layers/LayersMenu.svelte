@@ -3,9 +3,8 @@
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { ContentView, GridLayout } from '@nativescript/core';
-    // from gestures-types, not the barrel: ui/gestures/index.d.ts re-exports it but also declares a
-    // TouchGestureEventData of its own, and that one's getAllPointers() returns a Pointer declared
-    // locally and never exported - so the pointer handed to startDragging was a different type
+    // not from the barrel: ui/gestures/index.d.ts redeclares TouchGestureEventData with an unexported
+    // Pointer type that startDragging does not accept
     import type { TouchGestureEventData } from '@nativescript/core/ui/gestures/gestures-types';
     import { setNumber } from '@nativescript/core/application-settings';
     import { ObservableArray } from '@nativescript/core/data/observable-array';
@@ -139,11 +138,10 @@
             showError(error);
         }
     }
-    const nutiIconParams = ['contours', 'buildings'];
+    const nutiIconParams = ['contours', 'buildings'] as const;
 </script>
 
-<!-- on iOS the collectionview is applied a padding because of the safearea
-while being shown using bottomsheet. We remove it with paddingTop -->
+<!-- on iOS a bottomsheet adds a safe-area padding to the collectionview: contentInsetAdjustmentBehavior removes it -->
 <gesturerootview {...$$restProps} height={240} on:closedBottomSheet={onCloseBottomSheet}>
     <gridlayout bind:this={gridLayout} columns="*,auto">
         <collectionview

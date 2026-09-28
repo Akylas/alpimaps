@@ -83,136 +83,66 @@ import { type CameraFieldOfView, type CameraPreviewInfo, type LensDistortion, ty
 import { type MapPos, bearingBetween, computeDistanceBetween, fromPosition, toPosition } from '~/utils/geo';
 import { lockOrientation } from '~/utils/orientation';
 
-/**
- * The peak finder, on a MAP OF ITS OWN.
- *
- * It used to be a mode of the live map: the layers were hidden, the camera flown to the viewpoint, the
- * atmosphere and the terrain rewritten, and every one of those changes undone again on the way out. It
- * worked, but it meant the panorama paid for everything the live map is — its layers' decoded tiles,
- * its drape, its label sets — and the way out was a long list of things to put back, each of which was
- * a bug waiting to happen. It also MOVED the map: the user came back to wherever the panorama had
- * wandered to rather than where they left.
- *
- * So the panorama is now a second `massifmap`, mounted over the live one while the mode is up and
- * destroyed with it (`components/peaks/PeakFinderMap.svelte`). What that buys:
- *
- *  - the live map is not touched at all — not its camera, not its layers, not its atmosphere. It is
- *    also not DRAWN: the SDK renders when dirty, so an idle map under an opaque one costs nothing.
- *  - the panorama starts from nothing rather than from a map: one vector layer for the summit names
- *    and the terrain, no base map, no drape, no sky.
- *  - there is nothing to restore, so there is no exit path to get wrong. The map is destroyed, and
- *    every id it built goes with it.
- *  - no animation anywhere: the camera is placed where it belongs before the first frame is drawn.
- *
- * What it does NOT re-fetch is the point of the design: the DEM and the vector tiles are the SAME
- * data sources the live map is drawing, handed over by handle, so the tiles already in their caches
- * are the tiles the panorama meshes and labels from.
- *
- * The look is peakfinder.com's — see `PEAKFINDER_LOOK` in `terrain/reliefShaders.ts` — on geo-three's
- * terrain cut, and the callout summit labels are the android demo's, see `terrain/peaksStyle.ts`.
- */
+// The panorama is a second map mounted over the live one (`components/peaks/PeakFinderMap.svelte`). It
+// shares the live map's DEM and vector sources by handle, so their cached tiles are reused.
 
-/** The registry id the panorama's map takes. Two maps in one app must not share the `map` one. */
+/** Two maps in one app must not share the `map` registry id. */
 export const PANORAMA_MAP_ID = 'map.peakFinder';
 const PEAKS_LAYER_ID = 'layer.peaks';
 const PEAKS_DECODER_ID = 'decoder.peaks';
-/** Fixed, not generation-stamped: there is one summit set per panorama and the map owns it. */
+/** Fixed, not generation-stamped: one summit set per panorama. */
 const STATIC_PEAKS_SOURCE_ID = 'source.peaks.static';
-/** The engine-side one. Fixed too: one per panorama, released with the map that built it. */
 const DETAIL_PEAKS_SOURCE_ID = 'source.peaks.detail';
 const DETAIL_PEAKS_CACHE_ID = 'source.peaks.detail.cache';
 const DETAIL_PEAKS_BASE_ID = 'source.peaks.detail.base';
 const DETAIL_PEAKS_STORE_ID = 'source.peaks.detail.store';
-/**
- * The rebuilt tiles on disk. A rebuild reads 64 detail tiles off the base map, 1-2 s a coarse tile on
- * a Crosscall, so without it every visit waited seconds for its summits.
- */
+/** A rebuild reads 64 detail tiles, 1-2 s per coarse tile on a Crosscall. */
 const DETAIL_PEAKS_STORE_BYTES = 64 * 1024 * 1024;
 const DETAIL_PEAKS_STORE_FOLDER = 'peakfinder_cache';
 /**
- * Bytes the rebuilt summit tiles are held in, in front of `PointDetailTileDataSource`.
- *
- * Rebuilding one coarse tile READS 4^levels finer ones — 64 at the default — so a tile that falls
- * out and is asked for again is not a cache miss, it is sixty-four of them plus a decode and a
- * rebuild. Measured without it: the label map was rebuilt 3-6 times a SECOND while looking around
- * (`RenderStats` tileSets/labelMaps), allocating up to 992 labels and throwing up to 1397
- * placements away each time — which is the remaining reason names appear and vanish, now that
- * placement itself settles to visFlips=0.
- *
- * The SDK's own default is 6 MB, sized for raster tiles. These are a few hundred points each.
+ * Rebuilding one coarse tile reads 4^levels finer ones (64 by default), so a miss costs 64 reads and a
+ * rebuild. The SDK default (6 MB) is sized for raster tiles.
  */
 const DETAIL_PEAKS_CACHE_BYTES = 32 * 1024 * 1024;
 const EFFECT_ID = 'relief_outline';
 /** A transparent sky colour is how the legacy sky BITMAP is turned off — see `applyAtmosphere`. */
 const NO_SKY_BITMAP = 0;
 
-/** The panorama's own map, from the moment its view is ready until the mode is left. */
 let panorama: MassifMap = null;
-/** Its view, for the two things the surface API has no verb for: the effect and the surface shader. */
+/** For what the surface API has no verb for: the effect and the surface shader. */
 let panoramaView: MassifMapView = null;
-/** The live map's sources, held by handle while the panorama draws from them. */
+/** The live map's own sources, shared by handle. */
 let demSource: MassifSource = null;
 let peaksSource: MassifSource = null;
-/** The summit set collected for this viewpoint, once it has landed. See `loadStaticPeaks`. */
 let staticPeaksSource: MassifSource = null;
-/** The engine-side detail source, once it has been built and found to work. */
 let detailPeaksSource: MassifSource = null;
-/** The memory cache wrapping it — what the layer actually reads. See DETAIL_PEAKS_CACHE_BYTES. */
+/** Wraps the detail source; what the layer actually reads. */
 let detailPeaksCache: MassifSource = null;
-/** Between the two, the rebuilt tiles on disk. See DETAIL_PEAKS_STORE_BYTES. */
+/** Disk cache between the detail source and the memory cache. */
 let detailPeaksStore: MassifSource = null;
 /** The base map files the detail source reads, without the contours and routes merged into the map's. */
 let detailPeaksBase: MassifSource = null;
-/** Memoised: whether this build's SDK carries `PointDetailTileDataSource` at all. */
 let detailSourceAvailable: boolean | undefined;
 let peaksLayer: MassifLayer = null;
 let peaksDecoder: api.MassifObject<'massif::MBVectorTileDecoder'> = null;
 /** Bumped per rebuild, so a new layer/decoder pair never collides with the one still on the map. */
 let peaksGeneration = 0;
 let effect = null;
-/** Which compiled outline `effect` is - see applyReliefOutline. */
 let effectVariant = '';
-/**
- * Where the eye stands, in lon/lat — what every distance and bearing in this mode is measured from.
- *
- * LIVE, not the entry position. It used to be written once from the item the mode was opened on and
- * again by `flyToSelectedPeak`, which was wrong the moment the camera moved on its own — and it
- * does: a two-finger drag in this mode is a MOVE, not a pinch (`TouchHandler`, `DUAL_POINTER_MOVE`
- * under `FREE_ROAM_MODE_FIRST_PERSON`). Walk a few kilometres and every summit in the chip was
- * still measured from where you started.
- *
- * It is the EYE and not the camera's focus. The two are kilometres apart at a panorama's tilt,
- * which is the whole subject of `flyToSelectedPeak`, and the one a peak finder means by "from here"
- * is the eye. `entryPosition` keeps what the mode was opened ON, because the camera placement wants
- * that and nothing else does.
- */
+/** The live EYE position, not the camera focus nor the entry point: distances and bearings are measured from it. */
 let viewpoint: MapPos = null;
-/** The item the mode was opened on — where the camera is AIMED at setup, and only that. */
+/** Where the camera is aimed at setup, and only that. */
 let entryPosition: MapPos = null;
 /**
- * Ground height under the viewpoint, metres. Resolved from the DEM, NOT read off the camera.
- *
- * The skyline rank is an angle from the eye, so it needs the eye's absolute altitude — and
- * `camera().eyePosition()` does not carry one: the facade serialises `cameraPos` without a usable
- * altitude, so `?.altitude` came back undefined and the style was built with `[ele] - 0`, i.e.
- * measured from SEA LEVEL. From a 2000 m viewpoint that systematically over-ranks the distant high
- * summits and under-ranks the near skyline, which is the opposite of the rule.
- * The eye is this plus `peakFinderElevation` (the focus lift).
+ * Ground height under the eye, metres, from the DEM: `camera().eyePosition()` carries no usable altitude.
+ * The eye is this plus `peakFinderElevation`.
  */
 let eyeGroundElevation = 0;
-/** The bearing the panorama opens on, taken from the live map so the view starts as the map looked. */
+/** Taken from the live map, so the view opens as the map looked. */
 let initialRotation = 0;
 /** Whether AR is what started the orientation sensors, so turning it off knows to stop them. */
 let arStartedFollowing = false;
-/**
- * The AR camera preview, while it is up.
- *
- * Held because the preview's GEOMETRY — the stream's resolution, the quarter turns, how it is fitted
- * into the view and the live zoom — is session state that only the view owning the session can
- * report. The lens's own field of view and distortion come from the device instead, and need no view
- * at all (`~/utils/cameraFov`). The preview lives in `Map.svelte`, one level above the panorama, so
- * it is handed over rather than looked up.
- */
+/** Handed over from `Map.svelte`: only the view owning the session can report the preview geometry. */
 let arPreview: PreviewGeometrySource = null;
 
 function terrain() {
@@ -226,21 +156,12 @@ function camera() {
 /** The SDK's own vertical field of view, which is the widest this mode ever asks for. */
 const DEFAULT_FIELD_OF_VIEW_Y = 70;
 
-/** Degrees ↔ radians, for the field-of-view arithmetic below. */
 const TO_RADIANS = Math.PI / 180;
 const TO_DEGREES = 180 / Math.PI;
 
 /**
- * The vertical field of view the panorama should draw at, degrees.
- *
- * The SDK only takes the VERTICAL one and derives the horizontal from the viewport
- * (`_tanHalfFOVX = aspect * _tanHalfFOVY`, `ViewState.cpp`), so every horizontal figure here has to
- * be converted: a horizontal half-angle H over an aspect A is a vertical half-angle
- * `atan(tan(H) / A)`.
- *
- * In AR that horizontal figure is the CAMERA's, and it is not a preference — see `arGeometry`.
- * Outside AR it is `peakFinderMaxFieldOfView`, or the camera's own field when that is 0, applied as
- * a ceiling: `min` with the SDK default, so it can only ever narrow the view.
+ * The SDK takes only the vertical field and derives the horizontal from the aspect (`ViewState.cpp`), so a
+ * horizontal half-angle H becomes atan(tan(H) / aspect). Outside AR it is a cap: min with the SDK default.
  */
 function fieldOfViewY(viewAspect: number): number {
     const matched = arGeometry(viewAspect);
@@ -256,12 +177,6 @@ function fieldOfViewY(viewAspect: number): number {
 /** Memoised: reading it enumerates the device's cameras, and a lens does not change. */
 let cameraLens: CameraFieldOfView | null | undefined;
 
-/**
- * The back camera's horizontal field, degrees — what the panorama draws at by default.
- *
- * A peak finder is read against the view it is held up to, so the picture should be the size that
- * view is. Falls back to the SDK default's horizontal equivalent where there is no camera to ask.
- */
 function cameraHorizontalField(): number {
     if (cameraLens === undefined) {
         cameraLens = cameraFieldOfView();
@@ -269,19 +184,9 @@ function cameraHorizontalField(): number {
     return cameraLens?.horizontal > 0 ? cameraLens.horizontal : DEFAULT_FIELD_OF_VIEW_Y;
 }
 
-/**
- * What the AR preview is doing with the lens, or null when there is no preview to ask.
- *
- * Everything here is a decision the platform makes when it opens the session — which resolution it
- * picked for the stream, which way round it is, how it is fitted into the view, where the zoom sits —
- * so it is reported rather than computed. Before the plugin exposed it this was assumed: the sensor
- * array's aspect stood in for the stream's, and the zoom was pinned off so that 1 was safe to assume.
- */
 function arPreviewInfo(): CameraPreviewInfo | null {
-    // Optional on purpose. `getPreviewInfo` is newer than the ui-cameraview release this app resolves,
-    // so where it is missing the mode falls back to what it did before: the sensor array's aspect
-    // stands in for the stream's, and the zoom is 1 because the preview pins pinch zoom off. Both are
-    // right on a phone; see `arGeometry`.
+    // `getPreviewInfo` is newer than the resolved ui-cameraview: without it `arGeometry` falls back to the
+    // sensor aspect and zoom 1 (the preview pins pinch zoom off).
     if (typeof arPreview?.getPreviewInfo !== 'function') {
         return null;
     }
@@ -293,7 +198,6 @@ function arPreviewInfo(): CameraPreviewInfo | null {
     }
 }
 
-/** What the camera asks the panorama to draw, for a view of this shape. */
 interface ArGeometry {
     /** Half-field tangents of what the preview SHOWS, (horizontal, vertical), in view orientation. */
     screenTan: [number, number];
@@ -304,13 +208,7 @@ interface ArGeometry {
     distortion: LensDistortion | null;
 }
 
-/**
- * Brown-Conrady, ideal to distorted, exactly as the shader's loop inverts it.
- *
- * The one place the model is written in TypeScript: the render's field is chosen by UNDISTORTING the
- * screen's corner, which needs the same arithmetic the fragment shader runs, and two copies of a
- * distortion model that disagree is a warp that does not cancel.
- */
+/** Brown-Conrady inverse; must match the shader's loop exactly or the warp does not cancel. */
 function undistort(point: [number, number], distortion: LensDistortion): [number, number] {
     const target: [number, number] = [point[0] - distortion.centerX, point[1] - distortion.centerY];
     let ideal: [number, number] = [target[0], target[1]];
@@ -325,39 +223,9 @@ function undistort(point: [number, number], distortion: LensDistortion): [number
 }
 
 /**
- * The field of view that makes a summit the same size on the terrain as in the camera preview.
- *
- * Matching the camera is NOT "use the camera's field of view": what has to match is the field of the
- * picture actually VISIBLE ON SCREEN, and the preview frame is transformed twice before it gets
- * there.
- *
- *  1. It is ROTATED into the view's orientation, by the quarter turns the platform reports.
- *  2. It is SCALED to cover the view (or to fit inside it) and whatever overflows is cropped,
- *     symmetrically about the optical axis.
- *
- * The visible fraction of the frame per axis is `view / (frame * s)` where `s` is the fit scale —
- * `max` of the two ratios for a cover fit, `min` for a contain fit. Both preserve the aspect, so one
- * axis comes out at exactly 1 and the other is the crop. Multiply the frame's half-field tangent by
- * that fraction and the vertical field is settled; the SDK derives the horizontal from the view's
- * aspect, which is consistent because a rectilinear frame satisfies
- * `tan(hfov/2)/tan(vfov/2) = aspect` and a centre crop to the view's shape makes that ratio the
- * VIEW's aspect. So one number matches both axes.
- *
- * NONE of that is assumed: the stream's own resolution, the quarter turns, the fit and the live zoom
- * all come from `CameraView.getPreviewInfo()`, because they are decisions the platform makes at
- * session time and an application cannot compute them. Only the LENS — the field of view and the
- * distortion — is read from the device characteristics.
- *
- * Then the lens itself. A photograph is not a rectilinear projection and the render is: the camera's
- * barrel distortion is several percent at the frame corners, far more than anything else left in the
- * match. It is corrected by warping the render (`distortUv` in `reliefShaders.ts`), and that only
- * works if the render covers MORE than the screen — barrel pulls the periphery inwards, so the ideal
- * direction for a screen corner lies outside the screen's own field, and a render stopping at the
- * screen's field would have nothing there to read. Hence two fields: what the screen shows, and the
- * wider one actually rendered, scaled by exactly the corners' undistortion.
- *
- * Deliberately NOT capped by `peakFinderMaxFieldOfView`: in AR the field is a measurement, and
- * narrowing it is precisely the mismatch this exists to remove.
+ * Matches the field VISIBLE on screen (after the preview's rotation and cover/contain crop, all read from
+ * `getPreviewInfo`), plus a wider render field so the lens warp has pixels at the corners.
+ * Not capped by `peakFinderMaxFieldOfView`: in AR the field is a measurement.
  */
 function arGeometry(viewAspect: number): ArGeometry | null {
     if (!get(peakFinderArActive)) {
@@ -371,17 +239,13 @@ function arGeometry(viewAspect: number): ArGeometry | null {
     // The lens's field is the UNZOOMED one; a zoom of Z narrows the tangent by Z.
     const zoom = preview?.zoomRatio > 0 ? preview.zoomRatio : 1;
     const tanHalfWide = Math.tan((lens.horizontal / 2) * TO_RADIANS) / zoom;
-    // The stream's aspect, not the sensor array's: a 16:9 preview is a vertical crop of a 4:3 sensor,
-    // keeping its width, so the same horizontal field over a taller aspect.
+    // the stream's aspect, not the sensor's: 16:9 is a vertical crop of a 4:3 sensor
     const frameAspect = preview && preview.width > 0 && preview.height > 0 ? Math.max(preview.width, preview.height) / Math.min(preview.width, preview.height) : lens.aspect;
     const tanHalfNarrow = tanHalfWide / frameAspect;
-    // The turns the platform says it applies, rather than guessed from the view being portrait.
     const rotated = preview ? preview.rotation === 90 || preview.rotation === 270 : viewAspect < 1;
     const streamTan: [number, number] = rotated ? [tanHalfNarrow, tanHalfWide] : [tanHalfWide, tanHalfNarrow];
     const streamAspect = streamTan[0] / streamTan[1];
-    // Cover or contain. Both keep the aspect, so this one expression covers the two: `fit` leaves the
-    // whole stream on screen with the view seeing PAST it, which is a fraction above 1 — and drawing
-    // terrain where the preview shows letterbox is right, not a bug to guard.
+    // a contain fit leaves letterbox, and drawing terrain there is intended
     const covers = !preview || (preview.stretch !== 'aspectFit' && preview.stretch !== 'fitCenter' && preview.stretch !== 'fitStart' && preview.stretch !== 'fitEnd');
     const fitScale = covers ? Math.max(viewAspect / streamAspect, 1) : Math.min(viewAspect / streamAspect, 1);
     const screenTan: [number, number] = [(streamTan[0] * viewAspect) / (streamAspect * fitScale), streamTan[1] / fitScale];
@@ -390,11 +254,8 @@ function arGeometry(viewAspect: number): ArGeometry | null {
     if (!distortion) {
         return { screenTan, renderTan: screenTan, rotated, distortion: null };
     }
-    // A corner is the largest radius on screen, so undistorting one is what bounds the surplus the
-    // render needs — and ALL FOUR of them, because the principal point is not exactly the frame's
-    // centre and the distortion is measured about the principal point, so the four are not the same
-    // distance out. Never below 1: a pincushion lens asks for a narrower render than the screen, and
-    // there the screen's own field is already enough.
+    // undistort all four corners (the principal point is off-centre) to bound the render surplus;
+    // never below 1, a pincushion lens needs no extra
     let scale = 1;
     for (const signX of [-1, 1]) {
         for (const signY of [-1, 1]) {
@@ -404,22 +265,14 @@ function arGeometry(viewAspect: number): ArGeometry | null {
             scale = Math.max(scale, Math.abs(idealView[0]) / screenTan[0], Math.abs(idealView[1]) / screenTan[1]);
         }
     }
-    // ...and a hair more, so the outermost pixel reads inside the render rather than off its clamped
-    // edge. Half a percent of field costs nothing and the inverse above is itself only accurate to
-    // about that.
+    // ...plus a hair, so the outermost pixel reads inside the render, not its clamped edge
     scale *= 1.005;
     return { screenTan, renderTan: [screenTan[0] * scale, screenTan[1] * scale], rotated, distortion };
 }
 
 /**
- * Writes the field of view for the view's current shape.
- *
- * Re-applied on every layout: a rotation changes the aspect and nothing else, and the aspect is the
- * whole of what both rules above depend on.
- *
- * Written UNROUNDED. `Options::setFieldOfViewY` takes a float — it used to be an int, which at the
- * narrow vertical field a landscape AR view asks for quantised the tangent by about 3% a degree, so
- * half a degree of rounding was ~1.6% of scale, or some twenty pixels at the frame edge.
+ * Re-applied on every layout: a rotation changes the aspect. Written unrounded: half a degree of rounding
+ * is ~1.6% of scale at a landscape AR field.
  */
 function applyFieldOfView() {
     if (!panorama || !panoramaView) {
@@ -436,17 +289,9 @@ function applyFieldOfView() {
     applyLensCorrection();
 }
 
-/**
- * How far outside the screen the culler may place a summit name. See `peakFinderLabelPadding`.
- *
- * Written through the NATIVE options rather than `panorama.set`: the bridge resolves a property name
- * against the plugin's GENERATED schema, which is regenerated from the built SDK's typings and so
- * does not know a freshly added option. A build without it keeps the SDK's own tilt rule, which in a
- * panorama is 20 px — the names blink, but nothing breaks.
- */
+/** Written on the NATIVE options: the plugin's generated schema does not know this option yet. */
 function applyLabelPadding() {
-    // Same trap as `terrainNative`: the bridge's options object is the one the renderer reads, and
-    // the view's wrapper is not.
+    // the bridge's options object is the one the renderer reads, not the view's wrapper
     const native = (panorama as { native?: { getOptions?: () => { setLabelPadding?: (value: number) => void } } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.();
     if (typeof native?.setLabelPadding !== 'function') {
         DEV_LOG && console.log('peakFinder: label padding not in this SDK build, names will churn as the view turns');
@@ -458,22 +303,15 @@ function applyLabelPadding() {
 }
 
 /**
- * The panorama's native TerrainOptions.
- *
- * Two objects answer to that name and only one of them is read by the renderer: the terrain the
- * bridge created for this map (`map.terrain({...})`), and the wrapper the VIEW keeps. Which one
- * carries the native object differs by build, so both are tried — a zoom cap written to the wrong
- * one type-checks, logs nothing and does nothing, which is exactly how it failed the first time.
+ * Either the bridge's terrain or the view's wrapper carries the native object, depending on the build;
+ * a write to the wrong one silently does nothing.
  */
 function terrainNative(): Record<string, (value: unknown) => void> {
     const fromBridge = (terrain() as { native?: Record<string, (value: unknown) => void> })?.native;
     return fromBridge ?? (panoramaView?.getTerrainOptions?.()?.getNative?.() as Record<string, (value: unknown) => void>);
 }
 
-/**
- * The zoom the terrain mesh is cut at. See `peakFinderTerrainMaxZoom` — it is what makes the height
- * field settle, and with it the labels and the camera.
- */
+/** Capping the mesh zoom lets the height field settle, and with it the labels and the camera. */
 function applyTerrainZoomCap() {
     const native = terrainNative();
     if (typeof native?.setMaxZoom !== 'function') {
@@ -486,11 +324,8 @@ function applyTerrainZoomCap() {
 }
 
 /**
- * geo-three's terrain cut and mesh (`TerrainOptions.setSubdivideDistance`), the FULL resolution depth
- * the outline differentiates (at half resolution a one-pixel tap lands in the same texel half the
- * time and the skyline staircases), and the ground span the ridge ink measures curvature over - the
- * DEM textures carry that much of their neighbours, so it is also how far a tap may reach. Native, as
- * `applyTerrainZoomCap` is: none of the three is in the plugin's generated schema.
+ * geo-three's terrain cut, full-resolution depth (half makes the skyline staircase) and the ridge-ink
+ * sample span. Native: none of the three is in the plugin's generated schema.
  */
 function applyGeoThreeTerrain() {
     const native = terrainNative();
@@ -503,7 +338,6 @@ function applyGeoThreeTerrain() {
     native?.setNormalSampleDistance?.(PEAKFINDER_LOOK.normalSampleDistance);
 }
 
-/** The field of view the view's current shape asks for, or the SDK's own before it has been measured. */
 function currentFieldOfViewY(): number {
     const width = panoramaView?.getMeasuredWidth() ?? 0;
     const height = panoramaView?.getMeasuredHeight() ?? 0;
@@ -513,29 +347,14 @@ function currentFieldOfViewY(): number {
     return Math.max(10, fieldOfViewY(width / height));
 }
 
-/**
- * The zoom to place the camera with — `peakFinderFlyZoom`, corrected for the field of view in force.
- *
- * Every camera write in this mode goes through it, so the viewpoint stands in the same place whatever
- * the field of view is. See `zoomForFieldOfView`.
- */
+/** `peakFinderFlyZoom` corrected for the field of view; every camera write goes through it. */
 function effectiveZoom(): number {
     return zoomForFieldOfView(currentFieldOfViewY());
 }
 
 /**
- * The zoom that keeps the CAMERA where it would be at the SDK's own field of view.
- *
- * The two are coupled, and not obviously: `ZoomConvention::zoom0Distance` is
- * `screenHeight/2 · worldSize / (tilePixels · tan(fovY/2))`, and the camera sits at
- * `zoom0Distance / 2^zoom`. So tan(fovY/2) divides it — narrow the field and the camera moves FURTHER
- * at the same zoom, by the same ratio.
- *
- * That is not what a field-of-view cap is for. Moving the camera changes the camera-to-focus distance,
- * which is tangram's view-distance rule (how far the ground is drawn), the tile LOD's reference, and
- * the denominator a callout label's size is cancelled by — so capping the field quietly changed how
- * far the panorama reaches and how big its summit names are. Adding `log2` of the ratio to the zoom
- * cancels it exactly, leaving the cap as what it claims to be: a crop.
+ * The camera sits at zoom0Distance / 2^zoom and zoom0Distance scales with 1/tan(fovY/2), so a narrower
+ * field moves it further. Adding log2 of the ratio keeps it in place: the cap stays a crop.
  */
 function zoomForFieldOfView(fovY: number): number {
     const base = get(peakFinderFlyZoom);
@@ -548,15 +367,8 @@ function zoomForFieldOfView(fovY: number): number {
 }
 
 /**
- * Hands the lens warp its numbers — the two fields and the coefficients (`distortUv` in
- * `reliefShaders.ts`).
- *
- * Always writes all of them, zeroes included: an effect keeps the parameters it was last given, so a
- * frame that stops being AR has to say so or it keeps warping.
- *
- * Applied alongside the field of view, because the two are one decision: the render is deliberately
- * WIDER than the screen and the warp is what brings it back, so a field written without matching
- * coefficients — or the reverse — is a picture at the wrong scale, not merely an uncorrected one.
+ * Always writes every parameter, zeroes included: an effect keeps its last values. Applied with the field
+ * of view: the render is wider than the screen and the warp brings it back.
  */
 function applyLensCorrection() {
     if (!effect) {
@@ -573,8 +385,7 @@ function applyLensCorrection() {
     effect.setFloatParameter('uDistortP2', distortion?.p2 ?? 0);
     effect.setFloatParameter('uDistortCenterX', distortion?.centerX ?? 0);
     effect.setFloatParameter('uDistortCenterY', distortion?.centerY ?? 0);
-    // 1 rather than 0 when there is no warp: these are divisors, and the shader's early return means
-    // they are never read in that case anyway.
+    // 1 when there is no warp: these are divisors (never read then)
     effect.setFloatParameter('uDistortScreenTanX', geometry?.screenTan[0] ?? 1);
     effect.setFloatParameter('uDistortScreenTanY', geometry?.screenTan[1] ?? 1);
     effect.setFloatParameter('uDistortRenderTanX', geometry?.renderTan[0] ?? 1);
@@ -582,7 +393,6 @@ function applyLensCorrection() {
     effect.setFloatParameter('uDistortRotate', geometry?.rotated ? 1 : 0);
 }
 
-/** AR has its own light/dark switch, dark by default: see `peakFinderArDark`. */
 /** `auto` turns with the device even when the system is locked to portrait: a panorama wants landscape. */
 function screenOrientation() {
     const orientation = get(peakFinderScreenOrientation);
@@ -601,26 +411,12 @@ export function isPeakFinderActive() {
     return get(peakFinderActive);
 }
 
-// --- the data the live map already has ---------------------------------------------------------
-
-/**
- * The DEM the live map is shading with, as a source the panorama can mesh from.
- *
- * `CustomLayersModule` already resolved which DEM holds the hillshade slot and set its
- * `metaData.dem_encoding`, so the elevation decoder resolves itself. Sharing the SOURCE rather than
- * opening the file again is what makes the panorama's terrain appear at once: the tiles the live map
- * has read are already in that source's caches.
- */
+/** Shared by handle, not reopened, so the tiles the live map already read are in its caches. */
 function findDemSource(): MassifSource {
     return packageService.hillshadeLayer?.source() ?? null;
 }
 
-/**
- * A vector source with the app's own tiles in it, for the summit names.
- *
- * The offline package first, because that is what the mode is for; otherwise the first vector layer
- * the user has switched on. Shared with the live map for the same reason the DEM is.
- */
+/** Offline package first, else the first enabled vector layer. */
 function findPeaksSource(): MassifSource {
     const local = packageService.localVectorTileLayer;
     if (local?.valid) {
@@ -639,19 +435,13 @@ function findPeaksSource(): MassifSource {
     return found;
 }
 
-// --- the summit label layer -------------------------------------------------------------------
-
-/** The map's own label size preference, so the summit names match its labels. See `peaksStyle`. */
+/** The map's label size preference, so summit names match its labels. */
 function mapFontScale(): number {
     const store = nutiProps.getSettingsOptions('_fontscale')?.store;
     return store ? get(store) || 1 : 1;
 }
 
-/**
- * The label row as the fraction of the view's height the style wants, from `peakFinderLabelRowHeight`.
- * Auto is how tall a name wrapped at `peakFinderLabelWrap` stands at the label angle, elevation and
- * plate included, so the row leaves room for every name.
- */
+/** Auto: the height of a name wrapped at `peakFinderLabelWrap` at the label angle, plate included. */
 let builtRowFraction = 0;
 function labelRowFraction() {
     const height = (panoramaView?.getMeasuredHeight() ?? 0) / Screen.mainScreen.scale;
@@ -675,7 +465,7 @@ function onPanoramaLayout() {
     }
 }
 
-/** The names' layout: with the stars on, over each summit when asked, the sky above them clear. */
+/** With stars and labels-on-summits on, follow the skyline to keep the sky clear. */
 function labelLayout() {
     return get(peakFinderStars) && get(peakFinderStarsLabelsOnSummits) ? 'skyline' : get(peakFinderLabelLayout);
 }
@@ -683,10 +473,7 @@ function labelLayout() {
 function currentPeaksStyle() {
     return peaksStyle({
         dark: isPeakFinderDark(),
-        // The skyline rank is an ANGLE from the eye, so it needs the eye's own altitude. Baked in
-        // rather than read per label: CartoCSS has no camera height, and the style is rebuilt
-        // whenever the viewpoint changes anyway. See `eyeGroundElevation` for why it is not read
-        // off the camera.
+        // baked in: CartoCSS has no camera height, and the style is rebuilt when the viewpoint changes
         eyeElevation: eyeGroundElevation + get(peakFinderElevation),
         fontScale: mapFontScale(),
         pinTop: labelLayout() === 'top',
@@ -705,30 +492,16 @@ function currentPeaksStyle() {
     });
 }
 
-/**
- * Builds the layer and the decoder that styles it, under ids nobody else holds.
- *
- * The ids carry a GENERATION rather than being fixed: a rebuild has to stand its new layer up while
- * the old one is still on the map, and building an id that is already registered with a different
- * spec is refused. Both belong to the panorama's map, so its `destroy()` releases them.
- */
+/** Ids carry a generation: a rebuild stands its new layer up while the old one is still on the map. */
 function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif::MBVectorTileDecoder'> } {
-    // The collected set once it has landed, the live tiles until then - and the live tiles again if
-    // the setting is switched back off, which is why the store is read here rather than the built
-    // source simply being dropped. See `loadStaticPeaks`.
-    // Three, in order of how well they answer the same question. The engine-side one first: it
-    // rebuilds whatever tile is asked for, so it needs no viewpoint and nothing refreshed. Then the
-    // collected snapshot, which does the same job for a build with no such source. Then the raw
-    // tiles, which is the mode as it was.
+    // engine-side source first (no viewpoint needed), then the collected snapshot, then the raw tiles.
+    // The store is read here so switching the snapshot off falls back to the live tiles.
     const source = ensureDetailPeaksSource() ?? (get(peakFinderStaticPeaks) ? staticPeaksSource : null) ?? peaksSource;
     if (!panorama || !source) {
         return null;
     }
     peaksGeneration += 1;
     const css = currentPeaksStyle();
-    // The style the summits are actually drawn with. Every capacity question about the labels -
-    // how many fit, why a dense horizon drops them - is answered by these four lines, and reading
-    // them back beats inferring them from the settings.
     DEV_LOG &&
         console.log(
             'peakFinder: label style',
@@ -747,15 +520,8 @@ function createPeaks(): { layer: MassifLayer; decoder: api.MassifObject<'massif:
         // The labels are the only thing drawn over the relief, so they go last.
         labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST',
         tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE'
-        // NOT an overlay, for now. `postProcessed: false` takes this layer out of the terrain
-        // arrangement, which is worth 8-11 ms of the frame: a label-only layer has no ground in it,
-        // yet the shared-ground path walks the whole cover for it every frame (a stand-in elevation
-        // search per cover tile, plus an O(n^2) dedup).
-        // REVERTED because it also makes this the map's first post-process opt-out, which switches
-        // the effect from resolving straight to the screen onto FrameBuffer's SECONDARY colour
-        // texture plus a blend blit (MapRenderer::blendAndUnbindScreenFBO) - a path nothing here had
-        // exercised before, and the panorama came back visibly darker. The saving is no longer the
-        // limiter anyway: the frame is 2-15 ms now and what holds the fps down is elsewhere.
+        // no `postProcessed: false`: first post-process opt-out switches to the blend-blit path
+        // and the panorama renders visibly darker
     });
     layer.onFeatureClick((e) => {
         e.consumed = onPeakClicked(featureClickData(e));
@@ -775,33 +541,8 @@ function buildPeaksLayer() {
 }
 
 /**
- * Where the eye actually IS, which is not `viewpoint`.
- *
- * `viewpoint` is where the mode was ENTERED — `camera().moveTo` takes a focus, and the first-person
- * camera then walks away from it: a two-finger drag is a MOVE in this mode
- * (`TouchHandler::onTouchEvent`, `DUAL_POINTER_MOVE` under `FREE_ROAM_MODE_FIRST_PERSON`), and
- * `flyToSelectedPeak` relocates outright. So the summit set has to follow the camera and not the
- * entry, and `eyePosition` is the one reading that means "where you are standing" at any moment.
- */
-/**
- * The source that rebuilds coarse summit tiles out of the finer ones — see `peakFinderDetailSource`.
- *
- * Built once, lazily, and probed by BUILDING it: a spec type the SDK does not know is refused, and
- * there is no cheaper way to ask than to try. A refusal is expected rather than exceptional on a
- * build whose native side predates the source, so it is a log line and a `false` — the snapshot and
- * then the raw tiles stand behind it.
- */
-/**
- * The detail source's three knobs, written on the NATIVE object.
- *
- * Not `source.apply(...)`, which is what this was and which wrote nothing: the facade resolves a
- * spec type to a class name through the plugin's GENERATED schema, and a type newer than that
- * schema falls back to `massif::Layer` (`classOfSpec` in `api/index.common.js`). The source itself
- * is real — the spec crosses to native as JSON and native builds the right class — but every
- * property write after it is then looked up in the wrong method table.
- *
- * Which is why the constructor spec carries `detailZoom` and these three do not: a ctor argument
- * travels in the JSON and arrives, a property does not until the plugin is rebuilt.
+ * Written on the NATIVE object: the facade maps a spec type newer than its generated schema to
+ * `massif::Layer`, so property writes miss. Constructor spec args (`detailZoom`) do arrive.
  */
 function applyDetailPeaksOptions() {
     const native = detailPeaksSource?.native;
@@ -816,8 +557,8 @@ function applyDetailPeaksOptions() {
 }
 
 /**
- * The base map alone. The map's own source merges the contours and routes into every tile and
- * serialises all readers behind one lock; the summits are in the base file only. Half the time.
+ * The base map alone: the map's source merges contours and routes behind one lock, and summits are only
+ * in the base file. Half the time.
  */
 function detailPeaksBaseSource(): MassifSource {
     const files = packageService.localBaseMbtiles;
@@ -850,7 +591,6 @@ function detailPeaksStorePath() {
     return path.join(folder.path, name);
 }
 
-/** Drops the detail chain so the next layer build makes it again, for its current settings. */
 function resetDetailPeaksSource() {
     for (const source of [detailPeaksCache, detailPeaksStore, detailPeaksSource, detailPeaksBase]) {
         source?.destroy();
@@ -866,9 +606,7 @@ function ensureDetailPeaksSource(): MassifSource {
         return detailPeaksCache;
     }
     try {
-        // Cast because the spec union is GENERATED from the SDK's own modules, and this source is
-        // newer than the bindings most installs resolve - which is the same thing the try/catch is
-        // here for. It types itself once the plugin is rebuilt.
+        // cast: the generated spec union predates this source (hence the try/catch too)
         const spec = { type: 'point-detail', source: detailPeaksBaseSource().handle, layer: PANORAMA_PEAKS_LAYER, detailZoom: get(peakFinderPeakZoom) } as unknown as Parameters<
             typeof panorama.source
         >[1];
@@ -880,8 +618,7 @@ function ensureDetailPeaksSource(): MassifSource {
             capacity: DETAIL_PEAKS_STORE_BYTES,
             databasePath: detailPeaksStorePath()
         });
-        // ...and the cache is what the LAYER reads, so a tile the renderer drops and asks for again
-        // is not sixty-four reads and a rebuild. See DETAIL_PEAKS_CACHE_BYTES.
+        // the layer reads the memory cache, so a dropped tile is not 64 reads and a rebuild
         detailPeaksCache = panorama.source(DETAIL_PEAKS_CACHE_ID, {
             type: 'memory-cache',
             source: detailPeaksStore.handle,
@@ -902,13 +639,7 @@ function currentEye(): MapPos {
     return position ? fromPosition(position) : null;
 }
 
-/**
- * The ground height under the eye, metres, or 0 when there is no answer.
- *
- * `packageService.getElevation` runs on a worker off the same DEM the terrain is meshing, so by the
- * time the camera is placed the tiles it needs are resident and this is a lookup. 0 on failure is
- * the old behaviour — a rank measured from sea level — rather than no labels at all.
- */
+/** 0 on failure: the rank is then measured from sea level rather than showing no labels. */
 async function resolveEyeGroundElevation(): Promise<number> {
     const eye = currentEye() ?? entryPosition;
     if (!eye || !packageService.hasElevation()) {
@@ -923,7 +654,6 @@ async function resolveEyeGroundElevation(): Promise<number> {
     }
 }
 
-/** Re-reads where the eye is. Called once the camera is placed, and on every move after that. */
 function updateViewpoint() {
     const eye = currentEye();
     if (eye) {
@@ -931,17 +661,9 @@ function updateViewpoint() {
     }
 }
 
-/**
- * How much wider than the view the collected disc is.
- *
- * The margin IS the hysteresis: the set covers `viewDistance x MARGIN`, so it keeps covering the
- * full view distance until the eye has moved `viewDistance x (MARGIN - 1)` from where it was
- * collected — 37 km at the default 150 km, which is a great deal of two-finger dragging. Below that
- * nothing is recollected, so walking about costs nothing at all.
- */
+/** The margin is the hysteresis: no recollection until the eye has moved viewDistance x (MARGIN - 1). */
 const PEAKS_COLLECT_MARGIN = 1.25;
 
-/** Where the set was collected from, and how far it reaches — the refresh test, and nothing else. */
 let staticPeaksCentre: MapPos = null;
 let staticPeaksRadius = 0;
 /** The declared layer inside `staticPeaksSource`; a refresh replaces its document rather than it. */
@@ -949,38 +671,19 @@ let staticPeaksLayerIndex = 0;
 /** One sweep at a time. Two would read the same tiles twice and race on the document. */
 let staticPeaksLoading = false;
 /**
- * A sweep that failed is not tried again for this panorama.
- *
- * `checkStaticPeaks` asks for one whenever there is no collected centre, and a failure leaves no
- * centre — so without this the failure IS the retry condition, and the mode relaunches a search
- * that reads a couple of thousand tiles on every move event. Which is not a slow refresh, it is the
- * view going solid.
+ * A failed sweep is not retried: no collected centre is the retry condition, and a sweep reads thousands
+ * of tiles on every move event.
  */
 let staticPeaksFailed = false;
 
-/**
- * Whether the collected snapshot is the thing answering for the summit labels.
- *
- * The switch is not enough on its own, and that was a real hole: `createPeaks` prefers the
- * engine-side source over the snapshot, so with both available the sweep ran, read a couple of
- * thousand tiles, and produced a source nothing would ever read from. The snapshot is the FALLBACK
- * for a build without `PointDetailTileDataSource` — so what decides whether to collect is the same
- * thing that decides whether to draw from it.
- */
+/** The snapshot is only the fallback for a build without `PointDetailTileDataSource`. */
 function staticPeaksNeeded(): boolean {
     return get(peakFinderStaticPeaks) && !ensureDetailPeaksSource();
 }
 
 /**
- * Collects the summits around where the eye is now, and points the layer at them.
- *
- * Fire and forget: the sweep reads several hundred tiles, and the live layer is already drawing
- * labels from whatever is resident, so the only thing waiting for it would be the user. If it fails
- * or finds nothing the live source stays, which is what the mode did before this existed.
- *
- * A REFRESH is `setGeoJSON` on the source that is already there — the source re-tiles its document
- * in place, so the layer above it never moves and no label blinks through a rebuild. Only the first
- * collection swaps the layer over, because only then does the source it reads from change.
+ * Fire and forget: the live layer draws until the sweep lands. A refresh is `setGeoJSON` in place so the
+ * layer never moves; only the first collection swaps the layer's source.
  */
 async function loadStaticPeaks() {
     if (!panorama || staticPeaksLoading || staticPeaksFailed || !staticPeaksNeeded()) {
@@ -999,17 +702,14 @@ async function loadStaticPeaks() {
             maxCount: get(peakFinderPeakCount),
             minElevation: get(peakFinderPeakMinElevation)
         });
-        // The map going away mid-sweep is the one case worth testing: the eye having moved on is
-        // not, because the next `checkStaticPeaks` will say so and this set is still better than
-        // none.
+        // only the map going away matters: an outdated set is still better than none
         if (!peaks.length || !panorama) {
             DEV_LOG && console.log('peakFinder: no static summit set', peaks.length);
             return;
         }
         const first = !staticPeaksSource;
         if (first) {
-            // minZoom 0 / maxZoom 24: the set is in memory, so every zoom can serve all of it and
-            // the far-tile coarsening that thinned the live layer has nothing left to thin.
+            // minZoom 0 / maxZoom 24: the set is in memory, so every zoom serves all of it
             staticPeaksSource = panorama.source(STATIC_PEAKS_SOURCE_ID, { type: 'geojson', defaultLayerBuffer: 0, simplifyTolerance: 0, minZoom: 0, maxZoom: 24 });
             staticPeaksLayerIndex = staticPeaksSource.createLayer(PANORAMA_PEAKS_LAYER);
         }
@@ -1021,9 +721,7 @@ async function loadStaticPeaks() {
             rebuildPeaksLayer();
         }
     } catch (error) {
-        // A missing package or a search that found nothing is not worth a dialog: the live layer is
-        // still there and the mode works, with the label set it always had. But it is not worth
-        // REPEATING either - see `staticPeaksFailed`.
+        // not worth a dialog (the live layer still works), nor a retry: see `staticPeaksFailed`
         staticPeaksFailed = true;
         DEV_LOG && console.log('peakFinder: collecting the summit set failed, not retrying', error);
     } finally {
@@ -1031,18 +729,7 @@ async function loadStaticPeaks() {
     }
 }
 
-/**
- * Recollects when the eye has walked out from under the set it was given.
- *
- * On the move event only because the snapshot is ANCHORED to a position and the eye moves — a
- * two-finger drag in this mode is a walk. The engine-side source has no anchor and needs none of
- * this, which is why the first thing here is to ask whether the snapshot is in play at all; when it
- * is not, and by default it is not, this is a store read and a return.
- *
- * Where it does run, the test is one bridge read and a distance, and it answers no for all but a
- * handful of events: the condition is the invariant the margin buys — the collected disc must still
- * reach the full view distance from where the eye is NOW.
- */
+/** Recollects once the collected disc no longer reaches the full view distance from the eye. */
 function checkStaticPeaks() {
     if (staticPeaksLoading || staticPeaksFailed || !staticPeaksNeeded()) {
         return;
@@ -1057,7 +744,6 @@ function checkStaticPeaks() {
     }
 }
 
-/** Forgets the collected set, so the next check goes and gets it again. For the knobs that size it. */
 function refreshStaticPeaks() {
     staticPeaksCentre = null;
     staticPeaksRadius = 0;
@@ -1067,12 +753,7 @@ function refreshStaticPeaks() {
     loadStaticPeaks();
 }
 
-/**
- * Rebuilds the layer with a new decoder.
- *
- * Every label knob is style TEXT, so there is no property to write. Swapped in place so it keeps its
- * position in the stack, and the old pair is released only once the new one is standing.
- */
+/** Label knobs are style TEXT, hence a new decoder; swapped in place to keep its stack position. */
 function rebuildPeaksLayer() {
     if (!panorama || !peaksLayer) {
         return;
@@ -1093,22 +774,14 @@ function rebuildPeaksLayer() {
     previousDecoder?.destroy();
 }
 
-// --- the relief look -------------------------------------------------------------------------
-
-/**
- * The shaded terrain surface the ink lines are drawn over.
- *
- * The shader SOURCE is a facade property; its parameters are not — the surface API has no method
- * table for `TerrainOptions` — so the uniforms go through the object API on the view.
- */
+/** The shader source is a facade property but its uniforms are not, so they go through the view's object API. */
 function applyReliefSurface() {
     if (!panorama) {
         return;
     }
     const colors = palette();
-    // NO surface shader in AR: the shader's job is to paint the ground, and in AR the ground is the
-    // camera preview. The relief still reads, because the ridge lines are drawn by the post-process
-    // effect off the packed terrain DEPTH, which is rendered whether or not the surface is painted.
+    // no surface shader in AR (the ground is the camera preview); the ridge lines still come from the
+    // post-process effect off the terrain depth
     terrain().set('surfaceShaderSource', get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER);
     const terrainOptions = panoramaView?.getTerrainOptions();
     if (!terrainOptions) {
@@ -1124,12 +797,7 @@ function applyReliefSurface() {
     terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
 }
 
-/**
- * The ink: silhouettes only (`reliefDepthOutlineShader`, operator 2), and the skyline stroke.
- *
- * The SDK gives the mechanism — an offscreen frame, the packed terrain depth and named parameters —
- * and the shader is the look. Object API only: the surface API carries no `postProcessEffect`.
- */
+/** Silhouettes (operator 2) and the skyline stroke. Object API only: the surface API has no `postProcessEffect`. */
 function applyReliefOutline() {
     if (!panoramaView) {
         return;
@@ -1170,28 +838,8 @@ function applyReliefOutline() {
 }
 
 /**
- * The sky, which in this mode there is none of.
- *
- * Above the horizon the panorama is paper (or ink), the same flat tone as the ground it is read
- * against. Three separate things have to be off to get that, and each one alone leaves a band:
- *
- *  - the shader sky, which is what draws a gradient;
- *  - the legacy sky BITMAP, whose switch is a TRANSPARENT `skyColor` — `Options::getSkyBitmap`
- *    generates a gradient from the style's background up to that colour, so any real colour there is
- *    a gradient, and white gave a gradient that merely ended white;
- *  - and the background PLANE: `BackgroundRenderer` draws it before any layer from the first layer's
- *    style background, and with no base map to ask it falls back to the SDK's own default bitmap —
- *    the block pattern. It reads `Options.backgroundBitmap` only to decide whether the app has an
- *    opinion, so nulling it is what takes the plane off altogether.
- *
- * With all three off the band above the horizon shows the CLEAR colour, so that is what carries the
- * tone. In AR it is fully TRANSPARENT instead, which turns the frame into a hole for the camera
- * preview — and the terrain's own background fill has to go with it, or it paints the ground opaque
- * under the relief and the preview never appears.
- */
-/**
- * The background part of the atmosphere, which needs no terrain - so it can be the FIRST thing the
- * setup does. Until it runs the view draws the SDK's default background, the block pattern.
+ * No sky: the sky shader, the legacy sky bitmap (off via transparent `skyColor`) and the background plane
+ * (off via null `backgroundBitmap`) must all be off, each leaves a band. Needs no terrain, so it runs first.
  */
 function applyBackground() {
     panorama?.apply({
@@ -1212,9 +860,8 @@ function applyAtmosphere() {
 }
 
 /**
- * The sun the hillshade shades from. With the sun drawn, the REAL one at the chosen moment, while it
- * is up; otherwise, and at night, the 3D mode's. Overriding the style's, which would win otherwise
- * (`resolveLighting`), and with no shadows - the surface shader draws all of the light there is.
+ * The real sun at the chosen moment while it is up, else the 3D mode's. Overrides the style's sun, with no
+ * shadows: the surface shader draws all the light.
  */
 const LIT_BY_THE_SUN_ABOVE = 2;
 function applySun() {
@@ -1236,8 +883,7 @@ function applySun() {
     });
 }
 
-/** Re-applies everything the light/dark switch touches. The label palette is style text, so the
- *  decoder is rebuilt with it. */
+/** The label palette is style text, hence the decoder rebuild. */
 function applyPalette() {
     updatePeakFinderMoon();
     updatePeakFinderStars();
@@ -1247,109 +893,64 @@ function applyPalette() {
     rebuildPeaksLayer();
 }
 
-// --- the viewpoint ---------------------------------------------------------------------------
-
 /**
- * How high the eye stands above the ground, which is the one thing a peak finder is about.
- *
- * NOT a camera position. With a terrain attached the renderer OWNS the focus height — it sits the
- * focus on the ground, as mapbox does, and recomputes it on every frame and on every camera event. A
- * focus position written with an altitude in it therefore lasts until the next frame and no longer.
- *
- * `TerrainOptions.focusLift` is the lift that survives. It is ADDED on top of whatever the
- * ground-following rule decides, so the clearance shell keeps working underneath it and the value
- * means the same thing at every zoom and tilt: this many metres above the ground the viewpoint
- * stands over.
+ * Not a camera position: with terrain the renderer re-sits the focus on the ground every frame.
+ * `focusLift` is added on top of the ground-following rule, so it survives.
  */
 function setFocusLift(metres: number) {
     terrain()?.set('focusLift', Math.max(0, metres));
 }
 
-/**
- * Publishes where the view is pointed, for the overlay's compass.
- *
- * The map's ROTATION is the opposite of the heading — turning the view right turns the map left — so
- * this is the one place the two are converted into each other. Kept in a store rather than read by
- * the overlay, because the overlay has no map: this one is the panorama's.
- */
+/** Rotation is the opposite of the heading. Kept in a store: the overlay has no map of its own. */
 function publishHeading() {
     const rotation = camera()?.rotation() ?? 0;
     peakFinderHeading.set(((-rotation % 360) + 360) % 360);
 }
 
-/**
- * Re-reads the camera's field of view, for the moment the preview session actually opens.
- *
- * On iOS `AVCaptureDevice.activeFormat` is the format the SESSION chose only once there is a session;
- * before that it is whatever the device was last left on, so the value read when AR was switched on
- * can be the wrong one. On Android it changes nothing — Camera2 characteristics are static — but one
- * read costs nothing either.
- */
+/** On iOS `activeFormat` is the session's only once the session opens, so the field is re-read then. */
 export function onArCameraOpen(preview: PreviewGeometrySource) {
     arPreview = preview;
     applyFieldOfView();
 }
 
-/** Lifts the viewpoint to `metres` above the ground under it, without moving it horizontally. */
 export const applyViewpointElevation = tryCatchFunction(async (metres: number) => {
     setFocusLift(metres);
 });
 
-/** The viewpoint's height above the ground, read back from the SDK rather than from our own store. */
 export function currentViewpointElevation(): number {
     return terrain()?.get('focusLift') ?? 0;
 }
-
-// --- entering and leaving ---------------------------------------------------------------------
 
 function itemPosition(item: IItem): MapPos {
     const coordinates = item.geometry['coordinates'];
     return { lat: coordinates[1], lon: coordinates[0] };
 }
 
-/**
- * Enters the mode.
- *
- * Nothing here touches a map. Flipping the store is what mounts `PeakFinderMap.svelte`, and the map
- * it creates calls `setupPanorama` once its view is ready — so this only records what the panorama
- * has to be built FOR.
- */
+/** Touches no map: flipping the store mounts `PeakFinderMap.svelte`, whose map calls `setupPanorama`. */
 export const enterPeakFinder = tryCatchFunction(async (item: IItem) => {
     if (isPeakFinderActive()) {
         return;
     }
     if (!packageService.hasElevation()) {
-        // The item action is gated on this, so it only happens if the DEM went away between the row
-        // being built and the tap. Say so rather than doing nothing at all.
+        // the item action is gated on this: only a DEM gone between row build and tap gets here
         showToast(lc('no_elevation_data'));
         return;
     }
     entryPosition = itemPosition(item);
     // Stands in until the camera is placed and `updateViewpoint` can read the eye for real.
     viewpoint = entryPosition;
-    // The live map's bearing, so the panorama opens facing the way the map was read.
     initialRotation = getMapContext().getMap()?.camera().rotation() ?? 0;
     peakFinderSelectedPeak.set(null);
-    // Never on the ground: standing exactly on the height field puts the eye inside the surface's
-    // own sampling error and the nearest cell hides the panorama — see `peakFinderMinElevation`.
+    // never on the ground: the eye inside the height field's sampling error hides the panorama
     peakFinderElevation.set(Math.max(get(peakFinderMinElevation), get(peakFinderFlyElevation)));
     lockOrientation(screenOrientation());
     peakFinderActive.set(true);
 });
 
-/**
- * Builds the panorama, on the map the component just created.
- *
- * Everything is written BEFORE the camera is placed and the layer added, so the first frame the view
- * draws is already the panorama — there is no animation anywhere in this mode, and nothing to wait
- * for but the tiles.
- */
+/** Everything is written before the camera is placed, so the first frame is already the panorama. */
 export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: MassifMapView) => {
-    // `mapReady` can arrive more than once for one mode - an activity re-create, or a second mount
-    // of the component - and setting up over a live panorama left the first one's map registered
-    // while this one built ids on top of it. The symptom was the second entry failing with
-    // "Cannot create 'layer.peaks.2' ... RESULT_BAD_HANDLE", and a blank panorama after it, because
-    // the first teardown had already released the facade the second setup was still building on.
+    // `mapReady` can fire twice per mode (activity re-create, second mount): tear the old one down or its
+    // ids collide (RESULT_BAD_HANDLE) and the panorama goes blank
     if (panorama && panorama !== map) {
         teardownPanorama();
     }
@@ -1372,40 +973,20 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         return;
     }
 
-    // Labels, however far away they are. The culler drops any label past `labelViewDistance`
-    // multiples of the camera-to-focus distance (maplibre's own rule, 5) — and in a panorama the
-    // focus sits a couple of kilometres in front of a low camera, so that cut lands around ten
-    // kilometres and took every summit on the horizon with it. Mont Blanc from Grenoble is 108 km
-    // out. 0 = no limit, leaving `text-max-distance` the only bound. Its own call: the option is a
-    // property rather than part of the options SPEC, so `apply` does not carry it.
+    // no label view-distance cut: maplibre's 5x camera-to-focus rule lands ~10 km out in a panorama.
+    // Its own call: it is a property, not part of the options spec `apply` carries.
     map.set('labelViewDistance', 0);
     // map.set('debugTileBorders', true);
 
     applyLabelPadding();
     applyFieldOfView();
-    // A rotation changes the view's aspect and nothing else, and the aspect is the whole of what the
-    // field-of-view cap is about.
     view.on('layoutChanged', onPanoramaLayout);
     view.on('mapInteraction', onPanoramaInteraction);
     map.apply({
-        // PLANAR, always. The globe was offered here so the earth would curve away under the far
-        // ranges, and it cost far more than it bought - device-measured, panorama on a Crosscall:
-        // 3-7x the surface fill draws, 74 ms frames against 27, and every reopen worse than the
-        // last. Worse than the cost, it turns the mode's own mechanism OFF:
-        // `TerrainRenderer::ensureSurfaceAttribs` reads
-        //     bool fixedScale = normalSampleDistance > 0 && !spherical;
-        // so on a globe the fixed-distance normals are unreachable and the surface falls back to the
-        // mesh gradient - which inks every LOD tile boundary, the one thing
-        // `peakFinderNormalSampleDistance` exists to prevent. It also makes `moveCameraTo` land close
-        // rather than exact, because there a translation is a rotation.
-        //
-        // Curvature is still worth having (785 m of drop at 100 km) but not like this: it belongs in
-        // the height field, not in the projection the camera, the tile transformer and every mesh are
-        // built against. Read from no store on purpose - `peakFinderSpherical` was persisted true on
-        // at least one device, so a changed DEFAULT would not have reached it.
+        // PLANAR always: the globe cost 3-7x the fill draws and disables fixed-distance normals
+        // (`ensureSurfaceAttribs`), inking every LOD tile boundary. Not from a store: a stale persisted true exists.
         renderProjectionMode: 'RENDER_PROJECTION_MODE_PLANAR',
-        // A panorama reaches UP past the horizon (a negative tilt is a look up), and every frame of a
-        // drag is clamped to this. A floor at the horizon would stop the drag dead there.
+        // a negative tilt looks up past the horizon; every drag is clamped to this
         tiltRange: get(peakFinderStars) ? [-90, 90] : PANORAMA_RANGE,
         layersLabelsProcessedInReverseOrder: true,
         restrictedPanning: true,
@@ -1414,8 +995,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         kineticRotation: true
     });
 
-    // The terrain, from the live map's own DEM. `flattened` false from the start: this map has never
-    // been flat, so there is no switch to animate and nothing decodes twice.
+    // `flattened` false from the start: nothing to animate, nothing decodes twice
     map.terrain({ type: 'terrain', source: demSource.handle }).apply({
         enabled: true,
         flattened: false,
@@ -1424,112 +1004,60 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         autoFlattenTilt: 0,
         autoFlattenParallax: 0,
         exaggeration: get(peakFinderExaggeration),
-        // NO clearance clamp — and it takes BOTH of these. `cameraClearance` is only the floor; the
-        // rule underneath it is a FRACTION of the camera's altitude (a sixteenth), which models an
-        // orbiting map camera and is exactly wrong here: on a 4800 m summit it forced 320 m of
-        // clearance, so the eye floated a third of a kilometre above the peak it stands on. That is
-        // most of "the panorama opens in the sky looking down".
-        // A panorama's eye height is chosen outright (`setFocusLift` below), so there is nothing for
-        // either rule to protect against, and the ground keeps moving while elevation tiles stream
-        // in — a clamp on it is the whole view rising and sinking until it settles.
+        // no clearance clamp, floor nor fraction: the fraction rule floated the eye 320 m above a 4800 m
+        // summit, and the eye height is chosen outright via `setFocusLift`
         cameraClearance: 0,
         cameraClearanceFraction: 0,
-        // A finer mesh than the live map runs: the outline effect draws the skyline off the terrain
-        // depth, so the mesh IS the ridge line here.
+        // finer than the live map: the mesh IS the ridge line here
         meshResolution: get(peakFinderMeshResolution),
-        // A panorama wants the far ranges: tangram's rule stops the ground a few kilometres out,
-        // which is most of what the view is about...
+        // far ranges: tangram's factor rule alone stops the ground a few km out...
         viewDistanceFactor: get(peakFinderViewDistance),
-        // ...and the factor alone cannot reach them, because that rule shrinks as the viewpoint comes
-        // down towards the ground. The metres are what puts Mont Blanc on the horizon from Grenoble.
+        // ...and shrinks near the ground, hence a floor in metres...
         viewDistance: get(peakFinderViewDistanceMetres),
-        // ...and the CEILING too: `viewDistance` is only a floor, and the factor rule above reaches past
-        // it on its own - so without this a shorter setting drew just as far (Mont Blanc still on the
-        // horizon at 60 km). Both ends at one number make it THE distance, which is also the mode's
-        // biggest cost knob: it caps the tile walk, the culling and the far plane.
+        // ...and the same ceiling, else the factor rule reaches past a shorter setting
         viewDistanceMax: get(peakFinderViewDistanceMetres),
-        // NO DRAPE, and nothing to drape: this map carries no base layers. The surface shader is the
-        // only thing painting the ground.
+        // no drape: this map has no base layers; the surface shader paints the ground
         drapeFillsEnabled: false,
         drapeLinesEnabled: false,
-        // The mesh cache, sized for a panorama instead of a map — see `peakFinderMeshCacheSize`.
-        // Half of it is also the visible cut's budget, so this sets the LOD floor too.
+        // half of it is also the visible cut's budget, so this sets the LOD floor too
         meshCacheSize: get(peakFinderMeshCacheSize),
-        // NO EDGE STITCHING. It defaults to TRUE in the SDK, and it is actively harmful here: the
-        // stitching mask is part of the mesh cache KEY, and the mask is built from which neighbours
-        // are in the visible cut — so turning the camera remints the key for every tile whose
-        // neighbour set changed, rebuilding its mesh and dropping it back to the cheap stand-in
-        // normals until the worker catches up. Tiles therefore changed appearance purely with the
-        // view direction, and changed back when the old key came round again.
-        //
-        // What it buys is nothing we need: this renderer's surfaces are SKIRTED, so a coarser
-        // neighbour leaves no hole to fill (TerrainRenderer::collectTileMeshes says as much — it is
-        // "an improvement rather than a fix"). Off, the key is the grid size alone and a tile's mesh
-        // no longer depends on where the camera is pointing.
+        // no edge stitching: its mask is in the mesh cache key and depends on the visible cut, so turning
+        // remints meshes. The surfaces are skirted, so it fixes nothing here.
         tileEdgeStitchingEnabled: false,
-        // NO SHARED GROUND. With draping off the SDK draws the terrain cover once in a flat colour
-        // before any layer, so the layers have a ground to composite onto — but this map's only
-        // layer is the summit names, which are billboards, and the relief surface shader has already
-        // painted the terrain (with depth) in the same frame. So the ground pass drew the whole mesh
-        // a SECOND time for nothing: measured on the Crosscall, `PROF` `drape` was 10.6 ms of a
-        // 22.0 ms frame — the largest single item in the panorama — at 94 flat fills a frame,
-        // `RenderStats surfaces fill=658` over 7 frames, with `drape bakes=0`.
-        //
-        // This is also what "am I seeing terrain over terrain?" was: literally yes.
+        // no shared ground: the only layer is billboards and the surface shader already painted the terrain,
+        // so the ground pass drew the mesh twice (10.6 ms of a 22 ms frame on a Crosscall)
         sharedGroundEnabled: false,
-        // A summit sitting ON a ridge, or a metre behind it, is exactly what this view is for, so the
-        // label occlusion is deliberately generous here.
+        // generous: a summit on or just behind a ridge is exactly what this view is for
         billboardOcclusionEnabled: true,
         billboardOcclusionTolerance: get(peakFinderOcclusion),
-        // The LIVE summit tiles' LOD floor, and on this map nothing else's — see
-        // `peakFinderTileCoarsening`. The terrain mesh has its own budget and never reads this.
+        // the live summit tiles' LOD floor only; the terrain mesh has its own budget
         maxTileZoomCoarsening: get(peakFinderTileCoarsening),
         elevationPrefetchEnabled: true,
-        // THE GRID CACHE, sized for a panorama's working set instead of a map's.
-        //
-        // The SDK's rule is a grid COUNT (`ElevationManager::MIN_CACHED_GRIDS`, 192), which is the
-        // ground around one viewpoint at one zoom. This view reaches a hundred kilometres, so its
-        // working set is several times that: measured, `RenderStats elevGrid` sat at
-        // `bytes=335MB capacity=336MB` - exactly full - with 9-11 inserts a second FOREVER and
-        // `distinctEver` climbing past 850. Every grid evicted was immediately asked for again.
-        //
-        // What that costs is not memory, it is CPU. Each ElevationManager runs three decode threads,
-        // and a cache that never holds its working set keeps all of them busy for as long as the
-        // mode is open. Per-thread on a Crosscall: six such threads burned ~34,600 ticks against the
-        // render thread's 3,094 - eleven times the renderer - which is why the mode felt slow while
-        // the renderer was idle, why the settings list scrolled badly, and why cutting the mesh
-        // resolution barely moved it.
+        // sized for a panorama: the SDK's 192-grid default thrashed, keeping three decode threads per
+        // ElevationManager busy (11x the render thread on a Crosscall)
         elevationCacheSize: get(peakFinderElevationCacheSize)
     });
     // After the terrain exists — it is what carries these.
     applyTerrainZoomCap();
     applyGeoThreeTerrain();
 
-    // The camera, placed rather than flown. Before the touch model below: in first person `setTilt`
-    // and `setMapRotation` turn the view in PLACE, so a camera set afterwards would spin the view
-    // where it stands instead of pointing it at the panorama.
-    // `moveEyeTo`, not `moveTo`: this mode means STAND on the summit, and `moveTo` takes a FOCUS -
-    // at this tilt the eye then sits kilometres behind the chosen point, looking at it, which is
-    // not the view the user asked for. See MapCamera.moveEyeTo.
+    // placed before the first-person touch model, or setTilt/setMapRotation would turn it in place.
+    // `moveEyeTo`, not `moveTo`: `moveTo` takes a focus, which at this tilt puts the eye km behind the summit.
     camera().moveEyeTo(toPosition(entryPosition), {
         zoom: effectiveZoom(),
         rotation: initialRotation,
         tilt: get(peakFinderTilt)
     });
     setFocusLift(get(peakFinderElevation));
-    // FIRST PERSON is what standing on a summit and turning your head is: a one-finger drag turns the
-    // view about the CAMERA on both axes and the position never changes. The map's own model — the
-    // ground dragged under a camera orbiting its focus — sends that focus kilometres away at this tilt.
+    // first person: a one-finger drag turns the view about the camera; the map's orbit model would send
+    // the focus km away at this tilt
     map.set('freeRoamMode', 'FREE_ROAM_MODE_FIRST_PERSON');
 
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
     applySun();
-    // BEFORE the layer, because the style bakes the eye's altitude into `text-rank` and a style is
-    // text - getting it afterwards would mean rebuilding the decoder and the layer to correct it.
-    // After the camera, because the viewpoint is where we now STAND. On a worker, and on DEM tiles
-    // the terrain above has already pulled in, so this is a lookup rather than a load.
+    // before the layer: the style bakes the eye altitude into `text-rank`; after the camera: it reads the eye
     eyeGroundElevation = await resolveEyeGroundElevation();
     buildPeaksLayer();
     // After the summit layer, which the sun's top layer has to stay over.
@@ -1538,17 +1066,14 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     setupPeakFinderSun(skyContext);
     setupPeakFinderMoon(skyContext);
     setupPeakFinderStars(skyContext);
-    // Not awaited: the layer above already draws, and this swaps it onto the collected set when it
-    // has one. See `loadStaticPeaks`.
+    // not awaited: the layer already draws, and swaps onto the collected set once it lands
     loadStaticPeaks();
     // A tap on empty ground or sky clears the chip, the way tapping the map elsewhere deselects.
     map.onClick(() => {
         peakFinderSelectedPeak.set(null);
         clearSkySelection();
     });
-    // What the overlay's compass reads. Throttled: the view turns with every frame of a drag, and
-    // the readout is a number on screen.
-    // The camera is placed by now, so this is the first reading of the eye that means anything.
+    // the camera is placed by now: the first meaningful eye reading
     updateViewpoint();
     publishHeading();
     // The sun needs the eye, and lights the relief from where it is seen.
@@ -1556,9 +1081,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     updatePeakFinderMoon();
     updatePeakFinderStars(true);
     applySun();
-    // One listener for all three: a first-person two-finger drag MOVES the camera, so the same
-    // events that turn the compass are the ones that walk the eye - out from under its summit set,
-    // and away from whatever the chip's distances were measured against.
+    // a first-person two-finger drag MOVES the camera, so moves also walk the eye off its summit set
     map.onMove(
         () => {
             updateViewpoint();
@@ -1578,19 +1101,11 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
 });
 
 /**
- * Releases the panorama, when its component goes.
- *
- * `map.destroy()` releases the map's registration and every id it built — the layer, the decoder, the
- * terrain options — so the only thing left to hand back is the two SOURCE handles, which belong to
- * the live map's layers and were only borrowed.
- *
- * Releasing the registration is not the same as releasing the OBJECT, though: the view outlives the
- * facade and holds the terrain itself. See the `setTerrainOptions(null)` below.
+ * `map.destroy()` releases every id the map built; the two sources are the live map's, only borrowed.
+ * The view outlives the facade and holds the terrain itself, hence `setTerrainOptions(null)` below.
  */
 export function teardownPanorama() {
-    // IDEMPOTENT. One mode can produce two `onDestroy` calls (two component instances, or a
-    // re-create), and the second ran against a torn-down panorama - every `?.` short-circuited and
-    // the terrain detach below reported itself missing rather than doing nothing quietly.
+    // idempotent: one mode can produce two `onDestroy` calls
     if (!panorama && !panoramaView) {
         return;
     }
@@ -1598,18 +1113,8 @@ export function teardownPanorama() {
     panoramaView?.off('mapInteraction', onPanoramaInteraction);
     panoramaView?.setPostProcessEffect(null);
     effect = null;
-    // THE LAYERS OFF THE MAP, before anything else is released. `destroy()` unregisters a facade
-    // handle; it does not take the layer out of the view's native `Layers`, which holds a
-    // shared_ptr. A layer that stays there keeps its TileRenderer, which keeps the
-    // TerrainTileTransformer `TileLayer::resetTileTransformer` built for it, which keeps the
-    // ElevationManager - and with it 3 prefetch threads that go on decoding DEM tiles for a
-    // panorama nobody is looking at. Measured on a Crosscall: six such threads (two managers' worth)
-    // burned ~34,600 CPU ticks against the render thread's 3,094, which is why the mode felt slow
-    // while the renderer was not busy, and why the settings list scrolled badly.
-    //
-    // TileLayer DOES reset the transformer when the terrain goes (it compares `_terrainOptions.lock()`),
-    // but that check runs from the layer's own update - and once the panorama stops drawing, it never
-    // runs again. So the layer has to go, not just the terrain.
+    // layers off the map first: `destroy()` leaves them in the native `Layers`, keeping the ElevationManager
+    // and its prefetch threads alive (six threads burned 11x the render thread on a Crosscall)
     teardownPeakFinderSun();
     teardownPeakFinderMoon();
     teardownPeakFinderStars();
@@ -1626,17 +1131,8 @@ export function teardownPanorama() {
     staticPeaksSource = null;
     staticPeaksFailed = false;
     detailPeaksCache = detailPeaksStore = detailPeaksSource = detailPeaksBase = null;
-    // DETACH THE TERRAIN FIRST. `map.destroy()` releases the facade's own registration of the
-    // TerrainOptions, but the VIEW keeps working by design ("Not the view: the object API's map
-    // keeps working") - and the view's native Options still holds that TerrainOptions, which holds
-    // the ElevationManager, which holds 3 prefetch threads and a grid cache sized by count (192
-    // grids, 336 MB at the 1796 KB grids this DEM serves). Measured: RenderStats `managers` went
-    // 1, 2, 3, 4 across two entries and never fell, so each visit left a gigabyte behind and the
-    // prefetch threads of every dead panorama went on competing for the CPU.
-    // Options::setTerrainOptions(null) unregisters its listener and drops the pointer.
-    // The BRIDGE's options object first, exactly as `applyLabelPadding` does - that is the one that
-    // resolves; the view wrapper's `getNative()` is the fallback that does not, which is why this
-    // logged "cannot detach" on every exit while label padding written the other way worked.
+    // detach the terrain: the view's Options still holds it, with its ElevationManager, threads and grid
+    // cache (a GB leaked per visit). The bridge's options object resolves; the view wrapper's does not.
     const options = ((panorama as { native?: { getOptions?: () => unknown } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.()) as {
         setTerrainOptions?: (value: unknown) => void;
     };
@@ -1648,23 +1144,12 @@ export function teardownPanorama() {
     panorama?.destroy();
     panorama = null;
     panoramaView = null;
-    // BORROWED, NOT OWNED - so dropped, never destroyed. `findDemSource` returns
-    // `packageService.hillshadeLayer.source()` and `findPeaksSource` the live map's vector source;
-    // destroying them tore down the LIVE map's own sources. The next entry then built its layer on a
-    // dead handle ("Cannot create 'layer.peaks.2' of kind 'layer': RESULT_BAD_HANDLE"), the terrain
-    // lost the warm caches that make the panorama appear at once, and the mode came up unusably slow.
-    // Switching the map style appeared to cure it because that rebuilds the live layers, and their
-    // sources with them - which is also why the cure lasted exactly one round and came without labels.
+    // borrowed, not owned: destroying them tore down the live map's own sources
     demSource = null;
     peaksSource = null;
 }
 
-/**
- * Leaves the mode.
- *
- * There is nothing to put back: the live map was never touched, and the panorama's map is destroyed
- * with the component the store below unmounts.
- */
+/** Nothing to put back: the live map was never touched, and the panorama's map goes with its component. */
 export const exitPeakFinder = tryCatchFunction(async () => {
     if (!isPeakFinderActive()) {
         return;
@@ -1685,12 +1170,7 @@ export const exitPeakFinder = tryCatchFunction(async () => {
     lockOrientation('auto');
 });
 
-// --- the selected summit ---------------------------------------------------------------------
-
-/**
- * The selected summit's name, bold: a parameter the summit style declares itself (see `peaksStyle`),
- * so this is a write on the live decoder rather than a rebuild.
- */
+/** A style parameter, so a write on the live decoder rather than a rebuild. */
 function applySelectedPeak(decoder = peaksDecoder) {
     decoder?.set('params.selected_peak', get(peakFinderSelectedPeak)?.key ?? '');
 }
@@ -1718,11 +1198,8 @@ function onPeakClicked({ featureData, featurePosition }: FeatureClickData): bool
 }
 
 /**
- * Flies the viewpoint TO the selected summit, keeping the panorama's heading and tilt.
- *
- * `flyTo` takes the FOCUS, which at a panorama's tilt is kilometres in front of the eye - so the
- * target is the summit plus the focus-to-eye vector, measured off the camera. In first person the
- * SDK flies the eye straight there over an arc of `climbHeight`, the lift staying on top of it.
+ * `flyTo` takes the FOCUS, km ahead of the eye at this tilt, so the target is the summit plus the
+ * focus-to-eye vector.
  */
 export const flyToSelectedPeak = tryCatchFunction(async () => {
     const peak = get(peakFinderSelectedPeak);
@@ -1744,12 +1221,7 @@ export const flyToSelectedPeak = tryCatchFunction(async () => {
     );
 });
 
-// --- orientation following (the compass and AR) ------------------------------------------------
-
-/**
- * The sensor work lives in `peakFinderOrientation.ts` and is loaded on demand: it pulls in the sensors
- * plugin, and `Map.svelte` imports this file at startup.
- */
+/** Loaded on demand: it pulls in the sensors plugin, and `Map.svelte` imports this file at startup. */
 export const toggleHeadingFollowing = tryCatchFunction(async () => {
     const orientation = await import('~/mapModules/features/peakFinderOrientation');
     // Switched by hand, the sensors are the user's from now on: leaving AR must not stop them, and
@@ -1764,26 +1236,14 @@ export const toggleHeadingFollowing = tryCatchFunction(async () => {
 });
 
 /**
- * AR: the relief view over the camera preview.
- *
- * Every piece is an ordinary SDK feature the app puts together — a transparent clear colour (the frame
- * becomes a hole), a TRANSLUCENT GL surface so the hole shows what is behind it, the sky off, the
- * light-ink palette, and the device's orientation aiming the view.
- *
- * `setTranslucent` also raises the surface's z-order (`MapView.setTranslucent` calls
- * `setZOrderMediaOverlay`), which is the part that matters: a `SurfaceView` is composited BELOW the
- * window, so the only thing a translucent map can reveal is another surface under it. `Map.svelte`
- * puts a `<cameraview>` there and takes the LIVE map out of the way while AR is on — three surfaces
- * have no defined order between them, and the one that must be behind the panorama is the preview.
+ * AR: a transparent clear colour and a translucent GL surface over the `<cameraview>`. `setTranslucent` also
+ * raises the z-order, which is what matters: a SurfaceView can only reveal another surface under it.
  */
 export const toggleArMode = tryCatchFunction(async () => {
     if (get(peakFinderArActive)) {
         peakFinderArActive.set(false);
         setMapTranslucent(false);
-        // The sensors go with it. AR is the only thing that needs the ROTATION sensor, and if AR is
-        // also what switched the compass on then the magnetometer was AR's too — leaving either
-        // running kept the device polled and the view moving after the mode was off.
-        // Otherwise the compass was on before, and carries on as it was.
+        // stop the sensors only if AR started them, or they keep polling after AR is off
         if (arStartedFollowing) {
             arStartedFollowing = false;
             stopOrientationFollowing();
@@ -1816,7 +1276,6 @@ function setMapTranslucent(translucent: boolean) {
     }
 }
 
-/** AR follows the device, turning and aiming up and down; the compass does the same without it. */
 async function startFollowingForAr() {
     if (get(peakFinderHeadingFollowing)) {
         return;
@@ -1825,11 +1284,7 @@ async function startFollowingForAr() {
     await orientation.startOrientationFollowing(true);
 }
 
-/**
- * Looking straight up or down is for a view the device aims (AR or the compass); a panorama the
- * finger turns keeps its own range, and goes back to its own tilt rather than wherever the phone
- * last pointed (often the ground).
- */
+/** A finger-turned panorama keeps its own range and returns to its tilt, not wherever the phone pointed. */
 function applyTiltRange() {
     const aimed = get(peakFinderArActive) || get(peakFinderHeadingFollowing);
     applyTiltBounds();
@@ -1871,8 +1326,6 @@ export function panoramaInteractionTime() {
 export function panoramaPosition(): Position {
     return camera()?.position() ?? null;
 }
-
-// --- settings, and the entry point ------------------------------------------------------------
 
 export const showPeakFinderSettings = tryCatchFunction(async () => {
     const component = (await import('~/components/peaks/PeakFinderSettings.svelte')).default;
@@ -1955,9 +1408,7 @@ applyLive(peakFinderLabelWrap, rebuildPeaksLayer);
 // An OPTION, not style text — so it is written, not re-decoded.
 applyLive(peakFinderLabelPadding, applyLabelPadding);
 applyLive(peakFinderLabelMaxDistance, rebuildPeaksLayer);
-// Turning it off puts the live tiles back at once; turning it back on is free, because the
-// collected source is kept rather than dropped - it belongs to the panorama's map, which has one
-// summit set per viewpoint and releases it with everything else.
+// on again is free: the collected source is kept, owned and released by the panorama's map
 applyLive(peakFinderStaticPeaks, () => {
     if (get(peakFinderStaticPeaks) && !staticPeaksSource) {
         loadStaticPeaks();
@@ -1970,13 +1421,9 @@ applyLive(peakFinderScreenOrientation, () => lockOrientation(screenOrientation()
 // AR turns the clear colour into a hole for the camera preview to show through, and takes over the
 // tilt as well as the rotation — a panorama held up at the sky has to be able to look up.
 applyLive(peakFinderArActive, () => {
-    // EVERYTHING the look is made of, not the atmosphere alone: AR is a hole in the frame, and what
-    // paints over a hole is the terrain's surface shader (`applyReliefSurface` clears it in AR) and
-    // the effect's own alpha (`uTransparent`). The summit labels go with them, because AR has its own
-    // light/dark switch and their colours are style TEXT — see `palette` and `rebuildPeaksLayer`.
+    // the whole look, not the atmosphere alone: surface shader, effect alpha, and label colours (style text)
     applyPalette();
-    // In AR the field of view stops being a preference and becomes a MEASUREMENT of the camera
-    // behind the frame, which is the only way a summit is the same size in both pictures.
+    // in AR the field of view is a measurement of the camera, not a preference
     applyFieldOfView();
     applyTiltRange();
     if (get(peakFinderArActive)) {
@@ -2020,7 +1467,7 @@ registerMapFeature({
         return [
             {
                 id: 'peaks',
-                // 115 keeps it where it has always been in the row: just after `astronomy`.
+                // just after `astronomy`
                 order: 115,
                 text: 'mdi-summit',
                 tooltip: lc('peaks'),
