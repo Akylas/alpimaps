@@ -13,7 +13,7 @@
     import StoreSegment from '~/components/settings/StoreSegment.svelte';
     import StoreSlider from '~/components/settings/StoreSlider.svelte';
     import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
-    import PeakFinderSunTime from '~/components/peaks/PeakFinderSunTime.svelte';
+    import PeakFinderSkyTime from '~/components/peaks/PeakFinderSkyTime.svelte';
     import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
     import { colors, screenHeightDips, windowInset } from '~/variables';
 
@@ -40,7 +40,7 @@
             <StoreSegment description={item.description} options={item.options} store={item.store} title={item.title} />
         </Template>
         <Template key="suntime" let:item>
-            <PeakFinderSunTime title={item.title} />
+            <PeakFinderSkyTime title={item.title} />
         </Template>
         <Template key="slider" let:item>
             <StoreSlider description={item.description} format={item.format} max={item.max} min={item.min} step={item.step} store={item.store} title={item.title} />

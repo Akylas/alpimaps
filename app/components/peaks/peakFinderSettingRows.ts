@@ -4,6 +4,7 @@ import type { SettingsStore } from '~/stores/settingsStore';
 import {
     peakFinderArHorizonBoost,
     peakFinderArOutlineWidth,
+    peakFinderConstellations,
     peakFinderDark,
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
@@ -29,7 +30,10 @@ import {
     peakFinderOcclusion,
     peakFinderOutlineWidth,
     peakFinderPeakZoom,
+    peakFinderPlanets,
     peakFinderScreenOrientation,
+    peakFinderStars,
+    peakFinderStarsLabelsOnSummits,
     peakFinderStaticPeaks,
     peakFinderSun,
     peakFinderSunHours,
@@ -45,7 +49,7 @@ import {
  * the same stores, so a value changed in one is the value the other shows; keeping the rows here too
  * is what keeps the two lists, their ranges and their formats from drifting apart.
  *
- * `suntime` is the panorama's own row - the moment the sun is drawn for is not a persisted setting.
+ * `suntime` is the panorama's own row - the moment the sky is drawn for is not a persisted setting.
  */
 export interface PeakFinderSettingRow {
     type: 'sectionheader' | 'switch' | 'slider' | 'segment' | 'suntime';
@@ -99,11 +103,15 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         },
         { type: 'switch', store: peakFinderLensCorrection, title: lc('lens_correction'), description: lc('lens_correction_desc') },
 
-        section(lc('sun_path')),
-        { type: 'suntime', title: lc('sun_time') },
+        section(lc('sky')),
+        { type: 'suntime', title: lc('sky_time') },
         { type: 'switch', store: peakFinderSun, title: lc('sun_path'), description: lc('sun_path_desc') },
         { type: 'switch', store: peakFinderSunHours, title: lc('sun_hours'), description: lc('sun_hours_desc') },
         { type: 'switch', store: peakFinderMoon, title: lc('moon_path'), description: lc('moon_path_desc') },
+        { type: 'switch', store: peakFinderStars, title: lc('stars'), description: lc('stars_desc') },
+        { type: 'switch', store: peakFinderConstellations, title: lc('constellations'), description: lc('constellations_desc') },
+        { type: 'switch', store: peakFinderPlanets, title: lc('planets'), description: lc('planets_desc') },
+        { type: 'switch', store: peakFinderStarsLabelsOnSummits, title: lc('stars_labels_on_summits'), description: lc('stars_labels_on_summits_desc') },
 
         section(lc('summit_labels')),
         {

@@ -1,10 +1,13 @@
-import type { MassifLayer, MassifMap, MassifObject } from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-import { Color, ImageSource, Screen, path as filePath, knownFolders } from '@nativescript/core';
+import { ImageSource, Screen, path as filePath, knownFolders } from '@nativescript/core';
 import { getMoonIllumination, getMoonPosition } from 'suncalc';
-import { get } from 'svelte/store';
-import { peakFinderSunMoment, sunPositionAt } from '~/mapModules/features/peakFinderSun';
-import { peakFinderMoon, peakFinderSunTime } from '~/stores/terrainStore';
+import { lc } from '~/helpers/locale';
+import { type PeakFinderSkyContext, addTo, celestialLifecycle, clearSkySelection, colour, listenToSkyClicks, refreshSkySelection, skyMoment } from '~/mapModules/features/peakFinderCelestial';
+import { sunPositionAt } from '~/mapModules/features/peakFinderSun';
+import { direction } from '~/mapModules/features/sky/astronomy';
+import { MOON_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
+import { peakFinderMoon } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
 
 /**
@@ -21,38 +24,20 @@ const PATH_STEP_DEGREES = 1;
 const PATH_REPLAN_MS = 10 * 60000;
 const BITMAP_SIZE = 96;
 
-export interface PeakFinderMoonContext {
-    map: MassifMap;
-    eye: () => MapPos | null;
-    dark: () => boolean;
-}
-
-let context: PeakFinderMoonContext = null;
+let context: PeakFinderSkyContext = null;
 let layer: MassifLayer = null;
 let path: MassifObject<'massif::CelestialArc'> = null;
 let disc: MassifObject<'massif::CelestialSprite'> = null;
 let dayKey = '';
 let bitmapKey = '';
 let styledDark: boolean = null;
-let clock: ReturnType<typeof setInterval> = null;
-let unsubscribers: (() => void)[] = [];
+let clickSubscription: Subscription = null;
 let generation = 0;
-
-function colour(red: number, green: number, blue: number, alpha = 1) {
-    return new Color(Math.round(alpha * 255), red, green, blue).argb;
-}
 
 function moonPositionAt(time: number, eye: MapPos) {
     // Refraction included by suncalc. Its azimuth runs from the SOUTH, towards the west.
     const { altitude, azimuth } = getMoonPosition(new Date(time), eye.lat, eye.lon);
     return { azimuth: (azimuth * TO_DEGREES + 180 + 360) % 360, altitude: altitude * TO_DEGREES };
-}
-
-/** East, north, up. */
-function direction(azimuth: number, altitude: number): [number, number, number] {
-    const alt = altitude * TO_RADIANS;
-    const az = azimuth * TO_RADIANS;
-    return [Math.cos(alt) * Math.sin(az), Math.cos(alt) * Math.cos(az), Math.sin(alt)];
 }
 
 /**
@@ -178,15 +163,17 @@ export function updatePeakFinderMoon() {
             styledDark = dark;
             path.set('color', dark ? colour(203, 213, 225, 0.7) : colour(71, 85, 105, 0.7));
         }
-        const time = peakFinderSunMoment();
+        const time = skyMoment();
         planPath(eye, time);
         placeMoon(eye, time, dark);
+        refreshSkySelection();
     } catch (error) {
         DEV_LOG && console.log('peakFinder: moon', error);
     }
 }
 
-function build() {
+function build(moonContext: PeakFinderSkyContext) {
+    context = moonContext;
     const map = context.map;
     const scale = Screen.mainScreen.scale;
     generation += 1;
@@ -196,14 +183,29 @@ function build() {
     map.add(layer, 0);
     path = map.object('celestial', id('moon.path'), { type: 'arc', color: colour(203, 213, 225, 0.7), width: 2 * scale, belowHorizonVisible: true });
     // In pixels, not its real half degree, like the sun: a marker visible at any field of view.
-    disc = map.object('celestial', id('moon.disc'), { type: 'sprite', screenSize: 26 * scale, color: colour(255, 255, 255) });
-    layer.call('add', path.handle);
-    layer.call('add', disc.handle);
+    disc = map.object('celestial', id('moon.disc'), { type: 'sprite', screenSize: 26 * scale, color: colour(255, 255, 255), clickRadius: 3, metaData: { id: 'moon' } });
+    addTo(layer, path);
+    addTo(layer, disc);
+    clickSubscription = listenToSkyClicks(layer, (clicked) =>
+        clicked === 'moon'
+            ? {
+                  selected: { id: 'moon', kind: 'moon', name: lc('moon'), wikidata: MOON_WIKIDATA },
+                  locate: () => {
+                      const eye = context?.eye();
+                      if (!eye) {
+                          return null;
+                      }
+                      return moonPositionAt(skyMoment(), eye);
+                  }
+              }
+            : null
+    );
 }
 
 function drop() {
-    clearInterval(clock);
-    clock = null;
+    clearSkySelection(['moon']);
+    clickSubscription?.remove();
+    clickSubscription = null;
     if (layer) {
         try {
             context?.map.removeLayer(layer);
@@ -217,39 +219,16 @@ function drop() {
     layer = path = disc = null;
     dayKey = bitmapKey = '';
     styledDark = null;
-}
-
-function start() {
-    build();
-    updatePeakFinderMoon();
-    clock = setInterval(() => get(peakFinderSunTime) === null && updatePeakFinderMoon(), 60000);
-}
-
-export function setupPeakFinderMoon(moonContext: PeakFinderMoonContext) {
-    teardownPeakFinderMoon();
-    context = moonContext;
-    if (get(peakFinderMoon)) {
-        start();
-    }
-    let first = true;
-    unsubscribers = [
-        peakFinderMoon.subscribe((enabled) => {
-            if (first || !context) {
-                return;
-            }
-            drop();
-            if (enabled) {
-                start();
-            }
-        }),
-        peakFinderSunTime.subscribe(() => !first && updatePeakFinderMoon())
-    ];
-    first = false;
-}
-
-export function teardownPeakFinderMoon() {
-    unsubscribers.forEach((unsubscribe) => unsubscribe());
-    unsubscribers = [];
-    drop();
     context = null;
 }
+
+const lifecycle = celestialLifecycle({
+    enabled: peakFinderMoon,
+    clockMs: 60000,
+    start: build,
+    update: () => updatePeakFinderMoon(),
+    drop
+});
+
+export const setupPeakFinderMoon = lifecycle.setup;
+export const teardownPeakFinderMoon = lifecycle.teardown;
