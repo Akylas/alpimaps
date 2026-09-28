@@ -16,11 +16,12 @@
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { isNavigating, isNavigationRunning, navigationHideChrome } from '~/stores/navigationStore';
+    import { isEInk } from '~/helpers/theme';
     import { openLink } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
-    let { colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer } = $colors;
-    $: ({ colorOnPrimary, colorOnPrimaryContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer } = $colors);
+    let { colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     // const currentMapZoom = 0;
     let totalDownloadProgress = 0;
@@ -54,7 +55,9 @@
         }
         // userLocationModule.on('location', onNewLocation);
     });
-    $: locationButtonClass = !$queryingLocation && $watchingLocation ? 'buttonthemed' : 'buttontext';
+    $: watchingLocationActive = !$queryingLocation && $watchingLocation;
+    // e-ink keeps the filled button: a tint does not show there
+    $: locationButtonClass = watchingLocationActive ? (isEInk ? 'buttonthemed' : 'btn-themed') : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
     // $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
@@ -211,8 +214,9 @@
     <stacklayout id="stack1" col={2} padding={2} row={2} verticalAlignment="bottom">
         <mdbutton
             id="directions"
-            class="small-floating-btn btn-themed"
+            class="small-floating-btn"
             col={2}
+            color={colorPrimary}
             horizontalAlignment="center"
             rowSpan={2}
             text="mdi-directions"
@@ -227,7 +231,7 @@
             <label
                 ios:iosAccessibilityAdjustsFontSize={false}
                 class={`mdi ${locationButtonLabelClass}`}
-                color={$watchingLocation && !$queryingLocation ? colorOnPrimary : colorPrimary}
+                color={watchingLocationActive && isEInk ? colorOnPrimary : colorPrimary}
                 fontSize={24 * $fontScaleMaxed}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
@@ -264,8 +268,8 @@
         on:tap={onAttributionTap} />
 
     <gridlayout
-        backgroundColor={colorPrimaryContainer}
-        borderRadius="50%"
+        class="panel"
+        borderRadius={20}
         col={1}
         columns="auto,auto"
         horizontalAlignment="left"
@@ -273,8 +277,8 @@
         row={2}
         verticalAlignment="bottom"
         visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'}>
-        <label color={colorOnPrimaryContainer} fontSize={13} padding={10} text={lc('downloading_area', Math.round(totalDownloadProgress))} verticalTextAlignment="center" />
-        <mdbutton class="mdi" col={1} color={colorOnPrimaryContainer} fontSize={13} marginRight={10} text="mdi-close" variant="text" width={40} on:tap={stopDatasourceDownload} />
+        <label color={colorOnSurface} fontSize={13} padding={10} text={lc('downloading_area', Math.round(totalDownloadProgress))} verticalTextAlignment="center" />
+        <mdbutton class="mdi" col={1} color={colorOnSurface} fontSize={13} marginRight={10} text="mdi-close" variant="text" width={40} on:tap={stopDatasourceDownload} />
     </gridlayout>
 
     <progress colSpan={3} row={3} value={totalDownloadProgress} verticalAlignment="bottom" visibility={totalDownloadProgress > 0 ? 'visible' : 'collapse'} />

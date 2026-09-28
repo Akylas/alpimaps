@@ -19,7 +19,7 @@
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
-    import { CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
+    import { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
@@ -60,7 +60,7 @@
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
-    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
+    $: ({ colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
     const PROFILE_HEIGHT = 155;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
@@ -1026,9 +1026,10 @@
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
-            backgroundColor={colorWidgetBackground}
-            borderColor={colorOutlineVariant}
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
             borderRadius={CARD_RADIUS}
+            borderWidth={CARD_BORDER_WIDTH}
             closeAnimationDuration={100}
             height={INFOVIEW_HEIGHT}
             leftSwipeDistance={0}
@@ -1072,7 +1073,7 @@
             </stacklayout>
         </swipemenu>
 
-        <scrollview backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
+        <scrollview backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={CARD_RADIUS} borderWidth={CARD_BORDER_WIDTH} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
             <stacklayout id="bottomsheetbuttons" orientation="horizontal">
                 {#each itemActions as action (action.id)}
                     <IconButton
@@ -1088,9 +1089,10 @@
         <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart
             bind:this={elevationChart}
-            backgroundColor={colorWidgetBackground}
-            borderColor={colorOutlineVariant}
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
             borderRadius={CARD_RADIUS}
+            borderWidth={CARD_BORDER_WIDTH}
             {chartShowWaypoints}
             colSpan={2}
             {item}
@@ -1102,9 +1104,10 @@
             on:highlight={onChartHighlight} />
         <RouteStatsView
             bind:this={statsView}
-            backgroundColor={colorWidgetBackground}
-            borderColor={colorOutlineVariant}
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
             borderRadius={CARD_RADIUS}
+            borderWidth={CARD_BORDER_WIDTH}
             colSpan={2}
             {item}
             margin="2 2 0 2"

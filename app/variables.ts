@@ -48,6 +48,12 @@ export const colors = writable({
     colorSurfaceContainerHighest: '',
     colorOnSurfaceDisabled: '',
     colorWidgetBackground: '',
+    colorPanel: '',
+    colorMapControl: '',
+    colorHairline: '',
+    colorOutlineSoft: '',
+    colorAccentContainer: '',
+    colorAccentContainerSolid: '',
     colorSurfaceTint: '',
     popupMenuBackground: ''
 });
@@ -339,6 +345,28 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
             }
         }
 
+        // the peak finder panel style: hairline outlines and a primary tint, all solid on e-ink which dithers alpha
+        if (colorTheme === 'eink') {
+            currentColors.colorPanel = currentColors.colorSurface;
+            currentColors.colorMapControl = currentColors.colorSurface;
+            currentColors.colorHairline = currentColors.colorOnSurface;
+            currentColors.colorOutlineSoft = currentColors.colorOnSurface;
+            currentColors.colorAccentContainer = currentColors.colorSurface;
+            currentColors.colorAccentContainerSolid = currentColors.colorSurface;
+        } else {
+            const dark = theme === 'dark' || theme === 'black';
+            currentColors.colorPanel = new Color(currentColors.colorSurface).setAlpha(247).hex;
+            currentColors.colorMapControl = new Color(currentColors.colorSurface).setAlpha(200).hex;
+            currentColors.colorHairline = new Color(currentColors.colorOnSurface).setAlpha(31).hex;
+            currentColors.colorOutlineSoft = new Color(currentColors.colorOnSurface).setAlpha(64).hex;
+            currentColors.colorAccentContainer = new Color(currentColors.colorPrimary).setAlpha(dark ? 41 : 31).hex;
+            // the same tint made opaque, for buttons floating over the map
+            const surface = new Color(currentColors.colorSurface);
+            const primary = new Color(currentColors.colorPrimary);
+            const tint = (dark ? 41 : 31) / 255;
+            const mix = (from: number, to: number) => Math.round(from + (to - from) * tint);
+            currentColors.colorAccentContainerSolid = new Color(255, mix(surface.r, primary.r), mix(surface.g, primary.g), mix(surface.b, primary.b)).hex;
+        }
         currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;
         Object.keys(currentColors).forEach((c) => {

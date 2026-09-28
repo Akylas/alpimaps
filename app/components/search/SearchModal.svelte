@@ -9,7 +9,7 @@
     import { colors } from '~/variables';
     import { PhotonFeature } from './Features';
     import SearchCollectionView from './SearchCollectionView.svelte';
-    $: ({ colorWidgetBackground } = $colors);
+    $: ({ colorHairline, colorPanel } = $colors);
 
     let textField: NativeViewElementNode<TextField>;
     let loading = false;
@@ -88,7 +88,7 @@
 
 <!-- <page id="selectCity" actionBarHidden={true} on:navigatingTo={onNavigatingTo}> -->
 <gesturerootview columns="auto">
-    <gridlayout backgroundColor={colorWidgetBackground} borderRadius={8} {elevation} {margin} rows="auto,auto,240" {width}>
+    <gridlayout backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={24} borderWidth={1} {elevation} {margin} rows="auto,auto,240" {width}>
         <!-- <CActionBar title={lc('search')} modalWindow>
             <activityindicator busy={loading} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} />
         </CActionBar> -->

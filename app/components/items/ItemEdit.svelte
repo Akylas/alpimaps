@@ -24,7 +24,7 @@
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
 
-    $: ({ colorBackground, colorOnPrimary, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -421,12 +421,12 @@
     }
 </script>
 
-<page class="themedPage" actionBarHidden={true}>
+<page actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton color={colorOnPrimary} isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
-            <IconButton color={colorOnPrimary} text="mdi-playlist-plus" on:tap={addField} />
-            <IconButton color={colorOnPrimary} isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
+            <IconButton isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
+            <IconButton text="mdi-playlist-plus" on:tap={addField} />
+            <IconButton isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
         <massifmap row={1} zoom={16} on:mapReady={onMapReady} on:layoutChanged={onLayoutChanged} />
         <canvaslabel fontSize={16} height={50} horizontalAlignment="right" row={1} verticalAlignment="bottom" width={50} on:tap={() => pickOptionColor(itemColor)}>

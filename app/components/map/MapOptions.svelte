@@ -16,9 +16,9 @@
     import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
-    import { colors, fonts } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
     export interface MapOptionType {
         title: string;
         color?: Color | string;
@@ -30,8 +30,6 @@
 <script lang="ts">
     import SettingsSwitch from '../settings/SettingsSwitch.svelte';
 
-    let { colorOnBackground, colorOutlineVariant } = $colors;
-    $: ({ colorOnBackground, colorOutlineVariant } = $colors);
     const customLayers: CustomLayersModule = getMapContext().mapModule('customLayers');
     let collectionView: NativeViewElementNode<CollectionViewWithSwipeMenu>;
 
@@ -138,6 +136,7 @@
                             {
                                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                                 rowHeight: 56,
+                                titleIcon: item.icon,
                                 selectedIndex,
                                 options
                             },
@@ -216,49 +215,28 @@
     const layerIconParams = ['showSlopePercentages'] as const;
 </script>
 
-<gesturerootview height={350} rows="auto,*">
-    <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={1} ios:contentInsetAdjustmentBehavior={2}>
+<gesturerootview class="bottomsheet" height={420} rows="auto,auto,*">
+    <PanelHeader icon="mdi-map-outline" title={lc('map')} />
+    <collectionview bind:this={collectionView} {itemTemplateSelector} {items} row={2} ios:contentInsetAdjustmentBehavior={2}>
         <Template key="sectionheader" let:item>
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <SettingsSwitch
-                checkboxProps={{ col: 2 }}
-                columns="auto,*,auto"
-                fontSize={20}
-                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
-                mainCol={1}
-                {onCheckBox}
-                on:tap={(event) => onTap(item, event)}>
-                <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
-            </SettingsSwitch>
-            <!-- <ListItemAutoSize item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} leftIcon={item.icon} on:tap={(event) => onTap(item, event)}>
-                <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckBox(item, e)} />
-            </ListItemAutoSize> -->
+            <SettingsSwitch item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
         </Template>
         <Template let:item>
             <ListItemAutoSize
                 columns="auto,*,auto"
-                fontSize={20}
+                icon={item.icon}
                 item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
                 mainCol={1}
                 rightValue={item.rightValue}
                 showBottomLine={false}
-                on:tap={(event) => onTap(item, event)}>
-                <label color={colorOnBackground} fontFamily={$fonts.mdi} fontSize={24} padding="0 10 0 0" text={item.icon} verticalAlignment="center" />
-            </ListItemAutoSize>
+                on:tap={(event) => onTap(item, event)} />
         </Template>
-        <!-- <Template let:item>
-            <ListItemAutoSize
-                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
-                leftIcon={item.icon}
-                rightValue={item.rightValue}
-                showBottomLine={false}
-                on:tap={(event) => onTap(item, event)}></ListItemAutoSize>
-        </Template> -->
     </collectionview>
 
-    <stacklayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} orientation="horizontal">
+    <stacklayout orientation="horizontal" padding="0 8 8 8" row={1}>
         {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
             <StoreValue store={option.store} let:value>
                 <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />

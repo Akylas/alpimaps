@@ -38,7 +38,7 @@
     }
 </script>
 
-<gesturerootview rows="auto">
+<gesturerootview class="bottomsheet" rows="auto">
     <collectionView id="scrollView" height={200} items={options} ios:contentInsetAdjustmentBehavior={2}>
         <Template let:item>
             <ListItemAutoSize

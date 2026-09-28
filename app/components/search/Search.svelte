@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { Animation, ApplicationSettings, GridLayout, ObservableArray, TextField } from '@nativescript/core';
+    import { Animation, ApplicationSettings, Color, GridLayout, ObservableArray, TextField } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
@@ -17,8 +17,10 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
 
-    let { colorOnSurface, colorWidgetBackground } = $colors;
-    $: ({ colorOnSurface, colorWidgetBackground } = $colors);
+    let { colorHairline, colorOnSurface, colorPanel } = $colors;
+    $: ({ colorHairline, colorOnSurface, colorPanel } = $colors);
+    // see-through while idle so the map shows under it
+    $: colorSearchIdle = colorPanel ? new Color(colorPanel).setAlpha(150).hex : null;
 
     const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
     let animating = false;
@@ -130,7 +132,7 @@
         if (nCollectionView || nGridLayout) {
             animateTargets([
                 { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : __ANDROID__ ? 0 : 0.01, duration: 100 },
-                { target: nGridLayout, elevation: $currentTheme !== 'dark' && !isEInk && focused ? 10 : 0, borderRadius: searchResultsVisible ? 10 : 25, duration: 100 }
+                { target: nGridLayout, elevation: $currentTheme !== 'dark' && !isEInk && focused ? 6 : 0, borderRadius: searchResultsVisible ? 24 : 25, duration: 100 }
             ]);
             // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
@@ -450,9 +452,9 @@
     bind:this={gridLayout}
     id="search"
     {...$$restProps}
-    backgroundColor={!isEInk || focused ? colorWidgetBackground : 'transparent'}
-    borderColor="#00000066"
-    borderWidth={isEInk && !focused ? 1 : 0}
+    backgroundColor={focused ? colorPanel : isEInk ? 'transparent' : colorSearchIdle}
+    borderColor={isEInk ? '#00000066' : colorHairline}
+    borderWidth={isEInk && focused ? 0 : 1}
     columns="auto,*,auto,auto,auto,auto"
     elevation={$currentTheme !== 'dark' && !isEInk && focused ? 6 : 0}
     rows="auto,auto"

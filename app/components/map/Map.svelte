@@ -28,7 +28,7 @@
     import Search from '~/components/search/Search.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import { l, lc, onLanguageChanged, onMapLanguageChanged } from '~/helpers/locale';
-    import { forceDarkMode, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
+    import { currentRealTheme, forceDarkMode, isDarkTheme, isEInk, theme, toggleForceDarkMode } from '~/helpers/theme';
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
@@ -85,7 +85,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorError, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
 
     let defaultLiveSync = global.__onLiveSync;
@@ -1399,6 +1399,7 @@
             {
                 height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
+                titleIcon: 'mdi-map-outline',
                 selectedIndex,
                 options
             },
@@ -1872,9 +1873,9 @@
     ios:iosIgnoreSafeArea={false}
     keepScreenAwake={$keepScreenAwake}
     screenBrightness={$keepScreenAwake && $keepScreenAwakeFullBrightness ? 1 : -1}
-    statusBarStyle={directionsPanelVisible ? 'dark' : 'light'}
+    statusBarStyle={directionsPanelVisible && isDarkTheme($currentRealTheme) ? 'dark' : 'light'}
     ios:statusBarColor="transparent"
-    android:statusBarColor={directionsPanelVisible ? (isEInk ? 'white' : colorPrimary) : 'transparent'}
+    android:statusBarColor={directionsPanelVisible ? colorBackground : 'transparent'}
     on:navigatingTo={onNavigatingTo}
     on:navigatingFrom={onNavigatingFrom}>
     <gridlayout>
@@ -1923,9 +1924,11 @@
              go with the mode without taking the widgets down with it -->
             <gridlayout bind:this={widgetsHolder} height="100%" isPassThroughParentEnabled={true} width="100%">
                 <ButtonBar
+                    class="panel mapControl"
+                    borderRadius={20}
                     buttonSize={40}
                     buttons={sideButtons}
-                    color={isEInk ? '#aaa' : '#666'}
+                    color={isEInk ? '#aaa' : colorOnSurfaceVariant}
                     gray={true}
                     horizontalAlignment="left"
                     marginLeft={5}
@@ -2018,7 +2021,7 @@
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
-                borderRadius={isLandscape ? 10 : 0}
+                borderRadius={isLandscape ? 24 : 0}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
                 updating={itemLoading}

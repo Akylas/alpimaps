@@ -8,7 +8,7 @@ import { SDK_VERSION, copyToClipboard } from '@nativescript/core/utils';
 import { tryCatchFunction } from '@shared/utils/ui';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
-import { hideLoading, openLink, showSnack, showToast } from '@shared/utils/ui';
+import { hideLoading, openLink, showSliderPopover as showSharedSliderPopover, showSlidersPopover as showSharedSlidersPopover, showSnack, showToast } from '@shared/utils/ui';
 import { ComponentProps } from 'svelte';
 import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import { get } from 'svelte/store';
@@ -46,6 +46,9 @@ export async function promptForGroup(defaultGroup: string, groups?: Group[]): Pr
 export async function showAlertOptionSelect<T>(props?: ComponentProps<OptionSelect__SvelteComponent_>, options?: Partial<AlertOptions & MDCAlertControlerOptions>) {
     const component = (await import('~/components/common/OptionSelect.svelte')).default;
     let componentInstanceInfo: ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
+    // the title moves from the native dialog into the view, as the sky panel header
+    const { title, ...alertOptions } = options ?? {};
+    const headerHeight = title && typeof props?.height === 'number' ? PANEL_HEADER_HEIGHT : 0;
     try {
         componentInstanceInfo = resolveComponentElement(component, {
             onClose: (result) => {
@@ -55,13 +58,15 @@ export async function showAlertOptionSelect<T>(props?: ComponentProps<OptionSele
                 view.bindingContext.closeCallback(item);
             },
             trackingScrollView: 'collectionView',
-            ...props
+            title,
+            ...props,
+            ...(headerHeight ? { height: (props.height as number) + headerHeight } : {})
         }) as ComponentInstanceInfo<GridLayout, OptionSelect__SvelteComponent_>;
         const view: View = componentInstanceInfo.element.nativeView;
         const result = await alert({
             view,
             okButtonText: lc('cancel'),
-            ...(options ? options : {})
+            ...alertOptions
         });
         return result;
     } catch (err) {
@@ -71,6 +76,20 @@ export async function showAlertOptionSelect<T>(props?: ComponentProps<OptionSele
         componentInstanceInfo.viewInstance.$destroy();
         componentInstanceInfo = null;
     }
+}
+
+const PANEL_HEADER_HEIGHT = 64;
+
+// the shared slider popovers, in the PanelPopover look
+export function panelPopoverStyle(currentColors = get(colors)) {
+    const { colorHairline, colorPanel } = currentColors;
+    return { backgroundColor: colorPanel, props: { backgroundColor: colorPanel, borderColor: colorHairline, borderRadius: 20, borderWidth: 1 } };
+}
+export function showSliderPopover(options: Parameters<typeof showSharedSliderPopover>[0]) {
+    return showSharedSliderPopover({ ...panelPopoverStyle(), ...options });
+}
+export function showSlidersPopover(options: Parameters<typeof showSharedSlidersPopover>[0]) {
+    return showSharedSlidersPopover({ ...panelPopoverStyle(), ...options });
 }
 
 export async function showPopoverMenu<T = any>({
@@ -83,22 +102,24 @@ export async function showPopoverMenu<T = any>({
     props,
     vertPos
 }: { options; anchor; onClose?; onLongPress?; props?; closeOnClose? } & Partial<PopoverOptions>) {
-    const { colorSurfaceContainer } = get(colors);
+    const { colorHairline, colorPanel } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const scale = Math.sqrt(get(fontScale));
     const rowHeight = props?.rowHeight ?? 60 * scale;
     const result: T = await showPopover({
-        backgroundColor: colorSurfaceContainer,
+        backgroundColor: colorPanel,
         view: OptionSelect,
         anchor,
         horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
-            borderRadius: 10,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: colorHairline,
             elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
             fontWeight: 500,
-            backgroundColor: colorSurfaceContainer,
+            backgroundColor: colorPanel,
             containerColumns: 'auto',
             height: Math.min(rowHeight * options.length, props?.maxHeight ?? 300),
             width: Math.min(200 * scale, screenWidthDips * 0.9),

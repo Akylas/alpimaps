@@ -12,7 +12,7 @@
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { UNITS, convertElevation, convertValueToUnit, formatDistance, osmicon } from '~/helpers/formatter';
-    import { convertDurationSeconds, lc, lu, onLanguageChanged } from '~/helpers/locale';
+    import { convertDurationSeconds, lc, onLanguageChanged } from '~/helpers/locale';
     import { colorTheme, isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -40,7 +40,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorError, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary, colorSurfaceContainerHigh } = $colors);
     $: ({ bottom: windowInsetBottom, keyboard: keyboardInset } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -776,10 +776,9 @@ LEFT JOIN  (
             canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
         }
     }
-    $: actionBarLabelColor = isEInk ? colorOnSurface : colorOnPrimary;
 </script>
 
-<page bind:this={page} class="themedPage" actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
+<page bind:this={page} actionBarHidden={true} on:navigatedTo={onNavigatedTo}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
@@ -789,8 +788,8 @@ LEFT JOIN  (
             android:paddingBottom={windowInsetBottom + keyboardInset}
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
-                <gridlayout backgroundColor={colorOutlineVariant} height={50} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <canvasview id="canvas" margin="5 30 5 10" on:draw={(e) => onDrawGroup(item, e)} />
+                <gridlayout height={56} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
+                    <canvasview id="canvas" margin="8 100 4 16" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
                         horizontalAlignment="right"
                         marginRight={60}
@@ -814,11 +813,13 @@ LEFT JOIN  (
             </Template>
             <Template key="route" let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorBackground}
-                    borderBottomColor={colorOutlineVariant}
-                    borderBottomWidth={1}
+                    backgroundColor={colorPanel}
+                    borderColor={colorHairline}
+                    borderRadius={20}
+                    borderWidth={1}
                     height={80}
                     {item}
+                    margin="4 12 4 12"
                     marginBottom={34}
                     marginLeft={60}
                     opacity={item.onMap || 0.6}
@@ -841,11 +842,13 @@ LEFT JOIN  (
             </Template>
             <Template let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorBackground}
-                    borderBottomColor={colorOutlineVariant}
-                    borderBottomWidth={1}
+                    backgroundColor={colorPanel}
+                    borderColor={colorHairline}
+                    borderRadius={20}
+                    borderWidth={1}
                     height={80}
                     {item}
+                    margin="4 12 4 12"
                     opacity={item.onMap || 0.6}
                     rippleColor={colorPrimary}
                     selectable={false}
@@ -865,33 +868,13 @@ LEFT JOIN  (
             visibility={loading || itemsCount ? 'hidden' : 'visible'} />
         <activityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
 
-        <CActionBar forceCanGoBack={nbSelected > 0} onGoBack={nbSelected ? unselectAll : null} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
+        <CActionBar forceCanGoBack={nbSelected > 0} height={64} onGoBack={nbSelected ? unselectAll : null} paddingBottom={0} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
             <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
-            <IconButton color={actionBarLabelColor} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
-            <IconButton color={actionBarLabelColor} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
-            <gridlayout slot="bottom" colSpan={3} columns="*,*" height={48} row={1}>
-                <canvaslabel
-                    color={actionBarLabelColor}
-                    disableCss={true}
-                    fontSize={15}
-                    fontWeight={500}
-                    rippleColor={actionBarLabelColor}
-                    text={lu('routes')}
-                    textAlignment="center"
-                    verticalTextAlignment="center"
-                    on:tap={() => setTabIndex(0)} />
-                <canvaslabel
-                    col={1}
-                    color={actionBarLabelColor}
-                    disableCss={true}
-                    fontSize={15}
-                    fontWeight="500"
-                    rippleColor={actionBarLabelColor}
-                    text={lu('markers')}
-                    textAlignment="center"
-                    verticalTextAlignment="center"
-                    on:tap={() => setTabIndex(1)} />
-                <absolutelayout backgroundColor={actionBarLabelColor} colSpan={2} height={3} horizontalAlignment={tabIndex === 1 ? 'right' : 'left'} verticalAlignment="bottom" width="50%" />
+            <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
+            <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
+            <gridlayout slot="bottom" colSpan={3} columns="*,*" padding="0 12 8 12" row={1}>
+                <mdbutton class={tabIndex === 0 ? 'chip selected' : 'chip'} text={lc('routes')} variant="flat" on:tap={() => setTabIndex(0)} />
+                <mdbutton class={tabIndex === 1 ? 'chip selected' : 'chip'} col={1} text={lc('markers')} variant="flat" on:tap={() => setTabIndex(1)} />
             </gridlayout>
         </CActionBar>
     </gridlayout>

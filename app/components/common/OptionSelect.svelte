@@ -13,6 +13,7 @@
     import { ListItem as IListItem } from '~/components/common/ListItem';
     import ListItem from '~/components/common/ListItem.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
     import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import { lc } from '~/helpers/locale';
     import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
@@ -27,6 +28,7 @@
 
 <script lang="ts">
     export let title: string = null;
+    export let titleIcon: string = null;
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
@@ -201,7 +203,7 @@
 <gesturerootview columns={containerColumns} rows="auto">
     <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,auto,*" {...$$restProps}>
         {#if title}
-            <label class="actionBarTitle" color={colorOnSurface} fontWeight="bold" margin="10 10 0 10" text={title} />
+            <PanelHeader icon={titleIcon} padding="16 8 4 20" {title} />
         {/if}
         {#if showFilter}
             <gridlayout borderColor={colorOutline} margin="10 10 0 10" row={1}>

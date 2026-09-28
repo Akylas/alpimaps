@@ -236,6 +236,7 @@ async function internalSelectLanguage(currentLanguage = ApplicationSettings.getS
         {
             height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
             rowHeight: 56,
+            titleIcon: 'mdi-translate',
             selectedIndex,
             options
         },
