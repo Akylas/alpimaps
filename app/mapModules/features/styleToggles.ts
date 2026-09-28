@@ -14,7 +14,6 @@ const routesProps = nutiProps.getProps('show_routes');
 
 registerMapFeature({
     id: 'styleToggles',
-    // the props come off an untyped proxy, hence the explicit annotation and the boolean coercions
     sideButtons: derived([slopeProps.store, routesProps.store, mapCapabilities], ([$showSlopes, $showRoutes, $capabilities]): MapSideButton[] => [
         {
             id: 'slopes',

@@ -139,7 +139,7 @@
             showError(error);
         }
     }
-    const nutiIconParams = ['contours', 'buildings'];
+    const nutiIconParams = ['contours', 'buildings'] as const;
 </script>
 
 <!-- on iOS the collectionview is applied a padding because of the safearea

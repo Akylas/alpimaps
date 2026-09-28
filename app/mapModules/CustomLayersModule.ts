@@ -14,7 +14,7 @@ import MapModule, { type MapDecoder, getMapContext } from '~/mapModules/MapModul
 import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
-import { clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
+import { type NutiParamKey, type PropsChangeEvent, clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
@@ -308,17 +308,8 @@ export default class CustomLayersModule extends MapModule {
         this.applyHillshadeSettings(layer, name);
         return layer;
     }
-    /**
-     * Slope colouring, on the composite's own hillshade child.
-     *
-     * Read from the STORE, not from `layerProps['showSlopePercentages']`: the proxy answers null for
-     * a value sitting at its default, and this one defaults to `true` - so starting this at false
-     * left the button drawn as selected with no shader on the layer, and the first press turned
-     * "off" what was already off. The store carries the persisted value, or the default.
-     *
-     * Held rather than read on every call so the mode survives a re-attach, where the composite
-     * builds a brand new child.
-     */
+    // read from the store: the proxy answers null for a value at its default.
+    // Held so the mode survives a re-attach, where the composite builds a new child
     private slopeMode = !!get(layerProps.getStore('showSlopePercentages'));
     toggleHillshadeSlope(value: boolean) {
         this.slopeMode = value;
@@ -850,7 +841,7 @@ export default class CustomLayersModule extends MapModule {
         // whether or not anything is drawn from them, so it is hidden too. Hiding, not detaching:
         // detaching rebuilds the composite and reloads the whole base map for a visibility change.
         // (The hillshade needs no equivalent - it is an ordinary layer, hidden by its own opacity.)
-        nutiProps.on('change', (event: { key: string; value: boolean }) => {
+        nutiProps.on('change', (event: PropsChangeEvent) => {
             if (event.key === 'contours') {
                 this.setSlotVisible(CONTOUR_SLOT, !!event.value);
             }
@@ -1164,7 +1155,7 @@ export default class CustomLayersModule extends MapModule {
      * NOT `nutiProps[key]`: the proxy answers null for anything sitting at its default, which reads
      * as "off" for every one of these and is the opposite of what the default says.
      */
-    private mapOption(key: string): boolean {
+    private mapOption(key: NutiParamKey): boolean {
         return !!get(nutiProps.getStore(key));
     }
 
