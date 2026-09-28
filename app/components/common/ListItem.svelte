@@ -6,7 +6,6 @@
     import { ListItem } from './ListItem';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
     const dispatch = createEventDispatcher();
-    // technique for only specific properties to get updated on store change
     export let showBottomLine: boolean = false;
     export let extraPaddingLeft: number = 0;
     export let iconFontSize: number = 24;

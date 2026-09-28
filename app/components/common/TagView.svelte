@@ -20,7 +20,7 @@
     export let padding: string | number = 20;
 
     const miniSearch = new MiniSearch({
-        fields: ['name'], // fields to index for full-text search
+        fields: ['name'],
         storeFields: ['name']
     });
 

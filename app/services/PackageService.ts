@@ -52,11 +52,8 @@ import { isPointInsideBounds } from '~/helpers/geolib';
 export type PackageType = 'geo' | 'routing' | 'map';
 
 /**
- * The two offline geocoders, as one type.
- *
- * They are separate SDK classes but declare the same `calculateAddresses`, and everything here
- * treats them alike - so a union is what the callers actually want. It cannot be narrowed back:
- * a handle's brand is invariant, so `MassifObject<A | B>` is neither an `A` nor a `B`.
+ * Separate SDK classes sharing `calculateAddresses`. Cannot be narrowed back: a handle's brand is
+ * invariant, so `MassifObject<A | B>` is neither an `A` nor a `B`.
  */
 export type GeocodingService = MassifObject<'massif::MultiOSMOfflineGeocodingService' | 'massif::MultiOSMOfflineReverseGeocodingService'>;
 
@@ -139,7 +136,7 @@ let geocodingRequestId = 0;
 let searchRequestId = 0;
 let routingRequestId = 0;
 
-/** What a tile search takes. The zoom/result knobs are properties of the SERVICE, not the request. */
+/** The zoom/result knobs are properties of the SERVICE, not the request. */
 export interface SearchOptions {
     position?: MapPos;
     geometry?: GeoJSON.Geometry;
@@ -192,7 +189,6 @@ function sampleTrackForRouting(positions: MapPos[]) {
 
 class PackageService extends Observable {
     hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
-    /** The local base map. A composite since the terrain moved into its style's own layer order. */
     localVectorTileLayer?: MassifLayer<'massif::CompositeVectorTileLayer'>;
     /** The base map files alone, regions first: what the peak finder reads its summits from. */
     localBaseMbtiles: string[] = [];
@@ -228,13 +224,6 @@ class PackageService extends Observable {
             this.mLocalOSMOfflineReverseGeocodingService?.set('language', value);
         }
     }
-    /**
-     * One geocoding answer, as the app's item shape.
-     *
-     * The SDK hands the whole result set over as a GeoJSON FeatureCollection whose features already
-     * carry `address` and `rank`, so there is nothing to walk: what used to be a crossing per
-     * result, per feature and per address field is one read.
-     */
     convertGeoCodingResults(features: GeoJSON.Feature[], full = false) {
         const items: GeoResult[] = [];
         if (!features) {
@@ -293,12 +282,7 @@ class PackageService extends Observable {
         return r;
     }
 
-    /**
-     * Runs a geocoding request and returns its features.
-     *
-     * `calculateAddresses` is blocking - the offline geocoder reads sqlite - so it goes through
-     * callAsync, which runs it on a worker and resolves when the answer arrives.
-     */
+    /** `calculateAddresses` is blocking (sqlite), so it goes through callAsync on a worker. */
     async searchInGeocodingService(service: GeocodingService, options: { query?: string; location?: MapPos; searchRadius?: number }): Promise<GeoJSON.Feature[]> {
         if (!service) {
             return null;
@@ -312,8 +296,7 @@ class PackageService extends Observable {
               )
             : api.create('geocoding', `geocoding.request.${++geocodingRequestId}`, { type: 'request', query: options.query, searchRadius: options.searchRadius }, 'massif::GeocodingRequest');
         try {
-            // The result type is named rather than inferred: the SDK declares `calculateAddresses`
-            // as returning `Json`, which is all a property table can say about a document.
+            // result type named explicitly: the SDK declares `calculateAddresses` as returning `Json`
             const collection = await service.callAsync<'calculateAddresses', GeoJSON.FeatureCollection>('calculateAddresses', [request.handle]);
             return collection?.features ?? [];
         } finally {
@@ -335,12 +318,7 @@ class PackageService extends Observable {
         return result;
     }
 
-    /**
-     * The offline geocoders, over whatever .nutigeodb the user has downloaded.
-     *
-     * One database per area, found by scanning, so they are added after construction - which is
-     * why the service takes none in its spec.
-     */
+    /** One .nutigeodb per area, found by scanning, so they are added after construction. */
     private buildGeocoder(id: string, type: 'multi-osm-offline' | 'multi-osm-offline-reverse'): GeocodingService | null {
         const files = this.findFilesWithExtension('.nutigeodb');
         if (!files.length) {
@@ -373,8 +351,7 @@ class PackageService extends Observable {
     _vectorTileSearchService: MassifObject<'massif::VectorTileSearchService'>;
     get vectorTileSearchService() {
         if (!this._vectorTileSearchService && this.localVectorTileLayer) {
-            // Built FROM THE LAYER: its source and its decoder are the ones already on screen, so
-            // a search reads exactly what the user is looking at.
+            // built from the layer, so a search reads the very source and decoder on screen
             this._vectorTileSearchService = api.create('search', 'search.vectortile', {
                 type: 'vectortile',
                 layer: this.localVectorTileLayer.id,
@@ -484,11 +461,8 @@ class PackageService extends Observable {
     }
 
     /**
-     * A search over the tiles on screen. Returns the matching features, flat.
-     *
-     * The per-search settings are written onto the service and put back afterwards, because the
-     * SDK has no per-request override for them - which also means two overlapping searches would
-     * fight, so callers keep them sequential.
+     * Per-search settings are written onto the service and restored after (no per-request override),
+     * so overlapping searches would fight: callers keep them sequential.
      */
     async searchInVectorTiles(options: SearchOptions): Promise<GeoJSON.Feature[]> {
         const service = this.vectorTileSearchService;
@@ -520,7 +494,6 @@ class PackageService extends Observable {
         }
     }
 
-    /** A search request: a centre or a bounding geometry, a radius, and the filters. */
     private buildSearchRequest(options: SearchOptions): MassifObject<'massif::SearchRequest'> {
         const spec: api.SpecArg<'search', api.SpecType<'search'>> = { type: 'request' };
         if (options.searchRadius !== undefined) {
@@ -552,12 +525,6 @@ class PackageService extends Observable {
             request.destroy();
         }
     }
-    /**
-     * Normalises a geocoding result's address onto the app's own field names.
-     *
-     * The address arrives as a plain object now - the SDK serialises it with the feature - so this
-     * is a rename, where it used to be a getter call per field through a native object.
-     */
     prepareGeoCodingResult(geoRes: GeoResult, onlyAddress = false) {
         const source = (geoRes.properties.address ?? {}) as { [key: string]: any };
         const address: any = {};
@@ -587,15 +554,8 @@ class PackageService extends Observable {
     }
 
     /**
-     * Elevations under a set of positions, in one crossing.
-     *
-     * Only a hillshade layer answers. The values come back as real doubles - the layer interpolates,
-     * and rounding them destroys the grade the profile is differentiated from.
-     *
-     * On a WORKER, through callAsync: `ElevationManager::getElevations` loads the DEM tiles it needs
-     * on the calling thread, and a track profile is thousands of samples over mbtiles - on the UI
-     * thread that is a visible freeze. The manager documents itself as thread-safe and guards its
-     * grid cache with a mutex, so the worker is where this belongs.
+     * Unrounded doubles: rounding destroys the grade. On a worker: `getElevations` loads DEM tiles on
+     * the calling thread (a UI freeze on long tracks), and the manager is thread-safe.
      */
     async getElevations(positions: MapPos[]): Promise<number[]> {
         if (!this.hillshadeLayer) {
@@ -694,7 +654,6 @@ class PackageService extends Observable {
             last = sample;
             delete sample.tmpElevation;
 
-            // ascent detection
             if (startIndex === null) {
                 startIndex = i;
                 highestElevation = elevation;
@@ -703,7 +662,6 @@ class PackageService extends Observable {
                 continue;
             }
 
-            // Update the highest point in the current segment
             if (elevation > highestElevation) {
                 highestElevation = elevation;
                 highestPointIndex = i;
@@ -717,7 +675,6 @@ class PackageService extends Observable {
                 continue;
             }
 
-            // Track the lowest point after the peak
             if (i > highestPointIndex) {
                 currentMinSincePeak = Math.min(currentMinSincePeak, elevation);
             }
@@ -725,7 +682,6 @@ class PackageService extends Observable {
             const dipFromPeak = highestElevation - currentMinSincePeak;
 
             if (dipFromPeak > ascentsDipTolerance) {
-                // Too much dip – end current ascent if gain is enough
                 const gain = highestElevation - getElevation(startIndex);
                 if (gain >= ascentsMinGain) {
                     ascents.push({
@@ -737,7 +693,6 @@ class PackageService extends Observable {
                     });
                 }
 
-                // Start a new potential ascent from current point
                 startIndex = i;
                 highestElevation = elevation;
                 highestPointIndex = i;
@@ -746,7 +701,6 @@ class PackageService extends Observable {
                 continue;
             }
 
-            // End the ascent if it's the last point
             const isLast = i === nbPoints - 1;
             const gain = highestElevation - getElevation(startIndex);
             if (isLast && gain >= ascentsMinGain) {
@@ -779,13 +733,7 @@ class PackageService extends Observable {
         result.ascents = ascents;
         return result;
     }
-    /**
-     * The positions of a route item, as plain `{ lat, lon }`.
-     *
-     * There is no native geometry cache any more: the item already carries GeoJSON, and building an
-     * SDK geometry only to read its points back was two crossings and a proxy per point. A
-     * MultiLineString is flattened, which is what every caller here assumed anyway.
-     */
+    /** A MultiLineString is flattened. */
     getRouteItemPoses(item: Item): MapPos[] {
         const geometry = (item?.geometry ?? (item?._geometry ? JSON.parse(item._geometry) : null)) as LineString | MultiLineString;
         if (!geometry) {
@@ -803,13 +751,6 @@ class PackageService extends Observable {
         return (item.geometry as Point).coordinates;
     }
 
-    /**
-     * The elevation profile of a route: from the hillshade layer when there is one, from valhalla
-     * otherwise.
-     *
-     * The two branches used to build their positions differently - one from a cached native
-     * geometry, one from the item's GeoJSON - and produced the same thing; there is one path now.
-     */
     async getElevationProfile(item: Item, positions?: MapPos[]) {
         if (item && item.geometry.type !== 'LineString' && item.geometry.type !== 'MultiLineString') {
             return null;
@@ -833,13 +774,7 @@ class PackageService extends Observable {
         return result;
     }
 
-    /**
-     * Valhalla's trace attributes for a route: surface, road class, grade, per edge.
-     *
-     * Offline it is a map-matching call on the routing service; online it is the same request over
-     * HTTP. `shape_match` and the attribute filters are free-form JSON, so they go through
-     * setCustomParameter rather than being properties.
-     */
+    /** `shape_match` and the attribute filters are free-form JSON, so they go through setCustomParameter. */
     async getStats({
         // the shape indices are what lets us say which surface is *ahead*, not just how much of it there is
         attributes = ['edge.surface', 'edge.road_class', 'edge.sac_scale', 'edge.use', 'edge.length', 'edge.begin_shape_index', 'edge.end_shape_index'],
@@ -894,7 +829,6 @@ class PackageService extends Observable {
         const stats: {
             [k: string]: { [k: string]: number };
         } = { surfaces: {}, waytypes: {} };
-        // where each surface actually is along the route, so navigation can show what is coming up
         const surfaceSegments: { id: string; start: number; end: number }[] = [];
         const totalDistanceKm = route.totalDistance / 1000;
         try {
@@ -957,14 +891,8 @@ class PackageService extends Observable {
         }
     }
     /**
-     * Turns a recorded track into navigation instructions.
-     *
-     * An imported gpx carries no maneuvers, and valhalla's map matching cannot supply them either:
-     * the binding only exposes trace_attributes, which returns edge attributes and no maneuvers. So we
-     * route through the track instead, sampling it into via points and asking for a normal route.
-     *
-     * The computed route snaps to the road graph, so its own point indices mean nothing to the track.
-     * Each maneuver is therefore projected back onto the track to get an index the navigation can use.
+     * Map matching exposes no maneuvers, so the track is sampled into via points and routed. The
+     * route snaps to the road graph, so each maneuver is projected back onto the track for its index.
      */
     async computeTrackInstructions({ item, profile = 'pedestrian' }: { item: Item; profile?: ValhallaProfile }): Promise<RouteInstruction[]> {
         const trackPositions = this.getRouteItemPoses(item);
@@ -991,13 +919,7 @@ class PackageService extends Observable {
         return instructions.length ? instructions : null;
     }
 
-    /**
-     * One route, computed offline when we can and online otherwise, with no ui attached.
-     *
-     * The directions panel builds its own costing options out of what the user is looking at; this is
-     * for everything that has to route without a panel — a recorded track, or a reroute during
-     * navigation, which reuses the costing options stored on the route it is rerouting.
-     */
+    /** Routing without the directions panel (recorded track, reroute reusing stored costing options). */
     async computeRoute({
         costingOptions,
         points,
@@ -1008,8 +930,7 @@ class PackageService extends Observable {
         /** valhalla `costing_options`, as stored on a computed route */
         costingOptions?: any;
     }) {
-        // Typed as the BASE: the two services differ only in how they are built, and a union of
-        // the two concrete types has no callable methods in common.
+        // typed as the base: a union of the two concrete types has no callable methods in common
         const service = (this.offlineRoutingSearchService() ?? this.onlineRoutingSearchService()) as unknown as MassifObject<'massif::RoutingService'>;
         if (!service) {
             throw new Error('no_routing_service');
@@ -1021,17 +942,12 @@ class PackageService extends Observable {
                 request.call('setCustomParameter', 'costing_options', costingOptions);
             }
             service.set('profile', profile);
-            // The result is destroyed with the delivery, so everything the caller needs is read
-            // out here - the path in one flat array, through the bulk channel.
+            // the result is destroyed with the delivery, so everything the caller needs is read out here
             const route = await service.callAsync('calculateRoute', [request.handle], (result) => ({
-                // `instructionsJSON` is TEXT - the SDK serialises the whole maneuver list into one
-                // string so a mountain route is not a call per field.
+                // TEXT: the SDK serialises the whole maneuver list into one string
                 instructionsJSON: JSON.parse(result.get('instructionsJSON') || '[]') as RawInstruction[],
-                // `getPoints`, not `getDoubles`: the doubles channel reads a handle whose registered
-                // class IS std::vector<double>, which is what the METHOD's result is. Asked of the
-                // RoutingResult itself, Context::getDoubles answers RESULT_UNSUPPORTED_TYPE, and the
-                // bridge turns that into an empty array - so the route came back with no points at
-                // all, and nothing downstream of `positions` had anything to draw.
+                // `getPoints`, not `getDoubles`: on the RoutingResult itself getDoubles answers
+                // RESULT_UNSUPPORTED_TYPE, which the bridge turns into an empty array
                 flat: result.call('getPoints'),
                 totalDistance: result.get('totalDistance'),
                 totalTime: result.get('totalTime')
@@ -1041,8 +957,6 @@ class PackageService extends Observable {
                 positions.push({ lat: route.flat[index + 1], lon: route.flat[index] });
             }
             return {
-                // the maneuvers themselves, read while the result was alive: it is destroyed with
-                // its delivery, so nothing here can hand the object back
                 instructions: route.instructionsJSON ?? [],
                 positions,
                 totalDistance: route.totalDistance,
@@ -1079,7 +993,6 @@ class PackageService extends Observable {
     }
 
     setOnlineRoutingUrl(url: string) {
-        // `+ +` was a typo that stringified NaN onto the url; one concatenation is what was meant
         this.mOnlineRoutingSearchService?.set('customServiceURL', `${url}/{service}`);
     }
 

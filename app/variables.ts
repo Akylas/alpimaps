@@ -161,7 +161,6 @@ export function onInitRootView(force = false) {
     if (!force && initRootViewCalled) {
         return;
     }
-    // we need a timeout to read rootView css variable. not 100% sure why yet
     if (__ANDROID__) {
         const rootViewStyle = getRootViewStyle();
         const rootView = Application.getRootView();

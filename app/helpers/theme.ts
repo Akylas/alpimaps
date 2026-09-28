@@ -311,7 +311,6 @@ export function start() {
         if (__IOS__ && SDK_VERSION < 13) {
             newTheme = 'light';
         }
-        // on pref change we are updating
         if (newTheme === theme) {
             return;
         }
@@ -355,8 +354,7 @@ export function start() {
             Application.once(Application.launchEvent, onReady);
         }
 
-        // we need to update the theme on every activity start
-        // to get dynamic colors
+        // update the theme on every activity start to get dynamic colors
         Application.android.on(Application.android.activityStartedEvent, (event) => {
             if (event.activity['isNativeScriptActivity'] === true) {
                 if (useDynamicColors) {

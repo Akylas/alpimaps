@@ -344,11 +344,9 @@ function compress(points: [number, number][], precision: number) {
     precision = Math.pow(10, precision);
     while (index < len) {
         const pt = points[index++];
-        //  Round to N decimal places
         const lat = Math.round(pt[1] * precision);
         const lng = Math.round(pt[0] * precision);
 
-        //  Encode the differences between the points
         encoded += encodeNumber(lat - oldLat);
         encoded += encodeNumber(lng - oldLng);
 
@@ -528,7 +526,6 @@ export class NetworkService extends Observable {
                 return content as T;
             }
             try {
-                // we should never go there anymore
                 const result = JSON.parse(content as any as string);
                 return result.response || response;
             } catch (e) {
@@ -584,8 +581,7 @@ export class NetworkService extends Observable {
             let timeoutTimer;
             if (timeout > 0) {
                 timeoutTimer = setTimeout(() => {
-                    // we need to try catch because the simple fact of creating a new Error actually throws.
-                    // so we will get an uncaughtException
+                    // creating the Error itself can throw, which would be an uncaughtException
                     try {
                         reject(new Error('timeout'));
                     } catch {}

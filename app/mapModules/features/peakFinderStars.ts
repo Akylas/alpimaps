@@ -8,15 +8,8 @@ import { type Horizontal, daysSinceJ2000, meanDirection, planetHorizon, toHorizo
 import { FIGURES, PLANETS, STARS } from '~/mapModules/features/sky/starCatalogue';
 import { type SelectedSky, peakFinderConstellations, peakFinderPlanets, peakFinderSelectedSky, peakFinderStars } from '~/stores/terrainStore';
 
-/**
- * THE STARS over the panorama - the SDK demo's sky: the bright stars sized by magnitude, the
- * constellation figures and their names, and the planets, where they are at the chosen moment.
- *
- * One celestial layer under the terrain, like the moon: sky objects are depth-tested, so a ridge
- * hides the stars behind it. Every star is a sprite sharing one look, which the SDK batches into a
- * single draw call; the cost is on this side, one crossing per object placed - so only what moved
- * visibly is placed, and nothing under the horizon.
- */
+// One celestial layer under the terrain: sky objects are depth-tested, so a ridge hides the stars. Sprites
+// batch into one draw call; the cost is one crossing per object placed, so only what moved is placed.
 
 const TO_HOURS_DEGREES = 15;
 // The sky turns a quarter of a degree a minute: 15 s is under a tenth of one.
@@ -30,7 +23,6 @@ const PLANET_SIZES = { venus: 10, jupiter: 9, mars: 8, saturn: 8, mercury: 7 };
 
 interface Placed {
     object: MassifObject<'massif::CelestialSprite'>;
-    /** Its name in the sky, for the planets and the named stars. */
     label?: MassifObject<'massif::CelestialLabel'>;
     horizontal: Horizontal;
     visible: boolean;
@@ -55,7 +47,7 @@ let highlighted = -1;
 let clickSubscription: Subscription = null;
 let generation = 0;
 
-/** A star of this magnitude, in dp: brighter is bigger, on a linear ramp that reads better than the real one. */
+/** dp: a linear ramp reads better than the real magnitude scale. */
 function magnitudeToSize(magnitude: number) {
     return Math.max(1.6, 6 - 0.8 * (magnitude + 1.5));
 }
@@ -66,7 +58,6 @@ interface StarsStyle {
     figureSelected: number;
     planet: (rgb: [number, number, number]) => number;
     label: { fontName: string; fontSize: number; textColor: number; haloColor: number; haloWidth: number };
-    /** A named star's or a planet's: brighter than a figure's, for a point rather than an area. */
     nameLabel: { fontName: string; fontSize: number; textColor: number; haloColor: number; haloWidth: number };
 }
 
@@ -155,7 +146,6 @@ function setVisible(placed: { visible: boolean }, object: MassifObject, visible:
     }
 }
 
-/** A point and its name, if it has one, at its direction - or hidden. */
 function place(placed: Placed, visible: boolean) {
     if (visible) {
         const { altitude, azimuth } = placed.horizontal;
@@ -168,10 +158,7 @@ function place(placed: Placed, visible: boolean) {
     setVisible(placed, placed.object, visible);
 }
 
-/**
- * Places the sky for the moment and the eye. Keyed on both, rounded to what shows, so the camera's
- * every move - which calls this - costs a string compare.
- */
+/** Keyed on the moment and the eye rounded to what shows, so the per-move call costs a string compare. */
 export function updatePeakFinderStars(force = false) {
     if (!context || !layer) {
         return;

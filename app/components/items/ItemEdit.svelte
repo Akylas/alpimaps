@@ -174,8 +174,7 @@
             }
         } else {
             const geometry = item.geometry as GeoJSONPoint;
-            // named rather than the raw GeoJSON pair: `coordinates` is a plain number[], which is
-            // neither of AnyPosition's two shapes
+            // AnyPosition doesn't accept GeoJSON's plain number[]
             massifMap.camera().moveTo({ lat: geometry.coordinates[1], lon: geometry.coordinates[0] }, { zoom: 14 });
         }
     }
@@ -409,7 +408,6 @@
                         updatedProperties[k] = value;
                         if (!itemProperties[k] && propsToFilter.indexOf(k) === -1) {
                             DEV_LOG && console.log('adding new prop', k, value);
-                            //new prop
                             items.splice(items.length - 2, 0, { name: lc(k), id: k, value });
                         }
                     }

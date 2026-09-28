@@ -26,18 +26,15 @@ export interface Provider {
     attribution?: string;
     legend?: string;
     /**
-     * Everything but the url, which comes from `url` above after its tokens are substituted.
-     *
-     * A source SPEC's keys: the SDK's own property names, so `httpHeaders` is the one exception -
-     * it is spelled `HTTPHeaders` on the source and is translated when the spec is built.
+     * SDK property names, except `httpHeaders`: spelled `HTTPHeaders` on the source and translated
+     * when the spec is built.
      */
     sourceOptions?: Partial<Omit<SpecArg<'source', 'http'>, 'type' | 'url' | 'subdomains'>> & {
         httpHeaders?: { [key: string]: string };
         encoding?: string;
-        /** `'abcd'` is read as one letter per subdomain, which is how these tables have always spelled it */
+        /** `'abcd'` is read as one letter per subdomain */
         subdomains?: string | string[];
     };
-    /** A layer spec's keys, minus what the provider itself decides (`type`, `source`, `style`). */
     layerOptions?: { [key: string]: any };
     variants?: { [k: string]: Provider | string };
 }
@@ -676,13 +673,8 @@ export const data: { [k: string]: Provider } = {
     },
     HERE: {
         /*
-         * HERE maps, formerly Nokia maps.
-         * These basemaps are free, but you need an API key. Please sign up at
-         * http://developer.here.com/getting-started
-         *
-         * Note that the base urls contain '.cit' whichs is HERE's
-         * 'Customer Integration Testing' environment. Please remove for production
-         * envirionments.
+         * Needs an API key (http://developer.here.com/getting-started). '.cit' in the urls is HERE's
+         * Customer Integration Testing environment: remove it for production.
          */
         tokenKey: ['here_appcode', 'here_appid'],
 

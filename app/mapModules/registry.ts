@@ -5,16 +5,7 @@ import type { GeoHandler } from '~/handlers/GeoHandler';
 import type { IItem } from '~/models/Item';
 import type { ElementClickData, FeatureClickData, MapClickData, MapDecoder, MapInteraction, MapMoveReason } from '~/mapModules/MapModule';
 
-/**
- * Every hook the map dispatches, with the arguments it dispatches them with.
- *
- * This is the contract `runOnModules` is checked against — adding a hook here is what makes it
- * callable. It used to be a bare `functionName: string`, which let four hooks (`onMapIdle`,
- * `onMapStable`, `reloadMapStyle`, `vectorTileDecoderChanged`) be dispatched for a long time without
- * ever being declared on the module base class.
- *
- * A hook returning a truthy value means "handled, stop" — see `runOnModules`.
- */
+/** The contract `runOnModules` is checked against. A hook returning truthy means "handled, stop". */
 export interface MapModuleHooks {
     onMapReady: [MassifMap];
     onMapDestroyed: [];
@@ -36,22 +27,9 @@ export interface MapModuleHooks {
 export type MapModuleHook = keyof MapModuleHooks;
 
 /**
- * The modules the map dispatches to, keyed by id.
- *
- * Deliberately open: a feature adds its own key by augmenting this interface from its own file, so
- * registering a module does not mean editing this one.
- *
- *     declare module '~/mapModules/registry' {
- *         interface MapModules {
- *             transit: TransitModule;
- *         }
- *     }
- *
- * Values are heterogeneous on purpose — some are `MapModule` subclasses, others are svelte components
- * that happen to export matching hook functions.
+ * Open on purpose: each feature adds its key via `declare module` augmentation from its own file. Values are
+ * heterogeneous: `MapModule` subclasses or svelte components exporting hook functions.
  */
-// intentionally empty: it exists purely as a seam for `declare module` augmentation, and every key
-// comes from a feature declaring its own
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface MapModules {}
 
@@ -61,11 +39,8 @@ export type MapModuleLike = Partial<{ [K in MapModuleHook]: (...args: MapModuleH
 const modules = new Map<string, MapModuleLike>();
 
 /**
- * Registers a module under `id`, replacing any previous one.
- *
- * Modules register themselves rather than being collected into a literal at map mount: a component
- * rendered lazily (behind an `{#if}`) is `undefined` at that moment, and capturing it by value meant
- * its hooks were silently never dispatched, for the whole life of the app.
+ * Modules register themselves: a lazily rendered component is `undefined` at map mount, so collecting
+ * them into a literal silently dropped its hooks.
  */
 export function registerMapModule<T extends keyof MapModules>(id: T, mapModule: MapModules[T]): void;
 export function registerMapModule(id: string, mapModule: MapModuleLike): void;
@@ -82,19 +57,13 @@ export function getMapModule<T extends keyof MapModules>(id: T): MapModules[T] {
     return modules.get(id as string) as MapModules[T];
 }
 
-/** Live view of the registered modules. */
 export function getMapModules(): Readonly<Record<string, MapModuleLike>> {
     return Object.fromEntries(modules);
 }
 
 /**
- * Dispatches `hook` to every registered module in registration order, stopping at the first one that
- * returns truthy. Click hooks use the result to mean "handled — do not fall through to the default
- * behaviour". When no module handles it, the same event goes out on the global observable so
- * non-module listeners get a chance, and their `result` is honoured instead.
- *
- * Returns a boolean for the module path (matching the `Array.some` this replaced), or whatever the
- * observable listener put in `result` when nothing handled it.
+ * Stops at the first module returning truthy ("handled"). Unhandled, the event goes out on the global
+ * observable and the listener's `result` is returned instead.
  */
 export function runOnModules<K extends MapModuleHook>(hook: K, ...args: MapModuleHooks[K]) {
     let handledByModule = false;

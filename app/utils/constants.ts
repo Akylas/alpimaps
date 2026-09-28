@@ -96,17 +96,13 @@ export const DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD = 200;
 export const DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD = 4000;
 export const DEFAULT_NAVIGATION_ZOOM_MIN = 12;
 export const DEFAULT_NAVIGATION_ZOOM_MAX = 17;
-/**
- * multiplies every computed look-ahead distance, ie how much ground the camera frames. Above 1 the
- * view sits further out and shows more, below 1 it sits closer. A factor on the *distance* rather than
- * on the zoom: zoom is a log2 scale, so scaling the zoom number itself means nothing physical.
- */
+/** multiplies every look-ahead distance, not the zoom: zoom is log2, so scaling it means nothing physical */
 export const DEFAULT_NAVIGATION_ZOOM_FACTOR = 1;
 /** how much road past the next maneuver stays in frame when the camera zooms onto it */
 export const DEFAULT_NAVIGATION_ZOOM_MANEUVER_FRAME_RATIO = 1.8;
 /** scales the navigation widgets, buttons and sheet steps on top of the system font scale */
 export const DEFAULT_NAVIGATION_UI_SCALE = 1;
-/** ms, like every `minimumUpdateTime` handed to `@nativescript-community/gps` */
+/** ms */
 export const DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL = 5000;
 /** meters the gps must move before reporting, 0 means report every fix */
 export const DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE = 0;
@@ -119,10 +115,7 @@ export const DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE = 45;
 export const DEFAULT_NAVIGATION_MANEUVER_REFRESH_DISTANCE = 25;
 /** seconds: cap on the wait for that distance, so stopping just past a turn still gets the refresh */
 export const DEFAULT_NAVIGATION_TURN_REFRESH_DELAY = 10;
-/**
- * degrees of heading change since the last refresh that make the map worth redrawing, 0 disables.
- * A roundabout exit swings the heading 60 to 120°, which 90 was too coarse to catch.
- */
+/** degrees of heading change since the last refresh worth a redraw, 0 disables. Roundabout exits swing 60-120° */
 export const DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE = 60;
 export const DEFAULT_NAVIGATION_SPEED_DROP_WAKE = true;
 export const DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO = 0.5;

@@ -72,7 +72,6 @@ export default class SymbolShape extends Shape {
                 const hasSymbol = foreground.indexOf('_') !== -1;
                 const textIndex = hasSymbol || length > 2 ? 1 : 0;
                 if (hasSymbol) {
-                    //we have a shape
                     const foregroundArray = foreground.split('_');
                     let shape;
                     if (foregroundArray.length === 2 && specialShapes.indexOf(foreground) !== -1) {

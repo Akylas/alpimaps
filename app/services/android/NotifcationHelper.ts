@@ -32,7 +32,6 @@ export namespace NotificationHelper {
     const NotificationManager = __ANDROID__ ? android.app.NotificationManager : null;
     const NotificationCompat = __ANDROID__ ? androidx.core.app.NotificationCompat : null;
     const Intent = __ANDROID__ ? android.content.Intent : null;
-    /* Creates a notification builder */
     export function getNotification(context: android.content.Context, options: NotificationOptions = {}) {
         const { colorPrimary } = get(colors);
         const builder = options.builder || new NotificationCompat.Builder(context, options.channel);
@@ -71,19 +70,16 @@ export namespace NotificationHelper {
         }
     }
 
-    /* Constructs an updated notification */
     export function getUpdatedNotification(context, builder, session: Session) {
         updateBuilderTexts(builder, session);
         return builder.build();
     }
 
-    /* Create a notification channel */
     export function createNotificationChannel() {
         const { colorPrimary } = get(colors);
         const color = new Color(colorPrimary).android;
         if (sdkVersion >= 26) {
             const service = getNotificationManager();
-            // create channel
             let channel = new android.app.NotificationChannel(NOTIFICATION_CHANEL_ID_RECORDING_CHANNEL, lt('location_notification'), NotificationManager.IMPORTANCE_LOW);
             channel.setDescription(lt('location_notification_desc'));
             channel.setLightColor(color);

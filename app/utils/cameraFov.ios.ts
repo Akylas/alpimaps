@@ -1,31 +1,17 @@
 import type { CameraFieldOfView } from '~/utils/cameraFov';
 
-// Only the AVFoundation/CoreMedia members this needs, declared here rather than by pulling the
-// framework's 351 kB of typings into a program that is otherwise typechecked as Android
-// (typings/references.d.ts references the ANDROID massifmaps declarations).
+// declared here rather than pulling in 351 kB of iOS typings: the program is typechecked as Android
 declare const AVMediaTypeVideo: string;
 declare const AVCaptureDevice: {
     defaultDeviceWithMediaType(mediaType: string): { activeFormat?: { videoFieldOfView: number; formatDescription?: unknown } } | null;
 };
 declare function CMVideoFormatDescriptionGetDimensions(description: unknown): { width: number; height: number };
 
-/** What a 16:9 preview would be, if the format's own dimensions cannot be read. */
 const FALLBACK_ASPECT = 16 / 9;
 
 /**
- * AVFoundation states the field of view outright: `AVCaptureDeviceFormat.videoFieldOfView` is the
- * format's HORIZONTAL field in degrees, already accounting for whatever crop of the sensor the format
- * is — so unlike Camera2 (see cameraFov.android.ts) there is no lens arithmetic and no assumption
- * about which crop the preview picked.
- *
- * `AVCaptureDevice` is a singleton per physical device, so the default video device's `activeFormat`
- * is the format the running preview session selected, whoever opened it. The live zoom is not read
- * here: `CameraView.getPreviewInfo()` reports it off the view that owns the session.
- *
- * NO DISTORTION. AVFoundation only delivers `AVCameraCalibrationData` — the lookup table that would
- * describe it — alongside a PHOTO capture, with `isCameraCalibrationDataDeliveryEnabled` set on a
- * photo output. There is no equivalent for a preview session, so an iOS AR overlay stays rectilinear
- * and the residual is the lens's own barrel distortion at the frame corners.
+ * `videoFieldOfView` is the format's horizontal field, sensor crop included, and `activeFormat` is the running
+ * session's. No distortion: calibration data only comes with a photo capture, not a preview.
  */
 export function cameraFieldOfView(): CameraFieldOfView | null {
     const format = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)?.activeFormat;

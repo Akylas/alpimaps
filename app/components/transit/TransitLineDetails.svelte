@@ -79,7 +79,6 @@
             if (selectedIndex) {
                 focusOnItem(dataItems.getItem(selectedIndex), true);
             } else {
-                // the bounds of what was just drawn, worked out here: the geometry is ours already
                 massifMap.camera().fitBounds(geoJSONBounds(lineGeoJSON), { integerZoom: true, resetRotation: true, resetTilt: true });
             }
             noNetworkAndNoData = false;

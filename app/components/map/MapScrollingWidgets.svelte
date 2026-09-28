@@ -87,7 +87,7 @@
         attributionVisible = !devMode && e.needsAttribution;
     }
 
-    // while navigating the location button has one job left: bring the camera back after a pan
+    // while navigating, only needed to bring the camera back after a pan
     $: locationButtonVisible = !$isNavigating || !$userFollowStore;
 
     function askUserLocation() {

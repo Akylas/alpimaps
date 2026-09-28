@@ -4,7 +4,6 @@ import { lc } from '~/helpers/locale';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { immersive } from '~/stores/mapStore';
 
-/** Hides the system bars, leaving them reachable by swipe. */
 function toggleSystemBars(show: boolean) {
     const activity = Application.android.startActivity;
     if (!activity) {

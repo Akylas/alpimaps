@@ -1,13 +1,6 @@
 <script lang="ts">
-    /**
-     * The peak finder's on-screen chrome.
-     *
-     * The same controls the WebView version had — the viewpoint's elevation, the selected summit as a
-     * chip with a fly-to, and a row of round buttons — except that everything here writes a store and
-     * the module does the work, instead of `executeJavaScript` into a page.
-     *
-     * Rendered by `Map.svelte` over the map, and only mounted the first time the mode is entered.
-     */
+    // Peak finder chrome: everything here writes a store and the module does the work.
+    // Mounted by `Map.svelte` only the first time the mode is entered.
     import { onDestroy } from 'svelte';
     import PeakFinderSkyPanel from '~/components/peaks/PeakFinderSkyPanel.svelte';
     import { formatDistance } from '~/helpers/formatter';
@@ -44,13 +37,7 @@
     // Opaque on e-ink, which dithers alpha.
     $: colorWidgetBackground = $peakFinderDarkActive ? (isEInk ? '#000000' : '#18181be6') : isEInk ? '#ffffff' : '#ffffffe6';
 
-    /**
-     * The selected summit's plate.
-     *
-     * A translucent blue with white text everywhere except on e-ink, which has neither: alpha is
-     * dithered and a colour is a grey. Black on white, with an outline — the relief it sits over is
-     * white paper too, so without one the plate has no edge at all.
-     */
+    // e-ink dithers alpha and greys colours: black on white, outlined since the relief under it is white too
     const peakChipBackground = isEInk ? 'white' : '#4465be94';
     const peakChipColor = isEInk ? 'black' : 'white';
     const peakChipBorderWidth = isEInk ? 1 : 0;
@@ -59,13 +46,6 @@
     const skyPanelWidth = Math.min(460, Math.min(screenWidthDips, screenHeightDips) - 24);
     $: skyAccent = isEInk ? colorOnSurface : $peakFinderDarkActive ? '#fbbf24' : '#b45309';
 
-    /**
-     * Where the view is pointed, as a needle and a bearing.
-     *
-     * The needle points NORTH — it is a compass, not a heading arrow — so it is turned by MINUS the
-     * view's own bearing: looking east puts north to the left of the screen. The text is the other
-     * half, the direction being looked AT, which is what a panorama is read by.
-     */
     $: compass = getCompassInfo($peakFinderHeading);
 
     let skyPanelMounted = false;
@@ -75,20 +55,8 @@
         return text.length > maxLength ? text.slice(0, maxLength - 1) + '…' : text;
     }
 
-    /**
-     * The viewpoint's elevation, as the two arrows peakfinder.com uses rather than a slider.
-     *
-     * A slider laid across a panorama is the wrong control twice over: it is horizontal where the
-     * quantity is vertical, and its travel maps 9 km onto a few hundred pixels, so nothing finer than
-     * ~50 m is reachable. The arrows behave the way that site's do:
-     *
-     *  - a TAP moves one step (the native demo's 200 m);
-     *  - HOLDING one climbs continuously, accelerating the longer it is held, so the same control
-     *    reaches both the next ridge and the top of the troposphere;
-     *  - DRAGGING while held takes the direction over from the arrow that was pressed — the finger is
-     *    already down, and reaching for the other button to come back down is what makes the control
-     *    feel like two buttons instead of one axis.
-     */
+    // elevation arrows (as peakfinder.com): tap = one step, hold = accelerating climb,
+    // dragging while held takes the direction over from the arrow that was pressed
     const ELEVATION_TICK_MS = 50;
     /** Before the continuous climb starts, so a tap stays a single step. */
     const ELEVATION_HOLD_DELAY_MS = 300;
@@ -106,8 +74,7 @@
             return;
         }
         peakFinderElevation.set(value);
-        // A terrain property write, not a camera move, so it lands on the next frame — which is what
-        // a control that fires many times a second while held wants.
+        // a terrain property write, not a camera move, so it lands on the next frame
         applyViewpointElevation(value);
     }
 
@@ -120,9 +87,7 @@
             if (holdSeconds * 1000 < ELEVATION_HOLD_DELAY_MS) {
                 return;
             }
-            // GEOMETRIC, on the current height rather than on how long the arrow has been held: the
-            // further up the eye already is, the faster it moves. A constant fraction per second, so
-            // one drag covers the same proportion of the climb from 50 m as it does from 5 km.
+            // geometric on the current height, not on hold time: a constant fraction per second
             const rate = Math.min(PEAK_FINDER_ELEVATION_RATE_MAX, PEAK_FINDER_ELEVATION_RATE + $peakFinderElevation * PEAK_FINDER_ELEVATION_GROWTH);
             changeElevation((holdDirection * rate * ELEVATION_TICK_MS) / 1000);
         }, ELEVATION_TICK_MS);
@@ -161,7 +126,6 @@
 
 <!-- two rows only while the sky panel is open: it takes the bottom, the controls centre above it -->
 <gridlayout isPassThroughParentEnabled={true} rows="*,auto" {...$$restProps}>
-    <!-- the viewpoint elevation: up, the readout, down - a column on the right edge as in the demo -->
     <stacklayout backgroundColor={colorWidgetBackground} borderRadius={22} horizontalAlignment="right" marginRight={$windowInset.right + 10} padding="6 4" verticalAlignment="middle">
         <label
             color={colorOnSurface}
@@ -186,9 +150,7 @@
             on:touch={(event) => onElevationTouch(event, -1)} />
     </stacklayout>
 
-    <!-- the bottom: the tapped summit or sky object over the sky panel -->
     <stacklayout marginBottom={$peakFinderSkyPanel ? $windowInset.bottom + 8 : 50} row={$peakFinderSkyPanel ? 1 : 0} rowSpan={$peakFinderSkyPanel ? 1 : 2} verticalAlignment="bottom">
-        <!-- the summit the user tapped: tap the name to turn towards it, the plane to go there -->
         <gridlayout
             backgroundColor={peakChipBackground}
             borderColor={peakChipColor}
@@ -212,7 +174,6 @@
             <mdbutton col={1} color={peakChipColor} fontFamily={$fonts.app} text="alpimaps-paper-plane" variant="text" width={40} on:tap={() => flyToSelectedPeak()} />
         </gridlayout>
 
-        <!-- the star, planet, constellation, sun or moon the user tapped, and its Wikipedia page -->
         <gridlayout
             backgroundColor={colorWidgetBackground}
             borderColor={skyAccent}
@@ -295,7 +256,6 @@
             on:longPress={() => showToolTip(lc('close'))} />
     </stacklayout>
 
-    <!-- the compass is following on an uncalibrated magnetometer: bottom right, out of the buttons' way -->
     <mdbutton
         backgroundColor="orange"
         class="small-floating-btn"
@@ -310,9 +270,7 @@
         visibility={$peakFinderCalibrationNeeded ? 'visible' : 'collapse'}
         on:tap={() => showToolTip(lc('calibration_needed'))} />
 
-    <!-- where the view is pointed: the needle holds north, the text is the direction being looked at.
-         Top left, which is the one corner this mode leaves empty - the summit labels are pinned under
-         the top edge and the buttons hang bottom left. -->
+    <!-- the needle holds north (compass, not heading arrow), so it turns by minus the view bearing -->
     <stacklayout
         backgroundColor={colorWidgetBackground}
         borderRadius={26}

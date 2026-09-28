@@ -13,7 +13,6 @@ import { copyTextToClipboard } from '~/utils/ui';
  */
 let webserver;
 
-/** Drives the menu entry's label, which flips between start and stop. */
 const running = writable(false);
 
 function serverPort() {
@@ -28,8 +27,7 @@ export function startStopWebServer() {
         return;
     }
     try {
-        // The one thing the facade cannot express: the server is the app's own Java class, so it
-        // takes the SDK objects themselves. `source()` hands them over without an id.
+        // the server is the app's own Java class, so it takes the native SDK objects
         const hillshadeSource = packageService.hillshadeLayer?.source();
         const vectorSource = packageService.localVectorTileLayer?.source();
         const vDataSource = vectorSource?.native;
@@ -60,11 +58,9 @@ export function stopWebServer() {
 registerMapFeature({
     id: 'tileServer',
     enabled: () => __ANDROID__,
-    // mapCapabilities is a dependency because localVectorTileLayer is assigned by the same mbtiles
-    // load that sets hasLocalData: without it this would keep the value it had when the server was
-    // last toggled, and the entry would stay missing after offline data finished loading
+    // mapCapabilities: localVectorTileLayer is set by the same mbtiles load as hasLocalData,
+    // without it the entry stays missing after offline data loads
     menuItems: derived([running, mapCapabilities], ([$running]) =>
-        // no local vector tiles means nothing worth serving
         packageService.localVectorTileLayer
             ? [
                   {
@@ -73,7 +69,6 @@ registerMapFeature({
                       icon: 'mdi-server',
                       order: 100,
                       run: startStopWebServer,
-                      // the tile url is only useful pasted into something else
                       onLongPress: () => copyTextToClipboard(`http://127.0.0.1:${serverPort()}?source=data&x={x}&y={y}&z={z}`)
                   }
               ]

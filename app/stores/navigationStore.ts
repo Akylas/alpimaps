@@ -171,18 +171,11 @@ export const navigationChartCurrentAscent = settingsStore(SETTINGS_NAVIGATION_CH
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
 export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET);
 
-/**
- * What every navigation widget, button and sheet step is sized with: the system font scale the rest of
- * the app already follows, times the user's own navigation scale. One store rather than each component
- * multiplying two of them, so the bar rows and the sheet steps cannot end up disagreeing.
- */
+// system font scale times the user's navigation scale: one store so bar rows and sheet steps agree
 export const navigationScale = derived([fontScaleMaxed, navigationUiScale], ([fontScale, uiScale]) => fontScale * (uiScale > 0 ? uiScale : 1));
 
-/**
- * Whether the elevation/surface previews have anything to draw. The navigation view gives them a row
- * of their own, and that view and the bottom sheet step have to agree on whether that row exists,
- * else the sheet reserves a row of empty space above the map.
- */
+// the navigation view and the sheet step must agree on whether the preview row exists,
+// else the sheet reserves an empty row above the map
 export const navigationHasPreviewWidgets = derived([navigationItem, navigationShowElevationChart, navigationShowSurface], ([item, showChart, showSurface]) => {
     const stats = item?.stats;
     return (showChart && !!item?.profile?.data?.length) || (showSurface && (!!stats?.surfaceSegments?.length || !!stats?.surfaces?.length));
@@ -233,10 +226,7 @@ const formatAngle = (value: number) => value + '°';
 // auto pause speed is stored in m/s but shown in the user's own speed unit
 const formatSpeed = (value: number) => formatValue(value * 3.6, UNITS.SpeedKm);
 
-/**
- * Single source of truth for the navigation parameters: both the settings screen and the popover
- * shown during navigation are generated from this, so they cannot drift apart.
- */
+// generates both the settings screen and the in-navigation popover, so they cannot drift apart
 export const NAVIGATION_PARAMS: NavigationParam[] = [
     {
         key: SETTINGS_NAVIGATION_AUTO_ZOOM,
@@ -369,7 +359,7 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         store: navigationTilt,
         type: 'number',
         default: DEFAULT_NAVIGATION_TILT,
-        // the older key reads as a sentence, which belongs in the description now that rows have both
+        // the `navigation_tilt` key reads as a sentence, so it is the description
         title: () => lc('navigation_map_tilt'),
         description: () => lc('navigation_tilt'),
         min: 0,

@@ -15,7 +15,6 @@
 
     $: ({ colorOnSurface, colorOutlineVariant, colorWidgetBackground } = $colors);
 
-    // only the subset flagged `quick`: the full list lives in the settings screen
     let settings = getNavigationQuickSettings();
 
     function onCheckBox(item, value) {
