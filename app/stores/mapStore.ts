@@ -43,7 +43,7 @@ const layersParams = {
         title: lc('show_percentage_slopes'),
         settingsOptionsType: 'boolean',
         showAsIcon: true,
-        defaultValue: true,
+        defaultValue: false,
         icon: 'mdi-signal',
         visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event, button) => {
