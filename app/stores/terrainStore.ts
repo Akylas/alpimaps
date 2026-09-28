@@ -904,7 +904,7 @@ export interface SelectedPeak {
 }
 export const peakFinderSelectedPeak = writable<SelectedPeak>(null);
 
-// --- peak finder: the sun ---------------------------------------------------------------------
+// --- peak finder: the sky ---------------------------------------------------------------------
 
 /** The sun's day over the panorama: its path, where it is, and its rise and set over the terrain. */
 export const peakFinderSun = settingsStore('peakFinderSun', true);
@@ -912,11 +912,33 @@ export const peakFinderSun = settingsStore('peakFinderSun', true);
 export const peakFinderMoon = settingsStore('peakFinderMoon', true);
 /** A mark and a time on the path on every hour. */
 export const peakFinderSunHours = settingsStore('peakFinderSunHours', false);
+/** The real star sky over the panorama: the bright stars, where they are at the chosen moment. */
+export const peakFinderStars = settingsStore('peakFinderStars', false);
+/** The constellation figures and names, with the stars. */
+export const peakFinderConstellations = settingsStore('peakFinderConstellations', true);
+/** The five naked-eye planets, with the stars. */
+export const peakFinderPlanets = settingsStore('peakFinderPlanets', true);
+/** With the stars on, each summit's name over the summit itself (`skyline`), whatever `peakFinderLabelLayout` says: a row pinned at the top sits in the sky. */
+export const peakFinderStarsLabelsOnSummits = settingsStore('peakFinderStarsLabelsOnSummits', true);
 /**
- * The moment the sun is drawn - and the relief lit - for, ms since the epoch; null follows the clock.
+ * The moment the sky is drawn - and the relief lit - for, ms since the epoch; null follows the clock.
  * Not persisted: a panorama opens on now.
  */
-export const peakFinderSunTime = writable<number>(null);
+export const peakFinderSkyTime = writable<number>(null);
+/** The sky panel over the panorama is open. */
+export const peakFinderSkyPanel = writable(false);
+
+/** A sky object the user tapped, as the overlay's chip needs it. */
+export interface SelectedSky {
+    /** The object's metadata id, `star:Sirius`, `planet:mars`, `sun`… */
+    id: string;
+    kind: 'star' | 'planet' | 'constellation' | 'sun' | 'moon';
+    name: string;
+    /** A second line: magnitude, or what it is. */
+    detail?: string;
+    wikidata?: string;
+}
+export const peakFinderSelectedSky = writable<SelectedSky>(null);
 
 /**
  * The map's allowed tilt range, which three things now have an opinion about.

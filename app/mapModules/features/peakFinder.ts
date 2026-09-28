@@ -13,8 +13,10 @@ import { registerMapModule } from '~/mapModules/registry';
 import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefPalette, reliefSilhouetteShader } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
+import { type PeakFinderSkyContext, clearSkySelection, raiseSkySelection, setupSkySelection, skyMoment, teardownSkySelection } from '~/mapModules/features/peakFinderCelestial';
 import { setupPeakFinderMoon, teardownPeakFinderMoon, updatePeakFinderMoon } from '~/mapModules/features/peakFinderMoon';
-import { peakFinderSunMoment, raisePeakFinderSun, setupPeakFinderSun, sunPositionAt, teardownPeakFinderSun, updatePeakFinderSun } from '~/mapModules/features/peakFinderSun';
+import { setupPeakFinderStars, teardownPeakFinderStars, updatePeakFinderStars } from '~/mapModules/features/peakFinderStars';
+import { raisePeakFinderSun, setupPeakFinderSun, sunPositionAt, teardownPeakFinderSun, updatePeakFinderSun } from '~/mapModules/features/peakFinderSun';
 import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
 import { nutiProps } from '~/stores/mapStore';
@@ -62,9 +64,12 @@ import {
     peakFinderPeakZoom,
     peakFinderScreenOrientation,
     peakFinderSelectedPeak,
+    peakFinderSkyPanel,
+    peakFinderSkyTime,
+    peakFinderStars,
+    peakFinderStarsLabelsOnSummits,
     peakFinderStaticPeaks,
     peakFinderSun,
-    peakFinderSunTime,
     peakFinderTerrainMaxZoom,
     peakFinderTileCoarsening,
     peakFinderTilt,
@@ -670,6 +675,11 @@ function onPanoramaLayout() {
     }
 }
 
+/** The names' layout: with the stars on, over each summit when asked, the sky above them clear. */
+function labelLayout() {
+    return get(peakFinderStars) && get(peakFinderStarsLabelsOnSummits) ? 'skyline' : get(peakFinderLabelLayout);
+}
+
 function currentPeaksStyle() {
     return peaksStyle({
         dark: isPeakFinderDark(),
@@ -679,8 +689,8 @@ function currentPeaksStyle() {
         // off the camera.
         eyeElevation: eyeGroundElevation + get(peakFinderElevation),
         fontScale: mapFontScale(),
-        pinTop: get(peakFinderLabelLayout) === 'top',
-        followSkyline: get(peakFinderLabelLayout) === 'skyline',
+        pinTop: labelLayout() === 'top',
+        followSkyline: labelLayout() === 'skyline',
         band: labelRowFraction(),
         // A row held at a fixed height is held at the band's.
         topOffset: labelRowFraction(),
@@ -1078,6 +1088,7 @@ function rebuildPeaksLayer() {
     panorama.removeLayer(previousLayer);
     panorama.add(peaksLayer);
     raisePeakFinderSun();
+    raiseSkySelection();
     previousLayer.destroy();
     previousDecoder?.destroy();
 }
@@ -1211,7 +1222,7 @@ function applySun() {
     let sunAltitude = get(terrainSunAltitude);
     const eye = viewpoint ?? entryPosition;
     if (get(peakFinderSun) && eye) {
-        const sun = sunPositionAt(peakFinderSunMoment(), eye);
+        const sun = sunPositionAt(skyMoment(), eye);
         if (sun.altitude > LIT_BY_THE_SUN_ABOVE) {
             sunAzimuth = sun.azimuth;
             sunAltitude = sun.altitude;
@@ -1229,6 +1240,7 @@ function applySun() {
  *  decoder is rebuilt with it. */
 function applyPalette() {
     updatePeakFinderMoon();
+    updatePeakFinderStars();
     applyReliefSurface();
     applyReliefOutline();
     applyAtmosphere();
@@ -1394,7 +1406,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         renderProjectionMode: 'RENDER_PROJECTION_MODE_PLANAR',
         // A panorama reaches UP past the horizon (a negative tilt is a look up), and every frame of a
         // drag is clamped to this. A floor at the horizon would stop the drag dead there.
-        tiltRange: PANORAMA_RANGE,
+        tiltRange: get(peakFinderStars) ? [-90, 90] : PANORAMA_RANGE,
         layersLabelsProcessedInReverseOrder: true,
         restrictedPanning: true,
         // In first person this is the LOOK's glide (KineticEventHandler::startLook): the view keeps
@@ -1520,18 +1532,20 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // the terrain above has already pulled in, so this is a lookup rather than a load.
     eyeGroundElevation = await resolveEyeGroundElevation();
     buildPeaksLayer();
-    // After the summit layer, which its top layer has to stay over.
-    setupPeakFinderSun({
-        map,
-        eye: () => viewpoint,
-        dark: () => isPeakFinderDark()
-    });
-    setupPeakFinderMoon({ map, eye: () => viewpoint, dark: () => isPeakFinderDark() });
+    // After the summit layer, which the sun's top layer has to stay over.
+    const skyContext: PeakFinderSkyContext = { map, eye: () => viewpoint, dark: () => isPeakFinderDark() };
+    setupSkySelection(skyContext);
+    setupPeakFinderSun(skyContext);
+    setupPeakFinderMoon(skyContext);
+    setupPeakFinderStars(skyContext);
     // Not awaited: the layer above already draws, and this swaps it onto the collected set when it
     // has one. See `loadStaticPeaks`.
     loadStaticPeaks();
-    // A tap on empty ground clears the chip, the way tapping the map elsewhere deselects.
-    map.onClick(() => peakFinderSelectedPeak.set(null));
+    // A tap on empty ground or sky clears the chip, the way tapping the map elsewhere deselects.
+    map.onClick(() => {
+        peakFinderSelectedPeak.set(null);
+        clearSkySelection();
+    });
     // What the overlay's compass reads. Throttled: the view turns with every frame of a drag, and
     // the readout is a number on screen.
     // The camera is placed by now, so this is the first reading of the eye that means anything.
@@ -1540,6 +1554,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // The sun needs the eye, and lights the relief from where it is seen.
     updatePeakFinderSun(true);
     updatePeakFinderMoon();
+    updatePeakFinderStars(true);
     applySun();
     // One listener for all three: a first-person two-finger drag MOVES the camera, so the same
     // events that turn the compass are the ones that walk the eye - out from under its summit set,
@@ -1551,6 +1566,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
             checkStaticPeaks();
             updatePeakFinderSun();
             updatePeakFinderMoon();
+            updatePeakFinderStars();
         },
         { throttle: 100 }
     );
@@ -1596,6 +1612,8 @@ export function teardownPanorama() {
     // runs again. So the layer has to go, not just the terrain.
     teardownPeakFinderSun();
     teardownPeakFinderMoon();
+    teardownPeakFinderStars();
+    teardownSkySelection();
     try {
         panorama?.layers().clear();
     } catch (error) {
@@ -1656,8 +1674,9 @@ export const exitPeakFinder = tryCatchFunction(async () => {
     setMapTranslucent(false);
     peakFinderArActive.set(false);
     peakFinderSelectedPeak.set(null);
+    peakFinderSkyPanel.set(false);
     // The next panorama opens on now.
-    peakFinderSunTime.set(null);
+    peakFinderSkyTime.set(null);
     peakFinderElevation.set(get(peakFinderMinElevation));
     peakFinderActive.set(false);
     viewpoint = null;
@@ -1686,6 +1705,7 @@ function onPeakClicked({ featureData, featurePosition }: FeatureClickData): bool
         return false;
     }
     const elevation = featureData.ele !== undefined ? Math.round(Number(featureData.ele)) : undefined;
+    clearSkySelection();
     peakFinderSelectedPeak.set({
         // What the style compares with, `[name] + '|' + [ele]` - the raw values, as the tile has them.
         key: `${name}|${featureData.ele ?? ''}`,
@@ -1812,10 +1832,16 @@ async function startFollowingForAr() {
  */
 function applyTiltRange() {
     const aimed = get(peakFinderArActive) || get(peakFinderHeadingFollowing);
-    panorama.set('tiltRange', aimed ? [-90, 90] : PANORAMA_RANGE);
+    applyTiltBounds();
     if (!aimed) {
         panoramaView?.setTilt(get(peakFinderTilt), 0.3);
     }
+}
+
+/** The stars are overhead: with them on, the finger may look straight up too. */
+function applyTiltBounds() {
+    const aimed = get(peakFinderArActive) || get(peakFinderHeadingFollowing);
+    panorama.set('tiltRange', aimed || get(peakFinderStars) ? [-90, 90] : PANORAMA_RANGE);
 }
 
 export function stopOrientationFollowing() {
@@ -1880,7 +1906,7 @@ applyLive(peakFinderHillshade, applyReliefSurface);
 applyLive(terrainSunAzimuth, applySun);
 applyLive(terrainSunAltitude, applySun);
 applyLive(peakFinderSun, applySun);
-applyLive(peakFinderSunTime, applySun);
+applyLive(peakFinderSkyTime, applySun);
 applyLive(peakFinderOcclusion, () => terrain().set('billboardOcclusionTolerance', get(peakFinderOcclusion)));
 applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(peakFinderViewDistance)));
 applyLive(peakFinderViewDistanceMetres, () => {
@@ -1918,6 +1944,7 @@ applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
 applyLive(peakFinderMaxFieldOfView, applyFieldOfView);
 applyLive(peakFinderLensCorrection, applyFieldOfView);
 applyLive(peakFinderLabelLayout, rebuildPeaksLayer);
+applyLive(peakFinderStarsLabelsOnSummits, rebuildPeaksLayer);
 applyLive(peakFinderLabelRowHeight, rebuildPeaksLayer);
 applyLive(peakFinderLabelAngle, rebuildPeaksLayer);
 applyLive(peakFinderLabelRows, rebuildPeaksLayer);
@@ -1957,6 +1984,12 @@ applyLive(peakFinderArActive, () => {
     }
 });
 applyLive(peakFinderHeadingFollowing, applyTiltRange);
+applyLive(peakFinderStars, () => {
+    applyTiltBounds();
+    if (get(peakFinderStarsLabelsOnSummits) && get(peakFinderLabelLayout) !== 'skyline') {
+        rebuildPeaksLayer();
+    }
+});
 
 /** The live map going away takes the panorama with it — the app is shutting down or re-creating. */
 function onMapDestroyed() {
