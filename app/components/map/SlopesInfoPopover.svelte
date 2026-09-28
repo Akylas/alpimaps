@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { SLOPE_COLORS, SLOPE_STEPS } from '~/mapModules/CustomLayersModule';
     import { colors, fontScale, fonts } from '~/variables';
-    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
+    import PanelPopover from '~/components/common/PanelPopover.svelte';
     import { Paint } from '@nativescript-community/ui-canvas';
 </script>
 
@@ -29,7 +29,7 @@
     }
 </script>
 
-<PopoverBackgroundView columns="auto">
+<PanelPopover columns="auto">
     <!-- <gesturerootview columns="auto"> -->
     <canvasview height={150 * $fontScale} width={100 * $fontScale} on:draw={onDraw}> </canvasview>
-</PopoverBackgroundView>
+</PanelPopover>

@@ -50,11 +50,11 @@
     } from '~/utils/navigation';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
-    import { CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
+    import { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import { chartShowWaypoints, showAscents, showGradeColors } from '~/stores/mapStore';
     import { colors, fonts } from '~/variables';
 
-    $: ({ colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorWidgetBackground } = $colors);
+    $: ({ colorHairline, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
 
     $: paused = $navigationState === NavigationState.PAUSED;
 
@@ -217,9 +217,10 @@
     {#if profileAvailable}
         <ElevationChart
             bind:this={elevationChart}
-            backgroundColor={colorWidgetBackground}
-            borderColor={colorOutlineVariant}
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
             borderRadius={CARD_RADIUS}
+            borderWidth={CARD_BORDER_WIDTH}
             {chartShowWaypoints}
             colSpan={2}
             item={$navigationItem}
@@ -229,6 +230,14 @@
             showProfileGrades={$showGradeColors} />
     {/if}
     {#if statsAvailable}
-        <RouteStatsView backgroundColor={colorWidgetBackground} borderColor={colorOutlineVariant} borderRadius={CARD_RADIUS} colSpan={2} item={$navigationItem} margin="4 8 0 8" row={5} />
+        <RouteStatsView
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
+            borderRadius={CARD_RADIUS}
+            borderWidth={CARD_BORDER_WIDTH}
+            colSpan={2}
+            item={$navigationItem}
+            margin="4 8 0 8"
+            row={5} />
     {/if}
 </gridlayout>

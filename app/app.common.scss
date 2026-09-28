@@ -30,6 +30,12 @@
     --colorOnSurfaceInverse: #000000;
     --colorSurfaceContainer: #C2C9BD;
     --popupMenuBackground: #C2C9BD;
+    --colorPanel: #FCFCFFF7;
+    --colorMapControl: #FCFCFFC8;
+    --colorHairline: #191C1E1F;
+    --colorOutlineSoft: #191C1E40;
+    --colorAccentContainer: #29B6F61F;
+    --colorAccentContainerSolid: #E2F3FC;
 
     --mdiFontFamily: #{$mdiFontFamily};
     --appFontFamily: #{$appFontFamily};
@@ -77,11 +83,14 @@ mdtextfield[variant=fill] {
 }
 
 .directionsPanel {
-    background-color: var(--colorPrimary);
+    background-color: var(--colorBackground);
+    border-bottom-width: 1;
+    border-bottom-color: var(--colorHairline);
+    border-bottom-left-radius: 24;
+    border-bottom-right-radius: 24;
 
     .ns-eink & {
         background-color: white;
-        border-bottom-width: 1;
         border-bottom-color: black;
     }
 }
@@ -105,16 +114,6 @@ frame {
 //         status-bar-style: light;
 //     }
 // }
-
-.themedPage {
-    status-bar-color: var(--colorPrimary);
-    status-bar-style: dark;
-
-    .ns-eink & {
-        status-bar-style: light;
-        status-bar-color: white;
-    }
-}
 
 
 page {
@@ -145,30 +144,36 @@ label {
 }
 
 .sectionHeader {
-    font-size: 15;
+    font-size: 13;
     font-weight: bold;
     color: var(--colorPrimary);
-    padding: 5 5 5 16;
+    padding: 16 16 6 16;
+
+    .ns-eink & {
+        color: var(--colorOnSurface);
+    }
 }
 
 .buttonthemed {
     background-color: var(--colorPrimary);
     color: var(--colorOnPrimary);
     ripple-color: var(--colorOnPrimary);
+    border-color: var(--colorPrimary);
 
     .ns-eink & {
         color: white;
         background-color: black;
+        border-color: black;
     }
 }
 
 .buttontext {
-    background-color: var(--colorBackground);
-    color: var(--colorPrimary);
+    background-color: var(--colorMapControl);
+    color: var(--colorOnSurface);
     ripple-color: var(--colorPrimary);
 
     .ns-eink & {
-        background-color: #ffffff66;
+        background-color: white;
         color: black;
     }
 }
@@ -208,10 +213,13 @@ label {
     color: gray;
 }
 
+// map buttons: the peak finder's hairline pills
 .floating-btn {
     @extend %mdi;
-    shape: medium;
-    elevation: 6;
+    shape: round;
+    elevation: 2;
+    border-width: 1;
+    border-color: var(--colorHairline);
     font-size: 24;
     padding: 0;
     margin: 8;
@@ -221,71 +229,54 @@ label {
     .ns-eink & {
         elevation: 0;
         border-color: black;
-        border-width: 1;
     }
-}
-
-.floating-btn-themed {
-    @extend .floating-btn;
-    background-color: var(--colorPrimaryContainer);
-    ripple-color: var(--colorPrimaryContainer);
-    color: var(--colorOnPrimaryContainer);
-
-    .ns-eink & {
-        elevation: 0;
-        border-color: black;
-        border-width: 1;
-        background-color: #ffffff66;
-    }
-
 }
 
 .small-floating-btn {
     @extend %mdi;
     @extend .buttontext;
-    shape: small;
-    elevation: 3;
-    dynamic-elevation-offset: 3;
-    font-size: 24;
+    shape: round;
+    elevation: 2;
+    dynamic-elevation-offset: 2;
+    border-width: 1;
+    border-color: var(--colorHairline);
+    font-size: 22;
     padding: 0;
-    width: 40;
-    height: 40;
-    margin: 8;
+    width: 44;
+    height: 44;
+    margin: 6;
 
     .ns-eink & {
         elevation: 0;
         border-color: black;
-        border-width: 1;
-        background-color: #ffffff66;
+        background-color: white;
     }
 }
 
+// the sky toggle's on state, opaque as it floats over the map. E-ink uses .buttonthemed instead
 .btn-themed {
-    background-color: var(--colorPrimaryContainer);
-    ripple-color: var(--colorPrimaryContainer);
-    color: var(--colorOnPrimaryContainer);
-
-    .ns-eink & {
-        elevation: 0;
-        border-color: black;
-        border-width: 1;
-    }
-
-}
-
-.section-title {
-    font-size: 10;
+    background-color: var(--colorAccentContainerSolid);
+    ripple-color: var(--colorPrimary);
+    color: var(--colorPrimary);
+    border-color: var(--colorPrimary);
 }
 
 .actionBar {
-    background-color: var(--colorPrimary);
+    // the material 3 top app bar, 64: the shared CActionBar sizes itself to its buttons otherwise
+    padding-top: 9;
+    padding-bottom: 9;
+    background-color: var(--colorBackground);
+    border-bottom-width: 1;
+    border-bottom-color: var(--colorHairline);
 
     &:transparent {
         background-color: transparent;
+        border-bottom-width: 0;
     }
 
     .ns-eink & {
         background-color: white;
+        border-bottom-color: black;
     }
 }
 
@@ -293,40 +284,19 @@ label {
     @extend .mdi;
     width: var(--actionBarButtonHeight);
     height: var(--actionBarButtonHeight);
-    color: var(--colorOnPrimary);
+    color: var(--colorOnSurface);
+    ripple-color: var(--colorPrimary);
     margin: 0;
     padding: 0;
     font-size: 24;
-
-    &:transparent {
-        color: var(--colorOnSurface);
-    }
-
-    .ns-eink & {
-        color: var(--colorOnSurface);
-    }
 }
 
 .actionBarTitle {
-    font-size: 22;
-    max-font-size: 22;
+    font-size: 20;
+    max-font-size: 20;
     white-space: normal;
-    font-weight: 400;
-    color: var(--colorOnBackground);
-
-}
-
-.actionBarSubtitle {
-    font-size: 13;
-    color: var(--colorOnPrimary);
-
-    &:transparent {
-        color: var(--colorOnSurface);
-    }
-
-    .ns-eink & {
-        color: var(--colorOnSurface);
-    }
+    font-weight: bold;
+    color: var(--colorOnSurface);
 }
 
 .icon-btn {
@@ -342,10 +312,125 @@ label {
 }
 
 .cardview {
-    border-radius: 12;
-    background-color: var(--colorSurface);
-    border-color: var(--colorOutline);
+    border-radius: 24;
+    background-color: var(--colorPanel);
+    border-color: var(--colorHairline);
     border-width: 1;
+
+    .ns-eink & {
+        background-color: white;
+        border-color: black;
+    }
+}
+
+// the peak finder sky panel: a translucent card with a hairline, and its header
+.panel {
+    border-radius: 24;
+    background-color: var(--colorPanel);
+    border-color: var(--colorHairline);
+    border-width: 1;
+
+    .ns-eink & {
+        background-color: white;
+        border-color: black;
+    }
+}
+
+// a panel floating over the map, see-through like the map buttons
+.mapControl {
+    background-color: var(--colorMapControl);
+}
+
+// matches ShapeAppearance.App.Panel on the native Android sheet behind it, with the sky panel's hairline
+.bottomsheet {
+    background-color: var(--colorBackground);
+    border-top-left-radius: 24;
+    border-top-right-radius: 24;
+    border-width: 1;
+    border-color: var(--colorHairline);
+    padding-top: 8;
+
+    .ns-eink & {
+        background-color: white;
+        border-color: black;
+    }
+}
+
+.panelIcon {
+    @extend %mdi;
+    font-size: 22;
+    color: var(--colorPrimary);
+    vertical-alignment: middle;
+
+    .ns-eink & {
+        color: var(--colorOnSurface);
+    }
+}
+
+.panelTitle {
+    font-size: 17;
+    font-weight: bold;
+    color: var(--colorOnSurface);
+}
+
+.panelSubtitle {
+    font-size: 12;
+    color: var(--colorOnSurfaceVariant);
+}
+
+// list rows lead with the sky panel's primary icon, on the toggles' primary tint
+.listIcon {
+    @extend %mdi;
+    width: 40;
+    height: 40;
+    border-radius: 12;
+    margin-right: 14;
+    font-size: 22;
+    text-align: center;
+    vertical-text-alignment: center;
+    vertical-alignment: middle;
+    color: var(--colorPrimary);
+    background-color: var(--colorAccentContainer);
+
+    .ns-eink & {
+        color: black;
+        background-color: transparent;
+    }
+}
+
+// the sky toggles: outlined pills, primary on a primary tint when on
+.chip {
+    background-color: transparent;
+    border-color: var(--colorOutlineSoft);
+    border-width: 1;
+    border-radius: 16;
+    color: var(--colorOnSurface);
+    ripple-color: var(--colorPrimary);
+    elevation: 0;
+    height: 32;
+    margin: 2 4;
+    padding: 0 12;
+    font-size: 13;
+    text-align: center;
+    vertical-text-alignment: center;
+
+    &.selected {
+        background-color: var(--colorAccentContainer);
+        border-color: var(--colorPrimary);
+        color: var(--colorPrimary);
+        font-weight: bold;
+    }
+
+    .ns-eink & {
+        border-color: black;
+        color: black;
+
+        &.selected {
+            background-color: white;
+            color: black;
+            border-width: 2;
+        }
+    }
 }
 
 .transitIconLabel {

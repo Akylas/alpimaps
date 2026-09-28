@@ -12,8 +12,9 @@
     import { pickColor } from '~/utils/utils';
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
     import { createView } from '~/utils/ui';
-    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant } = $colors);
     import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
     import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
@@ -206,9 +207,9 @@
     }
 </script>
 
-<gesturerootview {...$$restProps} height={240}>
+<gesturerootview class="bottomsheet" {...$$restProps} height={280}>
     <gridlayout columns="*,auto" rows="auto,*">
-        <label fontSize={20} fontWeight="bold" padding="10 10 0 20" text={getTitle()} />
+        <PanelHeader icon="mdi-tune-variant" title={getTitle()} />
         <scrollview bind:this={scrollView} id="scrollView" row={1}>
             <stacklayout>
                 {#each Object.entries(options) as [name, option]}
@@ -257,7 +258,7 @@
                 {/each}
             </stacklayout>
         </scrollview>
-        <stacklayout borderLeftColor={colorOutlineVariant} borderLeftWidth={1} col={1} rowSpan={2}>
+        <stacklayout col={1} padding="0 4" rowSpan={2}>
             <IconButton gray={true} isVisible={cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
             <IconButton
                 gray={true}

@@ -12,7 +12,7 @@
     import { colors, fontScaleMaxed, fonts, onFontScaleChanged } from '~/variables';
     import SymbolShape from '../common/SymbolShape';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { isEInk, onThemeChanged } from '~/helpers/theme';
 
     const propsPaint = new Paint();
     propsPaint.textSize = 13;
@@ -341,7 +341,7 @@
                 const fontSize = iconSize * $fontScaleMaxed;
                 iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
-                iconPaint.color = iconColor || colorOnSurface;
+                iconPaint.color = iconColor || (isEInk ? colorOnSurface : colorPrimary);
                 canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
             }
 

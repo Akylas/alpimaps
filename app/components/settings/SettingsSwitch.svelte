@@ -15,7 +15,7 @@
     }
 </script>
 
-<ListItemAutoSize fontSize={16} {item} leftIcon={item.icon} {...$$restProps}>
-    <switch id="checkbox" checked={item.value} col={1} marginLeft={10} verticalAlignment="center" {...checkboxProps ?? {}} on:checkedChange={onCheckChanged} />
+<ListItemAutoSize columns={item.icon ? 'auto,*,auto' : '*,auto'} fontSize={16} icon={item.icon} {item} mainCol={item.icon ? 1 : 0} {...$$restProps}>
+    <switch id="checkbox" checked={item.value} col={item.icon ? 2 : 1} marginLeft={10} verticalAlignment="center" {...checkboxProps ?? {}} on:checkedChange={onCheckChanged} />
     <slot />
 </ListItemAutoSize>
