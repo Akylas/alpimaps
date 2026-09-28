@@ -19,7 +19,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorAccentContainer, colorOnSurface, colorPrimary } = $colors);
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
     let firstCanvas: NativeViewElementNode<CanvasLabel>;
@@ -234,7 +234,7 @@
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
-    backgroundColor={isEInk ? '#ffffff66' : '#00000077'}
+    class="panel mapControl"
     borderRadius={30}
     columns="auto,*,auto"
     height={60}
@@ -245,17 +245,17 @@
     {#if loaded}
         <canvaslabel
             bind:this={firstCanvas}
-            backgroundColor={isEInk ? null : '#000000aa'}
+            backgroundColor={isEInk ? null : colorAccentContainer}
             borderColor={colorPrimary}
             borderRadius={30}
-            borderWidth={4}
-            color={isEInk ? 'black' : 'white'}
+            borderWidth={3}
+            color={colorOnSurface}
             height={60}
             width={60}>
             <cspan fontSize={22} fontWeight="bold" paddingBottom={3} text={speedFormatted[0]} textAlignment="center" verticalAlignment="middle" />
             <cspan fontSize={10} paddingTop={12} text={speedFormatted[1]} textAlignment="center" verticalAlignment="middle" />
         </canvaslabel>
-        <canvaslabel col={1} color={isEInk ? '#000' : '#fff'} marginLeft={5}>
+        <canvaslabel col={1} color={colorOnSurface} marginLeft={5}>
             <cspan
                 color={isEInk ? '#000' : colorPrimary}
                 fontSize={10}
@@ -268,12 +268,12 @@
             </cgroup>
         </canvaslabel>
         {#if hasBarometer}
-            <canvaslabel col={1} color={isEInk ? '#000' : '#fff'} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'}>
+            <canvaslabel col={1} color={colorOnSurface} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'}>
                 <cspan fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
             </canvaslabel>
             <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapse'}>
-                <IconButton small={true} text="mdi-gauge" white={!isEInk} on:tap={switchBarometer} />
-                <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" white={!isEInk} on:tap={getNearestAirportPressure} />
+                <IconButton small={true} text="mdi-gauge" on:tap={switchBarometer} />
+                <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
             </stacklayout>
         {/if}
     {/if}

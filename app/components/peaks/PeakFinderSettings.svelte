@@ -5,11 +5,11 @@
     import StoreSegment from '~/components/settings/StoreSegment.svelte';
     import StoreSlider from '~/components/settings/StoreSlider.svelte';
     import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import { lc } from '~/helpers/locale';
     import PeakFinderSkyTime from '~/components/peaks/PeakFinderSkyTime.svelte';
     import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
-    import { colors, screenHeightDips, windowInset } from '~/variables';
-
-    $: ({ colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
+    import { screenHeightDips, windowInset } from '~/variables';
 
     const rows = peakFinderSettingRows();
 
@@ -18,11 +18,12 @@
     }
 </script>
 
-<gesturerootview backgroundColor={colorSurfaceContainer} height={Math.round(screenHeightDips * 0.3)}>
+<gesturerootview class="bottomsheet" height={Math.round(screenHeightDips * 0.3)} rows="auto,*">
+    <PanelHeader icon="mdi-image-filter-hdr" title={lc('peak_finder')} />
     <!-- the inset goes on the content: the collectionview scrolls under it -->
-    <collectionview {itemTemplateSelector} items={rows} ios:contentInsetAdjustmentBehavior={2} paddingBottom={10 + (__ANDROID__ ? $windowInset.bottom : 0)} paddingTop={10}>
+    <collectionview {itemTemplateSelector} items={rows} paddingBottom={10 + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2}>
         <Template key="sectionheader" let:item>
-            <label class="sectionHeader" color={colorOnSurfaceVariant} fontSize={13} padding="12 16 4 16" text={item.title} />
+            <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
             <StoreSwitch description={item.description} store={item.store} title={item.title} />

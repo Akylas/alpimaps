@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { RoutesType } from '~/mapModules/CustomLayersModule';
     import { nutiProps } from '~/stores/mapStore';
-    import PopoverBackgroundView from '@shared/components/PopoverBackgroundView.svelte';
+    import PanelPopover from '~/components/common/PanelPopover.svelte';
     import SettingsCheckbox from '../settings/SettingsCheckbox.svelte';
 </script>
 
@@ -38,7 +38,7 @@
     const routesType = nutiProps.getStore('routes_type');
 </script>
 
-<PopoverBackgroundView columns="auto">
+<PanelPopover columns="auto">
     <stacklayout width="auto">
         {#each types as type}
             <SettingsCheckbox
@@ -50,4 +50,4 @@
                 on:tap={(event) => onTap(event, type.type)} />
         {/each}
     </stacklayout>
-</PopoverBackgroundView>
+</PanelPopover>

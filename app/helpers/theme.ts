@@ -97,6 +97,7 @@ export async function selectTheme() {
             {
                 height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
+                titleIcon: 'mdi-theme-light-dark',
                 options: actions
                     .map((k) => ({ name: getThemeDisplayName(k), data: k }))
                     .map((d) => ({
@@ -127,6 +128,7 @@ export async function selectColorTheme() {
             {
                 height: Math.min(actions.length * 56, ALERT_OPTION_MAX_HEIGHT),
                 rowHeight: 56,
+                titleIcon: 'mdi-palette-outline',
                 options: actions
                     .map((k) => ({ name: getColorThemeDisplayName(k), data: k }))
                     .map((d) => ({

@@ -41,13 +41,10 @@ mdcardview {
 
 .floating-btn {
     ios-a11y-max-font-scale: 2;
-    elevation: 2;
 }
 
 .small-floating-btn {
     ios-a11y-max-font-scale: 1.5;
-    shape: small;
-    elevation: 2;
 }
 
 mdtextfield[variant=none] {

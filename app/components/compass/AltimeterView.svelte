@@ -202,7 +202,7 @@
     }
 </script>
 
-<gesturerootview rows="auto">
+<gesturerootview class="bottomsheet" rows="auto">
     <canvaslabel {height} padding={16}>
         <cspan fontSize={16} text={currentPressure} textAlignment="right" />
         <cgroup fontSize={14} textAlignment="right" verticalAlignment="bottom" visibility={!!referencePressure ? 'visible' : 'hidden'}>

@@ -471,6 +471,7 @@
     "language": "language",
     "later": "later",
     "laundry": "laundry",
+    "layers": "layers",
     "lens_correction": "correct lens distortion",
     "lens_correction_desc": "in AR, warp the terrain by the camera lens's own distortion so an outline sits on its ridge at the frame corners too. Android only, and only where the device reports it",
     "library": "library",

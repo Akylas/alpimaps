@@ -17,9 +17,12 @@
     export let showBottomLine: boolean = false;
     // export let iconFontSize: number = 24;
     export let item: ListItem;
-    export let fontSize: number = 21;
+    export let fontSize: number = 17;
     export let fontWeight: any = 'normal';
-    export let subtitleFontSize: number = 15;
+    export let subtitleFontSize: number = 14;
+    /** A leading icon on a primary tint, in column 0: callers shift `columns`/`mainCol` for it. */
+    export let icon: string = null;
+    export let iconFontFamily: string = null;
     export let columns: string = '*,auto';
     export let mainCol = 0;
     export let onLinkTap: (event) => void = null;
@@ -86,6 +89,9 @@
     {...$$restProps}>
     {#if showSymbol}
         <symbolshape color={symbolColor} height={34} {symbol} verticalAlignment="middle" width={34} />
+    {/if}
+    {#if icon}
+        <label class="listIcon" text={icon} {...iconFontFamily ? { fontFamily: iconFontFamily } : {}} />
     {/if}
     <!-- <label
         fontFamily={leftIconFonFamily}

@@ -110,8 +110,8 @@
 </script>
 
 <script lang="ts">
-    let { colorOnPrimary, colorPrimary, colorSurfaceTint } = $colors;
-    $: ({ colorOnPrimary, colorPrimary, colorSurfaceTint } = $colors);
+    let { colorAccentContainer, colorBackground, colorHairline, colorOnPrimary, colorOnSurface, colorPrimary, colorSurfaceVariant } = $colors;
+    $: ({ colorAccentContainer, colorBackground, colorHairline, colorOnPrimary, colorOnSurface, colorPrimary, colorSurfaceVariant } = $colors);
     const mapContext = getMapContext();
     const dispatch = createEventDispatcher();
     let _routeDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
@@ -137,8 +137,8 @@
     let requestProfile = ApplicationSettings.getBoolean('auto_fetch_profile', false);
     let requestStats = ApplicationSettings.getBoolean('auto_fetch_stats', false);
 
-    let buttonsColor = isEInk ? 'black' : 'white';
-    const buttonsColorAlpha = new Color(buttonsColor).setAlpha(50);
+    $: buttonsColor = colorOnSurface;
+    $: buttonsColorAlpha = new Color(colorOnSurface).setAlpha(80).hex;
 
     export let editingItem: IItem = null;
     export let translationY = 0;
@@ -1053,7 +1053,6 @@
                 anchor: event.object,
                 vertPos: VerticalPosition.ALIGN_TOP,
                 props: {
-                    borderRadius: 10,
                     elevation: __ANDROID__ ? 3 : 0,
                     margin: 4,
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
@@ -1247,7 +1246,6 @@
         collectionView?.nativeView.refreshVisibleItems();
     }
     onThemeChanged((theme: Themes) => {
-        buttonsColor = isEInk ? 'black' : 'white';
         refreshCollectionView();
     });
 
@@ -1265,7 +1263,7 @@
             <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
                 {#each profiles as profileBtn}
                     <IconButton
-                        backgroundColor={profile === profileBtn.id ? buttonsColor : isEInk ? 'white' : colorPrimary}
+                        backgroundColor={profile === profileBtn.id ? (isEInk ? 'black' : colorAccentContainer) : colorBackground}
                         color={profile === profileBtn.id ? (isEInk ? 'white' : colorPrimary) : buttonsColor}
                         text={profileBtn.icon}
                         on:tap={() => setProfile(profileBtn.id)}
@@ -1274,18 +1272,18 @@
                 {/each}
             </stacklayout>
             <IconButton
-                backgroundColor={isEInk ? 'white' : undefined}
+                backgroundColor={nbWayPoints > 1 ? (isEInk ? 'black' : colorPrimary) : colorBackground}
                 colSpan={2}
-                color={isEInk ? 'black' : 'white'}
+                color={isEInk ? 'white' : colorOnPrimary}
                 horizontalAlignment="right"
                 isEnabled={nbWayPoints > 1}
                 isVisible={!loading}
                 marginRight={10}
                 onLongPress={() => computeRoutes(true)}
-                rippleColor={isEInk ? 'black' : 'white'}
+                rippleColor={isEInk ? 'white' : colorOnPrimary}
                 text="mdi-magnify"
                 on:tap={() => computeRoutes()} />
-            <activityindicator busy={true} colSpan={2} color={buttonsColor} height={40} horizontalAlignment="right" marginRight={16} visibility={loading ? 'visible' : 'hidden'} width={40} />
+            <activityindicator busy={true} colSpan={2} color={colorPrimary} height={40} horizontalAlignment="right" marginRight={16} visibility={loading ? 'visible' : 'hidden'} width={40} />
             <collectionview
                 bind:this={collectionView}
                 animateItemUpdate={true}
@@ -1323,10 +1321,10 @@
                             verticalAlignment="middle" />
 
                         <gridlayout
-                            backgroundColor={isEInk ? 'white' : colorSurfaceTint}
-                            borderColor="black"
-                            borderRadius={8}
-                            borderWidth={isEInk ? 1 : 0}
+                            backgroundColor={isEInk ? 'white' : colorSurfaceVariant}
+                            borderColor={isEInk ? 'black' : colorHairline}
+                            borderRadius={15 * $fontScaleMaxed}
+                            borderWidth={1}
                             columns=" *,auto,auto"
                             height={30 * $fontScaleMaxed}
                             margin="0 0 0 30"

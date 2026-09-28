@@ -11,8 +11,8 @@
 </script>
 
 <script lang="ts">
-    let { colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors);
+    let { colorAccentContainer, colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors);
     export let isVisible = true;
     export let isHidden = false;
     export let white = false;
@@ -83,11 +83,14 @@
         // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
     }
     $: actualMaxFontScale = maxFontScale ?? Math.min($fontScaleMaxed, 1.4);
+    // the sky toggles' on state; e-ink already greys the off state
+    $: selectedBackgroundColor = toggable && isSelected && !isEInk ? colorAccentContainer : undefined;
 </script>
 
 {#if __ANDROID__}
     <canvasview
         bind:this={canvas}
+        backgroundColor={selectedBackgroundColor}
         borderRadius={shape === 'round' || (rounded && !shape) ? (height || size) / 2 : borderRadius}
         disableCss={true}
         isUserInteractionEnabled={isEnabled}
@@ -101,6 +104,7 @@
         use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
 {:else}
     <mdbutton
+        backgroundColor={selectedBackgroundColor}
         color={isSelected ? selectedColor || colorPrimary : actualColor}
         disableCss={true}
         {fontFamily}
