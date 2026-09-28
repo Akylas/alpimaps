@@ -1,11 +1,4 @@
 /**
- * The app's own coordinate types and the geodesy that goes with them.
- *
- * `lat`/`lon` objects, not the SDK's `MapPos` proxy: the surface API takes and returns plain
- * `[lng, lat]` arrays, so nothing here crosses to native. What used to be `MapPosVector.get(i)`
- * inside a loop - one JNI call per point - is now an array index.
- */
-/**
  * A type alias, not an interface: an interface has no implicit index signature, and the surface
  * API's `AnyPosition` accepts an object keyed by name.
  */
@@ -40,7 +33,6 @@ export function fromBounds(bounds: [Position, Position]): MapBounds {
     return { southwest: fromPosition(bounds[0]), northeast: fromPosition(bounds[1]) };
 }
 
-/** Every coordinate of a GeoJSON geometry, flat. */
 export function geometryCoordinates(geometry: GeoJSON.Geometry): number[][] {
     switch (geometry.type) {
         case 'Point':
@@ -60,22 +52,12 @@ export function geometryCoordinates(geometry: GeoJSON.Geometry): number[][] {
     }
 }
 
-/**
- * The box around a geometry.
- *
- * Worked out here rather than asked of the SDK: the app has the coordinates already, and building
- * an SDK geometry to read `bounds` off it would be a crossing plus a proxy per point.
- */
+/** Computed in JS: building an SDK geometry to read its `bounds` would cost a native proxy per point. */
 export function geometryBounds(geometry: GeoJSON.Geometry): MapBounds {
     return boundsOfCoordinates(geometryCoordinates(geometry));
 }
 
-/**
- * The same over a whole FeatureCollection - what a detail map frames when it opens.
- *
- * `forEach` rather than `flatMap`: callers pass an ObservableArray of features through a cast, and
- * ObservableArray has forEach but none of the newer Array methods.
- */
+/** `forEach`, not `flatMap`: callers pass an ObservableArray (no newer Array methods) through a cast. */
 export function geoJSONBounds(collection: GeoJSON.FeatureCollection): [Position, Position] {
     const coordinates: number[][] = [];
     collection.features.forEach((feature) => {
@@ -104,12 +86,10 @@ function boundsOfCoordinates(coordinates: number[][]): MapBounds {
     return { southwest: { lat: minLat, lon: minLon }, northeast: { lat: maxLat, lon: maxLon } };
 }
 
-/** The box around a list of positions - a route's own bounds, which is what a caller zooms to. */
 export function boundsOfPositions(positions: MapPos[]): MapBounds {
     return boundsOfCoordinates(positions.map((p) => [p.lon, p.lat]));
 }
 
-/** The middle of a geometry's bounds, which is what a search result is placed at. */
 export function geometryCenter(geometry: GeoJSON.Geometry): MapPos {
     if (geometry.type === 'Point') {
         return fromPosition(geometry.coordinates as [number, number]);
@@ -128,12 +108,6 @@ export const PI_DIV4 = PI / 4;
 export const EARTH_RADIUS = 6371009;
 export const DEFAULT_TOLERANCE = 0.1;
 
-/**
- * Calculates the center of a collection of geo coordinates
- *
- * @param        array       Collection of coords [{lat: 51.510, lon: 7.1321} {lat: 49.1238, lon: "8° 30' W"} ...]
- * @return       object      {lat: centerLat, lon: centerLng}
- */
 export function getCenter(...coords: MapPos[]) {
     if (!coords.length) {
         return undefined;
@@ -286,12 +260,7 @@ function isOnSegmentGC(lat1, lng1, lat2, lng2, lat3, lng3, havTolerance) {
     return sinSumAlongTrack > 0; // Compare with half-circle == PI using sign of sin().
 }
 
-/**
- * The index of the first segment `point` lies on, or -1.
- *
- * Was the plugin's native helper; it is the same maths and the positions are already in JavaScript,
- * so crossing to native for it only paid for the conversion.
- */
+/** The index of the first segment `point` lies on, or -1. */
 export function isLocationOnPath(point: MapPos, poly: MapPos[], closed = false, geodesic = true, toleranceEarth: number = DEFAULT_TOLERANCE) {
     const size = poly.length;
     if (size === 0) {
@@ -317,11 +286,8 @@ export function isLocationOnPath(point: MapPos, poly: MapPos[], closed = false, 
             lng1 = lng2;
         }
     } else {
-        // We project the points to mercator space, where the Rhumb segment is a straight line,
-        // and compute the geodesic distance between point3 and the closest point on the
-        // segment. This method is an approximation, because it uses "closest" in mercator
-        // space which is not "closest" on the sphere -- but the error is small because
-        // "tolerance" is small.
+        // approximation: "closest" is taken in mercator space (rhumb segment is a straight line),
+        // not on the sphere, but the error is small because tolerance is small
         const minAcceptable = lat3 - tolerance;
         const maxAcceptable = lat3 + tolerance;
         let y1 = mercator(lat1);
@@ -366,26 +332,16 @@ function distanceRadians(lat1, lng1, lat2, lng2) {
     return arcHav(havDistance(lat1, lat2, lng1 - lng2));
 }
 
-/**
- * Returns the angle between two LatLngs, in radians. This is the same as the distance
- * on the unit sphere.
- */
+/** In radians, i.e. the distance on the unit sphere. */
 function computeAngleBetween(from: MapPos, to: MapPos) {
     return distanceRadians(toRadians(from.lat), toRadians(from.lon), toRadians(to.lat), toRadians(to.lon));
 }
 
-/**
- * Returns the distance between two LatLngs, in meters.
- */
+/** In meters. */
 export function computeDistanceBetween(from: MapPos, to: MapPos) {
     return computeAngleBetween(from, to) * EARTH_RADIUS;
 }
-/**
- * The initial great-circle bearing from `from` to `to`, in degrees clockwise from north (0..360).
- *
- * "Initial" because a great circle does not hold a constant bearing: this is the direction to set off
- * in, which is what aiming a camera at something wants.
- */
+/** Initial great-circle bearing, in degrees clockwise from north (0..360). */
 export function bearingBetween(from: MapPos, to: MapPos) {
     const fromLat = toRadians(from.lat);
     const toLat = toRadians(to.lat);

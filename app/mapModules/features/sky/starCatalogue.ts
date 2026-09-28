@@ -1,14 +1,6 @@
 /**
- * The bright-star catalogue and constellation figures the peak finder's sky draws - the SDK demo's
- * (`DemoStarCatalogue`): every star down to about magnitude 3, plus the fainter ones a figure needs.
- *
- * J2000 right ascension (HOURS) and declination (degrees), visual magnitude. Precession since J2000
- * is about a third of a degree and is not applied: a star is drawn a few pixels across.
- *
- * `wikidata` ids were resolved by name through Wikipedia and Wikidata, and each star's checked
- * against its Wikidata coordinates (under half a degree).
- *
- * Pure data: no NativeScript import.
+ * J2000 right ascension (HOURS), declination (degrees), visual magnitude. Precession since J2000
+ * (~1/3 degree) is not applied. Pure data: no NativeScript import.
  */
 
 export interface CatalogueStar {

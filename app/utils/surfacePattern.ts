@@ -2,41 +2,25 @@ import { BitmapShader, Canvas, Matrix, Paint, Style, TileMode } from '@nativescr
 import { Color, ImageSource, knownFolders, path } from '@nativescript/core';
 
 /**
- * Surfaces are told apart by hatching rather than by colour, because the eink screen renders the
- * whole `surfaceColors` palette as a handful of indistinguishable greys.
- *
- * The hatching comes from the seamless tiles in `assets/images/surfaces`, repeated by a shader: a
- * band costs one drawRect whatever its width, where drawing the strokes one by one cost a few
- * hundred native calls per band per frame. See `generate.py` there to change a pattern.
+ * Hatching rather than colour: e-ink renders the `surfaceColors` palette as indistinguishable greys.
+ * Tiles from `assets/images/surfaces` (see `generate.py` there) repeated by a shader, one drawRect per band.
  */
 export type SurfacePattern = 'solid' | 'brick' | 'fine_dots' | 'coarse_dots' | 'dashes' | 'diagonal' | 'cross' | 'ladder' | 'chevron';
 
-/**
- * The pattern says what the ground feels like, so it reads without a legend:
- * nothing for asphalt, dots for loose ground, and more strokes the harder the going.
- */
 export const surfacePatterns: { [id: string]: SurfacePattern } = {
-    // rolling surfaces: nothing to draw, they are the baseline
     highway: 'solid',
     street: 'solid',
     road: 'solid',
     paved: 'solid',
     paved_smooth: 'solid',
     cycleway: 'solid',
-    // still paved, but you feel it: cobbles and setts
     paved_rough: 'brick',
-    // bound gravel, rides almost like a road
     compacted: 'fine_dots',
-    // loose stones, the pattern gets coarser as the grip gets worse
     gravel: 'coarse_dots',
-    // bare ground, scuffed rather than stony
     dirt: 'dashes',
-    // forest and farm tracks
     track: 'diagonal',
-    // walking only
     path: 'cross',
     steps: 'ladder',
-    // hiking scale: the first three are walked, the last three are climbed
     sac_scale_1: 'cross',
     sac_scale_2: 'cross',
     sac_scale_3: 'cross',
@@ -45,10 +29,7 @@ export const surfacePatterns: { [id: string]: SurfacePattern } = {
     sac_scale_6: 'chevron'
 };
 
-/**
- * Size the tile is drawn at, in canvas units. The files are 48px so they land on more device pixels
- * than they cover and stay crisp instead of being upscaled into a blur.
- */
+/** In canvas units. The files are 48px so they stay crisp instead of being upscaled. */
 const TILE_SIZE = 12;
 const TILES_FOLDER = path.join(knownFolders.currentApp().path, 'assets', 'images', 'surfaces');
 
@@ -105,8 +86,7 @@ function getPatternShader(pattern: SurfacePattern, color: Color | string | numbe
             shader.setLocalMatrix(matrix);
             shaderCache[key] = shader;
         } catch (error) {
-            // a band without its hatching is still readable; a throw here would abort the whole widget
-            // half drawn, leaving every band after this one missing
+            // a throw here would abort the whole widget half drawn; a band without hatching is still readable
             console.error('failed to load the surface pattern', key, error);
             return null;
         }

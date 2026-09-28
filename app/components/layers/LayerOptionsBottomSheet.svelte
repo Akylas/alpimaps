@@ -26,8 +26,7 @@
 
     $: downloadable = item.provider.downloadable || devMode;
     $: cacheable = item.provider.cacheable || !PRODUCTION;
-    // the layer's source, held for the length of this sheet: it is a reference, and destroying it
-    // does not touch the layer's own
+    // a reference: destroying it leaves the layer's own source intact
     $: source = item.layer.source() as MassifSource<'massif::PersistentCacheTileDataSource'>;
     $: persistent = !!source?.is('massif::PersistentCacheTileDataSource');
     $: cacheOnlyMode = persistent && source.get('cacheOnlyMode');
@@ -47,8 +46,7 @@
         const result = { ...item.options };
 
         Object.keys(result).forEach((k) => {
-            // a surface handle has no JS properties: reading one gives undefined, and transformBack
-            // then dereferences it
+            // layer.get, not layer[k]: a surface handle has no JS properties
             const value = layer.get(k);
             result[k].value = opts[k].transformBack ? opts[k].transformBack(value) : value;
         });
@@ -198,8 +196,7 @@
     function getTitle() {
         let result = item.name.toUpperCase();
         if (persistent) {
-            // from the item, not the source: `databasePath` is a constructor argument of
-            // PersistentCacheTileDataSource, so no path reads it back off the built object
+            // `databasePath` is constructor-only on the source, so it can't be read back from it
             const { databasePath } = item;
             if (databasePath && File.exists(databasePath)) {
                 result += ` (${formatSize(File.fromPath(databasePath).size)})`;

@@ -1,16 +1,9 @@
 import { ApplicationSettings, Color } from '@nativescript/core';
 import { type RouteInstruction, RoutingAction } from '~/models/Item';
 
-/** The costing models valhalla answers to. */
 export type ValhallaProfile = 'car' | 'auto' | 'bus' | 'bicycle' | 'pedestrian' | 'truck' | 'motorcycle';
 
-/**
- * One maneuver, as the SDK hands the whole list over.
- *
- * `action` is the enum's ORDINAL, whatever the property's doc string says: `getInstructionsJSON`
- * writes `static_cast<int>(instruction.getAction())`. It lines up with `RoutingAction` here, which
- * is why this is stored straight through.
- */
+/** `action` is the enum's ORDINAL (`getInstructionsJSON` casts it to int), which lines up with `RoutingAction`. */
 export interface RawInstruction {
     action: RoutingAction;
     pointIndex: number;
@@ -23,21 +16,8 @@ export interface RawInstruction {
 }
 
 /**
- * The maneuvers of a routing result, in the shape items store them in.
- *
- * Shared because three callers need exactly this and each used to carry its own copy: the directions
- * panel, turning a recorded track into instructions, and rerouting during navigation.
- *
- * Takes the maneuver LIST rather than the RoutingResult it came off: the result is destroyed with
- * its delivery, so `computeRoute` has already read `instructionsJSON` out of it by the time any of
- * these callers run. It used to be handed a stand-in object with one `get` on it, which is a
- * RoutingResult only as far as this function happens to look.
- *
- * The whole list arrives as one `instructionsJSON` read. Walking it instruction by instruction was
- * a call per maneuver plus one per field, and a mountain route has hundreds.
- *
- * `mapIndex` rewrites the point index a maneuver refers to, for the callers whose polyline is not the
- * result's own. Returning null from it drops the maneuver.
+ * Takes the maneuver list, read once as `instructionsJSON`: the RoutingResult is destroyed with its delivery.
+ * `mapIndex` remaps point indices for polylines that are not the result's own; null drops the maneuver.
  */
 export function instructionsFromResult(raw: RawInstruction[], mapIndex?: (pointIndex: number) => number): RouteInstruction[] {
     const instructions: RouteInstruction[] = [];
@@ -197,7 +177,6 @@ export const defaultProfileCostingOptions = {
     motorcycle: { use_tolls: 1, use_trails: 0 }
 };
 
-/** Ground surface colors, shared by the route stats chart and the navigation surface widget. */
 export const surfaceColors = {
     highway: '#E6C264',
     track: '#AD9067',

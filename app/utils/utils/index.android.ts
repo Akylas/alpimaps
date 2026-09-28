@@ -19,8 +19,6 @@ export async function askForManagePermission() {
     if (checkManagePermission()) {
         return true;
     }
-    //If the draw over permission is not available open the settings screen
-    //to grant the permission.
     return new Promise<boolean>((resolve, reject) => {
         const REQUEST_CODE = 6646;
         const onActivityResultHandler = (data: AndroidActivityResultEventData) => {
@@ -177,7 +175,7 @@ export async function pickColor(color: Color | string, options: { alpha?: boolea
                     }
                 })
             )
-            .setBottomSpace(12); // set a bottom space between the last slidebar and buttons.
+            .setBottomSpace(12);
 
         builder.getColorPickerView().setInitialColor(color.android);
         const popup = builder.create();
@@ -232,7 +230,6 @@ export function moveFileOrFolder(sourceLocationPath: string, targetLocationPath:
         const out = new java.io.FileOutputStream(targetLocation);
         const inStream = new java.io.FileInputStream(sourceLocation);
 
-        // Copy the bits from instream to outstream
         const buf = Array.create('byte', 1024);
         let len;
         while ((len = inStream.read(buf)) > 0) {
@@ -298,9 +295,8 @@ export function scheduleRefreshAlarm() {
     DEV_LOG && console.log('scheduleRefreshAlarm', enabled);
     if (enabled) {
         const context = Utils.android.getApplicationContext();
-        // Reschedule the alarm
         const alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager;
-        const triggerAtMillis = java.lang.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000); // 15 minutes from now
+        const triggerAtMillis = java.lang.System.currentTimeMillis() + ApplicationSettings.getNumber('refreshAlarmInterval', 60 * 1000);
         if (pendingAlarmIntent !== null) {
             alarmManager.cancel(pendingAlarmIntent);
         }
@@ -312,7 +308,6 @@ export function scheduleRefreshAlarm() {
             android.app.PendingIntent.FLAG_UPDATE_CURRENT | android.app.PendingIntent.FLAG_IMMUTABLE
         );
 
-        // Reschedule using setExactAndAllowWhileIdle
         alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingAlarmIntent);
     }
 }

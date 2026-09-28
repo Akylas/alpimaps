@@ -63,11 +63,7 @@
     export let showWaypoints = true;
     let chart: NativeViewElementNode<LineChart>;
     export let showProfileGrades = true;
-    /**
-     * Widget sized variant used by the navigation bar: no axes, no labels, no limit lines and no
-     * gestures, just the silhouette and where you are on it. Same chart underneath, so it keeps the
-     * point filtering and the curve rendering.
-     */
+    /** navigation bar widget variant: no axes, labels, limit lines or gestures */
     export let mini = false;
     /** the fill dithers into noise on eink, where the silhouette alone reads better */
     export let filled = true;
@@ -78,7 +74,6 @@
         applyRange(range);
     }
 
-    /** Windows the chart onto part of the profile through the axis bounds, values left untouched. */
     function applyRange(range: { fromIndex: number; toIndex: number }) {
         const chartView = chart?.nativeView;
         const data = item?.profile?.data;

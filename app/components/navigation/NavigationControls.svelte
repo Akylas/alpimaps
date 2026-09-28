@@ -65,10 +65,8 @@
     }
 </script>
 
-<!-- square cards, centred on the info row so the whole bar reads as one line of tiles.
-     Play/pause is deliberately the *last* child: the row is anchored to the right of the bar, so with
-     it at the end it sits at the same place whatever else is shown, and running and paused line up.
-     Everything conditional extends leftwards from it -->
+<!-- play/pause is deliberately the *last* child: the row is right-anchored, so it stays in place
+     whatever else is shown; everything conditional extends leftwards from it -->
 <flexlayout alignItems="center" flexDirection="row" {...$$restProps}>
     <!-- stopping and tuning are not things you do at speed: hide them while running to give the figures room -->
     <NavigationCard height={buttonSize} marginRight={8} visibility={$isNavigationRunning ? 'collapse' : 'visible'} width={buttonSize}>
@@ -77,11 +75,9 @@
     <NavigationCard height={buttonSize} marginRight={8} visibility={$isNavigationRunning ? 'collapse' : 'visible'} width={buttonSize}>
         <IconButton color={colorOnSurfaceVariant} size={buttonSize} text="mdi-tune" tooltip={lc('navigation_settings')} on:tap={showNavigationSettings} />
     </NavigationCard>
-    <!-- only there once the user has panned away, so it does not take room the rest of the time -->
     <NavigationCard height={buttonSize} marginRight={8} visibility={$userFollowStore ? 'collapse' : 'visible'} width={buttonSize}>
         <IconButton color={colorPrimary} size={buttonSize} text="mdi-crosshairs-gps" tooltip={lc('recenter_navigation')} on:tap={followUserAgain} />
     </NavigationCard>
-    <!-- only while a reroute is in effect: it is the way back to the route the user actually picked -->
     <NavigationCard height={buttonSize} marginRight={8} visibility={rerouted ? 'visible' : 'collapse'} width={buttonSize}>
         <IconButton color={colorOnSurfaceVariant} size={buttonSize} text="mdi-undo-variant" tooltip={lc('navigation_undo_reroute')} on:tap={undoReroute} />
     </NavigationCard>

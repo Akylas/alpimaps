@@ -19,7 +19,7 @@ export const desiredAccuracy = __ANDROID__ ? CoreTypes.Accuracy.high : kCLLocati
 export const updateDistance = 0;
 export const maximumAge = 3000;
 export const timeout = 20000;
-/** ms: the unit `@nativescript-community/gps` hands to `requestLocationUpdates`. 0 = as fast as it comes */
+/** ms. 0 = as fast as it comes */
 export const minimumUpdateTime = 0;
 export type GeoLocation = GenericGeoLocation<LatLonKeys>;
 
@@ -32,11 +32,8 @@ const SESSION_MIN_DISTANCE = 2;
 /** meters: altimeter noise floor, below which a climb is not counted */
 const SESSION_ALTITUDE_THRESHOLD = 3;
 /**
- * ms: how long a screen refresh owns the resume/pause events it causes.
- *
- * The eink refresh is a fire and forget broadcast, so on any other device nothing comes back and the
- * window has to close on its own. A flag cleared by the pause used to stay set forever there, and
- * swallow the user's next real unlock.
+ * ms: how long a screen refresh owns the resume/pause events it causes. The eink refresh is fire and
+ * forget, so on other devices nothing comes back and the window must close on its own.
  */
 const SCREEN_REFRESH_IGNORE_WINDOW = 5000;
 
@@ -89,18 +86,15 @@ export interface UserLocationdEventData extends GPSEvent {
 }
 
 export interface SessionChronoEventData extends GPSEvent {
-    data: number; // chrono
+    data: number;
 }
 
 const TAG = '[GeoHandler]';
 
 export class GeoHandler extends Handler {
     watchId;
-    /**
-     * A fresh watch replays the last known fix straight away. It is not news, and treating it as such
-     * is what let a screen refresh restart the watch and the replayed fix ask for another refresh.
-     * Consumed by whoever reads the first fix after a restart.
-     */
+    // a fresh watch replays the last known fix: not news, else a screen refresh loops on it.
+    // Consumed by whoever reads the first fix after a restart.
     watchJustRestarted = false;
     /** incremented by every start/stop, so a startWatch that resolves late can tell it is obsolete */
     private watchGeneration = 0;
@@ -132,11 +126,8 @@ export class GeoHandler extends Handler {
         }
     }
 
-    /**
-     * Navigation and a recording session both need fixes with the screen off, so neither may have its
-     * watch stopped on pause nor its foreground service dropped on resume — android 14 refuses to
-     * start a location one again from the background, so it could never be restored.
-     */
+    // fixes needed with the screen off: never drop the foreground service, android 14 refuses to
+    // restart a location one from the background
     private get needsBackgroundLocation() {
         return navigationService.isNavigating || !!this.currentSession;
     }
@@ -159,9 +150,8 @@ export class GeoHandler extends Handler {
         DEV_LOG && console.log('onAppResume', !!this.currentSession, this.isWatching(), this.wasWatchingBeforePause, this.needsBackgroundLocation);
 
         if (this.needsBackgroundLocation) {
-            // the rate is the background one right now, so it has to go back to the foreground one — and
-            // on ios the background location options go with it. Both only take on a fresh watch.
-            // The notification stays: dropping it here is what makes the next screen lock unrecoverable
+            // back to the foreground rate (and ios options): both only apply on a fresh watch.
+            // Keep the notification: dropping it makes the next screen lock unrecoverable
             if (__IOS__ || navigationService.isNavigating) {
                 this.restartWatch();
             }
@@ -193,10 +183,8 @@ export class GeoHandler extends Handler {
         DEV_LOG && console.log('onAppPause', !!this.currentSession, this.isWatching(), this.stopGpsBackground, this.needsBackgroundLocation);
 
         if (this.needsBackgroundLocation) {
-            // the watch has to keep running, only slower: a fresh one is what applies the background
-            // cadence getWatchOptions returns now that the app is in background, and on ios the
-            // background location options. The foreground service is already up, started while the app
-            // was still visible — this is exactly where it must not be touched
+            // keep watching, only slower: a fresh watch applies the background cadence (and ios
+            // options). Don't touch the foreground service here: it was started while visible
             if (__IOS__ || navigationService.isNavigating) {
                 this.restartWatch();
             }
@@ -451,9 +439,7 @@ export class GeoHandler extends Handler {
         const generation = ++this.watchGeneration;
         const watchId = await geolocation.watchLocation(this.onLocation, this.onLocationError, options);
         if (generation !== this.watchGeneration) {
-            // a stopWatch (or another startWatch) landed while we were still starting. Assigning now
-            // would resurrect a watch nobody can stop: watchId was null when stopWatch ran, so it
-            // cleared nothing. Drop this one instead
+            // a stopWatch/startWatch landed meanwhile: assigning now would resurrect an unstoppable watch
             DEV_LOG && console.log('startWatch: obsolete before it started, clearing', watchId);
             geolocation.clearWatch(watchId);
             return;
@@ -548,9 +534,8 @@ export class GeoHandler extends Handler {
         // flight and this is what tells it to throw its watch away rather than install it
         this.watchGeneration++;
         if (this.watchId) {
-            // navigation restarts the watch whenever its cadence changes. Dropping the foreground
-            // service each time would be fatal: android 14 refuses to start a location one again
-            // from the background, so it could never be restored
+            // navigation restarts the watch on cadence changes: keep the foreground service, android 14
+            // won't restart a location one from the background
             if (__ANDROID__ && !this.needsBackgroundLocation) {
                 (this.service.bgService as WeakRef<AndroidBgService>)?.get()?.removeForeground();
             }

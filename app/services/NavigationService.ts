@@ -76,11 +76,7 @@ export const NavigationReroutedEvent = 'navigationRerouted';
 
 /** fraction of the screen height that lies ahead of the user, given the navigation focus offset */
 const AHEAD_SCREEN_FRACTION = 0.75;
-/**
- * fraction of the *full* screen width a point has to stay within to count as visible, ie 80% of the
- * half width the user's dot sits in the middle of. The rest is the margin that keeps a maneuver off
- * the very edge of the screen.
- */
+/** fraction of the *full* screen width a point must stay within, ie 80% of the half width; the rest is margin */
 const LATERAL_SCREEN_FRACTION = 0.4;
 /** vertices of the current leg the framing looks at, so its cost does not follow the route's density */
 const LEG_FRAME_SAMPLES = 20;
@@ -95,9 +91,8 @@ const SPEED_DROP_MIN_AVERAGE = 2;
 /** ms between two speed-drop wakes */
 const SPEED_DROP_MIN_INTERVAL = 20000;
 /**
- * meters: closer than this to a maneuver there is no time to read the screen before being on it, so
- * waking only shows the middle of the turn. Reached when the instruction index advances to one we are
- * already on top of, which is what clustered maneuvers do — a roundabout's enter and exit especially.
+ * meters: closer than this there is no time to read the screen, waking only shows the middle of the
+ * turn. Happens with clustered maneuvers, a roundabout's enter and exit especially.
  */
 const MIN_WAKE_LEAD = 30;
 /** ms: gps rate while navigation is auto-paused, just enough to notice we started moving again */
@@ -122,11 +117,7 @@ const AUTO_REROUTE_MIN_OFF_ROUTE_DISTANCE = 100;
 export class NavigationService extends Observable {
     geoHandler: GeoHandler;
 
-    /**
-     * The route being followed — never the selected item itself, so a reroute cannot rewrite the
-     * user's own route. Its positions are cached for the whole navigation: rebuilding the native
-     * vector on every fix would be wasteful.
-     */
+    /** never the selected item itself, so a reroute cannot rewrite the user's own route */
     private route: NavigationRoute = null;
     /** how the route is travelled decides what counts as far and as slow, see `navigationProfileTuning` */
     private mProfileTuning: NavigationProfileTuning = null;
@@ -223,22 +214,18 @@ export class NavigationService extends Observable {
         // they were already watching, so stopping puts the gps back the way we found it
         this.wasWatchingBeforeStart = get(watchingLocation);
 
-        // everything below asks the geo handler questions it answers from the navigation state, so that
-        // state has to be true first. Started last, it made `needsBackgroundLocation` false for the
-        // whole of this method — and the watch replacement inside startWatch tore down the foreground
-        // service one line after we started it. Listening first also means no fix is missed
+        // state first: the geo handler answers from it (`needsBackgroundLocation`), else startWatch tears
+        // down the foreground service. Listening first also means no fix is missed
         this.listen();
         navigationItem.set(item);
         this.setState(NavigationState.RUNNING);
 
         try {
-            // has to happen now, while the app is still in the foreground: android 14 refuses to start a
-            // location foreground service from the background, so waiting for onAppPause is too late. And
-            // before the watch, so it is registered with the service already holding the location grant
+            // now, in foreground: android 14 refuses to start a location foreground service from the
+            // background. Before the watch, so the service already holds the location grant
             this.geoHandler.showForegroundNotification();
 
-            // one start, at the navigation cadence: starting and then restarting used to register two
-            // watches, and startSession a third
+            // one start, at the navigation cadence: a start then restart registers extra watches
             await userLocationModule.startWatchLocation({ force: true });
             userLocationModule.navigationMode = true;
 
@@ -246,8 +233,7 @@ export class NavigationService extends Observable {
                 await this.geoHandler.startSession();
             }
         } catch (error) {
-            // the state is already RUNNING, so a half started navigation would look like a running one
-            // with no gps behind it. Take it back down before handing the error on
+            // the state is already RUNNING: take a half started navigation back down
             await this.stop();
             throw error;
         }
@@ -260,11 +246,10 @@ export class NavigationService extends Observable {
         DEV_LOG && console.log(TAG, 'stop, watching before teardown:', this.geoHandler.isWatching());
         const userLocationModule = this.userLocationModule;
         const keepWatching = this.wasWatchingBeforeStart;
-        // everything here is best effort: whatever fails, the gps and the stores must still end up in
-        // a sane state. A throw halfway through used to leave the watch running with no way to stop it
+        // best effort: whatever fails, the gps and the stores must still end up in a sane state
         try {
             this.unlisten();
-            // stopWatch no longer drops it while navigating, so navigation has to take it down itself
+            // stopWatch does not drop it while navigating
             this.geoHandler.hideForegroundNotification();
             if (this.geoHandler.isSessionRunning()) {
                 this.geoHandler.stopSession();
@@ -301,11 +286,7 @@ export class NavigationService extends Observable {
         }
     }
 
-    /**
-     * Pausing clears the navigation UI and gives the search bar back, and is also what auto-pause
-     * triggers. The gps keeps running at a slow rate: an auto-pause must be able to notice we moved
-     * again, and the user location dot should stay live either way.
-     */
+    // the gps keeps running slowly: an auto-pause must notice movement, and the dot stays live
     async pause(auto = false) {
         if (this.state !== NavigationState.RUNNING) {
             return;
@@ -324,11 +305,7 @@ export class NavigationService extends Observable {
         await this.restartWatch();
     }
 
-    /**
-     * `startWatch` already replaces whatever is running, and unlike `geoHandler.restartWatch` it does
-     * not give up when nothing is: `pauseSession` stops the watch, so going through the latter left a
-     * paused navigation with no gps at all — and an auto-pause with no way to notice we set off again.
-     */
+    // not `geoHandler.restartWatch`: it gives up when nothing runs, and `pauseSession` stops the watch
     restartWatch() {
         return this.geoHandler?.startWatch();
     }
@@ -415,14 +392,7 @@ export class NavigationService extends Observable {
     //     this.restartWatch();
     // }
 
-    /**
-     * Navigation raises the gps rate in background instead of lowering it, which is the whole point
-     * of the mode: we need to know a maneuver is coming while the screen is off.
-     *
-     * Everywhere else it lowers it. A paused navigation used to keep the full foreground rate for as
-     * long as it stayed paused, which is the most expensive thing the mode can do for the least: the
-     * only thing paused mode reads from a fix is whether the user started moving again.
-     */
+    // RAISES the background gps rate (a maneuver must be noticed with the screen off); paused lowers it
     public getWatchOptions(navigating = this.isNavigating) {
         if (!navigating) {
             return {};
@@ -440,13 +410,7 @@ export class NavigationService extends Observable {
         }
     }
 
-    /**
-     * The background rate, slowed down while nothing is about to happen.
-     *
-     * Fixes are what a navigation costs in battery, and on a long leg most of them tell us something we
-     * already knew. Time to the next maneuver is the honest measure of how much we need them: far from
-     * it the rate drops, and it is back to the user's setting well before the maneuver is announced.
-     */
+    // slowed down when far (in time) from the next maneuver, back to the user's rate well before it
     private backgroundUpdateInterval() {
         const interval = get(navigationBackgroundUpdateInterval);
         const progress = get(navigationProgress);
@@ -461,10 +425,7 @@ export class NavigationService extends Observable {
         return Math.max(interval, Math.min(interval * FAR_FROM_MANEUVER_INTERVAL_FACTOR, MAX_BACKGROUND_UPDATE_INTERVAL));
     }
 
-    /**
-     * Applies a change of background rate, and only a change: restarting the watch on every fix would
-     * cost more than the fixes it saves.
-     */
+    // only on a change: restarting the watch every fix costs more than the fixes it saves
     private updateBackgroundInterval() {
         if (this.state !== NavigationState.RUNNING) {
             return;
@@ -494,10 +455,8 @@ export class NavigationService extends Observable {
             if (!location || !this.isNavigating) {
                 return;
             }
-            // a fresh watch replays the last known fix at once. Acting on one we already acted on counts
-            // it twice in the off route detector and can wake the screen — which turns the screen on,
-            // pauses and resumes the app, restarts the watch and replays it again. A fix from the gap
-            // between the two watches is genuinely newer, and stays news
+            // a fresh watch replays the last fix: acting on it twice can wake the screen, which
+            // restarts the watch and replays it again
             const fixTime = location.elapsedBoot ?? location.timestamp;
             if (this.geoHandler.watchJustRestarted) {
                 this.geoHandler.watchJustRestarted = false;
@@ -617,11 +576,7 @@ export class NavigationService extends Observable {
         });
     }
 
-    /**
-     * Takes the user back to the route without being asked, when the way back is short enough that
-     * asking would be noise. Anything further is a decision — which way to go, or whether to go back at
-     * all — and is left to the two buttons in the navigation bar.
-     */
+    // only when the way back is short; anything further is left to the navigation bar buttons
     private checkAutoReroute(location: GeoLocation) {
         if (!get(navigationAutoReroute)) {
             DEV_LOG && console.log(TAG, 'auto reroute skipped, disabled');
@@ -772,22 +727,14 @@ export class NavigationService extends Observable {
         }
     }
 
-    /**
-     * Persists extra data computed for the route while navigating — an elevation profile, road stats —
-     * and puts the updated item back everywhere it is read from.
-     *
-     * Only ever called with data that does not touch the geometry, so the cached positions and
-     * everything indexed by them stay valid: this is deliberately not `replaceBase`, which is for a
-     * route that actually changed.
-     */
+    // only for data that does not touch the geometry, so cached positions stay valid (not `replaceBase`)
     async updateNavigatedItem(data: Partial<IItem>) {
         const route = this.route;
         if (!route?.item) {
             return null;
         }
         const item = route.item;
-        // an item with no id was never saved — a computed route the user has not kept — so there is
-        // nothing to persist it into and the in-memory one is all there is
+        // no id: never saved, the in-memory item is all there is
         const updated = item.id !== undefined ? await getMapContext().mapModule('items').updateItem(item, data) : Object.assign(item, data);
         // navigation may have stopped or rerouted while we were computing
         if (this.route !== route) {
@@ -917,17 +864,8 @@ export class NavigationService extends Observable {
         });
     }
 
-    /**
-     * How much ground the current leg needs, along the direction of travel and across it.
-     *
-     * A look-ahead distance alone only ever describes road *straight ahead*: on a leg that turns 90° the
-     * end point sits to the side, and no amount of look-ahead brings it into frame. So the leg is
-     * sampled and each vertex resolved into a forward and a lateral distance from the user, which the
-     * zoom then has to satisfy in both axes.
-     *
-     * Null when the leg should not decide the zoom: crawling along a very long stretch, where framing
-     * the whole leg would zoom out to a map nobody can read.
-     */
+    // Look-ahead only covers road straight ahead: the leg's vertices give the forward and lateral
+    // ground the zoom must satisfy. Null when crawling a long stretch (would zoom out too far).
     private legFrameRequirement(progress: RouteProgress, speed: number) {
         const route = this.route;
         const instruction = progress.instruction;
@@ -973,13 +911,8 @@ export class NavigationService extends Observable {
         return forward > 0 || lateral > 0 ? { forward, lateral } : null;
     }
 
-    /**
-     * Converts the framed distances into a zoom by measuring what the map currently shows, rather
-     * than modelling the screen: that keeps us right whatever the device density and tile size.
-     *
-     * Whichever of the three constraints — the look-ahead, the leg's forward reach, its lateral reach —
-     * needs the most ground wins, so the leg can only ever widen the view the speed asked for.
-     */
+    // measures what the map shows rather than modelling the screen (density/tile size independent);
+    // the most demanding constraint wins, so the leg can only widen the view
     private zoomToFrame(lookAheadMeters: number, legFrame: { forward: number; lateral: number }) {
         const map = getMapContext().getMap();
         if (!map || !(lookAheadMeters > 0)) {
@@ -1032,12 +965,8 @@ export class NavigationService extends Observable {
         }
     }
 
-    /** Every screen refresh goes through here so there is one place to see why it did or did not fire. */
-    /**
-     * `requestScreenRefresh` throttles itself against the time the screen needs to go back off, so a
-     * refresh asked for here may not happen. Only a refresh that did counts as one: stamping it either
-     * way would also hold off the periodic refresh, which is the one meant to cover exactly this case.
-     */
+    // `requestScreenRefresh` throttles itself: only stamp a refresh that happened, else the periodic
+    // one is held off
     private refreshScreen(reason: string) {
         DEV_LOG && console.log(TAG, 'screen refresh:', reason);
         if (requestScreenRefresh(this.geoHandler)) {
@@ -1053,14 +982,7 @@ export class NavigationService extends Observable {
         this.pendingTurnPassedTime = 0;
     }
 
-    /**
-     * Whether a maneuver leaves the user pointing somewhere else, and so is worth a second look once
-     * it is done.
-     *
-     * A roundabout always is, whatever its own angle says: valhalla reports the turn *into* the ring,
-     * a handful of degrees, while the heading change the user actually experiences is spread across
-     * the entry, the ring and the exit.
-     */
+    // roundabouts always turn the user: valhalla's angle is only the few-degree turn *into* the ring
     private turnsTheUser(instruction: RouteInstruction) {
         switch (instruction.a) {
             case RoutingAction.ENTER_ROUNDABOUT:
@@ -1072,12 +994,8 @@ export class NavigationService extends Observable {
         return Math.abs(instruction.angle ?? 0) >= get(navigationTurnRefreshAngle);
     }
 
-    /**
-     * The refresh owed to a maneuver now behind us, held until the user is far enough past it that the
-     * map is worth looking at: mid turn the heading is still swinging and the screen shows the inside
-     * of the junction. Distance rather than a timer, so it means the same thing on foot and in a car —
-     * with the delay setting as a cap, because stopped just past a turn the distance never comes.
-     */
+    // held until far enough past the maneuver (mid turn the heading still swings); distance works on
+    // foot and in a car, the delay setting caps it for a stop just past the turn
     private checkManeuverRefresh(progress: RouteProgress, location: GeoLocation) {
         if (this.pendingTurnRefreshIndex < 0 || !(progress.instructionIndex > this.pendingTurnRefreshIndex)) {
             return false;
@@ -1099,10 +1017,6 @@ export class NavigationService extends Observable {
         return true;
     }
 
-    /**
-     * Waking the screen only makes sense when it is off, ie when the app is in background: that is
-     * the whole point of the mode, not having to turn the phone on to know what comes next.
-     */
     private checkWakeTriggers(progress: RouteProgress, speed: number, location: GeoLocation) {
         if (!__ANDROID__) {
             DEV_LOG && console.log(TAG, 'screen refresh skipped: not android');

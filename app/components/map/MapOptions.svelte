@@ -212,8 +212,8 @@
         return item.type || 'default';
     }
 
-    const nutiIconParams = ['contours', 'buildings'];
-    const layerIconParams = ['showSlopePercentages'];
+    const nutiIconParams = ['contours', 'buildings'] as const;
+    const layerIconParams = ['showSlopePercentages'] as const;
 </script>
 
 <gesturerootview height={350} rows="auto,*">

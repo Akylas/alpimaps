@@ -1,9 +1,6 @@
 import type { MassifLayer, MassifMap } from '@nativescript-community/ui-massifmaps/api';
 
-/**
- * Every kind of layer the map can hold. A feature that needs its own layer adds its id here and
- * to LAYERS_ORDER — the position in LAYERS_ORDER is what decides what draws on top of what.
- */
+/** A feature needing its own layer adds its id here and to LAYERS_ORDER. */
 export type LayerType = 'map' | 'routes' | 'customLayers' | 'selection' | 'items' | 'directions' | 'navigation' | 'userLocation' | 'search' | 'transit' | 'admin';
 
 /** Bottom to top: the first entry draws underneath everything else. */
@@ -15,17 +12,8 @@ export interface AddedLayer {
 }
 
 /**
- * Keeps the map's layer list ordered by LAYERS_ORDER.
- *
- * The SDK only knows a flat list of layers, so inserting one at "the right place" means working out
- * an index from the layers already added. This owns that arithmetic and the bookkeeping array that
- * mirrors the SDK's list; the map component only forwards to it.
- *
- * Everything goes through `map.layers()`, which is the facade's own `Layers` object — nothing here
- * touches a native layer list.
- *
- * The map is passed as a getter because it does not exist until the map view reports ready, while
- * modules may already have asked for layers by then.
+ * The SDK only knows a flat layer list: this derives insert indexes from LAYERS_ORDER and mirrors it.
+ * The map is a getter: modules may ask for layers before the map view is ready.
  */
 export class LayerStack {
     private readonly addedLayers: AddedLayer[] = [];

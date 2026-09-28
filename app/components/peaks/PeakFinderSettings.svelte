@@ -1,14 +1,6 @@
 <script lang="ts">
-    /**
-     * The peak finder's settings, behind the cog in its overlay.
-     *
-     * The rows are shared with the app's settings screen (`peakFinderSettingRows`), plus the moment the
-     * sun is drawn for, which only this sheet has.
-     *
-     * A COLLECTIONVIEW of DATA rows, like `Terrain3DSettings` — see the note there for why (a long
-     * stacklayout of sliders is built and measured in full while the sheet opens) and for what each
-     * `type` maps to.
-     */
+    // a collectionview rather than a stacklayout: a long list of sliders would be built and
+    // measured in full while the sheet opens
     import { Template } from '@nativescript-community/svelte-native/components';
     import StoreSegment from '~/components/settings/StoreSegment.svelte';
     import StoreSlider from '~/components/settings/StoreSlider.svelte';
@@ -19,7 +11,6 @@
 
     $: ({ colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
 
-    // The same rows as the app's settings screen - see peakFinderSettingRows.
     const rows = peakFinderSettingRows();
 
     function itemTemplateSelector(item: PeakFinderSettingRow) {

@@ -29,17 +29,10 @@
     inactivePaint.setColor('#F44336');
     northPaint.setColor('#F44336');
 
-    /*
-     * Get the total height of the text. Note that this is not the same as getTextSize/setTextSize.
-     * Also note that the ascent is negative and descent is positive, hence descent - ascent will give us
-     * absolute text height (a positive number).
-     */
+    // ascent is negative, so descent - ascent is the full text height (not getTextSize)
     const textHeight = Math.ceil(fontMetrics.descent - fontMetrics.ascent);
 
-    /*
-     * Height should be the same as two rows of small text plus a row of medium text. This is a
-     * rough approximation based on text sizes and the ratio between text size and actual height.
-     */
+    // rough approximation of two rows of small text plus a row of medium text
     const preferredHeight = ((2 * labelPaint.getTextSize() + 18) * textHeight) / labelPaint.getTextSize();
 
     const northArrow = new Path();
@@ -149,15 +142,10 @@
         labelPaint.setTextSize(mH * 0.045);
     }
 
-    /**
-     * Draws the grid lines and labels.
-     */
     function drawGrid(canvas: Canvas) {
-        //don't use Canvas.getWidth() and Canvas.getHeight() here, they may return incorrect values
         const w = canvas.getWidth();
         const h = canvas.getHeight();
 
-        // left boundary
         canvas.drawLine(gridStrokeWidth / 2, 0, gridStrokeWidth / 2, h - textHeight, gridPaintStrong);
 
         const numBars = getNumBars();
@@ -183,10 +171,8 @@
         // 236–300 (currently unused)
         if (draw_236_300) drawLabel(canvas, '236-300', 236, 65, numBars);
 
-        // 301–336 is Galileo
         if (draw_301_336) drawLabel(canvas, 'Galileo', 301, 36, numBars);
 
-        // range boundaries and auxiliary lines (after every 4th satellite)
         for (let nmeaID = 1; nmeaID < MAX_NMEA_ID; nmeaID++) {
             const pos = getGridPos(nmeaID);
             if (pos > 0) {
@@ -223,22 +209,11 @@
             }
         }
 
-        // right boundary
         canvas.drawLine(w - gridStrokeWidth / 2, h - textHeight, w - gridStrokeWidth / 2, 0, gridPaintStrong);
 
-        // bottom line
         canvas.drawLine(0, h - textHeight - gridStrokeWidth / 2, w, h - textHeight - gridStrokeWidth / 2, gridPaintStrong);
     }
 
-    /**
-     * Draws the label for a satellite range.
-     *
-     * @param canvas The {@code Canvas} on which the SNR view will appear.
-     * @param label The text to be displayed (the description of the satellite range, such as "GPS", "GLONASS" or "Beidou")
-     * @param startBar The NMEA ID of the first satellite in the range
-     * @param rangeBars The number of NMEA IDs in the range (ranges must be contiguous)
-     * @param numBars Total number of SNR bars being displayed, as returned by getNumBars()
-     */
     function drawLabel(canvas: Canvas, label, startBar, rangeBars, numBars) {
         const offsetBars = getGridPos(startBar) - 1;
         const w = canvas.getWidth();
@@ -251,14 +226,6 @@
         canvas.drawTextOnPath(label, labelPath, 0, -fontMetrics.descent, labelPaint);
     }
 
-    /**
-     * Draws the SNR bar for a satellite.
-     *
-     * @param canvas The {@code Canvas} on which the SNR view will appear.
-     * @param nmeaID The NMEA ID of the satellite, as returned by {@link android.location.GpsSatellite#getPrn()}.
-     * @param snr The signal-to-noise ratio (SNR) for the satellite.
-     * @param used Whether the satellite is used in the fix.
-     */
     function drawSatHorizontal(canvas: Canvas, w, h, { nmeaID, snr, usedInFix }) {
         const i = getGridPos(nmeaID);
 
@@ -271,16 +238,7 @@
         canvas.drawRect(x0, y1, x1, h - textHeight, usedInFix ? activePaint : inactivePaint);
     }
 
-    /**
-     * Returns the position of the SNR bar for a satellite in the grid.
-     * <p>
-     * This function returns the position at which the SNR bar for the
-     * satellite with the given {@code nmeaID} will appear in the grid, taking
-     * into account the visibility of NMEA ID ranges.
-     *
-     * @param nmeaID The NMEA ID of the satellite, as returned by {@link android.location.GpsSatellite#getPrn()}.
-     * @return The position of the SNR bar in the grid. The position of the first visible bar is 1. If {@code nmeaID} falls within a hidden range, -1 is returned.
-     */
+    // 1-based bar position with hidden ranges skipped; -1 if nmeaID is in a hidden range
     function getGridPos(nmeaID) {
         if (nmeaID < 1) return -1;
 
@@ -351,16 +309,6 @@
         return nmeaID - skip;
     }
 
-    /**
-     * Returns the number of SNR bars to draw
-     *
-     * The number of bars to draw varies depending on the systems supported by the device. Common
-     * numbers are 32 for a GPS-only receiver, 56 for a combined GPS/GLONASS receiver or 91 for a
-     * combined GPS/GLONASS/Beidou receiver. Another 36 bars are needed for Galileo; some receivers
-     * require additional bars for regional GNSS or assistance systems.
-     *
-     * @return The number of bars to draw
-     */
     function getNumBars() {
         return (
             (draw_1_32 ? 32 : 0) +
@@ -377,14 +325,7 @@
         );
     }
 
-    /**
-     * Initializes the SNR grid.
-     * <p>
-     * This method iterates through {@link #mSats} to determine which ranges of
-     * NMEA IDs will be drawn.
-     */
     function initializeGrid() {
-        // iterate through list to find out how many bars to draw
         if (mSats) {
             for (let index = 0; index < mSats.length; index++) {
                 const sat = mSats[index];
@@ -425,29 +366,16 @@
                 }
             }
         }
-        /*
-         * If we didn't get any valid ranges, display at least the GPS range.
-         * No need to check for extended ranges here - if they get drawn, so
-         * will their corresponding base range.
-         */
+        // no valid range: show at least GPS. Extended ranges always come with their base range.
         if (!(draw_1_32 || draw_33_54 || draw_65_88 || draw_97_192 || draw_193_195 || draw_201_235 || draw_236_300 || draw_301_336)) draw_1_32 = true;
     }
 
-    /**
-     * Redraws the SNR view.
-     * <p>
-     * This method is called whenever the view needs to be redrawn. Besides the
-     * usual cases of view creation/recreation, this also occurs when the
-     * {@link #showSats(Iterable)} has been called to indicate new SNR data is
-     * available.
-     */
     function onCanvasHorizontalDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
             const mW = canvas.getWidth();
             const mH = canvas.getHeight();
             initializeGrid();
 
-            // draw the SNR bars
             if (mSats) {
                 for (let index = 0; index < mSats.length; index++) {
                     const sat = mSats[index];

@@ -24,10 +24,9 @@ import MapModule, { getMapContext } from './MapModule';
 import { type MapPos, fromBounds, fromPosition, toPosition } from '~/utils/geo';
 const mapContext = getMapContext();
 
-/** Element and request ids have to be unique in the registry; a counter is the cheapest way to be. */
+/** registry ids must be unique */
 let localPointId = 0;
 
-/** A closed GeoJSON polygon from four corners, which is all a search bound ever is here. */
 function ring(corners: [number, number][]): GeoJSON.Polygon {
     return { type: 'Polygon', coordinates: [[...corners, corners[0]]] };
 }
@@ -173,7 +172,6 @@ export default class ItemsModule extends MapModule {
     setVisibility(value: boolean) {
         this.localVectorLayer?.visible(value);
     }
-    /** A dot on the map. The style is a spec, so a bigger pin is a number in JSON. */
     createLocalPoint(position: MapPos, style: { [key: string]: any }) {
         return mapContext.getMap().object('element', `element.point.${++localPointId}`, { type: 'point', position: toPosition(position), style: { type: 'point', ...style } });
     }
@@ -229,12 +227,8 @@ export default class ItemsModule extends MapModule {
         });
     }
     /**
-     * Every piece of an OSM route, searched out of the tiles it is drawn from.
-     *
-     * A route in vector tiles is many features - one per tile, often several per tile - so this
-     * finds them all by id and stitches them together. The search is bounded by the route's own
-     * extent when it has one, and by what is on screen otherwise: unbounded it would scan the world
-     * at tile zoom.
+     * A route in vector tiles is split into many features (per tile): find them all by id and stitch
+     * them. The search is bounded by the route extent or the screen, else it scans the world.
      */
     async getRoutePositions(item: IItem) {
         const layer = item.layer;
@@ -420,7 +414,7 @@ export default class ItemsModule extends MapModule {
             item = await this.itemRepository.updateItem(item as Item);
             this.notify({ eventName: 'itemChanged', item });
         }
-        return item as Item; // return the first one
+        return item as Item;
     }
     async showItem(item: IItem) {
         if (item.onMap === 0) {
@@ -531,9 +525,6 @@ export default class ItemsModule extends MapModule {
             return;
         }
         // console.log('takeItemPicture', new Error().stack);
-        //item needs to be already selected
-        // we hide other items before the screenshot
-        // and we show theme again after it
         let oldItem;
         let mapBounds;
         if (restore) {
@@ -541,7 +532,6 @@ export default class ItemsModule extends MapModule {
             mapBounds = mapContext.getMap().camera().bounds();
         }
         if (item.image_path && File.exists(item.image_path)) {
-            // we need to evict from image cache
             getImagePipeline().evictFromCache(item.image_path);
         }
         return new Promise<void>((resolve) => {
@@ -566,7 +556,6 @@ export default class ItemsModule extends MapModule {
                     image = await map.capture(true);
                     // DEV_LOG && console.log('takeItemPicture', 'onMapStable1');
                     image.saveToFile(item.image_path, 'jpg');
-                    // restore everyting
                     mapContext.innerDecoder.call('setStyleParameter', 'hide_unselected', '0');
                     if (restore) {
                         if (oldItem) {
@@ -685,7 +674,6 @@ export default class ItemsModule extends MapModule {
             };
             toShare.type = 'Feature';
             if (itemIsRoute && item.profile) {
-                // we add elevation to coordinates
                 (item.geometry as LineString).coordinates.forEach((c, index) => {
                     const d = item.profile.data[index];
                     if (c.length === 2) {

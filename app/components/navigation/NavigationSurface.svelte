@@ -37,11 +37,8 @@
     $: profile = $navigationItem?.profile;
     $: onPathIndex = $navigationProgress?.onPathIndex ?? -1;
     $: available = !!segments?.length || !!stats?.surfaces?.length;
-    // an icon rather than the word, and the span beside it: "surfaces" alone never said how far ahead
-    // the bar looks, and spelled out it was too small to read anyway
     $: caption = segments?.length ? formatDistance($navigationSurfaceSpan) : '';
-    // the band only moves when the position index does: redrawing on every fix is a canvas pass for a
-    // picture that has not changed, which on a long straight is most of them
+    // the band only moves with the position index, so don't redraw on every fix
     let drawnIndex = -2;
     let drawnSpan = -1;
     let drawnStats = null;
@@ -92,10 +89,6 @@
         return low;
     }
 
-    /**
-     * Index window the bar covers: `navigation_surface_span` meters of road ahead plus a short stretch
-     * behind, so the widget answers "what am I riding into" at a scale the user chose.
-     */
     function computeWindow(routeEnd: number) {
         const data = profile?.data;
         const position = Math.min(Math.max(onPathIndex, 0), routeEnd);

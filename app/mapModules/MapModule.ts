@@ -45,59 +45,36 @@ export type { AddedLayer, LayerType };
 
 export type ContextCallback<T = MassifMap> = (data: T) => void;
 
-/** A vector tile decoder, which is the object every style knob is written through. */
 export type MapDecoder = MassifObject<'massif::MBVectorTileDecoder'>;
 
 const appPath = knownFolders.currentApp().path;
 
-/**
- * A URL the SDK's own loader reads: the real file system when we can, the bundle otherwise.
- *
- * In a debug build the styles sit on disk and are live-reloaded; in a release build they are inside
- * the APK, where no file path reaches them. `assets://` is the SDK's scheme for that.
- */
+// file:// when on disk (debug, live-reloaded), else the SDK's `assets://` scheme (inside the APK)
 function assetUrl(relativePath: string) {
-    // An absolute path is passed through rather than joined onto appPath: joining twice produced
-    // `assets://app//data/data/.../…`, which reads as a missing asset rather than a bad call.
+    // absolute paths pass through: joining twice yields a bogus `assets://app//data/...`
     const filePath = relativePath.startsWith('/') ? relativePath : path.join(appPath, relativePath);
     return File.exists(filePath) ? `file://${filePath}` : `assets://app/${relativePath}`;
 }
 
-/**
- * The app's own faces, for the names the styles use that no device font carries.
- *
- * `osm.ttf` is the map's icon font (`@osm`) and MDI is what a saved item's `mapFontFamily` points
- * at. A fallback font is registered in the decoder's font manager under the name its OWN name table
- * gives - `osm` and `Material Design Icons` - so a style reaches them by `face-name` exactly as it
- * did when they were packaged, and the text faces come from the device.
- *
- * This is what replaced the shared `base.zip` asset package chained under every style: it carried
- * these two fonts plus a text family, and a style asset package was the only way to supply a face.
- */
+// Fallback fonts for style face-names no device font carries, registered under their OWN name-table
+// name (`osm`, `Material Design Icons`); text faces come from the device.
 const APP_FONTS = ['fonts/osm.ttf', 'fonts/materialdesignicons-webfont.ttf'];
 
-/**
- * Hands the app fonts to a decoder.
- *
- * Read through the spec API rather than by hand: `create` returns the SAME object for an id built
- * with an identical spec, so the bytes are read once and every decoder shares them. Registered for
- * good on purpose - a decoder holds its fonts for as long as it draws.
- */
+// `create` returns the SAME object for an identical spec, so the bytes are read once and shared
 function addAppFonts(decoder: MapDecoder) {
     for (const relativePath of APP_FONTS) {
         const font = api.create(
             'data',
             `font.${relativePath}`,
             { type: 'url', url: assetUrl(relativePath) },
-            // A hand-written factory, so it is the untyped `create` overload: `data` is bytes from a
-            // URL rather than a constructor the schema could describe.
+            // hand-written factory: untyped `create` overload
             'massif::BinaryData'
         );
         decoder.call('addFallbackFont', font.handle);
     }
 }
 
-/** A click, whatever it landed on. The facade reports the enum by its constant name. */
+/** The facade reports the enum by its constant name. */
 export const ClickType = {
     SINGLE: 'CLICK_TYPE_SINGLE',
     LONG: 'CLICK_TYPE_LONG',
@@ -114,12 +91,6 @@ export const MapMoveReason = {
 } as const;
 export type MapMoveReason = (typeof MapMoveReason)[keyof typeof MapMoveReason];
 
-/**
- * A click on a vector tile feature, flattened out of the facade payload.
- *
- * Read once here rather than in each of the eight modules the click is offered to: the payload only
- * lives for the length of the handler, and every field is a crossing.
- */
 export interface FeatureClickData {
     clickType: ClickType;
     position: MapPos;
@@ -146,7 +117,6 @@ export interface MapClickData {
     position: MapPos;
 }
 
-/** The clicked feature's shape, or undefined for a payload that carries none. */
 function parseFeatureGeometry(geoJSON: string): GeoJSONGeometry | undefined {
     if (!geoJSON) {
         return undefined;
@@ -159,22 +129,13 @@ function parseFeatureGeometry(geoJSON: string): GeoJSONGeometry | undefined {
     }
 }
 
-/**
- * Flattens a facade click payload into the shape the modules read.
- *
- * Read ONCE, here: the payload only lives for the length of the handler and every field is a
- * crossing, so eight modules each destructuring it would each pay for it. `feature.properties` and
- * `feature.geometryGeoJSON` are one read each - the SDK serialises them - which is what replaced the
- * old native feature walk.
- */
+// Read ONCE here: the payload only lives for the handler and every field is a native crossing.
 export function featureClickData(e: MassifEventData<'massif::VectorTileLayer', 'vectortile.clicked'>): FeatureClickData {
     return {
         clickType: e.clickType as ClickType,
         position: fromPosition(e.getPos('clickPos')),
         featurePosition: fromPosition(e.getPos('featurePos')),
         featureData: (e.get('feature.properties') ?? {}) as { [k: string]: any },
-        // `geometryGeoJSON` is the SERIALISED shape - the SDK hands it over as text, and every
-        // consumer here wants the document
         featureGeometry: parseFeatureGeometry(e.get('feature.geometryGeoJSON')),
         featureId: e.featureId,
         featureLayerName: e.featureLayerName,
@@ -182,7 +143,6 @@ export function featureClickData(e: MassifEventData<'massif::VectorTileLayer', '
     };
 }
 
-/** The same for a click on an element the app added. */
 export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vectorelement.clicked'>): ElementClickData {
     return {
         clickType: e.clickType as ClickType,
@@ -193,13 +153,7 @@ export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vect
     };
 }
 
-/**
- * A spec that draws the same tiles as `layer`, for a SECOND map view.
- *
- * The detail pages (a transit line, the peak finder) show the main map's data on their own map.
- * They share its source rather than opening the same files again - `child('dataSource')` hands it
- * over and a spec takes the handle - and its decoder by id.
- */
+// spec for a SECOND map view, sharing `layer`'s source handle and decoder rather than reopening files
 export type ClonedLayerSpec = api.SpecArg<'layer', 'composite-vector'> | api.SpecArg<'layer', 'vector'> | api.SpecArg<'layer', 'hillshade'> | api.SpecArg<'layer', 'raster'>;
 
 export function cloneLayerSpec(layer: MassifLayer): ClonedLayerSpec | null {
@@ -207,9 +161,8 @@ export function cloneLayerSpec(layer: MassifLayer): ClonedLayerSpec | null {
     if (!source) {
         return null;
     }
-    // Before the VectorTileLayer branch: composite IS one, so `is` matches both, and a composite
-    // cloned as a plain vector layer loses the hillshade and contour slots. The clone's slots are
-    // its own - the caller wires them with customLayers.attachTerrain.
+    // before VectorTileLayer: a composite IS one, and as plain vector would lose its terrain slots
+    // (the caller wires the clone's own with customLayers.attachTerrain)
     if (layer.is('massif::CompositeVectorTileLayer')) {
         return { type: 'composite-vector', source: source.handle, style: mapContext.mapDecoder.id };
     }
@@ -249,15 +202,8 @@ export interface MapContext {
     onVectorTileElementClicked(callback: ContextCallback<FeatureClickData>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => MassifMap;
-    /**
-     * The plugin's own map view, for the handful of things the surface API has no verb for.
-     *
-     * `getMap().view` is typed as the narrow `MapViewLike`, which does not carry
-     * `getTerrainOptions()` / `setPostProcessEffect()` — the surface API deliberately has no method
-     * table for `TerrainOptions` or `PostProcessEffect` (see `schema.js`), so a shaded terrain
-     * surface's parameters and a post-process effect are object-API only. This hands back the real
-     * view rather than making every caller cast.
-     */
+    // the real view: `getMap().view` is the narrow `MapViewLike`, without the object-API-only
+    // `getTerrainOptions()` / `setPostProcessEffect()`
     getMapView: () => MassifMapView;
     setBottomSheetStepIndex: (value: number) => void;
     startEditingItem: (item: IItem) => void;
@@ -302,10 +248,7 @@ export interface MapContext {
     focusOffset: { x: number; y: number };
 }
 
-/**
- * The built-in modules. `MapModules` itself lives in the registry and is open for augmentation, so a
- * feature declares its own key from its own file instead of editing this one.
- */
+// `MapModules` is open for augmentation: a feature declares its own key from its own file
 declare module '~/mapModules/registry' {
     interface MapModules {
         customLayers: CustomLayersModule;
@@ -318,13 +261,7 @@ declare module '~/mapModules/registry' {
     }
 }
 
-/**
- * A style, as a spec.
- *
- * A style is an asset package plus the name of one style inside it, and both forms the app ships -
- * a folder on disk while developing, a zip in a release build - are the same two lines of JSON.
- * No font travels in it any more: see `APP_FONTS`.
- */
+// asset package (folder while developing, zip in release) plus a style name inside it
 function styleSpec(name: string, style: string): SpecArg<'style', 'mbvt'> {
     const stylePath = name.startsWith('/') ? name : `${appPath}/assets/styles/${name}`;
     const isZip = name.endsWith('.zip');
@@ -340,13 +277,8 @@ function styleSpec(name: string, style: string): SpecArg<'style', 'mbvt'> {
     };
 }
 
-/**
- * A decoder, registered under an id so it can be reached again and released.
- *
- * Building the same id with the same spec returns the same object, which is how two layers share
- * one decoder without coordinating; a different spec under that id is refused, so the caller
- * destroys the old one first.
- */
+// same id + same spec returns the same object; a different spec under that id is refused,
+// so the old one is destroyed first
 export function createTileDecoder(name: string, style: string = 'voyager', id = `decoder.${name}.${style}`): MapDecoder {
     try {
         const existing = api.find('style', id, 'massif::MBVectorTileDecoder');
@@ -378,10 +310,7 @@ const mapContext: MapContext = {
             kineticRotation: false
         });
         if (isEInk) {
-            // An inline bitmap spec: the SDK decodes the bytes the url gives, so nothing here
-            // builds an image.
-            // assetUrl takes an APP-RELATIVE path - it joins appPath itself. Handing it an
-            // absolute one joins twice and falls through to assets://app/<absolute path>.
+            // assetUrl takes an APP-RELATIVE path: it joins appPath itself
             map.set('backgroundBitmap', { type: 'url', url: assetUrl('assets/images/eink-map-background.png') });
         }
     },
@@ -401,8 +330,7 @@ const mapContext: MapContext = {
     featureClickData,
     elementClickData,
     createMapDecoder(mapStyle, mapStyleLayer) {
-        // createTileDecoder releases the id first, so the old object is already unregistered here;
-        // the layers still holding it keep it alive until they are rebuilt below.
+        // already unregistered by createTileDecoder; layers holding it keep it alive until rebuilt
         const oldDecoder = mapContext.mapDecoder;
         mapContext.mapDecoder = createTileDecoder(mapStyle, mapStyleLayer, 'decoder.map');
         mapContext.setInnerStyle(mapStyleLayer.indexOf('eink') !== -1 ? 'eink' : 'voyager', mapStyle);
@@ -423,8 +351,7 @@ const mapContext: MapContext = {
             return acc;
         }, {});
         if (Object.keys(nutiPropsToApply).length > 0) {
-            // One crossing for the whole set: each parameter re-runs the style's repaintability
-            // check, so writing them one at a time did that work per key.
+            // one call for the whole set: each parameter re-runs the style's repaintability check
             decoder.call('setStyleParameters', nutiPropsToApply);
         }
         // every layer holding the old inner decoder rebuilds itself on this hook
@@ -519,7 +446,6 @@ export async function handleMapAction(action: string, options?) {
 }
 
 export default abstract class MapModule extends Observable /*  implements IMapModule */ {
-    /** The map, as the surface API sees it: options, layers, camera and events on one handle. */
     map: MassifMap;
     onMapReady(map: MassifMap) {
         this.map = map;
@@ -536,8 +462,6 @@ export default abstract class MapModule extends Observable /*  implements IMapMo
     onVectorElementClicked?(data: ElementClickData);
     onVectorTileElementClicked?(data: FeatureClickData);
     onSelectedItem?(item: IItem, oldItem: IItem);
-    // dispatched by the map but historically absent from this list, because the dispatcher took a
-    // plain string and so nothing ever checked the two against each other
     onMapIdle?(e: unknown);
     onMapStable?(e: { data: { reason: MapMoveReason } });
     reloadMapStyle?();

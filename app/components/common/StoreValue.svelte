@@ -1,4 +1,3 @@
-<!-- StoreValue.svelte -->
 <script>
     export let store;
     let value;

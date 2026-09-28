@@ -1,11 +1,6 @@
 import { Application } from '@nativescript/core';
 import type { ScreenOrientation } from '~/utils/orientation';
 
-/**
- * Android has the easy half of this: the activity carries a requested orientation, and setting it is
- * the whole of it. See orientation.ios.ts for the other half.
- */
-
 export function lockOrientation(orientation: ScreenOrientation): boolean {
     const activity = Application.android.startActivity;
     if (!activity) {
@@ -15,9 +10,7 @@ export function lockOrientation(orientation: ScreenOrientation): boolean {
     let requested: number;
     switch (orientation) {
         case 'landscape':
-            // SENSOR_LANDSCAPE, not LANDSCAPE: a panorama is held up like a window, and which way round
-            // the phone is held is the user's business. A fixed LANDSCAPE puts it upside down for half
-            // of them.
+            // SENSOR_LANDSCAPE, not LANDSCAPE: a fixed one is upside down for half the users
             requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
             break;
         case 'portrait':
@@ -28,8 +21,7 @@ export function lockOrientation(orientation: ScreenOrientation): boolean {
             requested = ActivityInfo.SCREEN_ORIENTATION_SENSOR;
             break;
         default:
-            // UNSPECIFIED, rather than reading the manifest's value back: it hands the decision to the
-            // system, which is what also restores the user's own rotation lock.
+            // hands the decision back to the system, which also restores the user's rotation lock
             requested = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
             break;
     }

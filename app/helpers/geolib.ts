@@ -25,7 +25,6 @@ function _getRoundNum(t) {
     return (i = i >= 10 ? 10 : i >= 5 ? 5 : i >= 3 ? 3 : i >= 2 ? 2 : 1), e * i;
 }
 
-// Constants
 const TO_RAD = Math.PI / 180;
 const TO_DEG = 180 / Math.PI;
 const PI_X2 = Math.PI * 2;
@@ -49,7 +48,6 @@ export function getNiceNumber(n: number) {
     return roundedFraction * Math.pow(10, exponent);
 }
 
-// Setting readonly defaults
 // export function version() {
 //     return '$version$';
 // }
@@ -88,22 +86,18 @@ export function getValue(point, index, possibleValues) {
     }
     return result;
 }
-// returns latitude of a given point, converted to decimal
 export function getLat(point) {
     return getValue(point, 1, ['lat', 'latitude']);
 }
 
-// Alias for getLat
 export function latitude(point) {
     return getLat(point);
 }
 
-// returns longitude of a given point, converted to decimal
 export function getLon(point) {
     return getValue(point, 0, ['lon', 'lng', 'longitude']);
 }
 
-// Alias for getLon
 export function longitude(point) {
     return getLon(point);
 }
@@ -112,11 +106,9 @@ export function getAlt(point) {
     return getValue(point, 2, ['alt', 'altitude', 'elevation', 'elev']);
 }
 
-// Alias for getAlt
 export function elevation(point) {
     return getAlt(point);
 }
-// Alias for getAlt
 export function altitude(point) {
     return getAlt(point);
 }
@@ -158,15 +150,8 @@ export function coords(point) {
 // }
 
 /**
- * Calculates geodetic distance between two points specified by latitude/longitude using
- * Vincenty inverse formula for ellipsoids
- * Vincenty Inverse Solution of Geodesics on the Ellipsoid (c) Chris Veness 2002-2010
- * (Licensed under CC BY 3.0)
- *
- * @param    object    Start position {latitude: 123, longitude: 123}
- * @param    object    End position {latitude: 123, longitude: 123}
- * @param    integer   Accuracy (in meters)
- * @return   integer   Distance (in meters)
+ * Vincenty Inverse Solution of Geodesics on the Ellipsoid (c) Chris Veness 2002-2010 (CC BY 3.0).
+ * `accuracy` and result in meters.
  */
 export function getDistance(start, end, accuracy?) {
     accuracy = Math.floor(accuracy) || 1;
@@ -244,15 +229,7 @@ export function getDistance(start, end, accuracy?) {
             */
 }
 
-/**
- * Calculates the distance between two spots.
- * This method is more simple but also far more inaccurate
- *
- * @param    object    Start position {latitude: 123, longitude: 123}
- * @param    object    End position {latitude: 123, longitude: 123}
- * @param    integer   Accuracy (in meters)
- * @return   integer   Distance (in meters)
- */
+/** Simpler than `getDistance` but far less accurate. `accuracy` and result in meters. */
 export function getDistanceSimple(start, end, accuracy?) {
     accuracy = Math.floor(accuracy) || 1;
     const s = coords(start);
@@ -269,12 +246,6 @@ export function getDistanceSimple(start, end, accuracy?) {
     return Math.round(distance / accuracy) * accuracy;
 }
 
-/**
- * Calculates the center of a collection of geo coordinates
- *
- * @param        array       Collection of coords [{latitude: 51.510, longitude: 7.1321} {latitude: 49.1238, longitude: "8° 30' W"} ...]
- * @return       object      {latitude: centerLat, longitude: centerLng}
- */
 export function getCenter(theCoords) {
     if (!theCoords.length) {
         return undefined;
@@ -350,16 +321,6 @@ export function getSpanFromPixels(pixelWidth, _pos, _zoom) {
     return ((meters / earthRadius) * 180) / Math.PI;
 }
 
-/**
- * Gets the max and min, latitude, longitude, and altitude (if provided).
- * @param        array       array with coords e.g. [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return   object      {maxLat: maxLat,
- *                     minLat: minLat
- *                     maxLng: maxLng,
- *                     minLng: minLng,
- *                     maxElev: maxElev,
- *                     minElev: minElev}
- */
 export function getBounds(theCoords) {
     if (!theCoords.length) {
         return undefined;
@@ -474,14 +435,7 @@ export function getBoundsOfDistance(point, distance) {
     };
 }
 
-/**
- * Checks whether a point is inside of a polygon or not.
- * Note that the polygon coords must be in correct order!
- *
- * @param        object      coordinate to check e.g. {latitude: 51.5023, longitude: 7.3815}
- * @param        array       array with coords e.g. [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return       bool        true if the coordinate is inside the given polygon
- */
+/** The polygon coords must be in correct order. */
 export function isPointInside(latlng, crds) {
     let ci,
         cj,
@@ -503,53 +457,28 @@ export function isPointInsideBounds(latlng, mapBounds) {
     return c.lat >= mapBounds.southwest.lat && c.lat <= mapBounds.northeast.lat && c.lon >= mapBounds.southwest.lon && c.lon <= mapBounds.northeast.lon;
 }
 
-/**
- * Shortcut for isPointInside()
- */
 export function isInside(latlng, coords) {
     return isPointInside(latlng, coords);
 }
 
-/**
- * Checks whether a point is inside of a circle or not.
- *
- * @param        object      coordinate to check (e.g. {latitude: 51.5023, longitude: 7.3815})
- * @param        object      coordinate of the circle's center (e.g. {latitude: 51.4812, longitude: 7.4025})
- * @param        integer     maximum radius in meters
- * @return       bool        true if the coordinate is within the given radius
- */
+/** `radius` in meters. */
 export function isPointInCircle(latlng, center, radius) {
     return getDistance(latlng, center) < radius;
 }
 
-/**
- * Shortcut for isPointInCircle()
- */
 export function withinRadius(latlng, center, radius) {
     return isPointInCircle(latlng, center, radius);
 }
 
 /**
- * Gets rhumb line bearing of two points. Find out about the difference between rhumb line and
- * great circle bearing on Wikipedia. It's quite complicated. Rhumb line should be fine in most cases:
- *
- * http://en.wikipedia.org/wiki/Rhumb_line#General_and_mathematical_description
- *
- * Function heavily based on Doug Vanderweide's great PHP version (licensed under GPL 3.0)
+ * Based on Doug Vanderweide's PHP version (GPL 3.0):
  * http://www.dougv.com/2009/07/13/calculating-the-bearing-and-compass-rose-direction-between-two-latitude-longitude-coordinates-in-php/
- *
- * @param        object      origin coordinate (e.g. {latitude: 51.5023, longitude: 7.3815})
- * @param        object      destination coordinate
- * @return       integer     calculated bearing
  */
 export function getRhumbLineBearing(originLL, destLL) {
-    // difference of longitude coords
     let diffLon = getLon(destLL).toRad() - getLon(originLL).toRad();
 
-    // difference latitude coords phi
     const diffPhi = Math.log(Math.tan(getLat(destLL).toRad() / 2 + PI_DIV4) / Math.tan(getLat(originLL).toRad() / 2 + PI_DIV4));
 
-    // recalculate diffLon if it is greater than pi
     if (Math.abs(diffLon) > Math.PI) {
         if (diffLon > 0) {
             diffLon = (PI_X2 - diffLon) * -1;
@@ -558,17 +487,9 @@ export function getRhumbLineBearing(originLL, destLL) {
         }
     }
 
-    // return the angle, normalized
     return (Math.atan2(diffLon, diffPhi).toDeg() + 360) % 360;
 }
 
-/**
- * Gets great circle bearing of two points. See description of getRhumbLineBearing for more information
- *
- * @param        object      origin coordinate (e.g. {latitude: 51.5023, longitude: 7.3815})
- * @param        object      destination coordinate
- * @return       integer     calculated bearing
- */
 export function getBearing(originLL, destLL) {
     const da = getLat(destLL),
         dl = getLon(destLL),
@@ -586,14 +507,6 @@ export function getBearing(originLL, destLL) {
     return bearing;
 }
 
-/**
- * Gets the compass direction from an origin coordinate to a destination coordinate.
- *
- * @param        object      origin coordinate (e.g. {latitude: 51.5023, longitude: 7.3815})
- * @param        object      destination coordinate
- * @param        string      Bearing mode. Can be either circle or rhumbline
- * @return       object      Returns an object with a rough (NESW) and an exact direction (NNE, NE, ENE, E, ESE, etc).
- */
 // export function getCompassDirection(originLL, destLL, bearingMode?) {
 //     let bearing;
 
@@ -748,20 +661,10 @@ export function getMppAtZoom(_zoom, pos) {
 //     // console.debug('getMapScaleAtZoom', _zoom, pos, mpp, result);
 //     return result;
 // }
-/**
- * Shortcut for getCompassDirection
- */
 // export function getDirection(originLL, destLL, bearingMode) {
 //     return getCompassDirection(originLL, destLL, bearingMode);
 // }
 
-/**
- * Sorts an array of coords by distance from a reference coordinate
- *
- * @param        object      reference coordinate e.g. {latitude: 51.5023, longitude: 7.3815}
- * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return       array       ordered array
- */
 // export function orderByDistance(latlng, coords) {
 //     const coordsArray = [];
 
@@ -782,13 +685,6 @@ export function getMppAtZoom(_zoom, pos) {
 //     });
 // }
 
-/**
- * Finds the nearest coordinate to a reference coordinate
- *
- * @param        object      reference coordinate e.g. {latitude: 51.5023, longitude: 7.3815}
- * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return       array       ordered array
- */
 // export function findNearest(latlng, coords, offset, limit) {
 //     offset = offset || 0;
 //     limit = limit || 1;
@@ -801,12 +697,7 @@ export function getMppAtZoom(_zoom, pos) {
 //     }
 // }
 
-/**
- * Calculates the length of a given path
- *
- * @param        mixed       array or object with coords [{latitude: 51.5143, longitude: 7.4138} {latitude: 123, longitude: 123} ...]
- * @return       integer     length of the path (in meters)
- */
+/** In meters. */
 export function getPathLength(cs) {
     let dist = 0;
     let last, coord;
@@ -822,14 +713,6 @@ export function getPathLength(cs) {
     return dist;
 }
 
-/**
- * Calculates the speed between to points within a given time span.
- *
- * @param        object      coords with javascript timestamp {latitude: 51.5143, longitude: 7.4138, time: 1360231200880}
- * @param        object      coords with javascript timestamp {latitude: 51.5502, longitude: 7.4323, time: 1360245600460}
- * @param        object      options (currently "unit" is the only option. Default: km(h));
- * @return       float       speed in unit per hour
- */
 // export function getSpeed(start, end, options) {
 //     let unit = (options && options.unit) || (metrics ? 'km' : 'mi');
 
@@ -846,14 +729,6 @@ export function getPathLength(cs) {
 //     return speed;
 // }
 
-/**
- * Converts a distance from meters to km, mm, cm, mi, ft, in or yd
- *
- * @param        string      Format to be converted in
- * @param        float       Distance in meters
- * @param        float       Decimal places for rounding (default: 4)
- * @return       float       Converted distance
- */
 // export function convertUnit(distance, unit, round) {
 //     if (distance === 0) {
 //         return 0;
@@ -987,12 +862,6 @@ export function getMetersPerPixel(_pos, _zoom) {
 //     address,
 //     speed
 // };
-/**
- * Checks if a value is in decimal format or, if neccessary, converts to decimal
- *
- * @param        mixed       Value(s) to be checked/converted (array of latlng objects, latlng object, sexagesimal string, float)
- * @return       float       Input data in decimal format
- */
 // export function useDecimal(value) {
 //     if (Object.prototype.toString.call(value) === '[object Array]') {
 //         value = value.map(function (val) {
@@ -1036,12 +905,6 @@ export function getMetersPerPixel(_pos, _zoom) {
 //     throw new Error('Unknown format.');
 // }
 
-/**
- * Converts a decimal coordinate value to sexagesimal format
- *
- * @param        float       decimal
- * @return       string      Sexagesimal value (XX° YY' ZZ")
- */
 // export function decimal2sexagesimal(dec: number) {
 //     if (dec in sexagesimal) {
 //         return sexagesimal[dec];
@@ -1061,12 +924,6 @@ export function getMetersPerPixel(_pos, _zoom) {
 //     return sexagesimal[dec];
 // }
 
-/**
- * Converts a sexagesimal coordinate to decimal format
- *
- * @param        float       Sexagesimal coordinate
- * @return       string      Decimal value (XX.XXXXXXXX)
- */
 // export function sexagesimal2decimal(sexagesimal) {
 //     if (sexagesimal in decimal) {
 //         return decimal[sexagesimal];
@@ -1094,26 +951,13 @@ export function getMetersPerPixel(_pos, _zoom) {
 //     return dec;
 // }
 
-/**
- * Checks if a value is in decimal format
- *
- * @param        string      Value to be checked
- * @return       bool        True if in sexagesimal format
- */
 export function isDecimal(value) {
     value = value.toString().replace(/\s*/, '');
 
     // looks silly but works as expected
-    // checks if value is in decimal format
     return !isNaN(parseFloat(value)) && parseFloat(value) === value;
 }
 
-/**
- * Checks if a value is in sexagesimal format
- *
- * @param        string      Value to be checked
- * @return       bool        True if in sexagesimal format
- */
 function isSexagesimal(value) {
     value = value.toString().replace(/\s*/, '');
 

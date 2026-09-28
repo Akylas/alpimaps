@@ -51,20 +51,10 @@
         stats?: RouteStats;
     }
 
-    /**
-     * Linear interpolation between two coordinates
-     */
     function interpolate(coord1, coord2, t) {
         return [coord1[0] + (coord2[0] - coord1[0]) * t, coord1[1] + (coord2[1] - coord1[1]) * t];
     }
 
-    /**
-     * Compute steps in one loop, assuming total length is known
-     * @param {Array<[number, number]>} coords - Array of [lon, lat]
-     * @param {number} stepKm - Step size (e.g. 1)
-     * @param {number} totalLengthKm - Total path length in km
-     * @returns {Array<{point: [number, number], distFromStart: number, distFromEnd: number}>}
-     */
     function computeStepsOnePass(coords, stepKm, totalLengthKm) {
         const startTime = Date.now();
         const steps = [];
@@ -784,8 +774,6 @@
             let startTime = Date.now();
             DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(costing_options));
             try {
-                // One call: the service, the request and its costing options are all the facade's,
-                // and the result is read out while it is alive.
                 const computed = await packageService.computeRoute({ points, profile, costingOptions: costing_options });
                 DEV_LOG && console.log('got route', computed.totalDistance, computed.totalTime, Date.now() - startTime, 'ms');
                 positions = computed.positions;
@@ -842,7 +830,6 @@
                     ...(style ? { style: { color: style.color } } : {}),
                     ...(route.profile ? { profile: { dplus: route.profile.dplus, dmin: route.profile.dmin } } : {})
                 },
-                // the positions are already ours: a LineString is the shape, not a serialisation
                 _geometry: JSON.stringify({ type: 'LineString', coordinates: positions.map(toPosition) }),
                 get geometry() {
                     if (!this._parsedGeometry) {
@@ -887,7 +874,6 @@
                 } else if (profile === 'pedestrian') {
                     options = [
                         {},
-                        //shortest
                         { shortest: true, style: { color: '#5994e0' } },
                         // very steep
                         { use_roads: 0, use_hills: 1, style: { color: '#AD5FC4' } },
@@ -1150,7 +1136,6 @@
 
     function onItemReordered(e) {
         (e.view as ContentView).content.animate({ opacity: 1, duration: 150 });
-        // we need to reset waypoints isStart / isStop
         const length = waypoints.length;
         waypoints.forEach((item, index) => {
             item.properties.isStart = index === 0;

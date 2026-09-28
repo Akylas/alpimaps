@@ -18,18 +18,8 @@ const NAVIGATION_LAYER = 1;
 /** the connector, on its own layer because it is redrawn on every position */
 const HINT_LAYER = 2;
 
-/**
- * Draws what navigation is actually following.
- *
- * Navigation runs on its own copy of the route (see `NavigationRoute`), never on the selected item, so
- * the map cannot rely on the selection to show it: this module owns a layer of its own and draws the
- * followed route, the detour taking the user back to it, and the route a full reroute replaced.
- *
- * While it is drawing, the `navigating` style parameter tells the items and directions styles to drop
- * their selected look, so the planned route stays visible underneath without competing with the line
- * the user is meant to follow. The selected item itself is never touched — it is still there, with the
- * same item sheet, once navigation ends.
- */
+// Navigation follows its own route copy (`NavigationRoute`), never the selected item, so it is drawn
+// on its own layer. The `navigating` style parameter makes the item/directions styles drop their selected look.
 export default class NavigationRouteModule extends MapModule {
     dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
     layer: MassifLayer<'massif::VectorTileLayer'>;
@@ -42,8 +32,7 @@ export default class NavigationRouteModule extends MapModule {
 
     constructor() {
         super();
-        // stores rather than navigation events: what has to be drawn is exactly what they hold, and a
-        // subscription cannot miss a change that happened before the map was ready
+        // stores rather than events: a subscription cannot miss a change made before the map was ready
         this.subscriptions.push(
             navigationItem.subscribe((item) => {
                 this.item = item;
@@ -104,12 +93,7 @@ export default class NavigationRouteModule extends MapModule {
         return this.layer;
     }
 
-    /**
-     * A layer holds its decoder, so a style change has to rebuild it.
-     *
-     * The map's own hook rather than an event on the decoder: the decoder is destroyed as part of
-     * the change, and a listener on a destroyed object is a listener on nothing.
-     */
+    // the map's hook rather than a decoder event: the decoder is destroyed as part of the change
     vectorTileDecoderChanged() {
         const oldLayer = this.layer;
         if (!oldLayer) {
@@ -124,7 +108,7 @@ export default class NavigationRouteModule extends MapModule {
         this.drawHint();
     }
 
-    /** Redraws everything the layer holds. There are at most three features: rebuilding is cheapest. */
+    // at most three features: rebuilding is cheapest
     private draw() {
         const item = this.item;
         const features: Feature[] = [];
@@ -150,12 +134,7 @@ export default class NavigationRouteModule extends MapModule {
         this.setNavigating(!!item);
     }
 
-    /**
-     * The straight line from the user to the point they are being sent back to.
-     *
-     * It is not a way to go — there may be a cliff across it — it is the answer to "which way is the
-     * route", which is the first thing you want when you realise you left it.
-     */
+    // straight line to the rejoin point: a direction hint, not a path to follow
     private drawHint() {
         const target = this.rejoinTarget;
         const location = this.location;

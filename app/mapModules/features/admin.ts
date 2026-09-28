@@ -8,18 +8,12 @@ import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { preloading } from '~/stores/mapStore';
 import { colors } from '~/variables';
 
-/** Whether the administrative-boundary overlay is on. */
 const showAdmins = writable(false);
 
 let adminLayer: MassifLayer<'massif::VectorTileLayer'>;
 
-/**
- * The overlay reuses the base map's datasource with a different decoder, so it can only exist once a
- * map layer does — which is why it is created on first use rather than up front.
- *
- * `child('dataSource')` hands the base layer's source over rather than naming or rebuilding it, and
- * a spec takes that handle straight: the boundaries come out of the tiles already on screen.
- */
+// reuses the base map layer's datasource with its own decoder, so it can only be created once a map
+// layer exists
 function createAdminLayer() {
     const mapContext = getMapContext();
     const baseLayer = mapContext.getLayers('map')[0]?.layer;

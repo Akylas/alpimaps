@@ -1,11 +1,4 @@
 <script lang="ts">
-    /**
-     * A switch row bound straight to a store.
-     *
-     * `SettingsSwitch` takes an `item` out of the settings screen's list machinery; this one takes the
-     * store itself, which is what the terrain and peak-finder sheets have — and it is the SAME store
-     * the app settings screen binds, so there is nothing to keep in sync.
-     */
     import type { Writable } from 'svelte/store';
     import { colors } from '~/variables';
 

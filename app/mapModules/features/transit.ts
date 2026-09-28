@@ -13,7 +13,6 @@ import { transitService } from '~/services/TransitService';
 import { preloading } from '~/stores/mapStore';
 import { colors } from '~/variables';
 
-/** Whether the transit overlay is on. Toggled from the map's overflow menu. */
 const showingTransitLines = writable(false);
 
 let dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
@@ -72,12 +71,7 @@ function onTransitTileClicked({ featureData, featureGeometry, featureId, feature
     return false;
 }
 
-/**
- * The layer holds a decoder that gets rebuilt on style changes, so it is rebuilt with it.
- *
- * Called from the map's `vectorTileDecoderChanged` hook rather than from an event on the decoder:
- * the decoder is destroyed as part of the change.
- */
+// from the map's `vectorTileDecoderChanged` hook, not a decoder event: the decoder is destroyed by the change
 export function updateTransitLayer() {
     const oldLayer = transitLayer;
     if (!oldLayer) {
@@ -147,10 +141,7 @@ showingTransitLines.subscribe((showing) => {
     }
 });
 
-/**
- * The overlay can be switched on before the map reports ready, in which case the layer exists but was
- * never added. The map calls this once it has a map to add it to.
- */
+// the overlay can be switched on before the map is ready: the layer then exists but was never added
 export function addTransitLayerIfPending() {
     if (transitLayer) {
         getMapContext().addLayer(transitLayer, 'transit');

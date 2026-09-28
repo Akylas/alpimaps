@@ -189,8 +189,7 @@ export function formatTime(date: number | dayjs.Dayjs | string | Date, formatStr
 prefs.on(`key:${SETTINGS_LANGUAGE}`, () => {
     const newLanguage = ApplicationSettings.getString(SETTINGS_LANGUAGE, DEFAULT_LOCALE);
     DEV_LOG && console.log('language changed', newLanguage);
-    // on pref change we are updating
-    // if "auto" then getActualLanguage will return lang value and we still need to update
+    // "auto" must still update even though getActualLanguage resolves it to the current lang
     if (newLanguage !== 'auto' && getActualLanguage(newLanguage) === lang) {
         return;
     }

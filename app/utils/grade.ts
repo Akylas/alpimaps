@@ -1,14 +1,5 @@
-/**
- * Route grade (slope) computation and sectioning.
- *
- * Pure TypeScript on purpose — no NativeScript import — so the maths can be exercised outside the
- * app, which is the only way to check it in a repo with no test runner.
- *
- * The whole point of this module is that **every window is expressed in meters, never in vertices**.
- * A route polyline has wildly irregular spacing (1 m in a switchback, 100 m on a straight), so a
- * "5 sample" window means a 5 m baseline in one place and a 500 m one a hundred meters later. We
- * resample the elevation onto a fixed step first, and everything after that is distance based.
- */
+// Every window is in meters, never vertices: route spacing is irregular, so elevation is resampled
+// onto a fixed step first. No NativeScript import on purpose, so the maths can be run outside the app.
 
 export interface GradeOptions {
     /** resample step in meters. Below the DEM resolution there is nothing left to gain */
@@ -34,7 +25,6 @@ export const DEFAULT_GRADE_OPTIONS: Required<GradeOptions> = {
     maxGrade: 45
 };
 
-/** One stretch of route the profile colours as a single slope. */
 export interface GradeSection {
     /** index into `RouteProfile.data` */
     startIndex: number;
@@ -53,23 +43,18 @@ interface ProfilePoint {
     g?: number;
 }
 
-/**
- * Signed grade buckets, in the spirit of Garmin's ClimbPro breakdown: 3/6/9/12% steps, and descents
- * on their own scale so a -12% plunge does not read as a wall to climb.
- * `from` is inclusive, the list is ordered from steepest descent to steepest climb.
- */
+/** `from` is inclusive, ordered from steepest descent to steepest climb. */
 export const gradeBuckets: { from: number; color: string }[] = [
-    { from: -Infinity, color: '#1B4E9B' }, // < -9%, dark blue
-    { from: -9, color: '#3B7DD8' }, // -9 .. -6%
-    { from: -6, color: '#7FB2E8' }, // -6 .. -3%
-    { from: -3, color: '#7BC96F' }, // flat, -3 .. 3%
-    { from: 3, color: '#F2D14B' }, // 3 .. 6%
-    { from: 6, color: '#F0902B' }, // 6 .. 9%
-    { from: 9, color: '#E34A33' }, // 9 .. 12%
-    { from: 12, color: '#9E1B18' } // >= 12%, dark red
+    { from: -Infinity, color: '#1B4E9B' },
+    { from: -9, color: '#3B7DD8' },
+    { from: -6, color: '#7FB2E8' },
+    { from: -3, color: '#7BC96F' },
+    { from: 3, color: '#F2D14B' },
+    { from: 6, color: '#F0902B' },
+    { from: 9, color: '#E34A33' },
+    { from: 12, color: '#9E1B18' }
 ];
 
-/** Index into `gradeBuckets` for a signed grade. */
 export function gradeBucketIndex(grade: number) {
     for (let index = gradeBuckets.length - 1; index > 0; index--) {
         if (grade >= gradeBuckets[index].from) {
@@ -83,10 +68,7 @@ export function gradeColor(grade: number) {
     return gradeBuckets[gradeBucketIndex(grade)].color;
 }
 
-/**
- * Resample `elevations` onto a fixed distance step by linear interpolation.
- * `distances` must be non decreasing, both arrays the same length.
- */
+/** `distances` must be non decreasing, both arrays the same length. */
 function resample(distances: number[], elevations: number[], step: number) {
     const total = distances[distances.length - 1];
     const count = Math.max(Math.floor(total / step) + 1, 2);
@@ -128,10 +110,8 @@ function smooth(values: number[], window: number) {
 }
 
 /**
- * Signed grade in % at every point of `distances`.
- *
- * Elevations must be the **raw, unrounded** values: rounding them to the meter before differentiating
- * over a short baseline is what makes a profile look like a staircase.
+ * Signed grade in %. Elevations must be **raw, unrounded**: meter rounding differentiated over a short
+ * baseline makes the profile a staircase.
  */
 export function computeGrades(distances: number[], elevations: number[], options?: GradeOptions) {
     const { baseline, maxGrade, smoothDistance, step } = { ...DEFAULT_GRADE_OPTIONS, ...options };
@@ -154,7 +134,6 @@ export function computeGrades(distances: number[], elevations: number[], options
         resampledGrades[index] = Math.max(Math.min(grade, maxGrade), -maxGrade);
     }
 
-    // back onto the original vertices
     for (let index = 0; index < count; index++) {
         const position = distances[index] / step;
         const low = Math.min(Math.floor(position), resampledCount - 1);
@@ -166,9 +145,8 @@ export function computeGrades(distances: number[], elevations: number[], options
 }
 
 /**
- * Average grade of `data[from..to]` taken end to end, which is what a rider computes by hand.
- * `elevations` holds the unrounded altitudes when the caller has them: `data[].a` is rounded to the
- * meter for display, and over a short section that rounding is worth a whole percent of grade.
+ * End to end average. Prefer unrounded `elevations`: `data[].a` is meter-rounded, worth a whole
+ * percent of grade over a short section.
  */
 function sectionGrade(data: ProfilePoint[], from: number, to: number, elevations?: number[]) {
     const length = data[to].d - data[from].d;
@@ -180,13 +158,6 @@ function sectionGrade(data: ProfilePoint[], from: number, to: number, elevations
     return ((end - start) / length) * 100;
 }
 
-/**
- * Cut the route into stretches of consistent slope.
- *
- * Two things keep the result readable rather than a confetti of colours: the bucket only changes once
- * the grade has gone `hysteresis` % past the threshold, and anything shorter than `minSectionLength`
- * is merged into whichever neighbour it resembles most.
- */
 export function buildGradeSections(data: ProfilePoint[], grades: number[], elevations?: number[], options?: GradeOptions): GradeSection[] {
     const { hysteresis, minSectionLength } = { ...DEFAULT_GRADE_OPTIONS, ...options };
     const count = data.length;
@@ -194,7 +165,6 @@ export function buildGradeSections(data: ProfilePoint[], grades: number[], eleva
         return [];
     }
 
-    // 1. runs of identical bucket, with hysteresis on the switch
     const runs: { startIndex: number; endIndex: number; bucket: number }[] = [];
     let bucket = gradeBucketIndex(grades[0]);
     let startIndex = 0;
@@ -215,7 +185,6 @@ export function buildGradeSections(data: ProfilePoint[], grades: number[], eleva
     }
     runs.push({ startIndex, endIndex: count - 1, bucket });
 
-    // 2. absorb the runs too short to be worth a colour of their own
     let merged = true;
     while (merged && runs.length > 1) {
         merged = false;
@@ -242,7 +211,7 @@ export function buildGradeSections(data: ProfilePoint[], grades: number[], eleva
         }
     }
 
-    // 3. the colour follows the section's own average, not the bucket it started in
+    // the colour follows the section's own average, not the bucket it started in
     return runs.map((run) => {
         const grade = sectionGrade(data, run.startIndex, run.endIndex, elevations);
         return {
@@ -257,11 +226,8 @@ export function buildGradeSections(data: ProfilePoint[], grades: number[], eleva
 }
 
 /**
- * Grade over the next `distance` meters of route, which is what a rider wants to read while moving:
- * the single point value is far too twitchy. Falls back to the stretch behind at the very end.
- *
- * Averages the per point grades weighted by the length they cover, rather than differentiating the
- * stored altitudes again — those are rounded to the meter and would quantise the reading.
+ * Length-weighted average of the per point grades over the next `distance` m (behind, at the very end).
+ * Not re-derived from the stored altitudes: those are meter-rounded and would quantise the reading.
  */
 export function gradeAhead(data: ProfilePoint[], index: number, distance: number) {
     if (!data?.length || index < 0) {

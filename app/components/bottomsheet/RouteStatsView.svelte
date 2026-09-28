@@ -23,7 +23,6 @@
     import { colors } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
 
-    /** The waytype/surface breakdown of a route, shared by the item sheet and the navigation one. */
     export let item: IItem;
 
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
@@ -58,13 +57,8 @@
             let labelx = 13;
             let labely = 95;
             const stats = item.stats[statsKey];
-            /**
-             * On eink the whole `surfaceColors` palette renders as a handful of indistinguishable
-             * greys, so the bands and their legend markers are hatched instead, exactly like the
-             * navigation surface widget. Only the surfaces have patterns — waytypes keep their colours.
-             * Read here rather than from a reactive value: `setStatsKey` invalidates the canvas itself,
-             * before svelte has flushed anything derived from it.
-             */
+            // On eink the surface palette renders as indistinguishable greys, so surfaces are hatched.
+            // Not reactive: `setStatsKey` invalidates the canvas before svelte flushes derived values.
             const patterned = isEInk && statsKey === 'surfaces';
             canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
             const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
@@ -86,7 +80,6 @@
                 text = lc(s.id);
                 text2 = formatDistance(s.dist * 1000);
                 if (patterned) {
-                    // a hatched square, so the legend carries the same mark as the band it names
                     drawSurfaceBand(canvas, {
                         id: s.id,
                         left: labelx - 3,
