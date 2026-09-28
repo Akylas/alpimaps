@@ -9,17 +9,14 @@ if (firstRun) {
 }
 
 export const stringProperty = (target: Object, key: string | symbol) => {
-    // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
     target[innerKey] = getString(actualkey);
 
-    // property getter
     const getter = function () {
         return this[innerKey];
     };
 
-    // property setter
     const setter = function (newVal) {
         this[innerKey] = newVal;
         if (newVal === undefined || newVal === null) {
@@ -27,7 +24,6 @@ export const stringProperty = (target: Object, key: string | symbol) => {
         }
         return setString(actualkey, newVal);
     };
-    // Create new property with getter and setter
     Object.defineProperty(target, key, {
         get: getter,
         set: setter,
@@ -36,19 +32,16 @@ export const stringProperty = (target: Object, key: string | symbol) => {
     });
 };
 export const objectProperty = (target: Object, key: string | symbol) => {
-    // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
 
     const savedValue = getString(actualkey);
     target[innerKey] = savedValue !== undefined ? JSON.parse(savedValue) : undefined;
 
-    // property getter
     const getter = function () {
         return this[innerKey];
     };
 
-    // property setter
     const setter = function (newVal) {
         this[innerKey] = newVal;
         if (newVal === undefined) {
@@ -56,7 +49,6 @@ export const objectProperty = (target: Object, key: string | symbol) => {
         }
         return setString(actualkey, JSON.stringify(newVal));
     };
-    // Create new property with getter and setter
     Object.defineProperty(target, key, {
         get: getter,
         set: setter,
@@ -102,7 +94,6 @@ export function booleanProperty(target: any, k?, desc?: PropertyDescriptor): any
 export function booleanProperty(options: PropertyDecoratorOptions<boolean>): (target: any, k?, desc?: PropertyDescriptor) => any;
 export function booleanProperty(...args) {
     if (args.length === 1) {
-        /// this must be a factory
         return function (target: any, key?: string, descriptor?: PropertyDescriptor) {
             return nativePropertyGenerator<boolean>(target, key, args[0] || {}, getBoolean, setBoolean);
         };
@@ -113,17 +104,14 @@ export function booleanProperty(...args) {
     }
 }
 export const numberProperty = (target: Object, key: string | symbol) => {
-    // property value
     const actualkey = key.toString();
     const innerKey = '_' + actualkey;
     target[innerKey] = getNumber(actualkey);
 
-    // property getter
     const getter = function () {
         return this[innerKey];
     };
 
-    // property setter
     const setter = function (newVal) {
         this[innerKey] = newVal;
         if (newVal === undefined) {
@@ -131,7 +119,6 @@ export const numberProperty = (target: Object, key: string | symbol) => {
         }
         return setNumber(actualkey, newVal);
     };
-    // Create new property with getter and setter
     Object.defineProperty(target, key, {
         get: getter,
         set: setter,
@@ -140,7 +127,4 @@ export const numberProperty = (target: Object, key: string | symbol) => {
     });
 };
 
-/**
- * Parent service class. Has common configs and methods.
- */
 export default class BackendService extends Observable {}

@@ -8,7 +8,6 @@ export function queryString(params: { [k: string]: any }, location: string): str
     }
 
     const locSplit = location.split(/[?&]/);
-    // _params[0] is the url
 
     const parts = [];
     for (i = 0, len = locSplit.length; i < len; i++) {

@@ -8,24 +8,15 @@
     import { getCurrentAscent } from '~/utils/navigation';
     import { colors, fonts } from '~/variables';
 
-    /**
-     * The card follows the navigation scale like every other widget — it shares a row with them, so a
-     * fixed height here would simply leave it shorter than its neighbour. Only the chart drawn inside
-     * keeps its own sizing.
-     */
+    // follows the navigation scale: it shares a row with the other widgets
     export let height: number = null;
     $: cardHeight = height ?? Math.round(NAVWIDGET_CARD_HEIGHT * $navigationScale);
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
-    /**
-     * The item sheet's chart in its `mini` variant rather than a second implementation: it already
-     * filters the points down and draws the curve, and rolling our own is what left this widget blank.
-     */
     let elevationChart: ElevationChart;
 
     $: profile = $navigationItem?.profile;
-    // nothing to silhouette without a profile, so the widget simply does not appear
     $: available = !!profile?.data?.length;
 
     // while climbing, the whole-route silhouette is unreadable: scope it to the climb being climbed
@@ -33,7 +24,6 @@
     $: range = currentAscent ? { fromIndex: currentAscent.ascent.startIndex, toIndex: currentAscent.ascent.endIndex } : null;
     // the road ahead, not the vertex underfoot: a single point grade jumps around far too much to read
     $: grade = available ? gradeAhead(profile.data, $navigationProgress?.onPathIndex ?? -1, $navigationGradeLookAhead) : null;
-    // the section colour under the position dot, so the figure and the chart agree
     $: gradeText = grade === null || grade === undefined ? '-' : (grade > 0 ? '+' : '') + grade.toFixed(grade > -10 && grade < 10 ? 1 : 0);
     // the eink screen collapses every bucket to the same grey, so the figure carries the meaning there
     $: gradeValueColor = isEInk || grade === null || grade === undefined ? colorOnSurface : gradeColor(grade);
@@ -68,11 +58,9 @@
 
 {#if available}
     <NavigationCard height={cardHeight} {...$$restProps}>
-        <!-- the chart keeps the space it can use, the grade takes the fixed width a figure needs -->
         <gridlayout columns="*,auto">
             <gridlayout>
                 <ElevationChart bind:this={elevationChart} filled={!isEInk} item={$navigationItem} mini={true} {range} showAscents={false} showProfileGrades={false} showWaypoints={false} />
-                <!-- in a climb the number the user wants is the summit they are heading for -->
                 {#if currentAscent}
                     <label
                         color={colorOnSurfaceVariant}
@@ -84,7 +72,6 @@
                 {/if}
             </gridlayout>
             <stacklayout col={1} paddingLeft={6} paddingRight={8} verticalAlignment="center">
-                <!-- the icon says what the figure is where the word could not be drawn big enough to -->
                 <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={13 * $navigationScale} text="mdi-angle-acute" />
                 <label>
                     <cspan color={gradeValueColor} fontSize={20 * $navigationScale} fontWeight="bold" text={gradeText} />

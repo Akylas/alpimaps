@@ -1,19 +1,9 @@
 import { Application, Utils } from '@nativescript/core';
 import type { ScreenOrientation } from '~/utils/orientation';
 
-/**
- * iOS does not let an app set an orientation; it lets it state a PREFERENCE and then asks the view
- * controller whether that is allowed. So there are two halves here, and both are needed:
- *
- *  - the window scene is asked for a new geometry (iOS 16+, `requestGeometryUpdate`), and
- *  - the root view controller is told its answer to `supportedInterfaceOrientations` has changed, or
- *    the system asks the old one and refuses the request.
- *
- * `App_Resources/iOS/Info.plist` lists both landscape orientations and both portrait ones, so either
- * request is one the system can grant. Below iOS 16 there is no supported way to do this from outside
- * a view controller, and this reports failure rather than reaching for the old
- * `setValueForKey('orientation')` trick — that one is private API and is what gets builds rejected.
- */
+// Both needed (iOS 16+): a scene geometry request AND the root controller's changed
+// `supportedInterfaceOrientations`, else the request is refused. Below 16 this reports failure:
+// the `setValueForKey('orientation')` trick is private API and gets builds rejected.
 
 /** What is currently being asked for, so the root controller's override answers consistently. */
 let preferredMask: UIInterfaceOrientationMask = null;
@@ -22,14 +12,8 @@ function rootController(): UIViewController {
     return Application.ios?.rootController;
 }
 
-/**
- * Overrides `supportedInterfaceOrientations` on the LIVE controller object.
- *
- * `defineProperty`, not an assignment: the typings mark the property read-only (it IS, on the class),
- * while overriding it per instance is exactly how the runtime lets an app answer the question.
- * Not a subclass either — the root controller is built by NativeScript before any of this runs, so the
- * class it came from is not ours to change.
- */
+// per-instance `defineProperty`: the property is read-only on the class, and the root controller is
+// built by NativeScript, so it cannot be subclassed
 function applySupportedOrientations() {
     const controller = rootController();
     if (!controller) {
@@ -50,8 +34,7 @@ function applySupportedOrientations() {
 }
 
 function requestGeometry(mask: UIInterfaceOrientationMask): boolean {
-    // anyObject rather than an index: connectedScenes is a SET, and an app with one window has exactly
-    // one member in it.
+    // connectedScenes is a SET; a one-window app has exactly one member
     const scene = UIApplication.sharedApplication.connectedScenes?.anyObject();
     if (!scene?.requestGeometryUpdateWithPreferencesErrorHandler) {
         return false;

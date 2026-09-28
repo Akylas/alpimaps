@@ -1,8 +1,6 @@
 import { getDistance, getDistanceSimple } from '~/helpers/geolib';
 
 export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, haversine_distance = false, combine = true) {
-    // Read a shapefile containing a bunch of linestrings,
-    // try and match up the ends and create one long linestring
     // const src_segments: GeoJSON.LineString[] = [];
     // geojson.features.forEach((f) => src_segments.push(f.geometry));
     DEV_LOG && console.log('join_em', src_segments.length, JSON.stringify(src_segments));
@@ -12,7 +10,6 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
     while (src_segments.length > 0) {
         const start = seg[0];
         const end = seg[seg.length - 1];
-        //look for a segment adjact to the end point
         let res = find_closest(end, src_segments);
         // console.log('find_closest:', end, res);
         if (res.closest_segment && res.closest_distance < tolerance) {
@@ -26,7 +23,6 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
             seg = res.closest_segment;
             flipped = false;
         } else {
-            // Look for a segment adjactent to the start point
             const end_distance = res.closest_distance;
             res = find_closest(start, src_segments);
             if (res.closest_segment && res.closest_distance < tolerance) {
@@ -72,8 +68,6 @@ export function join_em(src_segments: GeoJSON.Position[][], tolerance = 0.0001, 
 }
 
 function find_closest(point: GeoJSON.Position, segments: GeoJSON.Position[][], haversine_distance = false) {
-    //Find the linestring in segments that has a start or end point closest to point.
-    //return (segment, start or end, distance)
     DEV_LOG && console.log('find_closest', point);
     let closest_segment: GeoJSON.Position[] = null;
     let closest_distance = 0;

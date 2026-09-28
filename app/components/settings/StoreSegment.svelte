@@ -1,17 +1,10 @@
 <script lang="ts">
-    /**
-     * A one-of-N row bound straight to a store, as a row of tappable labels.
-     *
-     * For the two or three-way choices the settings sheets need. Anything longer belongs in the settings
-     * screen's own list, which can open a picker.
-     */
     import type { Writable } from 'svelte/store';
     import { colors } from '~/variables';
 
     export let title: string;
     export let description: string = null;
     export let store: Writable<string>;
-    /** In display order. `value` is what goes in the store, `title` is what the user reads. */
     export let options: { value: string; title: string }[];
 
     $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);

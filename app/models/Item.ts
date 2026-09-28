@@ -74,7 +74,6 @@ export interface RouteProfile {
     data: { d: number; a: number; g?: number; dp?: number; dm?: number }[];
     /** gradient stops for the chart fill, `d` being an **index** into `data` */
     colors?: { d: number; color: string }[];
-    /** the same cut of the route, with the distances and average grades the ui can read */
     sections?: GradeSection[];
     ascents: AscentSegment[];
 }
@@ -162,10 +161,7 @@ export interface RouteStats {
         dist: number;
         id: string;
     }[];
-    /**
-     * Where each surface sits along the route, as ranges of polyline indices, so navigation can show
-     * what is coming up rather than only the whole route's composition. Absent on older saved stats.
-     */
+    /** Ranges of polyline indices. Absent on older saved stats. */
     surfaceSegments?: {
         id: string;
         start: number;

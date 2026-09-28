@@ -3,53 +3,36 @@ import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { clearTimeout, setTimeout } from '~/utils/utils';
 
-/**
- * One tap can land on several overlapping features — a road carrying three hiking routes, a stop
- * served by four bus lines. Carto reports them one at a time, so a click is collected for a moment
- * before deciding, and only then is the user asked to choose.
- */
+// carto reports overlapping features of one tap one at a time: collect them briefly (ms) before choosing
 const COLLECT_DELAY = 10;
 
 const pendingPickers = new Set<string>();
 
-/**
- * Whether a picker is mid-collection or still showing its chooser.
- *
- * Lets one picker stand aside for another: a tap on a road that also carries transit belongs to the
- * road, so the transit layer bails while the route picker is busy.
- */
+/** Mid-collection or still showing its chooser: lets another picker (e.g. transit) stand aside. */
 export function isPickerPending(id: string) {
     return pendingPickers.has(id);
 }
 
 let ignoreNextMapClick = false;
 
-/**
- * A tap that landed on a feature must not also count as a tap on the empty map, which would drop the
- * selection the picker is about to make. Reading it consumes it.
- */
+/** Consumed on read: a feature tap must not also count as an empty-map tap, which would drop the selection. */
 export function consumeIgnoreNextMapClick() {
     const ignore = ignoreNextMapClick;
     ignoreNextMapClick = false;
     return ignore;
 }
 
-/** The tap turned out to be an ordinary feature tap after all, so let it through. */
 export function clearIgnoreNextMapClick() {
     ignoreNextMapClick = false;
 }
 
 export interface FeaturePickerOptions {
-    /** Identifies this picker to `isPickerPending`. */
     id: string;
-    /** Dedups the collected features — carto can report the same one more than once. */
+    /** Carto can report the same feature more than once. */
     key: (item: IItem) => unknown;
-    /** Row title in the chooser. */
     label: (item: IItem) => string;
-    /** What to do once one feature is settled on, whether it was the only one or the chosen one. */
     select: (item: IItem) => void;
     sort?: (first: IItem, second: IItem) => number;
-    /** Close whatever sheet is already open before showing the chooser. */
     closeOpenSheet?: boolean;
 }
 
@@ -63,10 +46,6 @@ export class FeaturePicker {
         return isPickerPending(this.options.id);
     }
 
-    /**
-     * Collects one feature, restarting the window. Swallows the map click that follows a genuinely
-     * new one, so the tap does not also register as a tap on the empty map.
-     */
     add(item: IItem) {
         if (this.timer) {
             clearTimeout(this.timer);
@@ -83,7 +62,6 @@ export class FeaturePicker {
         return true;
     }
 
-    /** Drops whatever was collected — the tap turned out to belong to something else. */
     cancel() {
         if (this.timer) {
             clearTimeout(this.timer);
@@ -123,8 +101,7 @@ export class FeaturePicker {
         } catch (error) {
             console.error('FeaturePicker', id, error, error['stack']);
         }
-        // cleared only once the chooser is done, so this picker still counts as pending while it is
-        // open and others keep standing aside — matches how the two hand-rolled versions behaved
+        // cleared only once the chooser is done, so others keep standing aside while it is open
         this.items = null;
         this.timer = null;
         pendingPickers.delete(id);

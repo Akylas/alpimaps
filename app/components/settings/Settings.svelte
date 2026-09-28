@@ -66,7 +66,7 @@
 
     const formatMilliseconds = (value: number) => value + ' ms';
 
-    /** the a9 watch needs its screen woken for the gps to keep reporting: nobody else has that quirk */
+    /** the a9 watch needs its screen woken for the gps to keep reporting */
     const isA9Watch = __ANDROID__ && Device.model === 'HLTE556N';
     const dataPathsAvailable = __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30;
 </script>
@@ -98,11 +98,8 @@
         refresh?.();
     });
 
-    /**
-     * The units live in a single json setting rather than one key each, so they get a store shim: the
-     * settings page only ever calls `set`/`reset` on it, and `variables.ts` reloads them from the
-     * `units` key change.
-     */
+    // units live in a single json setting, hence this set/reset shim; `variables.ts` reloads them
+    // on the `units` key change
     function unitStore(key: string) {
         function save() {
             ApplicationSettings.setString(SETTINGS_UNITS, JSON.stringify(unitsSettings));
@@ -119,13 +116,8 @@
         };
     }
 
-    /**
-     * A slider row backed by a svelte store rather than by a raw `ApplicationSettings` key.
-     *
-     * The terrain and peak-finder values are read by the map modules through their stores, so writing
-     * the key behind their back would persist the value without anything acting on it. `BaseSettingsPage`
-     * writes `item.store` when there is one, which both persists and notifies.
-     */
+    // map modules read these values through their stores: writing the raw key would persist without
+    // notifying them. `BaseSettingsPage` writes `item.store` when there is one
     function storeSlider(store: SettingsStore<number>, title: string, min: number, max: number, step: number, formatter?: (value: number) => string) {
         return {
             id: 'setting',
@@ -145,7 +137,6 @@
     function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
         return { type: 'switch', key: title, title, description, store, value: get(store) };
     }
-    /** A shared row (peak finder, 3D terrain) as this screen's list takes it. The sun's moment is the panorama's own. */
     function sharedSettingItem(row: PeakFinderSettingRow) {
         switch (row.type) {
             case 'sectionheader':
@@ -408,10 +399,8 @@
                     }
                 }));
             case 'terrain_3d':
-                // The same rows as the 3D mode's own sheet - see terrain3dSettingRows.
                 return [storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'peak_finder':
-                // The same rows as the panorama's own sheet - see peakFinderSettingRows.
                 return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'map_data':
                 return (
@@ -827,7 +816,6 @@
                             cancelButtonText: lc('cancel')
                         });
                         if (result) {
-                            //we need to move files around
                             Folder.fromPath(current)
                                 .getEntitiesSync()
                                 .forEach((entity) => {
@@ -953,8 +941,7 @@
                             if (__IOS__ && PLAY_STORE_BUILD) {
                                 presentInAppSponsorBottomsheet();
                             } else {
-                                // Apple wants us to use in-app purchase for donations => taking 30% ...
-                                // so lets just open github and ask for love...
+                                // Apple requires in-app purchase for donations, so iOS opens github instead
                                 openLink(__IOS__ ? GIT_URL : SPONSOR_URL);
                             }
                             break;
@@ -1076,7 +1063,6 @@
                                 cancelButtonText: lc('cancel')
                             });
                             if (confirmed) {
-                                //we need to move files around
                                 Folder.fromPath(current)
                                     .getEntitiesSync()
                                     .forEach((entity) => {

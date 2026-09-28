@@ -3,12 +3,7 @@ import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { type MapSideButton, registerMapFeature } from '~/mapModules/mapFeatures';
 import { layerProps, nutiProps } from '~/stores/mapStore';
 
-/**
- * The two style toggles that sit in the side bar: slope shading and hiking/cycling routes.
- *
- * Both are ordinary style properties, so everything about them — icon, title, what long-press opens —
- * already lives with the property definition in mapStore. This only places them in the bar.
- */
+// icon, title and long-press come from the property definitions in mapStore
 const slopeProps = layerProps.getProps('showSlopePercentages');
 const routesProps = nutiProps.getProps('show_routes');
 

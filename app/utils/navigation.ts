@@ -23,26 +23,19 @@ const PROJECTION_LOOKAHEAD_TOLERANCE = 3;
 /** how many segments ahead of the last known position we look for the user */
 export const DEFAULT_PROJECTION_WINDOW = 200;
 
-/** one row of navigation widget cards */
 export const NAVWIDGET_ROW_HEIGHT = 60;
 /** every navigation button, so the controls and the actions row cannot end up different sizes */
 export const NAVBUTTON_SIZE = 48;
 /** the actions step: one row of buttons and its margins */
 export const NAVACTIONS_HEIGHT = NAVBUTTON_SIZE + 10;
-/** the estimates strip below them, shown at the same step so nothing is hidden by default */
 export const NAVSTATS_HEIGHT = 32;
 /** the maneuver banner at the top of the map, everything anchored up there has to clear it */
 export const MANEUVER_VIEW_HEIGHT = 84;
 
-/**
- * Height of the whole navigation view: the figures row, the previews row when there is one, and the
- * strip. Lives here rather than in the component so the map can size the navigation sheet without
- * pulling the whole navigation ui into its bundle.
- */
+/** Lives here, not in the component, so the map can size the sheet without bundling the navigation ui. */
 export function navigationViewHeight(hasPreviewWidgets: boolean) {
-    // both widget rows are reserved whether or not there are previews, so the bar keeps one height for
-    // the whole of a navigation: sizing it to the current content makes the sheet jump every time a
-    // preview appears or drops out
+    // both widget rows are always reserved: sizing to the current content makes the sheet jump
+    // every time a preview appears or drops out
     return NAVWIDGET_ROW_HEIGHT * 2 + NAVSTATS_HEIGHT;
 }
 
@@ -50,12 +43,6 @@ export function navigationViewHeight(hasPreviewWidgets: boolean) {
 export const ROUTE_PROFILE_HEIGHT = 155;
 export const ROUTE_STATS_HEIGHT = 180;
 
-/**
- * Steps of the navigation sheet. It has no 0 step on purpose: the bar is the only way back out of
- * navigation, so it can never be dismissed. Dragging up reveals the actions, then the profile, then
- * the stats — the actions first because they are the one step the user goes looking for, rather than
- * something they read while moving.
- */
 export function navigationSheetSteps({ actionsHeight = 0, barHeight, hasProfile, hasStats }: { barHeight: number; actionsHeight?: number; hasProfile: boolean; hasStats: boolean }) {
     const steps = [0, barHeight];
     if (actionsHeight > 0) {
@@ -70,17 +57,14 @@ export function navigationSheetSteps({ actionsHeight = 0, barHeight, hasProfile,
     return steps;
 }
 
-/**
- * Value and unit kept apart so the UI can shrink the unit and let the number carry the emphasis.
- * The formatter's own helpers return them already joined.
- */
+/** Value and unit kept apart so the UI can draw the unit smaller. */
 export function splitDistance(meters: number): [number, string] {
     return convertValueToUnit(meters, meters < 1000 ? UNITS.Meters : UNITS.Kilometers);
 }
 export function splitElevation(meters: number): [number, string] {
     return convertValueToUnit(meters, UNITS.Meters);
 }
-/** takes km/h, the unit Session stores speeds in. Goes through the unit machinery so imperial works. */
+/** takes km/h, the unit Session stores speeds in */
 export function splitSpeed(speedKmh: number): [number, string] {
     return convertValueToUnit(speedKmh, UNITS.SpeedKm);
 }
@@ -90,7 +74,6 @@ export function formatSpeed(speedKmh: number) {
 
 export { formatDuration as formatNavigationDuration };
 
-/** Same split as the other figures, so the unit can be drawn smaller than the value. */
 export function splitDuration(seconds: number): [string, string] {
     if (seconds >= 3600) {
         return [convertDurationSeconds(seconds, 'H:mm'), 'h'];
@@ -112,11 +95,7 @@ export interface CurrentAscent {
     summitElevation: number;
 }
 
-/**
- * The climb the user is inside of right now, null when between climbs.
- * Total remaining ascent answers "how much is left overall"; on a route with several climbs what the
- * user actually wants while pedalling is how much of *this* climb is left, which is what this returns.
- */
+/** The climb the user is inside of right now, null when between climbs. */
 export function getCurrentAscent(profile: RouteProfile, onPathIndex: number): CurrentAscent {
     const ascents = profile?.ascents;
     const data = profile?.data;
@@ -148,7 +127,6 @@ export interface ManeuverIcon {
     font: 'app' | 'mdi';
 }
 
-/** Icon for a maneuver, shared by the maneuver banner and the navigation view so they cannot diverge. */
 export function getManeuverIcon(action: RoutingAction): ManeuverIcon {
     switch (action) {
         case RoutingAction.UTURN:
@@ -194,15 +172,8 @@ export interface NavigationLookAheadOptions {
 }
 
 /**
- * How many meters of road ahead the camera should frame.
- *
- * Speed sets the baseline, then the next maneuver adjusts it in *either* direction:
- * - it widens the view when the maneuver is further than the speed alone would show, so crawling up
- *   a long straight does not sit at maximum zoom with the turn off screen;
- * - it tightens the view on approach, so the turn is framed whatever the speed.
- *
- * Maneuver density only ever tightens: turn-after-turn on small roads must stay close even at speed,
- * which is exactly when the user has the least time to read the map.
+ * Meters of road ahead to frame: speed sets the baseline, the next maneuver widens or tightens it,
+ * and dense maneuvers only ever tighten it.
  */
 export function computeNavigationLookAhead({
     denseManeuverDistance,
@@ -221,7 +192,6 @@ export function computeNavigationLookAhead({
     let lookAhead = Math.max(Math.max(speed, 0) * lookAheadSeconds, minLookAhead);
 
     if (hasManeuver && distanceToNextInstruction <= maneuverVisibleDistance) {
-        // close enough to be worth showing: make sure it fits on screen, widening if we have to
         lookAhead = Math.max(lookAhead, distanceToNextInstruction * maneuverFrameRatio);
     }
     if (hasManeuver) {
@@ -232,16 +202,11 @@ export function computeNavigationLookAhead({
     if (clustered) {
         lookAhead = Math.min(lookAhead, distanceToNextInstruction + distanceToFollowingInstruction);
     }
-    // the user's factor comes last and is clamped like everything else: it tunes the result, it does
-    // not get to escape the bounds the rest of the settings set
+    // the user's factor is clamped too: it tunes the result, it does not escape the bounds
     return Math.min(Math.max(lookAhead * (zoomFactor > 0 ? zoomFactor : 1), minLookAhead), maxLookAhead);
 }
 
-/**
- * What "far", "close" and "slow" mean depends on how the route is travelled: 500 m ahead is the next
- * ten minutes on foot and the next thirty seconds in a car. Rather than storing every distance three
- * times, the settings hold the pedestrian figures and this scales them.
- */
+/** The settings hold the pedestrian figures; this scales them per travel mode. */
 export interface NavigationProfileTuning {
     /** multiplies the distance settings: min/max look ahead, maneuver visible, dense maneuver */
     distance: number;
@@ -274,10 +239,7 @@ export interface RouteProgress {
     offRoute?: boolean;
     /** meters from the user to the closest point of the route, whatever the state */
     distanceFromRoute?: number;
-    /**
-     * index of the closest route vertex to the user right now, even while off route. Unlike
-     * `onPathIndex` it keeps following the user, so it is what a rejoin target is picked from.
-     */
+    /** closest route vertex even while off route, unlike `onPathIndex`: what a rejoin target is picked from */
     closestIndex?: number;
     /** the figures come from the last on-route fix, not from where the user actually is */
     stale?: boolean;
@@ -289,10 +251,7 @@ export interface RouteProgress {
     /** position of `instruction` in `item.instructions` */
     instructionIndex?: number;
     distanceToNextInstruction?: number;
-    /**
-     * distance between `instruction` and the one after it, ie how tightly maneuvers are packed.
-     * `undefined` when `instruction` is the last one.
-     */
+    /** gap between `instruction` and the one after it, `undefined` when it is the last one */
     distanceToFollowingInstruction?: number;
     /** the user is following a reroute leg, so `onPathIndex` is the point it rejoins the route at */
     onDetour?: boolean;
@@ -300,10 +259,7 @@ export interface RouteProgress {
     detourIndex?: number;
 }
 
-/**
- * What progress needs of a route: the timings and the maneuvers. An `Item` satisfies it, and so does a
- * detour leg, which has both but is not an item and must never be turned into one.
- */
+/** Satisfied by an `Item` and by a detour leg, which is not an item and must never be turned into one. */
 export interface RouteProgressSource {
     route?: Route;
     instructions?: RouteInstruction[];
@@ -317,9 +273,8 @@ export interface ComputeRouteProgressOptions {
     computeRemaining?: boolean;
     computeInstruction?: boolean;
     /**
-     * meters from the user to `positions[onPathIndex]`, when the caller already projected the
-     * location onto the route. Without it we fall back to the straight line to that vertex, which
-     * overshoots whenever the user is not exactly on the polyline.
+     * meters to `positions[onPathIndex]` when already projected; else the straight line to that
+     * vertex is used, which overshoots off the polyline
      */
     distanceToOnPathIndex?: number;
 }
@@ -339,7 +294,6 @@ export function angleDifference(first: number, second: number) {
     return diff > 180 ? 360 - diff : diff;
 }
 
-/** Distance from a point to a segment, how far along that segment the closest point sits, and its heading. */
 function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, bLat: number, bLon: number) {
     // at these distances a local flat approximation is exact enough and far cheaper than haversine
     const cosLat = Math.cos(aLat * TO_RAD);
@@ -362,17 +316,8 @@ function projectOnSegment(lat: number, lon: number, aLat: number, aLon: number, 
 }
 
 /**
- * Closest point of the route to a location, whatever the distance.
- *
- * It returns the closest segment rather than the first one within tolerance like `isLocationOnPath`
- * does. That difference matters: where a route passes near itself (a switchback, an out and back), the
- * first matching segment can belong to the other leg, the index then never advances, and the distance
- * to the next maneuver *grows* as the user drives away from a vertex they already passed. Searching a
- * window ahead of the last known index also makes progress monotonic and costs a few segments instead
- * of all.
- *
- * Deciding whether that closest point is close *enough* is the caller's job — `projectOnRoute` for a
- * plain tolerance, `OffRouteDetector` when the answer has to survive a bad fix.
+ * Closest segment, not the first within tolerance like `isLocationOnPath`: where a route passes near
+ * itself the first match can be the other leg. Searching a window ahead keeps progress monotonic.
  */
 export function findClosestOnRoute(
     location: MapPos,
@@ -387,8 +332,7 @@ export function findClosestOnRoute(
     const start = fromIndex >= 0 ? Math.max(0, fromIndex - 2) : 0;
     const end = fromIndex >= 0 ? Math.min(size - 1, fromIndex + window) : size - 1;
     const useBearing = bearing >= 0;
-    // the limit is "ahead of where we were", so it means nothing without a position to be ahead of:
-    // capping a search that starts at the route's own beginning would simply never reach the user
+    // the limit is "ahead of where we were": meaningless without a known position
     const limitAhead = fromIndex >= 0 ? maxAhead : Number.POSITIVE_INFINITY;
     let best: RouteProjection = null;
     let bestScore = Number.POSITIVE_INFINITY;
@@ -403,9 +347,8 @@ export function findClosestOnRoute(
         if (best && ahead > limitAhead) {
             break;
         }
-        // an out and back walks the same road twice: geometrically the two legs are the same segments,
-        // so distance alone cannot tell them apart and the projection lands on whichever came first.
-        // Which way the user is going can, so a segment heading against them is scored as further away
+        // the two legs of an out and back are the same segments: only the heading tells them apart,
+        // so a segment heading against the user is scored as further away
         const score = useBearing && angleDifference(projection.bearing, bearing) > OPPOSITE_SEGMENT_ANGLE ? projection.distance + OPPOSITE_SEGMENT_PENALTY : projection.distance;
         if (score < bestScore) {
             bestScore = score;
@@ -464,16 +407,8 @@ export interface OffRouteState {
 }
 
 /**
- * Decides whether the user is following the route, keeping enough state to be sure about it.
- *
- * Three things a plain per-fix distance test gets wrong, and this exists to fix:
- * - a single bad fix (urban canyon, cold start, a tunnel exit) is not leaving the route, so a
- *   confirmation over several fixes is required — unless the fix is so far off there is no doubt;
- * - the gps says how much it trusts itself, so the tolerance follows the reported accuracy instead of
- *   pretending every fix is perfect;
- * - once off route the last known index is worth keeping: it is where the user *left* the route, which
- *   is both what the remaining figures are measured from and where a rejoin is computed to. Dropping
- *   it also meant every later fix rescanning the whole polyline.
+ * Needs several confirming fixes unless obviously off, scales the tolerance with reported accuracy,
+ * and keeps the last on-route index while off route: remaining figures and rejoin are measured from it.
  */
 export class OffRouteDetector {
     private lastOnPathIndex = -1;
@@ -534,14 +469,8 @@ export class OffRouteDetector {
     }
 
     /**
-     * Which way the user is going, which is the only thing telling the two legs of a path walked both
-     * ways apart.
-     *
-     * The reported heading is noise at a standstill, but "moving slowly" is not "standing still": a
-     * walker at 0.6 m/s still has a direction, and dropping it there is what let the projection snap
-     * onto the return leg of an out and back, jumping the user hundreds of vertices forward. So below
-     * the reported-heading threshold we derive one from the ground actually covered, holding the last
-     * answer until the user has moved far enough for a new one to mean something.
+     * Below MIN_BEARING_SPEED the reported heading is noise, but a slow walker still has a direction:
+     * derive it from the ground covered, else the projection can snap onto the other leg.
      */
     private bearingFor(location: MapPos & { bearing?: number; speed?: number }) {
         if (location.speed >= MIN_BEARING_SPEED && location.bearing >= 0) {
@@ -559,13 +488,8 @@ export class OffRouteDetector {
     }
 
     /**
-     * Meters of route ahead the projection may move to on this fix.
-     *
-     * A flat allowance meant that anywhere the route came back along itself within a kilometre, the
-     * *later* leg was a legitimate candidate — and a metre closer to a wobbly fix is all it took to be
-     * picked, which reads as suddenly having covered that kilometre. The user cannot travel further
-     * than their speed says, so that is the budget, with a wide tolerance for a burst and a margin for
-     * a lost fix.
+     * Meters of route ahead the projection may move on this fix, bounded by speed so a nearby later
+     * leg of the route cannot be picked.
      */
     private projectionLookAhead(location: { speed?: number }, now: number) {
         if (!this.lastUpdateTime) {
@@ -596,9 +520,8 @@ export class OffRouteDetector {
             this.lastFullScanTime = now;
             this.lastFullScanLocation = location;
             const full = findClosestOnRoute(location, positions, { bearing });
-            // only a real rejoin is worth leaving the neighbourhood for. Walking away from the route
-            // often ends up nearer some later part of it — a switchback above, the way back down — and
-            // taking that as progress would jump the user kilometres forward for stepping aside
+            // only a real rejoin: stepping aside often ends up nearer a later part of the route,
+            // which would jump the user kilometres forward
             if (full && full.distanceFromRoute <= tolerance && (!best || full.distanceFromRoute < best.distanceFromRoute)) {
                 best = full;
             }
@@ -618,10 +541,8 @@ export class OffRouteDetector {
         const requiredFixes = this.getOptions().fixes ?? 1;
         if (best.distanceFromRoute <= tolerance) {
             this.offFixes = 0;
-            // coming back takes as many fixes as leaving did. One was enough before, so a user
-            // travelling along the edge of the tolerance flapped off and on every other fix — and each
-            // flip re-framed the map, re-armed the reroute and, in background, woke the screen. The
-            // projection stays where it was until the return is confirmed, as it does while off route
+            // coming back takes as many fixes as leaving, else a user on the tolerance edge flaps off
+            // and on every fix (re-framing, re-arming the reroute, waking the screen)
             this.onFixes++;
             if (!this.mOffRoute || this.onFixes >= requiredFixes) {
                 this.onFixes = 0;
@@ -631,8 +552,7 @@ export class OffRouteDetector {
                 this.lastDistanceToIndex = best.distanceToIndex;
             }
         } else {
-            // every fix counts, moving or not: standing away from the route is being away from it, and
-            // requiring movement meant a navigation started off route was never told so
+            // every fix counts, moving or not, else a navigation started off route is never told so
             this.onFixes = 0;
             this.offFixes++;
             if (!this.mOffRoute && (this.offFixes >= requiredFixes || best.distanceFromRoute > tolerance * OFF_ROUTE_OBVIOUS_RATIO)) {
@@ -670,11 +590,7 @@ export interface RejoinTarget {
     maneuver?: RouteInstruction;
 }
 
-/**
- * meters of route between two of its vertices. `maxDistance` stops the walk as soon as the answer is
- * known to be over it, which is what every caller here actually asks — a maneuver 40 km up the track
- * would otherwise cost thousands of distances on every position.
- */
+/** meters of route between two of its vertices. `maxDistance` stops the walk once exceeded. */
 export function distanceAlong(positions: MapPos[], fromIndex: number, toIndex: number, maxDistance = Number.POSITIVE_INFINITY) {
     let distance = 0;
     const end = Math.min(toIndex, positions.length - 1);
@@ -687,14 +603,7 @@ export function distanceAlong(positions: MapPos[], fromIndex: number, toIndex: n
     return distance;
 }
 
-/**
- * Where to send a user who left the route.
- *
- * The next maneuver is the useful answer — rejoining a route between two maneuvers means being told to
- * do nothing until the turn anyway — but only while it is near: on a track whose maneuvers are
- * kilometres apart, being pointed at one of them instead of the path a hundred meters away is wrong.
- * So the closest point of the route wins whenever the maneuver is much further along than it.
- */
+/** The next maneuver while it is near, else the closest point of the route (maneuvers can be km apart). */
 export function chooseRejoinTarget({
     closestIndex = -1,
     fromIndex,
@@ -738,12 +647,7 @@ export function isLocationOnRoute(location: MapPos, positions: MapPos[], distanc
     return isLocationOnPath(location, positions, false, true, distanceFromRoute);
 }
 
-/**
- * Everything we know about where the user is along a route.
- *
- * `computeRemaining` and `computeInstruction` are opt-in because both walk the polyline: on a long
- * imported track with no profile and no instructions there is nothing to compute and we must not pay for it.
- */
+/** `computeRemaining` and `computeInstruction` are opt-in because both walk the polyline. */
 export function computeRouteProgress({ computeInstruction, computeRemaining, distanceToOnPathIndex, item, location, onPathIndex, positions }: ComputeRouteProgressOptions): RouteProgress {
     const result: RouteProgress = { onPathIndex };
     if (onPathIndex === -1) {
@@ -771,7 +675,6 @@ export function computeRouteProgress({ computeInstruction, computeRemaining, dis
             }
             instructionIndex = index;
         }
-        // past the last maneuver there is nothing left to announce
         if (instructionIndex !== -1) {
             result.instructionIndex = instructionIndex;
             result.instruction = instructions[instructionIndex];

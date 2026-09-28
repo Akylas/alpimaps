@@ -16,8 +16,7 @@
     export let pitch;
 
     const mapContext = getMapContext();
-    // The 3d view is a webview driven by the app's own Java client, so it takes the SDK sources
-    // themselves - `source()` hands one over whether or not it was given an id.
+    // the webview's Java client takes the SDK sources themselves (`source()` works with or without an id)
     const hillshadeSource = packageService.hillshadeLayer?.source();
     const vectorSource = packageService.localVectorTileLayer?.source();
     // only tile layers carry a datasource, and nothing registers a 'routes' layer today

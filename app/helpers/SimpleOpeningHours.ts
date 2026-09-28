@@ -12,9 +12,6 @@ function compareTimeArrays(time1: [number, number], time2: [number, number]) {
     }
 }
 export default class SimpleOpeningHours {
-    /**
-     * Creates the OpeningHours Object with OSM opening_hours string
-     */
     constructor(input: string) {
         this.parse(input);
     }
@@ -95,8 +92,7 @@ export default class SimpleOpeningHours {
                 }
             }
             if (compare1 > 0 && compare2 < 0) {
-                // we are open return close time. Could be timeData[1] except if next time start === timeData[1]
-                // happens where time spans spans over midnight
+                // open: return closing time; at 24:00 keep going, the next range may continue past midnight
                 resultDate = new Date(date);
                 const array = array1;
                 resultDate.setHours(array[0]);
@@ -106,7 +102,6 @@ export default class SimpleOpeningHours {
                 }
                 return true;
             } else if (compare1 < 0) {
-                // we are close return next opening time
                 resultDate = new Date(date);
                 const array = array0;
                 resultDate.setHours(array[0]);
@@ -117,9 +112,6 @@ export default class SimpleOpeningHours {
         return resultDate;
     }
 
-    /**
-     * Parses the input and creates openingHours Object
-     */
     private parse(input: string) {
         if (/^\s*24\s*?\/\s*?7\s*$/.test(input)) {
             this.openingHours = sections.reduce((acc, k) => {
@@ -160,16 +152,14 @@ export default class SimpleOpeningHours {
             const segments = parts[p].split(' ');
             let days;
             const openTimes = [];
-            // If part has the closing hours.
             if (parts[p].indexOf('off') !== -1) {
-                // If no start or end time is found yet, add part to the end of the list.
+                // universal hours not known yet: retry this part after the others
                 if (univStart === undefined || univEnd === undefined) {
                     parts.push(parts[p]);
                 } else {
                     days = this.parseDays(segments[0]);
                     const closeTimes = [];
-                    // Split closing times into array of times.
-                    // parts[0]: days, parts[last]: 'off'
+                    // segments[0]: days, segments[last]: 'off'
                     for (let i = 1; i < segments.length - 1; i++) {
                         segments[i] = segments[i].replace(',', '');
                         const tmp = segments[i].split('-');
@@ -228,7 +218,6 @@ export default class SimpleOpeningHours {
                 if (times.length === 0) {
                     days = days.concat(this.parseDays(segment));
                 } else {
-                    //append
                     days.forEach((day) => {
                         if (tempData[day]) {
                             tempData[day] = tempData[day].concat(times);
@@ -253,7 +242,6 @@ export default class SimpleOpeningHours {
             }
         });
 
-        //commit last times to it days
         days.forEach((day) => {
             if (tempData[day]) {
                 tempData[day] = tempData[day].concat(times);
@@ -262,7 +250,6 @@ export default class SimpleOpeningHours {
             }
         });
 
-        //apply data to main obj
         for (const key in tempData) {
             this.openingHours[key] = tempData[key];
         }
@@ -290,9 +277,6 @@ export default class SimpleOpeningHours {
         }, {});
     }
 
-    /**
-     * Calculates the days in range "mo-we" -> ["mo", "tu", "we"]
-     */
     private calcDayRange(range: string): string[] {
         const def = {
             su: 0,
@@ -321,10 +305,7 @@ export default class SimpleOpeningHours {
         return outRange;
     }
 
-    /**
-     * Creates a range between two number.
-     * if the max value is 6 a range bewteen 6 and 2 is 6, 0, 1, 2
-     */
+    // wraps past maxval: calcRange(6, 2, 6) -> 6, 0, 1, 2
     private calcRange(min: number, max: number, maxval): number[] {
         if (min === max) {
             return [min];
@@ -336,16 +317,12 @@ export default class SimpleOpeningHours {
             range.push(rangepoint);
         }
         if (min > max) {
-            //add from first in list to max value
             range = range.concat(this.calcRange(0, max, maxval));
         }
 
         return range;
     }
 
-    /**
-     * Check if string is time range
-     */
     private isTimeRange(input: string): boolean {
         //e.g. 09:00+
         if (input.match(/[0-9]{1,2}:[0-9]{2}\+/)) {
@@ -355,16 +332,12 @@ export default class SimpleOpeningHours {
         if (input.match(/[0-9]{1,2}:[0-9]{2}\-[0-9]{1,2}:[0-9]{2}/)) {
             return true;
         }
-        //off
         if (input.match(/off/)) {
             return true;
         }
         return false;
     }
 
-    /**
-     * check if string is day or dayrange
-     */
     private checkDay(input: string): boolean {
         if (input.match(/\-/g)) {
             const rangeElements = input.split('-');
@@ -377,12 +350,6 @@ export default class SimpleOpeningHours {
         return false;
     }
 
-    /**
-     * Compares to timestrings e.g. "18:00"
-     * if time1 > time2 -> 1
-     * if time1 < time2 -> -1
-     * if time1 === time2 -> 0
-     */
     private compareTime(time1: string, time2: string) {
         const date1 = Number(time1.replace(':', ''));
         const date2 = Number(time2.replace(':', ''));

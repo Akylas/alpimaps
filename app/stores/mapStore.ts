@@ -95,8 +95,7 @@ const nutiParams = {
         defaultValue: true,
         icon: 'mdi-bullseye',
         showAsIcon: true,
-        // hasTerrain, not hasLocalData: the lines are traced from the DEM now, so they are there
-        // for an online-only map too, and absent from an offline one with no elevation packages
+        // hasTerrain, not hasLocalData: the lines are traced from the DEM
         visible: (capabilities) => !!capabilities?.hasTerrain,
         onLongPress: tryCatchFunction(async (event) => {
             await showSliderPopover({
@@ -443,11 +442,8 @@ function createStore<T extends StoreParams>(storeParams: T): PropsStore<T> {
     Object.assign(propsObj, params);
 
     const keys = Object.keys(params);
-    /**
-     * Built once. The get trap runs on every property access, so returning a fresh closure from it —
-     * as this used to for each of the ten accessors, plus a bind() for anything else — allocated on
-     * reads that happen while the map is being styled.
-     */
+    // built once: the get trap runs on every property access, including reads while the map is
+    // being styled, so it must not allocate closures
     const accessors: Record<string, Function> = {
         getTitle: (key: string) => params[key].title,
         getDescription: (key: string) => params[key].description,

@@ -31,15 +31,13 @@ export class MainActivity extends androidx.appcompat.app.AppCompatActivity {
                 DEV_LOG && console.log('PROCESS_TEXT', intent.getAction(), data);
             }
         }
-        // Set the isNativeScriptActivity in onCreate (as done in the original NativeScript activity code)
-        // The JS constructor might not be called because the activity is created from Android.
+        // set here: the JS constructor may not run when Android creates the activity
         this.isNativeScriptActivity = true;
         if (!this._callbacks) {
             setActivityCallbacks(this);
         }
 
         this._callbacks.onCreate(this, savedInstanceState, this.getIntent(), super.onCreate);
-        // Handle the splash screen transition.
         //@ts-ignore
         androidx.core.splashscreen.SplashScreen.installSplashScreen(this);
 

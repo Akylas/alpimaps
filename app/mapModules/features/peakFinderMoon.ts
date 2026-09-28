@@ -10,13 +10,7 @@ import { MOON_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
 import { peakFinderMoon } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
 
-/**
- * THE MOON over the panorama: its path across the sky and the moon at the chosen moment, drawn with its phase
- * and its lit side turned towards the sun. No times: its rise and set are not what a panorama is read by.
- *
- * One celestial layer, under the terrain like the sun's path; sky objects are depth-tested, so a
- * ridge hides the moon behind it.
- */
+// Celestial layer under the terrain: sky objects are depth-tested, so a ridge hides the moon.
 
 const TO_DEGREES = 180 / Math.PI;
 const TO_RADIANS = Math.PI / 180;
@@ -41,9 +35,8 @@ function moonPositionAt(time: number, eye: MapPos) {
 }
 
 /**
- * Where the lit limb points on screen, degrees clockwise from up: the direction from the moon to the
- * sun, in the sky's plane at the moon. The sprite is screen-aligned and the panorama never rolls, so
- * screen up is the zenith's side.
+ * Lit limb direction on screen, degrees clockwise from up. The sprite is screen-aligned and the
+ * panorama never rolls, so screen up is the zenith's side.
  */
 function litLimbAngle(moon: [number, number, number], sun: [number, number, number]) {
     const dot = (a: number[], b: number[]) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -107,9 +100,8 @@ function moonBitmapUrl(fraction: number, angle: number, dark: boolean) {
 }
 
 /**
- * The circle the moon turns on at the moment: its direction swept once round the celestial pole, as
- * a star's would be. Its real path never closes - it comes back ~50 minutes later each day - so a
- * day's worth of it leaves a gap in the sky; this passes through the moon and closes.
+ * The moon's direction swept once round the celestial pole, like a star's: its real path never closes
+ * (~50 minutes later each day), so a day of it would leave a gap.
  */
 function planPath(eye: MapPos, time: number) {
     const centre = Math.round(time / PATH_REPLAN_MS) * PATH_REPLAN_MS;
