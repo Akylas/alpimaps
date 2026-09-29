@@ -69,6 +69,8 @@
     const INFOVIEW_HEIGHT = 86;
     // the route header's stat tiles, under its title band
     const ROUTE_TILES_HEIGHT = 48;
+    // a route's title band: the icon tile with its option icons below; the title takes the height beside
+    const ROUTE_TITLE_HEIGHT = 76;
     const CARD_RADIUS = 20;
     const CARD_MARGIN = 6;
     /** the space above each card after the first, part of its row so the steps stay exact */
@@ -103,7 +105,7 @@
     };
     const ACTIONS_HEIGHT = 58;
     function headerHeight(it: Item) {
-        return INFOVIEW_HEIGHT + (it?.route ? ROUTE_TILES_HEIGHT : 0);
+        return it?.route ? ROUTE_TITLE_HEIGHT + ROUTE_TILES_HEIGHT : INFOVIEW_HEIGHT;
     }
 
     const mapContext = getMapContext();
@@ -1108,8 +1110,8 @@
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${INFOVIEW_HEIGHT - CARD_GAP},*`}>
-                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginBottom={itemIsRoute ? 6 : 18} marginLeft={62} showStats={!itemIsRoute}>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${(itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT) - CARD_GAP},*`}>
+                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginBottom={itemIsRoute ? 2 : 24} marginLeft={62} propsBottom={24} showStats={!itemIsRoute}>
                     <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                 </BottomSheetInfoView>
                 {#if itemIsRoute}
