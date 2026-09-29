@@ -13,7 +13,7 @@
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { showPopoverMenu } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips } from '~/variables';
+    import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
 
@@ -387,8 +387,9 @@
                     !!packageService.localOSMOfflineGeocodingService
                         ? [
                               {
-                                  type: 'checkbox',
+                                  type: 'switch',
                                   name: lc('search_using_geocoding'),
+                                  icon: 'mdi-database-search-outline',
                                   value: ApplicationSettings.getBoolean('searchInGeocoding', true),
                                   id: 'searchInGeocoding'
                               }
@@ -399,8 +400,9 @@
                     !!packageService.localVectorTileLayer
                         ? [
                               {
-                                  type: 'checkbox',
+                                  type: 'switch',
                                   name: lc('search_in_vectortiles'),
+                                  icon: 'mdi-map-search-outline',
                                   value: ApplicationSettings.getBoolean('searchInTiles', true),
                                   id: 'searchInTiles'
                               }
@@ -409,14 +411,16 @@
                 )
                 .concat([
                     {
-                        type: 'checkbox',
+                        type: 'switch',
                         name: lc('search_using_here'),
+                        icon: 'mdi-cloud-search-outline',
                         value: ApplicationSettings.getBoolean('searchUsingHere', false),
                         id: 'searchUsingHere'
                     },
                     {
-                        type: 'checkbox',
+                        type: 'switch',
                         name: lc('search_using_photon'),
+                        icon: 'mdi-web',
                         value: ApplicationSettings.getBoolean('searchUsingPhoton', true),
                         id: 'searchUsingPhoton'
                     }
@@ -427,6 +431,7 @@
                 horizPos: HorizontalPosition.ALIGN_LEFT,
                 anchor: event.object,
                 props: {
+                    width: Math.min(330, screenWidthDips * 0.9),
                     autoSizeListItem: true,
                     fontWeight: 'normal',
                     maxHeight: screenHeightDips - 200,

@@ -1940,8 +1940,8 @@
                     bind:this={locationInfoPanel}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-                    marginLeft={40}
-                    marginTop={90 + navigationTopOffset}
+                    marginLeft={53}
+                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top"
                     visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
                 <Search
