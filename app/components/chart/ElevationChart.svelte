@@ -82,7 +82,7 @@
     /** the selected point's figures in a strip above the chart, instead of text drawn over it */
     export let infoStrip = false;
 
-    let highlightInfo: { at: string; values: { icon: string; fontFamily: string; value: string; color?: string }[] } = null;
+    let highlightInfo: { at: string; values: { icon: string; fontFamily: string; value: string }[] } = null;
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
@@ -344,9 +344,9 @@
                         at: formatDistance(itemData.d),
                         values: [
                             !isNaN(params.remainingTime) && { icon: 'mdi-timer-outline', fontFamily: $fonts.mdi, value: convertDurationSeconds(params.remainingTime) },
-                            { icon: 'mdi-arrow-expand-right', fontFamily: $fonts.mdi, value: formatDistance(params.remainingDistance) },
+                            { icon: 'mdi-flag-checkered', fontFamily: $fonts.mdi, value: formatDistance(params.remainingDistance) },
                             { icon: 'mdi-triangle-outline', fontFamily: $fonts.mdi, value: convertElevation(itemData.a || 0) },
-                            { icon: 'mdi-angle-acute', fontFamily: $fonts.mdi, value: grade.toFixed(1) + ' %', color: gradeColor(grade) },
+                            { icon: 'mdi-angle-acute', fontFamily: $fonts.mdi, value: grade.toFixed(1) + ' %' },
                             !isNaN(itemData.dp) && params.dplus - itemData.dp > 0 && { icon: 'mdi-arrow-top-right', fontFamily: $fonts.mdi, value: convertElevation(params.dplus - itemData.dp) },
                             !isNaN(itemData.dm) &&
                                 Math.abs(params.dmin - itemData.dm) > 0 && { icon: 'mdi-arrow-bottom-right', fontFamily: $fonts.mdi, value: convertElevation(-(params.dmin - itemData.dm)) }
@@ -685,14 +685,15 @@
                 <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={16} text="mdi-map-marker" textAlignment="center" />
                 <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={11} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
             </stacklayout>
-            <wraplayout col={1} paddingRight={6} verticalAlignment="middle">
-                {#each highlightInfo?.values ?? [] as info}
-                    <canvaslabel fontSize={13} height={18} width="33%">
-                        <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} text={info.icon} verticalAlignment="middle" />
-                        <cspan color={info.color && !isEInk ? info.color : colorOnSurface} fontWeight="bold" paddingLeft={18} text={info.value} verticalAlignment="middle" />
-                    </canvaslabel>
+            <!-- each figure an icon over its value, so none needs a label -->
+            <gridlayout col={1} columns={(highlightInfo?.values ?? []).map(() => '*').join(',') || '*'} paddingRight={4} verticalAlignment="middle">
+                {#each highlightInfo?.values ?? [] as info, index}
+                    <stacklayout col={index} verticalAlignment="middle">
+                        <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} fontSize={15} text={info.icon} textAlignment="center" />
+                        <label autoFontSize={true} color={colorOnSurface} fontSize={12} fontWeight="bold" maxFontSize={12} maxLines={1} minFontSize={9} text={info.value} textAlignment="center" />
+                    </stacklayout>
                 {/each}
-            </wraplayout>
+            </gridlayout>
         </gridlayout>
     {/if}
     <linechart

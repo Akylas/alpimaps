@@ -47,6 +47,8 @@
     export let iconTile = false;
     /** The inline distance, time and elevation line; off where stat tiles show them instead. */
     export let showStats = true;
+    /** The route's costing option icons. */
+    export let showOptions = true;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -62,6 +64,8 @@
     let nString;
     let nString2;
     let nString3;
+    /** the route options' icon count, drawn top right beside the title in the tile header */
+    let costingCount = 0;
 
     function redrawIcon() {
         canvas?.nativeView?.invalidate();
@@ -205,7 +209,7 @@
                     color: colorOnSurfaceVariant
                 },
                 {
-                    text: convertElevation(itemProps.ele) + ' '
+                    text: convertElevation(itemProps.ele) + '   '
                 }
             );
         }
@@ -220,7 +224,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${formatDistance(route.totalDistance || itemProps.distance * 1000)}` + ' '
+                        text: `${formatDistance(route.totalDistance || itemProps.distance * 1000)}` + '   '
                     }
                 );
             }
@@ -233,7 +237,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: convertDurationSeconds(route.totalTime) + ' '
+                        text: convertDurationSeconds(route.totalTime) + '   '
                     }
                 );
             }
@@ -249,7 +253,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.ascent)}` + ' '
+                        text: `${convertElevation(itemProps.ascent)}` + '   '
                     }
                 );
             }
@@ -261,7 +265,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.descent)}` + ' '
+                        text: `${convertElevation(itemProps.descent)}` + '   '
                     }
                 );
             }
@@ -275,7 +279,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(profile.dplus)}` + ' '
+                        text: `${convertElevation(profile.dplus)}` + '   '
                     }
                 );
             }
@@ -287,7 +291,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(-profile.dmin)}` + ' '
+                        text: `${convertElevation(-profile.dmin)}` + '   '
                     }
                 );
             }
@@ -313,12 +317,14 @@
                     });
                 }
             });
+            costingCount = spans2.length;
             if (spans2.length > 0) {
                 nString2 = createNativeAttributedString({ spans: spans2 });
             } else {
                 nString2 = null;
             }
         } else {
+            costingCount = 0;
             nString2 = null;
         }
         canvas?.nativeView.invalidate();
@@ -369,16 +375,17 @@
                 propsPaint.textSize = 13 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom * Math.sqrt($fontScaleMaxed));
+                // beside the tile, under the title
+                canvas.translate(paddingLeft + (iconTile ? marginLeft : propsLeft), paddingTop + h - propsBottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            if (nString2) {
-                // with the tile header the route options read as a line under the title, not a corner badge
+            if (nString2 && showOptions) {
+                // with the tile header the route options sit top right, beside the title
                 propsPaint.textSize = (iconTile ? 13 : 14) * $fontScaleMaxed;
-                const staticLayout = new StaticLayout(nString2, propsPaint, iconTile ? w - marginLeft : w, iconTile ? LayoutAlignment.ALIGN_NORMAL : LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft + (iconTile ? marginLeft - 10 : 0), paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
+                canvas.translate(paddingLeft, iconTile ? paddingTop + 6 : paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
@@ -419,7 +426,14 @@
 
 <canvasview bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
     <slot />
-    <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop} ios:verticalAlignment="center">
+    <flexlayout
+        disableCss={true}
+        flexDirection="column"
+        {marginBottom}
+        {marginLeft}
+        marginRight={rightTextPadding + (iconTile && showOptions ? costingCount * 15 * $fontScaleMaxed : 0)}
+        {marginTop}
+        ios:verticalAlignment="center">
         <label
             autoFontSize={true}
             color={colorOnSurface}

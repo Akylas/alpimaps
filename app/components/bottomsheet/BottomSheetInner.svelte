@@ -38,7 +38,7 @@
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
     import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors, fontScaleMaxed } from '~/variables';
+    import { colors, fontScaleMaxed } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
@@ -64,10 +64,11 @@
     $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
     // the chart's height includes the band its selected point strip lives in
     const PROFILE_HEIGHT = 215;
-    const STATS_HEIGHT = 180;
+    const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 86;
-    const STAT_TILES_HEIGHT = 80;
+    // the route header's stat tiles, under its title band
+    const ROUTE_TILES_HEIGHT = 48;
     const CARD_RADIUS = 20;
     const CARD_MARGIN = 6;
     /** the space above each card after the first, part of its row so the steps stay exact */
@@ -102,7 +103,7 @@
     };
     const ACTIONS_HEIGHT = 58;
     function headerHeight(it: Item) {
-        return INFOVIEW_HEIGHT + (it?.route ? STAT_TILES_HEIGHT : 0);
+        return INFOVIEW_HEIGHT + (it?.route ? ROUTE_TILES_HEIGHT : 0);
     }
 
     const mapContext = getMapContext();
@@ -1107,8 +1108,8 @@
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${INFOVIEW_HEIGHT},auto`}>
-                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginLeft={62} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0} showStats={!itemIsRoute}>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${INFOVIEW_HEIGHT - CARD_GAP},*`}>
+                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginBottom={itemIsRoute ? 6 : 18} marginLeft={62} showStats={!itemIsRoute}>
                     <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                 </BottomSheetInfoView>
                 {#if itemIsRoute}

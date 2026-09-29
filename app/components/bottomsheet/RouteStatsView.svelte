@@ -5,9 +5,9 @@
     const barPaint = new Paint();
     barPaint.strokeWidth = 2;
     const textPaint = new Paint();
-    textPaint.textSize = 13;
+    textPaint.textSize = 12;
     const valuePaint = new Paint();
-    valuePaint.textSize = 13;
+    valuePaint.textSize = 12;
     valuePaint.fontWeight = 'bold';
     valuePaint.setTextAlign(Align.RIGHT);
     // the .sectionHeader look
@@ -45,13 +45,13 @@
         statsCanvas?.nativeView?.invalidate();
     }
 
-    const BAR_TOP = 40;
-    const BAR_HEIGHT = 12;
-    const LEGEND_TOP = 72;
-    const LEGEND_ROW = 22;
+    const BAR_TOP = 38;
+    const BAR_HEIGHT = 10;
+    const LEGEND_TOP = 58;
+    const LEGEND_ROW = 20;
     const PADDING = 16;
 
-    // a stacked bar with a gap between segments, then a two column legend: dot, name, length
+    // a stacked bar with a gap between segments, then a two column legend read in rows: dot, name, length
     function drawStats({ canvas }: { canvas: Canvas; object: CanvasView }) {
         try {
             if (!item?.stats) {
@@ -97,25 +97,24 @@
             canvas.restore();
 
             const columnWidth = usedWidth / 2;
-            // balanced: half the entries per column, as far as the height allows
-            const rowsPerColumn = Math.min(Math.max(1, Math.floor((h - LEGEND_TOP) / LEGEND_ROW)), Math.ceil(stats.length / 2));
+            const maxRows = Math.max(1, Math.floor((h - LEGEND_TOP) / LEGEND_ROW));
             stats.forEach((stat, index) => {
-                const column = index < rowsPerColumn ? 0 : 1;
-                const row = index - column * rowsPerColumn;
-                if (column > 1 || row >= rowsPerColumn) {
+                const column = index % 2;
+                const row = Math.floor(index / 2);
+                if (row >= maxRows) {
                     return;
                 }
                 const left = PADDING + column * columnWidth + (column ? 12 : 0);
                 const right = PADDING + (column + 1) * columnWidth - (column ? 0 : 12);
-                const baseline = LEGEND_TOP + row * LEGEND_ROW + 14;
+                const baseline = LEGEND_TOP + row * LEGEND_ROW + 13;
                 barPaint.color = surfaceColors[stat.id] || '#000000';
                 if (patterned) {
-                    drawSurfaceBand(canvas, { id: stat.id, left, right: left + 10, top: baseline - 10, bottom: baseline, fillColor: colorSurfaceContainerHigh, patternColor: colorOnSurface });
+                    drawSurfaceBand(canvas, { id: stat.id, left, right: left + 9, top: baseline - 9, bottom: baseline, fillColor: colorSurfaceContainerHigh, patternColor: colorOnSurface });
                 } else {
-                    canvas.drawCircle(left + 5, baseline - 5, 5, barPaint);
+                    canvas.drawCircle(left + 4.5, baseline - 4.5, 4.5, barPaint);
                 }
                 textPaint.color = colorOnSurfaceVariant;
-                canvas.drawText(lc(stat.id), left + 16, baseline, textPaint);
+                canvas.drawText(lc(stat.id), left + 15, baseline, textPaint);
                 valuePaint.color = colorOnSurface;
                 canvas.drawText(formatDistance(stat.dist * 1000), right, baseline, valuePaint);
             });
@@ -127,20 +126,22 @@
 
 <canvasview bind:this={statsCanvas} {...$$restProps} on:draw={drawStats}>
     <IconButton
-        fontSize={20}
+        fontSize={18}
         horizontalAlignment="right"
         isEnabled={statsKey === 'waytypes'}
         marginRight={4}
-        size={40}
+        marginTop={4}
+        size={36}
         text="mdi-chevron-right"
         verticalAlignment="top"
         on:tap={() => setStatsKey('surfaces')} />
     <IconButton
-        fontSize={20}
+        fontSize={18}
         horizontalAlignment="right"
         isEnabled={statsKey === 'surfaces'}
-        marginRight={44}
-        size={40}
+        marginRight={40}
+        marginTop={4}
+        size={36}
         text="mdi-chevron-left"
         verticalAlignment="top"
         on:tap={() => setStatsKey('waytypes')} />
