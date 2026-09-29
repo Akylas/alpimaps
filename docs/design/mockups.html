@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alpi Maps design chart</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+/* the app tokens (app/variables.ts), light theme; toggle dark with the button */
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);
+--bg-accent:rgba(41,182,246,.12);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.6);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--text-danger:#d32f2f;--border-danger:rgba(211,47,47,.5)}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);
+--bg-accent:rgba(41,182,246,.16);--text-accent:#7fd3fa;--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--text-danger:#ef9a9a}
+body{margin:0;padding:16px;font-family:Roboto,system-ui,sans-serif;background:var(--surface-0);color:var(--text-primary)}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:24px 0 4px}p.note{font-size:12px;color:var(--text-secondary);margin:0 0 8px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.ts{fill:var(--text-secondary)}
+button{font:inherit;padding:6px 14px;border-radius:99px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary)}
+.ph{background:var(--surface-1);border-radius:16px;padding:8px}
+.cp{font-size:11px;color:var(--text-secondary);margin:0 0 6px 4px}
+.sc{background:var(--surface-0);border-radius:12px;overflow:hidden;font-size:12px;color:var(--text-primary);position:relative}
+.map{height:56px;background:var(--surface-1)}
+.sh{background:var(--surface-2);border:0.5px solid var(--border);border-radius:16px 16px 0 0;padding:10px 12px 12px}
+.hd{display:flex;align-items:center;gap:10px;min-height:40px}
+.tl{width:33px;height:33px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.t{font-size:13px;font-weight:500;line-height:1.3}
+.s{font-size:11px;color:var(--text-secondary);line-height:1.35}
+.cap{font-size:11px;color:var(--text-secondary);margin:12px 0 6px;display:flex;justify-content:space-between}
+.ib{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-secondary);flex:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.st{background:var(--surface-1);border-radius:10px;padding:6px 8px}
+.st b{display:block;font-size:13px;font-weight:500}
+.pills{display:flex;gap:6px;margin-top:10px;overflow:hidden}
+.p{height:33px;border:0.5px solid var(--border-strong);border-radius:99px;padding:0 12px;font-size:12px;white-space:nowrap;display:flex;gap:5px;align-items:center;flex:none}
+.p i{font-size:16px}
+.pa{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.pt{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.row{display:flex;align-items:center;gap:10px;min-height:46px}
+.fld{background:var(--surface-1);border-radius:10px;padding:0 10px;height:40px;display:flex;align-items:center;flex:1}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:10px 0 6px}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2)}
+.btn{flex:1;height:40px;display:flex;align-items:center;justify-content:center;border-radius:99px;font-size:12px}
+.sw{width:43px;height:26px;border-radius:13px;background:var(--fill-accent);position:relative;flex:none}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--on-accent)}
+.sw.off{background:var(--border-strong)}.sw.off:after{right:auto;left:3px}
+.grp{background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:0 12px;margin-top:6px}
+.grp .row+.row{border-top:0.5px solid var(--border)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:6px}
+.lg span{display:flex;align-items:center;gap:6px;font-size:11px}
+.pop{background:var(--surface-2);border:0.5px solid var(--border);border-radius:16px;padding:6px 12px}
+.pop .row{min-height:40px}
+.ek{background:#fff;color:#000}
+.ek .sh,.ek .pop{background:#fff;border:1px solid #000}
+.ek .s,.ek .cap{color:#000}
+.ek .st{background:#fff;border:1px solid #000}
+.ek .p{border:1px solid #000;color:#000}
+.ek .pa{background:#000;color:#fff}
+.ek .tl{background:#fff;color:#000;border:1px solid #000}
+.pd{color:var(--text-danger);border-color:var(--border-danger)}
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:8px;display:flex;gap:10px;align-items:center;margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--text-secondary);margin-right:8px}
+.sw2{width:26px;height:26px;border-radius:50%;border:0.5px solid var(--border-strong);flex:none}
+</style>
+</head>
+<body>
+<h1>Alpi Maps design chart</h1>
+<p class="note">Reference mockups for the peak finder panel design. Rules and decisions: <a href="README.md">README.md</a>. <button onclick="document.body.classList.toggle('dark')">Toggle dark</button></p>
+<h2>Round 2: route sheet, directions, layers, map options, settings, item edit, e-ink</h2>
+<p class="note">Superseded here: the map menu (see round 3) and the grade colour in the selected point strip (now plain).</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:0.5rem 0">
+
+<div class="ph"><p class="cp">Route sheet</p><div class="sc">
+<div class="map"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-walk" aria-hidden="true"></i></div><div style="flex:1"><div class="t">27 Rue Aimé Pupin</div><div class="s">Pedestrian route · saved</div></div><span class="ib"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+<div class="stats"><div class="st"><span class="s">Distance</span><b>9 km</b></div><div class="st"><span class="s">Time</span><b>2 h 23</b></div><div class="st"><span class="s">Ascent</span><b>56 m</b></div><div class="st"><span class="s">Descent</span><b>48 m</b></div></div>
+<div class="pills"><span class="p pa"><i class="ti ti-navigation" aria-hidden="true"></i>Navigate</span><span class="p"><i class="ti ti-pencil" aria-hidden="true"></i>Edit</span><span class="p"><i class="ti ti-share" aria-hidden="true"></i>Share</span><span class="p"><i class="ti ti-dots" aria-hidden="true"></i></span></div>
+<div class="cap"><span>Elevation</span><span>tap or drag the chart</span></div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface-1);border-radius:10px;padding:6px 8px">
+<div><div class="s">At</div><div class="t">3.8 km</div></div><div><div class="s">Altitude</div><div class="t">213 m</div></div><div><div class="s">Grade</div><div class="t" style="color:#3B6D11">0.3 %</div></div><div><div class="s">Left</div><div class="t">5.2 km</div></div></div>
+<svg viewBox="0 0 280 78" width="100%" height="78" role="img" style="margin-top:4px"><title>Elevation profile with grade colors</title><desc>Mostly flat, a climb near 7 km colored by grade</desc>
+<text class="ts" x="0" y="10" style="font-size:9px">300</text><text class="ts" x="0" y="44" style="font-size:9px">200</text>
+<line x1="22" y1="7" x2="280" y2="7" stroke="var(--border)" stroke-width="0.5"/><line x1="22" y1="41" x2="280" y2="41" stroke="var(--border)" stroke-width="0.5"/>
+<path d="M22 58 L160 56 L160 70 L22 70Z" fill="#97C459"/><path d="M160 56 L205 54 L205 70 L160 70Z" fill="#C0DD97"/><path d="M205 54 L228 44 L228 70 L205 70Z" fill="#EF9F27"/><path d="M228 44 L245 34 L245 70 L228 70Z" fill="#E24B4A"/><path d="M245 34 L280 42 L280 70 L245 70Z" fill="#97C459"/>
+<path d="M22 58 L160 56 L205 54 L228 44 L245 34 L280 42" fill="none" stroke="var(--text-primary)" stroke-width="1.2"/>
+<line x1="110" y1="4" x2="110" y2="70" stroke="var(--text-accent)" stroke-width="1"/><circle cx="110" cy="57" r="4" fill="var(--text-accent)" stroke="var(--surface-2)" stroke-width="1.5"/>
+<text class="ts" x="22" y="78" style="font-size:9px">0</text><text class="ts" x="260" y="78" style="font-size:9px">9 km</text></svg>
+<div style="display:flex;gap:8px;margin-top:2px" class="s"><span><span class="dot" style="display:inline-block;background:#97C459"></span> &lt;5 %</span><span><span class="dot" style="display:inline-block;background:#EF9F27"></span> 5–10 %</span><span><span class="dot" style="display:inline-block;background:#E24B4A"></span> &gt;10 %</span></div>
+<div class="cap" style="align-items:center"><span>Way types</span><span style="display:flex"><span class="ib" style="width:33px;height:33px"><i class="ti ti-chevron-left" aria-hidden="true"></i></span><span class="ib" style="width:33px;height:33px"><i class="ti ti-chevron-right" aria-hidden="true"></i></span></span></div>
+<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px"><span style="flex:56;background:#B4B2A9"></span><span style="flex:31;background:#888780"></span><span style="flex:3;background:#97C459"></span><span style="flex:1;background:#D3D1C7"></span></div>
+<div class="lg"><span><span class="dot" style="background:#B4B2A9"></span>Street<b style="margin-left:auto;font-weight:500">5.6 km</b></span><span><span class="dot" style="background:#888780"></span>Road<b style="margin-left:auto;font-weight:500">3.1 km</b></span><span><span class="dot" style="background:#97C459"></span>Alpine<b style="margin-left:auto;font-weight:500">233 m</b></span><span><span class="dot" style="background:#D3D1C7"></span>Steps<b style="margin-left:auto;font-weight:500">52 m</b></span></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Directions + long-press on a profile</p><div class="sc">
+<div class="sh" style="border-radius:0 0 16px 16px">
+<div class="hd"><span class="ib" style="color:var(--text-primary)"><i class="ti ti-arrow-left" aria-hidden="true"></i></span><div style="flex:1;display:flex;gap:4px"><span class="p" style="padding:0 9px"><i class="ti ti-car" aria-hidden="true"></i></span><span class="p" style="padding:0 9px"><i class="ti ti-motorbike" aria-hidden="true"></i></span><span class="p pt"><i class="ti ti-walk" aria-hidden="true"></i>Walk</span><span class="p" style="padding:0 9px"><i class="ti ti-bike" aria-hidden="true"></i></span></div></div>
+<div class="row"><i class="ti ti-circle" style="color:var(--text-accent);font-size:16px" aria-hidden="true"></i><div class="fld">My location</div><span style="width:24px"></span></div>
+<div class="row" style="margin-top:-4px"><i class="ti ti-map-pin" style="color:var(--text-danger);font-size:16px" aria-hidden="true"></i><div class="fld">3 Rue de Provence</div><i class="ti ti-arrows-up-down" style="color:var(--text-secondary);font-size:18px" aria-hidden="true"></i></div>
+<div class="pills"><span class="p pt"><i class="ti ti-mountain" aria-hidden="true"></i>Hills</span><span class="p"><i class="ti ti-stairs" aria-hidden="true"></i>Steps</span><span class="p"><i class="ti ti-clock" aria-hidden="true"></i>Shortest</span></div>
+<div style="display:flex;margin-top:10px"><span class="btn pa">Get route</span></div>
+</div>
+<div style="padding:10px 12px 14px">
+<div class="pop">
+<div class="hd"><div class="tl"><i class="ti ti-walk" aria-hidden="true"></i></div><div class="t" style="flex:1">Walking options</div></div>
+<div style="display:flex;gap:4px;margin:6px 0"><span class="p pt" style="flex:1;justify-content:center">Normal</span><span class="p" style="flex:1;justify-content:center">Mountain</span><span class="p" style="flex:1;justify-content:center">Running</span></div>
+<div style="padding:4px 0"><div style="display:flex;justify-content:space-between"><span>Use hills</span><span class="s">0.5</span></div><div class="trk"><i style="width:50%"></i><u style="left:46%"></u></div></div>
+<div class="row"><span style="flex:1">Avoid steps</span><span class="sw"></span></div>
+</div></div></div></div>
+
+<div class="ph"><p class="cp">Layers</p><div class="sc">
+<div class="map" style="height:40px"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-stack-2" aria-hidden="true"></i></div><div class="t" style="flex:1">Layers</div><span class="p"><i class="ti ti-plus" aria-hidden="true"></i>Add</span></div>
+<div class="pills"><span class="p pt"><i class="ti ti-chart-dots" aria-hidden="true"></i>Contours</span><span class="p"><i class="ti ti-building" aria-hidden="true"></i>Buildings</span><span class="p"><i class="ti ti-rotate-3d" aria-hidden="true"></i>Pitch</span></div>
+<div class="cap">Stack, top first</div>
+<div class="row" style="align-items:flex-start;padding:4px 0"><i class="ti ti-grip-vertical" style="color:var(--text-muted);font-size:18px;margin-top:10px" aria-hidden="true"></i><div style="flex:1"><div style="display:flex;justify-content:space-between"><span class="t">openfreemap</span><span class="s">100 %</span></div><div class="s">OpenFreeMap · OpenMapTiles</div><div class="trk"><i style="width:100%"></i><u style="left:90%"></u></div></div><span class="ib"><i class="ti ti-eye" aria-hidden="true"></i></span></div>
+<div class="row" style="align-items:flex-start;padding:4px 0"><i class="ti ti-grip-vertical" style="color:var(--text-muted);font-size:18px;margin-top:10px" aria-hidden="true"></i><div style="flex:1"><div style="display:flex;justify-content:space-between"><span class="t">mapterhorn</span><span class="s">60 %</span></div><div class="s">Mapterhorn · hillshade</div><div class="trk"><i style="width:60%"></i><u style="left:54%"></u></div></div><span class="ib"><i class="ti ti-eye" aria-hidden="true"></i></span></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Map options</p><div class="sc">
+<div class="map" style="height:30px"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-map" aria-hidden="true"></i></div><div class="t" style="flex:1">Map</div><span class="ib"><i class="ti ti-chevron-down" aria-hidden="true"></i></span></div>
+<div class="pills" style="flex-wrap:wrap"><span class="p pt"><i class="ti ti-chart-dots" aria-hidden="true"></i>Contours</span><span class="p"><i class="ti ti-world" aria-hidden="true"></i>Globe</span><span class="p pt"><i class="ti ti-rotate" aria-hidden="true"></i>Rotation</span><span class="p"><i class="ti ti-clock" aria-hidden="true"></i>Preload</span></div>
+<div class="cap">Style</div>
+<div class="row"><div class="tl"><i class="ti ti-typography" aria-hidden="true"></i></div><div style="flex:1"><div>Map font scale</div><div class="s">Labels and icons</div></div><span class="s">Not set</span></div>
+<div class="row"><div class="tl"><i class="ti ti-shield" aria-hidden="true"></i></div><div style="flex:1">Road shields</div><span class="sw"></span></div>
+<div class="row"><div class="tl"><i class="ti ti-route" aria-hidden="true"></i></div><div style="flex:1">Hiking and cycling routes</div><span class="sw off"></span></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Map menu (⋮ in search)</p><div class="sc" style="padding:10px;min-height:250px">
+<div class="fld" style="border-radius:99px;background:var(--surface-2);border:0.5px solid var(--border)"><i class="ti ti-search" style="margin-right:8px" aria-hidden="true"></i><span class="s" style="flex:1">Search</span><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+<div class="pop" style="margin:8px 0 0 70px">
+<div style="display:flex;gap:6px;padding:4px 0 8px;border-bottom:0.5px solid var(--border)"><span class="p pt" style="flex:1;justify-content:center"><i class="ti ti-moon" aria-hidden="true"></i></span><span class="p" style="flex:1;justify-content:center"><i class="ti ti-wifi-off" aria-hidden="true"></i></span><span class="p" style="flex:1;justify-content:center"><i class="ti ti-screenshot" aria-hidden="true"></i></span></div>
+<div class="row"><i class="ti ti-compass" style="font-size:18px" aria-hidden="true"></i>Compass</div>
+<div class="row"><i class="ti ti-satellite" style="font-size:18px" aria-hidden="true"></i>Satellites view</div>
+<div class="row"><i class="ti ti-moon-stars" style="font-size:18px" aria-hidden="true"></i>Astronomy</div>
+<div class="row" style="border-top:0.5px solid var(--border)"><i class="ti ti-file-import" style="font-size:18px" aria-hidden="true"></i>Import GPX or GeoJSON</div>
+<div class="row"><i class="ti ti-settings" style="font-size:18px" aria-hidden="true"></i>Settings</div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Settings (grouped)</p><div class="sc" style="padding-bottom:10px">
+<div class="hd" style="padding:10px 12px;min-height:53px;background:var(--surface-2);border-bottom:0.5px solid var(--border)"><i class="ti ti-arrow-left" style="font-size:20px" aria-hidden="true"></i><div style="flex:1;font-size:16px;font-weight:500">Settings</div><i class="ti ti-search" style="font-size:20px" aria-hidden="true"></i></div>
+<div style="padding:0 12px">
+<div class="cap" style="color:var(--text-accent)">General</div>
+<div class="grp"><div class="row"><div class="tl"><i class="ti ti-language" aria-hidden="true"></i></div><div style="flex:1"><div>Language</div><div class="s">English</div></div><i class="ti ti-chevron-right" style="color:var(--text-muted)" aria-hidden="true"></i></div>
+<div class="row"><div class="tl"><i class="ti ti-palette" aria-hidden="true"></i></div><div style="flex:1"><div>Appearance</div><div class="s">Theme, colors and clock</div></div><i class="ti ti-chevron-right" style="color:var(--text-muted)" aria-hidden="true"></i></div>
+<div class="row"><div class="tl"><i class="ti ti-browser" aria-hidden="true"></i></div><div style="flex:1">In-app browser</div><span class="sw"></span></div></div>
+<div class="cap" style="color:var(--text-accent)">Map</div>
+<div class="grp"><div class="row"><div class="tl"><i class="ti ti-database" aria-hidden="true"></i></div><div style="flex:1"><div>Map data</div><div class="s">Offline data and tile server</div></div><i class="ti ti-chevron-right" style="color:var(--text-muted)" aria-hidden="true"></i></div></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Item edit</p><div class="sc" style="background:var(--surface-2)">
+<div class="hd" style="padding:6px 12px;min-height:53px;border-bottom:0.5px solid var(--border)"><i class="ti ti-x" style="font-size:20px" aria-hidden="true"></i><div style="flex:1;font-size:16px;font-weight:500">Edit route</div><span class="ib"><i class="ti ti-playlist-add" aria-hidden="true"></i></span></div>
+<div style="padding:10px 12px">
+<div class="map" style="border-radius:12px;height:70px;border:0.5px solid var(--border)"></div>
+<div class="cap">Name</div><div class="fld">27 Rue Aimé Pupin</div>
+<div class="cap">Group</div><div class="fld" style="color:var(--text-muted)">Choose or create a group</div>
+<div class="cap">Notes</div><div class="fld" style="height:56px;align-items:flex-start;padding-top:10px;color:var(--text-muted)">Add notes</div>
+</div>
+<div style="display:flex;gap:8px;padding:10px 12px;border-top:0.5px solid var(--border)"><span class="btn p" style="flex:1;justify-content:center">Cancel</span><span class="btn pa">Save</span></div>
+</div></div>
+
+<div class="ph"><p class="cp">E-ink variant (route sheet)</p><div class="sc ek">
+<div class="map" style="background:#fff;border-bottom:1px solid #000"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-walk" aria-hidden="true"></i></div><div style="flex:1"><div class="t">27 Rue Aimé Pupin</div><div class="s">Pedestrian route · saved</div></div><span class="ib" style="color:#000"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+<div class="stats"><div class="st"><span class="s">Distance</span><b>9 km</b></div><div class="st"><span class="s">Time</span><b>2 h 23</b></div><div class="st"><span class="s">Ascent</span><b>56 m</b></div><div class="st"><span class="s">Descent</span><b>48 m</b></div></div>
+<div class="pills"><span class="p pa"><i class="ti ti-navigation" aria-hidden="true"></i>Navigate</span><span class="p"><i class="ti ti-pencil" aria-hidden="true"></i>Edit</span><span class="p" style="border-width:2px;font-weight:500"><i class="ti ti-eye-off" aria-hidden="true"></i>Hidden</span></div>
+<div class="cap">Elevation</div>
+<svg viewBox="0 0 280 50" width="100%" height="50" role="img"><title>E-ink elevation profile</title><desc>Grades as hatch density, black line</desc><defs><pattern id="h1" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 4L4 0" stroke="#000" stroke-width="0.6"/></pattern><pattern id="h2" width="2.5" height="2.5" patternUnits="userSpaceOnUse"><path d="M0 2.5L2.5 0" stroke="#000" stroke-width="0.9"/></pattern></defs><path d="M0 36 L200 34 L200 50 L0 50Z" fill="#fff"/><path d="M200 34 L226 24 L226 50 L200 50Z" fill="url(#h1)"/><path d="M226 24 L245 14 L245 50 L226 50Z" fill="url(#h2)"/><path d="M0 36 L200 34 L226 24 L245 14 L280 22" fill="none" stroke="#000" stroke-width="1.5"/><line x1="110" y1="0" x2="110" y2="50" stroke="#000" stroke-width="1"/></svg>
+<div style="font-size:11px;margin-top:4px">Grade shown as hatching: none &lt;5 %, light 5–10 %, dense &gt;10 %</div>
+</div></div></div>
+
+</div>
+<h2>Round 3: elevation selection, layer menu and settings, items list, map menu</h2>
+<p class="note">Superseded here: the strip's labels (now an icon above each value) and its close button (tap the strip).</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:0.5rem 0">
+
+<div class="ph"><p class="cp">Elevation, nothing selected</p><div class="sc"><div class="sh" style="border-radius:16px">
+<div class="cap" style="margin-top:0"><span>Elevation</span><span>tap the chart</span></div>
+<svg viewBox="0 0 280 74" width="100%" height="74" role="img"><title>Elevation profile</title><desc>No point selected</desc>
+<text class="ts" x="0" y="10" style="font-size:9px">300</text><text class="ts" x="0" y="44" style="font-size:9px">200</text>
+<line x1="22" y1="7" x2="280" y2="7" stroke="var(--border)" stroke-width="0.5"/><line x1="22" y1="41" x2="280" y2="41" stroke="var(--border)" stroke-width="0.5"/>
+<path d="M22 58 L160 56 L160 66 L22 66Z" fill="#97C459"/><path d="M160 56 L205 54 L205 66 L160 66Z" fill="#C0DD97"/><path d="M205 54 L228 44 L228 66 L205 66Z" fill="#EF9F27"/><path d="M228 44 L245 34 L245 66 L228 66Z" fill="#E24B4A"/><path d="M245 34 L280 42 L280 66 L245 66Z" fill="#97C459"/>
+<path d="M22 58 L160 56 L205 54 L228 44 L245 34 L280 42" fill="none" stroke="var(--text-primary)" stroke-width="1.2"/>
+<text class="ts" x="22" y="74" style="font-size:9px">0</text><text class="ts" x="258" y="74" style="font-size:9px">9 km</text></svg>
+</div></div>
+<p class="cp" style="margin-top:10px">Elevation, point selected (tap or GPS match)</p><div class="sc"><div class="sh" style="border-radius:16px">
+<div class="cap" style="margin-top:0"><span>Elevation</span><span></span></div>
+<div style="display:flex;align-items:center;gap:8px;background:var(--bg-accent);border:0.5px solid var(--border-accent);border-radius:12px;padding:6px 4px 6px 10px;color:var(--text-accent)">
+<i class="ti ti-map-pin" style="font-size:18px" aria-hidden="true"></i>
+<div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:2px">
+<div><div style="font-size:10px">At</div><div class="t">3.8 km</div></div><div><div style="font-size:10px">Alt.</div><div class="t">213 m</div></div><div><div style="font-size:10px">Grade</div><div class="t">0.3 %</div></div><div><div style="font-size:10px">Left</div><div class="t">5.2 km</div></div></div>
+<span class="ib" style="width:33px;height:33px;color:var(--text-accent)"><i class="ti ti-x" aria-hidden="true"></i></span></div>
+<svg viewBox="0 0 280 74" width="100%" height="74" role="img"><title>Elevation profile with selected point</title><desc>Cursor at 3.8 km joined to the strip above</desc>
+<line x1="110" y1="0" x2="110" y2="66" stroke="var(--text-accent)" stroke-width="1.2"/>
+<text class="ts" x="0" y="10" style="font-size:9px">300</text><text class="ts" x="0" y="44" style="font-size:9px">200</text>
+<line x1="22" y1="7" x2="280" y2="7" stroke="var(--border)" stroke-width="0.5"/><line x1="22" y1="41" x2="280" y2="41" stroke="var(--border)" stroke-width="0.5"/>
+<path d="M22 58 L160 56 L160 66 L22 66Z" fill="#97C459"/><path d="M160 56 L205 54 L205 66 L160 66Z" fill="#C0DD97"/><path d="M205 54 L228 44 L228 66 L205 66Z" fill="#EF9F27"/><path d="M228 44 L245 34 L245 66 L228 66Z" fill="#E24B4A"/><path d="M245 34 L280 42 L280 66 L245 66Z" fill="#97C459"/>
+<path d="M22 58 L160 56 L205 54 L228 44 L245 34 L280 42" fill="none" stroke="var(--text-primary)" stroke-width="1.2"/>
+<circle cx="110" cy="57" r="5" fill="var(--text-accent)" stroke="var(--surface-2)" stroke-width="2"/>
+<rect x="96" y="66" width="28" height="8" rx="4" fill="var(--text-accent)"/><text x="110" y="72.5" text-anchor="middle" style="font-size:7px;fill:var(--surface-2)">3.8</text></svg>
+</div></div></div>
+
+<div class="ph"><p class="cp">Layers, row menu open</p><div class="sc">
+<div class="map" style="height:30px"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-stack-2" aria-hidden="true"></i></div><div class="t" style="flex:1">Layers</div><span class="p"><i class="ti ti-plus" aria-hidden="true"></i>Add</span></div>
+<div class="cap">Stack, top first</div>
+<div class="row" style="align-items:flex-start;padding:4px 0"><i class="ti ti-grip-vertical" style="color:var(--text-muted);font-size:18px;margin-top:10px" aria-hidden="true"></i><div style="flex:1"><div style="display:flex;justify-content:space-between"><span class="t">openfreemap</span><span class="s">100 %</span></div><div class="s">OpenFreeMap · OpenMapTiles</div><div class="trk"><i style="width:100%"></i><u style="left:90%"></u></div></div><span class="ib"><i class="ti ti-eye" aria-hidden="true"></i></span><span class="ib" style="width:30px"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+<div class="row" style="align-items:flex-start;padding:4px 0;position:relative"><i class="ti ti-grip-vertical" style="color:var(--text-muted);font-size:18px;margin-top:10px" aria-hidden="true"></i><div style="flex:1"><div style="display:flex;justify-content:space-between"><span class="t">mapterhorn</span><span class="s">60 %</span></div><div class="s">Mapterhorn · hillshade</div><div class="trk"><i style="width:60%"></i><u style="left:54%"></u></div></div><span class="ib"><i class="ti ti-eye" aria-hidden="true"></i></span><span class="ib" style="width:30px;color:var(--text-accent)"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+<div class="pop" style="margin:-6px 0 0 90px">
+<div class="row"><i class="ti ti-adjustments" style="font-size:18px" aria-hidden="true"></i>Layer settings</div>
+<div class="row"><i class="ti ti-download" style="font-size:18px" aria-hidden="true"></i>Download area</div>
+<div class="row"><i class="ti ti-clock-x" style="font-size:18px" aria-hidden="true"></i>Clear cache</div>
+<div class="row" style="border-top:0.5px solid var(--border);color:var(--text-danger)"><i class="ti ti-trash" style="font-size:18px" aria-hidden="true"></i>Remove layer</div>
+</div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Layer settings</p><div class="sc">
+<div class="map" style="height:30px"></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i class="ti ti-mountain" aria-hidden="true"></i></div><div style="flex:1"><div class="t">mapterhorn</div><div class="s">Hillshade · 128 MB cached</div></div><span class="ib"><i class="ti ti-chevron-down" aria-hidden="true"></i></span></div>
+<div class="pills"><span class="p"><i class="ti ti-download" aria-hidden="true"></i>Download</span><span class="p pt"><i class="ti ti-cloud-off" aria-hidden="true"></i>Cache only</span><span class="p"><i class="ti ti-filter-cog" aria-hidden="true"></i>Filter</span></div>
+<div class="cap">Rendering</div>
+<div style="padding:2px 0"><div style="display:flex;justify-content:space-between"><span>Contrast</span><span class="s">0.5</span></div><div class="trk"><i style="width:50%"></i><u style="left:46%"></u></div></div>
+<div style="padding:2px 0"><div style="display:flex;justify-content:space-between"><span>Height scale</span><span class="s">0.2</span></div><div class="trk"><i style="width:20%"></i><u style="left:16%"></u></div></div>
+<div style="padding:2px 0"><div style="display:flex;justify-content:space-between"><span>Zoom level bias</span><span class="s">0</span></div><div class="trk"><i style="width:0%"></i><u style="left:0%"></u></div></div>
+<div class="cap">Colors</div>
+<div class="row" style="min-height:40px"><span style="flex:1">Highlight</span><span class="sw2" style="background:#FAC775"></span></div>
+<div class="row" style="min-height:40px"><span style="flex:1">Accent</span><span class="sw2" style="background:#444441"></span></div>
+<div class="pills" style="margin-top:8px"><span class="p"><i class="ti ti-clock-x" aria-hidden="true"></i>Clear cache</span><span class="p pd"><i class="ti ti-trash" aria-hidden="true"></i>Remove</span></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Items, routes tab</p><div class="sc" style="padding-bottom:10px">
+<div class="hd" style="padding:6px 12px;min-height:53px;background:var(--surface-2)"><i class="ti ti-arrow-left" style="font-size:20px" aria-hidden="true"></i><div style="flex:1;font-size:16px;font-weight:500">Items</div><i class="ti ti-search" style="font-size:20px" aria-hidden="true"></i></div>
+<div style="display:flex;gap:6px;padding:0 12px 10px;background:var(--surface-2);border-bottom:0.5px solid var(--border)"><span class="p pt" style="flex:1;justify-content:center">Routes · 3</span><span class="p" style="flex:1;justify-content:center">Markers · 12</span></div>
+<div style="padding:0 12px">
+<div class="cap"><span style="color:var(--text-primary);font-weight:500;font-size:12px">Chartreuse · 2</span><span style="display:flex"><span class="ib" style="width:33px;height:33px"><i class="ti ti-eye" aria-hidden="true"></i></span><span class="ib" style="width:33px;height:33px"><i class="ti ti-chevron-up" aria-hidden="true"></i></span></span></div>
+<div class="s" style="margin-top:-8px">14 km · 4 h 10 · ↗ 820 m</div>
+<div class="card"><div style="width:56px;height:56px;border-radius:10px;background:var(--surface-1);position:relative;flex:none"><span class="tl" style="position:absolute;right:-4px;bottom:-4px;width:24px;height:24px;font-size:14px;border:2px solid var(--surface-2)"><i class="ti ti-walk" aria-hidden="true"></i></span></div><div style="flex:1;min-width:0"><div class="t">27 Rue Aimé Pupin</div><div style="margin-top:4px"><span class="chip"><i class="ti ti-ruler-2" aria-hidden="true"></i>9 km</span><span class="chip"><i class="ti ti-clock" aria-hidden="true"></i>2 h 23</span><span class="chip"><i class="ti ti-trending-up" aria-hidden="true"></i>56 m</span></div></div><span class="ib" style="width:30px"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+<div class="card"><div style="width:56px;height:56px;border-radius:10px;background:var(--surface-1);position:relative;flex:none"><span class="tl" style="position:absolute;right:-4px;bottom:-4px;width:24px;height:24px;font-size:14px;border:2px solid var(--surface-2)"><i class="ti ti-bike" aria-hidden="true"></i></span></div><div style="flex:1;min-width:0"><div class="t">Col de Porte loop</div><div style="margin-top:4px"><span class="chip"><i class="ti ti-ruler-2" aria-hidden="true"></i>5 km</span><span class="chip"><i class="ti ti-clock" aria-hidden="true"></i>1 h 47</span><span class="chip"><i class="ti ti-trending-up" aria-hidden="true"></i>764 m</span></div></div><span class="ib" style="width:30px"><i class="ti ti-dots-vertical" aria-hidden="true"></i></span></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">Items, markers tab</p><div class="sc" style="padding-bottom:10px">
+<div class="hd" style="padding:6px 12px;min-height:53px;background:var(--surface-2)"><i class="ti ti-arrow-left" style="font-size:20px" aria-hidden="true"></i><div style="flex:1;font-size:16px;font-weight:500">Items</div><i class="ti ti-search" style="font-size:20px" aria-hidden="true"></i></div>
+<div style="display:flex;gap:6px;padding:0 12px 10px;background:var(--surface-2);border-bottom:0.5px solid var(--border)"><span class="p" style="flex:1;justify-content:center">Routes · 3</span><span class="p pt" style="flex:1;justify-content:center">Markers · 12</span></div>
+<div style="padding:0 12px">
+<div class="cap"><span style="color:var(--text-primary);font-weight:500;font-size:12px">No group · 12</span><span class="ib" style="width:33px;height:33px"><i class="ti ti-chevron-up" aria-hidden="true"></i></span></div>
+<div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:0 10px">
+<div class="row" style="min-height:60px"><div class="tl"><i class="ti ti-mountain" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="t">Chamechaude</div><div class="s">2082 m · Saint-Pierre-de-Chartreuse</div></div><span class="s">12 km</span></div>
+<div class="row" style="min-height:60px;border-top:0.5px solid var(--border)"><div class="tl"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="t">Restaurant L'Atypik</div><div class="s">Place Edmond Arnaud, Grenoble</div></div><span class="s">846 m</span></div>
+<div class="row" style="min-height:60px;border-top:0.5px solid var(--border)"><div class="tl"><i class="ti ti-home" aria-hidden="true"></i></div><div style="flex:1;min-width:0"><div class="t">Refuge du Habert</div><div class="s">1450 m · Chartreuse</div></div><span class="s">18 km</span></div>
+</div></div></div></div>
+
+<div class="ph"><p class="cp">Map menu, two toggles</p><div class="sc" style="padding:10px">
+<div style="display:flex;align-items:center;height:40px;border-radius:99px;background:var(--surface-2);border:0.5px solid var(--border);padding:0 12px"><i class="ti ti-search" style="margin-right:8px" aria-hidden="true"></i><span class="s" style="flex:1">Search</span><i class="ti ti-dots-vertical" aria-hidden="true"></i></div>
+<div class="pop" style="margin:8px 0 0 70px">
+<div class="row"><i class="ti ti-moon" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Dark mode</span><span class="sw"></span></div>
+<div class="row"><i class="ti ti-wifi-off" style="font-size:18px" aria-hidden="true"></i><span style="flex:1">Offline mode</span><span class="sw off"></span></div>
+<div class="row" style="border-top:0.5px solid var(--border)"><i class="ti ti-compass" style="font-size:18px" aria-hidden="true"></i>Compass</div>
+<div class="row"><i class="ti ti-satellite" style="font-size:18px" aria-hidden="true"></i>Satellites view</div>
+<div class="row"><i class="ti ti-moon-stars" style="font-size:18px" aria-hidden="true"></i>Astronomy</div>
+<div class="row"><i class="ti ti-screenshot" style="font-size:18px" aria-hidden="true"></i>Share screenshot</div>
+<div class="row" style="border-top:0.5px solid var(--border)"><i class="ti ti-file-import" style="font-size:18px" aria-hidden="true"></i>Import GPX or GeoJSON</div>
+<div class="row"><i class="ti ti-settings" style="font-size:18px" aria-hidden="true"></i>Settings</div>
+</div></div></div>
+
+</div>
+</body>
+</html>

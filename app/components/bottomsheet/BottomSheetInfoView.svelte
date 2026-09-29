@@ -20,10 +20,11 @@
 
     const iconPaint = new Paint();
     iconPaint.setTextAlign(Align.CENTER);
+    const iconTilePaint = new Paint();
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
@@ -42,6 +43,12 @@
     export let iconLeft = 15;
     export let iconTop = 30;
     export let showIcon = true;
+    /** The icon on the .listIcon primary tint. */
+    export let iconTile = false;
+    /** The inline distance, time and elevation line; off where stat tiles show them instead. */
+    export let showStats = true;
+    /** The route's costing option icons. */
+    export let showOptions = true;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -200,7 +207,7 @@
                     color: colorOnSurfaceVariant
                 },
                 {
-                    text: convertElevation(itemProps.ele) + ' '
+                    text: convertElevation(itemProps.ele) + '   '
                 }
             );
         }
@@ -215,7 +222,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${formatDistance(route.totalDistance || itemProps.distance * 1000)}` + ' '
+                        text: `${formatDistance(route.totalDistance || itemProps.distance * 1000)}` + '   '
                     }
                 );
             }
@@ -228,7 +235,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: convertDurationSeconds(route.totalTime) + ' '
+                        text: convertDurationSeconds(route.totalTime) + '   '
                     }
                 );
             }
@@ -244,7 +251,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.ascent)}` + ' '
+                        text: `${convertElevation(itemProps.ascent)}` + '   '
                     }
                 );
             }
@@ -256,7 +263,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(itemProps.descent)}` + ' '
+                        text: `${convertElevation(itemProps.descent)}` + '   '
                     }
                 );
             }
@@ -270,7 +277,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(profile.dplus)}` + ' '
+                        text: `${convertElevation(profile.dplus)}` + '   '
                     }
                 );
             }
@@ -282,7 +289,7 @@
                         color: colorOnSurfaceVariant
                     },
                     {
-                        text: `${convertElevation(-profile.dmin)}` + ' '
+                        text: `${convertElevation(-profile.dmin)}` + '   '
                     }
                 );
             }
@@ -325,6 +332,11 @@
             console.error('updateItem', err, err.stack);
         }
     }
+    // centred on the title block; with the route options below it, the tile and options together
+    function tileCenterY(paddingTop: number, height: number) {
+        const optionsHeight = nString2 && showOptions ? 15 * $fontScaleMaxed : 0;
+        return paddingTop + (height - marginBottom) / 2 - optionsHeight / 2;
+    }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         if (!item) {
             return;
@@ -342,20 +354,44 @@
                 iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || (isEInk ? colorOnSurface : colorPrimary);
-                canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
+                if (iconTile) {
+                    // tile and glyph both centred on the title block, beside which they sit
+                    const centerY = tileCenterY(paddingTop, h);
+                    if (!isEInk) {
+                        const tileSize = fontSize + 18;
+                        const tileLeft = paddingLeft + iconLeft - tileSize / 2;
+                        iconTilePaint.color = colorAccentContainer;
+                        canvas.drawRoundRect(tileLeft, centerY - tileSize / 2, tileLeft + tileSize, centerY + tileSize / 2, 12, 12, iconTilePaint);
+                    }
+                    const metrics = iconPaint.getFontMetrics();
+                    canvas.drawText(itemIcon, paddingLeft + iconLeft, centerY - (metrics.ascent + metrics.descent) / 2, iconPaint);
+                } else {
+                    canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
+                }
             }
 
             propsPaint.setTextAlign(Align.LEFT);
             propsPaint.color = colorOnSurface;
-            if (nString) {
+            if (nString && showStats) {
                 propsPaint.textSize = 13 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft + propsLeft, paddingTop + h - propsBottom * Math.sqrt($fontScaleMaxed));
+                // beside the tile, under the title
+                canvas.translate(paddingLeft + (iconTile ? marginLeft : propsLeft), paddingTop + h - propsBottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            if (nString2) {
+            if (nString2 && showOptions && iconTile) {
+                // the route options under the icon tile, leaving the title its full width
+                propsPaint.textSize = 10 * $fontScaleMaxed;
+                const width = marginLeft - 2;
+                const tileBottom = tileCenterY(paddingTop, h) + (iconSize * $fontScaleMaxed + 18) / 2;
+                const staticLayout = new StaticLayout(nString2, propsPaint, width, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                canvas.save();
+                canvas.translate(paddingLeft + iconLeft - width / 2, tileBottom + 3);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            } else if (nString2 && showOptions) {
                 propsPaint.textSize = 14 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
@@ -364,7 +400,8 @@
                 canvas.restore();
             }
 
-            if (nString3) {
+            // the tile header shows the live figures in its stat tiles instead
+            if (nString3 && !iconTile) {
                 propsPaint.textSize = 11 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();

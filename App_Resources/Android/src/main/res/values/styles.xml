@@ -7,6 +7,13 @@
     <style name="ShapeAppearance.App.Panel" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
         <item name="cornerSize">24dp</item>
     </style>
+    <!-- overrides the textfield plugin's outlined box: the design's 12dp field corners -->
+    <style name="TextInputLayout.Outlined" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+    </style>
     <style name="ModalBottomSheetDialog" parent="Widget.Material3.BottomSheet.Modal">
         <item name="backgroundTint">?android:attr/colorBackground</item>
         <item name="shapeAppearance">@style/ShapeAppearance.App.Panel</item>

@@ -2,7 +2,7 @@
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-        import { LineChart } from '@nativescript-community/ui-chart/charts';
+    import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
@@ -10,7 +10,7 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
+    import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -22,16 +22,20 @@
     import { showError } from '@shared/utils/showError';
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
+    import { lc } from '~/helpers/locale';
+    import GradeLegend from '~/components/chart/GradeLegend.svelte';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     /** what ui-chart fills a line set with by default, out of 255 */
     const DEFAULT_FILL_ALPHA = 85;
     /** grade sections are read by colour, so their fill has to actually carry one */
-    const GRADE_FILL_ALPHA = 180;
+    const GRADE_FILL_ALPHA = 225;
 
-    const xintervals = [1, 2, 5, 10, 20, 50, 100];
+    /** km between x labels: whatever gives about four of them */
+    const xintervals = [0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
+    const X_LABEL_COUNT = 4;
     function closestUpper(arr: number[], target: number): number | undefined {
         return arr.filter((x) => x >= target).sort((a, b) => a - b)[0];
     }
@@ -39,6 +43,12 @@
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
 
+    const cursorPaint = new Paint();
+    cursorPaint.setStrokeWidth(1.5);
+    const cursorTextPaint = new Paint();
+    cursorTextPaint.setTextSize(11);
+    cursorTextPaint.setFontWeight('bold');
+    cursorTextPaint.setTextAlign(Align.CENTER);
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
     highlightPaint.setStrokeWidth(1);
@@ -58,6 +68,32 @@
     nstringPaint.setStrokeWidth(1);
     nstringPaint.setTextSize(12);
 
+    // chart labels sit on a semi opaque rounded plate, so they read over the grade fill and gridlines
+    const plateLabelPaint = new Paint();
+    const plateBackPaint = new Paint();
+    function drawPlatedLabel(c: Canvas, lines: string[], x: number, top: number, paint: Paint, alignRight: boolean) {
+        const metrics = paint.getFontMetrics();
+        const lineHeight = metrics.descent - metrics.ascent;
+        const width = Math.max(...lines.map((line) => paint.measureText(line)));
+        const left = alignRight ? x - width : x;
+        plateBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(210).hex;
+        c.drawRoundRect(left - 3, top - 1, left + width + 3, top + lines.length * lineHeight + 1, 4, 4, plateBackPaint);
+        const align = paint.getTextAlign();
+        paint.setTextAlign(Align.LEFT);
+        lines.forEach((line, index) => c.drawText(line, left, top - metrics.ascent + index * lineHeight, paint));
+        paint.setTextAlign(align);
+    }
+    /** An elevation line whose label the axis custom renderer draws on a plate, above or below it. */
+    class PlateLimitLine extends LimitLine {
+        constructor(
+            limit: number,
+            public plateLabel: string,
+            public plateBelow: boolean
+        ) {
+            super(limit, '');
+        }
+    }
+
     export let item: Item;
     export let showAscents = true;
     export let showWaypoints = true;
@@ -69,6 +105,15 @@
     export let filled = true;
     /** profile index range to zoom on, eg the climb underway. Whole route when null */
     export let range: { fromIndex: number; toIndex: number } = null;
+    /** the selected point's figures in a strip above the chart, instead of text drawn over it */
+    export let infoStrip = false;
+
+    let highlightInfo: { at: string; values: { icon: string; fontFamily: string; value: string }[] } = null;
+
+    export function clearHighlight() {
+        chart?.nativeView?.highlightValues(null);
+        highlightInfo = null;
+    }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
         applyRange(range);
@@ -238,6 +283,7 @@
         // DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
+            highlightInfo = null;
             if (nChart) {
                 nChart.highlight(null);
             }
@@ -318,6 +364,21 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
+                if (infoStrip) {
+                    const grade = itemData.g || 0;
+                    highlightInfo = {
+                        at: formatDistance(itemData.d),
+                        values: [
+                            !isNaN(params.remainingTime) && { icon: 'mdi-timer-outline', fontFamily: $fonts.mdi, value: convertDurationSeconds(params.remainingTime) },
+                            { icon: 'mdi-flag-checkered', fontFamily: $fonts.mdi, value: formatDistance(params.remainingDistance) },
+                            { icon: 'mdi-triangle-outline', fontFamily: $fonts.mdi, value: convertElevation(itemData.a || 0) },
+                            { icon: 'mdi-angle-acute', fontFamily: $fonts.mdi, value: grade.toFixed(1) + ' %' },
+                            !isNaN(itemData.dp) && params.dplus - itemData.dp > 0 && { icon: 'mdi-arrow-top-right', fontFamily: $fonts.mdi, value: convertElevation(params.dplus - itemData.dp) },
+                            !isNaN(itemData.dm) &&
+                                Math.abs(params.dmin - itemData.dm) > 0 && { icon: 'mdi-arrow-bottom-right', fontFamily: $fonts.mdi, value: convertElevation(-(params.dmin - itemData.dm)) }
+                        ].filter(Boolean)
+                    };
+                }
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
@@ -396,7 +457,8 @@
                 chartView.minOffset = 0;
                 // the mini chart is drawn under the widget's own labels — the summit elevation sits in
                 // its top right corner — so the curve needs headroom rather than the whole card
-                chartView.setExtraOffsets(0, mini ? 14 : 24, mini ? 4 : 10, mini ? 2 : 10);
+                // with the strip above, the highlight needs no room of its own
+                chartView.setExtraOffsets(0, mini ? 14 : infoStrip ? 6 : 24, mini ? 4 : 10, mini ? 2 : infoStrip ? 16 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -407,11 +469,29 @@
                 }
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(70).hex;
-
-                leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(infoStrip ? 140 : 70).hex;
+                if (infoStrip) {
+                    leftAxis.gridLineWidth = 0.5;
+                } else {
+                    leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
+                }
                 leftAxis.ensureLastLabel = true;
                 leftAxis.drawLimitLinesBehindData = false;
+                // under the highlight, so its distance badge covers the axis labels, not the reverse
+                leftAxis.drawLabelsBehindData = true;
+                leftAxis.customRenderer = {
+                    drawLimitLine(c: Canvas, axis, limitLine, rect, y: number, paint: Paint) {
+                        c.drawLine(rect.left, y, rect.right, y, paint);
+                        if (limitLine instanceof PlateLimitLine) {
+                            plateLabelPaint.textSize = 9 * $fontScale;
+                            plateLabelPaint.color = colorOnSurface;
+                            const metrics = plateLabelPaint.getFontMetrics();
+                            const height = metrics.descent - metrics.ascent;
+                            const top = limitLine.plateBelow ? y + 2 : Math.max(rect.top, y - 2 - height);
+                            drawPlatedLabel(c, [limitLine.plateLabel], rect.right - 3, top, plateLabelPaint, true);
+                        }
+                    }
+                };
 
                 xAxis.position = XAxisPosition.BOTTOM;
                 xAxis.labelTextAlign = Align.CENTER;
@@ -420,6 +500,7 @@
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
                 xAxis.drawLimitLinesBehindData = false;
+                xAxis.drawLabelsBehindData = true;
                 xAxis.valueFormatter = {
                     getAxisLabel: (value) => formatDistance(value)
                 };
@@ -433,12 +514,30 @@
                             c.drawCircle(x, h.drawY, 4, highlightPaint);
                             return;
                         }
-                        if (highlightNString) {
+                        if (highlightNString && !infoStrip) {
                             const staticLayout = new StaticLayout(highlightNString, nstringPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
                             c.translate(10, 0);
                             staticLayout.draw(c);
                             c.restore();
+                        }
+                        if (infoStrip) {
+                            // the strip's accent, so the cursor reads as its point: a line from the
+                            // strip down, a ringed dot on the curve and the distance on the axis
+                            const bottom = chartView.viewPortHandler.contentBottom;
+                            cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
+                            c.drawLine(x, 0, x, bottom, cursorPaint);
+                            cursorPaint.color = isEInk ? 'white' : colorBackground;
+                            c.drawCircle(x, h.drawY, 7, cursorPaint);
+                            cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
+                            c.drawCircle(x, h.drawY, 5, cursorPaint);
+                            const text = formatDistance(h.entry['d']);
+                            const halfWidth = cursorTextPaint.measureText(text) / 2 + 6;
+                            const left = Math.max(0, Math.min(c.getWidth() - halfWidth * 2, x - halfWidth));
+                            c.drawRoundRect(left, bottom + 1, left + halfWidth * 2, bottom + 17, 8, 8, cursorPaint);
+                            cursorTextPaint.color = isEInk ? 'white' : colorOnPrimary;
+                            c.drawText(text, left + halfWidth, bottom + 13, cursorTextPaint);
+                            return;
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
@@ -458,7 +557,7 @@
                 //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
             }
-            const labelCount = 5;
+            const labelCount = infoStrip ? 3 : 5;
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
             const interval = Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / step) * step;
             leftAxis.forcedInterval = interval;
@@ -468,7 +567,7 @@
             leftAxis.textSize = 9 * $fontScale;
 
             const totalDistance = it.route.totalDistance;
-            const xLabelCount = 6;
+            const xLabelCount = infoStrip ? X_LABEL_COUNT : 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
@@ -540,25 +639,16 @@
             }
 
             leftAxis.removeAllLimitLines();
-            let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
+            let limitLine: LimitLine = new PlateLimitLine(profile.min[1], convertElevation(profile.min[1]), true);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
-            limitLine.yOffset = -1;
-            limitLine.textSize = 9 * $fontScale;
-            limitLine.textColor = colorOnSurface;
-            // limitLine.ensureVisible = true;
-            limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             leftAxis.addLimitLine(limitLine);
 
-            limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
+            limitLine = new PlateLimitLine(profile.max[1], convertElevation(profile.max[1]), false);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
-            limitLine.yOffset = 1;
-            limitLine.textSize = 9 * $fontScale;
-            limitLine.textColor = colorOnSurface;
-            limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
 
             xAxis.removeAllLimitLines();
@@ -577,12 +667,8 @@
                         c.drawCircle(x, y - 6, 6, waypointsBackPaint);
                         waypointsPaint.textSize = 7 * $fontScale;
                         c.drawText('', x, y - 5 + 1, waypointsPaint);
-                        //   paint.setTextAlign(Align.CENTER);
-                        const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                        c.save();
-                        c.translate(x, y + 6);
-                        staticLayout.draw(c);
-                        c.restore();
+                        // right aligned when the renderer flipped the label to stay inside the chart
+                        drawPlatedLabel(c, label.split('\n'), x + 2, y + 3, paint, paint.getTextAlign() === Align.RIGHT);
                     };
                     xAxis.addLimitLine(limitLine);
                 });
@@ -611,18 +697,50 @@
     }
 </script>
 
-<linechart
-    bind:this={chart}
-    hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28}
-    {...$$restProps}
-    doubleTapGestureOptions={{
-        maxDelayMs: 100
-    }}
-    panGestureOptions={{
-        minDist: 20,
-        failOffsetYStart: -20,
-        failOffsetYEnd: 20
-    }}
-    on:highlight={onChartHighlight}
-    on:zoom={onChartPanOrZoom}
-    on:pan={onChartPanOrZoom} />
+<gridlayout rows={infoStrip ? '46,*,auto' : '*'} {...$$restProps}>
+    {#if infoStrip}
+        <!-- the selected point's strip, in the accent the cursor shares; tapping it clears the selection -->
+        <label class="sectionHeader" padding="16 8 0 8" text={lc('elevation_profile')} visibility={highlightInfo ? 'collapse' : 'visible'} />
+        <gridlayout
+            backgroundColor={isEInk ? null : colorAccentContainer}
+            borderColor={isEInk ? colorOnSurface : colorPrimary}
+            borderRadius={14}
+            borderWidth={1}
+            columns="auto,*"
+            margin="4 4 0 4"
+            visibility={highlightInfo ? 'visible' : 'collapse'}
+            on:tap={clearHighlight}>
+            <stacklayout padding="0 8 0 10" verticalAlignment="middle">
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={16} text="mdi-map-marker" textAlignment="center" />
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={11} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
+            </stacklayout>
+            <!-- each figure an icon over its value, so none needs a label -->
+            <gridlayout col={1} columns={(highlightInfo?.values ?? []).map(() => '*').join(',') || '*'} paddingRight={4} verticalAlignment="middle">
+                {#each highlightInfo?.values ?? [] as info, index}
+                    <stacklayout col={index} verticalAlignment="middle">
+                        <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} fontSize={15} text={info.icon} textAlignment="center" />
+                        <label autoFontSize={true} color={colorOnSurface} fontSize={12} fontWeight="bold" maxFontSize={12} maxLines={1} minFontSize={9} text={info.value} textAlignment="center" />
+                    </stacklayout>
+                {/each}
+            </gridlayout>
+        </gridlayout>
+    {/if}
+    <linechart
+        bind:this={chart}
+        doubleTapGestureOptions={{
+            maxDelayMs: 100
+        }}
+        hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28}
+        panGestureOptions={{
+            minDist: 20,
+            failOffsetYStart: -20,
+            failOffsetYEnd: 20
+        }}
+        row={infoStrip ? 1 : 0}
+        on:highlight={onChartHighlight}
+        on:zoom={onChartPanOrZoom}
+        on:pan={onChartPanOrZoom} />
+    {#if infoStrip && showProfileGrades && !isEInk}
+        <GradeLegend row={2} />
+    {/if}
+</gridlayout>

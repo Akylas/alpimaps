@@ -102,7 +102,7 @@ export async function showPopoverMenu<T = any>({
     props,
     vertPos
 }: { options; anchor; onClose?; onLongPress?; props?; closeOnClose? } & Partial<PopoverOptions>) {
-    const { colorHairline, colorPanel } = get(colors);
+    const { colorPanel } = get(colors);
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const scale = Math.sqrt(get(fontScale));
     const rowHeight = props?.rowHeight ?? 60 * scale;
@@ -114,14 +114,13 @@ export async function showPopoverMenu<T = any>({
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
             borderRadius: 20,
-            borderWidth: 1,
-            borderColor: colorHairline,
+            panel: true,
             elevation: __ANDROID__ ? 3 : 0,
             margin: 4,
             fontWeight: 500,
-            backgroundColor: colorPanel,
             containerColumns: 'auto',
-            height: Math.min(rowHeight * options.length, props?.maxHeight ?? 300),
+            // the toggle pill row above the list, when there is one
+            height: Math.min(rowHeight * options.length + (props?.toggles?.length ? 56 : 0), props?.maxHeight ?? 300),
             width: Math.min(200 * scale, screenWidthDips * 0.9),
             options,
             onLongPress,
