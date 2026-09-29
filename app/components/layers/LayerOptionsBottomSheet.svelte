@@ -57,12 +57,20 @@
         });
         options = result;
     });
-    function optionValue(name) {
-        if (options[name].type === 'color') {
-            return options[name].value;
+    // a colour comes back from the layer as an argb number, not the css string a view takes
+    function optionColor(name: string) {
+        const value = options[name].value;
+        if (value === undefined || value === null || value === '') {
+            return null;
         }
+        try {
+            return new Color(value).hex;
+        } catch (error) {
+            return null;
+        }
+    }
+    function optionValue(name: string) {
         return Math.round(options[name].value * 100);
-        // return Math.round(options * 100);
     }
     function onOptionChanged(name, event) {
         let newValue = (event.value || 0) / 100;
@@ -73,9 +81,9 @@
         }
         item.layer.set(name, newValue);
     }
-    async function pickOptionColor(name, color: Color) {
+    async function pickOptionColor(name: string, color: string) {
         try {
-            const newColor = await pickColor(color);
+            const newColor = await pickColor(color ? new Color(color) : null);
             if (!newColor) {
                 return;
             }
@@ -141,9 +149,12 @@
                 <label class="sectionHeader" text={lc('colors')} />
             {/if}
             {#each colorOptions as [name]}
-                <gridlayout columns="*,auto" height={52} padding="0 16" rippleColor={colorOnSurface} on:tap={() => pickOptionColor(name, optionValue(name))}>
+                <gridlayout columns="*,auto" height={52} padding="0 16" rippleColor={colorOnSurface} on:tap={() => pickOptionColor(name, optionColor(name))}>
                     <label color={colorOnSurface} fontSize={15} text={optionLabel(name)} verticalAlignment="middle" />
-                    <absolutelayout backgroundColor={optionValue(name)} borderColor={colorHairline} borderRadius={16} borderWidth={1} col={1} height={32} verticalAlignment="middle" width={32} />
+                    <stacklayout col={1} orientation="horizontal" verticalAlignment="middle">
+                        <label color={colorOnSurfaceVariant} fontSize={13} marginRight={10} text={optionColor(name)?.toUpperCase()} verticalAlignment="middle" />
+                        <absolutelayout backgroundColor={optionColor(name)} borderColor={colorHairline} borderRadius={16} borderWidth={1} height={32} width={32} />
+                    </stacklayout>
                 </gridlayout>
             {/each}
         </stacklayout>

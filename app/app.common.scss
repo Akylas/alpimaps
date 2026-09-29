@@ -358,12 +358,21 @@ label {
 
 .panelIcon {
     @extend %mdi;
+    width: 40;
+    height: 40;
+    border-radius: 12;
     font-size: 22;
+    text-align: center;
+    vertical-text-alignment: center;
     color: var(--colorPrimary);
+    background-color: var(--colorAccentContainer);
     vertical-alignment: middle;
 
     .ns-eink & {
         color: var(--colorOnSurface);
+        background-color: transparent;
+        border-width: 1;
+        border-color: black;
     }
 }
 

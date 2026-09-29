@@ -6,6 +6,10 @@
     barPaint.strokeWidth = 2;
     const textPaint = new Paint();
     textPaint.textSize = 13;
+    const valuePaint = new Paint();
+    valuePaint.textSize = 13;
+    valuePaint.fontWeight = 'bold';
+    valuePaint.setTextAlign(Align.RIGHT);
     // the .sectionHeader look
     const bigTextPaint = new Paint();
     bigTextPaint.textSize = 13;
@@ -93,7 +97,8 @@
             canvas.restore();
 
             const columnWidth = usedWidth / 2;
-            const rowsPerColumn = Math.max(1, Math.floor((h - LEGEND_TOP) / LEGEND_ROW));
+            // balanced: half the entries per column, as far as the height allows
+            const rowsPerColumn = Math.min(Math.max(1, Math.floor((h - LEGEND_TOP) / LEGEND_ROW)), Math.ceil(stats.length / 2));
             stats.forEach((stat, index) => {
                 const column = index < rowsPerColumn ? 0 : 1;
                 const row = index - column * rowsPerColumn;
@@ -109,14 +114,10 @@
                 } else {
                     canvas.drawCircle(left + 5, baseline - 5, 5, barPaint);
                 }
-                textPaint.setTextAlign(Align.LEFT);
-                textPaint.fontWeight = 'normal';
                 textPaint.color = colorOnSurfaceVariant;
                 canvas.drawText(lc(stat.id), left + 16, baseline, textPaint);
-                textPaint.setTextAlign(Align.RIGHT);
-                textPaint.fontWeight = 'bold';
-                textPaint.color = colorOnSurface;
-                canvas.drawText(formatDistance(stat.dist * 1000), right, baseline, textPaint);
+                valuePaint.color = colorOnSurface;
+                canvas.drawText(formatDistance(stat.dist * 1000), right, baseline, valuePaint);
             });
         } catch (error) {
             console.error(error, error.stack);

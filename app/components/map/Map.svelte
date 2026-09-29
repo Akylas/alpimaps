@@ -1537,23 +1537,8 @@
     onDestroy(stopWebServer);
     const showMapMenu = tryCatchFunction(
         async (event) => {
-            // the two modes lead as switches, toggled in place without closing the menu
             const options = (
                 [
-                    {
-                        title: lc('dark_mode'),
-                        id: 'dark_mode',
-                        type: 'switch',
-                        value: $forceDarkMode,
-                        icon: 'mdi-theme-light-dark'
-                    },
-                    {
-                        title: lc('offline_mode'),
-                        id: 'offline_mode',
-                        type: 'switch',
-                        value: networkService.forcedOffline,
-                        icon: 'mdi-wifi-strength-off-outline'
-                    },
                     {
                         accessibilityValue: 'settingsBtn',
                         title: lc('settings'),
@@ -1641,11 +1626,16 @@
                     // autoSizeListItem: true,
                     maxHeight: Screen.mainScreen.heightDIPs - 100,
                     width: Math.min(280, Screen.mainScreen.widthDIPs * 0.8),
-                    onCheckBox: (item, value) => {
-                        if (item.id === 'dark_mode' && value !== $forceDarkMode) {
+                    // the two modes lead as toggle pills, switched in place without closing the menu
+                    toggles: [
+                        { id: 'dark_mode', icon: 'mdi-theme-light-dark', label: lc('dark'), selected: $forceDarkMode },
+                        { id: 'offline_mode', icon: 'mdi-wifi-strength-off-outline', label: lc('offline'), selected: networkService.forcedOffline }
+                    ],
+                    onToggle: (toggle) => {
+                        if (toggle.id === 'dark_mode') {
                             toggleForceDarkMode();
-                        } else if (item.id === 'offline_mode') {
-                            networkService.forcedOffline = value;
+                        } else {
+                            networkService.forcedOffline = toggle.selected;
                         }
                     }
                 },

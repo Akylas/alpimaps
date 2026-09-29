@@ -14,6 +14,7 @@
     import ListItem from '~/components/common/ListItem.svelte';
     import ListItemAutoSize from '~/components/common/ListItemAutoSize.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import Pill from '~/components/common/Pill.svelte';
     import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import { lc } from '~/helpers/locale';
     import { colors, fontScale, fontScaleMaxed, fonts } from '~/variables';
@@ -28,6 +29,9 @@
 
 <script lang="ts">
     export let title: string = null;
+    /** Toggle pills above the list, each `{ id, icon, label, selected }`; a tap goes to `onToggle`. */
+    export let toggles: { id: string; icon: string; label: string; selected: boolean }[] = null;
+    export let onToggle: (toggle) => void = null;
     export let titleIcon: string = null;
     export let showFilter = false;
     export let showBorders = false;
@@ -65,7 +69,7 @@
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
 
-    $: ({ colorOnSurface, colorOutline } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOutline } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -232,6 +236,23 @@
                         blurTextField();
                         filter = null;
                     }} />
+            </gridlayout>
+        {/if}
+        {#if toggles?.length}
+            <gridlayout borderBottomColor={colorHairline} borderBottomWidth={1} columns={toggles.map(() => '*').join(',')} padding="6 4 8 4" row={1}>
+                {#each toggles as toggle, index}
+                    <Pill
+                        col={index}
+                        horizontalAlignment="stretch"
+                        icon={toggle.icon}
+                        label={toggle.label}
+                        selected={toggle.selected}
+                        on:tap={() => {
+                            toggle.selected = !toggle.selected;
+                            toggles = toggles;
+                            onToggle?.(toggle);
+                        }} />
+                {/each}
             </gridlayout>
         {/if}
         <collectionview
