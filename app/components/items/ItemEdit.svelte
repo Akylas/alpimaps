@@ -431,7 +431,6 @@
 <page actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
             <IconButton text="mdi-playlist-plus" on:tap={addField} />
             <IconButton isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
@@ -474,7 +473,7 @@
                 <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>
             <Template key="textfield" let:item>
-                <gridlayout padding="10 10 0 10">
+                <gridlayout padding="10 12 0 12">
                     <textfield
                         editable={item.editable ?? true}
                         hint={item.name}
@@ -488,7 +487,7 @@
                 </gridlayout>
             </Template>
             <Template key="textview" let:item>
-                <gridlayout padding="10 10 0 10">
+                <gridlayout padding="10 12 0 12">
                     <textview
                         height={item.height || 150}
                         hint={item.name}
@@ -538,15 +537,17 @@
             </stacklayout>
         </scrollview> -->
 
-        <gridlayout borderColor={colorHairline} borderTopWidth={1} columns="*,*" padding="4 9" row={4}>
+        <gridlayout borderColor={colorHairline} borderTopWidth={1} columns="*,*" padding="8 8" row={4}>
             <Pill
+                horizontalAlignment="stretch"
                 label={lc('cancel')}
+                margin="0 4"
                 on:tap={() => {
                     updatedProperties = {};
                     refreshItems();
                     updatePreview(false);
                 }} />
-            <Pill col={1} isEnabled={canSave} label={lc('save')} opacity={canSave ? 1 : 0.4} primary={true} on:tap={() => updateItem()} />
+            <Pill col={1} horizontalAlignment="stretch" isEnabled={canSave} label={lc('save')} margin="0 4" opacity={canSave ? 1 : 0.4} primary={true} on:tap={() => updateItem()} />
         </gridlayout>
     </gridlayout>
 </page>

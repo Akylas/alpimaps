@@ -274,7 +274,7 @@
                             text={item.layer.opacity() === 0 ? 'mdi-eye-off-outline' : 'mdi-eye-outline'}
                             tooltip={item.layer.opacity() === 0 ? lc('show') : lc('hide')}
                             on:tap={() => toggleLayerVisible(item)} />
-                        <IconButton col={3} gray={true} rowSpan={2} text="mdi-dots-vertical" width={40} on:tap={(event) => showLayerMenu(item, event)} />
+                        <IconButton col={3} color={colorOnSurfaceVariant} rowSpan={2} text="mdi-dots-vertical" width={40} on:tap={(event) => showLayerMenu(item, event)} />
                         <progress col={1} row={1} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
                     <mdbutton

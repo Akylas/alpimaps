@@ -861,6 +861,7 @@ LEFT JOIN  (
                     rippleColor={colorPrimary}
                     selectable={false}
                     showIcon={false}
+                    showOptions={false}
                     subtitleEnabled={false}
                     titleVerticalTextAlignment="middle"
                     on:tap={(e) => onItemTap(item, e)}
@@ -878,9 +879,9 @@ LEFT JOIN  (
                     <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
                     <SelectedIndicator selected={item.selected} />
                     <!-- a hidden item says so, and shows again in one tap -->
-                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="top">
-                        <IconButton gray={true} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
-                        <IconButton gray={true} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="middle">
+                        <IconButton color={colorOnSurfaceVariant} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
+                        <IconButton color={colorOnSurfaceVariant} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
                     </stacklayout>
                 </BottomSheetInfoView>
             </Template>
@@ -904,9 +905,9 @@ LEFT JOIN  (
                     on:longPress={(e) => onItemLongPress(item, e)}>
                     <SelectedIndicator selected={item.selected} />
                     <!-- a hidden item says so, and shows again in one tap -->
-                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="top">
-                        <IconButton gray={true} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
-                        <IconButton gray={true} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="middle">
+                        <IconButton color={colorOnSurfaceVariant} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
+                        <IconButton color={colorOnSurfaceVariant} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
                     </stacklayout>
                 </BottomSheetInfoView>
             </Template>

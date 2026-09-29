@@ -74,9 +74,11 @@ mdslider {
 }
 
 mdtextfield[variant=outline],
-mdtextfield[variant=fill] {
+mdtextfield[variant=fill],
+mdtextview[variant=outline] {
     color: var(--colorOnSurface);
-    stroke-color: var(--colorOutline);
+    stroke-color: var(--colorPrimary);
+    stroke-inactive-color: var(--colorOutlineSoft);
     placeholder-color: var(--colorOutline);
     floating-color: var(--colorOutline);
     floating-inactive-color: var(--colorOutline);
