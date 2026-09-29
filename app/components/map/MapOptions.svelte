@@ -236,22 +236,25 @@
         </Template>
     </collectionview>
 
-    <!-- the layers sheet's toggles: short labelled pills, tinted when on -->
-    <wraplayout padding="0 12 4 12" row={1}>
-        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
-            <StoreValue store={option.store} let:value>
-                <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
-            </StoreValue>
-        {/each}
-        {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
-            <StoreValue store={option.store} let:value>
-                <Pill icon={option.icon} label={lc('slopes')} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
-            </StoreValue>
-        {/each}
-        <Pill icon="mdi-globe-model" label={lc('globe')} selected={$projectionModeSpherical} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
-        <Pill icon="mdi-rotate-3d-variant" label={lc('rotation')} selected={$rotateEnabled} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
-        <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-        <Pill icon="mdi-map-clock" label={lc('preload')} selected={$preloading} on:tap={() => preloading.set(!$preloading)} />
-        <Pill icon="mdi-map-marker-multiple-outline" label={lc('items')} selected={$showItemsLayer} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
-    </wraplayout>
+    <!-- the layers sheet's toggles: short labelled pills, tinted when on. Two rows at most, scrolling
+         sideways, so the settings list keeps its room -->
+    <scrollview orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
+        <wraplayout height={100} orientation="vertical" padding="0 12 0 12">
+            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+                <StoreValue store={option.store} let:value>
+                    <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
+                </StoreValue>
+            {/each}
+            {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+                <StoreValue store={option.store} let:value>
+                    <Pill icon={option.icon} label={lc('slopes')} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
+                </StoreValue>
+            {/each}
+            <Pill icon="mdi-globe-model" label={lc('globe')} selected={$projectionModeSpherical} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
+            <Pill icon="mdi-rotate-3d-variant" label={lc('rotation')} selected={$rotateEnabled} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+            <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
+            <Pill icon="mdi-map-clock" label={lc('preload')} selected={$preloading} on:tap={() => preloading.set(!$preloading)} />
+            <Pill icon="mdi-map-marker-multiple-outline" label={lc('items')} selected={$showItemsLayer} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
+        </wraplayout>
+    </scrollview>
 </gesturerootview>
