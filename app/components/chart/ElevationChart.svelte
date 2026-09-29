@@ -10,7 +10,7 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import { LimitLabelPosition, LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
+    import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -67,6 +67,32 @@
     nstringPaint.setColor('#aaa');
     nstringPaint.setStrokeWidth(1);
     nstringPaint.setTextSize(12);
+
+    // chart labels sit on a semi opaque rounded plate, so they read over the grade fill and gridlines
+    const plateLabelPaint = new Paint();
+    const plateBackPaint = new Paint();
+    function drawPlatedLabel(c: Canvas, lines: string[], x: number, top: number, paint: Paint, alignRight: boolean) {
+        const metrics = paint.getFontMetrics();
+        const lineHeight = metrics.descent - metrics.ascent;
+        const width = Math.max(...lines.map((line) => paint.measureText(line)));
+        const left = alignRight ? x - width : x;
+        plateBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(210).hex;
+        c.drawRoundRect(left - 3, top - 1, left + width + 3, top + lines.length * lineHeight + 1, 4, 4, plateBackPaint);
+        const align = paint.getTextAlign();
+        paint.setTextAlign(Align.LEFT);
+        lines.forEach((line, index) => c.drawText(line, left, top - metrics.ascent + index * lineHeight, paint));
+        paint.setTextAlign(align);
+    }
+    /** An elevation line whose label the axis custom renderer draws on a plate, above or below it. */
+    class PlateLimitLine extends LimitLine {
+        constructor(
+            limit: number,
+            public plateLabel: string,
+            public plateBelow: boolean
+        ) {
+            super(limit, '');
+        }
+    }
 
     export let item: Item;
     export let showAscents = true;
@@ -451,6 +477,21 @@
                 }
                 leftAxis.ensureLastLabel = true;
                 leftAxis.drawLimitLinesBehindData = false;
+                // under the highlight, so its distance badge covers the axis labels, not the reverse
+                leftAxis.drawLabelsBehindData = true;
+                leftAxis.customRenderer = {
+                    drawLimitLine(c: Canvas, axis, limitLine, rect, y: number, paint: Paint) {
+                        c.drawLine(rect.left, y, rect.right, y, paint);
+                        if (limitLine instanceof PlateLimitLine) {
+                            plateLabelPaint.textSize = 9 * $fontScale;
+                            plateLabelPaint.color = colorOnSurface;
+                            const metrics = plateLabelPaint.getFontMetrics();
+                            const height = metrics.descent - metrics.ascent;
+                            const top = limitLine.plateBelow ? y + 2 : Math.max(rect.top, y - 2 - height);
+                            drawPlatedLabel(c, [limitLine.plateLabel], rect.right - 3, top, plateLabelPaint, true);
+                        }
+                    }
+                };
 
                 xAxis.position = XAxisPosition.BOTTOM;
                 xAxis.labelTextAlign = Align.CENTER;
@@ -459,6 +500,7 @@
                 xAxis.drawGridLines = false;
                 xAxis.drawMarkTicks = true;
                 xAxis.drawLimitLinesBehindData = false;
+                xAxis.drawLabelsBehindData = true;
                 xAxis.valueFormatter = {
                     getAxisLabel: (value) => formatDistance(value)
                 };
@@ -597,25 +639,16 @@
             }
 
             leftAxis.removeAllLimitLines();
-            let limitLine = new LimitLine(profile.min[1], convertElevation(profile.min[1]));
+            let limitLine: LimitLine = new PlateLimitLine(profile.min[1], convertElevation(profile.min[1]), true);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
-            limitLine.yOffset = -1;
-            limitLine.textSize = 9 * $fontScale;
-            limitLine.textColor = colorOnSurface;
-            // limitLine.ensureVisible = true;
-            limitLine.labelPosition = LimitLabelPosition.RIGHT_BOTTOM;
             leftAxis.addLimitLine(limitLine);
 
-            limitLine = new LimitLine(profile.max[1], convertElevation(profile.max[1]));
+            limitLine = new PlateLimitLine(profile.max[1], convertElevation(profile.max[1]), false);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
-            limitLine.yOffset = 1;
-            limitLine.textSize = 9 * $fontScale;
-            limitLine.textColor = colorOnSurface;
-            limitLine.ensureVisible = true;
             leftAxis.addLimitLine(limitLine);
 
             xAxis.removeAllLimitLines();
@@ -634,12 +667,8 @@
                         c.drawCircle(x, y - 6, 6, waypointsBackPaint);
                         waypointsPaint.textSize = 7 * $fontScale;
                         c.drawText('', x, y - 5 + 1, waypointsPaint);
-                        //   paint.setTextAlign(Align.CENTER);
-                        const staticLayout = new StaticLayout(label, paint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                        c.save();
-                        c.translate(x, y + 6);
-                        staticLayout.draw(c);
-                        c.restore();
+                        // right aligned when the renderer flipped the label to stay inside the chart
+                        drawPlatedLabel(c, label.split('\n'), x + 2, y + 3, paint, paint.getTextAlign() === Align.RIGHT);
                     };
                     xAxis.addLimitLine(limitLine);
                 });

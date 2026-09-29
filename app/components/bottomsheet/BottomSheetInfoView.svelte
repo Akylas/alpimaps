@@ -64,8 +64,6 @@
     let nString;
     let nString2;
     let nString3;
-    /** the route options' icon count, drawn top right beside the title in the tile header */
-    let costingCount = 0;
 
     function redrawIcon() {
         canvas?.nativeView?.invalidate();
@@ -317,14 +315,12 @@
                     });
                 }
             });
-            costingCount = spans2.length;
             if (spans2.length > 0) {
                 nString2 = createNativeAttributedString({ spans: spans2 });
             } else {
                 nString2 = null;
             }
         } else {
-            costingCount = 0;
             nString2 = null;
         }
         canvas?.nativeView.invalidate();
@@ -335,6 +331,11 @@
         } catch (err) {
             console.error('updateItem', err, err.stack);
         }
+    }
+    // centred on the title block; with the route options below it, the tile and options together
+    function tileCenterY(paddingTop: number, height: number) {
+        const optionsHeight = nString2 && showOptions ? 15 * $fontScaleMaxed : 0;
+        return paddingTop + (height - marginBottom) / 2 - optionsHeight / 2;
     }
     function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
         if (!item) {
@@ -355,7 +356,7 @@
                 iconPaint.color = iconColor || (isEInk ? colorOnSurface : colorPrimary);
                 if (iconTile) {
                     // tile and glyph both centred on the title block, beside which they sit
-                    const centerY = paddingTop + (h - marginBottom) / 2;
+                    const centerY = tileCenterY(paddingTop, h);
                     if (!isEInk) {
                         const tileSize = fontSize + 18;
                         const tileLeft = paddingLeft + iconLeft - tileSize / 2;
@@ -380,12 +381,21 @@
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            if (nString2 && showOptions) {
-                // with the tile header the route options sit top right, beside the title
-                propsPaint.textSize = (iconTile ? 13 : 14) * $fontScaleMaxed;
+            if (nString2 && showOptions && iconTile) {
+                // the route options under the icon tile, leaving the title its full width
+                propsPaint.textSize = 10 * $fontScaleMaxed;
+                const width = marginLeft - 2;
+                const tileBottom = tileCenterY(paddingTop, h) + (iconSize * $fontScaleMaxed + 18) / 2;
+                const staticLayout = new StaticLayout(nString2, propsPaint, width, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
+                canvas.save();
+                canvas.translate(paddingLeft + iconLeft - width / 2, tileBottom + 3);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            } else if (nString2 && showOptions) {
+                propsPaint.textSize = 14 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft, iconTile ? paddingTop + 6 : paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
+                canvas.translate(paddingLeft, paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
@@ -426,14 +436,7 @@
 
 <canvasview bind:this={canvas} padding="4 10 2 10" on:draw={onCanvasDraw} {...$$restProps} disableCss={true} on:tap on:longPress>
     <slot />
-    <flexlayout
-        disableCss={true}
-        flexDirection="column"
-        {marginBottom}
-        {marginLeft}
-        marginRight={rightTextPadding + (iconTile && showOptions ? costingCount * 15 * $fontScaleMaxed : 0)}
-        {marginTop}
-        ios:verticalAlignment="center">
+    <flexlayout disableCss={true} flexDirection="column" {marginBottom} {marginLeft} marginRight={rightTextPadding} {marginTop} ios:verticalAlignment="center">
         <label
             autoFontSize={true}
             color={colorOnSurface}
