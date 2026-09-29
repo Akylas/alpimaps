@@ -103,9 +103,9 @@
     </style>
     <style name="TextInputLayout.Filled" parent="@style/Widget.Material3.TextInputLayout.FilledBox">
     </style>
-    <style name="TextInputLayout.Outlined"
+    <!-- <style name="TextInputLayout.Outlined"
         parent="@style/Widget.Material3.TextInputLayout.OutlinedBox">
-    </style>
+    </style> -->
     <style name="LinearProgress"
         parent="@style/Widget.Material3.LinearProgressIndicator">
         <item name="trackCornerRadius">2dp</item>
