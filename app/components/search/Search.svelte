@@ -16,13 +16,14 @@
     import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
+    import Pill from '~/components/common/Pill.svelte';
 
-    let { colorHairline, colorOnSurface, colorPanel } = $colors;
-    $: ({ colorHairline, colorOnSurface, colorPanel } = $colors);
+    let { colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel } = $colors;
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel } = $colors);
     // see-through while idle so the map shows under it
     $: colorSearchIdle = colorPanel ? new Color(colorPanel).setAlpha(150).hex : null;
 
-    const SEARCH_COLLECTIONVIEW_HEIGHT = 250;
+    const SEARCH_COLLECTIONVIEW_HEIGHT = 300;
     let animating = false;
     async function animateTargets(animations: any[]) {
         animations = animations.filter((a) => !!a.target);
@@ -492,10 +493,17 @@
         <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
             <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
                 <SearchCollectionView bind:this={collectionView} colSpan={3} isUserInteractionEnabled={searchResultsVisible} bind:searchResultsCount bind:dataItems on:tap={onItemTap} />
-                <stacklayout orientation="horizontal" row={1} width="100%" on:tap={() => {}}>
-                    <!-- <IconButton small={true} isVisible={searchResultsVisible} text="mdi-shape" on:tap={toggleFilterOSMKey} isSelected={filteringOSMKey} /> -->
-                    <IconButton isVisible={searchResultsVisible} small={true} text="mdi-map" on:tap={toggleShowResultsOnMap} />
-                </stacklayout>
+                <!-- the result count, and showing them on the map as a pill -->
+                <gridlayout borderColor={colorHairline} borderTopWidth={1} colSpan={3} columns="*,auto" padding="2 8 2 16" row={1} on:tap={() => {}}>
+                    <label color={colorOnSurfaceVariant} fontSize={12} text={lc('results_count', searchResultsCount)} verticalAlignment="middle" />
+                    <Pill
+                        col={1}
+                        icon="mdi-map-marker-multiple-outline"
+                        label={lc('show_on_map')}
+                        selected={showingOnMap}
+                        visibility={searchResultsVisible ? 'visible' : 'collapse'}
+                        on:tap={toggleShowResultsOnMap} />
+                </gridlayout>
             </gridlayout>
         </absolutelayout>
     {/if}
