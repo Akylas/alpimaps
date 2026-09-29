@@ -27,6 +27,8 @@
     import { clearInterval } from '~/utils/utils/index.ios';
     import { colors, fonts } from '~/variables';
     import CompassView from '../compass/CompassView.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import Pill from '~/components/common/Pill.svelte';
 
     const nightPaint = new Paint();
     nightPaint.color = '#00000099';
@@ -37,7 +39,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorOutline } = $colors);
+    $: ({ colorOnSurface, colorOutline, colorSurfaceFill } = $colors);
     let chartView: NativeViewElementNode<LineChart>;
 
     let chartInitialized = false;
@@ -458,23 +460,19 @@
 </script>
 
 <gesturerootview class="bottomsheet" columns="3*,4*" rows="auto,50,200,50,200">
-    {#if name}
-        <gridlayout borderBottomColor={colorOutline} borderBottomWidth={1} colSpan={2} columns="*,130" height={50}>
-            <label marginLeft={16} verticalTextAlignment="center">
-                <cspan fontSize={17} fontWeight="600" text={name} />
-                <cspan fontSize={14} text={subtitle ? '\n' + subtitle : null} />
-            </label>
-            <label col={1} fontSize={20} fontWeight="500" marginRight={16} text={formatTime(currentTime, 'LT')} textAlignment="right" verticalTextAlignment="center" />
-        </gridlayout>
-    {/if}
-    <mdbutton class="icon-btn" horizontalAlignment="left" row={1} text="mdi-chevron-left" variant="text" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
-    <label colSpan={2} fontSize={17} marginLeft={50} marginRight={50} row={1} text={startTime.format('LL')} textAlignment="center" verticalTextAlignment="center" on:tap={selectDate} />
-    <mdbutton class="icon-btn" col={1} horizontalAlignment="right" row={1} text="mdi-chevron-right" variant="text" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
+    <PanelHeader colSpan={2} icon="mdi-weather-sunset" subtitle={name ? subtitle : null} title={name || lc('astronomy')}>
+        <label fontSize={18} fontWeight="bold" marginRight={8} text={formatTime(currentTime, 'LT')} verticalAlignment="middle" />
+    </PanelHeader>
+    <gridlayout colSpan={2} columns="auto,*,auto" padding="0 12" row={1}>
+        <Pill icon="mdi-chevron-left" on:tap={() => updateStartTime(startTime.subtract(1, 'd'))} />
+        <Pill col={1} horizontalAlignment="center" icon="mdi-calendar" label={startTime.format('LL')} on:tap={selectDate} />
+        <Pill col={2} icon="mdi-chevron-right" on:tap={() => updateStartTime(startTime.add(1, 'd'))} />
+    </gridlayout>
     <linechart bind:this={chartView} colSpan={3} row={2}>
         <!-- <rectangle fillColor="#a0caff" height="50%" width="100%" /> -->
     </linechart>
     {#if sunTimes}
-        <canvaslabel bind:this={bottomLabel} colSpan={3} fontSize={18} padding="0 10 0 10" row={3} on:draw={drawMoonPosition}>
+        <canvaslabel bind:this={bottomLabel} backgroundColor={colorSurfaceFill} borderRadius={14} colSpan={3} fontSize={18} margin="3 12" padding="0 12 0 12" row={3} on:draw={drawMoonPosition}>
             <cgroup color="#ffa500" verticalAlignment="middle">
                 <cspan fontFamily={$fonts.mdi} text="mdi-weather-sunset-up" />
                 <cspan text={' ' + formatTime(sunriseEnd, undefined, timezoneOffset)} />

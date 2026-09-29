@@ -493,6 +493,8 @@
     "reorder": "reorder",
     "roads": "roads",
     "rotation": "rotation",
+    "satellites_in_use": "%s in use · %s visible",
+    "sensor": "sensor",
     "shadow_color": "shadow",
     "slopes": "slopes",
     "static_peaks": "collect summits once",

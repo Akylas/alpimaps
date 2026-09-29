@@ -18,11 +18,12 @@
     import { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { TO_DEG, TO_RAD } from '~/utils/geo';
-    import { colors } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import CompassDialView from './CompassDialView.svelte';
-    import IconButton from '../common/IconButton.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
+    import Pill from '../common/Pill.svelte';
     import { showError } from '@shared/utils/showError';
-    $: ({ colorPrimary } = $colors);
+    $: ({ colorError, colorPrimary } = $colors);
 
     let currentHeading: number = 0;
     let lastHeadingTime: number = 0;
@@ -36,6 +37,8 @@
 
     export let updateWithUserLocation = false;
     export let updateWithSensor = true;
+    /** Its own sheet: a panel header with the heading, and the sensor toggle as a pill. */
+    export let standalone = false;
 
     let moonBearing: GetMoonPositionResult = null;
     let sunBearing: GetSunPositionResult = null;
@@ -232,22 +235,42 @@
             });
         }
     }
+    const CARDINALS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    function cardinal(heading: number) {
+        return CARDINALS[Math.round(heading / 45) % 8];
+    }
 </script>
 
-<gesturerootview {height} rows="*,auto" {...$$restProps}>
-    <CompassDialView drawInsideGrid={!!moonBearing} onDraw={onCanvasDraw} onDrawBeforeText={onCanvasDrawBeforeText} rotation={updateWithSensor ? -currentHeading : 0} bind:canvas />
-    <!-- <svgview visibility={updateWithSensor ? 'visible' : 'hidden'} src="~/assets/svgs/needle.svg" stretch="aspectFit" horizontalAlignment="center" margin="30" /> -->
-    <IconButton horizontalAlignment="left" isSelected={updateWithSensor} small={true} text="mdi-rotate-orbit" verticalAlignment="bottom" on:tap={() => (updateWithSensor = !updateWithSensor)} />
+<gesturerootview class={standalone ? 'bottomsheet' : null} height={height + (standalone ? 64 : 0)} rows={standalone ? 'auto,*,auto' : '*,auto'} {...$$restProps}>
+    {#if standalone}
+        <PanelHeader icon="mdi-compass-outline" subtitle={updateWithSensor ? `${Math.round(currentHeading)}° ${cardinal(currentHeading)}` : null} title={lc('compass')}>
+            <Pill icon="mdi-rotate-orbit" label={lc('sensor')} selected={updateWithSensor} on:tap={() => (updateWithSensor = !updateWithSensor)} />
+        </PanelHeader>
+    {/if}
+    <CompassDialView
+        drawInsideGrid={!!moonBearing}
+        onDraw={onCanvasDraw}
+        onDrawBeforeText={onCanvasDrawBeforeText}
+        rotation={updateWithSensor ? -currentHeading : 0}
+        row={standalone ? 1 : 0}
+        bind:canvas />
+    {#if !standalone}
+        <Pill horizontalAlignment="left" icon="mdi-rotate-orbit" selected={updateWithSensor} verticalAlignment="bottom" on:tap={() => (updateWithSensor = !updateWithSensor)} />
+    {/if}
+    <!-- a calibration hint in the design's danger outline -->
     <label
-        backgroundColor="orange"
-        borderRadius="4"
-        color="white"
-        fontSize={10}
+        borderColor={colorError}
+        borderRadius={14}
+        borderWidth={1}
+        color={colorError}
+        fontSize={12}
         horizontalAlignment="center"
-        marginBottom={4}
-        padding={4}
-        row={1}
-        text={lc('calibration_needed')}
-        verticalTextAlignment="center"
-        visibility={updateWithSensor && headingAccuracy >= 2 ? 'visible' : 'hidden'} />
+        margin="0 16 8 16"
+        padding="6 12"
+        row={standalone ? 2 : 1}
+        textWrap={true}
+        visibility={updateWithSensor && headingAccuracy >= 2 ? 'visible' : 'collapse'}>
+        <cspan fontFamily={$fonts.mdi} fontSize={14} text="mdi-rotate-3d-variant " />
+        <cspan text={lc('calibration_needed')} />
+    </label>
 </gesturerootview>

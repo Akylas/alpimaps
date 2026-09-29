@@ -26,7 +26,6 @@
 
     const fontMetrics = labelPaint.getFontMetrics();
     const MAX_NMEA_ID = 336;
-    inactivePaint.setColor('#F44336');
     northPaint.setColor('#F44336');
 
     // ascent is negative, so descent - ascent is the full text height (not getTextSize)
@@ -49,14 +48,19 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { watchingLocation } from '~/stores/mapStore';
     import { TO_RAD } from '~/utils/geo';
+    import { lc } from '~/helpers/locale';
+    import { isEInk } from '~/helpers/theme';
     import CompassDialView from '../compass/CompassDialView.svelte';
+    import PanelHeader from '../common/PanelHeader.svelte';
     let { colorOnSurface, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorOutlineVariant, colorPrimary, colorSurfaceContainer, colorSurfaceContainerHighest } = $colors);
 
-    $: gridPaint.setColor(colorOnSurface);
-    $: gridPaintStrong.setColor(colorOnSurface);
-    $: labelPaint.setColor(colorOnSurface);
-    $: activePaint.setColor(colorPrimary);
+    // the design's hairlines, muted labels; satellites in the fix in the accent, the others grey
+    $: gridPaint.setColor(isEInk ? colorOnSurface : colorHairline);
+    $: gridPaintStrong.setColor(isEInk ? colorOnSurface : colorOutlineSoft);
+    $: labelPaint.setColor(colorOnSurfaceVariant);
+    $: activePaint.setColor(isEInk ? colorOnSurface : colorPrimary);
+    $: inactivePaint.setColor(isEInk ? '#bbb' : colorOutlineSoft);
     export let height: number = 350;
     let canvas: NativeViewElementNode<CanvasView>;
     let canvas2: NativeViewElementNode<CanvasView>;
@@ -74,8 +78,10 @@
     let draw_301_336 = false;
 
     let mSats;
+    let satsSubtitle: string = null;
     function onSatsChange(sats) {
         mSats = sats;
+        satsSubtitle = sats ? lc('satellites_in_use', sats.filter((sat) => sat.usedInFix).length, sats.length) : null;
         if (canvas?.nativeView) {
             canvas.nativeView.invalidate();
             canvas2.nativeView.invalidate();
@@ -391,7 +397,8 @@
     }
 </script>
 
-<gesturerootview class="bottomsheet" {height} rows="*,auto">
-    <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} bind:canvas on:layoutChanged={refreshGeometries} />
-    <canvasview bind:this={canvas2} height={preferredHeight} row={1} on:draw={onCanvasHorizontalDraw} />
+<gesturerootview class="bottomsheet" height={height + 64} rows="auto,*,auto">
+    <PanelHeader icon="mdi-satellite-variant" subtitle={satsSubtitle} title={lc('satellites_view')} />
+    <CompassDialView drawInsideGrid={true} onDraw={onCanvasDraw} row={1} bind:canvas on:layoutChanged={refreshGeometries} />
+    <canvasview bind:this={canvas2} height={preferredHeight} row={2} on:draw={onCanvasHorizontalDraw} />
 </gesturerootview>
