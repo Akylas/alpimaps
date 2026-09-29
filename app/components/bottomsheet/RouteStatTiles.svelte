@@ -1,12 +1,15 @@
 <script lang="ts">
-    // the route's totals as labelled tiles; on the route, each also shows what is left, in the accent
+    // the route's totals as compact tiles, an icon for a label; on the route, each also shows what is
+    // left to the end, behind the finish flag, in the accent
+    import { View } from '@nativescript/core';
     import { onDestroy } from 'svelte';
     import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
-    import { colors } from '~/variables';
+    import { showToolTip } from '~/utils/ui';
+    import { colors, fonts } from '~/variables';
 
     export let item: Item;
 
@@ -48,27 +51,38 @@
         const ascent = hasProfile ? profile.dplus : properties?.ascent;
         const descent = hasProfile ? -profile.dmin : properties?.descent;
         return [
-            distance > 0 && { key: 'distance', label: lc('distance'), value: formatDistance(distance) },
-            route.totalTime > 0 && { key: 'time', label: lc('duration'), value: convertDurationSeconds(route.totalTime) },
-            ascent > 0 && { key: 'ascent', label: lc('ascent'), value: convertElevation(ascent) },
-            descent > 0 && { key: 'descent', label: lc('descent'), value: convertElevation(descent) }
+            distance > 0 && { key: 'distance', icon: 'mdi-arrow-left-right', label: lc('distance'), value: formatDistance(distance) },
+            route.totalTime > 0 && { key: 'time', icon: 'mdi-timer-outline', label: lc('duration'), value: convertDurationSeconds(route.totalTime) },
+            ascent > 0 && { key: 'ascent', icon: 'mdi-arrow-top-right', label: lc('ascent'), value: convertElevation(ascent) },
+            descent > 0 && { key: 'descent', icon: 'mdi-arrow-bottom-right', label: lc('descent'), value: convertElevation(descent) }
         ].filter(Boolean);
     }
     $: tiles = tilesFor(item);
 </script>
 
-<gridlayout columns={tiles.map(() => '*').join(',') || '*'} padding="0 9 0 9" {...$$restProps}>
+<gridlayout columns={tiles.map(() => '*').join(',') || '*'} height={40} padding="0 7" {...$$restProps}>
     {#each tiles as tile, index}
-        <stacklayout backgroundColor={colorSurfaceFill} borderColor={colorHairline} borderRadius={12} borderWidth={isEInk ? 1 : 0} col={index} margin="0 3" padding="6 10">
-            <label color={colorOnSurfaceVariant} fontSize={12} maxLines={1} text={tile.label} />
-            <label color={colorOnSurface} fontSize={16} fontWeight="bold" maxLines={1} text={tile.value} />
-            <label
-                color={isEInk ? colorOnSurface : colorPrimary}
-                fontSize={11}
-                fontWeight="bold"
-                maxLines={1}
-                text={remaining?.[tile.key] ? `${remaining[tile.key]} ${lc('left')}` : ''}
-                visibility={remaining?.[tile.key] ? 'visible' : 'collapse'} />
-        </stacklayout>
+        <gridlayout
+            backgroundColor={colorSurfaceFill}
+            borderColor={colorHairline}
+            borderRadius={10}
+            borderWidth={isEInk ? 1 : 0}
+            col={index}
+            margin="0 3"
+            padding="0 6"
+            rows="*,auto"
+            verticalAlignment="stretch"
+            on:longPress={(event) => event.object instanceof View && showToolTip(tile.label, event.object)}>
+            <canvaslabel fontSize={14} height={18} rowSpan={remaining?.[tile.key] ? 1 : 2} verticalAlignment={remaining?.[tile.key] ? 'bottom' : 'middle'}>
+                <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={tile.icon} verticalAlignment="middle" />
+                <cspan color={colorOnSurface} fontWeight="bold" paddingLeft={17} text={tile.value} verticalAlignment="middle" />
+            </canvaslabel>
+            {#if remaining?.[tile.key]}
+                <canvaslabel fontSize={11} height={15} row={1} verticalAlignment="top">
+                    <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={11} text="mdi-flag-checkered" verticalAlignment="middle" />
+                    <cspan color={isEInk ? colorOnSurface : colorPrimary} fontWeight="bold" paddingLeft={14} text={remaining[tile.key]} verticalAlignment="middle" />
+                </canvaslabel>
+            {/if}
+        </gridlayout>
     {/each}
 </gridlayout>
