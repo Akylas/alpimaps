@@ -47,6 +47,7 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
+    import { CARD_INSET, CARD_PADDING, groupRows } from '~/components/settings/groupedRows';
     import { panelPopoverStyle, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
@@ -1125,14 +1126,15 @@
 <BaseSettingsPage
     bind:this={settingsPage}
     {id}
+    collectionViewProps={{ backgroundColor: $colors.colorCanvas }}
     {getDescription}
     {getTitle}
-    itemProps={{ fontSize: 17, subtitleFontSize: 14 }}
+    itemProps={{ backgroundColor: $colors.colorCard, fontSize: 17, subtitleFontSize: 14, padding: `0 ${CARD_INSET + CARD_PADDING}` }}
     leftIconClass="listIcon"
     {onCheckBox}
     onItemLongPress={onLongPress}
     onItemTap={onTap}
-    optionsProvider={getAvailableOptions}
+    optionsProvider={() => groupRows(getAvailableOptions())}
     {searchEnabled}
     sliderPopoverStyle={panelPopoverStyle($colors)}
     title={title || $slc('settings')}
