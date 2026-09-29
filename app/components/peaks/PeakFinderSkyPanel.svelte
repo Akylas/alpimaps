@@ -5,6 +5,7 @@
     import { formatDate, formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import {
+        peakFinderConstellationArt,
         peakFinderConstellations,
         peakFinderDarkActive,
         peakFinderMoon,
@@ -61,6 +62,13 @@
             small={true}
             store={peakFinderConstellations}
             visibility={$peakFinderStars ? 'visible' : 'collapse'}
+            {...toggleColors} />
+        <PeakFinderSkyToggle
+            icon="mdi-draw"
+            label={lc('constellation_art')}
+            small={true}
+            store={peakFinderConstellationArt}
+            visibility={$peakFinderStars && $peakFinderConstellations ? 'visible' : 'collapse'}
             {...toggleColors} />
         <PeakFinderSkyToggle icon="mdi-orbit" label={lc('planets')} small={true} store={peakFinderPlanets} visibility={$peakFinderStars ? 'visible' : 'collapse'} {...toggleColors} />
     </wraplayout>

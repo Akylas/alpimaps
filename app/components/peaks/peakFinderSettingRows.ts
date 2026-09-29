@@ -4,6 +4,7 @@ import type { SettingsStore } from '~/stores/settingsStore';
 import {
     peakFinderArHorizonBoost,
     peakFinderArOutlineWidth,
+    peakFinderConstellationArt,
     peakFinderConstellations,
     peakFinderDark,
     peakFinderDetailFeatures,
@@ -100,6 +101,7 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
         { type: 'switch', store: peakFinderMoon, title: lc('moon_path'), description: lc('moon_path_desc') },
         { type: 'switch', store: peakFinderStars, title: lc('stars'), description: lc('stars_desc') },
         { type: 'switch', store: peakFinderConstellations, title: lc('constellations'), description: lc('constellations_desc') },
+        { type: 'switch', store: peakFinderConstellationArt, title: lc('constellation_art'), description: lc('constellation_art_desc') },
         { type: 'switch', store: peakFinderPlanets, title: lc('planets'), description: lc('planets_desc') },
         { type: 'switch', store: peakFinderStarsLabelsOnSummits, title: lc('stars_labels_on_summits'), description: lc('stars_labels_on_summits_desc') },
 

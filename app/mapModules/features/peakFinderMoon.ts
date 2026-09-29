@@ -1,9 +1,19 @@
-import type { MassifLayer, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifObject } from '@nativescript-community/ui-massifmaps/api';
 import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import { ImageSource, Screen, path as filePath, knownFolders } from '@nativescript/core';
 import { getMoonIllumination, getMoonPosition } from 'suncalc';
 import { lc } from '~/helpers/locale';
-import { type PeakFinderSkyContext, addTo, celestialLifecycle, clearSkySelection, colour, listenToSkyClicks, refreshSkySelection, skyMoment } from '~/mapModules/features/peakFinderCelestial';
+import {
+    type PeakFinderSkyContext,
+    type SkyClicks,
+    addTo,
+    celestialLifecycle,
+    clearSkySelection,
+    colour,
+    listenToSkyClicks,
+    refreshSkySelection,
+    skyMoment
+} from '~/mapModules/features/peakFinderCelestial';
 import { sunPositionAt } from '~/mapModules/features/peakFinderSun';
 import { direction } from '~/mapModules/features/sky/astronomy';
 import { MOON_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
@@ -25,7 +35,7 @@ let disc: MassifObject<'massif::CelestialSprite'> = null;
 let dayKey = '';
 let bitmapKey = '';
 let styledDark: boolean = null;
-let clickSubscription: Subscription = null;
+let clickSubscription: SkyClicks = null;
 let generation = 0;
 
 function moonPositionAt(time: number, eye: MapPos) {

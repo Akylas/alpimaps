@@ -372,6 +372,8 @@ export const peakFinderMoon = settingsStore('peakFinderMoon', true);
 export const peakFinderSunHours = settingsStore('peakFinderSunHours', false);
 export const peakFinderStars = settingsStore('peakFinderStars', false);
 export const peakFinderConstellations = settingsStore('peakFinderConstellations', true);
+/** Stellarium's artwork behind every figure; the selected one shows its own either way. */
+export const peakFinderConstellationArt = settingsStore('peakFinderConstellationArt', false);
 export const peakFinderPlanets = settingsStore('peakFinderPlanets', true);
 /** With the stars on, forces the `skyline` layout: a row pinned at the top would sit in the sky. */
 export const peakFinderStarsLabelsOnSummits = settingsStore('peakFinderStarsLabelsOnSummits', true);
