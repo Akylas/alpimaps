@@ -26,6 +26,7 @@
         peakFinderMinElevation,
         peakFinderSelectedPeak,
         peakFinderSelectedSky,
+        peakFinderSelectedSkyPass,
         peakFinderSkyPanel
     } from '~/stores/terrainStore';
     import { clearInterval, setInterval } from '~/utils/utils';
@@ -180,16 +181,18 @@
             borderRadius={22}
             borderWidth={1}
             columns="auto,*,auto"
-            height={54}
             horizontalAlignment="center"
             marginBottom={8}
+            minHeight={54}
             padding="4 4 4 14"
+            rows="auto"
             visibility={$peakFinderSelectedSky ? 'visible' : 'collapse'}
             width={Math.min(skyPanelWidth, 340)}>
             <label color={skyAccent} fontFamily={$fonts.mdi} fontSize={20} text="mdi-star-four-points" verticalAlignment="middle" />
             <stacklayout col={1} paddingLeft={10} verticalAlignment="middle">
                 <label color={colorOnSurface} fontSize={15} fontWeight="bold" maxLines={1} text={$peakFinderSelectedSky?.name ?? ''} />
                 <label color={colorOnSurface + 'b3'} fontSize={12} maxLines={1} text={$peakFinderSelectedSky?.detail ?? ''} visibility={$peakFinderSelectedSky?.detail ? 'visible' : 'collapse'} />
+                <label color={colorOnSurface + 'b3'} fontSize={12} maxLines={1} text={$peakFinderSelectedSkyPass ?? ''} visibility={$peakFinderSelectedSkyPass ? 'visible' : 'collapse'} />
             </stacklayout>
             <mdbutton
                 col={2}

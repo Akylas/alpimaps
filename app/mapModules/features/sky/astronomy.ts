@@ -106,15 +106,63 @@ function heliocentric(planet: number, n: number): [number, number, number] {
     return [xPlane * cosNode - yPlane * cosInclination * sinNode, xPlane * sinNode + yPlane * cosInclination * cosNode, yPlane * Math.sin(inclination)];
 }
 
-/** A planet, by its index in the catalogue's `PLANETS`. Light time and aberration ignored. */
-export function planetHorizon(planet: number, n: number, lat: number, lon: number): Horizontal {
+/** A planet, by its index in the catalogue's `PLANETS`, as seen from Earth; `distance` in au. Light time and aberration ignored. */
+export function planetEquatorial(planet: number, n: number) {
     const body = heliocentric(planet, n);
     const earth = heliocentric(EARTH, n);
     const x = body[0] - earth[0];
     const y = body[1] - earth[1];
     const z = body[2] - earth[2];
-    const { declination, rightAscension } = eclipticToEquatorial(Math.atan2(y, x) * TO_DEGREES, Math.atan2(z, Math.hypot(x, y)) * TO_DEGREES, n);
+    return { ...eclipticToEquatorial(Math.atan2(y, x) * TO_DEGREES, Math.atan2(z, Math.hypot(x, y)) * TO_DEGREES, n), distance: Math.hypot(x, y, z) };
+}
+
+export function planetHorizon(planet: number, n: number, lat: number, lon: number): Horizontal {
+    const { declination, rightAscension } = planetEquatorial(planet, n);
     return toHorizon(rightAscension, declination, n, lat, lon);
+}
+
+// A point's rise and set: the horizon lifted by refraction.
+const RISE_ALTITUDE = -0.5667;
+const SIDEREAL_DEGREES_PER_DAY = 360.98564736629;
+
+/** ms since the epoch; 'always' and 'never' when it does not cross the horizon that day. */
+export type Pass = { rise: number; set: number } | 'always' | 'never';
+
+/** The rise and set of the pass under way at `time`, else of the next one. */
+export function fixedPass(rightAscensionDegrees: number, declination: number, time: number, lat: number, lon: number): Pass {
+    const latitude = lat * TO_RADIANS;
+    const decl = declination * TO_RADIANS;
+    const cosHalfArc = (Math.sin(RISE_ALTITUDE * TO_RADIANS) - Math.sin(latitude) * Math.sin(decl)) / (Math.cos(latitude) * Math.cos(decl));
+    if (cosHalfArc < -1) {
+        return 'always';
+    }
+    if (cosHalfArc > 1) {
+        return 'never';
+    }
+    const halfArc = Math.acos(cosHalfArc) * TO_DEGREES;
+    const msPerDegree = MS_PER_DAY / SIDEREAL_DEGREES_PER_DAY;
+    // Hour angle turned since it rose: up while under the arc.
+    const sinceRise = normalizeDegrees(gmstDegrees(daysSinceJ2000(time)) + lon - rightAscensionDegrees + halfArc);
+    const rise = sinceRise < 2 * halfArc ? time - sinceRise * msPerDegree : time + (360 - sinceRise) * msPerDegree;
+    return { rise, set: rise + 2 * halfArc * msPerDegree };
+}
+
+/** As `fixedPass`, each end re-solved where the planet is by then. */
+export function planetPass(planet: number, time: number, lat: number, lon: number): Pass {
+    const passAt = (moment: number) => {
+        const { declination, rightAscension } = planetEquatorial(planet, daysSinceJ2000(moment));
+        return fixedPass(rightAscension, declination, time, lat, lon);
+    };
+    let pass = passAt(time);
+    for (let iteration = 0; iteration < 2 && typeof pass === 'object'; iteration++) {
+        const atRise = passAt(pass.rise);
+        const atSet = passAt(pass.set);
+        if (typeof atRise !== 'object' || typeof atSet !== 'object') {
+            break;
+        }
+        pass = { rise: atRise.rise, set: atSet.set };
+    }
+    return pass;
 }
 
 /** East, north, up. */
