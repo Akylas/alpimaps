@@ -1108,6 +1108,8 @@
     "constellation": "constellation",
     "constellations": "constellations",
     "constellations_desc": "the constellation figures and their names, with the stars",
+    "constellation_art": "artwork",
+    "constellation_art_desc": "Stellarium's drawings behind every figure, downloaded once; a tapped figure always shows its own",
     "planet": "planet",
     "planets": "planets",
     "planets_desc": "the five naked-eye planets, with the stars",

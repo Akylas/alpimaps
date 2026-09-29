@@ -1,4 +1,4 @@
-import type { MassifLayer, MassifMap, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
+import type { MassifLayer, MassifMap, MassifObject } from '@nativescript-community/ui-massifmaps/api';
 import { Canvas, Paint, Style } from '@nativescript-community/ui-canvas';
 import { Color, ImageSource, Screen, path as filePath, knownFolders } from '@nativescript/core';
 import { type Readable, get } from 'svelte/store';
@@ -14,6 +14,8 @@ export interface PeakFinderSkyContext {
     /** Where the eye stands, or null before the camera is placed. */
     eye: () => MapPos | null;
     dark: () => boolean;
+    /** The vertical field over the view's height: turns a touch size in dp into the angle a click radius takes. */
+    degreesPerDp: () => number;
 }
 
 export function colour(red: number, green: number, blue: number, alpha = 1) {
@@ -99,9 +101,13 @@ let locateSelected: () => Horizontal | null = null;
 let passOfSelected: () => string | null = null;
 let ringGeneration = 0;
 
+export interface SkyClicks {
+    remove(): void;
+}
+
 // objects carry `metaData.id`; `resolve` maps it to the chip content and a locator as the sky turns
-export function listenToSkyClicks(layer: MassifLayer, resolve: SkyResolver): Subscription {
-    return layer.onCelestialClick((event) => {
+export function listenToSkyClicks(layer: MassifLayer, resolve: SkyResolver): SkyClicks {
+    const objectClicks = layer.onCelestialClick((event) => {
         const metaData = event.get('celestialObject.metaData') as { [key: string]: unknown };
         const id = metaData?.id;
         const found = typeof id === 'string' ? resolve(id) : null;
@@ -115,6 +121,17 @@ export function listenToSkyClicks(layer: MassifLayer, resolve: SkyResolver): Sub
         peakFinderSelectedSky.set(found.selected);
         refreshSkySelection();
     });
+    // A tap on empty sky misses the ground, so the map's own click (which deselects) never fires.
+    const skyClicks = layer.onSkyClick(() => {
+        peakFinderSelectedPeak.set(null);
+        clearSkySelection();
+    });
+    return {
+        remove() {
+            objectClicks.remove();
+            skyClicks.remove();
+        }
+    };
 }
 
 function ringBitmapUrl(dark: boolean) {

@@ -546,6 +546,281 @@ export const FIGURES: CatalogueFigure[] = [
     }
 ];
 
+/**
+ * Stellarium's "modern" sky culture artwork (Johan Meuris, Free Art License; data CC BY-SA 4.0), by
+ * figure name: the file under skycultures/modern/illustrations, its pixel size, and three anchors
+ * [x, y, ra, dec] - a pixel from the top left, pinned to its Hipparcos star. Vela has none.
+ */
+export interface FigureArt {
+    file: string;
+    size: [number, number];
+    anchors: [number, number, number, number][];
+}
+
+export const FIGURE_ART: { [name: string]: FigureArt } = {
+    Orion: {
+        file: 'orion.png',
+        size: [512, 512],
+        anchors: [
+            [59, 11, 5.9064, 20.2764],
+            [329, 477, 5.7959, -9.6696],
+            [421, 91, 4.8306, 6.9612]
+        ]
+    },
+    'Ursa Major': {
+        file: 'ursa-major.png',
+        size: [512, 512],
+        anchors: [
+            [26, 75, 13.7924, 49.3133],
+            [452, 272, 8.5045, 60.7184],
+            [258, 394, 10.285, 42.9145]
+        ]
+    },
+    'Ursa Minor': {
+        file: 'ursa-minor.png',
+        size: [256, 256],
+        anchors: [
+            [15, 20, 2.5297, 89.2641],
+            [193, 51, 12.2033, 77.6162],
+            [93, 209, 16.2918, 75.7547]
+        ]
+    },
+    Cassiopeia: {
+        file: 'cassiopeia.png',
+        size: [512, 512],
+        anchors: [
+            [390, 336, 1.9066, 63.6701],
+            [163, 156, 0.6751, 56.5374],
+            [73, 243, 0.1528, 59.1502]
+        ]
+    },
+    Cygnus: {
+        file: 'cygnus.png',
+        size: [512, 512],
+        anchors: [
+            [7, 382, 21.7357, 28.7432],
+            [474, 46, 19.285, 53.3682],
+            [467, 453, 19.512, 27.9597]
+        ]
+    },
+    Lyra: {
+        file: 'lyra.png',
+        size: [256, 256],
+        anchors: [
+            [100, 96, 18.9084, 36.8986],
+            [157, 38, 18.6156, 38.783],
+            [139, 162, 18.8347, 33.3627]
+        ]
+    },
+    Aquila: {
+        file: 'aquila.png',
+        size: [512, 512],
+        anchors: [
+            [163, 232, 19.8463, 8.8674],
+            [385, 131, 18.9937, 15.0685],
+            [397, 397, 19.1042, -4.8823]
+        ]
+    },
+    Scorpius: {
+        file: 'scorpius.png',
+        size: [512, 512],
+        anchors: [
+            [447, 29, 16.0906, -19.8054],
+            [62, 365, 17.5601, -37.1037],
+            [217, 462, 16.9098, -42.3608]
+        ]
+    },
+    Sagittarius: {
+        file: 'sagittarius.png',
+        size: [512, 512],
+        anchors: [
+            [96, 82, 19.3612, -17.8473],
+            [307, 492, 19.387, -44.7996],
+            [506, 100, 17.7927, -27.8308]
+        ]
+    },
+    Leo: {
+        file: 'leo.png',
+        size: [512, 512],
+        anchors: [
+            [69, 411, 11.8177, 14.5723],
+            [383, 186, 10.1396, 11.9672],
+            [321, 32, 9.7642, 23.7743]
+        ]
+    },
+    Taurus: {
+        file: 'taurus.png',
+        size: [512, 512],
+        anchors: [
+            [13, 92, 5.6274, 21.1426],
+            [399, 438, 3.4136, 9.0291],
+            [382, 192, 3.8479, 23.9616]
+        ]
+    },
+    Gemini: {
+        file: 'gemini.png',
+        size: [256, 256],
+        anchors: [
+            [14, 81, 7.7408, 24.3981],
+            [117, 252, 6.7548, 12.8961],
+            [249, 165, 6.0687, 23.2636]
+        ]
+    },
+    'Canis Major': {
+        file: 'canis-major.png',
+        size: [512, 512],
+        anchors: [
+            [21, 347, 7.4016, -29.3031],
+            [321, 24, 6.9032, -12.0386],
+            [318, 492, 6.3386, -30.0634]
+        ]
+    },
+    Bootes: {
+        file: 'bootes.png',
+        size: [512, 512],
+        anchors: [
+            [225, 222, 14.7498, 27.0742],
+            [365, 184, 14.5347, 38.3079],
+            [207, 401, 13.9114, 18.3986]
+        ]
+    },
+    Crux: {
+        file: 'crux.png',
+        size: [128, 128],
+        anchors: [
+            [112, 21, 12.5194, -57.1126],
+            [42, 20, 12.7954, -59.6887],
+            [21, 106, 12.4433, -63.0991]
+        ]
+    },
+    Centaurus: {
+        file: 'centaurus.png',
+        size: [512, 512],
+        anchors: [
+            [118, 157, 14.1115, -36.3687],
+            [194, 444, 14.6614, -60.8351],
+            [463, 412, 11.5964, -63.0198]
+        ]
+    },
+    Pegasus: {
+        file: 'pegasus.png',
+        size: [512, 512],
+        anchors: [
+            [164, 41, 21.7364, 9.875],
+            [47, 283, 22.1665, 33.1783],
+            [409, 349, 0.2206, 15.1836]
+        ]
+    },
+    Andromeda: {
+        file: 'andromeda.png',
+        size: [512, 512],
+        anchors: [
+            [198, 215, 0.8302, 41.079],
+            [337, 136, 0.6554, 30.8612],
+            [224, 428, 2.065, 42.3298]
+        ]
+    },
+    Auriga: {
+        file: 'auriga.png',
+        size: [512, 512],
+        anchors: [
+            [196, 189, 5.9953, 37.2128],
+            [419, 208, 5.2781, 45.999],
+            [290, 423, 4.9499, 33.1661]
+        ]
+    },
+    Perseus: {
+        file: 'perseus.png',
+        size: [512, 512],
+        anchors: [
+            [164, 323, 3.9642, 40.0103],
+            [299, 175, 3.4054, 49.8612],
+            [385, 386, 2.843, 38.3189]
+        ]
+    },
+    Virgo: {
+        file: 'virgo.png',
+        size: [512, 512],
+        anchors: [
+            [65, 389, 14.7708, 1.8929],
+            [454, 57, 11.7643, 6.5298],
+            [338, 382, 13.4199, -11.1612]
+        ]
+    },
+    Aries: {
+        file: 'aries.png',
+        size: [256, 256],
+        anchors: [
+            [12, 130, 2.8331, 27.2608],
+            [58, 206, 2.9869, 21.3404],
+            [210, 47, 1.8922, 19.2941]
+        ]
+    },
+    Cepheus: {
+        file: 'cepheus.png',
+        size: [512, 512],
+        anchors: [
+            [60, 335, 23.6558, 77.632],
+            [125, 170, 21.4777, 70.5607],
+            [335, 147, 22.1809, 58.2012]
+        ]
+    },
+    Draco: {
+        file: 'draco.png',
+        size: [512, 512],
+        anchors: [
+            [13, 411, 11.5234, 69.3311],
+            [361, 154, 17.5072, 52.3014],
+            [449, 429, 19.8028, 70.2678]
+        ]
+    },
+    'Corona Borealis': {
+        file: 'corona-borealis.png',
+        size: [256, 256],
+        anchors: [
+            [16, 186, 16.0241, 29.8511],
+            [201, 203, 15.7124, 26.2955],
+            [157, 20, 15.5488, 31.3592]
+        ]
+    },
+    'Canis Minor': {
+        file: 'canis-minor.png',
+        size: [256, 256],
+        anchors: [
+            [96, 43, 7.7712, 10.7683],
+            [101, 171, 7.6551, 5.2275],
+            [184, 124, 7.4525, 8.2894]
+        ]
+    },
+    Ophiuchus: {
+        file: 'ophiuchus.png',
+        size: [512, 512],
+        anchors: [
+            [5, 183, 18.937, 4.2035],
+            [452, 47, 15.7698, 15.4219],
+            [238, 453, 17.5236, -23.9626]
+        ]
+    },
+    Libra: {
+        file: 'libra.png',
+        size: [256, 256],
+        anchors: [
+            [41, 27, 15.2835, -9.3829],
+            [58, 170, 15.8971, -16.7296],
+            [224, 107, 15.0679, -25.2819]
+        ]
+    },
+    Carina: {
+        file: 'argonavis.png',
+        size: [512, 512],
+        anchors: [
+            [202, 455, 9.2201, -69.7175],
+            [62, 216, 10.2456, -42.1221],
+            [298, 22, 8.1258, -24.3044]
+        ]
+    }
+};
+
 /** In the order of `PLANET_ELEMENTS` in astronomy.ts. */
 export const PLANETS: CataloguePlanet[] = [
     { key: 'mercury', wikidata: 'Q308', colour: [220, 220, 230] },

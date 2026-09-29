@@ -23,6 +23,10 @@
             moduleUrl: 'https://valhalla1.openstreetmap.de'
         },
         {
+            moduleName: 'Stellarium constellation art (Johan Meuris, Free Art License) and figures (CC BY-SA 4.0)',
+            moduleUrl: 'https://github.com/Stellarium/stellarium/tree/master/skycultures/modern'
+        },
+        {
             moduleName: 'NativeScript',
             moduleUrl: 'https://github.com/NativeScript/NativeScript'
         }
