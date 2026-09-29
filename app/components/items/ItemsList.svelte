@@ -794,8 +794,10 @@ LEFT JOIN  (
             // the profile, as a badge on the thumbnail's corner, the design's primary tile
             const paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
             const paddingTop = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingTop);
-            const centerX = paddingLeft + 58;
-            const centerY = paddingTop + (canvas.getHeight() - paddingTop) / 2 + 26;
+            const paddingBottom = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingBottom);
+            // on the thumbnail's bottom right corner, clear of the card's rounded edge
+            const centerX = paddingLeft + 54;
+            const centerY = paddingTop + (canvas.getHeight() - paddingTop - paddingBottom) / 2 + 20;
             circlePaint.setAlpha(255);
             circlePaint.color = colorCard;
             canvas.drawCircle(centerX, centerY, 15, circlePaint);
@@ -896,8 +898,10 @@ LEFT JOIN  (
                     iconTile={true}
                     {item}
                     margin="4 12 4 12"
+                    marginBottom={24}
                     marginLeft={62}
                     opacity={item.onMap || 0.6}
+                    propsBottom={24}
                     rightTextPadding={item.onMap === 0 ? 88 : 40}
                     rippleColor={colorPrimary}
                     selectable={false}
