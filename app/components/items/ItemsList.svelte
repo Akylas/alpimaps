@@ -334,13 +334,19 @@ LEFT JOIN  (
             itemsModule.showItem(item);
             item.onMap = 1;
         }
-        item.onMap = item.onMap ? 0 : 1;
         const index = items.indexOf(item);
         if (index !== -1) {
             items.setItem(index, item);
         }
         // setMenuVisible(item, false);
         showSnack({ message: item.onMap ? lc('item_now_visible') : lc('item_now_hidden') });
+    }
+
+    // the row gets the tap too and would open the item
+    function showItemOnMapAfterTap(item: Item) {
+        ignoreTap = true;
+        setTimeout(() => (ignoreTap = false), 300);
+        showItemOnMap(item);
     }
 
     function startEditingItem(item: Item) {
@@ -682,7 +688,7 @@ LEFT JOIN  (
         }
         const nString = createNativeAttributedString({ spans });
         // propsPaint.setTextAlign(Align.LEFT);
-        groupPaint.color = colorOnSurface;
+        groupPaint.color = item.onMap === 0 ? colorOnSurfaceVariant : colorOnSurface;
         const staticLayout = new StaticLayout(nString, groupPaint, canvas.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
         // canvas.save();
         // canvas.translate(0, h - staticLayout.getHeight());
@@ -711,7 +717,7 @@ LEFT JOIN  (
                     id: 'share'
                 },
                 {
-                    color: 'red',
+                    color: colorError,
                     icon: 'mdi-delete',
                     name: lc('delete'),
                     id: 'delete'
@@ -826,7 +832,7 @@ LEFT JOIN  (
                     padding="4 0 2 10"
                     propsBottom={20 * $fontScale}
                     propsLeft={60}
-                    rightTextPadding={40}
+                    rightTextPadding={item.onMap === 0 ? 88 : 40}
                     rippleColor={colorPrimary}
                     selectable={false}
                     showIcon={false}
@@ -837,7 +843,11 @@ LEFT JOIN  (
                     <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
                     <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
                     <SelectedIndicator selected={item.selected} />
-                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <!-- a hidden item says so, and shows again in one tap -->
+                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="top">
+                        <IconButton gray={true} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
+                        <IconButton gray={true} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    </stacklayout>
                 </BottomSheetInfoView>
             </Template>
             <Template let:item>
@@ -847,15 +857,23 @@ LEFT JOIN  (
                     borderRadius={20}
                     borderWidth={1}
                     height={80}
+                    iconLeft={30}
+                    iconTile={true}
                     {item}
                     margin="4 12 4 12"
+                    marginLeft={62}
                     opacity={item.onMap || 0.6}
+                    rightTextPadding={item.onMap === 0 ? 88 : 40}
                     rippleColor={colorPrimary}
                     selectable={false}
                     on:tap={(e) => onItemTap(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
                     <SelectedIndicator selected={item.selected} />
-                    <IconButton slot="above" gray={true} horizontalAlignment="right" text="mdi-dots-vertical" verticalAlignment="top" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    <!-- a hidden item says so, and shows again in one tap -->
+                    <stacklayout slot="above" horizontalAlignment="right" orientation="horizontal" verticalAlignment="top">
+                        <IconButton gray={true} isVisible={item.onMap === 0} text="mdi-eye-off-outline" tooltip={lc('show')} on:tap={() => showItemOnMapAfterTap(item)} />
+                        <IconButton gray={true} text="mdi-dots-vertical" on:tap={(e) => showItemMoreMenu(item, e)} />
+                    </stacklayout>
                 </BottomSheetInfoView>
             </Template>
         </collectionview>

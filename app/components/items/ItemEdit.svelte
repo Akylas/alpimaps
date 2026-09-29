@@ -21,10 +21,11 @@
     import { toBounds } from '~/utils/geo';
     import { Item } from '~/models/Item';
     import { showSliderPopover } from '~/utils/ui';
+    import Pill from '~/components/common/Pill.svelte';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
 
-    $: ({ colorBackground, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorHairline, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -170,7 +171,13 @@
                     }
                     extent = JSON.parse(extent as any);
                 }
-                camera.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], { screen, integerZoom: true, resetRotation: true });
+                camera.fitBounds(
+                    [
+                        [extent[0], extent[1]],
+                        [extent[2], extent[3]]
+                    ],
+                    { screen, integerZoom: true, resetRotation: true }
+                );
             }
         } else {
             const geometry = item.geometry as GeoJSONPoint;
@@ -531,18 +538,15 @@
             </stacklayout>
         </scrollview> -->
 
-        <gridlayout columns="*,*" marginBottom={5} row={4}>
-            <mdbutton isEnabled={canSave} text={lc('save')} verticalAlignment="center" on:tap={(e) => updateItem()} />
-            <mdbutton
-                col={1}
-                text={lc('cancel')}
-                variant="text"
-                verticalAlignment="center"
-                on:tap={(e) => {
+        <gridlayout borderColor={colorHairline} borderTopWidth={1} columns="*,*" padding="4 9" row={4}>
+            <Pill
+                label={lc('cancel')}
+                on:tap={() => {
                     updatedProperties = {};
                     refreshItems();
                     updatePreview(false);
                 }} />
+            <Pill col={1} isEnabled={canSave} label={lc('save')} opacity={canSave ? 1 : 0.4} primary={true} on:tap={() => updateItem()} />
         </gridlayout>
     </gridlayout>
 </page>
