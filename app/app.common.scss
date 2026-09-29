@@ -217,7 +217,7 @@ label {
 .floating-btn {
     @extend %mdi;
     shape: round;
-    elevation: 2;
+    elevation: 0;
     border-width: 1;
     border-color: var(--colorHairline);
     font-size: 24;
@@ -236,8 +236,8 @@ label {
     @extend %mdi;
     @extend .buttontext;
     shape: round;
-    elevation: 2;
-    dynamic-elevation-offset: 2;
+    elevation: 0;
+    dynamic-elevation-offset: 0;
     border-width: 1;
     border-color: var(--colorHairline);
     font-size: 22;

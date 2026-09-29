@@ -2033,6 +2033,7 @@
                 bind:this={bottomSheetInner}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
+                sheetWidth={isLandscape ? Math.max(screenWidthDips / 2, 400) : screenWidthDips}
                 updating={itemLoading}
                 width={isLandscape ? Math.max(screenWidthDips / 2, 400) : '100%'}
                 bind:navigationInstructions

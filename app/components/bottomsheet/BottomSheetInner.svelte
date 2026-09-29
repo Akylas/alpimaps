@@ -10,7 +10,7 @@
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Application, ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { debounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
@@ -61,13 +61,38 @@
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
-    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
     // the chart's height includes the band its selected point strip lives in
     const PROFILE_HEIGHT = 215;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 86;
-    const STAT_TILES_HEIGHT = 64;
+    const STAT_TILES_HEIGHT = 80;
+    const CARD_RADIUS = 20;
+    const CARD_MARGIN = 6;
+    /** the space above each card after the first, part of its row so the steps stay exact */
+    const CARD_GAP = 6;
+    // what a pill takes in the row, to fit as many as the width allows and move the rest to "…"
+    const PILL_ICON_WIDTH = 54;
+    const PILL_CHAR_WIDTH = 8;
+    function pillWidth(action) {
+        const label = PILL_LABELS[action.id]?.();
+        return PILL_ICON_WIDTH + (label ? label.length * PILL_CHAR_WIDTH + 6 : 0);
+    }
+    function splitActions(actions: typeof itemActions, width: number) {
+        const budget = width - CARD_MARGIN * 2 - 12;
+        let used = 0;
+        const visible = [];
+        for (let index = 0; index < actions.length; index++) {
+            const needed = pillWidth(actions[index]) + (index < actions.length - 1 ? PILL_ICON_WIDTH : 0);
+            if (used + needed > budget) {
+                return { visible, overflow: actions.slice(index) };
+            }
+            used += pillWidth(actions[index]);
+            visible.push(actions[index]);
+        }
+        return { visible, overflow: [] };
+    }
     // the few actions worth a word; the rest are icon pills, their tooltip on long press
     const PILL_LABELS: Record<string, () => string> = {
         navigate: () => lc('start'),
@@ -75,7 +100,7 @@
         edit: () => lc('edit'),
         share: () => lc('share')
     };
-    const ACTIONS_HEIGHT = 56;
+    const ACTIONS_HEIGHT = 58;
     function headerHeight(it: Item) {
         return INFOVIEW_HEIGHT + (it?.route ? STAT_TILES_HEIGHT : 0);
     }
@@ -348,6 +373,34 @@
         .filter((action) => action.when)
         .concat(featureItemActions(item) as any)
         .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+    $: ({ overflow: overflowActions, visible: visibleActions } = splitActions(itemActions, sheetWidth));
+
+    function runAction(action, event) {
+        return (action['onTap'] ?? actionHandlers[action.id]?.tap)?.(event);
+    }
+    function longPressAction(action, event) {
+        const handler = action['onLongPress'] ?? actionHandlers[action.id]?.long;
+        return handler ? handler(event) : showToolTip(action.tooltip);
+    }
+    async function showOverflowActions(event) {
+        try {
+            await showPopoverMenu({
+                options: overflowActions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                props: { autoSizeListItem: true },
+                onClose: (option) => {
+                    const action = overflowActions.find((candidate) => candidate.id === option.id);
+                    if (action) {
+                        runAction(action, event);
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
     $: if ($isNavigating && $navigationProgress && graphAvailable) {
         highlightChartFromProgress($navigationProgress);
@@ -445,6 +498,8 @@
     // let webViewHeight = 0;
     // let listViewAvailable = false;
     // const listViewVisible = false;
+    /** the sheet's width, landscape is narrower than the screen */
+    export let sheetWidth = screenWidthDips;
     export let steps;
     export let navigationInstructions: {
         remainingDistance: number;
@@ -1036,29 +1091,23 @@
     }
 </script>
 
-<!-- one sheet with the sky panel's hairline, its sections set apart by spacing rather than cards -->
-<gridlayout
-    id="bottomSheetInner"
-    backgroundColor={colorBackground}
-    borderColor={colorHairline}
-    borderTopLeftRadius={24}
-    borderTopRightRadius={24}
-    borderWidth={1}
-    {...$$restProps}
-    rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`}
-    on:tap={() => {}}>
+<!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
+<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
-            borderTopLeftRadius={24}
-            borderTopRightRadius={24}
+            backgroundColor={colorPanel}
+            borderColor={colorHairline}
+            borderRadius={CARD_RADIUS}
+            borderWidth={1}
             closeAnimationDuration={100}
-            height={headerHeight(item)}
+            height={headerHeight(item) - CARD_GAP}
             leftSwipeDistance={0}
+            margin={`0 ${CARD_MARGIN}`}
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorBackground} rows={`${INFOVIEW_HEIGHT},auto`}>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${INFOVIEW_HEIGHT},auto`}>
                 <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginLeft={62} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0} showStats={!itemIsRoute}>
                     <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                 </BottomSheetInfoView>
@@ -1099,32 +1148,46 @@
             </stacklayout>
         </swipemenu>
 
-        <scrollview colSpan={2} orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
-            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding="0 9" verticalAlignment="middle">
-                {#each itemActions as action (action.id)}
+        <gridlayout class="panel" borderRadius={CARD_RADIUS} colSpan={2} margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`} row={1}>
+            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding="0 6" verticalAlignment="middle">
+                {#each visibleActions as action (action.id)}
                     <Pill
                         id={action.id}
                         icon={action.text}
                         label={PILL_LABELS[action.id]?.()}
                         primary={action.id === 'navigate'}
-                        on:tap={(event) => (action['onTap'] ?? actionHandlers[action.id]?.tap)?.(event)}
-                        on:longPress={(event) => (action['onLongPress'] ?? actionHandlers[action.id]?.long ?? (() => showToolTip(action.tooltip)))(event)} />
+                        on:tap={(event) => runAction(action, event)}
+                        on:longPress={(event) => longPressAction(action, event)} />
                 {/each}
+                {#if overflowActions.length}
+                    <Pill icon="mdi-dots-horizontal" on:tap={showOverflowActions} />
+                {/if}
             </stacklayout>
-        </scrollview>
+        </gridlayout>
         <ElevationChart
             bind:this={elevationChart}
+            class="panel"
+            borderRadius={CARD_RADIUS}
             {chartShowWaypoints}
             colSpan={2}
             infoStrip={true}
             {item}
-            margin="0 8"
+            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+            padding="0 6 4 6"
             row={2}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors}
             visibility={graphAvailable ? 'visible' : 'collapse'}
             on:highlight={onChartHighlight} />
-        <RouteStatsView bind:this={statsView} colSpan={2} {item} margin="0 8" row={3} visibility={statsAvailable ? 'visible' : 'collapse'} />
+        <RouteStatsView
+            bind:this={statsView}
+            class="panel"
+            borderRadius={CARD_RADIUS}
+            colSpan={2}
+            {item}
+            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+            row={3}
+            visibility={statsAvailable ? 'visible' : 'collapse'} />
 
         <!-- <AWebView
             row={3}
