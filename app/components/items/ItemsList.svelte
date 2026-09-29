@@ -40,7 +40,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorCanvas, colorCard, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     $: ({ bottom: windowInsetBottom, keyboard: keyboardInset } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -788,6 +788,7 @@ LEFT JOIN  (
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*">
         <collectionview
             bind:this={collectionView}
+            backgroundColor={colorCanvas}
             itemTemplateSelector={(item) => item.type || (!!item.route ? 'route' : 'default')}
             {items}
             row={1}
@@ -819,7 +820,7 @@ LEFT JOIN  (
             </Template>
             <Template key="route" let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorPanel}
+                    backgroundColor={colorCard}
                     borderColor={colorHairline}
                     borderRadius={20}
                     borderWidth={1}
@@ -852,7 +853,7 @@ LEFT JOIN  (
             </Template>
             <Template let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorPanel}
+                    backgroundColor={colorCard}
                     borderColor={colorHairline}
                     borderRadius={20}
                     borderWidth={1}
