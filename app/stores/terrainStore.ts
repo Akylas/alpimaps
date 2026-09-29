@@ -390,6 +390,8 @@ export interface SelectedSky {
     wikidata?: string;
 }
 export const peakFinderSelectedSky = writable<SelectedSky>(null);
+/** The selected object's rise and set around the sky moment, as the chip shows them. */
+export const peakFinderSelectedSkyPass = writable<string>(null);
 
 /** The range every tilted mode, and every flight into or out of one, needs. */
 export const TILTED_RANGE: [number, number] = [1, 90];
