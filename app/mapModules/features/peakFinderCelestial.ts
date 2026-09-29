@@ -5,7 +5,7 @@ import { type Readable, get } from 'svelte/store';
 import { langStore } from '~/helpers/locale';
 import type { Horizontal } from '~/mapModules/features/sky/astronomy';
 import { networkService } from '~/services/NetworkService';
-import { type SelectedSky, peakFinderSelectedPeak, peakFinderSelectedSky, peakFinderSkyTime } from '~/stores/terrainStore';
+import { type SelectedSky, peakFinderSelectedPeak, peakFinderSelectedSky, peakFinderSelectedSkyPass, peakFinderSkyTime } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
 import { openURL } from '~/utils/ui/index.common';
 
@@ -89,13 +89,14 @@ export function celestialLifecycle(body: CelestialBody) {
     return { setup, teardown };
 }
 
-type SkyResolver = (id: string) => { selected: SelectedSky; locate: () => Horizontal | null } | null;
+type SkyResolver = (id: string) => { selected: SelectedSky; locate: () => Horizontal | null; pass?: () => string | null } | null;
 
 let selectionContext: PeakFinderSkyContext = null;
 let ringLayer: MassifLayer = null;
 let ring: MassifObject<'massif::CelestialSprite'> = null;
 let ringDark: boolean = null;
 let locateSelected: () => Horizontal | null = null;
+let passOfSelected: () => string | null = null;
 let ringGeneration = 0;
 
 // objects carry `metaData.id`; `resolve` maps it to the chip content and a locator as the sky turns
@@ -109,6 +110,7 @@ export function listenToSkyClicks(layer: MassifLayer, resolve: SkyResolver): Sub
         }
         event.consumed = true;
         locateSelected = found.locate;
+        passOfSelected = found.pass ?? null;
         peakFinderSelectedPeak.set(null);
         peakFinderSelectedSky.set(found.selected);
         refreshSkySelection();
@@ -144,6 +146,7 @@ export function refreshSkySelection() {
     if (!selectionContext) {
         return;
     }
+    peakFinderSelectedSkyPass.set(get(peakFinderSelectedSky) && passOfSelected ? passOfSelected() : null);
     const located = get(peakFinderSelectedSky) && locateSelected ? locateSelected() : null;
     if (!located) {
         ring?.set('visible', false);
@@ -176,8 +179,9 @@ export function clearSkySelection(kinds?: SelectedSky['kind'][]) {
     if (!selected || (kinds && !kinds.includes(selected.kind))) {
         return;
     }
-    locateSelected = null;
+    locateSelected = passOfSelected = null;
     peakFinderSelectedSky.set(null);
+    peakFinderSelectedSkyPass.set(null);
     ring?.set('visible', false);
 }
 
@@ -214,6 +218,8 @@ export async function openSkyWikipedia(selected: SelectedSky) {
         const result = await networkService.request<{ entities: { [id: string]: { sitelinks?: { [site: string]: { title: string } } } } }>({
             url: 'https://www.wikidata.org/w/api.php',
             method: 'GET',
+            // Wikimedia answers 403 to a request without one.
+            headers: { 'User-Agent': __APP_ID__ },
             queryParams: { action: 'wbgetentities', format: 'json', props: 'sitelinks', ids: selected.wikidata, sitefilter: `${language}wiki|enwiki` }
         });
         const sitelinks = result?.entities?.[selected.wikidata]?.sitelinks ?? {};
