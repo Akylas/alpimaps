@@ -4,6 +4,7 @@
     import { lu } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { TO_RAD } from '~/utils/geo';
+    import { isEInk } from '~/helpers/theme';
     import { colors } from '~/variables';
     function dialTicks(center: { x; y }, radius: number, tickLength: number, spacing: number, start: number = 0, end: number = 360, path: Path = new Path()): Path {
         path.reset();
@@ -36,17 +37,17 @@
     textHeight = rect.height();
     textWidth = rect.width();
     fontMetrics = textPaint.getFontMetrics();
-    textPaint.color = '#bbb';
     // }
 </script>
 
 <script lang="ts">
-    let { colorBackground, colorOnSurface, colorOutlineVariant, colorPrimary, colorSurfaceContainerHighest } = $colors;
-    $: ({ colorBackground, colorOnSurface, colorOutlineVariant, colorPrimary, colorSurfaceContainerHighest } = $colors);
-    // $: textPaint.color = colorOnSurface;
+    let { colorBackground, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors;
+    $: ({ colorBackground, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
+    // the design's hairline dial: soft ticks, accent cardinals, muted letters
+    $: textPaint.color = colorOnSurfaceVariant;
     export let drawInsideGrid = false;
-    export let tickColor = '#888';
-    export let cardinalTickColor = colorPrimary;
+    export let tickColor: string = null;
+    export let cardinalTickColor: string = null;
     export let rotation = 0;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number }; rotation: number }) => void = null;
     export let onDrawBeforeText: (event: { canvas: Canvas; object: CanvasView; delta: number; radius: number; center: { x: number; y: number }; rotation: number }) => void = null;
@@ -109,8 +110,8 @@
             paint.color = colorBackground;
 
             paint.setStyle(Style.STROKE);
-            paint.strokeWidth = 3;
-            paint.color = tickColor;
+            paint.strokeWidth = borderStrokedWidth;
+            paint.color = isEInk ? colorOnSurface : colorHairline;
 
             if (rotation !== 0) {
                 canvas.translate(center.x, center.y);
@@ -123,6 +124,7 @@
 
             if (drawInsideGrid) {
                 paint.strokeWidth = 1;
+                paint.color = isEInk ? colorOnSurface : colorHairline;
                 canvas.drawLine(center.x, center.y - radius, center.x, center.y + radius, paint);
                 canvas.drawLine(center.x - radius, center.y, center.x + radius, center.y, paint);
                 canvas.drawCircle(center.x, center.y, radius * 0.66, paint);
@@ -130,9 +132,10 @@
             }
 
             paint.strokeWidth = tickThicknessDp;
+            paint.color = tickColor || (isEInk ? colorOnSurface : colorOutlineSoft);
             canvas.drawPath(ticks, paint);
             paint.strokeWidth = tickThicknessDp * 2;
-            paint.color = cardinalTickColor;
+            paint.color = cardinalTickColor || (isEInk ? colorOnSurface : colorPrimary);
             // paint.setStrokeCap(Cap.ROUND)
             canvas.drawPath(cardinalTicks, paint);
 

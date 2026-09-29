@@ -403,8 +403,8 @@ export async function handleMapAction(action: string, options?) {
                     parent,
                     view: CompassView,
                     skipCollapsedState: true,
-                    transparent: true,
                     props: {
+                        standalone: true,
                         location,
                         updateWithUserLocation: true,
                         aimingItems: selected ? [selected] : []
