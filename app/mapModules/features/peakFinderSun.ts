@@ -3,7 +3,17 @@ import { Screen } from '@nativescript/core';
 import { getPosition } from 'suncalc';
 import { get, writable } from 'svelte/store';
 import { formatTime, lc } from '~/helpers/locale';
-import { type PeakFinderSkyContext, addTo, celestialLifecycle, clearSkySelection, colour, listenToSkyClicks, refreshSkySelection, skyMoment } from '~/mapModules/features/peakFinderCelestial';
+import {
+    type PeakFinderSkyContext,
+    type SkyClicks,
+    addTo,
+    celestialLifecycle,
+    clearSkySelection,
+    colour,
+    listenToSkyClicks,
+    refreshSkySelection,
+    skyMoment
+} from '~/mapModules/features/peakFinderCelestial';
 import { SUN_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
 import { peakFinderElevation, peakFinderSun, peakFinderSunHours } from '~/stores/terrainStore';
 import type { MapPos } from '~/utils/geo';
@@ -74,7 +84,7 @@ let planKey = '';
 let lastSignature = '';
 let styledDark: boolean = null;
 let idleSubscription: Subscription = null;
-let clickSubscription: Subscription = null;
+let clickSubscription: SkyClicks = null;
 
 function labelStyle(plate: boolean, dark: boolean) {
     if (plate) {

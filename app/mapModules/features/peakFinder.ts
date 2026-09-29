@@ -1061,7 +1061,12 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     eyeGroundElevation = await resolveEyeGroundElevation();
     buildPeaksLayer();
     // After the summit layer, which the sun's top layer has to stay over.
-    const skyContext: PeakFinderSkyContext = { map, eye: () => viewpoint, dark: () => isPeakFinderDark() };
+    const skyContext: PeakFinderSkyContext = {
+        map,
+        eye: () => viewpoint,
+        dark: () => isPeakFinderDark(),
+        degreesPerDp: () => currentFieldOfViewY() / Math.max(1, (panoramaView?.getMeasuredHeight() ?? 0) / Screen.mainScreen.scale)
+    };
     setupSkySelection(skyContext);
     setupPeakFinderSun(skyContext);
     setupPeakFinderMoon(skyContext);
