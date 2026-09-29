@@ -398,19 +398,22 @@ label {
     }
 }
 
-// the sky toggles: outlined pills, primary on a primary tint when on
+// the sky toggles: outlined pills, primary on a primary tint when on, filled for a view's one main action.
+// 40 tall, the material 3 button height (the ripple area reaches the 48 touch target)
 .chip {
     background-color: transparent;
     border-color: var(--colorOutlineSoft);
     border-width: 1;
-    border-radius: 16;
+    border-radius: 20;
     color: var(--colorOnSurface);
     ripple-color: var(--colorPrimary);
     elevation: 0;
-    height: 32;
-    margin: 2 4;
-    padding: 0 12;
-    font-size: 13;
+    dynamic-elevation-offset: 0;
+    height: 40;
+    min-width: 48;
+    margin: 4 3;
+    padding: 0 14;
+    font-size: 14;
     text-align: center;
     vertical-text-alignment: center;
 
@@ -421,6 +424,19 @@ label {
         font-weight: bold;
     }
 
+    &.primary {
+        background-color: var(--colorPrimary);
+        border-color: var(--colorPrimary);
+        color: var(--colorOnPrimary);
+        ripple-color: var(--colorOnPrimary);
+        font-weight: bold;
+    }
+
+    &.danger {
+        border-color: var(--colorError);
+        color: var(--colorError);
+    }
+
     .ns-eink & {
         border-color: black;
         color: black;
@@ -429,6 +445,11 @@ label {
             background-color: white;
             color: black;
             border-width: 2;
+        }
+
+        &.primary {
+            background-color: black;
+            color: white;
         }
     }
 }
