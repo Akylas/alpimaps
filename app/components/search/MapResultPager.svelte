@@ -1,8 +1,8 @@
 <script context="module" lang="ts">
-    import { Align, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Align, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
 
     import { Pager } from '@nativescript-community/ui-pager';
-    import { GridLayout, ObservableArray } from '@nativescript/core';
+    import { Color, GridLayout, ObservableArray } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
 
     import { Template } from '@nativescript-community/svelte-native/components';
@@ -37,14 +37,15 @@
     import { Point } from 'geojson';
     import { IItem } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
-    import IconButton from '../common/IconButton.svelte';
+    import Pill from '../common/Pill.svelte';
+    import { showToolTip } from '~/utils/ui';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { getDistanceSimple } from '~/helpers/geolib';
     import { isEInk } from '~/helpers/theme';
     import { onDestroy, onMount } from 'svelte';
     import { registerMapModule, unregisterMapModule } from '~/mapModules/registry';
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     // mounted lazily, after the map registers its modules, so it registers itself;
     // after directionsPanel, which keeps the onVectorTileClicked dispatch order
@@ -149,59 +150,64 @@
     }
     const textPaint = new Paint();
     const iconPaint = new Paint();
-    function onDraw(item, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    iconPaint.setTextAlign(Align.CENTER);
+    const tilePaint = new Paint();
+    const CARD_PADDING = 14;
+    const TILE_SIZE = 40;
+    // the search list's row, grown into a card: tinted icon tile, title and distance, the address, then
+    // the details and opening hours above the action pills
+    function onDraw(item, { canvas }: { canvas: Canvas; object: CanvasView }) {
         try {
             const w = canvas.getWidth();
             const h = canvas.getHeight();
-            const dx = 16;
-            let titleDx = dx;
+            const pad = CARD_PADDING;
             const itemProps = item.properties;
-            let itemIconFontFamily, itemIcon, iconSize, iconColor;
-            if (item.icon) {
-                titleDx = 50;
+            const tint = item.style?.color || colorPrimary;
+            tilePaint.setStyle(isEInk ? Style.STROKE : Style.FILL);
+            tilePaint.color = isEInk ? colorOnSurface : new Color(tint).setAlpha(36).hex;
+            canvas.drawRoundRect(pad, pad, pad + TILE_SIZE, pad + TILE_SIZE, 12, 12, tilePaint);
+            const icon = itemProps?.icon || item.icon || item.style?.icon || osmicon(formatter.geItemIcon(item));
+            if (icon) {
                 iconPaint.textSize = 20;
-                iconPaint.fontFamily = itemProps.fontFamily || 'osm';
-                iconPaint.color = colorOnSurface;
-                canvas.drawText(itemProps?.icon || item.icon || osmicon(formatter.geItemIcon(item)), dx, 30, iconPaint);
-            }
-            // textPaint.textSize = 20;
-            textPaint.color = colorOnSurface;
-            // textPaint.fontWeight = 'bold';
-            // canvas.drawText(item.title, titleDx, 30, textPaint);
-            // textPaint.fontWeight = 'normal';
-            textPaint.textSize = 14;
-
-            if (itemProps?.['address']) {
-                const address = getAddress(item);
-                const staticLayout = new StaticLayout(address.join(' '), textPaint, w - 2 * dx, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                canvas.save();
-                canvas.translate(dx, 45);
-                staticLayout.draw(canvas);
-                canvas.restore();
+                iconPaint.fontFamily = itemProps?.fontFamily || 'osm';
+                iconPaint.color = isEInk ? colorOnSurface : tint;
+                const metrics = iconPaint.getFontMetrics();
+                canvas.drawText(icon, pad + TILE_SIZE / 2, pad + TILE_SIZE / 2 - (metrics.ascent + metrics.descent) / 2, iconPaint);
             }
 
-            const spans = getItemSpans(item);
-            if (spans.length) {
-                const nString = createNativeAttributedString({ spans });
-                textPaint.color = colorOnSurface;
-                const staticLayout = new StaticLayout(nString, textPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
-                canvas.save();
-                canvas.translate(dx, h - 70);
-                staticLayout.draw(canvas);
-                canvas.restore();
-            }
-
+            textPaint.textSize = 12;
+            textPaint.color = colorOnSurfaceVariant;
             if (item.distance) {
                 textPaint.setTextAlign(Align.RIGHT);
-                canvas.drawText(formatDistance(item.distance), w - dx, h - 56, textPaint);
+                canvas.drawText(formatDistance(item.distance), w - pad, pad + 14, textPaint);
                 textPaint.setTextAlign(Align.LEFT);
             }
 
+            textPaint.textSize = 13;
+            if (itemProps?.['address']) {
+                const address = getAddress(item);
+                const staticLayout = new StaticLayout(address.join(' '), textPaint, w - 2 * pad, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
+                canvas.save();
+                canvas.translate(pad, pad + TILE_SIZE + 8);
+                staticLayout.draw(canvas);
+                canvas.restore();
+            }
+
+            // one row above the pills: opening hours on the left, the details on the right
             if (itemProps?.['opening_hours']) {
                 const data = openingHoursText(item);
                 textPaint.color = data.color;
-                // textPaint.setTextAlign(Align.RIGHT);
-                canvas.drawText(data.text, dx, h - 80, textPaint);
+                canvas.drawText(data.text, pad, h - 62, textPaint);
+            }
+            const spans = getItemSpans(item);
+            if (spans.length) {
+                const nString = createNativeAttributedString({ spans });
+                textPaint.color = colorOnSurfaceVariant;
+                const staticLayout = new StaticLayout(nString, textPaint, w - 2 * pad, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                canvas.save();
+                canvas.translate(pad, h - 76);
+                staticLayout.draw(canvas);
+                canvas.restore();
             }
         } catch (err) {
             console.error(err, err.stack);
@@ -210,24 +216,20 @@
     const mapContext = getMapContext();
 
     async function getItemDetails(item) {
-        try {
-            const itemsModule = mapContext.mapModule('items');
-            const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom());
-            if (result) {
-                const ignoredKeys = itemsModule.ignoredOSMKeys;
-                const itemProperties = { ...item.properties };
-                const newProps = {};
-                Object.keys(result.tags).forEach((k) => {
-                    const value = result.tags[k];
-                    if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
-                        newProps[k] = itemProperties[k] = value;
-                    }
-                });
-                return { ...item, properties: { ...itemProperties, osmid: result.id } };
-                // extraProps = newProps;
-            }
-        } catch (error) {
-            showError(error);
+        const itemsModule = mapContext.mapModule('items');
+        const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom());
+        if (result) {
+            const ignoredKeys = itemsModule.ignoredOSMKeys;
+            const itemProperties = { ...item.properties };
+            const newProps = {};
+            Object.keys(result.tags).forEach((k) => {
+                const value = result.tags[k];
+                if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
+                    newProps[k] = itemProperties[k] = value;
+                }
+            });
+            return { ...item, properties: { ...itemProperties, osmid: result.id } };
+            // extraProps = newProps;
         }
     }
 
@@ -341,17 +343,21 @@
         if (!itemProperties.osmid || !itemProperties.address) {
             const itemToChangeIndex = selectedPageIndex;
             const addressIndex = itemProperties.osmid ? 0 : 1;
-            const toUpdate = await Promise.all(
-                [].concat(itemProperties.osmid ? [] : [getItemDetails(item).catch((e) => {})]).concat(itemProperties.address ? [] : [packageService.getItemAddress(item)])
-            );
-            const newItem = toUpdate[0] ?? item;
-            if (toUpdate[addressIndex]) {
-                newItem.properties.address = toUpdate[addressIndex];
-            }
-            oItems.setItem(itemToChangeIndex, newItem);
+            try {
+                const toUpdate = await Promise.all(
+                    [].concat(itemProperties.osmid ? [] : [getItemDetails(item).catch((e) => {})]).concat(itemProperties.address ? [] : [packageService.getItemAddress(item)])
+                );
+                const newItem = toUpdate[0] ?? item;
+                if (toUpdate[addressIndex]) {
+                    newItem.properties.address = toUpdate[addressIndex];
+                }
+                oItems.setItem(itemToChangeIndex, newItem);
 
-            const canvasView: CanvasView = pager.nativeView.getViewForItemAtIndex(itemToChangeIndex)?.getViewById('canvas');
-            canvasView?.redraw();
+                const canvasView: CanvasView = pager.nativeView.getViewForItemAtIndex(itemToChangeIndex)?.getViewById('canvas');
+                canvasView?.redraw();
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
 
@@ -499,23 +505,32 @@
         on:selectedIndexChange={onPageSelectedChange}>
         <Template let:index let:item>
             <gridlayout padding={PAGER_PAGE_PADDING - 10}>
-                <canvasview id="canvas" class="cardview" padding={6} on:draw={(e) => onDraw(item, e)} on:tap={(e) => onCardTap(item, e)}>
+                <canvasview id="canvas" class="cardview" borderRadius={20} on:draw={(e) => onDraw(item, e)} on:tap={(e) => onCardTap(item, e)}>
                     <label
                         autoFontSize={true}
                         color={colorOnSurface}
-                        fontSize={18}
+                        fontSize={16}
                         fontWeight="bold"
-                        height={40}
-                        marginLeft={item.icon ? 40 : 16}
-                        maxFontSize={18}
+                        height={TILE_SIZE + 4}
+                        margin={`${CARD_PADDING - 2} 70 0 ${CARD_PADDING + TILE_SIZE + 12}`}
+                        maxFontSize={16}
                         maxLines={2}
                         text={item.title}
-                        verticalAlignment="top" />
-                    <collectionview colWidth={40} height={40} items={getItemActions(item)} orientation="horizontal" verticalAlignment="bottom">
-                        <Template let:item={buttonItem}>
-                            <IconButton size={40} text={buttonItem.icon} tooltip={buttonItem.title} on:tap={(e) => onButtonTap(buttonItem, item, e)} />
-                        </Template>
-                    </collectionview>
+                        verticalAlignment="top"
+                        verticalTextAlignment="middle" />
+                    <!-- the actions as pills, the save one labelled -->
+                    <scrollview margin="0 8 6 8" orientation="horizontal" scrollBarIndicatorVisible={false} verticalAlignment="bottom">
+                        <stacklayout orientation="horizontal">
+                            {#each getItemActions(item) as buttonItem (buttonItem.id + (buttonItem.subtitle || ''))}
+                                <Pill
+                                    icon={buttonItem.icon}
+                                    label={buttonItem.id === 'add_map' ? lc('save') : null}
+                                    primary={buttonItem.id === 'add_map'}
+                                    on:tap={(e) => onButtonTap(buttonItem, item, e)}
+                                    on:longPress={() => buttonItem.title && showToolTip(buttonItem.title)} />
+                            {/each}
+                        </stacklayout>
+                    </scrollview>
                 </canvasview>
             </gridlayout>
         </Template>

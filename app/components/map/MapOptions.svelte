@@ -16,7 +16,7 @@
     import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
-    import IconButton from '../common/IconButton.svelte';
+    import Pill from '../common/Pill.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import PanelHeader from '../common/PanelHeader.svelte';
     export interface MapOptionType {
@@ -236,21 +236,25 @@
         </Template>
     </collectionview>
 
-    <stacklayout orientation="horizontal" padding="0 8 8 8" row={1}>
-        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
-            <StoreValue store={option.store} let:value>
-                <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
-            </StoreValue>
-        {/each}
-        {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
-            <StoreValue store={option.store} let:value>
-                <IconButton isSelected={value} onLongPress={option.onLongPress} text={option.icon} toggable={true} tooltip={option.title} on:tap={() => option.store.set(!value)} />
-            </StoreValue>
-        {/each}
-        <IconButton isSelected={$projectionModeSpherical} text="mdi-globe-model" toggable={true} tooltip={lc('globe_mode')} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
-        <IconButton isSelected={$rotateEnabled} text="mdi-rotate-3d-variant" toggable={true} tooltip={lc('map_rotation')} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
-        <IconButton isSelected={$pitchEnabled} text="mdi-rotate-orbit" toggable={true} tooltip={lc('map_pitch')} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
-        <IconButton isSelected={$preloading} text="mdi-map-clock" toggable={true} tooltip={lc('preloading')} on:tap={() => preloading.set(!$preloading)} />
-        <IconButton isSelected={$showItemsLayer} text="mdi-map-marker-off-outline" toggable={true} tooltip={lc('show_items_routes')} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
-    </stacklayout>
+    <!-- the layers sheet's toggles: short labelled pills, tinted when on. Two rows at most, scrolling
+         sideways, so the settings list keeps its room -->
+    <scrollview orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
+        <wraplayout height={100} orientation="vertical" padding="0 12 0 12">
+            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+                <StoreValue store={option.store} let:value>
+                    <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
+                </StoreValue>
+            {/each}
+            {#each layerIconParams.map((key) => ({ ...layerProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+                <StoreValue store={option.store} let:value>
+                    <Pill icon={option.icon} label={lc('slopes')} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
+                </StoreValue>
+            {/each}
+            <Pill icon="mdi-globe-model" label={lc('globe')} selected={$projectionModeSpherical} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
+            <Pill icon="mdi-rotate-3d-variant" label={lc('rotation')} selected={$rotateEnabled} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
+            <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
+            <Pill icon="mdi-map-clock" label={lc('preload')} selected={$preloading} on:tap={() => preloading.set(!$preloading)} />
+            <Pill icon="mdi-map-marker-multiple-outline" label={lc('items')} selected={$showItemsLayer} on:tap={() => showItemsLayer.set(!$showItemsLayer)} />
+        </wraplayout>
+    </scrollview>
 </gesturerootview>

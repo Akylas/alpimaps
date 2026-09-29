@@ -91,12 +91,9 @@ function getProviderAttribution(pr) {
 }
 
 function templateString(str: string, data) {
-    return str.replace(
-        /{(\w*)}/g,
-        function (m, key) {
-            return data.hasOwnProperty(key) ? data[key] : m;
-        }
-    );
+    return str.replace(/{(\w*)}/g, function (m, key) {
+        return data.hasOwnProperty(key) ? data[key] : m;
+    });
 }
 
 // slot names are LAYER NAMES in the style (`#hillshade`, `#contour`): an undeclared one is never drawn.
@@ -1359,10 +1356,11 @@ export default class CustomLayersModule extends MapModule {
             view: OptionSelect,
             skipCollapsedState: true,
             props: {
-                height: 400,
-                title: l('pick_source'),
+                height: 460,
+                title: lc('pick_source'),
+                titleIcon: 'mdi-layers-plus',
                 showFilter: true,
-                rowHeight: 56,
+                rowHeight: 64,
                 options: Object.keys(this.baseProviders)
                     .sort()
                     .map((s) => {

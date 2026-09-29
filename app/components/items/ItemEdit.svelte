@@ -21,10 +21,11 @@
     import { toBounds } from '~/utils/geo';
     import { Item } from '~/models/Item';
     import { showSliderPopover } from '~/utils/ui';
+    import Pill from '~/components/common/Pill.svelte';
     import { pickColor } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
 
-    $: ({ colorBackground, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorHairline, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
     export let item: Item;
     let itemColor: string;
     let itemIsRoute = false;
@@ -170,7 +171,13 @@
                     }
                     extent = JSON.parse(extent as any);
                 }
-                camera.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], { screen, integerZoom: true, resetRotation: true });
+                camera.fitBounds(
+                    [
+                        [extent[0], extent[1]],
+                        [extent[2], extent[3]]
+                    ],
+                    { screen, integerZoom: true, resetRotation: true }
+                );
             }
         } else {
             const geometry = item.geometry as GeoJSONPoint;
@@ -424,7 +431,6 @@
 <page actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,*,auto,2.5*,auto" android:paddingBottom={$windowInset.bottom}>
         <CActionBar canGoBack title={lc('edit')}>
-            <IconButton isEnabled={canSave} text="mdi-content-save-outline" on:tap={(e) => updateItem()} />
             <IconButton text="mdi-playlist-plus" on:tap={addField} />
             <IconButton isVisible={!itemIsRoute} text="mdi-web-sync" on:tap={fetchOSMDetails} />
         </CActionBar>
@@ -467,7 +473,7 @@
                 <TagView padding="5 10 0 10" showDefaultGroups={false} topGroup={item.groups?.[0]} on:groupSelected={onTagViewSelectedGroup} />
             </Template>
             <Template key="textfield" let:item>
-                <gridlayout padding="10 10 0 10">
+                <gridlayout padding="10 12 0 12">
                     <textfield
                         editable={item.editable ?? true}
                         hint={item.name}
@@ -481,7 +487,7 @@
                 </gridlayout>
             </Template>
             <Template key="textview" let:item>
-                <gridlayout padding="10 10 0 10">
+                <gridlayout padding="10 12 0 12">
                     <textview
                         height={item.height || 150}
                         hint={item.name}
@@ -531,18 +537,17 @@
             </stacklayout>
         </scrollview> -->
 
-        <gridlayout columns="*,*" marginBottom={5} row={4}>
-            <mdbutton isEnabled={canSave} text={lc('save')} verticalAlignment="center" on:tap={(e) => updateItem()} />
-            <mdbutton
-                col={1}
-                text={lc('cancel')}
-                variant="text"
-                verticalAlignment="center"
-                on:tap={(e) => {
+        <gridlayout borderColor={colorHairline} borderTopWidth={1} columns="*,*" padding="8 8" row={4}>
+            <Pill
+                horizontalAlignment="stretch"
+                label={lc('cancel')}
+                margin="0 4"
+                on:tap={() => {
                     updatedProperties = {};
                     refreshItems();
                     updatePreview(false);
                 }} />
+            <Pill col={1} horizontalAlignment="stretch" isEnabled={canSave} label={lc('save')} margin="0 4" opacity={canSave ? 1 : 0.4} primary={true} on:tap={() => updateItem()} />
         </gridlayout>
     </gridlayout>
 </page>

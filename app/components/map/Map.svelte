@@ -1593,18 +1593,6 @@
                         icon: 'mdi-weather-night'
                     },
                     {
-                        title: lc('dark_mode'),
-                        id: 'dark_mode',
-                        color: $forceDarkMode ? colorPrimary : undefined,
-                        icon: 'mdi-theme-light-dark'
-                    },
-                    {
-                        title: lc('offline_mode'),
-                        id: 'offline_mode',
-                        color: networkService.forcedOffline ? colorError : undefined,
-                        icon: 'mdi-wifi-strength-off-outline'
-                    },
-                    {
                         title: lc('import_data'),
                         id: 'import',
                         icon: 'mdi-import'
@@ -1636,7 +1624,20 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs - 100
+                    maxHeight: Screen.mainScreen.heightDIPs - 100,
+                    width: Math.min(280, Screen.mainScreen.widthDIPs * 0.8),
+                    // the two modes lead as toggle pills, switched in place without closing the menu
+                    toggles: [
+                        { id: 'dark_mode', icon: 'mdi-theme-light-dark', label: lc('dark'), selected: $forceDarkMode },
+                        { id: 'offline_mode', icon: 'mdi-wifi-strength-off-outline', label: lc('offline'), selected: networkService.forcedOffline }
+                    ],
+                    onToggle: (toggle) => {
+                        if (toggle.id === 'dark_mode') {
+                            toggleForceDarkMode();
+                        } else {
+                            networkService.forcedOffline = toggle.selected;
+                        }
+                    }
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
@@ -1889,7 +1890,6 @@
         <!-- collapsed during AR: three GL surfaces (preview, live map, panorama) have no defined order -->
         <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
 
-
         <!-- two sheets, never both: item and navigation step lists are incompatible -->
         <!-- transparent: the navigation view is a row of floating cards with the map showing between them -->
         <bottomsheet
@@ -1940,8 +1940,8 @@
                     bind:this={locationInfoPanel}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
-                    marginLeft={40}
-                    marginTop={90 + navigationTopOffset}
+                    marginLeft={53}
+                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top"
                     visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
                 <Search
@@ -2021,15 +2021,14 @@
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
-                borderRadius={isLandscape ? 24 : 0}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
+                sheetWidth={isLandscape ? Math.max(screenWidthDips / 2, 400) : screenWidthDips}
                 updating={itemLoading}
                 width={isLandscape ? Math.max(screenWidthDips / 2, 400) : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
-
 
         <!-- the live map underneath is only covered: the SDK renders when dirty, so it costs nothing idle -->
         {#if $peakFinderActive && peakFinderMapComponent}

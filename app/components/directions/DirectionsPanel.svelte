@@ -12,6 +12,7 @@
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import IconButton from '~/components/common/IconButton.svelte';
+    import Pill from '~/components/common/Pill.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { formatDistance } from '~/helpers/formatter';
     import { getDistance } from '~/helpers/geolib';
@@ -106,12 +107,12 @@
         return { route, instructions };
     }
 
-    const COLLECTIONVIEW_HEIGHT = 70;
+    const COLLECTIONVIEW_HEIGHT = 100;
 </script>
 
 <script lang="ts">
-    let { colorAccentContainer, colorBackground, colorHairline, colorOnPrimary, colorOnSurface, colorPrimary, colorSurfaceVariant } = $colors;
-    $: ({ colorAccentContainer, colorBackground, colorHairline, colorOnPrimary, colorOnSurface, colorPrimary, colorSurfaceVariant } = $colors);
+    let { colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
+    $: ({ colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
     const mapContext = getMapContext();
     const dispatch = createEventDispatcher();
     let _routeDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
@@ -138,7 +139,6 @@
     let requestStats = ApplicationSettings.getBoolean('auto_fetch_stats', false);
 
     $: buttonsColor = colorOnSurface;
-    $: buttonsColorAlpha = new Color(colorOnSurface).setAlpha(80).hex;
 
     export let editingItem: IItem = null;
     export let translationY = 0;
@@ -1055,6 +1055,9 @@
                 props: {
                     elevation: __ANDROID__ ? 3 : 0,
                     margin: 4,
+                    title: profileLabel(profile),
+                    titleIcon: Profiles[profile].icon,
+                    titleIconFontFamily: Profiles[profile].fontFamily ? $fonts[Profiles[profile].fontFamily] : undefined,
                     currentOption: profile === 'bicycle' ? bicycle_type : pedestrian_type,
                     onCheckBox: (item, value) => {
                         item.onChange(value);
@@ -1249,6 +1252,32 @@
         refreshCollectionView();
     });
 
+    function profileLabel(id: string) {
+        switch (id) {
+            case 'auto':
+                return lc('car');
+            case 'motorcycle':
+                return lc('motorcycle');
+            case 'pedestrian':
+                return lc('walk');
+            default:
+                return lc('bicycle');
+        }
+    }
+
+    // the short names the option pills carry
+    const OPTION_LABELS = {
+        use_highways: 'highways',
+        use_tolls: 'tolls',
+        use_roads: 'roads',
+        use_hills: 'hills',
+        non_network_penalty: 'off_network',
+        weight: 'weight',
+        avoid_bad_surfaces: 'surfaces',
+        driveway_factor: 'driveways',
+        step_penalty: 'steps'
+    };
+
     const profiles = Object.keys(Profiles).map((k) => ({
         ...Profiles[k],
         fontFamily: Profiles[k].fontFamily ? $fonts[Profiles[k].fontFamily] : undefined,
@@ -1258,32 +1287,34 @@
 
 <stacklayout bind:this={topLayout} {...$$restProps} style="z-index:1000;" class="directionsPanel" translateY={currentTranslationY} ios:iosIgnoreSafeArea={false}>
     {#if loaded}
-        <gridlayout bind:this={gridLayout} columns={`*,${40 * $fontScaleMaxed}`} rows={`${50 * $fontScaleMaxed},auto,auto`} on:tap={() => {}}>
-            <IconButton color={buttonsColor} horizontalAlignment="left" text="mdi-arrow-left" on:tap={() => cancel()} />
-            <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal">
+        <gridlayout bind:this={gridLayout} columns={`*,${48 * $fontScaleMaxed}`} padding="0 4 8 4" rows="56,auto,auto,auto" on:tap={() => {}}>
+            <IconButton color={buttonsColor} horizontalAlignment="left" text="mdi-arrow-left" verticalAlignment="middle" on:tap={() => cancel()} />
+            <!-- the selected profile names itself; the others stay icons to fit one row -->
+            <stacklayout colSpan={2} horizontalAlignment="center" orientation="horizontal" verticalAlignment="middle">
                 {#each profiles as profileBtn}
-                    <IconButton
-                        backgroundColor={profile === profileBtn.id ? (isEInk ? 'black' : colorAccentContainer) : colorBackground}
-                        color={profile === profileBtn.id ? (isEInk ? 'white' : colorPrimary) : buttonsColor}
-                        text={profileBtn.icon}
+                    <Pill
+                        icon={profileBtn.icon}
+                        iconFontFamily={profileBtn.fontFamily}
+                        label={profile === profileBtn.id ? profileLabel(profileBtn.id) : null}
+                        selected={profile === profileBtn.id}
                         on:tap={() => setProfile(profileBtn.id)}
-                        {...profileBtn.fontFamily ? { fontFamily: profileBtn.fontFamily } : {}}
-                        onLongPress={(event) => showProfileSettings(profileBtn.id, event)} />
+                        on:longPress={(event) => showProfileSettings(profileBtn.id, event)} />
                 {/each}
             </stacklayout>
-            <IconButton
-                backgroundColor={nbWayPoints > 1 ? (isEInk ? 'black' : colorPrimary) : colorBackground}
-                colSpan={2}
-                color={isEInk ? 'white' : colorOnPrimary}
-                horizontalAlignment="right"
-                isEnabled={nbWayPoints > 1}
-                isVisible={!loading}
-                marginRight={10}
-                onLongPress={() => computeRoutes(true)}
-                rippleColor={isEInk ? 'white' : colorOnPrimary}
-                text="mdi-magnify"
-                on:tap={() => computeRoutes()} />
-            <activityindicator busy={true} colSpan={2} color={colorPrimary} height={40} horizontalAlignment="right" marginRight={16} visibility={loading ? 'visible' : 'hidden'} width={40} />
+            <gridlayout colSpan={2} columns="*,auto,auto" margin="4 5 0 8" row={3}>
+                <Pill col={1} icon="mdi-dots-vertical" marginLeft={6} on:tap={showMoreOptions} />
+                <Pill col={2} icon={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
+                <Pill
+                    horizontalAlignment="stretch"
+                    isEnabled={nbWayPoints > 1 && !loading}
+                    label={loading ? null : lc('get_route')}
+                    margin={0}
+                    opacity={nbWayPoints > 1 ? 1 : 0.4}
+                    primary={true}
+                    on:tap={() => computeRoutes()}
+                    on:longPress={() => computeRoutes(true)} />
+                <activityindicator busy={true} color={isEInk ? 'white' : colorOnPrimary} height={28} visibility={loading ? 'visible' : 'hidden'} width={28} />
+            </gridlayout>
             <collectionview
                 bind:this={collectionView}
                 animateItemUpdate={true}
@@ -1295,7 +1326,7 @@
                 reorderEnabled={true}
                 reorderLongPressEnabled={true}
                 row={1}
-                rowHeight={36 * $fontScaleMaxed}
+                rowHeight={50 * $fontScaleMaxed}
                 on:itemReorderStarting={onItemReorderStarting}
                 on:itemReordered={onItemReordered}>
                 <Template let:item>
@@ -1315,18 +1346,19 @@
                             verticalAlignment="bottom"
                             visibility={item.properties.isStop ? 'hidden' : 'visible'} />
                         <cspan
+                            color={isEInk ? buttonsColor : item.properties.isStop ? colorError : item.properties.isStart ? colorPrimary : colorOnSurfaceVariant}
                             fontFamily={$fonts.mdi}
-                            fontSize={15 * $fontScaleMaxed}
-                            text={item.properties.isStop ? 'mdi-flag-checkered' : item.properties.isStart ? 'mdi-map-marker' : 'mdi-checkbox-blank-circle-outline'}
+                            fontSize={18 * $fontScaleMaxed}
+                            text={item.properties.isStop ? 'mdi-map-marker' : item.properties.isStart ? 'mdi-circle-slice-8' : 'mdi-circle-small'}
                             verticalAlignment="middle" />
 
                         <gridlayout
-                            backgroundColor={isEInk ? 'white' : colorSurfaceVariant}
+                            backgroundColor={isEInk ? 'white' : colorSurfaceFill}
                             borderColor={isEInk ? 'black' : colorHairline}
-                            borderRadius={15 * $fontScaleMaxed}
+                            borderRadius={21 * $fontScaleMaxed}
                             borderWidth={1}
                             columns=" *,auto,auto"
-                            height={30 * $fontScaleMaxed}
+                            height={42 * $fontScaleMaxed}
                             margin="0 0 0 30"
                             on:tap={(event) => openSearchFromItem(event, item)}>
                             <label
@@ -1354,89 +1386,88 @@
                 row={1}
                 text="mdi-swap-vertical"
                 on:tap={() => reversePoints()} />
-            <stacklayout id="directionsbuttons" colSpan={2} orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
-                {#if profile === 'auto' || profile === 'motorcycle'}
-                    <IconButton
-                        color={valhallaSettingColor('use_highways', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('use_highways', event)}
-                        size={40}
-                        text={valhallaSettingIcon['use_highways']}
-                        on:tap={() => switchValhallaSetting('use_highways')} />
+            <gridlayout colSpan={2} columns="*,auto" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
+                <scrollview orientation="horizontal" scrollBarIndicatorVisible={false}>
+                    <stacklayout id="directionsbuttons" orientation="horizontal" paddingLeft={4}>
+                        {#if profile === 'auto' || profile === 'motorcycle'}
+                            <Pill
+                                color={valhallaSettingColor('use_highways', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['use_highways']}
+                                label={lc(OPTION_LABELS['use_highways'])}
+                                on:tap={() => switchValhallaSetting('use_highways')}
+                                on:longPress={(event) => setSliderCostingOptions('use_highways', event)} />
 
-                    <IconButton
-                        color={valhallaSettingColor('use_tolls', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('use_tolls', event)}
-                        size={40}
-                        text={valhallaSettingIcon['use_tolls']}
-                        on:tap={() => switchValhallaSetting('use_tolls')} />
-                {/if}
-                {#if profile === 'bicycle'}
-                    <IconButton
-                        color={valhallaSettingColor('use_roads', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('use_roads', event)}
-                        size={40}
-                        text={valhallaSettingIcon['use_roads']}
-                        on:tap={() => switchValhallaSetting('use_roads')} />
-                    <IconButton
-                        color={valhallaSettingColor('use_hills', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
-                        size={40}
-                        text={valhallaSettingIcon['use_hills']}
-                        on:tap={() => switchValhallaSetting('use_hills')} />
-                    <IconButton
-                        color={valhallaSettingColor('non_network_penalty', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('non_network_penalty', event)}
-                        size={40}
-                        text={valhallaSettingIcon['non_network_penalty']}
-                        on:tap={() => switchValhallaSetting('non_network_penalty')} />
-                    <IconButton
-                        color={valhallaSettingColor('weight', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('weight', event)}
-                        size={40}
-                        text={valhallaSettingIcon['weight']}
-                        on:tap={() => switchValhallaSetting('weight')} />
-                    <IconButton
-                        color={valhallaSettingColor('avoid_bad_surfaces', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', event)}
-                        size={40}
-                        text={valhallaSettingIcon['avoid_bad_surfaces']}
-                        on:tap={() => switchValhallaSetting('avoid_bad_surfaces')} />
-                    <!-- <IconButton col={5} text={bicycleTypeIcon(bicycle_type)} isVisible={profile === 'bicycle'} color="white" on:tap={() => switchValhallaSetting('bicycle_type')} /> -->
-                {/if}
-                {#if profile === 'pedestrian'}
-                    <IconButton
-                        color={valhallaSettingColor('driveway_factor', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('driveway_factor', event)}
-                        size={40}
-                        text={valhallaSettingIcon['driveway_factor']}
-                        on:tap={() => switchValhallaSetting('driveway_factor')} />
-                    <IconButton
-                        color={valhallaSettingColor('use_hills', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('use_hills', event)}
-                        size={40}
-                        text={valhallaSettingIcon['use_hills']}
-                        on:tap={() => switchValhallaSetting('use_hills')} />
-                    <IconButton
-                        color={valhallaSettingColor('weight', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('weight', event)}
-                        size={40}
-                        text={valhallaSettingIcon['weight']}
-                        on:tap={() => switchValhallaSetting('weight')} />
-                    <IconButton
-                        color={valhallaSettingColor('step_penalty', profile, profileCostingOptions, buttonsColor)}
-                        onLongPress={(event) => setSliderCostingOptions('step_penalty', event)}
-                        size={40}
-                        text={valhallaSettingIcon['step_penalty']}
-                        on:tap={() => switchValhallaSetting('step_penalty')} />
-                {/if}
-            </stacklayout>
-
-            <stacklayout id="directionsbuttons2" colSpan={3} horizontalAlignment="right" orientation="horizontal" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
-                <IconButton color={costingOptions.shortest ? buttonsColor : buttonsColorAlpha} size={40} text="mdi-timer-outline" on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
-                <IconButton color={computeMultiple ? buttonsColor : buttonsColorAlpha} size={40} text="mdi-arrow-decision" on:tap={() => (computeMultiple = !computeMultiple)} />
-                <IconButton color={buttonsColor} size={40} text="mdi-dots-vertical" on:tap={showMoreOptions} />
-                <IconButton color={buttonsColor} size={40} text={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
-            </stacklayout>
+                            <Pill
+                                color={valhallaSettingColor('use_tolls', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['use_tolls']}
+                                label={lc(OPTION_LABELS['use_tolls'])}
+                                on:tap={() => switchValhallaSetting('use_tolls')}
+                                on:longPress={(event) => setSliderCostingOptions('use_tolls', event)} />
+                        {/if}
+                        {#if profile === 'bicycle'}
+                            <Pill
+                                color={valhallaSettingColor('use_roads', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['use_roads']}
+                                label={lc(OPTION_LABELS['use_roads'])}
+                                on:tap={() => switchValhallaSetting('use_roads')}
+                                on:longPress={(event) => setSliderCostingOptions('use_roads', event)} />
+                            <Pill
+                                color={valhallaSettingColor('use_hills', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['use_hills']}
+                                label={lc(OPTION_LABELS['use_hills'])}
+                                on:tap={() => switchValhallaSetting('use_hills')}
+                                on:longPress={(event) => setSliderCostingOptions('use_hills', event)} />
+                            <Pill
+                                color={valhallaSettingColor('non_network_penalty', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['non_network_penalty']}
+                                label={lc(OPTION_LABELS['non_network_penalty'])}
+                                on:tap={() => switchValhallaSetting('non_network_penalty')}
+                                on:longPress={(event) => setSliderCostingOptions('non_network_penalty', event)} />
+                            <Pill
+                                color={valhallaSettingColor('weight', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['weight']}
+                                label={lc(OPTION_LABELS['weight'])}
+                                on:tap={() => switchValhallaSetting('weight')}
+                                on:longPress={(event) => setSliderCostingOptions('weight', event)} />
+                            <Pill
+                                color={valhallaSettingColor('avoid_bad_surfaces', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['avoid_bad_surfaces']}
+                                label={lc(OPTION_LABELS['avoid_bad_surfaces'])}
+                                on:tap={() => switchValhallaSetting('avoid_bad_surfaces')}
+                                on:longPress={(event) => setSliderCostingOptions('avoid_bad_surfaces', event)} />
+                            <!-- <IconButton col={5} text={bicycleTypeIcon(bicycle_type)} isVisible={profile === 'bicycle'} color="white" on:tap={() => switchValhallaSetting('bicycle_type')} /> -->
+                        {/if}
+                        {#if profile === 'pedestrian'}
+                            <Pill
+                                color={valhallaSettingColor('driveway_factor', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['driveway_factor']}
+                                label={lc(OPTION_LABELS['driveway_factor'])}
+                                on:tap={() => switchValhallaSetting('driveway_factor')}
+                                on:longPress={(event) => setSliderCostingOptions('driveway_factor', event)} />
+                            <Pill
+                                color={valhallaSettingColor('use_hills', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['use_hills']}
+                                label={lc(OPTION_LABELS['use_hills'])}
+                                on:tap={() => switchValhallaSetting('use_hills')}
+                                on:longPress={(event) => setSliderCostingOptions('use_hills', event)} />
+                            <Pill
+                                color={valhallaSettingColor('weight', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['weight']}
+                                label={lc(OPTION_LABELS['weight'])}
+                                on:tap={() => switchValhallaSetting('weight')}
+                                on:longPress={(event) => setSliderCostingOptions('weight', event)} />
+                            <Pill
+                                color={valhallaSettingColor('step_penalty', profile, profileCostingOptions, buttonsColor)}
+                                icon={valhallaSettingIcon['step_penalty']}
+                                label={lc(OPTION_LABELS['step_penalty'])}
+                                on:tap={() => switchValhallaSetting('step_penalty')}
+                                on:longPress={(event) => setSliderCostingOptions('step_penalty', event)} />
+                        {/if}
+                        <Pill icon="mdi-timer-outline" label={lc('shortest')} selected={costingOptions.shortest} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
+                        <Pill icon="mdi-arrow-decision" label={lc('alternatives')} selected={computeMultiple} on:tap={() => (computeMultiple = !computeMultiple)} />
+                    </stacklayout>
+                </scrollview>
+            </gridlayout>
         </gridlayout>
     {/if}
 </stacklayout>

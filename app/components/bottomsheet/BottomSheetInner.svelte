@@ -10,7 +10,7 @@
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Application, ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { debounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
@@ -18,8 +18,9 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
+    import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
+    import Pill from '~/components/common/Pill.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
-    import { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
@@ -36,8 +37,8 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
-    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
-    import { actionBarButtonHeight, colors, fontScaleMaxed } from '~/variables';
+    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
+    import { colors, fontScaleMaxed } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
@@ -60,11 +61,52 @@
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
-    $: ({ colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
-    const PROFILE_HEIGHT = 155;
-    const STATS_HEIGHT = 180;
+    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
+    // the chart's height includes the band its selected point strip lives in
+    const PROFILE_HEIGHT = 215;
+    const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 86;
+    // the route header's stat tiles, under its title band
+    const ROUTE_TILES_HEIGHT = 48;
+    // a route's title band: the icon tile with its option icons below; the title takes the height beside
+    const ROUTE_TITLE_HEIGHT = 76;
+    const CARD_RADIUS = 20;
+    const CARD_MARGIN = 6;
+    /** the space above each card after the first, part of its row so the steps stay exact */
+    const CARD_GAP = 6;
+    // what a pill takes in the row, to fit as many as the width allows and move the rest to "…"
+    const PILL_ICON_WIDTH = 54;
+    const PILL_CHAR_WIDTH = 8;
+    function pillWidth(action) {
+        const label = PILL_LABELS[action.id]?.();
+        return PILL_ICON_WIDTH + (label ? label.length * PILL_CHAR_WIDTH + 6 : 0);
+    }
+    function splitActions(actions: typeof itemActions, width: number) {
+        const budget = width - CARD_MARGIN * 2 - 12;
+        let used = 0;
+        const visible = [];
+        for (let index = 0; index < actions.length; index++) {
+            const needed = pillWidth(actions[index]) + (index < actions.length - 1 ? PILL_ICON_WIDTH : 0);
+            if (used + needed > budget) {
+                return { visible, overflow: actions.slice(index) };
+            }
+            used += pillWidth(actions[index]);
+            visible.push(actions[index]);
+        }
+        return { visible, overflow: [] };
+    }
+    // the few actions worth a word; the rest are icon pills, their tooltip on long press
+    const PILL_LABELS: Record<string, () => string> = {
+        navigate: () => lc('start'),
+        save: () => lc('save'),
+        edit: () => lc('edit'),
+        share: () => lc('share')
+    };
+    const ACTIONS_HEIGHT = 58;
+    function headerHeight(it: Item) {
+        return it?.route ? ROUTE_TITLE_HEIGHT + ROUTE_TILES_HEIGHT : INFOVIEW_HEIGHT;
+    }
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -334,6 +376,34 @@
         .filter((action) => action.when)
         .concat(featureItemActions(item) as any)
         .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+    $: ({ overflow: overflowActions, visible: visibleActions } = splitActions(itemActions, sheetWidth));
+
+    function runAction(action, event) {
+        return (action['onTap'] ?? actionHandlers[action.id]?.tap)?.(event);
+    }
+    function longPressAction(action, event) {
+        const handler = action['onLongPress'] ?? actionHandlers[action.id]?.long;
+        return handler ? handler(event) : showToolTip(action.tooltip);
+    }
+    async function showOverflowActions(event) {
+        try {
+            await showPopoverMenu({
+                options: overflowActions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                props: { autoSizeListItem: true },
+                onClose: (option) => {
+                    const action = overflowActions.find((candidate) => candidate.id === option.id);
+                    if (action) {
+                        runAction(action, event);
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
     $: if ($isNavigating && $navigationProgress && graphAvailable) {
         highlightChartFromProgress($navigationProgress);
@@ -431,6 +501,8 @@
     // let webViewHeight = 0;
     // let listViewAvailable = false;
     // const listViewVisible = false;
+    /** the sheet's width, landscape is narrower than the screen */
+    export let sheetWidth = screenWidthDips;
     export let steps;
     export let navigationInstructions: {
         remainingDistance: number;
@@ -477,9 +549,9 @@
         // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and
         // gets stuck if it is missing
         const result = [0];
-        let total = INFOVIEW_HEIGHT;
+        let total = headerHeight(item);
         result.push(total);
-        total += 50;
+        total += ACTIONS_HEIGHT;
         result.push(total);
         if (graphAvailable) {
             total += PROFILE_HEIGHT;
@@ -1022,24 +1094,30 @@
     }
 </script>
 
-<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
+<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
             backgroundColor={colorPanel}
             borderColor={colorHairline}
             borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
+            borderWidth={1}
             closeAnimationDuration={100}
-            height={INFOVIEW_HEIGHT}
+            height={headerHeight(item) - CARD_GAP}
             leftSwipeDistance={0}
-            margin="0 2 0 2"
+            margin={`0 ${CARD_MARGIN}`}
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
-                <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
-            </BottomSheetInfoView>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${(itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT) - CARD_GAP},*`}>
+                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginBottom={itemIsRoute ? 2 : 24} marginLeft={62} propsBottom={24} showStats={!itemIsRoute}>
+                    <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
+                </BottomSheetInfoView>
+                {#if itemIsRoute}
+                    <RouteStatTiles {item} row={1} verticalAlignment="top" />
+                {/if}
+            </gridlayout>
             <IconButton
                 prop:leftDrawer
                 backgroundColor={isEInk ? 'white' : colorError}
@@ -1073,30 +1151,32 @@
             </stacklayout>
         </swipemenu>
 
-        <scrollview backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={CARD_RADIUS} borderWidth={CARD_BORDER_WIDTH} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
-            <stacklayout id="bottomsheetbuttons" orientation="horizontal">
-                {#each itemActions as action (action.id)}
-                    <IconButton
+        <gridlayout class="panel" borderRadius={CARD_RADIUS} colSpan={2} margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`} row={1}>
+            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding="0 6" verticalAlignment="middle">
+                {#each visibleActions as action (action.id)}
+                    <Pill
                         id={action.id}
-                        onLongPress={action['onLongPress'] ?? actionHandlers[action.id]?.long}
-                        rounded={false}
-                        text={action.text}
-                        tooltip={action.tooltip}
-                        on:tap={action['onTap'] ?? actionHandlers[action.id]?.tap} />
+                        icon={action.text}
+                        label={PILL_LABELS[action.id]?.()}
+                        primary={action.id === 'navigate'}
+                        on:tap={(event) => runAction(action, event)}
+                        on:longPress={(event) => longPressAction(action, event)} />
                 {/each}
+                {#if overflowActions.length}
+                    <Pill icon="mdi-dots-horizontal" on:tap={showOverflowActions} />
+                {/if}
             </stacklayout>
-        </scrollview>
-        <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
+        </gridlayout>
         <ElevationChart
             bind:this={elevationChart}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
+            class="panel"
             borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
             {chartShowWaypoints}
             colSpan={2}
+            infoStrip={true}
             {item}
-            margin="2 2 0 2"
+            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+            padding="0 6 4 6"
             row={2}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors}
@@ -1104,13 +1184,11 @@
             on:highlight={onChartHighlight} />
         <RouteStatsView
             bind:this={statsView}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
+            class="panel"
             borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
             colSpan={2}
             {item}
-            margin="2 2 0 2"
+            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
             row={3}
             visibility={statsAvailable ? 'visible' : 'collapse'} />
 

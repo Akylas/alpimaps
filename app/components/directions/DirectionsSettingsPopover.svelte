@@ -4,19 +4,20 @@
     import { Color } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { isEInk, onThemeChanged } from '~/helpers/theme';
-    import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
+    import { onThemeChanged } from '~/helpers/theme';
+    import { colors, fontScaleMaxed, screenHeightDips, screenWidthDips } from '~/variables';
     import SettingsSlider from '@shared/components/SettingsSlider.svelte';
     import PanelPopover from '~/components/common/PanelPopover.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import Pill from '~/components/common/Pill.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
 </script>
 
 <script lang="ts">
     import SettingsSwitch from '../settings/SettingsSwitch.svelte';
 
-    let { colorAccentContainer, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors;
-    $: ({ colorAccentContainer, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
+    let { colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors;
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
     // export let name: string = ull;
     export let options: { text; value; fontFamily }[] = null;
     export let settings: any[] = null;
@@ -26,6 +27,9 @@
     export let onOptionChange: (value) => any[] = null;
     export let onReset: () => any[] = null;
     export let onCheckBox: (item, value) => void = null;
+    export let title: string = null;
+    export let titleIcon: string = null;
+    export let titleIconFontFamily: string = null;
     let collectionView: NativeViewElementNode<CollectionView>;
 
     function onActualOptionChanged(value) {
@@ -51,25 +55,23 @@
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
 </script>
 
-<PanelPopover columns="*" rows="auto,*,auto" width={Math.min(screenWidthDips * 0.7 * $fontScaleMaxed, screenWidthDips * 0.9)} {...$$restProps}>
+<PanelPopover columns="*" rows="auto,auto,*,auto" width={Math.min(screenWidthDips * 0.7 * $fontScaleMaxed, screenWidthDips * 0.9)} {...$$restProps}>
+    {#if title}
+        <PanelHeader icon={titleIcon} iconFontFamily={titleIconFontFamily} padding="12 0 4 4" {title} />
+    {/if}
     {#if options}
-        <stacklayout horizontalAlignment="center" margin={5} orientation="horizontal">
-            {#each options as option, index}
-                <IconButton
-                    backgroundColor={currentOption === option.value ? (isEInk ? color : colorAccentContainer) : colorPanel}
-                    color={currentOption === option.value ? (isEInk ? inversedColor : colorPrimary) : color}
-                    fontFamily={option.fontFamily ?? $fonts.mdi}
-                    text={option.text}
-                    on:tap={() => onActualOptionChanged(option.value)} />
+        <wraplayout horizontalAlignment="center" margin="0 0 4 0" row={1}>
+            {#each options as option}
+                <Pill icon={option.text} iconFontFamily={option.fontFamily} selected={currentOption === option.value} on:tap={() => onActualOptionChanged(option.value)} />
             {/each}
-        </stacklayout>
+        </wraplayout>
     {/if}
     <collectionview
         bind:this={collectionView}
         height={Math.min(80 * $fontScaleMaxed * settings.length, screenHeightDips - 200)}
         itemTemplateSelector={(item) => (item.type === 'switch' ? item.type : 'default')}
         items={settings}
-        row={1}>
+        row={2}>
         <Template let:item>
             <SettingsSlider borderBottomColor={colorHairline} borderBottomWidth={1} {...item} />
         </Template>
@@ -78,18 +80,6 @@
         </Template>
     </collectionview>
     {#if onReset}
-        <mdbutton
-            color={colorOnSurface}
-            horizontalAlignment="left"
-            rippleColor={colorOnSurface}
-            row={2}
-            textAlignment="center"
-            variant="text"
-            verticalTextAlignment="center"
-            android:padding="8 4 0 4"
-            on:tap={onActualReset}>
-            <cspan fontFamily={$fonts.mdi} fontSize={20} text="mdi-cancel" verticalAlignment="middle" />
-            <cspan fontSize={16} text={lc('reset_settings')} verticalAlignment="middle" />
-        </mdbutton>
+        <Pill horizontalAlignment="left" icon="mdi-restore" label={lc('reset_settings')} margin="8 0" row={3} on:tap={onActualReset} />
     {/if}
 </PanelPopover>

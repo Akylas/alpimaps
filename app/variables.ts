@@ -50,6 +50,9 @@ export const colors = writable({
     colorWidgetBackground: '',
     colorPanel: '',
     colorMapControl: '',
+    colorSurfaceFill: '',
+    colorCanvas: '',
+    colorCard: '',
     colorHairline: '',
     colorOutlineSoft: '',
     colorAccentContainer: '',
@@ -349,6 +352,9 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
         if (colorTheme === 'eink') {
             currentColors.colorPanel = currentColors.colorSurface;
             currentColors.colorMapControl = currentColors.colorSurface;
+            currentColors.colorSurfaceFill = currentColors.colorSurface;
+            currentColors.colorCanvas = currentColors.colorBackground;
+            currentColors.colorCard = currentColors.colorBackground;
             currentColors.colorHairline = currentColors.colorOnSurface;
             currentColors.colorOutlineSoft = currentColors.colorOnSurface;
             currentColors.colorAccentContainer = currentColors.colorSurface;
@@ -357,15 +363,22 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
             const dark = theme === 'dark' || theme === 'black';
             currentColors.colorPanel = new Color(currentColors.colorSurface).setAlpha(247).hex;
             currentColors.colorMapControl = new Color(currentColors.colorSurface).setAlpha(200).hex;
+            // a tile a step off the sheet it sits on
+            currentColors.colorSurfaceFill = new Color(currentColors.colorOnSurface).setAlpha(8).hex;
             currentColors.colorHairline = new Color(currentColors.colorOnSurface).setAlpha(31).hex;
             currentColors.colorOutlineSoft = new Color(currentColors.colorOnSurface).setAlpha(64).hex;
             currentColors.colorAccentContainer = new Color(currentColors.colorPrimary).setAlpha(dark ? 41 : 31).hex;
             // the same tint made opaque, for buttons floating over the map
-            const surface = new Color(currentColors.colorSurface);
-            const primary = new Color(currentColors.colorPrimary);
-            const tint = (dark ? 41 : 31) / 255;
-            const mix = (from: number, to: number) => Math.round(from + (to - from) * tint);
-            currentColors.colorAccentContainerSolid = new Color(255, mix(surface.r, primary.r), mix(surface.g, primary.g), mix(surface.b, primary.b)).hex;
+            const blend = (base: string, over: string, amount: number) => {
+                const from = new Color(base);
+                const to = new Color(over);
+                const mix = (start: number, end: number) => Math.round(start + (end - start) * amount);
+                return new Color(255, mix(from.r, to.r), mix(from.g, to.g), mix(from.b, to.b)).hex;
+            };
+            currentColors.colorAccentContainerSolid = blend(currentColors.colorSurface, currentColors.colorPrimary, (dark ? 41 : 31) / 255);
+            // grouped lists: cards lifted off a dimmer page, lighter than it in both themes
+            currentColors.colorCanvas = dark ? currentColors.colorBackground : blend(currentColors.colorBackground, currentColors.colorOnSurface, 0.06);
+            currentColors.colorCard = dark ? blend(currentColors.colorBackground, currentColors.colorOnSurface, 0.08) : '#ffffff';
         }
         currentColors.colorOnSurfaceVariant2 = new Color(currentColors.colorOnSurfaceVariant).setAlpha(170).hex;
         currentColors.colorOnSurfaceDisabled = new Color(currentColors.colorOnSurface).setAlpha(50).hex;

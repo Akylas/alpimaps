@@ -47,6 +47,7 @@
         SETTINGS_VALHALLA_MAX_DISTANCE_TRACE,
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
+    import { CARD_INSET, CARD_PADDING, groupRows } from '~/components/settings/groupedRows';
     import { panelPopoverStyle, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
@@ -133,6 +134,57 @@
             currentValue: () => get(store),
             rightValue: () => (formatter ? formatter(get(store)) : get(store) + '')
         };
+    }
+    // sub page rows' icon tiles, by setting key (or row id when it has none)
+    const SUB_SETTING_ICONS: Record<string, string> = {
+        theme: 'mdi-theme-light-dark',
+        color_theme: 'mdi-palette',
+        auto_black: 'mdi-brightness-2',
+        clock_24: 'mdi-clock-outline',
+        [SETTINGS_IMPERIAL]: 'mdi-ruler',
+        [UNIT_FAMILIES.Distance]: 'mdi-map-marker-distance',
+        [UNIT_FAMILIES.Speed]: 'mdi-speedometer',
+        url_use_inapp_browser: 'mdi-web',
+        list_longpress_camera: 'mdi-camera-outline',
+        immersive: 'mdi-fullscreen',
+        useOfflineGeocodeAddress: 'mdi-map-search-outline',
+        useSystemGeocodeAddress: 'mdi-cellphone-marker',
+        startDirDest: 'mdi-directions',
+        [SETTINGS_VALHALLA_ONLINE_URL]: 'mdi-link-variant',
+        location_distance_from_route: 'mdi-map-marker-path',
+        [SETTINGS_VALHALLA_MAX_DISTANCE_PEDESTRIAN]: 'mdi-walk',
+        [SETTINGS_VALHALLA_MAX_DISTANCE_BICYCLE]: 'mdi-bike',
+        [SETTINGS_VALHALLA_MAX_DISTANCE_AUTO]: 'mdi-car',
+        [SETTINGS_VALHALLA_MAX_DISTANCE_TRACE]: 'mdi-vector-polyline',
+        chart_max_filter: 'mdi-filter-outline',
+        chart_elevation_min_range: 'mdi-arrow-expand-vertical',
+        elevation_profile_smooth_window: 'mdi-chart-bell-curve-cumulative',
+        elevation_profile_filter_step: 'mdi-stairs',
+        data_path: 'mdi-folder-outline',
+        items_data_path: 'mdi-folder-marker-outline',
+        [SETTINGS_TILE_SERVER_AUTO_START]: 'mdi-server',
+        [SETTINGS_TILE_SERVER_PORT]: 'mdi-lan',
+        route_image_capture: 'mdi-image-outline',
+        clickHandlerLayerFilter: 'mdi-cursor-default-click-outline',
+        clickRadius: 'mdi-radius-outline',
+        stop_gps_background: 'mdi-crosshairs-off',
+        gps_update_distance: 'mdi-map-marker-radius-outline',
+        gps_desired_accuracy: 'mdi-crosshairs-gps',
+        show_accuracy_marker: 'mdi-target',
+        draw_onroute_live_data: 'mdi-map-marker-path',
+        a9_background_location_screenrefresh: 'mdi-monitor-screenshot',
+        a9_background_location_screenrefresh_delay: 'mdi-timer-outline',
+        token: 'mdi-key-variant',
+        [SETTINGS_ENABLE_CRASH_REPORT]: 'mdi-bug-outline'
+    };
+    function withIcons<T extends { type?: string; icon?: string; key?: string; id?: string }>(rows: T[]): T[] {
+        return rows.map((row) => {
+            if (row.icon || row.type === 'header' || row.type === 'sectionheader') {
+                return row;
+            }
+            const icon = SUB_SETTING_ICONS[row.key] || SUB_SETTING_ICONS[row.id];
+            return icon ? { ...row, icon } : row;
+        });
     }
     function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
         return { type: 'switch', key: title, title, description, store, value: get(store) };
@@ -399,9 +451,12 @@
                     }
                 }));
             case 'terrain_3d':
-                return [storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
+                return [{ ...storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), icon: 'mdi-terrain' }, ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'peak_finder':
-                return [storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), ...peakFinderSettingRows().map(sharedSettingItem).filter(Boolean)];
+                return [
+                    { ...storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), icon: 'mdi-image-filter-hdr' },
+                    ...peakFinderSettingRows().map(sharedSettingItem).filter(Boolean)
+                ];
             case 'map_data':
                 return (
                     dataPathsAvailable
@@ -1125,14 +1180,15 @@
 <BaseSettingsPage
     bind:this={settingsPage}
     {id}
+    collectionViewProps={{ backgroundColor: $colors.colorCanvas }}
     {getDescription}
     {getTitle}
-    itemProps={{ fontSize: 17, subtitleFontSize: 14 }}
+    itemProps={{ backgroundColor: $colors.colorCard, fontSize: 17, subtitleFontSize: 14, padding: `0 ${CARD_INSET + CARD_PADDING}` }}
     leftIconClass="listIcon"
     {onCheckBox}
     onItemLongPress={onLongPress}
     onItemTap={onTap}
-    optionsProvider={getAvailableOptions}
+    optionsProvider={() => groupRows(withIcons(getAvailableOptions()))}
     {searchEnabled}
     sliderPopoverStyle={panelPopoverStyle($colors)}
     title={title || $slc('settings')}
