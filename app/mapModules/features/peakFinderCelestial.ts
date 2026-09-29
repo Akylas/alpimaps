@@ -214,6 +214,8 @@ export async function openSkyWikipedia(selected: SelectedSky) {
         const result = await networkService.request<{ entities: { [id: string]: { sitelinks?: { [site: string]: { title: string } } } } }>({
             url: 'https://www.wikidata.org/w/api.php',
             method: 'GET',
+            // Wikimedia answers 403 to a request without one.
+            headers: { 'User-Agent': __APP_ID__ },
             queryParams: { action: 'wbgetentities', format: 'json', props: 'sitelinks', ids: selected.wikidata, sitefilter: `${language}wiki|enwiki` }
         });
         const sitelinks = result?.entities?.[selected.wikidata]?.sitelinks ?? {};
