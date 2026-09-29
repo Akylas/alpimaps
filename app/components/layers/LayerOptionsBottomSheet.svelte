@@ -1,36 +1,40 @@
 <script lang="ts">
-    import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { action, confirm } from '@nativescript-community/ui-material-dialogs';
-    import { ApplicationSettings, Color, File, ScrollView, StackLayout } from '@nativescript/core';
+    import { ApplicationSettings, Color } from '@nativescript/core';
+    import { showError } from '@shared/utils/showError';
     import { onMount } from 'svelte';
-    import { formatSize } from '~/helpers/formatter';
+    import Pill from '~/components/common/Pill.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import { type LayerAction, layerCacheSize, layerCapabilities, runLayerAction } from '~/components/layers/layerActions';
     import { lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import { showError } from '@shared/utils/showError';
     import { pickColor } from '~/utils/utils';
     import { colors } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
-    import PanelHeader from '../common/PanelHeader.svelte';
-    import { createView } from '~/utils/ui';
-    $: ({ colorBackground, colorError, colorOnSurfaceVariant } = $colors);
-    import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
-    import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
-    import { GestureRootView } from '@nativescript-community/gesturehandler';
 
-    const mapContext = getMapContext();
-    let scrollView;
-    const devMode = mapContext.mapModule('customLayers').devMode;
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
+
     export let item: SourceItem;
 
-    $: downloadable = item.provider.downloadable || devMode;
-    $: cacheable = item.provider.cacheable || !PRODUCTION;
-    // a reference: destroying it leaves the layer's own source intact
-    $: source = item.layer.source() as MassifSource<'massif::PersistentCacheTileDataSource'>;
-    $: persistent = !!source?.is('massif::PersistentCacheTileDataSource');
-    $: cacheOnlyMode = persistent && source.get('cacheOnlyMode');
+    let scrollView;
+    let capabilities = layerCapabilities(item);
+    const cacheSize = layerCacheSize(item);
+
+    // the style's raw parameter names, readable where they are known
+    const OPTION_LABELS: Record<string, string> = {
+        contrast: 'contrast',
+        heightScale: 'height_scale',
+        zoomLevelBias: 'zoom_level_bias',
+        highlightColor: 'highlight_color',
+        accentColor: 'accent_color',
+        shadowColor: 'shadow_color',
+        illuminationDirection: 'illumination_direction',
+        minVisibleZoom: 'min_visible_zoom',
+        maxVisibleZoom: 'max_visible_zoom'
+    };
+    function optionLabel(name: string) {
+        return OPTION_LABELS[name] ? lc(OPTION_LABELS[name]) : name;
+    }
+
     let options: {
         [k: string]: {
             type?: string;
@@ -83,110 +87,12 @@
             showError(err);
         }
     }
-    async function handleAction(act: string) {
+    async function handleAction(layerAction: LayerAction) {
         try {
-            DEV_LOG && console.log('handleAction', act);
-            const customLayers = mapContext.mapModule('customLayers');
-            switch (act) {
-                case 'delete': {
-                    customLayers.deleteSource(item);
-                    break;
-                }
-                case 'cache_only_mode': {
-                    if (persistent) {
-                        cacheOnlyMode = !cacheOnlyMode;
-                        source.set('cacheOnlyMode', cacheOnlyMode);
-                        ApplicationSettings.setBoolean(`${item.name}_cacheOnlyMode`, cacheOnlyMode);
-                    }
-                    //dont close the bottom sheet
-                    return;
-                }
-                case 'clear_cache': {
-                    if (persistent) {
-                        source.call('clear');
-                    }
-                    item.layer.call('clearTileCaches', true);
-                    break;
-                }
-                case 'download_area': {
-                    const view = createView(ScrollView, {
-                        height: ALERT_OPTION_MAX_HEIGHT - 80
-                    });
-                    const stackLayout = createView(GestureRootView, {
-                        padding: 10,
-                        rows: 'auto,auto'
-                    });
-                    const SettingsSlider = (await import('@shared/components/SettingsSlider.svelte')).default;
-                    const massifMap = mapContext.getMap();
-                    const minSliderInstance = resolveComponentElement(SettingsSlider, {
-                        title: lc('min_zoom'),
-                        subtitle: lc('dowload_area_minzoom'),
-                        icon: 'mdi-chevron-down',
-                        max: item.provider.sourceOptions.maxZoom,
-                        step: 1,
-                        valueFormatter: (value) => value + '',
-                        min: 0,
-                        value: Math.round(mapContext.getMap().camera().zoom())
-                    });
-                    const maxSliderInstance = resolveComponentElement(SettingsSlider, {
-                        row: 1,
-                        title: lc('max_zoom'),
-                        subtitle: lc('dowload_area_maxzoom'),
-                        icon: 'mdi-chevron-up',
-                        max: item.provider.sourceOptions.maxZoom,
-                        min: 0,
-                        valueFormatter: (value) => value + '',
-                        step: 1,
-                        value: item.provider.sourceOptions.maxZoom - 1
-                    });
-                    stackLayout.addChild(minSliderInstance.element.nativeView);
-                    stackLayout.addChild(maxSliderInstance.element.nativeView);
-                    view.content = stackLayout;
-                    const result = await confirm({
-                        title: lc('download'),
-                        message: lc('confirm_area_download'),
-                        view,
-                        okButtonText: lc('ok'),
-                        cancelButtonText: lc('cancel')
-                    });
-                    const minZoom = (minSliderInstance.viewInstance as SettingsSlider__SvelteComponent_).value;
-                    const maxZoom = (maxSliderInstance.viewInstance as SettingsSlider__SvelteComponent_).value;
-                    minSliderInstance.element.nativeElement._tearDownUI();
-                    minSliderInstance.viewInstance.$destroy();
-                    maxSliderInstance.element.nativeElement._tearDownUI();
-                    maxSliderInstance.viewInstance.$destroy();
-                    if (result) {
-                        const customLayers = mapContext.mapModule('customLayers');
-                        if (customLayers && source) {
-                            customLayers.downloadDataSource({ source, provider: item.provider, minZoom, maxZoom });
-                        }
-                    }
-                    break;
-                }
-                case 'tile_filter_mode':
-                    if (item.layer.is('massif::RasterTileLayer') || item.layer.is('massif::HillshadeRasterTileLayer')) {
-                        const result = await action({
-                            title: lc('tile_filter_mode'),
-                            actions: ['bicubic', 'bilinear', 'nearest']
-                        });
-                        if (result) {
-                            ApplicationSettings.setString(`${item.name}_tileFilterMode`, result);
-                            // use native for now
-                            switch (result) {
-                                case 'bicubic':
-                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_BICUBIC');
-                                    break;
-                                case 'bilinear':
-                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_BILINEAR');
-                                    break;
-                                case 'nearest':
-                                    item.layer.set('tileFilterMode', 'RASTER_TILE_FILTER_MODE_NEAREST');
-                                    break;
-                            }
-                        }
-                    }
-                    //dont close the bottom sheet
-                    return;
+            await runLayerAction(item, layerAction);
+            if (layerAction === 'cache_only_mode' || layerAction === 'tile_filter_mode') {
+                capabilities = layerCapabilities(item);
+                return;
             }
             closeBottomSheet();
         } catch (error) {
@@ -194,98 +100,60 @@
         }
     }
 
-    function getTitle() {
-        let result = item.name.toUpperCase();
-        if (persistent) {
-            // `databasePath` is constructor-only on the source, so it can't be read back from it
-            const { databasePath } = item;
-            if (databasePath && File.exists(databasePath)) {
-                result += ` (${formatSize(File.fromPath(databasePath).size)})`;
-            }
-        }
-        return result;
-    }
+    $: sliderOptions = Object.entries(options).filter(([, option]) => option.type !== 'color');
+    $: colorOptions = Object.entries(options).filter(([, option]) => option.type === 'color');
 </script>
 
-<gesturerootview class="bottomsheet" {...$$restProps} height={280}>
-    <gridlayout columns="*,auto" rows="auto,*">
-        <PanelHeader icon="mdi-tune-variant" title={getTitle()} />
-        <scrollview bind:this={scrollView} id="scrollView" row={1}>
-            <stacklayout>
-                {#each Object.entries(options) as [name, option]}
-                    {#if option.type === 'color'}
-                        <gridlayout columns="*" height={50} on:tap={() => pickOptionColor(name, optionValue(name))}>
-                            <canvaslabel fontSize={13} padding={10}>
-                                <cspan horizontalAlignment="left" paddingLeft={10} text={name} verticalAlignment="middle" width={100} />
-                                <circle
-                                    antiAlias={true}
-                                    fillColor={colorOnSurfaceVariant}
-                                    horizontalAlignment="right"
-                                    paintStyle="fill"
-                                    radius={15}
-                                    strokeWidth={2}
-                                    verticalAlignment="middle"
-                                    width={20} />
-                                <circle
-                                    antiAlias={true}
-                                    fillColor={optionValue(name)}
-                                    horizontalAlignment="right"
-                                    paintStyle="fill_and_stroke"
-                                    radius={15}
-                                    strokeColor={colorOnSurfaceVariant}
-                                    strokeWidth={2}
-                                    verticalAlignment="middle"
-                                    width={20} />
-                            </canvaslabel>
-                        </gridlayout>
-                    {:else}
-                        <gridlayout columns="100,*,30" height={50}>
-                            <canvaslabel colSpan={3} fontSize={13} padding={10}>
-                                <cspan horizontalAlignment="left" paddingLeft={10} text={name} verticalAlignment="middle" width={100} />
-                                <cspan text={optionValue(name) / 100 + ''} textAlignment="right" verticalAlignment="middle" />
-                            </canvaslabel>
-                            <slider
-                                col={1}
-                                marginLeft={10}
-                                marginRight={10}
-                                maxValue={option.max * 100}
-                                minValue={option.min * 100}
-                                value={optionValue(name)}
-                                verticalAlignment="middle"
-                                on:valueChange={(event) => onOptionChanged(name, event)} />
-                        </gridlayout>
-                    {/if}
-                {/each}
-            </stacklayout>
-        </scrollview>
-        <stacklayout col={1} padding="0 4" rowSpan={2}>
-            <IconButton gray={true} isVisible={cacheable !== false} text="mdi-clock-remove-outline" tooltip={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
-            <IconButton
-                gray={true}
-                isVisible={!item.local && persistent}
-                text={cacheOnlyMode ? 'mdi-cloud-off-outline' : 'mdi-cloud-download-outline'}
-                tooltip={lc('cache_only_mode')}
-                on:tap={() => handleAction('cache_only_mode')} />
-            <IconButton
-                gray={true}
-                isVisible={!item.local && (devMode || downloadable) && !item.downloading}
-                text="mdi-download"
-                tooltip={lc('download_area')}
-                on:tap={() => handleAction('download_area')} />
-            <IconButton
-                gray={true}
-                isVisible={item.layer.is('massif::RasterTileLayer') || item.layer.is('massif::HillshadeRasterTileLayer')}
-                text="mdi-filter-cog"
-                tooltip={lc('tile_filter_mode')}
-                on:tap={() => handleAction('tile_filter_mode')} />
-            <IconButton color={colorError} isVisible={!item.local} text="mdi-delete" tooltip={lc('delete')} on:tap={() => handleAction('delete')} />
+<gesturerootview class="bottomsheet" {...$$restProps} height={420} rows="auto,auto,*,auto">
+    <PanelHeader icon="mdi-tune-variant" subtitle={cacheSize} title={item.name} />
+    <wraplayout padding="0 12" row={1}>
+        {#if capabilities.downloadable}
+            <Pill icon="mdi-download" label={lc('download')} on:tap={() => handleAction('download_area')} />
+        {/if}
+        {#if capabilities.canCacheOnly}
+            <Pill icon="mdi-cloud-off-outline" label={lc('cache_only_mode')} selected={capabilities.cacheOnlyMode} on:tap={() => handleAction('cache_only_mode')} />
+        {/if}
+        {#if capabilities.filterable}
+            <Pill icon="mdi-filter-cog" label={lc('tile_filter_mode')} on:tap={() => handleAction('tile_filter_mode')} />
+        {/if}
+    </wraplayout>
+    <scrollview bind:this={scrollView} id="scrollView" row={2}>
+        <stacklayout padding="0 4">
+            {#if sliderOptions.length}
+                <label class="sectionHeader" text={lc('rendering')} />
+            {/if}
+            {#each sliderOptions as [name, option]}
+                <gridlayout columns="*,auto" padding="4 16 0 16" rows="auto,auto">
+                    <label color={colorOnSurface} fontSize={15} text={optionLabel(name)} />
+                    <label col={1} color={colorOnSurfaceVariant} fontSize={14} text={optionValue(name) / 100 + ''} />
+                    <slider
+                        colSpan={2}
+                        marginLeft={-8}
+                        marginRight={-8}
+                        maxValue={option.max * 100}
+                        minValue={option.min * 100}
+                        row={1}
+                        value={optionValue(name)}
+                        on:valueChange={(event) => onOptionChanged(name, event)} />
+                </gridlayout>
+            {/each}
+            {#if colorOptions.length}
+                <label class="sectionHeader" text={lc('colors')} />
+            {/if}
+            {#each colorOptions as [name]}
+                <gridlayout columns="*,auto" height={52} padding="0 16" rippleColor={colorOnSurface} on:tap={() => pickOptionColor(name, optionValue(name))}>
+                    <label color={colorOnSurface} fontSize={15} text={optionLabel(name)} verticalAlignment="middle" />
+                    <absolutelayout backgroundColor={optionValue(name)} borderColor={colorHairline} borderRadius={16} borderWidth={1} col={1} height={32} verticalAlignment="middle" width={32} />
+                </gridlayout>
+            {/each}
         </stacklayout>
-        <!-- <collectionview orientation="horizontal" row={2} height={40} items={actions} colWidth="auto">
-        <Template let:item>
-            <gridlayout>
-                <mdbutton variant="outline" padding={10} marginRight={10} text={l(item)} on:tap={() => handleAction(item)} />
-            </gridlayout>
-        </Template>
-    </collectionview> -->
-    </gridlayout>
+    </scrollview>
+    <wraplayout padding="4 12 8 12" row={3}>
+        {#if capabilities.cacheable}
+            <Pill icon="mdi-clock-remove-outline" label={lc('clear_cache')} on:tap={() => handleAction('clear_cache')} />
+        {/if}
+        {#if capabilities.removable}
+            <Pill danger={true} icon="mdi-delete" label={lc('remove_layer')} on:tap={() => handleAction('delete')} />
+        {/if}
+    </wraplayout>
 </gesturerootview>
