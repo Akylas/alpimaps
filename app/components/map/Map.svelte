@@ -1537,8 +1537,23 @@
     onDestroy(stopWebServer);
     const showMapMenu = tryCatchFunction(
         async (event) => {
+            // the two modes lead as switches, toggled in place without closing the menu
             const options = (
                 [
+                    {
+                        title: lc('dark_mode'),
+                        id: 'dark_mode',
+                        type: 'switch',
+                        value: $forceDarkMode,
+                        icon: 'mdi-theme-light-dark'
+                    },
+                    {
+                        title: lc('offline_mode'),
+                        id: 'offline_mode',
+                        type: 'switch',
+                        value: networkService.forcedOffline,
+                        icon: 'mdi-wifi-strength-off-outline'
+                    },
                     {
                         accessibilityValue: 'settingsBtn',
                         title: lc('settings'),
@@ -1593,18 +1608,6 @@
                         icon: 'mdi-weather-night'
                     },
                     {
-                        title: lc('dark_mode'),
-                        id: 'dark_mode',
-                        color: $forceDarkMode ? colorPrimary : undefined,
-                        icon: 'mdi-theme-light-dark'
-                    },
-                    {
-                        title: lc('offline_mode'),
-                        id: 'offline_mode',
-                        color: networkService.forcedOffline ? colorError : undefined,
-                        icon: 'mdi-wifi-strength-off-outline'
-                    },
-                    {
                         title: lc('import_data'),
                         id: 'import',
                         icon: 'mdi-import'
@@ -1636,7 +1639,15 @@
                 anchor: event.object,
                 props: {
                     // autoSizeListItem: true,
-                    maxHeight: Screen.mainScreen.heightDIPs - 100
+                    maxHeight: Screen.mainScreen.heightDIPs - 100,
+                    width: Math.min(280, Screen.mainScreen.widthDIPs * 0.8),
+                    onCheckBox: (item, value) => {
+                        if (item.id === 'dark_mode' && value !== $forceDarkMode) {
+                            toggleForceDarkMode();
+                        } else if (item.id === 'offline_mode') {
+                            networkService.forcedOffline = value;
+                        }
+                    }
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
