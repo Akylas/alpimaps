@@ -49,7 +49,7 @@ let generation = 0;
 
 /** dp: a linear ramp reads better than the real magnitude scale. */
 function magnitudeToSize(magnitude: number) {
-    return Math.max(1.6, 6 - 0.8 * (magnitude + 1.5));
+    return Math.max(2.6, 8 - (magnitude + 1.5));
 }
 
 interface StarsStyle {
