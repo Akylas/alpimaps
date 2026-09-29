@@ -1,7 +1,7 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
+    import { ApplicationSettings, Color, ObservableArray, Screen } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import deburr from 'deburr';
     import type { Point as GeoJSONPoint } from 'geojson';
@@ -11,7 +11,7 @@
     import { formatDistance, osmicon } from '~/helpers/formatter';
     import { getBoundsOfDistance, getDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
-    import { onThemeChanged } from '~/helpers/theme';
+    import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
@@ -218,7 +218,7 @@
                         }
                         bounds = { southwest: { lat: extent[1], lon: extent[0] }, northeast: { lat: extent[3], lon: extent[2] } };
                     } else if (item.route) {
-                        bounds = geometryBounds(item.geometry as GeoJSON.Geometry);
+                        bounds = geometryBounds(item.geometry);
                     } else {
                         const geometry = item.geometry as GeoJSONPoint;
                         position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
@@ -349,22 +349,29 @@
     onThemeChanged(refreshCollectionView);
 </script>
 
-<collectionview bind:this={collectionView} items={dataItems} rowHeight={52} {...$$restProps}>
+<!-- the items list's marker row: a tile tinted with the provider colour, title and address, distance -->
+<collectionview bind:this={collectionView} items={dataItems} rowHeight={60} {...$$restProps}>
     <Template let:item>
-        <canvaslabel color={colorOnSurface} columns="34,*" disableCss={true} padding="0 10 0 10" rippleColor={colorOnSurface} rows="*,auto,auto,*" on:tap={() => dispatch('tap', item)}>
-            <cspan color={item.style.color} fontFamily="osm" fontSize={20} text={item.style.icon} verticalAlignment="middle" />
-            <cgroup paddingLeft={34} paddingRight={80} verticalAlignment="middle">
-                <cspan fontSize={13} fontWeight="bold" text={item.title} />
-                <cspan color={colorOnSurfaceVariant} fontSize={11} text={!!item.subtitle ? '\n' + item.subtitle : null} visibility={!!item.subtitle ? 'visible' : 'collapse'} />
-            </cgroup>
-            <cspan
-                color={colorOnSurfaceVariant}
-                fontSize={12}
-                paddingTop={10}
-                text={item.distance && formatDistance(item.distance)}
-                textAlignment="right"
-                verticalAlignment="top"
-                visibility={'distance' in item ? 'visible' : 'collapse'} />
-        </canvaslabel>
+        <gridlayout columns="auto,*,auto" padding="0 16 0 12" rippleColor={colorOnSurface} on:tap={() => dispatch('tap', item)}>
+            <label
+                backgroundColor={isEInk ? null : new Color(item.style.color || colorOnSurface).setAlpha(36).hex}
+                borderColor={colorOnSurface}
+                borderRadius={12}
+                borderWidth={isEInk ? 1 : 0}
+                color={isEInk ? colorOnSurface : item.style.color}
+                fontFamily="osm"
+                fontSize={20}
+                height={40}
+                text={item.style.icon}
+                textAlignment="center"
+                verticalAlignment="middle"
+                verticalTextAlignment="center"
+                width={40} />
+            <stacklayout col={1} paddingLeft={12} paddingRight={8} verticalAlignment="middle">
+                <label color={colorOnSurface} fontSize={15} fontWeight="bold" maxLines={1} text={item.title} />
+                <label color={colorOnSurfaceVariant} fontSize={12} maxLines={1} text={item.subtitle} visibility={item.subtitle ? 'visible' : 'collapse'} />
+            </stacklayout>
+            <label col={2} color={colorOnSurfaceVariant} fontSize={12} text={item.distance ? formatDistance(item.distance) : null} verticalAlignment="middle" />
+        </gridlayout>
     </Template>
 </collectionview>
