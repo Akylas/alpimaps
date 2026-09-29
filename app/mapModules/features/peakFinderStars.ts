@@ -1,10 +1,10 @@
 import type { MassifLayer, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
 import { Screen } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { lc } from '~/helpers/locale';
+import { formatTime, lc } from '~/helpers/locale';
 import { isEInk } from '~/helpers/theme';
 import { type PeakFinderSkyContext, addTo, celestialLifecycle, clearSkySelection, colour, listenToSkyClicks, refreshSkySelection, skyMoment } from '~/mapModules/features/peakFinderCelestial';
-import { type Horizontal, daysSinceJ2000, meanDirection, planetHorizon, toHorizon } from '~/mapModules/features/sky/astronomy';
+import { type Horizontal, type Pass, daysSinceJ2000, fixedPass, meanDirection, planetEquatorial, planetHorizon, planetPass, toHorizon } from '~/mapModules/features/sky/astronomy';
 import { FIGURES, PLANETS, STARS } from '~/mapModules/features/sky/starCatalogue';
 import { type SelectedSky, peakFinderConstellations, peakFinderPlanets, peakFinderSelectedSky, peakFinderStars } from '~/stores/terrainStore';
 
@@ -216,21 +216,47 @@ export function updatePeakFinderStars(force = false) {
     }
 }
 
+const KM_PER_AU = 149597870.7;
+
+function passText(pass: Pass) {
+    if (pass === 'always') {
+        return lc('never_sets');
+    }
+    if (pass === 'never') {
+        return lc('never_rises');
+    }
+    return `↑ ${formatTime(pass.rise)} · ↓ ${formatTime(pass.set)}`;
+}
+
 /** What the chip shows for a tapped object, and where the ring follows it. */
-function resolve(id: string): { selected: SelectedSky; locate: () => Horizontal | null } | null {
+function resolve(id: string): { selected: SelectedSky; locate: () => Horizontal | null; pass?: () => string | null } | null {
     const [kind, value] = id.split(':');
     const index = Number(value);
     if (kind === 'star' && STARS[index]) {
         const entry = STARS[index];
         return {
-            selected: { id, kind: 'star', name: entry.name, detail: `${lc('star')} · ${lc('magnitude')} ${entry.mag}`, wikidata: entry.wikidata },
-            locate: () => stars[index]?.horizontal ?? null
+            selected: { id, kind: 'star', name: entry.name, detail: `${lc('star')} · ${lc('magnitude')} ${entry.mag} · ${lc('light_years', entry.ly)}`, wikidata: entry.wikidata },
+            locate: () => stars[index]?.horizontal ?? null,
+            pass: () => {
+                const eye = context?.eye();
+                return eye ? passText(fixedPass(entry.ra * TO_HOURS_DEGREES, entry.dec, skyMoment(), eye.lat, eye.lon)) : null;
+            }
         };
     }
     if (kind === 'planet' && PLANETS[index]) {
         return {
             selected: { id, kind: 'planet', name: lc(PLANETS[index].key), detail: lc('planet'), wikidata: PLANETS[index].wikidata },
-            locate: () => planets[index]?.horizontal ?? null
+            locate: () => planets[index]?.horizontal ?? null,
+            // Its distance changes with the moment, so it rides with the pass.
+            pass: () => {
+                const eye = context?.eye();
+                if (!eye) {
+                    return null;
+                }
+                const moment = skyMoment();
+                const distance = Math.round((planetEquatorial(index, daysSinceJ2000(moment)).distance * KM_PER_AU) / 1e6);
+                return `${passText(planetPass(index, moment, eye.lat, eye.lon))} · ${lc('million_km', distance)}`;
+            }
         };
     }
     if (kind === 'constellation' && FIGURES[index]) {
