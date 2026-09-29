@@ -364,7 +364,7 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
             currentColors.colorPanel = new Color(currentColors.colorSurface).setAlpha(247).hex;
             currentColors.colorMapControl = new Color(currentColors.colorSurface).setAlpha(200).hex;
             // a tile a step off the sheet it sits on
-            currentColors.colorSurfaceFill = new Color(currentColors.colorOnSurface).setAlpha(13).hex;
+            currentColors.colorSurfaceFill = new Color(currentColors.colorOnSurface).setAlpha(8).hex;
             currentColors.colorHairline = new Color(currentColors.colorOnSurface).setAlpha(31).hex;
             currentColors.colorOutlineSoft = new Color(currentColors.colorOnSurface).setAlpha(64).hex;
             currentColors.colorAccentContainer = new Color(currentColors.colorPrimary).setAlpha(dark ? 41 : 31).hex;

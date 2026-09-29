@@ -344,17 +344,23 @@
             }
             if (showIcon && itemIcon && !actualShowSymbol) {
                 const fontSize = iconSize * $fontScaleMaxed;
-                if (iconTile && !isEInk) {
-                    const tileSize = fontSize + 18;
-                    const tileLeft = paddingLeft + iconLeft - tileSize / 2;
-                    const tileTop = iconTop - tileSize / 2;
-                    iconTilePaint.color = colorAccentContainer;
-                    canvas.drawRoundRect(tileLeft, tileTop, tileLeft + tileSize, tileTop + tileSize, 12, 12, iconTilePaint);
-                }
                 iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || (isEInk ? colorOnSurface : colorPrimary);
-                canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
+                if (iconTile) {
+                    // tile and glyph both centred on the title block, beside which they sit
+                    const centerY = paddingTop + (h - marginBottom) / 2;
+                    if (!isEInk) {
+                        const tileSize = fontSize + 18;
+                        const tileLeft = paddingLeft + iconLeft - tileSize / 2;
+                        iconTilePaint.color = colorAccentContainer;
+                        canvas.drawRoundRect(tileLeft, centerY - tileSize / 2, tileLeft + tileSize, centerY + tileSize / 2, 12, 12, iconTilePaint);
+                    }
+                    const metrics = iconPaint.getFontMetrics();
+                    canvas.drawText(itemIcon, paddingLeft + iconLeft, centerY - (metrics.ascent + metrics.descent) / 2, iconPaint);
+                } else {
+                    canvas.drawText(itemIcon, paddingLeft + iconLeft, iconTop + fontSize / 2, iconPaint);
+                }
             }
 
             propsPaint.setTextAlign(Align.LEFT);
@@ -368,15 +374,17 @@
                 canvas.restore();
             }
             if (nString2) {
-                propsPaint.textSize = 14 * $fontScaleMaxed;
-                const staticLayout = new StaticLayout(nString2, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
+                // with the tile header the route options read as a line under the title, not a corner badge
+                propsPaint.textSize = (iconTile ? 13 : 14) * $fontScaleMaxed;
+                const staticLayout = new StaticLayout(nString2, propsPaint, iconTile ? w - marginLeft : w, iconTile ? LayoutAlignment.ALIGN_NORMAL : LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();
-                canvas.translate(paddingLeft, paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
+                canvas.translate(paddingLeft + (iconTile ? marginLeft - 10 : 0), paddingTop + h - props2Bottom * Math.sqrt($fontScaleMaxed));
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
 
-            if (nString3) {
+            // the tile header shows the live figures in its stat tiles instead
+            if (nString3 && !iconTile) {
                 propsPaint.textSize = 11 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString3, propsPaint, w, LayoutAlignment.ALIGN_OPPOSITE, 1, 0, true);
                 canvas.save();

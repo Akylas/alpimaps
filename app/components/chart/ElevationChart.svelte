@@ -25,15 +25,17 @@
     import { lc } from '~/helpers/locale';
     import GradeLegend from '~/components/chart/GradeLegend.svelte';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    let { colorAccentContainer, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorAccentContainer, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     /** what ui-chart fills a line set with by default, out of 255 */
     const DEFAULT_FILL_ALPHA = 85;
     /** grade sections are read by colour, so their fill has to actually carry one */
-    const GRADE_FILL_ALPHA = 180;
+    const GRADE_FILL_ALPHA = 225;
 
-    const xintervals = [1, 2, 5, 10, 20, 50, 100];
+    /** km between x labels: whatever gives about four of them */
+    const xintervals = [0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
+    const X_LABEL_COUNT = 4;
     function closestUpper(arr: number[], target: number): number | undefined {
         return arr.filter((x) => x >= target).sort((a, b) => a - b)[0];
     }
@@ -41,6 +43,12 @@
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
 
+    const cursorPaint = new Paint();
+    cursorPaint.setStrokeWidth(1.5);
+    const cursorTextPaint = new Paint();
+    cursorTextPaint.setTextSize(11);
+    cursorTextPaint.setFontWeight('bold');
+    cursorTextPaint.setTextAlign(Align.CENTER);
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
     highlightPaint.setStrokeWidth(1);
@@ -423,7 +431,8 @@
                 chartView.minOffset = 0;
                 // the mini chart is drawn under the widget's own labels — the summit elevation sits in
                 // its top right corner — so the curve needs headroom rather than the whole card
-                chartView.setExtraOffsets(0, mini ? 14 : 24, mini ? 4 : 10, mini ? 2 : 10);
+                // with the strip above, the highlight needs no room of its own
+                chartView.setExtraOffsets(0, mini ? 14 : infoStrip ? 6 : 24, mini ? 4 : 10, mini ? 2 : infoStrip ? 16 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -434,9 +443,12 @@
                 }
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(70).hex;
-
-                leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(infoStrip ? 140 : 70).hex;
+                if (infoStrip) {
+                    leftAxis.gridLineWidth = 0.5;
+                } else {
+                    leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
+                }
                 leftAxis.ensureLastLabel = true;
                 leftAxis.drawLimitLinesBehindData = false;
 
@@ -467,6 +479,24 @@
                             staticLayout.draw(c);
                             c.restore();
                         }
+                        if (infoStrip) {
+                            // the strip's accent, so the cursor reads as its point: a line from the
+                            // strip down, a ringed dot on the curve and the distance on the axis
+                            const bottom = chartView.viewPortHandler.contentBottom;
+                            cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
+                            c.drawLine(x, 0, x, bottom, cursorPaint);
+                            cursorPaint.color = isEInk ? 'white' : colorBackground;
+                            c.drawCircle(x, h.drawY, 7, cursorPaint);
+                            cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
+                            c.drawCircle(x, h.drawY, 5, cursorPaint);
+                            const text = formatDistance(h.entry['d']);
+                            const halfWidth = cursorTextPaint.measureText(text) / 2 + 6;
+                            const left = Math.max(0, Math.min(c.getWidth() - halfWidth * 2, x - halfWidth));
+                            c.drawRoundRect(left, bottom + 1, left + halfWidth * 2, bottom + 17, 8, 8, cursorPaint);
+                            cursorTextPaint.color = isEInk ? 'white' : colorOnPrimary;
+                            c.drawText(text, left + halfWidth, bottom + 13, cursorTextPaint);
+                            return;
+                        }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
                         c.drawText(formatDistance(h.entry['d']), x + 6, 23, highlightPaint);
@@ -485,7 +515,7 @@
                 //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
             }
-            const labelCount = 5;
+            const labelCount = infoStrip ? 3 : 5;
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
             const interval = Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / step) * step;
             leftAxis.forcedInterval = interval;
@@ -495,7 +525,7 @@
             leftAxis.textSize = 9 * $fontScale;
 
             const totalDistance = it.route.totalDistance;
-            const xLabelCount = 6;
+            const xLabelCount = infoStrip ? X_LABEL_COUNT : 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
@@ -638,31 +668,31 @@
     }
 </script>
 
-<gridlayout rows={infoStrip ? '52,*,auto' : '*'} {...$$restProps}>
+<gridlayout rows={infoStrip ? '46,*,auto' : '*'} {...$$restProps}>
     {#if infoStrip}
-        <!-- the selected point's strip: the accent it shares with the cursor ties the two together -->
+        <!-- the selected point's strip, in the accent the cursor shares; tapping it clears the selection -->
         <label class="sectionHeader" padding="16 8 0 8" text={lc('elevation_profile')} visibility={highlightInfo ? 'collapse' : 'visible'} />
         <gridlayout
             backgroundColor={isEInk ? null : colorAccentContainer}
             borderColor={isEInk ? colorOnSurface : colorPrimary}
             borderRadius={14}
             borderWidth={1}
-            columns="auto,*,auto"
-            margin="4 4 2 4"
-            visibility={highlightInfo ? 'visible' : 'collapse'}>
+            columns="auto,*"
+            margin="4 4 0 4"
+            visibility={highlightInfo ? 'visible' : 'collapse'}
+            on:tap={clearHighlight}>
             <stacklayout padding="0 8 0 10" verticalAlignment="middle">
-                <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={18} text="mdi-map-marker" textAlignment="center" />
-                <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={12} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={16} text="mdi-map-marker" textAlignment="center" />
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={11} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
             </stacklayout>
-            <wraplayout col={1} verticalAlignment="middle">
+            <wraplayout col={1} paddingRight={6} verticalAlignment="middle">
                 {#each highlightInfo?.values ?? [] as info}
-                    <canvaslabel fontSize={13} height={20} width="33%">
+                    <canvaslabel fontSize={13} height={18} width="33%">
                         <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} text={info.icon} verticalAlignment="middle" />
                         <cspan color={info.color && !isEInk ? info.color : colorOnSurface} fontWeight="bold" paddingLeft={18} text={info.value} verticalAlignment="middle" />
                     </canvaslabel>
                 {/each}
             </wraplayout>
-            <mdbutton class="actionBarButton" col={2} color={isEInk ? colorOnSurface : colorPrimary} text="mdi-close" variant="text" width={44} on:tap={clearHighlight} />
         </gridlayout>
     {/if}
     <linechart
