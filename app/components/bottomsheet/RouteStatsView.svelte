@@ -7,8 +7,9 @@
     barPaint.strokeWidth = 2;
     const textPaint = new Paint();
     textPaint.textSize = 13;
+    // the .sectionHeader look
     const bigTextPaint = new Paint();
-    bigTextPaint.textSize = 16;
+    bigTextPaint.textSize = 13;
     bigTextPaint.fontWeight = 'bold';
 </script>
 
@@ -25,7 +26,7 @@
 
     export let item: IItem;
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
 
     let statsCanvas: NativeViewElementNode<CanvasView>;
     let statsKey = ApplicationSettings.getString('stats_key', 'waytypes');
@@ -49,7 +50,7 @@
             const w = canvas.getWidth();
             const h = canvas.getHeight();
 
-            bigTextPaint.color = colorOnSurfaceVariant;
+            bigTextPaint.color = isEInk ? colorOnSurface : colorPrimary;
             textPaint.color = colorOnSurface;
 
             const usedWidth = w - 20;
@@ -60,7 +61,7 @@
             // On eink the surface palette renders as indistinguishable greys, so surfaces are hatched.
             // Not reactive: `setStatsKey` invalidates the canvas before svelte flushes derived values.
             const patterned = isEInk && statsKey === 'surfaces';
-            canvas.drawText(lc(statsKey), labelx, 20, bigTextPaint);
+            canvas.drawText(lc(statsKey), labelx, 22, bigTextPaint);
             const nbColumns = Math.max(1, Math.round(stats.length / Math.floor((h - 95) / 20)));
             const availableWidth = usedWidth / nbColumns - 15;
             let nString, text, text2, layoutHeight, staticLayout;

@@ -2,7 +2,7 @@
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-        import { LineChart } from '@nativescript-community/ui-chart/charts';
+    import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
     import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
@@ -22,9 +22,11 @@
     import { showError } from '@shared/utils/showError';
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
+    import { lc } from '~/helpers/locale';
+    import GradeLegend from '~/components/chart/GradeLegend.svelte';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    let { colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorOnPrimary, colorOnSurface, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorAccentContainer, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     /** what ui-chart fills a line set with by default, out of 255 */
     const DEFAULT_FILL_ALPHA = 85;
@@ -69,6 +71,15 @@
     export let filled = true;
     /** profile index range to zoom on, eg the climb underway. Whole route when null */
     export let range: { fromIndex: number; toIndex: number } = null;
+    /** the selected point's figures in a strip above the chart, instead of text drawn over it */
+    export let infoStrip = false;
+
+    let highlightInfo: { at: string; values: { icon: string; fontFamily: string; value: string; color?: string }[] } = null;
+
+    export function clearHighlight() {
+        chart?.nativeView?.highlightValues(null);
+        highlightInfo = null;
+    }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
         applyRange(range);
@@ -238,6 +249,7 @@
         // DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
+            highlightInfo = null;
             if (nChart) {
                 nChart.highlight(null);
             }
@@ -318,6 +330,21 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
+                if (infoStrip) {
+                    const grade = itemData.g || 0;
+                    highlightInfo = {
+                        at: formatDistance(itemData.d),
+                        values: [
+                            !isNaN(params.remainingTime) && { icon: 'mdi-timer-outline', fontFamily: $fonts.mdi, value: convertDurationSeconds(params.remainingTime) },
+                            { icon: 'mdi-arrow-expand-right', fontFamily: $fonts.mdi, value: formatDistance(params.remainingDistance) },
+                            { icon: 'mdi-triangle-outline', fontFamily: $fonts.mdi, value: convertElevation(itemData.a || 0) },
+                            { icon: 'mdi-angle-acute', fontFamily: $fonts.mdi, value: grade.toFixed(1) + ' %', color: gradeColor(grade) },
+                            !isNaN(itemData.dp) && params.dplus - itemData.dp > 0 && { icon: 'mdi-arrow-top-right', fontFamily: $fonts.mdi, value: convertElevation(params.dplus - itemData.dp) },
+                            !isNaN(itemData.dm) &&
+                                Math.abs(params.dmin - itemData.dm) > 0 && { icon: 'mdi-arrow-bottom-right', fontFamily: $fonts.mdi, value: convertElevation(-(params.dmin - itemData.dm)) }
+                        ].filter(Boolean)
+                    };
+                }
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
@@ -433,7 +460,7 @@
                             c.drawCircle(x, h.drawY, 4, highlightPaint);
                             return;
                         }
-                        if (highlightNString) {
+                        if (highlightNString && !infoStrip) {
                             const staticLayout = new StaticLayout(highlightNString, nstringPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
                             c.translate(10, 0);
@@ -611,18 +638,49 @@
     }
 </script>
 
-<linechart
-    bind:this={chart}
-    hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28}
-    {...$$restProps}
-    doubleTapGestureOptions={{
-        maxDelayMs: 100
-    }}
-    panGestureOptions={{
-        minDist: 20,
-        failOffsetYStart: -20,
-        failOffsetYEnd: 20
-    }}
-    on:highlight={onChartHighlight}
-    on:zoom={onChartPanOrZoom}
-    on:pan={onChartPanOrZoom} />
+<gridlayout rows={infoStrip ? '52,*,auto' : '*'} {...$$restProps}>
+    {#if infoStrip}
+        <!-- the selected point's strip: the accent it shares with the cursor ties the two together -->
+        <label class="sectionHeader" padding="16 8 0 8" text={lc('elevation_profile')} visibility={highlightInfo ? 'collapse' : 'visible'} />
+        <gridlayout
+            backgroundColor={isEInk ? null : colorAccentContainer}
+            borderColor={isEInk ? colorOnSurface : colorPrimary}
+            borderRadius={14}
+            borderWidth={1}
+            columns="auto,*,auto"
+            margin="4 4 2 4"
+            visibility={highlightInfo ? 'visible' : 'collapse'}>
+            <stacklayout padding="0 8 0 10" verticalAlignment="middle">
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={18} text="mdi-map-marker" textAlignment="center" />
+                <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={12} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
+            </stacklayout>
+            <wraplayout col={1} verticalAlignment="middle">
+                {#each highlightInfo?.values ?? [] as info}
+                    <canvaslabel fontSize={13} height={20} width="33%">
+                        <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} text={info.icon} verticalAlignment="middle" />
+                        <cspan color={info.color && !isEInk ? info.color : colorOnSurface} fontWeight="bold" paddingLeft={18} text={info.value} verticalAlignment="middle" />
+                    </canvaslabel>
+                {/each}
+            </wraplayout>
+            <mdbutton class="actionBarButton" col={2} color={isEInk ? colorOnSurface : colorPrimary} text="mdi-close" variant="text" width={44} on:tap={clearHighlight} />
+        </gridlayout>
+    {/if}
+    <linechart
+        bind:this={chart}
+        doubleTapGestureOptions={{
+            maxDelayMs: 100
+        }}
+        hardwareAccelerated={__ANDROID__ && SDK_VERSION >= 28}
+        panGestureOptions={{
+            minDist: 20,
+            failOffsetYStart: -20,
+            failOffsetYEnd: 20
+        }}
+        row={infoStrip ? 1 : 0}
+        on:highlight={onChartHighlight}
+        on:zoom={onChartPanOrZoom}
+        on:pan={onChartPanOrZoom} />
+    {#if infoStrip && showProfileGrades && !isEInk}
+        <GradeLegend row={2} />
+    {/if}
+</gridlayout>

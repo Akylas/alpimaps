@@ -18,8 +18,9 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
+    import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
+    import Pill from '~/components/common/Pill.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
-    import { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
@@ -36,7 +37,7 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
-    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover } from '~/utils/ui/index.common';
+    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors, fontScaleMaxed } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -60,11 +61,24 @@
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
-    $: ({ colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
-    const PROFILE_HEIGHT = 155;
+    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    // the chart's height includes the band its selected point strip lives in
+    const PROFILE_HEIGHT = 215;
     const STATS_HEIGHT = 180;
     const WEB_HEIGHT = 400;
     const INFOVIEW_HEIGHT = 86;
+    const STAT_TILES_HEIGHT = 64;
+    // the few actions worth a word; the rest are icon pills, their tooltip on long press
+    const PILL_LABELS: Record<string, () => string> = {
+        navigate: () => lc('start'),
+        save: () => lc('save'),
+        edit: () => lc('edit'),
+        share: () => lc('share')
+    };
+    const ACTIONS_HEIGHT = 56;
+    function headerHeight(it: Item) {
+        return INFOVIEW_HEIGHT + (it?.route ? STAT_TILES_HEIGHT : 0);
+    }
 
     const mapContext = getMapContext();
     const highlightPaint = new Paint();
@@ -477,9 +491,9 @@
         // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and
         // gets stuck if it is missing
         const result = [0];
-        let total = INFOVIEW_HEIGHT;
+        let total = headerHeight(item);
         result.push(total);
-        total += 50;
+        total += ACTIONS_HEIGHT;
         result.push(total);
         if (graphAvailable) {
             total += PROFILE_HEIGHT;
@@ -1022,24 +1036,36 @@
     }
 </script>
 
-<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${INFOVIEW_HEIGHT},50,${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<!-- one sheet with the sky panel's hairline, its sections set apart by spacing rather than cards -->
+<gridlayout
+    id="bottomSheetInner"
+    backgroundColor={colorBackground}
+    borderColor={colorHairline}
+    borderTopLeftRadius={24}
+    borderTopRightRadius={24}
+    borderWidth={1}
+    {...$$restProps}
+    rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`}
+    on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
-            borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
+            borderTopLeftRadius={24}
+            borderTopRightRadius={24}
             closeAnimationDuration={100}
-            height={INFOVIEW_HEIGHT}
+            height={headerHeight(item)}
             leftSwipeDistance={0}
-            margin="0 2 0 2"
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <BottomSheetInfoView bind:this={infoView} prop:mainContent colSpan={2} {item} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0}>
-                <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
-            </BottomSheetInfoView>
+            <gridlayout prop:mainContent backgroundColor={colorBackground} rows={`${INFOVIEW_HEIGHT},auto`}>
+                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginLeft={62} rightTextPadding={itemIsRoute ? $actionBarButtonHeight : 0} showStats={!itemIsRoute}>
+                    <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
+                </BottomSheetInfoView>
+                {#if itemIsRoute}
+                    <RouteStatTiles {item} row={1} verticalAlignment="top" />
+                {/if}
+            </gridlayout>
             <IconButton
                 prop:leftDrawer
                 backgroundColor={isEInk ? 'white' : colorError}
@@ -1073,46 +1099,32 @@
             </stacklayout>
         </swipemenu>
 
-        <scrollview backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={CARD_RADIUS} borderWidth={CARD_BORDER_WIDTH} colSpan={2} margin="2 2 0 2" orientation="horizontal" row={1}>
-            <stacklayout id="bottomsheetbuttons" orientation="horizontal">
+        <scrollview colSpan={2} orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
+            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding="0 9" verticalAlignment="middle">
                 {#each itemActions as action (action.id)}
-                    <IconButton
+                    <Pill
                         id={action.id}
-                        onLongPress={action['onLongPress'] ?? actionHandlers[action.id]?.long}
-                        rounded={false}
-                        text={action.text}
-                        tooltip={action.tooltip}
-                        on:tap={action['onTap'] ?? actionHandlers[action.id]?.tap} />
+                        icon={action.text}
+                        label={PILL_LABELS[action.id]?.()}
+                        primary={action.id === 'navigate'}
+                        on:tap={(event) => (action['onTap'] ?? actionHandlers[action.id]?.tap)?.(event)}
+                        on:longPress={(event) => (action['onLongPress'] ?? actionHandlers[action.id]?.long ?? (() => showToolTip(action.tooltip)))(event)} />
                 {/each}
             </stacklayout>
         </scrollview>
-        <!-- <label height={PROFILE_HEIGHT} row={2} visibility={graphAvailable ? 'visible' : 'collapse'}/> -->
         <ElevationChart
             bind:this={elevationChart}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
-            borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
             {chartShowWaypoints}
             colSpan={2}
+            infoStrip={true}
             {item}
-            margin="2 2 0 2"
+            margin="0 8"
             row={2}
             showAscents={$showAscents}
             showProfileGrades={$showGradeColors}
             visibility={graphAvailable ? 'visible' : 'collapse'}
             on:highlight={onChartHighlight} />
-        <RouteStatsView
-            bind:this={statsView}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
-            borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
-            colSpan={2}
-            {item}
-            margin="2 2 0 2"
-            row={3}
-            visibility={statsAvailable ? 'visible' : 'collapse'} />
+        <RouteStatsView bind:this={statsView} colSpan={2} {item} margin="0 8" row={3} visibility={statsAvailable ? 'visible' : 'collapse'} />
 
         <!-- <AWebView
             row={3}
