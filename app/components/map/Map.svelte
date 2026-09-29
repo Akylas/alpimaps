@@ -1889,7 +1889,6 @@
         <!-- collapsed during AR: three GL surfaces (preview, live map, panorama) have no defined order -->
         <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
 
-
         <!-- two sheets, never both: item and navigation step lists are incompatible -->
         <!-- transparent: the navigation view is a row of floating cards with the map showing between them -->
         <bottomsheet
@@ -2021,7 +2020,6 @@
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
-                borderRadius={isLandscape ? 24 : 0}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
                 updating={itemLoading}
@@ -2029,7 +2027,6 @@
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
-
 
         <!-- the live map underneath is only covered: the SDK renders when dirty, so it costs nothing idle -->
         {#if $peakFinderActive && peakFinderMapComponent}

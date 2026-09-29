@@ -50,6 +50,7 @@ export const colors = writable({
     colorWidgetBackground: '',
     colorPanel: '',
     colorMapControl: '',
+    colorSurfaceFill: '',
     colorHairline: '',
     colorOutlineSoft: '',
     colorAccentContainer: '',
@@ -349,6 +350,7 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
         if (colorTheme === 'eink') {
             currentColors.colorPanel = currentColors.colorSurface;
             currentColors.colorMapControl = currentColors.colorSurface;
+            currentColors.colorSurfaceFill = currentColors.colorSurface;
             currentColors.colorHairline = currentColors.colorOnSurface;
             currentColors.colorOutlineSoft = currentColors.colorOnSurface;
             currentColors.colorAccentContainer = currentColors.colorSurface;
@@ -357,6 +359,8 @@ export function updateThemeColors(theme: Themes, colorTheme: ColorThemes = Appli
             const dark = theme === 'dark' || theme === 'black';
             currentColors.colorPanel = new Color(currentColors.colorSurface).setAlpha(247).hex;
             currentColors.colorMapControl = new Color(currentColors.colorSurface).setAlpha(200).hex;
+            // a tile a step off the sheet it sits on
+            currentColors.colorSurfaceFill = new Color(currentColors.colorOnSurface).setAlpha(13).hex;
             currentColors.colorHairline = new Color(currentColors.colorOnSurface).setAlpha(31).hex;
             currentColors.colorOutlineSoft = new Color(currentColors.colorOnSurface).setAlpha(64).hex;
             currentColors.colorAccentContainer = new Color(currentColors.colorPrimary).setAlpha(dark ? 41 : 31).hex;

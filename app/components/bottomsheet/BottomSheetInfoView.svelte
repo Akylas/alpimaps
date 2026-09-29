@@ -20,10 +20,11 @@
 
     const iconPaint = new Paint();
     iconPaint.setTextAlign(Align.CENTER);
+    const iconTilePaint = new Paint();
 </script>
 
 <script lang="ts">
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
@@ -42,6 +43,10 @@
     export let iconLeft = 15;
     export let iconTop = 30;
     export let showIcon = true;
+    /** The icon on the .listIcon primary tint. */
+    export let iconTile = false;
+    /** The inline distance, time and elevation line; off where stat tiles show them instead. */
+    export let showStats = true;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -339,6 +344,13 @@
             }
             if (showIcon && itemIcon && !actualShowSymbol) {
                 const fontSize = iconSize * $fontScaleMaxed;
+                if (iconTile && !isEInk) {
+                    const tileSize = fontSize + 18;
+                    const tileLeft = paddingLeft + iconLeft - tileSize / 2;
+                    const tileTop = iconTop - tileSize / 2;
+                    iconTilePaint.color = colorAccentContainer;
+                    canvas.drawRoundRect(tileLeft, tileTop, tileLeft + tileSize, tileTop + tileSize, 12, 12, iconTilePaint);
+                }
                 iconPaint.textSize = fontSize;
                 iconPaint.fontFamily = itemIconFontFamily;
                 iconPaint.color = iconColor || (isEInk ? colorOnSurface : colorPrimary);
@@ -347,7 +359,7 @@
 
             propsPaint.setTextAlign(Align.LEFT);
             propsPaint.color = colorOnSurface;
-            if (nString) {
+            if (nString && showStats) {
                 propsPaint.textSize = 13 * $fontScaleMaxed;
                 const staticLayout = new StaticLayout(nString, propsPaint, w, LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                 canvas.save();
