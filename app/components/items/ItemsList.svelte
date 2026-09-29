@@ -24,6 +24,7 @@
     import BottomSheetInfoView from '../bottomsheet/BottomSheetInfoView.svelte';
     import CActionBar from '../common/CActionBar.svelte';
     import IconButton from '../common/IconButton.svelte';
+    import Pill from '../common/Pill.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
     type MapGroup = Group;
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
@@ -40,7 +41,8 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorCanvas, colorCard, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorBackground, colorCanvas, colorCard, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh, colorSurfaceFill } =
+        $colors);
     $: ({ bottom: windowInsetBottom, keyboard: keyboardInset } = $windowInset);
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -48,6 +50,20 @@
     let groupedItems: { [k: string]: CollectionItem[] };
     let groups: { [k: string]: MapGroup };
     let itemsCount = 0;
+    let routesCount: number = null;
+    let markersCount: number = null;
+    function tabLabel(name: string, count: number) {
+        return count === null ? name : `${name} · ${count}`;
+    }
+    async function refreshCounts() {
+        const database = itemsModule.itemRepository.database;
+        const [routes, markers] = await Promise.all([
+            database.query(SqlQuery.createFromTemplateString`SELECT COUNT(*) AS count FROM Items WHERE "route" IS NOT NULL`),
+            database.query(SqlQuery.createFromTemplateString`SELECT COUNT(*) AS count FROM Items WHERE "route" IS NULL`)
+        ]);
+        routesCount = routes[0]?.['count'] ?? 0;
+        markersCount = markers[0]?.['count'] ?? 0;
+    }
     let tabIndex = 0;
     let nbSelected = 0;
     const itemsModule = getMapContext().mapModule('items');
@@ -181,6 +197,7 @@ LEFT JOIN  (
                     }, noneGroupItems as CollectionItemOrGroup[])
                 );
                 itemsCount = items.length;
+                await refreshCounts();
             } catch (error) {
                 showError(error);
             } finally {
@@ -774,12 +791,19 @@ LEFT JOIN  (
             }
         }
         if (itemIcon) {
-            iconPaint.color = colorBackground;
-            iconPaint.fontFamily = itemIconFontFamily;
-            circlePaint.setAlpha(100);
-            canvas.drawCircle(25, 57, 13, circlePaint);
+            // the profile, as a badge on the thumbnail's corner, the design's primary tile
             const paddingLeft = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingLeft);
-            canvas.drawText(itemIcon, paddingLeft + 17, 63, iconPaint);
+            const paddingTop = Utils.layout.toDeviceIndependentPixels(object.effectivePaddingTop);
+            const centerX = paddingLeft + 58;
+            const centerY = paddingTop + (canvas.getHeight() - paddingTop) / 2 + 26;
+            circlePaint.setAlpha(255);
+            circlePaint.color = colorCard;
+            canvas.drawCircle(centerX, centerY, 15, circlePaint);
+            circlePaint.color = isEInk ? colorOnSurface : colorPrimary;
+            canvas.drawCircle(centerX, centerY, 13, circlePaint);
+            iconPaint.color = isEInk ? 'white' : colorOnPrimary;
+            iconPaint.fontFamily = itemIconFontFamily;
+            canvas.drawText(itemIcon, centerX - 8, centerY + 6, iconPaint);
         }
     }
 </script>
@@ -824,15 +848,15 @@ LEFT JOIN  (
                     borderColor={colorHairline}
                     borderRadius={20}
                     borderWidth={1}
-                    height={80}
+                    height={88}
                     {item}
                     margin="4 12 4 12"
                     marginBottom={34}
-                    marginLeft={60}
+                    marginLeft={76}
                     opacity={item.onMap || 0.6}
-                    padding="4 0 2 10"
-                    propsBottom={20 * $fontScale}
-                    propsLeft={60}
+                    padding="8 0 6 12"
+                    propsBottom={22 * $fontScale}
+                    propsLeft={76}
                     rightTextPadding={item.onMap === 0 ? 88 : 40}
                     rippleColor={colorPrimary}
                     selectable={false}
@@ -841,7 +865,16 @@ LEFT JOIN  (
                     titleVerticalTextAlignment="middle"
                     on:tap={(e) => onItemTap(item, e)}
                     on:longPress={(e) => onItemLongPress(item, e)}>
-                    <image borderRadius={8} disableCss={true} height={50} horizontalAlignment="left" marginTop={6} src={item.image_path} stretch="aspectFill" verticalAlignment="top" width={50} />
+                    <image
+                        backgroundColor={colorSurfaceFill}
+                        borderRadius={12}
+                        disableCss={true}
+                        height={64}
+                        horizontalAlignment="left"
+                        src={item.image_path}
+                        stretch="aspectFill"
+                        verticalAlignment="middle"
+                        width={64} />
                     <canvasView on:draw={(event) => onDrawRouteIcon(item, event)} />
                     <SelectedIndicator selected={item.selected} />
                     <!-- a hidden item says so, and shows again in one tap -->
@@ -892,8 +925,8 @@ LEFT JOIN  (
             <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
             <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
             <gridlayout slot="bottom" colSpan={3} columns="*,*" padding="0 12 8 12" row={1}>
-                <mdbutton class={tabIndex === 0 ? 'chip selected' : 'chip'} text={lc('routes')} variant="flat" on:tap={() => setTabIndex(0)} />
-                <mdbutton class={tabIndex === 1 ? 'chip selected' : 'chip'} col={1} text={lc('markers')} variant="flat" on:tap={() => setTabIndex(1)} />
+                <Pill horizontalAlignment="stretch" label={tabLabel(lc('routes'), routesCount)} selected={tabIndex === 0} on:tap={() => setTabIndex(0)} />
+                <Pill col={1} horizontalAlignment="stretch" label={tabLabel(lc('markers'), markersCount)} selected={tabIndex === 1} on:tap={() => setTabIndex(1)} />
             </gridlayout>
         </CActionBar>
     </gridlayout>

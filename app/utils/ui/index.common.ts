@@ -121,7 +121,8 @@ export async function showPopoverMenu<T = any>({
             fontWeight: 500,
             backgroundColor: colorPanel,
             containerColumns: 'auto',
-            height: Math.min(rowHeight * options.length, props?.maxHeight ?? 300),
+            // the toggle pill row above the list, when there is one
+            height: Math.min(rowHeight * options.length + (props?.toggles?.length ? 56 : 0), props?.maxHeight ?? 300),
             width: Math.min(200 * scale, screenWidthDips * 0.9),
             options,
             onLongPress,

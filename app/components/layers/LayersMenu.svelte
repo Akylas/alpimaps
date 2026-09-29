@@ -193,19 +193,21 @@
     <wraplayout padding="0 12 4 12" row={1}>
         {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
             <StoreValue store={option.store} let:value>
-                <Pill icon={option.icon} label={option.title} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
+                <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
             </StoreValue>
         {/each}
-        <Pill icon="mdi-rotate-orbit" label={lc('map_pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
+        <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
     </wraplayout>
-    <gridlayout bind:this={gridLayout} row={2}>
+    <gridlayout bind:this={gridLayout} row={2} rows="auto,*">
+        <label class="sectionHeader" padding="4 16 0 16" text={lc('layer_stack')} />
         <collectionview
             bind:this={collectionView}
             id="scrollView"
             items={customSources}
+            row={1}
             ios:contentInsetAdjustmentBehavior={2}
             android:reorderEnabled={true}
-            rowHeight={92 * Math.sqrt($fontScaleMaxed)}
+            rowHeight={84 * Math.sqrt($fontScaleMaxed)}
             on:itemReordered={onItemReordered}
             on:itemReorderStarting={onItemReorderStarting}>
             <Template let:item>
@@ -246,7 +248,8 @@
                                 color={colorOnSurfaceVariant}
                                 fontSize={11 * $fontScaleMaxed}
                                 html={item.provider.attribution}
-                                linkColor={colorPrimary}
+                                linkColor={colorOnSurfaceVariant}
+                                {...{ linkUnderline: false }}
                                 marginTop={20 * $fontScaleMaxed}
                                 maxLines={1}
                                 visibility={item.provider.attribution ? 'visible' : 'collapse'}
@@ -254,10 +257,10 @@
                         </gridlayout>
                         <slider
                             col={1}
-                            marginBottom={10}
-                            marginLeft={-8}
-                            marginRight={-8}
-                            marginTop={4}
+                            marginBottom={8}
+                            marginLeft={-10}
+                            marginRight={-10}
+                            marginTop={0}
                             maxValue={1}
                             minValue={0}
                             row={1}
