@@ -36,6 +36,8 @@
     export let showFilter = false;
     export let showBorders = false;
     export let backgroundColor = null;
+    /** The panel look, following the theme while open (a menu can toggle dark mode). */
+    export let panel = false;
     export let borderRadius = 8;
     export let rowHeight = null;
     export let autofocus = false;
@@ -69,7 +71,7 @@
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
 
-    $: ({ colorHairline, colorOnSurface, colorOutline } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOutline, colorPanel } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -205,7 +207,14 @@
 </script>
 
 <gesturerootview columns={containerColumns} rows="auto">
-    <gridlayout {backgroundColor} {borderRadius} columns={`${width}`} {height} rows="auto,auto,*" {...$$restProps}>
+    <gridlayout
+        backgroundColor={panel ? colorPanel : backgroundColor}
+        {borderRadius}
+        columns={`${width}`}
+        {height}
+        rows="auto,auto,*"
+        {...panel ? { borderColor: colorHairline, borderWidth: 1 } : {}}
+        {...$$restProps}>
         {#if title}
             <PanelHeader icon={titleIcon} padding="16 8 4 20" {title} />
         {/if}
@@ -280,6 +289,7 @@
                     {subtitleProps}
                     {titleHolderProps}
                     {titleProps}
+                    {...autoSizeListItem && item.icon ? { icon: item.icon, iconFontFamily: item.iconFontFamily } : {}}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
                     <checkbox
@@ -305,6 +315,7 @@
                     {subtitleProps}
                     {titleHolderProps}
                     {titleProps}
+                    {...autoSizeListItem && item.icon ? { icon: item.icon, iconFontFamily: item.iconFontFamily } : {}}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
                     <switch id="checkbox" checked={item.value} col={2} horizontalAlignment="right" marginLeft={10} verticalAlignment="center" on:checkedChange={(e) => onCheckedChanged(item, e)} />

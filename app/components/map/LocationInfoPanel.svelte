@@ -1,7 +1,6 @@
 <script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import type { CanvasLabel } from '@nativescript-community/ui-canvaslabel';
-        import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-material-dialogs';
     import type { ApplicationEventData, GridLayout } from '@nativescript/core';
     import { Application } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
@@ -9,20 +8,20 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import type { GeoHandler, GeoLocation, UserLocationdEventData } from '~/handlers/GeoHandler';
     import { UNITS, convertValueToUnit } from '~/helpers/formatter';
-    import { l, lc, lu } from '~/helpers/locale';
+    import { l, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { colors } from '~/variables';
+    import { colors, fonts } from '~/variables';
 </script>
 
 <script lang="ts">
-    $: ({ colorAccentContainer, colorOnSurface, colorPrimary } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
     let geoHandler: GeoHandler;
     let gridLayout: NativeViewElementNode<GridLayout>;
-    let firstCanvas: NativeViewElementNode<CanvasLabel>;
+    let firstCanvas: NativeViewElementNode<GridLayout>;
 
     let showLocationInfo = false;
     const hasBarometer = isSensorAvailable('barometer');
@@ -230,50 +229,49 @@
     $: altitudeFormatted = convertValueToUnit(shownAltitude, UNITS.Meters);
 </script>
 
+<!-- speed and altitude as the route sheet's stat tiles: an icon and caption over the value -->
 <gridlayout
     {...$$restProps}
     bind:this={gridLayout}
     id="locationInfo"
     class="panel mapControl"
-    borderRadius={30}
-    columns="auto,*,auto"
-    height={60}
+    borderRadius={20}
+    columns="104,104,auto"
+    height={64}
+    padding="6 3"
     visibility={showLocationInfo ? 'visible' : 'collapse'}
-    width={hasBarometer ? 200 : 150}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
-        <canvaslabel
-            bind:this={firstCanvas}
-            backgroundColor={isEInk ? null : colorAccentContainer}
-            borderColor={colorPrimary}
-            borderRadius={30}
-            borderWidth={3}
-            color={colorOnSurface}
-            height={60}
-            width={60}>
-            <cspan fontSize={22} fontWeight="bold" paddingBottom={3} text={speedFormatted[0]} textAlignment="center" verticalAlignment="middle" />
-            <cspan fontSize={10} paddingTop={12} text={speedFormatted[1]} textAlignment="center" verticalAlignment="middle" />
-        </canvaslabel>
-        <canvaslabel col={1} color={colorOnSurface} marginLeft={5}>
-            <cspan
-                color={isEInk ? '#000' : colorPrimary}
-                fontSize={10}
-                paddingTop={4}
-                text={lu('altitude_short') + (listeningForBarometer ? `(${l('barometer')})` : '') + '\n'}
-                verticalAlignment="top" />
-            <cgroup verticalAlignment="middle">
-                <cspan fontSize={20} fontWeight="bold" text={altitudeFormatted[0] ?? '-'} />
-                <cspan fontSize={12} text={` ${altitudeFormatted[1]}`} />
-            </cgroup>
-        </canvaslabel>
-        {#if hasBarometer}
-            <canvaslabel col={1} color={colorOnSurface} visibility={listeningForBarometer && airportRefName ? 'visible' : 'collapse'}>
-                <cspan fontSize={9} text={airportRefName} textAlignment="right" verticalAlignment="bottom" />
+        <gridlayout bind:this={firstCanvas} backgroundColor={colorSurfaceFill} borderColor={colorHairline} borderRadius={14} borderWidth={isEInk ? 1 : 0} margin="0 3" padding="4 12" rows="auto,*">
+            <canvaslabel color={colorOnSurfaceVariant} fontSize={11} height={16}>
+                <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={13} text="mdi-speedometer" verticalAlignment="middle" />
+                <cspan paddingLeft={17} text={lc('speed')} verticalAlignment="middle" />
             </canvaslabel>
-            <stacklayout col={2} verticalAlignment="middle" visibility={hasBarometer ? 'visible' : 'collapse'}>
-                <IconButton small={true} text="mdi-gauge" on:tap={switchBarometer} />
-                <IconButton isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
+            <canvaslabel color={colorOnSurface} row={1}>
+                <cgroup verticalAlignment="middle">
+                    <cspan fontSize={20} fontWeight="bold" text={speedFormatted[0] || '-'} />
+                    <cspan color={colorOnSurfaceVariant} fontSize={12} text={` ${speedFormatted[1]}`} />
+                </cgroup>
+            </canvaslabel>
+        </gridlayout>
+        <gridlayout backgroundColor={colorSurfaceFill} borderColor={colorHairline} borderRadius={14} borderWidth={isEInk ? 1 : 0} col={1} margin="0 3" padding="4 12" rows="auto,*">
+            <canvaslabel color={colorOnSurfaceVariant} fontSize={11} height={16}>
+                <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={13} text={listeningForBarometer ? 'mdi-gauge' : 'mdi-altimeter'} verticalAlignment="middle" />
+                <cspan paddingLeft={17} text={listeningForBarometer ? lc('barometer') : lc('altitude')} verticalAlignment="middle" />
+            </canvaslabel>
+            <canvaslabel color={colorOnSurface} row={1}>
+                <cgroup verticalAlignment="middle">
+                    <cspan fontSize={20} fontWeight="bold" text={altitudeFormatted[0] || '-'} />
+                    <cspan color={colorOnSurfaceVariant} fontSize={12} text={` ${altitudeFormatted[1]}`} />
+                </cgroup>
+                <cspan fontSize={9} text={listeningForBarometer ? airportRefName : null} textAlignment="right" verticalAlignment="bottom" />
+            </canvaslabel>
+        </gridlayout>
+        {#if hasBarometer}
+            <stacklayout col={2} verticalAlignment="middle">
+                <IconButton color={colorOnSurfaceVariant} isSelected={listeningForBarometer} small={true} text="mdi-gauge" tooltip={lc('barometer')} on:tap={switchBarometer} />
+                <IconButton color={colorOnSurfaceVariant} isVisible={listeningForBarometer} small={true} text="mdi-reflect-vertical" on:tap={getNearestAirportPressure} />
             </stacklayout>
         {/if}
     {/if}
