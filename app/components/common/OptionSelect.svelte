@@ -71,7 +71,7 @@
     let filteredOptions: OptionType[] | ObservableArray<OptionType> = null;
     let filter: string = null;
 
-    $: ({ colorHairline, colorOnSurface, colorOutline, colorPanel } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorPanel, colorPrimary, colorSurfaceFill } = $colors);
 
     function updateFiltered(filter) {
         if (filter) {
@@ -219,25 +219,29 @@
             <PanelHeader icon={titleIcon} padding="16 8 4 20" {title} />
         {/if}
         {#if showFilter}
-            <gridlayout borderColor={colorOutline} margin="10 10 0 10" row={1}>
+            <!-- the design's search field: a filled rounded bar with its icon, no outline -->
+            <gridlayout backgroundColor={colorSurfaceFill} borderRadius={22} columns="auto,*,auto" height={44} margin="4 16 8 16" row={1}>
+                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} padding="0 4 0 14" text="mdi-magnify" verticalAlignment="middle" />
                 <textfield
                     autocapitalizationType="none"
                     backgroundColor="transparent"
+                    col={1}
+                    floating={false}
                     hint={lc('search')}
+                    padding="0 4"
                     placeholder={lc('search')}
                     returnKeyType="search"
                     text={filter}
-                    variant="outline"
+                    variant="none"
                     verticalTextAlignment="center"
                     on:loaded={onTextFieldLoaded}
                     on:returnPress={blurTextField}
                     on:textChange={(e) => (filter = e['value'])} />
 
                 <IconButton
-                    col={1}
-                    gray={true}
-                    horizontalAlignment="right"
-                    isHidden={!filter || filter.length === 0}
+                    col={2}
+                    color={colorOnSurfaceVariant}
+                    isVisible={!!filter?.length}
                     size={40}
                     text="mdi-close"
                     verticalAlignment="middle"
@@ -382,15 +386,11 @@
                     {titleProps}
                     {...templateProps}
                     on:tap={(event) => onTap(item, event)}>
-                    <image
-                        aspectRatio={1}
-                        borderRadius={4}
-                        headers={item.imageHeaders}
-                        marginBottom={5}
-                        marginRight={10}
-                        marginTop={5}
-                        src={item.image}
-                        visibility={item.image ? 'visible' : 'collapse'} />
+                    <!-- a fixed thumbnail tile, a map glyph standing in when there is no preview -->
+                    <gridlayout backgroundColor={colorSurfaceFill} borderRadius={10} height={48} marginRight={12} verticalAlignment="middle" width={48}>
+                        <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={22} text="mdi-map-outline" textAlignment="center" verticalAlignment="middle" />
+                        <image headers={item.imageHeaders} src={item.image} stretch="aspectFill" visibility={item.image ? 'visible' : 'collapse'} />
+                    </gridlayout>
                 </svelte:component>
             </Template>
             <Template key="slider" let:item>
