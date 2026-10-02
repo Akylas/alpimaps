@@ -11,7 +11,6 @@ import { initialize } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application, ApplicationSettings, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
 import { init as sharedInit } from '@shared/index';
@@ -34,7 +33,6 @@ try {
     installBottomSheets();
     installUIMixins();
     overrideSpanAndFormattedString();
-    installWebRTC();
     initialize();
 
     setGeoLocationKeys('lat', 'lon');
