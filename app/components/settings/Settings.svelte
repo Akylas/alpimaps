@@ -499,7 +499,7 @@
                     {
                         type: 'switch',
                         key: 'route_image_capture',
-                        value: ApplicationSettings.getBoolean('route_image_capture', true),
+                        value: ApplicationSettings.getBoolean('route_image_capture', false),
                         title: lc('route_item_image_capture')
                     },
                     {
