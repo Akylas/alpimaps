@@ -231,12 +231,9 @@ export default class CustomLayersModule extends MapModule {
         if (specs.length === 1) {
             return specs[0];
         }
-        let result;
-        for (let index = 0; index < specs.length; index += 2) {
-            const merged = index < specs.length - 1 ? { type: 'merged-mbvt' as const, source: specs[index], source2: specs[index + 1] } : specs[index];
-            result = result ? { type: 'merged-mbvt' as const, source: result, source2: merged } : merged;
-        }
-        return result;
+        // nested to the right: the SDK reads a package's tile mask from a direct MBTiles child, and a
+        // merge of two merges (4+ files) has none, so the first file, the base, heads every level
+        return specs.reduceRight((merged, spec) => ({ type: 'merged-mbvt' as const, source: spec, source2: merged }));
     }
 
     /** The first source that has a tile wins, so a detailed region shadows the world map. */
@@ -1128,7 +1125,7 @@ export default class CustomLayersModule extends MapModule {
                     if (sources.length) {
                         mbtiles.push(
                             this.createMergeDataSource(
-                                sources.map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
+                                (base ? [base, ...sources.filter((s) => s !== base)] : sources).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
                                 worldMbtilesEntity ? 5 : undefined
                             )
                         );
