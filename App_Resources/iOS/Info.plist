@@ -51,6 +51,8 @@
     <array>
       <string>location</string>
     </array>
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+    <true/>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.navigation</string>
     <key>UIApplicationSceneManifest</key>
