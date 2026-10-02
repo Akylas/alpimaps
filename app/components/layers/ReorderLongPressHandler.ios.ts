@@ -3,8 +3,9 @@ interface IOSCollectionView extends CollectionView {
     onReorderLongPress?(recognizer: UILongPressGestureRecognizer);
 }
 
+// declared, then exported: the @NativeClass transform drops an `export default` on the class itself
 @NativeClass
-export default class ReorderLongPressHandler extends NSObject {
+class ReorderLongPressHandler extends NSObject {
     private _owner: WeakRef<IOSCollectionView>;
 
     public static initWithOwner(owner: WeakRef<IOSCollectionView>): ReorderLongPressHandler {
@@ -24,3 +25,4 @@ export default class ReorderLongPressHandler extends NSObject {
         longPress: { returns: interop.types.void, params: [interop.types.id] }
     };
 }
+export default ReorderLongPressHandler;
