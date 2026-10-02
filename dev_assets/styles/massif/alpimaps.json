@@ -1,0 +1,35 @@
+{
+  "extends": "./project.json",
+  "styles": [
+    "alpimaps-colors.mss",
+    "variables.mss",
+    "style.mss",
+    "alpimaps-rules.mss"
+  ],
+  "styleparameters": {
+    "variant": {
+      "default": "streets",
+      "values": {
+        "streets": "streets",
+        "outdoor": "outdoor",
+        "topo": "topo",
+        "hybrid": "hybrid",
+        "eink": "eink"
+      }
+    },
+    "track_min_zoom": 24,
+    "poiStyle": {
+      "default": "plain",
+      "values": {
+        "badge": "badge",
+        "plain": "plain"
+      }
+    },
+    "road_osm_low": 1,
+    "tunnel_min_zoom": 13
+  },
+  "constants": {
+    "poi_bus_minzoom": 15,
+    "poi_bus_label_minzoom": 16
+  }
+}

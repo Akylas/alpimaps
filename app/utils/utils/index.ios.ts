@@ -1,7 +1,7 @@
 import { showSnack } from '~/utils/ui';
 import { ApplicationSettings, Color, Utils, View, path } from '@nativescript/core';
 import { Dayjs } from 'dayjs';
-import { getDataFolder, setSavedMBTilesDir } from './index.common';
+import { getDataFolder, getSavedMBTilesDir as getSavedMBTilesPath, setSavedMBTilesDir } from './index.common';
 
 export * from './index.common';
 export function checkManagePermission() {
@@ -14,7 +14,54 @@ export async function askForScheduleAlarmPermission() {
     return true;
 }
 
+const MBTILES_BOOKMARK_KEY = 'local_mbtiles_bookmark';
+let mbtilesBookmarkResolved = false;
+
+// the Mac sandbox only grants a picked folder until quit, a security-scoped bookmark keeps it
+export function setMBTilesFolder(folderUrl: NSURL) {
+    folderUrl.startAccessingSecurityScopedResource();
+    const bookmark = folderUrl.bookmarkDataWithOptionsIncludingResourceValuesForKeysRelativeToURLError(NSURLBookmarkCreationOptions.WithSecurityScope, null, null);
+    NSUserDefaults.standardUserDefaults.setObjectForKey(bookmark, MBTILES_BOOKMARK_KEY);
+    mbtilesBookmarkResolved = true;
+    setSavedMBTilesDir(folderUrl.path);
+}
+
+function resolveMBTilesBookmark() {
+    const bookmark = NSUserDefaults.standardUserDefaults.dataForKey(MBTILES_BOOKMARK_KEY);
+    if (!bookmark) {
+        return;
+    }
+    try {
+        const isStale = new interop.Reference(interop.types.bool, false);
+        const folderUrl = NSURL.URLByResolvingBookmarkDataOptionsRelativeToURLBookmarkDataIsStaleError(bookmark, NSURLBookmarkResolutionOptions.WithSecurityScope, null, isStale);
+        if (isStale.value) {
+            setMBTilesFolder(folderUrl);
+        } else {
+            folderUrl.startAccessingSecurityScopedResource();
+            setSavedMBTilesDir(folderUrl.path);
+        }
+    } catch (error) {
+        console.error('resolveMBTilesBookmark', error, error.stack);
+        NSUserDefaults.standardUserDefaults.removeObjectForKey(MBTILES_BOOKMARK_KEY);
+        setSavedMBTilesDir(null);
+    }
+}
+
+export function getSavedMBTilesDir() {
+    if (__CATALYST__ && !mbtilesBookmarkResolved) {
+        mbtilesBookmarkResolved = true;
+        resolveMBTilesBookmark();
+    }
+    return getSavedMBTilesPath();
+}
+
 export async function getDefaultMBTilesDir() {
+    if (__CATALYST__) {
+        const pickedFolder = getSavedMBTilesDir();
+        if (pickedFolder) {
+            return pickedFolder;
+        }
+    }
     // on iOS we cant save the path as the knownFolders path can change upon app upgrade
     // let localMbtilesSource = savedMBTilesDir;
     // let localMbtilesSource = null;

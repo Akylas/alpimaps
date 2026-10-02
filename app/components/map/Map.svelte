@@ -9,7 +9,7 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils, View } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
@@ -47,6 +47,7 @@
         setMapContext
     } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
+    import { installMacMouse } from './macMouse';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
@@ -71,17 +72,18 @@
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
     import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
-    import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
-    import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
+    import { hideLoading, onBackButton, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
+    import { colors, windowInset, windowSize } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
+    import type { StyleFamily, StyleVariant } from './StylePicker.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
 
-    const DEFAULT_STYLE = PRODUCTION || TEST_ZIP_STYLES ? 'osm.zip~osm' : 'osm~osm';
+    // Alpimaps OSM over Massif: a folder while developing, massif.zip in release (styleSpec picks)
+    const DEFAULT_STYLE = 'massif~alpimaps';
 </script>
 
 <script lang="ts">
@@ -95,6 +97,9 @@
     let massifMap: MassifMap;
     // terrain shader params and post-process effects are object-API only, hence the view itself
     let mapViewInstance: MassifMapView;
+    let uninstallMacMouse: () => void;
+    let macMenuAnchor: NativeViewElementNode<View>;
+    const isCatalyst = __CATALYST__;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -346,6 +351,8 @@
     let itemModule: ItemsModule;
 
     let isLandscape = Application.orientation() === 'landscape';
+    // a Mac window has no orientation, only a size
+    $: if (__CATALYST__) isLandscape = $windowSize.width > $windowSize.height;
     function onOrientationChanged(event: OrientationChangedEventData) {
         DEV_LOG && console.log('onOrientationChanged', event.newValue);
         isLandscape = event.newValue === 'landscape';
@@ -453,6 +460,7 @@
     onDestroy(() => {
         // console.log('onMapDestroyed');
         Application.off(Application.orientationChangedEvent, onOrientationChanged);
+        uninstallMacMouse?.();
         mapContext.runOnModules('onMapDestroyed');
 
         // localVectorLayer = null;
@@ -497,6 +505,8 @@
             }
         });
     function reloadMapStyle() {
+        // a folder style is compiled when its decoder is created: a new one picks up the edited files
+        setMapStyle(currentLayerStyle, true);
         mapContext.runOnModules('reloadMapStyle');
     }
 
@@ -559,6 +569,9 @@
             api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
+            if (__CATALYST__) {
+                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick);
+            }
 
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
@@ -670,6 +683,19 @@
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, massifMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem });
+        }
+    }
+    // right-click selects the place under the cursor and lists what the sheet can do with it, there
+    async function onMapSecondaryClick(point: { x: number; y: number }, position: MapPos) {
+        try {
+            unFocusSearch();
+            await selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true });
+            const anchor = macMenuAnchor.nativeView;
+            anchor.translateX = point.x;
+            anchor.translateY = point.y;
+            await bottomSheetInner?.showActionsMenu(anchor);
+        } catch (error) {
+            showError(error);
         }
     }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
@@ -1322,6 +1348,13 @@
                     }
                     return acc;
                 }, {});
+                const variant = mapStyleVariant(layerStyle);
+                if (variant) {
+                    nutiPropsToApply['variant'] = variant;
+                    if (variant === 'eink') {
+                        mapContext.setInnerStyle('eink', mapStyle);
+                    }
+                }
                 if (Object.keys(nutiPropsToApply).length > 0) {
                     //    showToast(JSON.stringify(nutiPropsToApply));
                     vectorTileDecoder.call('setStyleParameters', nutiPropsToApply);
@@ -1335,7 +1368,35 @@
         }
     }
 
-    async function selectStyle() {
+    // a Massif project draws every variant: the `variant` style parameter picks one, stored per project
+    const MASSIF_PACKAGE = 'massif';
+    const MASSIF_VARIANTS = ['streets', 'outdoor', 'topo', 'hybrid', 'eink'];
+    function mapStyleVariant(layerStyle: string) {
+        return layerStyle.startsWith(MASSIF_PACKAGE + '~') ? ApplicationSettings.getString('mapStyleVariant.' + layerStyle, null) : null;
+    }
+    function setMapStyleVariant(layerStyle: string, variant: string) {
+        ApplicationSettings.setString('mapStyleVariant.' + layerStyle, variant);
+        if (layerStyle !== currentLayerStyle) {
+            return setMapStyle(layerStyle, true);
+        }
+        // same decoder, one parameter: a re-decode, not a new style
+        vectorTileDecoder?.call('setStyleParameters', { variant });
+        const innerStyle = variant === 'eink' ? 'eink' : 'voyager';
+        if (ApplicationSettings.getString('innerStyle') !== innerStyle) {
+            mapContext.setInnerStyle(innerStyle, layerStyle.split('~')[0]);
+        }
+    }
+
+    const VARIANT_LOOKS: { [k: string]: { icon: string; iconColor: string; swatch: [string, string] } } = {
+        streets: { icon: 'mdi-city-variant-outline', iconColor: '#5d6b7a', swatch: ['#f7f4ee', '#c9d7e6'] },
+        outdoor: { icon: 'mdi-pine-tree', iconColor: '#3f6b2a', swatch: ['#eef3e3', '#a9cf8a'] },
+        topo: { icon: 'mdi-terrain', iconColor: '#7a5a32', swatch: ['#f6eedc', '#c9ad7e'] },
+        hybrid: { icon: 'mdi-satellite-variant', iconColor: '#e8efe2', swatch: ['#3d5236', '#1f2a1c'] },
+        eink: { icon: 'mdi-book-open-variant', iconColor: '#000000', swatch: ['#ffffff', '#9a9a9a'] }
+    };
+    const LEGACY_LOOK = { icon: 'mdi-map-outline', iconColor: '#5d6b7a', swatch: ['#f2efe9', '#d6d2c8'] as [string, string] };
+
+    async function listStyleFamilies(): Promise<StyleFamily[]> {
         function filterEntity(e) {
             return !/(inner|admin|cleaned|base)/.test(e.name);
         }
@@ -1345,71 +1406,88 @@
             }
             return [];
         }
-        const styles = [];
         const stylePath = path.join(knownFolders.currentApp().path, 'assets', 'styles');
         const entities = (
             await Promise.all(
                 [stylePath, path.join(getDataFolder(), 'styles'), path.join(getSavedMBTilesDir(), 'styles'), '/storage/emulated/0/Documents/dev/alpimaps/dev_assets/styles'].map(getFolderEntities)
             )
         ).flat();
-        //       const entities = (await getFolderEntities())(await Folder.fromPath(stylePath).getEntities()).filter(filterEntity).concat((await Folder.fromPath( path.join(getDataFolder(), 'styles')).getEntities()).filter(filterEntity));
+        const families: StyleFamily[] = [];
         for (let index = 0; index < entities.length; index++) {
             const e = entities[index];
+            const packageName = e.path.startsWith(stylePath) ? e.name.replace(/\.zip$/, '') : e.path;
+            let styleNames: string[];
             if (Folder.exists(e.path)) {
-                const subs = (await Folder.fromPath(e.path).getEntities()).filter(filterEntity);
-                styles.push(
-                    ...subs
-                        .filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml'))
-                        .map((s) => ({ name: s.name.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.name.split('.')[0] }))
-                );
+                styleNames = (await Folder.fromPath(e.path).getEntities()).filter((s) => s.name.endsWith('.json') || s.name.endsWith('.xml')).map((s) => s.name.split('.')[0]);
             } else {
                 try {
                     // the archive, only to list what is in it: `assetNames` is a plain property
                     const pack = api.create('assets', `assets.probe.${e.name}`, { type: 'zip', data: { type: 'url', url: `file://${e.path}` } });
-                    const assetsNames = pack.get('assetNames');
+                    styleNames = pack
+                        .get('assetNames')
+                        .filter((s) => s.endsWith('.xml'))
+                        .map((s) => s.split('.')[0]);
                     pack.destroy();
-                    // DEV_LOG && console.log('assetsNames', assetsNames);
-                    styles.push(
-                        ...assetsNames
-                            .filter((s) => s.endsWith('.xml'))
-                            .map((s) => ({ name: s.split('.')[0], subtitle: e.name.toUpperCase(), data: (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + s.split('.')[0] }))
-                    );
                 } catch (error) {
                     console.error(error, error.stack);
+                    continue;
                 }
             }
+            const data = (name: string) => (e.path.startsWith(stylePath) ? e.name : e.path) + '~' + name;
+            if (packageName === MASSIF_PACKAGE) {
+                // the folder (dev) and the zip (release) are the same styles: list them once
+                if (families.some((f) => f.id === 'massif')) {
+                    continue;
+                }
+                // one row: the five variants of one project (a style parameter, no reload), then the
+                // Alpimaps OSM look, a project of its own (its colour sheets differ)
+                const variants: StyleVariant[] = MASSIF_VARIANTS.map((variant) => {
+                    const look = VARIANT_LOOKS[variant];
+                    return { id: variant, name: lc('variant_' + variant), style: data('streets'), variant, icon: look.icon, iconColor: look.iconColor, swatch: look.swatch };
+                });
+                if (styleNames.includes('alpimaps')) {
+                    variants.push({ id: 'alpimaps', name: 'OSM', style: data('alpimaps'), icon: 'mdi-map-legend', iconColor: '#7a5a32', swatch: ['#f2efe9', '#aad3df'] });
+                }
+                families.unshift({ id: 'massif', name: 'Massif', subtitle: '', variants });
+                continue;
+            }
+            const variants = styleNames
+                .filter((name) => name !== 'project' && name !== 'legend')
+                .map((name) => {
+                    const look = VARIANT_LOOKS[name] || LEGACY_LOOK;
+                    return { id: name, name, style: data(name), icon: look.icon, iconColor: look.iconColor, swatch: look.swatch };
+                });
+            if (variants.length) {
+                families.push({ id: data(''), name: e.name.replace(/\.zip$/, ''), subtitle: e.name.endsWith('.zip') ? 'ZIP' : lc('legacy'), variants });
+            }
         }
+        return families;
+    }
 
-        DEV_LOG && console.log('selectStyle', screenHeightDips, ALERT_OPTION_MAX_HEIGHT);
-        let selectedIndex = -1;
-        const options = styles.map((d, index) => {
-            const value = currentLayerStyle === d.data;
-            if (value) {
-                selectedIndex = index;
-            }
-            return {
-                ...d,
-                boxType: 'circle',
-                type: 'checkbox',
-                value
-            };
-        });
-        //  showToast('selectStyle ' + selectedIndex + ' ' +currentLayerStyle + '');
-        const result = await showAlertOptionSelect(
-            {
-                height: Math.min(options.length * 56, ALERT_OPTION_MAX_HEIGHT),
-                rowHeight: 56,
-                titleIcon: 'mdi-map-outline',
-                selectedIndex,
-                options
-            },
-            {
-                title: lc('select_style')
-            }
-        );
-        DEV_LOG && console.log('on style selected', result);
-        if (result?.data) {
-            setMapStyle(result.data, true);
+    async function selectStyle() {
+        try {
+            const families = await listStyleFamilies();
+            const StylePicker = (await import('./StylePicker.svelte')).default;
+            await showBottomSheet({
+                view: StylePicker,
+                peekHeight: 200,
+                trackingScrollView: 'collectionView',
+                disableDimBackground: true,
+                dismissOnBackgroundTap: true,
+                props: {
+                    families,
+                    current: { style: currentLayerStyle, variant: mapStyleVariant(currentLayerStyle) },
+                    onSelect: (family: StyleFamily, variant: StyleVariant) => {
+                        if (variant.variant) {
+                            setMapStyleVariant(variant.style.toLowerCase(), variant.variant);
+                        } else {
+                            setMapStyle(variant.style, true);
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
         }
     }
 
@@ -1889,6 +1967,10 @@
         {/if}
         <!-- collapsed during AR: three GL surfaces (preview, live map, panorama) have no defined order -->
         <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
+        {#if isCatalyst}
+            <!-- the right-click menu points at it: an iOS popover only anchors to a view -->
+            <gridlayout bind:this={macMenuAnchor} height={1} horizontalAlignment="left" isUserInteractionEnabled={false} verticalAlignment="top" width={1} />
+        {/if}
 
         <!-- two sheets, never both: item and navigation step lists are incompatible -->
         <!-- transparent: the navigation view is a row of floating cards with the map showing between them -->
@@ -2023,9 +2105,9 @@
                 bind:this={bottomSheetInner}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
-                sheetWidth={isLandscape ? Math.max(screenWidthDips / 2, 400) : screenWidthDips}
+                sheetWidth={isLandscape ? Math.max($windowSize.width / 2, 400) : $windowSize.width}
                 updating={itemLoading}
-                width={isLandscape ? Math.max(screenWidthDips / 2, 400) : '100%'}
+                width={isLandscape ? Math.max($windowSize.width / 2, 400) : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>

@@ -7,3 +7,5 @@ export function startRefreshAlarm();
 export function stopRefreshAlarm();
 export function scheduleRefreshAlarm();
 export async function askForScheduleAlarmPermission(): Promise<boolean>;
+// Mac Catalyst only: persists the picked folder as a security-scoped bookmark
+export function setMBTilesFolder(folderUrl: NSURL);

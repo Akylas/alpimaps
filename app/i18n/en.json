@@ -1122,5 +1122,11 @@
     "open_wikipedia": "open in wikipedia",
     "stars_labels_on_summits": "names over their summits",
     "stars_labels_on_summits_desc": "with the stars on, each summit name sits over its summit, leaving the sky clear",
-    "zoom_level_bias": "zoom level bias"
+    "zoom_level_bias": "zoom level bias",
+    "legacy": "legacy",
+    "variant_eink": "e-ink",
+    "variant_hybrid": "hybrid",
+    "variant_outdoor": "outdoor",
+    "variant_streets": "streets",
+    "variant_topo": "topo"
 }
