@@ -135,7 +135,7 @@
         "@nativescript/android": "9.0.5",
         "@nativescript/android-quickjs-ng": "9.0.0-alpha.1",
         "@nativescript/core": "9.0.20",
-        "@nativescript/ios": "9.0.3",
+        "@nativescript/ios": "9.1.0",
         "@sentry/cli": "3.5.0",
         "@swc/core": "1.16.1",
         "@types/geojson": "^7946.0.16",

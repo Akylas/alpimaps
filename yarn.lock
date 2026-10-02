@@ -3284,10 +3284,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript/ios@npm:9.0.3":
-  version: 9.0.3
-  resolution: "@nativescript/ios@npm:9.0.3"
-  checksum: 10/f19a7d15ae0588fbbdece0909e0d9a4f63d8e73c0994b54f1ff083b7ce1c7836b7ff46d494595893f35b1276daac4e8f80a3e071774683afb81530c339086813
+"@nativescript/ios@npm:9.1.0":
+  version: 9.1.0
+  resolution: "@nativescript/ios@npm:9.1.0"
+  checksum: 10/85f69eb0c1a72ec68db1bff7a493d1383b6450e25f1d7bdaa9a9999a8a9b38aeb26b7fe4b888899595d62566983b5b325aee9db40924b3599fe15e466f59b1c6
   languageName: node
   linkType: hard
 
@@ -14784,7 +14784,7 @@ __metadata:
     "@nativescript/appavailability": "npm:2.0.0"
     "@nativescript/core": "npm:9.0.20"
     "@nativescript/email": "npm:^2.1.0"
-    "@nativescript/ios": "npm:9.0.3"
+    "@nativescript/ios": "npm:9.1.0"
     "@sentry/cli": "npm:3.5.0"
     "@swc/core": "npm:1.16.1"
     "@tmcw/togeojson": "npm:7.1.2"
