@@ -11,10 +11,10 @@
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
-    import { Application, ApplicationSettings, Color, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, Utils, View } from '@nativescript/core';
     import { debounce, openUrl } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy, onMount, tick } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
@@ -385,16 +385,15 @@
         const handler = action['onLongPress'] ?? actionHandlers[action.id]?.long;
         return handler ? handler(event) : showToolTip(action.tooltip);
     }
-    async function showOverflowActions(event) {
+    async function showActionsPopover(actions: typeof itemActions, event, position?: { vertPos: VerticalPosition; horizPos: HorizontalPosition }) {
         try {
             await showPopoverMenu({
-                options: overflowActions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
+                options: actions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
                 anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                ...position,
                 props: { autoSizeListItem: true },
                 onClose: (option) => {
-                    const action = overflowActions.find((candidate) => candidate.id === option.id);
+                    const action = actions.find((candidate) => candidate.id === option.id);
                     if (action) {
                         runAction(action, event);
                     }
@@ -402,6 +401,16 @@
             });
         } catch (error) {
             showError(error);
+        }
+    }
+    function showOverflowActions(event) {
+        return showActionsPopover(overflowActions, event, { vertPos: VerticalPosition.ABOVE, horizPos: HorizontalPosition.ALIGN_RIGHT });
+    }
+    // the Mac right-click menu on the map: every action of the item it just selected
+    export async function showActionsMenu(anchor: View) {
+        await tick();
+        if (itemActions.length) {
+            return showActionsPopover(itemActions, { object: anchor });
         }
     }
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix

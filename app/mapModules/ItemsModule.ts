@@ -521,7 +521,7 @@ export default class ItemsModule extends MapModule {
         }
     }
     async takeItemPicture(item: IItem, restore = false) {
-        if (!item.route || !ApplicationSettings.getBoolean('route_image_capture', true)) {
+        if (!item.route || !ApplicationSettings.getBoolean('route_image_capture', false)) {
             return;
         }
         // console.log('takeItemPicture', new Error().stack);

@@ -50,7 +50,7 @@
     import { CARD_INSET, CARD_PADDING, groupRows } from '~/components/settings/groupedRows';
     import { panelPopoverStyle, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
-    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setSavedMBTilesDir } from '~/utils/utils';
+    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setMBTilesFolder, setSavedMBTilesDir } from '~/utils/utils';
     import { colors, fonts, imperial, unitsSettings } from '~/variables';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
@@ -70,6 +70,7 @@
     /** the a9 watch needs its screen woken for the gps to keep reporting */
     const isA9Watch = __ANDROID__ && Device.model === 'HLTE556N';
     const dataPathsAvailable = __ANDROID__ && !PLAY_STORE_BUILD && ANDROID_30;
+    const mbtilesPathAvailable = dataPathsAvailable || __CATALYST__;
 </script>
 
 <script lang="ts">
@@ -459,18 +460,22 @@
                 ];
             case 'map_data':
                 return (
-                    dataPathsAvailable
+                    mbtilesPathAvailable
                         ? [
                               {
                                   id: 'data_path',
                                   title: lc('map_data_path'),
                                   description: getSavedMBTilesDir
                               },
-                              {
-                                  id: 'items_data_path',
-                                  title: lc('items_data_path'),
-                                  description: getItemsDataFolder
-                              }
+                              ...(dataPathsAvailable
+                                  ? [
+                                        {
+                                            id: 'items_data_path',
+                                            title: lc('items_data_path'),
+                                            description: getItemsDataFolder
+                                        }
+                                    ]
+                                  : [])
                           ]
                         : ([] as any[])
                 ).concat([
@@ -494,7 +499,7 @@
                     {
                         type: 'switch',
                         key: 'route_image_capture',
-                        value: ApplicationSettings.getBoolean('route_image_capture', true),
+                        value: ApplicationSettings.getBoolean('route_image_capture', false),
                         title: lc('route_item_image_capture')
                     },
                     {
@@ -1085,9 +1090,14 @@
                     });
                     const resultPath = result.folders[0];
                     if (resultPath) {
-                        const toUsePath = getAndroidRealPath(resultPath);
+                        const folderUrl: NSURL = __CATALYST__ && result.ios.objectAtIndex(0);
+                        const toUsePath = __CATALYST__ ? folderUrl.path : getAndroidRealPath(resultPath);
                         if (toUsePath !== getSavedMBTilesDir()) {
-                            setSavedMBTilesDir(toUsePath);
+                            if (__CATALYST__) {
+                                setMBTilesFolder(folderUrl);
+                            } else {
+                                setSavedMBTilesDir(toUsePath);
+                            }
                             updateItem(item, 'id');
                             confirmRestartApp();
                         }

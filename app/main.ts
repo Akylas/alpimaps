@@ -1,3 +1,5 @@
+// first: sets the Mac Catalyst app delegate before plugins create their own
+import { startWindowHelper } from '@shared/utils/window';
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
@@ -9,7 +11,6 @@ import { initialize } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
-import installWebRTC from '@nativescript-community/ui-webview-rtc';
 import { Application, ApplicationSettings, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
 import { init as sharedInit } from '@shared/index';
@@ -32,7 +33,6 @@ try {
     installBottomSheets();
     installUIMixins();
     overrideSpanAndFormattedString();
-    installWebRTC();
     initialize();
 
     setGeoLocationKeys('lat', 'lon');
@@ -124,6 +124,7 @@ try {
     Application.on(Application.launchEvent, () => {
         networkService.start();
         bgService.start();
+        startWindowHelper({ startWidth: 1200, startHeight: 800 });
     });
     Application.on(Application.exitEvent, () => {
         networkService.stop();

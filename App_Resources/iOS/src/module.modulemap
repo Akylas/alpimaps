@@ -1,0 +1,4 @@
+module MacRightMouse {
+  header "MacRightMouse.h"
+  export *
+}
