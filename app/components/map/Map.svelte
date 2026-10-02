@@ -9,7 +9,7 @@
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
-    import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils } from '@nativescript/core';
+    import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils, View } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
     import { Folder, knownFolders, path } from '@nativescript/core/file-system';
     import { Screen } from '@nativescript/core/platform';
@@ -47,6 +47,7 @@
         setMapContext
     } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
+    import { installMacMouse } from './macMouse';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
@@ -96,6 +97,9 @@
     // terrain shader params and post-process effects are object-API only, hence the view itself
     let mapViewInstance: MassifMapView;
     let directionsPanel: DirectionsPanel;
+    let uninstallMacMouse: () => void;
+    let macMenuAnchor: NativeViewElementNode<View>;
+    const isCatalyst = __CATALYST__;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
     let bottomSheetInner: BottomSheetInner;
@@ -456,6 +460,7 @@
         // console.log('onMapDestroyed');
         Application.off(Application.orientationChangedEvent, onOrientationChanged);
         mapContext.runOnModules('onMapDestroyed');
+        uninstallMacMouse?.();
 
         // localVectorLayer = null;
         // if (localVectorDataSource) {
@@ -561,6 +566,9 @@
             api.log().apply({ showDebug: DEV_LOG, showInfo: DEV_LOG, showWarn: DEV_LOG, showError: DEV_LOG });
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
+            if (__CATALYST__) {
+                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick);
+            }
 
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos;
             const zoom = ApplicationSettings.getNumber('mapZoom', 10);
@@ -672,6 +680,19 @@
         // console.log('mapTile', latLngToTileXY(position.lat, position.lon, massifMap.zoom), clickType === ClickType.SINGLE, handledByModules, !!selectedItem);
         if (!handledByModules && clickType === ClickType.SINGLE) {
             selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: !$selectedItem });
+        }
+    }
+    // right-click selects the place under the cursor and lists what the sheet can do with it, there
+    async function onMapSecondaryClick(point: { x: number; y: number }, position: MapPos) {
+        try {
+            unFocusSearch();
+            await selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true });
+            const anchor = macMenuAnchor.nativeView;
+            anchor.translateX = point.x;
+            anchor.translateY = point.y;
+            await bottomSheetInner?.showActionsMenu(anchor);
+        } catch (error) {
+            showError(error);
         }
     }
     function onSelectedItemChanged(oldValue: IItem, value: IItem) {
@@ -1891,6 +1912,10 @@
         {/if}
         <!-- collapsed during AR: three GL surfaces (preview, live map, panorama) have no defined order -->
         <massifmap accessibilityLabel="massifMap" visibility={$peakFinderArActive ? 'collapse' : 'visible'} zoom={16} on:mapReady={onMainMapReady} on:layoutChanged={reportFullyDrawn} />
+        {#if isCatalyst}
+            <!-- the right-click menu points at it: an iOS popover only anchors to a view -->
+            <gridlayout bind:this={macMenuAnchor} height={1} horizontalAlignment="left" isUserInteractionEnabled={false} verticalAlignment="top" width={1} />
+        {/if}
 
         <!-- two sheets, never both: item and navigation step lists are incompatible -->
         <!-- transparent: the navigation view is a row of floating cards with the map showing between them -->
