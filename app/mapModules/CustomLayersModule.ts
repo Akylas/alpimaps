@@ -860,6 +860,10 @@ export default class CustomLayersModule extends MapModule {
             if (!item.spec || (item.spec.type !== 'vector' && item.spec.type !== 'composite-vector')) {
                 return;
             }
+            // only the layers on the decoder that changed: the inner decoder changing rebuilt the map on it
+            if (oldDecoder && item.spec.style !== oldDecoder.id) {
+                return;
+            }
             const oldLayer = item.layer;
             // reuse the source: rebuilding a persistent-cache spec opens a SECOND cache on the same file
             const source = oldLayer.source();

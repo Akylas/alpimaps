@@ -91,6 +91,8 @@ dev_assets/styles/inner_cleaned/*.xml
 dev_assets/styles/mobile-sdk-styles
 dev_assets/styles/**/*.xml
 dev_assets/styles/test*
+# the `buildstyle` step's Massif build, zipped into app/assets/styles/massif.zip
+dev_assets/styles/massif_cleaned
 /css2xml_*
 # fontforge output of the `buildstyle` step
 /dev_assets/fonts/
