@@ -18,6 +18,11 @@ on:
         required: true
         default: true
         type: boolean
+      catalyst:
+        description: 'Mac Catalyst'
+        required: true
+        default: false
+        type: boolean
       android:
         description: 'Android'
         required: true
@@ -83,4 +88,15 @@ jobs:
       github: ${{ github.event.inputs.github }}
       sentry: ${{ github.event.inputs.sentry }}
     secrets: inherit
-    
+
+  release-catalyst:
+    uses: Akylas/app-tools/.github/workflows/release_catalyst.yml@main
+    # runs after iOS (shared Info.plist version) and reuses its version bump
+    needs: release-ios
+    if: ${{ !cancelled() && github.event.inputs.catalyst == 'true' && needs.release-ios.result != 'failure' }}
+    with:
+      release_type: ${{ github.event.inputs.ios == 'true' && 'none' || github.event.inputs.release_type }}
+      publish: ${{ github.event.inputs.publish }}
+      github: ${{ github.event.inputs.github }}
+      sentry: ${{ github.event.inputs.sentry }}
+    secrets: inherit
