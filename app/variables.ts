@@ -67,8 +67,9 @@ export const fonts = writable({
 export const windowInset = writable({ top: 0, left: 0, right: 0, bottom: 0, keyboard: 0 });
 export const actionBarButtonHeight = writable(0);
 export const actionBarHeight = writable(0);
-export const screenHeightDips = Screen.mainScreen.heightDIPs;
-export const screenWidthDips = Screen.mainScreen.widthDIPs;
+export let screenHeightDips = Screen.mainScreen.heightDIPs;
+export let screenWidthDips = Screen.mainScreen.widthDIPs;
+export const windowSize = writable({ width: screenWidthDips, height: screenHeightDips });
 // export const navigationBarHeight = writable(0);
 
 export const fontScale = writable(1);
@@ -232,6 +233,13 @@ export function onInitRootView(force = false) {
         actionBarHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarHeight')));
         actionBarButtonHeight.set(parseFloat(rootViewStyle.getCssVariable('--actionBarButtonHeight')));
         updateIOSWindowInset();
+        if (__CATALYST__) {
+            // the window is resizable
+            rootView.on('layoutChanged', () => {
+                updateIOSWindowSize();
+                updateIOSWindowInset();
+            });
+        }
     }
     Application.on(Application.fontScaleChangedEvent, (event) => updateSystemFontScale(event.newValue));
     Application.off(Application.initRootViewEvent, onInitRootViewFromEvent);
@@ -254,6 +262,19 @@ function updateIOSWindowInset() {
             });
         }
         // }, 0);
+    }
+}
+function updateIOSWindowSize() {
+    const bounds = Application.ios.window?.bounds;
+    if (!bounds) {
+        return;
+    }
+    const width = Math.round(bounds.size.width);
+    const height = Math.round(bounds.size.height);
+    if (width !== screenWidthDips || height !== screenHeightDips) {
+        screenWidthDips = width;
+        screenHeightDips = height;
+        windowSize.set({ width, height });
     }
 }
 function onOrientationChanged() {

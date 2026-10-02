@@ -1,3 +1,5 @@
+// first: sets the Mac Catalyst app delegate before plugins create their own
+import { startWindowHelper } from '@shared/utils/window';
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
@@ -124,6 +126,7 @@ try {
     Application.on(Application.launchEvent, () => {
         networkService.start();
         bgService.start();
+        startWindowHelper({ startWidth: 1200, startHeight: 800 });
     });
     Application.on(Application.exitEvent, () => {
         networkService.stop();
