@@ -8,7 +8,7 @@
         <item name="cornerSize">24dp</item>
     </style>
     <!-- overrides the textfield plugin's outlined box: the design's 12dp field corners -->
-    <style name="TextInputLayout.Outlined" parent="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+    <style name="TextInputLayout.Outlined" parent="@style/Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="boxCornerRadiusTopStart">12dp</item>
         <item name="boxCornerRadiusTopEnd">12dp</item>
         <item name="boxCornerRadiusBottomStart">12dp</item>
