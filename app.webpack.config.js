@@ -163,7 +163,9 @@ module.exports = (env, params = {}) => {
     const config = webpackConfig(env, params);
     // config.resolve.conditionNames.push('svelte');
     const mode = production ? 'production' : 'development';
-    const platform = env && ((env.android && 'android') || (env.ios && 'ios'));
+    const isCatalyst = !!(env && env.catalyst);
+    // Catalyst builds are iOS builds, they only differ by platforms folder.
+    const platform = env && ((env.android && 'android') || ((env.ios || isCatalyst) && 'ios'));
     const projectRoot = params.projectRoot || __dirname;
     const dist = nsWebpack.Utils.platform.getDistPath();
     const appResourcesFullPath = resolve(projectRoot, appResourcesPath);
@@ -429,6 +431,7 @@ module.exports = (env, params = {}) => {
         __ONLY_ALLOW_ROOT_VARIABLES__: true,
         __IOS__: isIOS,
         __ANDROID__: isAndroid,
+        __CATALYST__: isCatalyst,
         'global.autoLoadPolyfills': false,
         TNS_ENV: JSON.stringify(mode),
         __APP_ID__: `"${appId}"`,

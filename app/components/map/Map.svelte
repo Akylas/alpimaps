@@ -76,7 +76,7 @@
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showAlertOptionSelect, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
     import { clearTimeout, getDataFolder, getSavedMBTilesDir, setTimeout } from '~/utils/utils';
-    import { colors, screenHeightDips, screenWidthDips, windowInset } from '../../variables';
+    import { colors, screenHeightDips, windowInset, windowSize } from '../../variables';
     import MapResultPager from '../search/MapResultPager.svelte';
 
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
@@ -346,6 +346,8 @@
     let itemModule: ItemsModule;
 
     let isLandscape = Application.orientation() === 'landscape';
+    // a Mac window has no orientation, only a size
+    $: if (__CATALYST__) isLandscape = $windowSize.width > $windowSize.height;
     function onOrientationChanged(event: OrientationChangedEventData) {
         DEV_LOG && console.log('onOrientationChanged', event.newValue);
         isLandscape = event.newValue === 'landscape';
@@ -2023,9 +2025,9 @@
                 bind:this={bottomSheetInner}
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
-                sheetWidth={isLandscape ? Math.max(screenWidthDips / 2, 400) : screenWidthDips}
+                sheetWidth={isLandscape ? Math.max($windowSize.width / 2, 400) : $windowSize.width}
                 updating={itemLoading}
-                width={isLandscape ? Math.max(screenWidthDips / 2, 400) : '100%'}
+                width={isLandscape ? Math.max($windowSize.width / 2, 400) : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>

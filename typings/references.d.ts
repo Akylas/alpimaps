@@ -35,6 +35,7 @@ declare const DEV_LOG: boolean;
 declare const NO_CONSOLE: boolean;
 declare const PRODUCTION: boolean;
 declare const __DISABLE_OFFLINE__: boolean;
+declare const __CATALYST__: boolean;
 declare const WITH_BUS_SUPPORT: boolean;
 declare const SENTRY_ENABLED: boolean;
 declare const SENTRY_DSN: string;
