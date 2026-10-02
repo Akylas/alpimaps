@@ -715,6 +715,15 @@ module.exports = (env, params = {}) => {
         }
     ];
     if (!production) {
+        // Massif's CartoCSS (icon-font flavour) as a folder, compiled at runtime, so editing the
+        // Alpimaps child in dev_assets/styles/massif shows on the next sync; the package's own examples stay out
+        copyPatterns.push({
+            context: join(projectRoot, 'node_modules/@massif-maps/styles/cartocss-iconfont'),
+            from: '**/*',
+            to: 'assets/styles/massif',
+            noErrorOnMissing: true,
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*'] }
+        });
         copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
     }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
@@ -871,6 +880,8 @@ module.exports = (env, params = {}) => {
     }
 
     if (buildstyle) {
+        // every Massif project the app lists: the base (its variant a style parameter) and the Alpimaps child
+        const MASSIF_PROJECTS = ['streets', 'alpimaps'];
         const css2xmlBin = `css2xml_${process.platform === 'darwin' ? 'macos' : process.platform}`;
         let dir1 = join(projectRoot, 'dev_assets/styles/inner_cleaned');
         if (!existsSync(dir1)) {
@@ -907,7 +918,14 @@ module.exports = (env, params = {}) => {
                         `./${css2xmlBin} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
-                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -'
+                        'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
+                        // Massif: the package's icon-font CartoCSS plus the Alpimaps child, compiled and zipped
+                        'rm -rf dev_assets/styles/massif_cleaned && mkdir -p dev_assets/styles/massif_cleaned/src dev_assets/styles/massif_cleaned/out',
+                        'cp -R node_modules/@massif-maps/styles/cartocss-iconfont/. dev_assets/styles/massif_cleaned/src/',
+                        'cp -R dev_assets/styles/massif/. dev_assets/styles/massif_cleaned/src/',
+                        ...MASSIF_PROJECTS.map((name) => `./${css2xmlBin} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
+                        'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/fonts dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
+                        'rm -f app/assets/styles/massif.zip && cd ./dev_assets/styles/massif_cleaned/out && zip -r ../../../../app/assets/styles/massif.zip ./* && cd -'
                     ],
                     blocking: true,
                     parallel: false
