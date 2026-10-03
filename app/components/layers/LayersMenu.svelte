@@ -72,8 +72,13 @@
         if (item.layer.opacity() === opacity) {
             return;
         }
+        const wasVisible = item.layer.opacity() > 0;
         item.layer.opacity(opacity).visible(opacity > 0);
         setNumber(item.name + '_opacity', opacity);
+        // the terrain slots follow the top-most shown base map
+        if (wasVisible !== opacity > 0 && item.layer.is('massif::CompositeVectorTileLayer')) {
+            customLayers?.updateTerrainAttachment();
+        }
         mapContext.getMap().requestRedraw();
         updateItem(item);
     }

@@ -963,8 +963,10 @@ export default class CustomLayersModule extends MapModule {
             .getLayers()
             .map((added) => added.layer)
             .filter((layer) => layer?.is('massif::CompositeVectorTileLayer'));
-        // getLayers is bottom-to-top, so the last one is the one drawn over the others
-        const target = this.terrainSource ? composites[composites.length - 1] : null;
+        // getLayers is bottom-to-top, so the last one is the one drawn over the others. A hidden one
+        // would hide the hillshade with it: the top-most SHOWN one, unless none is
+        const shown = composites.filter((layer) => layer.visible() && layer.opacity() > 0);
+        const target = this.terrainSource ? (shown[shown.length - 1] ?? composites[composites.length - 1]) : null;
         // adding/removing an external source reloads the composite's tiles: only when target or DEM changed
         if (target?.handle === this.terrainAttachedTo?.handle && this.terrainSource === this.attachedSource) {
             // still re-point the item's layer at the child: updateTerrain reset it to the detached
