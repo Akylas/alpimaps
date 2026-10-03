@@ -12,6 +12,11 @@ import { getMapContext } from '~/mapModules/MapModule';
 import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
 import { createView } from '~/utils/ui';
 
+/** Local items keep their historic names as settings keys: what the user reads is translated. */
+export function layerTitle(item: SourceItem) {
+    return item.local ? lc(item.terrain ? 'offline_terrain' : 'offline_map') : item.name;
+}
+
 export type LayerAction = 'delete' | 'cache_only_mode' | 'clear_cache' | 'download_area' | 'tile_filter_mode';
 
 export function layerSource(item: SourceItem) {
