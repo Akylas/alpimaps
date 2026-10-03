@@ -50,7 +50,8 @@
     import { CARD_INSET, CARD_PADDING, groupRows } from '~/components/settings/groupedRows';
     import { panelPopoverStyle, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
-    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder, setMBTilesFolder, setSavedMBTilesDir } from '~/utils/utils';
+    import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder } from '~/utils/utils';
+    import { pickLocalDataFolder } from '~/mapModules/localData/folder';
     import { colors, fonts, imperial, unitsSettings } from '~/variables';
 
     const version = __APP_VERSION__ + ' Build ' + __APP_BUILD_NUMBER__;
@@ -1082,25 +1083,9 @@
                     break;
                 }
                 case 'data_path': {
-                    const result = await pickFolder({
-                        permissions: {
-                            read: true,
-                            persistable: true
-                        }
-                    });
-                    const resultPath = result.folders[0];
-                    if (resultPath) {
-                        const folderUrl: NSURL = __CATALYST__ && result.ios.objectAtIndex(0);
-                        const toUsePath = __CATALYST__ ? folderUrl.path : getAndroidRealPath(resultPath);
-                        if (toUsePath !== getSavedMBTilesDir()) {
-                            if (__CATALYST__) {
-                                setMBTilesFolder(folderUrl);
-                            } else {
-                                setSavedMBTilesDir(toUsePath);
-                            }
-                            updateItem(item, 'id');
-                            confirmRestartApp();
-                        }
+                    if (await pickLocalDataFolder()) {
+                        updateItem(item, 'id');
+                        confirmRestartApp();
                     }
                     break;
                 }
