@@ -920,5 +920,19 @@
     "remaining_time": "",
     "navigation_maneuver_refresh_distance": "",
     "navigation_arrow_marker_desc": "",
-    "navigation_auto_pause_delay": ""
+    "navigation_auto_pause_delay": "",
+    "offline_data_none": "aucune donnée hors ligne trouvée",
+    "offline_data_order": "Chaque tuile vient de la première source qui l'a : les régions, puis le secours en ligne s'il est activé, puis les fichiers monde.",
+    "offline_map": "carte hors ligne",
+    "offline_terrain": "relief hors ligne",
+    "world": "monde",
+    "regions": "régions",
+    "rescan": "réanalyser",
+    "change_folder": "changer de dossier",
+    "terrain": "relief",
+    "bathymetry": "bathymétrie",
+    "online_fallback": "secours en ligne",
+    "local_map_online_fallback": "OpenFreeMap là où les fichiers hors ligne n'ont pas de tuile",
+    "local_terrain_online_fallback": "Mapterhorn là où les fichiers hors ligne n'ont pas de tuile, ou au-delà de leur zoom",
+    "online_fallback_description": "nécessite le réseau, désactivé par défaut"
 }

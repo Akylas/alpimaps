@@ -16,18 +16,20 @@
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { onThemeChanged } from '~/helpers/theme';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
-    import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { LOCAL_DATA_SUPPORTED, localInventory, mapCapabilities } from '~/mapModules/CustomLayersModule';
+    import { disabledLocalData } from '~/mapModules/localData/scan';
+    import { archivesSummary } from './offlineData';
     import { getMapContext } from '~/mapModules/MapModule';
     import { nutiProps, pitchEnabled, projectionModeSpherical, styleHasParameter, styleParameterKeys } from '~/stores/mapStore';
     import { openLink, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fontScaleMaxed } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
     import Pill from '../common/Pill.svelte';
-    import { layerCapabilities, runLayerAction } from './layerActions';
+    import { layerCapabilities, layerTitle, runLayerAction } from './layerActions';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import PanelHeader from '../common/PanelHeader.svelte';
     import ReorderLongPressHandler from './ReorderLongPressHandler';
-    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorPrimary, colorSurfaceContainer } = $colors);
 
     const mapContext = getMapContext();
     let gridLayout: NativeViewElementNode<GridLayout>;
@@ -74,6 +76,31 @@
         setNumber(item.name + '_opacity', opacity);
         mapContext.getMap().requestRedraw();
         updateItem(item);
+    }
+
+    // what the map uses out of the folder: disabled archives left out
+    $: offlineSummary = (() => {
+        const archives = [...($localInventory?.world ?? []), ...($localInventory?.regions ?? []).filter((region) => !$disabledLocalData.has(region.id)).flatMap((region) => region.archives)].filter(
+            (archive) => !$disabledLocalData.has(archive.id)
+        );
+        return archives.length ? archivesSummary(archives) : lc('offline_data_none');
+    })();
+
+    async function showOfflineData() {
+        const OfflineDataSheet = (await import('./OfflineDataSheet.svelte')).default;
+        closeBottomSheet();
+        setTimeout(
+            () => {
+                showBottomSheet({
+                    parent: gridLayout,
+                    view: OfflineDataSheet,
+                    skipCollapsedState: true,
+                    dismissOnBackgroundTap: true,
+                    disableDimBackground: true
+                });
+            },
+            __IOS__ ? 500 : 0
+        );
     }
 
     async function showSourceOptions(item: SourceItem) {
@@ -185,7 +212,7 @@
 </script>
 
 <!-- on iOS a bottomsheet adds a safe-area padding to the collectionview: contentInsetAdjustmentBehavior removes it -->
-<gesturerootview class="bottomsheet" {...$$restProps} height={400} rows="auto,auto,*" on:closedBottomSheet={onCloseBottomSheet}>
+<gesturerootview class="bottomsheet" {...$$restProps} height={LOCAL_DATA_SUPPORTED ? 470 : 400} rows="auto,auto,auto,*" on:closedBottomSheet={onCloseBottomSheet}>
     <PanelHeader icon="mdi-layers-outline" title={lc('layers')}>
         <Pill icon="mdi-plus" label={lc('add')} on:tap={addSource} />
     </PanelHeader>
@@ -201,7 +228,17 @@
         {/each}
         <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
     </wraplayout>
-    <gridlayout bind:this={gridLayout} row={2} rows="auto,*">
+    {#if LOCAL_DATA_SUPPORTED}
+        <gridlayout backgroundColor={colorSurfaceContainer} borderRadius={12} columns="auto,*,auto" margin="4 12" padding="10 12" rippleColor={colorPrimary} row={2} on:tap={showOfflineData}>
+            <label class="panelIcon" text="mdi-database-outline" verticalAlignment="middle" />
+            <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
+                <label color={colorOnSurface} fontSize={15} fontWeight="bold" text={lc('offline_data')} />
+                <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={offlineSummary} />
+            </stacklayout>
+            <label class="mdi" col={2} color={colorOnSurfaceVariant} fontSize={22} text="mdi-chevron-right" verticalAlignment="middle" />
+        </gridlayout>
+    {/if}
+    <gridlayout bind:this={gridLayout} row={3} rows="auto,*">
         <label class="sectionHeader" padding="4 16 0 16" text={lc('layer_stack')} />
         <collectionview
             bind:this={collectionView}
@@ -244,7 +281,7 @@
                                 fontWeight="bold"
                                 lineBreak="end"
                                 maxLines={1}
-                                text={item.name} />
+                                text={layerTitle(item)} />
                             <label col={1} color={colorOnSurfaceVariant} fontSize={13} text={Math.round(item.layer.opacity() * 100) + ' %'} verticalAlignment="top" />
                             <label
                                 colSpan={2}

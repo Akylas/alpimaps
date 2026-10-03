@@ -5,10 +5,12 @@
     import { onMount } from 'svelte';
     import Pill from '~/components/common/Pill.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
-    import { type LayerAction, layerCacheSize, layerCapabilities, runLayerAction } from '~/components/layers/layerActions';
+    import { type LayerAction, layerCacheSize, layerCapabilities, layerTitle, runLayerAction } from '~/components/layers/layerActions';
     import { lc } from '~/helpers/locale';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import { pickColor } from '~/utils/utils';
+    import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
+    import { localMapOnlineFallback, localTerrainOnlineFallback } from '~/mapModules/localData/scan';
     import { colors } from '~/variables';
 
     $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
@@ -17,6 +19,12 @@
 
     let scrollView;
     let capabilities = layerCapabilities(item);
+    // a Local item's tiles can come from the matching online source where no archive has them
+    const onlineFallback = item.local
+        ? item.terrain
+            ? { store: localTerrainOnlineFallback, title: lc('local_terrain_online_fallback') }
+            : { store: localMapOnlineFallback, title: lc('local_map_online_fallback') }
+        : null;
     const cacheSize = layerCacheSize(item);
 
     // the style's raw parameter names, readable where they are known
@@ -113,7 +121,7 @@
 </script>
 
 <gesturerootview class="bottomsheet" {...$$restProps} height={420} rows="auto,auto,*,auto">
-    <PanelHeader icon="mdi-tune-variant" subtitle={cacheSize} title={item.name} />
+    <PanelHeader icon="mdi-tune-variant" subtitle={cacheSize} title={layerTitle(item)} />
     <wraplayout padding="0 12" row={1}>
         {#if capabilities.downloadable}
             <Pill icon="mdi-download" label={lc('download')} on:tap={() => handleAction('download_area')} />
@@ -127,6 +135,10 @@
     </wraplayout>
     <scrollview bind:this={scrollView} id="scrollView" row={2}>
         <stacklayout padding="0 4">
+            {#if onlineFallback}
+                <label class="sectionHeader" text={lc('online_fallback')} />
+                <StoreSwitch description={lc('online_fallback_description')} store={onlineFallback.store} title={onlineFallback.title} />
+            {/if}
             {#if sliderOptions.length}
                 <label class="sectionHeader" text={lc('rendering')} />
             {/if}
