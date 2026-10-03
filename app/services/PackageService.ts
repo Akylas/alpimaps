@@ -15,6 +15,7 @@ import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/gr
 import { projectOnRoute } from '~/utils/navigation';
 import { type RawInstruction, type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
+import type { LocalArchive } from '~/mapModules/localData/archives';
 import { networkService } from './NetworkService';
 import { Application, ApplicationSettings } from '@akylas/nativescript';
 import { get } from 'svelte/store';
@@ -189,9 +190,18 @@ function sampleTrackForRouting(positions: MapPos[]) {
 
 class PackageService extends Observable {
     hillshadeLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
-    localVectorTileLayer?: MassifLayer<'massif::CompositeVectorTileLayer'>;
-    /** The base map files alone, regions first: what the peak finder reads its summits from. */
-    localBaseMbtiles: string[] = [];
+    /** The Local map's composite layer, rebuilt with every local load and style change. */
+    localVectorTileLayer?: MassifLayer;
+    /** The base map archives alone, regions first: what the peak finder reads its summits from. */
+    localBaseArchives: LocalArchive[] = [];
+
+    /** A new local load replaces the layer, and the search built over the old one with it. */
+    setLocalVectorData(layer: MassifLayer | undefined, baseArchives: LocalArchive[]) {
+        this.localVectorTileLayer = layer;
+        this.localBaseArchives = baseArchives;
+        this._vectorTileSearchService?.destroy();
+        this._vectorTileSearchService = null;
+    }
 
     mLocalOfflineRoutingSearchService: MassifObject<'massif::MultiValhallaOfflineRoutingService'>;
     mOnlineRoutingSearchService: MassifObject<'massif::ValhallaOnlineRoutingService'>;

@@ -19,6 +19,7 @@ import { setupPeakFinderStars, teardownPeakFinderStars, updatePeakFinderStars } 
 import { raisePeakFinderSun, setupPeakFinderSun, sunPositionAt, teardownPeakFinderSun, updatePeakFinderSun } from '~/mapModules/features/peakFinderSun';
 import type { IItem } from '~/models/Item';
 import { packageService } from '~/services/PackageService';
+import { archiveSpec } from '~/mapModules/localData/archives';
 import { nutiProps } from '~/stores/mapStore';
 import {
     PANORAMA_RANGE,
@@ -561,11 +562,11 @@ function applyDetailPeaksOptions() {
  * in the base file. Half the time.
  */
 function detailPeaksBaseSource(): MassifSource {
-    const files = packageService.localBaseMbtiles;
-    if (!files?.length) {
+    const archives = packageService.localBaseArchives;
+    if (!archives?.length) {
         return peaksSource;
     }
-    const specs = files.map((file) => ({ type: 'mbtiles' as const, path: file }));
+    const specs = archives.map(archiveSpec);
     const spec = specs.reduce((first, second) => ({ type: 'ordered' as const, source: first, source2: second }) as unknown as (typeof specs)[0]);
     detailPeaksBase = panorama.source(DETAIL_PEAKS_BASE_ID, spec);
     return detailPeaksBase;
@@ -577,8 +578,8 @@ function detailPeaksBaseSource(): MassifSource {
  */
 function detailPeaksStorePath() {
     const folder = Folder.fromPath(path.join(knownFolders.temp().path, DETAIL_PEAKS_STORE_FOLDER));
-    const files = packageService.localBaseMbtiles ?? [];
-    const signature = files.map((file) => `${file}:${File.exists(file) ? File.fromPath(file).size : 0}`).join('|');
+    const archives = packageService.localBaseArchives ?? [];
+    const signature = archives.map((archive) => `${archive.path}:${archive.size}`).join('|');
     let hash = 0;
     for (let index = 0; index < signature.length; index++) {
         hash = (hash * 31 + signature.charCodeAt(index)) | 0;
