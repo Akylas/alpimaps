@@ -1,6 +1,5 @@
 import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifMap, MassifObject, MassifSource, SpecArg } from '@nativescript-community/ui-massifmaps/api';
-import { openFilePicker, pickFolder } from '@nativescript-community/ui-document-picker';
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { alert, confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
@@ -17,7 +16,7 @@ import { packageService } from '~/services/PackageService';
 import { type NutiParamKey, type PropsChangeEvent, clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
-import { getDataFolder, getDefaultMBTilesDir, getFileNameThatICanUseInNativeCode, listFolder } from '~/utils/utils';
+import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
 
 import { SDK_VERSION } from '@akylas/nativescript/utils';
 import { createView, showSnack } from '~/utils/ui';
@@ -28,6 +27,21 @@ import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
 import { CLog } from '@nativescript-community/sentry';
+import { debounce } from '@nativescript/core/utils';
+import {
+    type LocalArchive,
+    type LocalInventory,
+    type SourceInput,
+    archiveSpec,
+    archivesWithRole,
+    enabledLocalData,
+    fallbackChain,
+    mergedSpec,
+    orderedSpec,
+    vectorArchives,
+    vectorChain
+} from '~/mapModules/localData/archives';
+import { disabledLocalData, localMapOnlineFallback, localTerrainOnlineFallback, scanLocalData } from '~/mapModules/localData/scan';
 const mapContext = getMapContext();
 
 export enum RoutesType {
@@ -36,12 +50,8 @@ export enum RoutesType {
     Hiking = 2
 }
 
-let localSourceId = 0;
-
 /** Only a persistent cache can download an area, and only it declares the download events. */
 export type DownloadableSource = MassifSource<'massif::PersistentCacheTileDataSource'>;
-
-const mbTilesSourceSpec = (path: string, minZoom?: number) => ({ type: 'mbtiles' as const, path, ...(minZoom !== undefined ? { minZoom } : {}) });
 
 export const SLOPE_STEPS = [30, 35, 40, 45];
 export const SLOPE_COLORS = ['#f0e64e', '#e87639', '#ff0000', '#c18bb7'];
@@ -148,6 +158,18 @@ const HILLSHADE_OPTIONS = {
 // flips asynchronously while mbtiles are scanned: UI must react to the store, not read a snapshot
 export const mapCapabilities = writable({ hasLocalData: false, hasTerrain: false, hasRoute: false });
 
+/** What the last scan of the data folder found, enabled or not; null before one ran. */
+export const localInventory = writable<LocalInventory>(null);
+
+export const LOCAL_DATA_SUPPORTED = !__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11);
+
+// item names double as the settings key prefix (`Local_opacity`), so they stay as they were
+export const LOCAL_MAP_NAME = 'Local';
+export const LOCAL_TERRAIN_NAME = 'Hillshade';
+
+// the style draws the bathymap's `global_landcover` and `depth` below z8
+const BATHYMAP_LAST_ZOOM = 7;
+
 export interface SourceItem {
     downloading?: boolean;
     downloadProgress?: number;
@@ -226,29 +248,6 @@ export default class CustomLayersModule extends MapModule {
             }
         }
     }
-    // `merged-mbvt` merges two vector-tile sources tile by tile, so several mbtiles are nested pairwise
-    createMergeDataSource(sources: any[], minZoom?: number) {
-        const specs = sources.map((s) => (typeof s === 'string' ? mbTilesSourceSpec(s, minZoom) : s));
-        if (specs.length === 1) {
-            return specs[0];
-        }
-        // nested to the right: the SDK reads a package's tile mask from a direct MBTiles child, and a
-        // merge of two merges (4+ files) has none, so the first file, the base, heads every level
-        return specs.reduceRight((merged, spec) => ({ type: 'merged-mbvt' as const, source: spec, source2: merged }));
-    }
-
-    /** The first source that has a tile wins, so a detailed region shadows the world map. */
-    createOrderedTileDataSource(sources: any[], minZoom?: number) {
-        const specs = sources.filter((s) => !!s).map((s) => (typeof s === 'string' ? mbTilesSourceSpec(s, minZoom) : s));
-        if (specs.length === 0) {
-            return null;
-        }
-        if (specs.length === 1) {
-            return specs[0];
-        }
-        return specs.reduce((first, second) => ({ type: 'ordered' as const, source: first, source2: second }));
-    }
-
     // Built for every DEM, even the woven one kept off the map: ElevationManager is reached through a
     // hillshade layer, so it answers elevation queries while on no map. The elevation decoder comes
     // from the source's `metaData.dem_encoding`.
@@ -738,11 +737,12 @@ export default class CustomLayersModule extends MapModule {
         (async () => {
             try {
                 if (!this.listenForSourceChanges) {
-                    if (!__DISABLE_OFFLINE__ && (!__ANDROID__ || !PLAY_STORE_BUILD || SDK_VERSION < 11)) {
+                    if (LOCAL_DATA_SUPPORTED) {
                         const folderPath = await getDefaultMBTilesDir();
                         if (folderPath && Folder.exists(folderPath)) {
-                            await this.loadLocalMbtiles(folderPath);
+                            await this.loadLocalData(folderPath);
                         }
+                        this.watchLocalDataSettings();
                         if (this.customSources.length === 0) {
                             const showFirstPresentation = ApplicationSettings.getBoolean('showFirstPresentation', true);
                             if (showFirstPresentation) {
@@ -876,6 +876,9 @@ export default class CustomLayersModule extends MapModule {
                 e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
             });
             mapContext.replaceLayer(oldLayer, layer);
+            if (oldLayer === packageService.localVectorTileLayer) {
+                packageService.setLocalVectorData(layer, packageService.localBaseArchives);
+            }
             oldLayer.destroy();
             item.layer = layer;
         });
@@ -960,8 +963,10 @@ export default class CustomLayersModule extends MapModule {
             .getLayers()
             .map((added) => added.layer)
             .filter((layer) => layer?.is('massif::CompositeVectorTileLayer'));
-        // getLayers is bottom-to-top, so the last one is the one drawn over the others
-        const target = this.terrainSource ? composites[composites.length - 1] : null;
+        // getLayers is bottom-to-top, so the last one is the one drawn over the others. A hidden one
+        // would hide the hillshade with it: the top-most SHOWN one, unless none is
+        const shown = composites.filter((layer) => layer.visible() && layer.opacity() > 0);
+        const target = this.terrainSource ? (shown[shown.length - 1] ?? composites[composites.length - 1]) : null;
         // adding/removing an external source reloads the composite's tiles: only when target or DEM changed
         if (target?.handle === this.terrainAttachedTo?.handle && this.terrainSource === this.attachedSource) {
             // still re-point the item's layer at the child: updateTerrain reset it to the detached
@@ -1095,152 +1100,192 @@ export default class CustomLayersModule extends MapModule {
     set hasRoute(value: boolean) {
         mapCapabilities.update((capabilities) => ({ ...capabilities, hasRoute: value }));
     }
-    async loadLocalMbtiles(directory: string) {
-        try {
-            const context: android.app.Activity = __ANDROID__ && Application.android.startActivity;
-            const entities = listFolder(directory);
+    /** The SDK objects the current local load built, released once the next one replaced them. */
+    private localObjects: MassifObject[] = [];
+    private localGeneration = 0;
+    private localFolder: string;
+    // one load at a time: a toggle while one builds would interleave their items
+    private localLoad = Promise.resolve();
+    private localDataUnsubscribers: (() => void)[] = [];
 
-            const terrains = [];
-            const mbtiles = [];
-            const baseMbtiles: string[] = [];
-            let worldMbtilesEntity = entities.find((e) => e.name === 'world.mbtiles');
-            const worldBaseMbtiles = worldMbtilesEntity && getFileNameThatICanUseInNativeCode(context, worldMbtilesEntity.path);
-            const worldRouteMbtilesEntity = entities.find((e) => e.name.endsWith('routes_9.mbtiles') || e.name.endsWith('routes.mbtiles'));
-            let worldTerrainMbtilesEntity = entities.find((e) => e.name.endsWith('.etiles'));
-
-            const folders = entities.filter((e) => e.isFolder).sort((a, b) => b.name.localeCompare(a.name));
-            // DEV_LOG && console.log('loadLocalMbtiles', JSON.stringify(folders));
-            for (let i = 0; i < folders.length; i++) {
-                const f = folders[i];
-                const subentities = listFolder(f.path);
-                if (subentities?.length > 0) {
-                    const sources = subentities.filter((s) => s.path.endsWith('.mbtiles'));
-                    const routesSourceIndex = sources.findIndex((s) => s.path.endsWith('routes.mbtiles'));
-                    this.hasRoute = this.hasRoute || routesSourceIndex >= 0;
-
-                    // DEV_LOG &&
-                    //     console.log(
-                    //         'sources',
-                    //         sources.map((s) => s.path)
-                    //     );
-                    const base = sources.find((s) => !/(routes|contours)\.mbtiles$/.test(s.name));
-                    if (base) {
-                        baseMbtiles.push(getFileNameThatICanUseInNativeCode(context, base.path));
-                    }
-                    if (sources.length) {
-                        mbtiles.push(
-                            this.createMergeDataSource(
-                                (base ? [base, ...sources.filter((s) => s !== base)] : sources).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)),
-                                worldMbtilesEntity ? 5 : undefined
-                            )
-                        );
-                    }
-
-                    const terrain = subentities.find((e) => e.name.endsWith('.etiles'));
-                    if (terrain) {
-                        terrains.push(mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, terrain.path)));
-                    }
-                }
-            }
-
-            if (worldMbtilesEntity && mbtiles.length === 0) {
-                mbtiles.push(this.createMergeDataSource([worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path))));
-                this.hasRoute = this.hasRoute || !!worldRouteMbtilesEntity;
-                worldMbtilesEntity = null;
-            }
-
-            if (worldTerrainMbtilesEntity && terrains.length === 0) {
-                terrains.push(mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path)));
-                worldTerrainMbtilesEntity = null;
-            }
-
-            if (mbtiles.length) {
-                this.hasLocalData = true;
-                const name = 'Local';
-                const map = mapContext.getMap();
-                // `multi` picks the right package per tile; filled after construction from the scan
-                const multi = map.source('source.local.multi', { type: 'multi' });
-                mbtiles.forEach((spec) => multi.call('add', map.source(`source.local.${++localSourceId}`, spec).handle, ''));
-                let sourceSpec: any = multi.handle;
-                if (worldMbtilesEntity) {
-                    const worldSpec = this.createMergeDataSource([worldMbtilesEntity, worldRouteMbtilesEntity].filter((s) => !!s).map((s) => getFileNameThatICanUseInNativeCode(context, s.path)));
-                    // the detailed packages first, the world map behind them
-                    sourceSpec = this.createOrderedTileDataSource([worldSpec, multi.handle]);
-                }
-                const opacity = ApplicationSettings.getNumber(name + '_opacity', 1);
-                // composite so the DEM can be woven into the style's layer order rather than stacked
-                const spec: SpecArg<'layer', 'composite-vector'> = {
-                    type: 'composite-vector',
-                    source: sourceSpec,
-                    style: mapContext.mapDecoder.id,
-
-                    layerBlendingSpeed: isEInk ? 0 : 3,
-                    labelBlendingSpeed: isEInk ? 0 : 3,
-                    labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
-                    opacity,
-                    preloading: get(preloading),
-                    clickRadius: layerProps['clickRadius'],
-                    tileCacheCapacity: 30 * 1024 * 1024,
-                    clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
-                    tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
-                    visible: opacity !== 0
-                };
-                const layer = map.buildLayer('layer.local', spec);
-                layer.onFeatureClick((e) => {
-                    e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
-                });
-                if (!packageService.localVectorTileLayer) {
-                    packageService.localVectorTileLayer = layer;
-                    packageService.localBaseMbtiles = [...baseMbtiles, worldBaseMbtiles].filter((file) => !!file);
-                }
-                this.customSources.push({
-                    layer,
-                    spec,
-                    name,
-                    opacity,
-                    options: {
-                        zoomLevelBias: {
-                            min: 0,
-                            max: 5
-                        }
-                    },
-                    legend: 'https://www.openstreetmap.org/key.html',
-                    local: true,
-                    provider: { name }
-                });
-                mapContext.addLayer(layer, 'map');
-            }
-            if (terrains.length) {
-                const name = 'Hillshade';
-                const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
-                const map = mapContext.getMap();
-                const multi = map.source('source.terrain.multi', { type: 'multi' });
-                terrains.forEach((spec) => multi.call('add', map.source(`source.terrain.${++localSourceId}`, spec).handle, ''));
-                let sourceSpec: any = multi.handle;
-                if (worldTerrainMbtilesEntity) {
-                    sourceSpec = this.createOrderedTileDataSource([multi.handle, mbTilesSourceSpec(getFileNameThatICanUseInNativeCode(context, worldTerrainMbtilesEntity.path))]);
-                }
-
-                // no addLayer: updateTerrain stacks it or weaves it into `#hillshade`
-                const layer = this.createHillshadeLayer('layer.hillshade.local', name, sourceSpec);
-                this.customSources.push({
-                    name,
-                    opacity,
-                    layer,
-                    terrainLayer: layer,
-                    options: HILLSHADE_OPTIONS,
-                    local: true,
-                    terrain: true,
-                    provider: { name }
-                });
-            }
-            this.updateTerrain();
-        } catch (err) {
-            console.error('loadLocalMbtiles', err);
-            showError(err);
-            // throw err;
-        }
+    /** Rescans the folder and rebuilds the Local map and terrain items in place. */
+    loadLocalData(folder = this.localFolder) {
+        this.localLoad = this.localLoad.then(() => this.buildLocalData(folder)).catch(showError);
+        return this.localLoad;
     }
+
+    private watchLocalDataSettings() {
+        const reload = debounce(() => this.loadLocalData(), 300);
+        let ready = false;
+        this.localDataUnsubscribers = [localMapOnlineFallback, localTerrainOnlineFallback, disabledLocalData].map((store) => store.subscribe(() => ready && reload()));
+        ready = true;
+    }
+
+    private async buildLocalData(folder: string) {
+        if (!folder) {
+            return;
+        }
+        this.localFolder = folder;
+        const inventory = scanLocalData(folder);
+        localInventory.set(inventory);
+        const enabled = enabledLocalData(inventory, get(disabledLocalData));
+        const previousObjects = this.localObjects;
+        this.localObjects = [];
+        this.localGeneration++;
+        const local = await this.buildLocalMapItem(enabled);
+        const terrainItem = await this.buildLocalTerrainItem(enabled);
+        const replacedLayers = [this.setLocalItem(LOCAL_MAP_NAME, local?.item), this.setLocalItem(LOCAL_TERRAIN_NAME, terrainItem)];
+
+        const archives = [...enabled.regions.flatMap((region) => region.archives), ...enabled.world];
+        this.hasLocalData = !!local;
+        this.hasRoute = archives.some((archive) => archive.role === 'routes');
+        packageService.setLocalVectorData(local?.layer, archivesWithRole(archives, 'map'));
+        // before the replaced layers go: it moves the terrain slots off them
+        this.updateTerrain();
+        replacedLayers.forEach((layer) => layer?.destroy());
+        previousObjects.forEach((object) => object.destroy());
+    }
+
+    /** Swaps a Local item in place, keeping its rank. Returns the layer it took off, for the caller to release. */
+    private setLocalItem(name: string, item: SourceItem | null) {
+        const index = this.customSources.findIndex((source) => source.local && source.name === name);
+        const previous = index === -1 ? null : this.customSources.getItem(index);
+        // by stack membership: the woven DEM's `layer` is the composite's child, never in the stack
+        const previousLayer = previous ? (previous.terrainLayer ?? previous.layer) : null;
+        const stacked = !!previousLayer && mapContext.getLayerIndex(previousLayer) !== -1;
+        if (item && !item.terrain && stacked) {
+            mapContext.replaceLayer(previousLayer, item.layer);
+        } else {
+            if (stacked) {
+                mapContext.removeLayer(previousLayer);
+            }
+            if (item && !item.terrain) {
+                mapContext.addLayer(item.layer, 'map');
+            }
+        }
+        // the list's splice handler would move the layer into the custom layers' range
+        const listening = this.listenForSourceChanges;
+        this.listenForSourceChanges = false;
+        if (item && previous) {
+            this.customSources.setItem(index, item);
+        } else if (item) {
+            this.customSources.push(item);
+        } else if (previous) {
+            this.customSources.splice(index, 1);
+        }
+        this.listenForSourceChanges = listening;
+        return previousLayer;
+    }
+
+    /** `multi` picks the archive per tile from each one's tile mask; a lone region needs none. */
+    private localMulti(name: string, sources: SourceInput[]) {
+        if (sources.length <= 1) {
+            return sources[0];
+        }
+        const prefix = `source.local.${this.localGeneration}.${name}`;
+        const multi = mapContext.getMap().source(`${prefix}.multi`, { type: 'multi' });
+        this.localObjects.push(multi);
+        sources.forEach((source, index) => multi.call('add', this.localSourceHandle(`${prefix}.${index}`, source), ''));
+        return multi.handle;
+    }
+
+    private localSourceHandle(id: string, input: SourceInput) {
+        if (typeof input === 'number') {
+            return input;
+        }
+        const source = mapContext.getMap().source(id, input);
+        this.localObjects.push(source);
+        return source.handle;
+    }
+
+    private localBathymap(archives: LocalArchive[]) {
+        const handles = archives.map((archive, index) => {
+            const source = mapContext.getMap().source(`source.local.${this.localGeneration}.bathymap.${index}`, archiveSpec(archive));
+            this.localObjects.push(source);
+            // merged over whichever source answers: past this it would replace their parent tiles
+            source.set('maxOverzoomLevel', Math.max(0, BATHYMAP_LAST_ZOOM - source.get('maxZoom')));
+            return source.handle;
+        });
+        return mergedSpec(handles);
+    }
+
+    /** Its own cache file: the same provider added as a layer already has one under its id. */
+    private async onlineFallback(providerId: string) {
+        await this.getSourcesLibrary();
+        const provider = this.baseProviders[providerId] ?? this.overlayProviders[providerId];
+        const data = provider && (await this.createDataSource(`${providerId}_local_fallback`, provider));
+        return data ? { provider, sourceSpec: data.sourceSpec } : null;
+    }
+
+    private async buildLocalMapItem({ regions, world }: LocalInventory) {
+        const regionSources = regions.map((region) => mergedSpec(vectorArchives(region.archives).map(archiveSpec))).filter(Boolean);
+        const worldSource = mergedSpec(vectorArchives(world).map(archiveSpec));
+        const bathymap = this.localBathymap(archivesWithRole(world, 'bathymap'));
+        if (!regionSources.length && !worldSource && !bathymap) {
+            return null;
+        }
+        const online = get(localMapOnlineFallback) ? await this.onlineFallback('openfreemap') : null;
+        const opacity = ApplicationSettings.getNumber(`${LOCAL_MAP_NAME}_opacity`, 1);
+        // composite so the DEM can be woven into the style's layer order rather than stacked
+        const spec: SpecArg<'layer', 'composite-vector'> = {
+            type: 'composite-vector',
+            source: vectorChain({ regions: this.localMulti('map', regionSources), online: online?.sourceSpec, world: worldSource, bathymap }),
+            style: mapContext.mapDecoder.id,
+            layerBlendingSpeed: isEInk ? 0 : 3,
+            labelBlendingSpeed: isEInk ? 0 : 3,
+            labelRenderOrder: 1, // VECTOR_TILE_RENDER_ORDER_LAST
+            opacity,
+            preloading: get(preloading),
+            clickRadius: layerProps['clickRadius'],
+            tileCacheCapacity: 30 * 1024 * 1024,
+            clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
+            tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
+            visible: opacity !== 0
+        };
+        const layer = mapContext.getMap().buildLayer(`layer.local.${this.localGeneration}`, spec);
+        layer.onFeatureClick((e) => {
+            e.consumed = mapContext.vectorTileClicked(mapContext.featureClickData(e));
+        });
+        const item: SourceItem = {
+            layer,
+            spec,
+            name: LOCAL_MAP_NAME,
+            opacity,
+            options: {
+                zoomLevelBias: {
+                    min: 0,
+                    max: 5
+                }
+            },
+            legend: 'https://www.openstreetmap.org/key.html',
+            local: true,
+            provider: { name: LOCAL_MAP_NAME, attribution: online && getProviderAttribution(online.provider) }
+        };
+        return { item, layer };
+    }
+
+    private async buildLocalTerrainItem({ regions, world }: LocalInventory): Promise<SourceItem> {
+        const regionSources = regions.flatMap((region) => archivesWithRole(region.archives, 'terrain').map(archiveSpec));
+        const worldSource = orderedSpec(archivesWithRole(world, 'terrain').map(archiveSpec));
+        if (!regionSources.length && !worldSource) {
+            return null;
+        }
+        const online = get(localTerrainOnlineFallback) ? await this.onlineFallback('mapterhorn') : null;
+        const source = fallbackChain({ regions: this.localMulti('terrain', regionSources), online: online?.sourceSpec, world: worldSource });
+        // no addLayer: updateTerrain stacks it or weaves it into `#hillshade`
+        const layer = this.createHillshadeLayer(`layer.hillshade.local.${this.localGeneration}`, LOCAL_TERRAIN_NAME, source);
+        return {
+            name: LOCAL_TERRAIN_NAME,
+            opacity: ApplicationSettings.getNumber(`${LOCAL_TERRAIN_NAME}_opacity`, 1),
+            layer,
+            terrainLayer: layer,
+            options: HILLSHADE_OPTIONS,
+            local: true,
+            terrain: true,
+            provider: { name: LOCAL_TERRAIN_NAME, attribution: online && getProviderAttribution(online.provider) }
+        };
+    }
+
     currentlyDownloadind: { source: DownloadableSource; provider: Provider };
 
     private clearDownloadingRow(provider: Provider) {
@@ -1324,29 +1369,12 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
-    selectLocalMbtilesFolder() {
-        return pickFolder({
-            multipleSelection: false
-        })
-            .then((result) => {
-                if (Folder.exists(result.folders[0])) {
-                    const localMbtilesSource = result.folders[0];
-                    ApplicationSettings.setString('local_mbtiles_directory', localMbtilesSource);
-                    this.loadLocalMbtiles(localMbtilesSource);
-                } else {
-                    return Promise.reject(new Error(l('no_folder_selected')));
-                }
-            })
-            .catch((err) => {
-                console.error('selectLocalMbtilesFolder', err);
-                setTimeout(() => {
-                    throw err;
-                }, 0);
-            });
-    }
-
     onMapDestroyed() {
         super.onMapDestroyed();
+        this.localDataUnsubscribers.forEach((unsubscribe) => unsubscribe());
+        this.localDataUnsubscribers = [];
+        // released with the map
+        this.localObjects = [];
         this.customSources.splice(0, this.customSources.length);
     }
 

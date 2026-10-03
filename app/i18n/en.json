@@ -1156,5 +1156,19 @@
     "campsite_min_zoom": "Campsites minimum zoom",
     "wetland_pattern_zoom": "Wetland pattern zoom",
     "style_option_default": "Style default",
-    "style_option_overridden": "Changed, long press to reset to the style"
+    "style_option_overridden": "Changed, long press to reset to the style",
+    "offline_data_none": "no offline data found",
+    "offline_data_order": "Each tile comes from the first that has it: regions, then the online fallback when enabled, then the world files.",
+    "offline_map": "offline map",
+    "offline_terrain": "offline terrain",
+    "world": "world",
+    "regions": "regions",
+    "rescan": "rescan",
+    "change_folder": "change folder",
+    "terrain": "terrain",
+    "bathymetry": "bathymetry",
+    "online_fallback": "online fallback",
+    "local_map_online_fallback": "OpenFreeMap where offline files have no tile",
+    "local_terrain_online_fallback": "Mapterhorn where offline files have no tile, or past their zoom",
+    "online_fallback_description": "needs network, off by default"
 }
