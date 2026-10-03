@@ -18,7 +18,7 @@
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { nutiProps, pitchEnabled, projectionModeSpherical } from '~/stores/mapStore';
+    import { nutiProps, pitchEnabled, projectionModeSpherical, styleHasParameter, styleParameterKeys } from '~/stores/mapStore';
     import { openLink, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fontScaleMaxed } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
@@ -191,7 +191,10 @@
     </PanelHeader>
     <!-- the map-wide toggles, then the layer stack top first -->
     <wraplayout padding="0 12 4 12" row={1}>
-        {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+        {#each nutiIconParams
+            .filter((key) => styleHasParameter($styleParameterKeys, key))
+            .map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key }))
+            .filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
             <StoreValue store={option.store} let:value>
                 <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
             </StoreValue>
