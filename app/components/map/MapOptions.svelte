@@ -7,13 +7,13 @@
     import { showError } from '@shared/utils/showError';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { Writable } from 'svelte/store';
+    import { Writable, get } from 'svelte/store';
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { GeoHandler } from '~/handlers/GeoHandler';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleHasParameter, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import Pill from '../common/Pill.svelte';
@@ -42,7 +42,25 @@
         }
     }
     function getSubtitle(item) {
-        return typeof item.description === 'function' ? item.description(item) : item.description;
+        const description = typeof item.description === 'function' ? item.description(item) : item.description;
+        if (!item.styleOwned) {
+            return description;
+        }
+        const state = lc(item.overridden ? 'style_option_overridden' : 'style_option_default');
+        return description ? `${description}\n${state}` : state;
+    }
+    // an option left to the style goes back to it
+    // on every switch: a recycled row keeps the listener its first item got
+    function resetToStyle(item) {
+        if (!item.styleOwned) {
+            return;
+        }
+        // the store, not the template's item: that one was drawn before the switch moved
+        const value = item.nutiProps.getProps(item.key).value;
+        if (value != null && value !== -1) {
+            item.nutiProps[item.key] = null;
+            refresh();
+        }
     }
     function updateItem(item, key = 'key') {
         const index = items.findIndex((it) => it[key] === item[key]);
@@ -165,6 +183,7 @@
             newItems.push(
                 ...nutiProps
                     .getKeys()
+                    .filter((key) => styleHasParameter(get(styleParameterKeys), key))
                     .map((key) => nutiProps.getSettingsOptions(key))
                     .filter((s) => s.showAsIcon !== true)
             );
@@ -183,6 +202,8 @@
     onServiceLoaded((handler: GeoHandler) => {
         refresh();
     });
+    // another style, other parameters
+    $: ($styleParameterKeys, $styleParameterValues, items && refresh());
 
     function onCheckBox(item, value, event) {
         item.value = value;
@@ -222,7 +243,11 @@
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <SettingsSwitch item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} on:tap={(event) => onTap(item, event)} />
+            <SettingsSwitch
+                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
+                {onCheckBox}
+                onLongPress={resetToStyle}
+                on:tap={(event) => onTap(item, event)} />
         </Template>
         <Template let:item>
             <ListItemAutoSize
@@ -240,7 +265,10 @@
          sideways, so the settings list keeps its room -->
     <scrollview orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
         <wraplayout height={100} orientation="vertical" padding="0 12 0 12">
-            {#each nutiIconParams.map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key })).filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
+            {#each nutiIconParams
+                .filter((key) => styleHasParameter($styleParameterKeys, key))
+                .map((key) => ({ ...nutiProps.getSettingsOptions(key), id: key }))
+                .filter((s) => s.visible?.($mapCapabilities) ?? true) as option}
                 <StoreValue store={option.store} let:value>
                     <Pill icon={option.icon} label={lc(option.id)} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
                 </StoreValue>

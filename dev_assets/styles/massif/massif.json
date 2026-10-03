@@ -1,0 +1,18 @@
+{
+  "extends": "./project.json",
+  "styles": [
+    "variables.mss",
+    "style.mss",
+    "alpimaps-ranking.mss"
+  ],
+  "styleparameters": {
+    "ranking": {
+      "default": "default",
+      "values": {
+        "default": "default",
+        "activities": "activities",
+        "sports": "sports"
+      }
+    }
+  }
+}

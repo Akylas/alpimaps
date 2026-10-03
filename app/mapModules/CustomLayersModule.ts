@@ -23,6 +23,7 @@ import { SDK_VERSION } from '@akylas/nativescript/utils';
 import { createView, showSnack } from '~/utils/ui';
 import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
+import { clickFilterFor } from '~/utils/massif';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
@@ -530,7 +531,7 @@ export default class CustomLayersModule extends MapModule {
                 opacity,
                 clickRadius: layerProps['clickRadius'],
                 preloading: get(preloading),
-                clickHandlerLayerFilter: get(clickHandlerLayerFilter),
+                clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
                 ...provider.layerOptions
             };
             layer = map.buildLayer(layerId, spec);
@@ -847,7 +848,7 @@ export default class CustomLayersModule extends MapModule {
         })();
     }
     updateClickHandlerLayerFilter() {
-        this.updateVectorTileLayerProperty('clickHandlerLayerFilter', get(clickHandlerLayerFilter));
+        this.updateVectorTileLayerProperty('clickHandlerLayerFilter', clickFilterFor(get(clickHandlerLayerFilter)));
     }
     // `trySet`: the stack also holds raster and hillshade layers without that property
     updateVectorTileLayerProperty(key: string, value) {
@@ -1180,7 +1181,7 @@ export default class CustomLayersModule extends MapModule {
                     preloading: get(preloading),
                     clickRadius: layerProps['clickRadius'],
                     tileCacheCapacity: 30 * 1024 * 1024,
-                    clickHandlerLayerFilter: get(clickHandlerLayerFilter),
+                    clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
                     tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
                     visible: opacity !== 0
                 };
