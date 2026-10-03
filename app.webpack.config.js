@@ -1,8 +1,8 @@
 const webpackConfig = require('./webpack.config.js');
 const webpack = require('webpack');
-const { readFileSync, readdirSync, existsSync, mkdirSync } = require('fs');
+const { existsSync, mkdirSync, readdirSync, readFileSync } = require('fs');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-const { basename, dirname, join, relative, resolve, isAbsolute } = require('path');
+const { basename, dirname, isAbsolute, join, relative, resolve } = require('path');
 const nsWebpack = require('@akylas/nativescript-webpack');
 const CopyPlugin = require('copy-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -97,34 +97,34 @@ module.exports = (env, params = {}) => {
         );
     }
     const {
+        accessibility = true,
+        adhoc,
+        apiKeys = true,
         appId,
         appPath,
         appResourcesPath,
-        production,
-        sourceMap,
+        buildstyle = false,
+        busSupport = true,
+        devlog,
+        disableoffline = false,
+        fork = true,
         hiddenSourceMap,
         inlineSourceMap,
-        sentry,
-        uploadSentry,
-        uglify,
-        profile,
-        noconsole,
-        timeline,
-        devlog,
-        testlog,
-        fork = true,
-        buildstyle = false,
-        report,
-        disableoffline = false,
-        busSupport = true,
-        apiKeys = true,
-        playStoreBuild = !!process.env['PLAY_STORE_BUILD'],
         keep_classnames_functionnames = true,
-        testZipStyles = false,
-        accessibility = true,
         locale = 'en',
+        noconsole,
+        playStoreBuild = !!process.env['PLAY_STORE_BUILD'],
+        production,
+        profile,
+        report,
+        sentry,
+        sourceMap,
+        testlog,
+        testZipStyles = false,
         theme = 'auto',
-        adhoc
+        timeline,
+        uglify,
+        uploadSentry
     } = env;
     // console.log('env', playStoreBuild, env);
     env.appPath = appPath;
@@ -662,6 +662,9 @@ module.exports = (env, params = {}) => {
             noErrorOnMissing: true,
             globOptions
         },
+        // the map legend draws Massif's swatches itself: its icon font and pattern images, outside the style zip
+        { from: 'node_modules/@massif-maps/styles/cartocss-iconfont/fonts/MassifIcons.ttf', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
+        { context: 'node_modules/@massif-maps/styles/cartocss-iconfont', from: 'icons/*', to: 'assets/massif-legend', noErrorOnMissing: true, globOptions },
         {
             from: 'css/_osm.scss',
             to: 'osm_icons.json',
@@ -880,8 +883,8 @@ module.exports = (env, params = {}) => {
     }
 
     if (buildstyle) {
-        // every Massif project the app lists: the base (its variant a style parameter) and the Alpimaps child
-        const MASSIF_PROJECTS = ['streets', 'alpimaps'];
+        // every Massif project the app lists: each draws all five variants and all rankings, picked by style parameters
+        const MASSIF_PROJECTS = ['massif', 'alpimaps'];
         const css2xmlBin = `css2xml_${process.platform === 'darwin' ? 'macos' : process.platform}`;
         let dir1 = join(projectRoot, 'dev_assets/styles/inner_cleaned');
         if (!existsSync(dir1)) {
@@ -909,6 +912,7 @@ module.exports = (env, params = {}) => {
                         // dev_assets/fonts serves both the map and the app UI.
                         'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/fonts/osm.ttf',
                         'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/fonts/materialdesignicons-webfont.ttf',
+
                         `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
                         `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
@@ -919,6 +923,7 @@ module.exports = (env, params = {}) => {
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
                         `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
                         'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
+
                         // Massif: the package's icon-font CartoCSS plus the Alpimaps child, compiled and zipped
                         'rm -rf dev_assets/styles/massif_cleaned && mkdir -p dev_assets/styles/massif_cleaned/src dev_assets/styles/massif_cleaned/out',
                         'cp -R node_modules/@massif-maps/styles/cartocss-iconfont/. dev_assets/styles/massif_cleaned/src/',
