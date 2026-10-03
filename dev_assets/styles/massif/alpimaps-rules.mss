@@ -37,13 +37,3 @@
   polygon-pattern-file: url('icons/pattern-rock.png');
   polygon-pattern-opacity: 0.5;
 }
-
-/* POIs as an OSM map wants them, over Massif's rank ladder (%poi, one ::poi attachment):
-   bakeries from z15 whatever their rank, winning their collisions; pharmacies held back to z17. */
-#poi[zoom >= 15][class = 'bakery']::poi {
-  @extend %poi;
-  shield-placement-priority: 30000000;
-}
-#poi[zoom < 17][class = 'pharmacy']::poi {
-  display: none;
-}

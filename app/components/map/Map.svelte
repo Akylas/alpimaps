@@ -54,6 +54,8 @@
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
+    import '~/mapModules/features/legend';
+    import MapLegend from './MapLegend.svelte';
     import '~/mapModules/features/terrain3d';
     import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
     import type { PreviewGeometrySource } from '~/utils/cameraFov';
@@ -70,7 +72,10 @@
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
-    import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer } from '~/stores/mapStore';
+    import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
+    import { legendVersion, showLegend } from '~/stores/legendStore';
+    import { MASSIF_PACKAGE, MASSIF_VARIANTS, VARIANT_PARAMETER_KEYS, isMassifStyle, massifLook, rankingFor, rankingParameters, setRankingFor, variantParameters } from '~/utils/massif';
+    import type { MassifRanking } from '~/utils/massif';
     import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
@@ -83,7 +88,7 @@
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
 
     // Alpimaps OSM over Massif: a folder while developing, massif.zip in release (styleSpec picks)
-    const DEFAULT_STYLE = 'massif~alpimaps';
+    const DEFAULT_STYLE = `${MASSIF_PACKAGE}~alpimaps`;
 </script>
 
 <script lang="ts">
@@ -1035,7 +1040,21 @@
 
     nutiProps.on('change', (event: any) => {
         // console.log('nutichange', event.key, event.nutiValue);
-        setStyleParameter(event.key, event.nutiValue);
+        if (event.nutiValue == null) {
+            // reset to the style: its own value, then a Massif variant's, which the reset key may carry
+            if (styleDefaults[event.key] != null) {
+                setStyleParameter(event.key, styleDefaults[event.key]);
+            }
+            if (isMassifStyle(currentLayerStyle)) {
+                vectorTileDecoder?.call('setStyleParameters', massifParameters(currentLayerStyle, mapStyleVariant(currentLayerStyle)));
+            }
+        } else {
+            const value = styleValue(event.key, event.nutiValue);
+            if (value != null) {
+                setStyleParameter(event.key, value);
+            }
+        }
+        styleParametersChanged();
     });
     innerNutiProps.on('change', (event: any) => {
         setStyleParameter(event.key, event.nutiValue, mapContext.innerDecoder);
@@ -1321,6 +1340,12 @@
 
     function setMapStyle(layerStyle: string, force = false) {
         layerStyle = layerStyle.toLowerCase();
+        // a variant project (`massif~outdoor`, stored by an earlier build) is the variant row's project at that variant
+        const massifProject = isMassifStyle(layerStyle) && layerStyle.split('~')[1];
+        if (massifProject && (MASSIF_VARIANTS as readonly string[]).includes(massifProject)) {
+            layerStyle = `${MASSIF_PACKAGE}~${MASSIF_PACKAGE}`;
+            ApplicationSettings.setString('mapStyleVariant.' + layerStyle, massifProject);
+        }
         let mapStyle = layerStyle;
         let mapStyleLayer = 'streets';
         if (layerStyle.indexOf('~') !== -1) {
@@ -1341,16 +1366,19 @@
             ApplicationSettings.setString('mapStyle', layerStyle);
             try {
                 vectorTileDecoder = mapContext.createMapDecoder(mapStyle, mapStyleLayer);
+                readStyleDefaults(vectorTileDecoder);
+                // the default click filter follows the style family
+                mapContext.mapModules.customLayers?.updateClickHandlerLayerFilter();
                 const nutiPropsToApply = nutiProps.getKeys().reduce((acc, key) => {
-                    const value = nutiProps.getNutiValue(key);
+                    const value = styleValue(key, nutiProps.getNutiValue(key));
                     if (value != null) {
                         acc[key] = value;
                     }
                     return acc;
                 }, {});
-                const variant = mapStyleVariant(layerStyle);
-                if (variant) {
-                    nutiPropsToApply['variant'] = variant;
+                if (isMassifStyle(layerStyle)) {
+                    const variant = mapStyleVariant(layerStyle);
+                    Object.assign(nutiPropsToApply, massifParameters(layerStyle, variant));
                     if (variant === 'eink') {
                         mapContext.setInnerStyle('eink', mapStyle);
                     }
@@ -1359,6 +1387,7 @@
                     //    showToast(JSON.stringify(nutiPropsToApply));
                     vectorTileDecoder.call('setStyleParameters', nutiPropsToApply);
                 }
+                styleParametersChanged();
             } catch (error) {
                 vectorTileDecoder = null;
                 showError(error);
@@ -1368,23 +1397,82 @@
         }
     }
 
-    // a Massif project draws every variant: the `variant` style parameter picks one, stored per project
-    const MASSIF_PACKAGE = 'massif';
-    const MASSIF_VARIANTS = ['streets', 'outdoor', 'topo', 'hybrid', 'eink'];
+    /** the style's own value of each parameter the app knows, read before the app sets any: what a zoom left unset goes back to */
+    let styleDefaults: Record<string, string> = {};
+    function readStyleDefaults(decoder) {
+        const defaults: Record<string, string> = {};
+        for (const key of new Set([...nutiProps.getKeys(), ...VARIANT_PARAMETER_KEYS])) {
+            try {
+                defaults[key] = decoder.call('getStyleParameter', key);
+            } catch (error) {
+                // not a parameter of this style
+            }
+        }
+        styleDefaults = defaults;
+        styleParameterKeys.set(Object.keys(defaults));
+    }
+    /** the legend and the map options follow what the style draws with now */
+    function styleParametersChanged() {
+        const values: Record<string, string> = {};
+        Object.keys(styleDefaults).forEach((key) => {
+            try {
+                values[key] = vectorTileDecoder?.call('getStyleParameter', key);
+            } catch (error) {}
+        });
+        styleParameterValues.set(values);
+        legendVersion.update((v) => v + 1);
+    }
+    type NutiKey = ReturnType<typeof nutiProps.getKeys>[number];
+    const isNutiKey = (key: string): key is NutiKey => nutiProps.getKeys().includes(key as NutiKey);
+    /** a zoom parameter at -1 is unset: the style's own value, not zoom -1 */
+    function styleValue(key: string, value: string) {
+        if (value === '-1' && isNutiKey(key) && nutiProps.getProps(key)?.settingsOptionsType === 'zoom') {
+            return styleDefaults[key] ?? null;
+        }
+        return value;
+    }
+
+    // a Massif project draws every variant and every POI ranking: style parameters, stored per project
     function mapStyleVariant(layerStyle: string) {
-        return layerStyle.startsWith(MASSIF_PACKAGE + '~') ? ApplicationSettings.getString('mapStyleVariant.' + layerStyle, null) : null;
+        return isMassifStyle(layerStyle) && layerStyle.split('~')[1] === MASSIF_PACKAGE ? ApplicationSettings.getString('mapStyleVariant.' + layerStyle, null) : null;
+    }
+    /** the variant project's own parameters, under the user's settings, then the variant and the ranking */
+    function massifParameters(layerStyle: string, variant: string) {
+        const params: Record<string, string> = {};
+        VARIANT_PARAMETER_KEYS.forEach((key) => {
+            if (styleDefaults[key] != null) {
+                params[key] = styleValue(key, isNutiKey(key) ? nutiProps.getNutiValue(key) : null) ?? styleDefaults[key];
+            }
+        });
+        const overrides = variantParameters(variant);
+        Object.keys(overrides).forEach((key) => {
+            if (!isNutiKey(key) || !ApplicationSettings.hasKey(nutiProps.getKey(key))) {
+                params[key] = overrides[key];
+            }
+        });
+        Object.assign(params, rankingParameters(rankingFor(massifLook(layerStyle, variant))));
+        if (variant) {
+            params['variant'] = variant;
+        }
+        return params;
     }
     function setMapStyleVariant(layerStyle: string, variant: string) {
         ApplicationSettings.setString('mapStyleVariant.' + layerStyle, variant);
         if (layerStyle !== currentLayerStyle) {
             return setMapStyle(layerStyle, true);
         }
-        // same decoder, one parameter: a re-decode, not a new style
-        vectorTileDecoder?.call('setStyleParameters', { variant });
+        // same decoder, a few parameters: a re-decode, not a new style
+        vectorTileDecoder?.call('setStyleParameters', massifParameters(layerStyle, variant));
         const innerStyle = variant === 'eink' ? 'eink' : 'voyager';
         if (ApplicationSettings.getString('innerStyle') !== innerStyle) {
             mapContext.setInnerStyle(innerStyle, layerStyle.split('~')[0]);
         }
+        styleParametersChanged();
+    }
+    function setMapStyleRanking(ranking: MassifRanking) {
+        setRankingFor(massifLook(currentLayerStyle, mapStyleVariant(currentLayerStyle)), ranking);
+        vectorTileDecoder?.call('setStyleParameters', rankingParameters(ranking));
+        legendVersion.update((v) => v + 1);
     }
 
     const VARIANT_LOOKS: { [k: string]: { icon: string; iconColor: string; swatch: [string, string] } } = {
@@ -1396,6 +1484,10 @@
     };
     const LEGACY_LOOK = { icon: 'mdi-map-outline', iconColor: '#5d6b7a', swatch: ['#f2efe9', '#d6d2c8'] as [string, string] };
 
+    function stylePreview(name: string) {
+        const file = path.join(knownFolders.currentApp().path, 'assets', 'images', 'styles', `massif-${name}.png`);
+        return File.exists(file) ? file : undefined;
+    }
     async function listStyleFamilies(): Promise<StyleFamily[]> {
         function filterEntity(e) {
             return !/(inner|admin|cleaned|base)/.test(e.name);
@@ -1443,10 +1535,27 @@
                 // Alpimaps OSM look, a project of its own (its colour sheets differ)
                 const variants: StyleVariant[] = MASSIF_VARIANTS.map((variant) => {
                     const look = VARIANT_LOOKS[variant];
-                    return { id: variant, name: lc('variant_' + variant), style: data('streets'), variant, icon: look.icon, iconColor: look.iconColor, swatch: look.swatch };
+                    return {
+                        id: variant,
+                        name: lc('variant_' + variant),
+                        style: `${MASSIF_PACKAGE}~${MASSIF_PACKAGE}`,
+                        variant,
+                        icon: look.icon,
+                        iconColor: look.iconColor,
+                        swatch: look.swatch,
+                        preview: stylePreview(variant)
+                    };
                 });
                 if (styleNames.includes('alpimaps')) {
-                    variants.push({ id: 'alpimaps', name: 'OSM', style: data('alpimaps'), icon: 'mdi-map-legend', iconColor: '#7a5a32', swatch: ['#f2efe9', '#aad3df'] });
+                    variants.push({
+                        id: 'alpimaps',
+                        name: 'OSM',
+                        style: `${MASSIF_PACKAGE}~alpimaps`,
+                        icon: 'mdi-map-legend',
+                        iconColor: '#7a5a32',
+                        swatch: ['#f2efe9', '#aad3df'],
+                        preview: stylePreview('osm')
+                    });
                 }
                 families.unshift({ id: 'massif', name: 'Massif', subtitle: '', variants });
                 continue;
@@ -1483,7 +1592,8 @@
                         } else {
                             setMapStyle(variant.style, true);
                         }
-                    }
+                    },
+                    onRanking: setMapStyleRanking
                 }
             });
         } catch (error) {
@@ -2074,6 +2184,15 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
+                {#if $showLegend && !$peakFinderActive}
+                    <!-- below the compass, under half the screen: the map stays there to compare -->
+                    <MapLegend
+                        horizontalAlignment="right"
+                        marginRight={5}
+                        marginTop={116 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                        maxHeight={$windowSize.height * 0.45}
+                        verticalAlignment="top" />
+                {/if}
                 <MapScrollingWidgets
                     bind:this={mapScrollingWidgets}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}

@@ -36,7 +36,17 @@ export const immersive = settingsStore('immersive', false);
 export const showAscents = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_ASCENTS, DEFAULT_SHOW_ELEVATION_PROFILE_ASCENTS);
 export const chartShowWaypoints = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS, DEFAULT_SHOW_ELEVATION_PROFILE_WAYPOINTS);
 export const showGradeColors = settingsStore(SETTINGS_SHOW_ELEVATION_PROFILE_GRADE_COLORS, DEFAULT_SHOW_ELEVATION_PROFILE_GRADE_COLORS);
-export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
+/** the parameters the current map style has, null before one loads: the map options list only those */
+export const styleParameterKeys = writable<string[]>(null);
+/** what the style draws with now, for an option left to the style (a boolean defaulting to -1) to show */
+export const styleParameterValues = writable<Record<string, string>>({});
+// the app's own, not the style's: listed with any style
+const APP_STYLE_PARAMS = ['contours', 'contoursOpacity'];
+export function styleHasParameter(keys: string[], key: string) {
+    return !keys || APP_STYLE_PARAMS.includes(key) || keys.includes(key);
+}
+export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(poi|mountain_peak|transportation_name|route|aerodrome_label|water_name|place|landcover_name)::.*');
+// export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
 const layersParams = {
     showSlopePercentages: {
@@ -123,7 +133,7 @@ const nutiParams = {
         showAsIcon: true,
         defaultValue: false,
         icon: 'mdi-domain',
-        visible: (capabilities) => !!capabilities?.hasLocalData,
+        // any vector source has buildings; whether the style can extrude them is styleHasParameter's
         nutiTransform: (value) => (!!value ? '2' : '1')
     },
     building_min_zoom: {
@@ -288,6 +298,103 @@ const nutiParams = {
         description: lc('forest_pattern_zoom_desc'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
+    },
+    // Massif's own; a style without one is not sent it, and the map options leave it out
+    lighting: {
+        icon: 'mdi-white-balance-sunny',
+        title: lc('style_lighting'),
+        description: lc('style_lighting_desc'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    label_occlusion: {
+        icon: 'mdi-eye-off-outline',
+        title: lc('label_occlusion'),
+        description: lc('label_occlusion_desc'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    poi_on_roof: {
+        icon: 'mdi-home-roof',
+        title: lc('poi_on_roof'),
+        settingsOptionsType: 'boolean',
+        defaultValue: -1
+    },
+    poiStyle: {
+        icon: 'mdi-map-marker-outline',
+        title: lc('poi_plain_icons'),
+        settingsOptionsType: 'boolean',
+        // unset: each project keeps its own (Alpimaps OSM is plain, the variants badges)
+        defaultValue: -1,
+        nutiTransform: (value) => (value ? 'plain' : 'badge'),
+        fromNuti: (value) => value === 'plain'
+    },
+    building_ao: {
+        icon: 'mdi-domain',
+        title: lc('building_ao'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    building_opacity: {
+        icon: 'mdi-domain',
+        title: lc('building_opacity'),
+        settingsOptionsType: 'number',
+        defaultValue: 1
+    },
+    sac_scale_labels: {
+        icon: 'mdi-hiking',
+        title: lc('sac_scale_labels'),
+        settingsOptionsType: 'boolean',
+        defaultValue: false
+    },
+    show_boundaries: {
+        icon: 'mdi-vector-polyline',
+        title: lc('show_boundaries'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    road_osm_low: {
+        icon: 'mdi-road-variant',
+        title: lc('road_osm_low'),
+        description: lc('road_osm_low_desc'),
+        settingsOptionsType: 'boolean',
+        defaultValue: -1
+    },
+    path_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('path_min_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
+    track_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('track_min_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
+    tunnel_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('tunnel_min_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
+    water_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('water_min_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
+    campsite_min_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('campsite_min_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
+    },
+    wetland_pattern_zoom: {
+        icon: 'mdi-plus-minus-variant',
+        title: lc('wetland_pattern_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     }
 };
 interface StoreParam {
@@ -305,6 +412,8 @@ interface StoreParam {
     visible?: (capabilities) => boolean;
     onLongPress?: (...args) => unknown;
     nutiTransform?: (value) => string;
+    /** the switch state of a style's own value, for an option left to the style */
+    fromNuti?: (value: string) => boolean;
 }
 type StoreParams = Record<string, StoreParam>;
 interface RuntimeStoreParam extends StoreParam {
@@ -367,12 +476,21 @@ function nutiSettings(type, key, store) {
                 valueFormatter: (value, item) => value.toFixed(),
                 ...defaultSettings
             };
-        case 'boolean':
+        case 'boolean': {
+            const props = store.getProps(key);
+            // a default of -1: the style decides until the user overrides it, a long press resets
+            const styleOwned = props.defaultValue === -1;
+            const overridden = styleOwned && props.value != null && props.value !== -1;
+            const live = get(styleParameterValues)[key];
+            const styleValue = props.fromNuti ? props.fromNuti(live) : live != null && live !== '0' && live !== '';
             return {
                 type: 'switch',
-                value: store[key] ?? false,
-                ...defaultSettings
+                ...defaultSettings,
+                value: styleOwned && !overridden ? styleValue : !!props.value,
+                styleOwned,
+                overridden
             };
+        }
         case 'number':
             return {
                 min: 0,
@@ -434,7 +552,7 @@ function createStore<T extends StoreParams>(storeParams: T): PropsStore<T> {
             } else {
                 updateMethod(settingKey, value);
             }
-            notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
+            notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: value == null ? null : nutiTransform ? nutiTransform(value) : value + '' });
         });
         obj.updateMethod = updateMethod;
     });
@@ -454,7 +572,8 @@ function createStore<T extends StoreParams>(storeParams: T): PropsStore<T> {
         getStore: (key: string) => params[key].store,
         getNutiValue(key: string) {
             const obj = params[key];
-            if (obj.value == null) {
+            // a boolean left to the style is -1 until set
+            if (obj.value == null || (obj.value === -1 && obj.settingsOptionsType === 'boolean')) {
                 return null;
             }
             return obj.nutiTransform ? obj.nutiTransform(obj.value) : obj.value + '';
@@ -478,7 +597,7 @@ function createStore<T extends StoreParams>(storeParams: T): PropsStore<T> {
                 } else {
                     obj.updateMethod(settingKey, value);
                 }
-                notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: nutiTransform ? nutiTransform(value) : value + '' });
+                notifyCallback?.({ eventName: 'change', object: propsObj, key, value, nutiValue: value == null ? null : nutiTransform ? nutiTransform(value) : value + '' });
             } catch (error) {
                 showError(error);
             }

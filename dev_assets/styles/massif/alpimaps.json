@@ -4,7 +4,8 @@
     "alpimaps-colors.mss",
     "variables.mss",
     "style.mss",
-    "alpimaps-rules.mss"
+    "alpimaps-rules.mss",
+    "alpimaps-ranking.mss"
   ],
   "styleparameters": {
     "variant": {
@@ -26,7 +27,16 @@
       }
     },
     "road_osm_low": 1,
-    "tunnel_min_zoom": 13
+    "tunnel_min_zoom": 13,
+    "ranking": {
+      "default": "default",
+      "values": {
+        "default": "default",
+        "activities": "activities",
+        "sports": "sports"
+      }
+    },
+    "water_min_zoom": 16
   },
   "constants": {
     "poi_bus_minzoom": 15,
