@@ -921,5 +921,13 @@
     "navigation_chart_current_ascent_desc": "",
     "remaining_time": "verbleibende Zeit",
     "navigation_maneuver_refresh_distance": "",
-    "navigation_arrow_marker_desc": ""
+    "navigation_arrow_marker_desc": "",
+    "variant_streets": "Straßen",
+    "variant_hybrid": "Hybrid",
+    "variant_outdoor": "Draußen",
+    "variant_topo": "Topo",
+    "accent_color": "Akzent",
+    "add": "hinzufügen",
+    "alternatives": "Alternativen",
+    "ar_mode": "Kameraansicht"
 }
