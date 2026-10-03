@@ -102,7 +102,7 @@ export const data: { [k: string]: Provider } = {
         url: 'https://tiles.mapterhorn.com/{z}/{x}/{y}.webp',
         hillshade: true,
         isOverlay: true,
-        attribution: '<a href="https://mapterhorn.com/attribution">Materhorn</a>',
+        attribution: '<a href="https://mapterhorn.com/attribution">Mapterhorn</a>',
         sourceOptions: {
             encoding: 'terrarium',
             maxZoom: 16
