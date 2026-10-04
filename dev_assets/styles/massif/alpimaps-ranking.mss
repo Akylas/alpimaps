@@ -70,3 +70,26 @@
 #poi['param::ranking' != 'default'][zoom < 17][class = 'post']::poi {
   display: none;
 }
+
+/* classic: the class order Alpimaps' planetiler fork bakes into `rank` (Poi.java CLASS_RANKS), rebuilt
+   here for tiles ranked by upstream OpenMapTiles (OpenFreeMap): upstream ranks pharmacies, bakeries,
+   banks, pubs and restaurants after every other class, the fork right after parks and schools. */
+#poi['param::ranking' = 'classic'][zoom >= 14][subclass = 'national_park']::poi {
+  @extend %poi;
+}
+#poi['param::ranking' = 'classic'][zoom >= 15][class = 'pharmacy']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 15][class = 'bakery']::poi {
+  @extend %poi;
+}
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'pitch']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'bank']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'beer']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'bar']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'restaurant']::poi,
+#poi['param::ranking' = 'classic'][zoom >= 16][class = 'grocery']::poi {
+  @extend %poi;
+}
+/* the fork moves libraries behind shops */
+#poi['param::ranking' = 'classic'][zoom < 16][class = 'library']::poi {
+  display: none;
+}

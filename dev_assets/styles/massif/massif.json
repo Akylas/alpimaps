@@ -11,7 +11,8 @@
       "values": {
         "default": "default",
         "activities": "activities",
-        "sports": "sports"
+        "sports": "sports",
+        "classic": "classic"
       }
     }
   }

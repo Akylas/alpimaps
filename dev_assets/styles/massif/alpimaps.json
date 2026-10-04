@@ -33,7 +33,8 @@
       "values": {
         "default": "default",
         "activities": "activities",
-        "sports": "sports"
+        "sports": "sports",
+        "classic": "classic"
       }
     },
     "water_min_zoom": 16

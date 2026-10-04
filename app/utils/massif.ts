@@ -3,7 +3,7 @@ import { ApplicationSettings } from '@nativescript/core';
 /** The Massif projects the app ships (dev_assets/styles/massif): both draw every variant and every ranking. */
 export const MASSIF_PACKAGE = 'massif';
 export const MASSIF_VARIANTS = ['streets', 'outdoor', 'topo', 'hybrid', 'eink'] as const;
-export const MASSIF_RANKINGS = ['default', 'activities', 'sports'] as const;
+export const MASSIF_RANKINGS = ['default', 'activities', 'sports', 'classic'] as const;
 export type MassifVariant = (typeof MASSIF_VARIANTS)[number];
 export type MassifRanking = (typeof MASSIF_RANKINGS)[number];
 
@@ -50,7 +50,9 @@ export const RANKING_BOOSTS: Record<MassifRanking, Record<string, number>> = {
     sports: boosts(
         ['skiing', 'alpine_hut', 'wilderness_hut', 'viewpoint'],
         ['stadium', 'swimming', 'golf', 'pitch', 'shelter', 'tennis', 'soccer', 'basketball', 'bicycle', 'bicycle_rental', 'playground']
-    )
+    ),
+    // the planetiler fork's CLASS_RANKS order over upstream ranks: a ladder band (100k) per step it moves a class
+    classic: { pharmacy: 200000, bakery: 200000, pitch: 100000, bank: 100000, beer: 100000, biergarten: 100000, bar: 100000, restaurant: 100000, grocery: 100000, library: -100000 }
 };
 const BOOSTED_NAMES = [...new Set(Object.values(RANKING_BOOSTS).flatMap((table) => Object.keys(table)))];
 
