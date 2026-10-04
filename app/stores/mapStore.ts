@@ -395,6 +395,12 @@ const nutiParams = {
         title: lc('wetland_pattern_zoom'),
         settingsOptionsType: 'zoom',
         defaultValue: -1
+    },
+    hillshade_max_zoom: {
+        icon: 'mdi-terrain',
+        title: lc('hillshade_max_zoom'),
+        settingsOptionsType: 'zoom',
+        defaultValue: -1
     }
 };
 interface StoreParam {
