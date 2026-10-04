@@ -145,13 +145,18 @@ const HILLSHADE_OPTIONS = {
         transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
         transformBack: (value) => toDegrees(((value.x || value[0]) > 0 ? 1 : -1) * Math.acos(value.y || value[1]))
     },
+    // the layer only has the pair, `visibleZoomRange`
     minVisibleZoom: {
         min: 0,
-        max: 24
+        max: 24,
+        read: (layer: MassifLayer) => layer.get('visibleZoomRange')?.[0],
+        write: (layer: MassifLayer, value: number) => layer.set('visibleZoomRange', [value, layer.get('visibleZoomRange')?.[1] ?? 24])
     },
     maxVisibleZoom: {
         min: 0,
-        max: 24
+        max: 24,
+        read: (layer: MassifLayer) => layer.get('visibleZoomRange')?.[1],
+        write: (layer: MassifLayer, value: number) => layer.set('visibleZoomRange', [layer.get('visibleZoomRange')?.[0] ?? 0, value])
     }
 };
 
@@ -198,6 +203,9 @@ export interface SourceItem {
             transform?: Function;
             transformBack?: Function;
             type?: string;
+            /** for an option that is not a layer property of its own name */
+            read?: (layer: MassifLayer) => number;
+            write?: (layer: MassifLayer, value: number) => void;
         };
     };
 }
