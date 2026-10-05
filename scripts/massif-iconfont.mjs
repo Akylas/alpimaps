@@ -25,6 +25,9 @@ const ALIAS = {
     wayside_shrine: 'shrine',
     wind_turbine: 'generator_wind'
 };
+// Massif names whose own glyph reads better than the osm one: osm-carto's power tower is a crossed
+// square, a map symbol rather than a tower
+const KEEP_MASSIF = new Set(['power_tower']);
 // osm glyphs that are no POI class: map symbols, route markers, the Japanese variants
 const NOT_A_CLASS = /^(symbol-|uni[0-9A-F]{4}|.*_jp$|arrow$|marker|circle|square|star|triangle|oneway|alert-|flag-|heart$|location_on$|diamond$)/;
 
@@ -44,7 +47,7 @@ for (const icon of osm.icons) {
 const icons = [];
 const fromOsm = [];
 for (const icon of massif.icons.filter((i) => i.selected !== false)) {
-    const paths = art.get(ALIAS[icon.name] ?? icon.name);
+    const paths = KEEP_MASSIF.has(icon.name) ? undefined : art.get(ALIAS[icon.name] ?? icon.name);
     icons.push({ name: icon.name, paths: paths ?? icon.paths });
     if (paths) fromOsm.push(icon.name);
 }

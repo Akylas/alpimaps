@@ -11,7 +11,6 @@
 #poi['param::ranking' = 'activities'][zoom >= 13][class = 'shelter'][shelter_type = 'rock_shelter']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 13][class = 'shelter'][shelter_type = 'weather_shelter']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 13][class = 'shelter'][shelter_type = 'wilderness_hut']::poi,
-#poi['param::ranking' = 'activities'][zoom >= 13][subclass = 'viewpoint']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 13][class = 'waterfall']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 13][class = 'cave_entrance']::poi {
   @extend %poi;
@@ -28,8 +27,7 @@
 /* sports: where to ski, climb, swim or play, and the huts on the way */
 #poi['param::ranking' = 'sports'][zoom >= 13][class = 'skiing']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 13][subclass = 'alpine_hut']::poi,
-#poi['param::ranking' = 'sports'][zoom >= 13][class = 'wilderness_hut']::poi,
-#poi['param::ranking' = 'sports'][zoom >= 13][subclass = 'viewpoint']::poi {
+#poi['param::ranking' = 'sports'][zoom >= 13][class = 'wilderness_hut']::poi {
   @extend %poi;
 }
 #poi['param::ranking' = 'sports'][zoom >= 14][class = 'stadium']::poi,

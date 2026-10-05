@@ -25,6 +25,7 @@
         "plain": "plain"
       }
     },
+    "trails": 1,
     "road_osm_low": 1,
     "tunnel_min_zoom": 13,
     "ranking": {
@@ -37,6 +38,7 @@
       }
     },
     "water_min_zoom": 16,
+    "spring_min_zoom": 12,
     "campsite_min_zoom": 10,
     "glyph.fitness_centre": "",
     "glyph.supermarket": "",
