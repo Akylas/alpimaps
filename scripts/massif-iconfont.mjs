@@ -53,7 +53,7 @@ const extras = [...art.keys()].filter((name) => !taken.has(name) && !NOT_A_CLASS
 for (const name of extras) icons.push({ name, paths: art.get(name) });
 
 // Massif's codes first, so its names land on its characters; then this file's own, so an extra keeps its
-// code unless a later Massif icon took it (the child projects' glyph-<name> are rewritten below anyway)
+// code unless a later Massif icon took it (the child projects' glyph.<name> are rewritten below anyway)
 const previous = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')) : { icons: [] };
 const massifNames = new Set(massif.icons.map((i) => i.name));
 const massifCodes = new Set(massif.icons.map((i) => i.code));
@@ -63,12 +63,12 @@ doc.output = { fonts: { dir: '../dev_assets/styles/massif/fonts', formats: ['ttf
 doc.credits = osm.credits;
 writeFileSync(OUT, JSON.stringify(doc, null, 2) + '\n');
 
-// the extras are names Massif's style has no `glyph-<name>` for: the child projects declare them
+// the extras are names Massif's `glyph` table lacks: the child projects add them as `glyph.<name>`
 const glyphs = Object.fromEntries(doc.icons.filter((i) => extras.includes(i.name) && i.selected !== false)
-    .map((i) => ['glyph-' + i.name, String.fromCodePoint(parseInt(i.code, 16))]));
+    .map((i) => ['glyph.' + i.name, String.fromCodePoint(parseInt(i.code, 16))]));
 for (const file of PROJECTS) {
     const child = JSON.parse(readFileSync(file, 'utf8'));
-    const params = Object.fromEntries(Object.entries(child.styleparameters ?? {}).filter(([key]) => !key.startsWith('glyph-')));
+    const params = Object.fromEntries(Object.entries(child.styleparameters ?? {}).filter(([key]) => !key.startsWith('glyph-') && !key.startsWith('glyph.')));
     child.styleparameters = { ...params, ...glyphs };
     writeFileSync(file, JSON.stringify(child, null, 2) + '\n');
 }
