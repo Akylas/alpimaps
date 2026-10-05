@@ -49,21 +49,21 @@
 }
 
 /* both: errands and services make way */
-#poi['param::ranking' != 'default'][zoom < 17][class = 'clothing_store']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'shop']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'furniture']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'gift']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'florist']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'hairdresser']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'laundry']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'bank']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'car']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'dentist']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'doctors']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'pharmacy']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'veterinary']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'embassy']::poi,
-#poi['param::ranking' != 'default'][zoom < 17][class = 'post']::poi {
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'clothing_store']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'shop']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'furniture']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'gift']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'florist']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'hairdresser']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'laundry']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'bank']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'car']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'dentist']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'doctors']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'pharmacy']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'veterinary']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'embassy']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'post']::poi {
   display: none;
 }
 
@@ -87,5 +87,12 @@
 }
 /* the fork moves libraries behind shops */
 #poi['param::ranking' = 'classic'][zoom < 16][class = 'library']::poi {
+  display: none;
+}
+
+/* classic: a community centre (town_hall to OpenMapTiles) and an attraction rank high in the fork but
+   crowd a town: from z16, and demoted in a collision (app/utils/massif.ts). A viewpoint keeps its layer. */
+#poi['param::ranking' = 'classic'][zoom < 16][subclass = 'community_centre']::poi,
+#poi['param::ranking' = 'classic'][zoom < 16][class = 'attraction'][subclass != 'viewpoint']::poi {
   display: none;
 }

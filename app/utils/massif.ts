@@ -41,6 +41,20 @@ const DEMOTE = -1000000;
 const ERRANDS = ['clothing_store', 'shop', 'furniture', 'gift', 'florist', 'hairdresser', 'laundry', 'bank', 'car', 'dentist', 'doctors', 'pharmacy', 'veterinary', 'embassy', 'post'];
 const boosts = (promote: string[], favour: string[]) =>
     Object.fromEntries([...ERRANDS.map((name) => [name, DEMOTE]), ...favour.map((name) => [name, FAVOUR]), ...promote.map((name) => [name, PROMOTE])]) as Record<string, number>;
+// the planetiler fork's CLASS_RANKS: the lower, the more a class matters in its tile
+const CLASS_RANKS: Record<string, number> = {
+    hospital: 20, railway: 40, bus: 50, harbor: 70, attraction: 75, stadium: 80, zoo: 90, town_hall: 95, campsite: 100,
+    pharmacy: 101, national_park: 103, aerialway: 105, cemetery: 110, park: 115, drinking_water: 121, bakery: 122,
+    college: 125, school: 130, police: 135, post: 140, pitch: 152, golf: 155, bank: 156, beer: 160, biergarten: 161,
+    bar: 170, restaurant: 180, grocery: 190, shop: 250, library: 300, fast_food: 600, clothing_store: 700, lodging: 800,
+    bicycle_repair_station: 900, viewpoint: 1001
+};
+// a class wins over every class ranked after it, an unlisted one (no boost) comes last; a community
+// centre (town_hall to OpenMapTiles) and an attraction ranked high there but crowd a town: demoted
+function classicBoosts() {
+    const boosts = Object.fromEntries(Object.entries(CLASS_RANKS).map(([name, rank]) => [name, (1100 - rank) * 1000]));
+    return { ...boosts, attraction: DEMOTE, community_centre: DEMOTE } as Record<string, number>;
+}
 export const RANKING_BOOSTS: Record<MassifRanking, Record<string, number>> = {
     default: {},
     activities: boosts(
@@ -51,8 +65,7 @@ export const RANKING_BOOSTS: Record<MassifRanking, Record<string, number>> = {
         ['skiing', 'alpine_hut', 'wilderness_hut', 'viewpoint'],
         ['stadium', 'swimming', 'golf', 'pitch', 'shelter', 'tennis', 'soccer', 'basketball', 'bicycle', 'bicycle_rental', 'playground']
     ),
-    // the planetiler fork's CLASS_RANKS order over upstream ranks: a ladder band (100k) per step it moves a class
-    classic: { pharmacy: 200000, bakery: 200000, pitch: 100000, bank: 100000, beer: 100000, biergarten: 100000, bar: 100000, restaurant: 100000, grocery: 100000, library: -100000 }
+    classic: classicBoosts()
 };
 const BOOSTED_NAMES = [...new Set(Object.values(RANKING_BOOSTS).flatMap((table) => Object.keys(table)))];
 
