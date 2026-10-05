@@ -33,8 +33,8 @@ export function variantParameters(variant: string): Record<string, string> {
 /** Every parameter some variant project sets: switching variant resets them to the style's values first. */
 export const VARIANT_PARAMETER_KEYS = [...new Set(MASSIF_VARIANTS.flatMap((variant) => Object.keys(variantParameters(variant))))];
 
-// Which POI wins a collision: added to Massif's placement priority per class (`poi-boost-<class>` style
-// parameters, a re-decode). POIs span 18.8M-21.0M, 100k a ladder band, road names from 21.1M.
+// Which POI wins a collision: added to Massif's placement priority per class (`poi-boost.<class>`, one
+// entry of its `poi-boost` table, a re-decode). POIs span 22.1M-24.9M, 100k a ladder band, road names below.
 const PROMOTE = 1000000;
 const FAVOUR = 500000;
 const DEMOTE = -1000000;
@@ -60,7 +60,7 @@ const BOOSTED_NAMES = [...new Set(Object.values(RANKING_BOOSTS).flatMap((table) 
 export function rankingParameters(ranking: MassifRanking): Record<string, string> {
     const table = RANKING_BOOSTS[ranking] ?? {};
     const params: Record<string, string> = { ranking };
-    BOOSTED_NAMES.forEach((name) => (params['poi-boost-' + name] = (table[name] ?? 0) + ''));
+    BOOSTED_NAMES.forEach((name) => (params['poi-boost.' + name] = (table[name] ?? 0) + ''));
     return params;
 }
 

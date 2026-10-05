@@ -1,7 +1,7 @@
 /* POI rankings over Massif's rank ladder (%poi, one ::poi attachment), picked by the `ranking`
    style parameter: a switch re-decodes, no reload. `default` is Massif's own ladder.
    Here only WHEN a class shows: promoted ones come in early, demoted ones wait for z17. Which wins a
-   collision is the app's `poi-boost-<class>` table (app/utils/massif.ts), set with the ranking. */
+   collision is the app's `poi-boost.<class>` entries (app/utils/massif.ts), set with the ranking. */
 
 /* activities: what a hike or a trip outdoors needs */
 #poi['param::ranking' = 'activities'][zoom >= 13][subclass = 'alpine_hut']::poi,
