@@ -18,7 +18,6 @@
         "eink": "eink"
       }
     },
-    "track_min_zoom": 24,
     "poiStyle": {
       "default": "plain",
       "values": {
@@ -38,6 +37,7 @@
       }
     },
     "water_min_zoom": 16,
+    "campsite_min_zoom": 10,
     "glyph.fitness_centre": "",
     "glyph.supermarket": "",
     "glyph.trade": "",

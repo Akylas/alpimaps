@@ -725,7 +725,9 @@ module.exports = (env, params = {}) => {
             from: '**/*',
             to: 'assets/styles/massif',
             noErrorOnMissing: true,
-            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*'] }
+            // fonts/MassifIcons.ttf too: dev_assets' (scripts/massif-iconfont.mjs) has the osm glyphs, and the
+            // first pattern to emit a file keeps it
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/MassifIcons.ttf'] }
         });
         copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
     }
