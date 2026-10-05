@@ -1171,5 +1171,6 @@
     "local_map_online_fallback": "OpenFreeMap where offline files have no tile",
     "local_terrain_online_fallback": "Mapterhorn where offline files have no tile, or past their zoom",
     "online_fallback_description": "needs network, off by default",
-    "ranking_classic": "Classic"
+    "ranking_classic": "Classic",
+    "hillshade_max_zoom": "Hillshade maximum zoom"
 }

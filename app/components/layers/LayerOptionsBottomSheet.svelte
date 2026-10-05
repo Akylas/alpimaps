@@ -51,6 +51,8 @@
             max?: number;
             transform?: Function;
             transformBack?: Function;
+            read?: (layer: SourceItem['layer']) => number;
+            write?: (layer: SourceItem['layer'], value: number) => void;
         };
     } = {};
     onMount(() => {
@@ -60,7 +62,7 @@
 
         Object.keys(result).forEach((k) => {
             // layer.get, not layer[k]: a surface handle has no JS properties
-            const value = layer.get(k);
+            const value = opts[k].read ? opts[k].read(layer) : layer.get(k);
             result[k].value = opts[k].transformBack ? opts[k].transformBack(value) : value;
         });
         options = result;
@@ -87,7 +89,11 @@
         if (options[name].transform) {
             newValue = options[name].transform(newValue);
         }
-        item.layer.set(name, newValue);
+        if (options[name].write) {
+            options[name].write(item.layer, newValue);
+        } else {
+            item.layer.set(name, newValue);
+        }
     }
     async function pickOptionColor(name: string, color: string) {
         try {

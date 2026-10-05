@@ -935,5 +935,6 @@
     "local_map_online_fallback": "OpenFreeMap là où les fichiers hors ligne n'ont pas de tuile",
     "local_terrain_online_fallback": "Mapterhorn là où les fichiers hors ligne n'ont pas de tuile, ou au-delà de leur zoom",
     "online_fallback_description": "nécessite le réseau, désactivé par défaut",
-    "ranking_classic": "Classique"
+    "ranking_classic": "Classique",
+    "hillshade_max_zoom": "Zoom maximum de l'ombrage"
 }
