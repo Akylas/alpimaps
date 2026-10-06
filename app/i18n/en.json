@@ -1173,6 +1173,6 @@
     "online_fallback_description": "needs network, off by default",
     "hillshade_max_zoom": "Hillshade maximum zoom",
     "ranking_alpimaps": "Alpimaps",
-    "mtb_markings": "MTB difficulty beside paths",
+    "mtb_markings": "MTB lines",
     "poi_label_color": "Colored POI names"
 }

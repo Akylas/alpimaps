@@ -937,6 +937,6 @@
     "online_fallback_description": "nécessite le réseau, désactivé par défaut",
     "hillshade_max_zoom": "Zoom maximum de l'ombrage",
     "ranking_alpimaps": "Alpimaps",
-    "mtb_markings": "Difficulté VTT le long des chemins",
+    "mtb_markings": "Lignes VTT",
     "poi_label_color": "Noms des POI en couleur"
 }

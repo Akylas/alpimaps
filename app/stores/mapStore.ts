@@ -351,7 +351,8 @@ const nutiParams = {
         icon: 'mdi-bike',
         title: lc('mtb_markings'),
         settingsOptionsType: 'boolean',
-        defaultValue: true
+        showAsIcon: true,
+        defaultValue: false
     },
     poi_label_color: {
         icon: 'mdi-format-color-text',
