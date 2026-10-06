@@ -18,7 +18,6 @@ import {
     DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
     DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
     DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD,
-    DEFAULT_NAVIGATION_HIDE_CHROME,
     DEFAULT_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
     DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE,
@@ -57,7 +56,6 @@ import {
     SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
     SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
     SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
-    SETTINGS_NAVIGATION_HIDE_CHROME,
     SETTINGS_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
     SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE,
@@ -162,7 +160,6 @@ export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_P
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
 export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
-export const navigationHideChrome = settingsStore(SETTINGS_NAVIGATION_HIDE_CHROME, DEFAULT_NAVIGATION_HIDE_CHROME);
 export const navigationShowElevationChart = settingsStore(SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART, DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART);
 export const navigationShowSurface = settingsStore(SETTINGS_NAVIGATION_SHOW_SURFACE, DEFAULT_NAVIGATION_SHOW_SURFACE);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
@@ -691,16 +688,6 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         max: 20000,
         step: 500,
         formatter: formatDistance,
-        quick: true
-    },
-    {
-        key: SETTINGS_NAVIGATION_HIDE_CHROME,
-        section: NavigationSection.Display,
-        store: navigationHideChrome,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_HIDE_CHROME,
-        title: () => lc('navigation_hide_chrome'),
-        description: () => lc('navigation_hide_chrome_desc'),
         quick: true
     }
 ];

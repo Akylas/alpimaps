@@ -950,5 +950,20 @@
     "change_source": "changer de source",
     "default_source": "par défaut",
     "in_use": "utilisée",
-    "opacity": "opacité"
+    "opacity": "opacité",
+    "more": "plus",
+    "navigation_waiting_gps": "en attente du GPS",
+    "navigation_moving": "en mouvement",
+    "navigation_done": "parcouru",
+    "navigation_average_speed": "vitesse moy.",
+    "navigation_climbed": "dénivelé fait",
+    "navigation_this_climb": "cette montée",
+    "navigation_time_left": "restant",
+    "navigation_arrival": "arrivée",
+    "navigation_then": "puis",
+    "navigation_resumes_moving": "reprend quand vous bougez",
+    "navigation_elevation_ahead": "dénivelé à venir",
+    "navigation_surface_ahead": "revêtement à venir",
+    "navigation_surface": "revêtement",
+    "navigation_next_surface": "%1$s dans %2$s"
 }

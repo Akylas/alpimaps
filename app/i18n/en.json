@@ -1186,5 +1186,20 @@
     "change_source": "change source",
     "default_source": "default",
     "in_use": "in use",
-    "opacity": "opacity"
+    "opacity": "opacity",
+    "more": "more",
+    "navigation_waiting_gps": "waiting for GPS",
+    "navigation_moving": "moving",
+    "navigation_done": "done",
+    "navigation_average_speed": "avg speed",
+    "navigation_climbed": "climbed",
+    "navigation_this_climb": "this climb",
+    "navigation_time_left": "left",
+    "navigation_arrival": "arrival",
+    "navigation_then": "then",
+    "navigation_resumes_moving": "resumes when you move",
+    "navigation_elevation_ahead": "elevation ahead",
+    "navigation_surface_ahead": "surface ahead",
+    "navigation_surface": "surface",
+    "navigation_next_surface": "%1$s in %2$s"
 }

@@ -1,33 +1,17 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import { showPopover } from '@nativescript-community/ui-popover/svelte';
+    import { confirm } from '@nativescript-community/ui-material-dialogs';
     import { showError } from '@shared/utils/showError';
     import IconButton from '~/components/common/IconButton.svelte';
-    import NavigationCard from '~/components/navigation/NavigationCard.svelte';
-    import { getMapContext } from '~/mapModules/MapModule';
-    import { userFollowStore } from '~/mapModules/UserLocationModule';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigationRunning, navigationDetour, navigationOriginalItem, navigationScale } from '~/stores/navigationStore';
-    import { NAVBUTTON_SIZE } from '~/utils/navigation';
+    import { isNavigationRunning, navigationScale } from '~/stores/navigationStore';
+    import { NAVPRIMARY_SIZE } from '~/utils/navigation';
     import { colors } from '~/variables';
 
-    $: ({ colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorOnPrimary, colorPrimary } = $colors);
 
-    /** the buttons have to fit next to the info cards without making the bar taller */
-    $: buttonSize = Math.round(NAVBUTTON_SIZE * $navigationScale);
+    $: buttonSize = Math.round(NAVPRIMARY_SIZE * $navigationScale);
 
-    /**
-     * Panning the map turns following off, and the map buttons are hidden while navigating, so this is
-     * the only way back to the camera following the route.
-     */
-    function followUserAgain() {
-        try {
-            getMapContext().mapModule('userLocation').navigationMode = true;
-        } catch (error) {
-            showError(error);
-        }
-    }
     async function togglePause() {
         try {
             await navigationService.toggle();
@@ -35,58 +19,28 @@
             showError(error);
         }
     }
-    // a reroute can be taken back for as long as it lasts, not just while a snack is on screen
-    $: rerouted = !!$navigationDetour || !!$navigationOriginalItem;
-    function undoReroute() {
+    // a long press, then a confirmation: ending by accident on a bumpy track loses the recording
+    async function endNavigation() {
         try {
-            navigationService.undoReroute();
-        } catch (error) {
-            showError(error);
-        }
-    }
-    async function stopNavigation() {
-        try {
-            await navigationService.stop();
-        } catch (error) {
-            showError(error);
-        }
-    }
-    async function showNavigationSettings(event) {
-        try {
-            const component = (await import('~/components/navigation/NavigationSettingsPopover.svelte')).default;
-            await showPopover({
-                view: component,
-                anchor: event.object,
-                vertPos: VerticalPosition.ABOVE
-            });
+            const result = await confirm({ title: lc('stop_navigation'), okButtonText: lc('stop_navigation'), cancelButtonText: lc('cancel') });
+            if (result) {
+                await navigationService.stop();
+            }
         } catch (error) {
             showError(error);
         }
     }
 </script>
 
-<!-- play/pause is deliberately the *last* child: the row is right-anchored, so it stays in place
-     whatever else is shown; everything conditional extends leftwards from it -->
-<flexlayout alignItems="center" flexDirection="row" {...$$restProps}>
-    <!-- stopping and tuning are not things you do at speed: hide them while running to give the figures room -->
-    <NavigationCard height={buttonSize} marginRight={8} visibility={$isNavigationRunning ? 'collapse' : 'visible'} width={buttonSize}>
-        <IconButton color={colorError} size={buttonSize} text="mdi-close" tooltip={lc('stop_navigation')} on:tap={stopNavigation} />
-    </NavigationCard>
-    <NavigationCard height={buttonSize} marginRight={8} visibility={$isNavigationRunning ? 'collapse' : 'visible'} width={buttonSize}>
-        <IconButton color={colorOnSurfaceVariant} size={buttonSize} text="mdi-tune" tooltip={lc('navigation_settings')} on:tap={showNavigationSettings} />
-    </NavigationCard>
-    <NavigationCard height={buttonSize} marginRight={8} visibility={$userFollowStore ? 'collapse' : 'visible'} width={buttonSize}>
-        <IconButton color={colorPrimary} size={buttonSize} text="mdi-crosshairs-gps" tooltip={lc('recenter_navigation')} on:tap={followUserAgain} />
-    </NavigationCard>
-    <NavigationCard height={buttonSize} marginRight={8} visibility={rerouted ? 'visible' : 'collapse'} width={buttonSize}>
-        <IconButton color={colorOnSurfaceVariant} size={buttonSize} text="mdi-undo-variant" tooltip={lc('navigation_undo_reroute')} on:tap={undoReroute} />
-    </NavigationCard>
-    <NavigationCard height={buttonSize} width={buttonSize}>
-        <IconButton
-            color={colorOnSurfaceVariant}
-            size={buttonSize}
-            text={$isNavigationRunning ? 'mdi-pause' : 'mdi-play'}
-            tooltip={$isNavigationRunning ? lc('pause') : lc('resume')}
-            on:tap={togglePause} />
-    </NavigationCard>
-</flexlayout>
+<!-- the primary action, alone in its corner: what it does changes with the state, never where it is -->
+<gridlayout backgroundColor={colorPrimary} borderRadius={buttonSize / 2} height={buttonSize} width={buttonSize} {...$$restProps}>
+    <IconButton
+        color={colorOnPrimary}
+        fontSize={26 * $navigationScale}
+        maxFontScale={1}
+        onLongPress={endNavigation}
+        size={buttonSize}
+        text={$isNavigationRunning ? 'mdi-pause' : 'mdi-play'}
+        tooltip={$isNavigationRunning ? lc('pause') : lc('resume')}
+        on:tap={togglePause} />
+</gridlayout>

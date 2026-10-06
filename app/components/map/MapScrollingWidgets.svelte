@@ -15,7 +15,7 @@
     import UserLocationModule, { navigationModeStore, userFollowStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
-    import { isNavigating, isNavigationRunning, navigationHideChrome } from '~/stores/navigationStore';
+    import { isNavigating, isNavigationRunning } from '~/stores/navigationStore';
     import { isEInk } from '~/helpers/theme';
     import { openLink } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';

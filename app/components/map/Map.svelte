@@ -66,8 +66,8 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, isNavigationRunning, navigationHasPreviewWidgets, navigationHideChrome, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
-    import { MANEUVER_VIEW_HEIGHT, NAVACTIONS_HEIGHT, navigationSheetSteps, navigationViewHeight } from '~/utils/navigation';
+    import { isNavigating, navigationHasPreviewWidgets, navigationItem, navigationScale } from '~/stores/navigationStore';
+    import { MANEUVER_VIEW_HEIGHT, navigationSections, navigationSheetSteps } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -106,7 +106,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
 
     let defaultLiveSync = global.__onLiveSync;
@@ -149,32 +149,33 @@
     // navigation has its own sheet (sharing the item one made them fight over steps); views lazy-loaded
     let navigationViewComponent = null;
     let maneuverViewComponent = null;
-    let offRoutePanelComponent = null;
-    // lifted by the navigation sheet like the other widgets
-    let offRoutePanelHolder: NativeViewElementNode<GridLayout>;
+    let navigationRailComponent = null;
+    let routeSimulatorPanelComponent = null;
     let navigationStepIndex = 0;
-    // scaled text, so at a large font scale a fixed height would clip it
-    $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $navigationScale);
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed
-    $: navigationSteps = navigationSheetSteps({
-        barHeight: navigationSheetHeight,
-        actionsHeight: Math.round(NAVACTIONS_HEIGHT * $navigationScale),
-        hasProfile: !!$navigationItem?.profile?.data?.length,
-        hasStats: !!$navigationItem?.stats
-    });
+    $: navigationSteps = navigationSheetSteps(
+        navigationSections($navigationScale, {
+            hasAhead: $navigationHasPreviewWidgets,
+            hasProfile: !!$navigationItem?.profile?.data?.length,
+            hasStats: !!$navigationItem?.stats
+        })
+    );
 
     async function loadNavigationViews() {
         if (navigationViewComponent) {
             return;
         }
-        const [navigationView, maneuverView, offRoutePanel] = await Promise.all([
+        const [navigationView, maneuverView, navigationRail] = await Promise.all([
             import('~/components/navigation/NavigationView.svelte'),
             import('~/components/navigation/ManeuverView.svelte'),
-            import('~/components/navigation/NavigationOffRoutePanel.svelte')
+            import('~/components/navigation/NavigationRail.svelte')
         ]);
         navigationViewComponent = navigationView.default;
         maneuverViewComponent = maneuverView.default;
-        offRoutePanelComponent = offRoutePanel.default;
+        navigationRailComponent = navigationRail.default;
+        if (!PRODUCTION) {
+            routeSimulatorPanelComponent = (await import('~/components/navigation/RouteSimulatorPanel.svelte')).default;
+        }
     }
     // lazy: Map is the root component, so mode-only views stay off the startup path
     let peakFinderOverlayComponent = null;
@@ -1631,10 +1632,10 @@
     const getLayerIndex = (layer: MassifLayer) => layerStack.getLayerIndex(layer);
     const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
     const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
-    // make room for the maneuver banner: same condition and scale as ManeuverView (shown off route too)
-    $: navigationTopOffset = $isNavigationRunning && (!!$navigationProgress?.instruction || !!$navigationProgress?.offRoute) ? Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) : 0;
-    // while running, the map is what the user needs: pausing brings the whole interface back
-    $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
+    // the banner is reserved in every navigation state, so the rail under it never moves
+    $: navigationRailTop = Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 20;
+    // the banner takes the search bar's place for the whole navigation, paused included
+    $: hideChromeForNavigation = $isNavigating;
     $: hideChromeForPeakFinder = $peakFinderActive;
 
     let scrollingWidgetsOpacity = 1;
@@ -1709,13 +1710,6 @@
                   }
                 : {})
         } as any;
-        if (offRoutePanelHolder?.nativeView) {
-            // it sits right on top of the bar, so it has to move with it or the bar covers it
-            result.offRoutePanel = {
-                target: offRoutePanelHolder.nativeView,
-                translateY: translation
-            };
-        }
         return result;
     }
 
@@ -2056,9 +2050,6 @@
                 nativeView.translateY = 0;
             }
         });
-        if (offRoutePanelHolder?.nativeView) {
-            offRoutePanelHolder.nativeView.translateY = 0;
-        }
     }
     // translation only: the item sheet owns the widgets' opacity
     function navigationTranslationFunction(translation, maxTranslation, progress) {
@@ -2145,17 +2136,21 @@
                     color={isEInk ? '#aaa' : colorOnSurfaceVariant}
                     gray={true}
                     horizontalAlignment="left"
+                    isUserInteractionEnabled={!$isNavigating || scrollingWidgetsOpacity > 0.3}
                     marginLeft={5}
-                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    opacity={$isNavigating ? scrollingWidgetsOpacity : 1}
+                    separatorColor={colorOutlineSoft}
                     verticalAlignment="top"
-                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'}
+                    android:marginTop={($isNavigating ? navigationRailTop : 66 + Math.max(topTranslationY - 90, 0)) + windowInsetTop}
+                    ios:marginTop={$isNavigating ? navigationRailTop : 66 + windowInsetTop + Math.max(topTranslationY - 90, 0)} />
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     marginLeft={53}
-                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
                     verticalAlignment="top"
                     visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
                 <Search
@@ -2170,6 +2165,28 @@
                     android:marginTop={windowInsetTop + 10} />
                 {#if maneuverViewComponent}
                     <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
+                {/if}
+                {#if navigationRailComponent}
+                    <svelte:component
+                        this={navigationRailComponent}
+                        horizontalAlignment="right"
+                        isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                        marginRight={10}
+                        onCompass={resetBearing}
+                        opacity={scrollingWidgetsOpacity}
+                        rotation={currentMapRotation}
+                        verticalAlignment="top"
+                        visibility={$isNavigating ? 'visible' : 'collapse'}
+                        android:marginTop={windowInsetTop + navigationRailTop}
+                        ios:marginTop={navigationRailTop} />
+                {/if}
+                {#if routeSimulatorPanelComponent}
+                    <svelte:component
+                        this={routeSimulatorPanelComponent}
+                        horizontalAlignment="center"
+                        verticalAlignment="top"
+                        android:marginTop={windowInsetTop + navigationRailTop}
+                        ios:marginTop={navigationRailTop} />
                 {/if}
                 <canvaslabel
                     class="mdi"
@@ -2187,11 +2204,11 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    android:marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
-                    ios:marginTop={66 + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    android:marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
-                    visibility={currentMapRotation !== 0 && !$peakFinderActive ? 'visible' : 'collapse'}
+                    visibility={currentMapRotation !== 0 && !$peakFinderActive && !$isNavigating ? 'visible' : 'collapse'}
                     on:tap={resetBearing}>
                     <label class="mdi" color={colorPrimary} rotate={currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
                 </mdcardview>
@@ -2206,12 +2223,12 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                {#if $showLegend && !$peakFinderActive}
+                {#if $showLegend && !$peakFinderActive && !$isNavigating}
                     <!-- below the compass, under half the screen: the map stays there to compare -->
                     <MapLegend
                         horizontalAlignment="right"
                         marginRight={5}
-                        marginTop={116 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                        marginTop={116 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
                         maxHeight={$windowSize.height * 0.45}
                         verticalAlignment="top" />
                 {/if}
@@ -2220,13 +2237,6 @@
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     opacity={scrollingWidgetsOpacity}
                     visibility={$peakFinderActive ? 'collapse' : 'visible'} />
-                <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
-                     over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
-                <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">
-                    {#if offRoutePanelComponent}
-                        <svelte:component this={offRoutePanelComponent} />
-                    {/if}
-                </gridlayout>
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}
