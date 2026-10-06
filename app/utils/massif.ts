@@ -1,5 +1,5 @@
 import { ApplicationSettings } from '@nativescript/core';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { settingsStore } from '~/stores/settingsStore';
 
 /** The Massif projects the app ships (dev_assets/styles/massif): both draw every variant and every ranking. */
@@ -17,6 +17,9 @@ const VARIANT_PROJECTS: Record<MassifVariant, { styleparameters: Record<string, 
     hybrid: require('@massif-maps/styles/cartocss-iconfont/hybrid.json'),
     eink: require('@massif-maps/styles/cartocss-iconfont/eink.json')
 };
+
+/** The variant the map draws, null on any other style: `hybrid` needs imagery under the map. */
+export const massifVariant = writable<string>(null);
 
 export function isMassifStyle(layerStyle: string) {
     return !!layerStyle && layerStyle.split('~')[0].replace(/\.zip$/, '') === MASSIF_PACKAGE;

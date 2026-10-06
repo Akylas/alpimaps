@@ -74,7 +74,21 @@
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
     import { legendVersion, showLegend } from '~/stores/legendStore';
-    import { MASSIF_PACKAGE, MASSIF_VARIANTS, type MassifIconFont, VARIANT_PARAMETER_KEYS, iconFontParameters, isMassifStyle, massifIconFont, massifLook, rankingFor, rankingParameters, setRankingFor, variantParameters } from '~/utils/massif';
+    import {
+        MASSIF_PACKAGE,
+        MASSIF_VARIANTS,
+        type MassifIconFont,
+        VARIANT_PARAMETER_KEYS,
+        iconFontParameters,
+        isMassifStyle,
+        massifIconFont,
+        massifLook,
+        massifVariant,
+        rankingFor,
+        rankingParameters,
+        setRankingFor,
+        variantParameters
+    } from '~/utils/massif';
     import type { MassifRanking } from '~/utils/massif';
     import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
@@ -1387,6 +1401,7 @@
                     //    showToast(JSON.stringify(nutiPropsToApply));
                     vectorTileDecoder.call('setStyleParameters', nutiPropsToApply);
                 }
+                massifVariant.set(mapStyleVariant(layerStyle));
                 styleParametersChanged();
             } catch (error) {
                 vectorTileDecoder = null;
@@ -1463,6 +1478,7 @@
         }
         // same decoder, a few parameters: a re-decode, not a new style
         vectorTileDecoder?.call('setStyleParameters', massifParameters(layerStyle, variant));
+        massifVariant.set(variant);
         const innerStyle = variant === 'eink' ? 'eink' : 'voyager';
         if (ApplicationSettings.getString('innerStyle') !== innerStyle) {
             mapContext.setInnerStyle(innerStyle, layerStyle.split('~')[0]);

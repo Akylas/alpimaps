@@ -29,6 +29,7 @@
 
     // the style's raw parameter names, readable where they are known
     const OPTION_LABELS: Record<string, string> = {
+        opacity: 'opacity',
         contrast: 'contrast',
         heightScale: 'height_scale',
         zoomLevelBias: 'zoom_level_bias',
@@ -127,8 +128,11 @@
 </script>
 
 <gesturerootview class="bottomsheet" {...$$restProps} height={420} rows="auto,auto,*,auto">
-    <PanelHeader icon="mdi-tune-variant" subtitle={cacheSize} title={layerTitle(item)} />
+    <PanelHeader icon={item.imagery ? 'mdi-satellite-variant' : 'mdi-tune-variant'} subtitle={cacheSize} title={layerTitle(item)} />
     <wraplayout padding="0 12" row={1}>
+        {#if item.imagery}
+            <Pill icon="mdi-swap-horizontal" label={lc('change_source')} on:tap={() => handleAction('change_source')} />
+        {/if}
         {#if capabilities.downloadable}
             <Pill icon="mdi-download" label={lc('download')} on:tap={() => handleAction('download_area')} />
         {/if}

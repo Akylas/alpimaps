@@ -16,7 +16,7 @@
     import StoreValue from '~/components/common/StoreValue.svelte';
     import { onThemeChanged } from '~/helpers/theme';
     import type { SourceItem } from '~/mapModules/CustomLayersModule';
-    import CustomLayersModule, { LOCAL_DATA_SUPPORTED, localInventory, mapCapabilities } from '~/mapModules/CustomLayersModule';
+    import CustomLayersModule, { LOCAL_DATA_SUPPORTED, hybridImagery, localInventory, mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { disabledLocalData } from '~/mapModules/localData/scan';
     import { archivesSummary } from './offlineData';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -217,7 +217,7 @@
 </script>
 
 <!-- on iOS a bottomsheet adds a safe-area padding to the collectionview: contentInsetAdjustmentBehavior removes it -->
-<gesturerootview class="bottomsheet" {...$$restProps} height={LOCAL_DATA_SUPPORTED ? 470 : 400} rows="auto,auto,auto,*" on:closedBottomSheet={onCloseBottomSheet}>
+<gesturerootview class="bottomsheet" {...$$restProps} height={(LOCAL_DATA_SUPPORTED ? 470 : 400) + ($hybridImagery ? 64 : 0)} rows="auto,auto,auto,auto,*" on:closedBottomSheet={onCloseBottomSheet}>
     <PanelHeader icon="mdi-layers-outline" title={lc('layers')}>
         <Pill icon="mdi-plus" label={lc('add')} on:tap={addSource} />
     </PanelHeader>
@@ -243,7 +243,26 @@
             <label class="mdi" col={2} color={colorOnSurfaceVariant} fontSize={22} text="mdi-chevron-right" verticalAlignment="middle" />
         </gridlayout>
     {/if}
-    <gridlayout bind:this={gridLayout} row={3} rows="auto,*">
+    <!-- the hybrid variant's imagery: under the whole stack, so not one of its rows -->
+    {#if $hybridImagery}
+        <gridlayout
+            backgroundColor={colorSurfaceContainer}
+            borderRadius={12}
+            columns="auto,*,auto"
+            margin="4 12"
+            padding="10 12"
+            rippleColor={colorPrimary}
+            row={3}
+            on:tap={() => showSourceOptions($hybridImagery)}>
+            <label class="panelIcon" text="mdi-satellite-variant" verticalAlignment="middle" />
+            <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
+                <label color={colorOnSurface} fontSize={15} fontWeight="bold" text={lc('hybrid_imagery')} />
+                <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={layerTitle($hybridImagery)} />
+            </stacklayout>
+            <label class="mdi" col={2} color={colorOnSurfaceVariant} fontSize={22} text="mdi-chevron-right" verticalAlignment="middle" />
+        </gridlayout>
+    {/if}
+    <gridlayout bind:this={gridLayout} row={4} rows="auto,*">
         <label class="sectionHeader" padding="4 16 0 16" text={lc('layer_stack')} />
         <collectionview
             bind:this={collectionView}

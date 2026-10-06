@@ -945,5 +945,10 @@
     "poi_icons": "Icônes des POI",
     "poi_style_default": "Par défaut",
     "poi_style_fill": "Pleines",
-    "poi_style_icononly": "Icône seule"
+    "poi_style_icononly": "Icône seule",
+    "hybrid_imagery": "imagerie satellite",
+    "change_source": "changer de source",
+    "default_source": "par défaut",
+    "in_use": "utilisée",
+    "opacity": "opacité"
 }

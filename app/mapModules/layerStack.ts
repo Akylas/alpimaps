@@ -1,10 +1,10 @@
 import type { MassifLayer, MassifMap } from '@nativescript-community/ui-massifmaps/api';
 
 /** A feature needing its own layer adds its id here and to LAYERS_ORDER. */
-export type LayerType = 'map' | 'routes' | 'customLayers' | 'selection' | 'items' | 'directions' | 'navigation' | 'userLocation' | 'search' | 'transit' | 'admin';
+export type LayerType = 'imagery' | 'map' | 'routes' | 'customLayers' | 'selection' | 'items' | 'directions' | 'navigation' | 'userLocation' | 'search' | 'transit' | 'admin';
 
 /** Bottom to top: the first entry draws underneath everything else. */
-export const LAYERS_ORDER: LayerType[] = ['map', 'customLayers', 'admin', 'routes', 'transit', 'items', 'directions', 'navigation', 'search', 'selection', 'userLocation'];
+export const LAYERS_ORDER: LayerType[] = ['imagery', 'map', 'customLayers', 'admin', 'routes', 'transit', 'items', 'directions', 'navigation', 'search', 'selection', 'userLocation'];
 
 export interface AddedLayer {
     layer: MassifLayer;

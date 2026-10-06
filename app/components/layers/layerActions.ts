@@ -14,10 +14,13 @@ import { createView } from '~/utils/ui';
 
 /** Local items keep their historic names as settings keys: what the user reads is translated. */
 export function layerTitle(item: SourceItem) {
+    if (item.imagery) {
+        return item.provider.name;
+    }
     return item.local ? lc(item.terrain ? 'offline_terrain' : 'offline_map') : item.name;
 }
 
-export type LayerAction = 'delete' | 'cache_only_mode' | 'clear_cache' | 'download_area' | 'tile_filter_mode';
+export type LayerAction = 'delete' | 'cache_only_mode' | 'clear_cache' | 'download_area' | 'tile_filter_mode' | 'change_source';
 
 export function layerSource(item: SourceItem) {
     // a reference: destroying it leaves the layer's own source intact
@@ -36,7 +39,7 @@ export function layerCapabilities(item: SourceItem) {
         downloadable: !item.local && (!!item.provider.downloadable || devMode) && !item.downloading,
         cacheable: !!item.provider.cacheable || !PRODUCTION,
         filterable: item.layer.is('massif::RasterTileLayer') || item.layer.is('massif::HillshadeRasterTileLayer'),
-        removable: !item.local
+        removable: !item.local && !item.imagery
     };
 }
 
@@ -154,6 +157,11 @@ export async function runLayerAction(item: SourceItem, layerAction: LayerAction)
         case 'tile_filter_mode':
             if (layerCapabilities(item).filterable) {
                 await pickTileFilterMode(item);
+            }
+            break;
+        case 'change_source':
+            if (item.imagery) {
+                await customLayers.pickImagerySource();
             }
             break;
     }
