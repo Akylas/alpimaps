@@ -7,7 +7,7 @@
 
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { convertElevation, formatDistance, getAddress, openingHoursText, osmicon } from '~/helpers/formatter';
+    import { convertElevation, formatDistance, getAddress, openingHoursText } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { colors, fonts } from '~/variables';
@@ -166,10 +166,11 @@
             tilePaint.setStyle(isEInk ? Style.STROKE : Style.FILL);
             tilePaint.color = isEInk ? colorOnSurface : new Color(tint).setAlpha(36).hex;
             canvas.drawRoundRect(pad, pad, pad + TILE_SIZE, pad + TILE_SIZE, 12, 12, tilePaint);
-            const icon = itemProps?.icon || item.icon || item.style?.icon || osmicon(formatter.geItemIcon(item));
+            const own = itemProps?.icon || item.icon || item.style?.icon;
+            const { icon, fontFamily } = own ? { icon: own, fontFamily: itemProps?.fontFamily || 'osm' } : formatter.getItemIcon(item);
             if (icon) {
                 iconPaint.textSize = 20;
-                iconPaint.fontFamily = itemProps?.fontFamily || 'osm';
+                iconPaint.fontFamily = fontFamily;
                 iconPaint.color = isEInk ? colorOnSurface : tint;
                 const metrics = iconPaint.getFontMetrics();
                 canvas.drawText(icon, pad + TILE_SIZE / 2, pad + TILE_SIZE / 2 - (metrics.ascent + metrics.descent) / 2, iconPaint);

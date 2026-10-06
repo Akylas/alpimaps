@@ -324,8 +324,10 @@ const nutiParams = {
         icon: 'mdi-map-marker-outline',
         title: lc('poi_plain_icons'),
         settingsOptionsType: 'boolean',
+        // picked in the style sheet (StylePicker), default / fill / icon only
+        showAsIcon: true,
         // unset: each project keeps its own (Alpimaps OSM is plain, the variants badges)
-        defaultValue: -1,
+        defaultValue: -1 as number | boolean,
         nutiTransform: (value) => (value ? 'plain' : 'badge'),
         fromNuti: (value) => value === 'plain'
     },
@@ -346,6 +348,21 @@ const nutiParams = {
         title: lc('sac_scale_labels'),
         settingsOptionsType: 'boolean',
         defaultValue: false
+    },
+    mtb_markings: {
+        icon: 'mdi-bike',
+        title: lc('mtb_markings'),
+        settingsOptionsType: 'boolean',
+        showAsIcon: true,
+        defaultValue: false
+    },
+    poi_label_color: {
+        icon: 'mdi-format-color-text',
+        title: lc('poi_label_color'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        nutiTransform: (value) => (value ? 'category' : 'neutral'),
+        fromNuti: (value) => value !== 'neutral'
     },
     show_boundaries: {
         icon: 'mdi-vector-polyline',

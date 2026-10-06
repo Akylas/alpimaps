@@ -18,7 +18,7 @@
     $: ({ colorError, colorOnPrimary, colorOnSurface, colorPrimary } = $colors);
 
     $: clazz = 'chip' + (primary ? ' primary' : selected ? ' selected' : '') + (danger ? ' danger' : '');
-    $: contentColor = color || (primary ? (isEInk ? 'white' : colorOnPrimary) : danger ? colorError : selected && !isEInk ? colorPrimary : colorOnSurface);
+    $: contentColor = color || (primary || (selected && isEInk) ? (isEInk ? 'white' : colorOnPrimary) : danger ? colorError : selected ? colorPrimary : colorOnSurface);
 </script>
 
 <gridlayout class={clazz} horizontalAlignment="left" rippleColor={primary ? colorOnPrimary : colorPrimary} {...$$restProps} on:tap on:longPress>

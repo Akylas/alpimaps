@@ -53,6 +53,7 @@ tmp/
 *.zip
 dist
 /webpack.stats.json
+/events.json
 /.sentryclirc
 
 

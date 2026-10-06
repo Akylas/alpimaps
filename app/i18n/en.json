@@ -1171,5 +1171,15 @@
     "local_map_online_fallback": "OpenFreeMap where offline files have no tile",
     "local_terrain_online_fallback": "Mapterhorn where offline files have no tile, or past their zoom",
     "online_fallback_description": "needs network, off by default",
-    "hillshade_max_zoom": "Hillshade maximum zoom"
+    "hillshade_max_zoom": "Hillshade maximum zoom",
+    "ranking_alpimaps": "Alpimaps",
+    "mtb_markings": "MTB lines",
+    "poi_label_color": "Colored POI names",
+    "icon_font": "Icons",
+    "icon_font_osm": "OSM",
+    "icon_font_massif": "Massif",
+    "poi_icons": "POI icons",
+    "poi_style_default": "Default",
+    "poi_style_fill": "Filled",
+    "poi_style_icononly": "Icon only"
 }

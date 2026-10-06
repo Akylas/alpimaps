@@ -30,6 +30,7 @@ import { innerNutiProps } from '~/stores/mapStore';
 import { showSnack, showToast } from '~/utils/ui';
 import type { AddedLayer, LayerType } from '~/mapModules/layerStack';
 import { type MapPos, type Position, fromPosition } from '~/utils/geo';
+import { massifIconFontFamily } from '~/utils/massif';
 import type { Geometry as GeoJSONGeometry } from 'geojson';
 
 /** What the user is doing to the map right now, as `map.interaction` reports it. */
@@ -57,12 +58,14 @@ function assetUrl(relativePath: string) {
 }
 
 // Fallback fonts for style face-names no device font carries, registered under their OWN name-table
-// name (`osm`, `Material Design Icons`); text faces come from the device.
+// name (`osm`, `Material Design Icons`, `MassifIcons`); text faces come from the device. The Massif
+// styles ship no icon font: they draw with the one picked (massifIconFont), both `MassifIcons` by full
+// name, so a switch is a new decoder.
 const APP_FONTS = ['fonts/osm.ttf', 'fonts/materialdesignicons-webfont.ttf'];
 
 // `create` returns the SAME object for an identical spec, so the bytes are read once and shared
 function addAppFonts(decoder: MapDecoder) {
-    for (const relativePath of APP_FONTS) {
+    for (const relativePath of [...APP_FONTS, `fonts/${massifIconFontFamily()}.ttf`]) {
         const font = api.create(
             'data',
             `font.${relativePath}`,

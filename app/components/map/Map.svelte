@@ -74,7 +74,7 @@
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
     import { legendVersion, showLegend } from '~/stores/legendStore';
-    import { MASSIF_PACKAGE, MASSIF_VARIANTS, VARIANT_PARAMETER_KEYS, isMassifStyle, massifLook, rankingFor, rankingParameters, setRankingFor, variantParameters } from '~/utils/massif';
+    import { MASSIF_PACKAGE, MASSIF_VARIANTS, type MassifIconFont, VARIANT_PARAMETER_KEYS, iconFontParameters, isMassifStyle, massifIconFont, massifLook, rankingFor, rankingParameters, setRankingFor, variantParameters } from '~/utils/massif';
     import type { MassifRanking } from '~/utils/massif';
     import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
@@ -1450,7 +1450,7 @@
                 params[key] = overrides[key];
             }
         });
-        Object.assign(params, rankingParameters(rankingFor(massifLook(layerStyle, variant))));
+        Object.assign(params, rankingParameters(rankingFor(massifLook(layerStyle, variant))), iconFontParameters());
         if (variant) {
             params['variant'] = variant;
         }
@@ -1468,6 +1468,11 @@
             mapContext.setInnerStyle(innerStyle, layerStyle.split('~')[0]);
         }
         styleParametersChanged();
+    }
+    /** the map loads its icon font with the decoder: a new one */
+    function setMassifIconFont(font: MassifIconFont) {
+        massifIconFont.set(font);
+        setMapStyle(currentLayerStyle, true);
     }
     function setMapStyleRanking(ranking: MassifRanking) {
         setRankingFor(massifLook(currentLayerStyle, mapStyleVariant(currentLayerStyle)), ranking);
@@ -1593,7 +1598,8 @@
                             setMapStyle(variant.style, true);
                         }
                     },
-                    onRanking: setMapStyleRanking
+                    onRanking: setMapStyleRanking,
+                    onIconFont: setMassifIconFont
                 }
             });
         } catch (error) {

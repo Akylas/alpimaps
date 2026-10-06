@@ -6,7 +6,7 @@
     import { compose } from '@nativescript/email';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { convertElevation, getAddress, openingHoursText, osmicon } from '~/helpers/formatter';
+    import { convertElevation, getAddress, openingHoursText } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -48,8 +48,7 @@
 
     // $: itemColor = getStyleProperty(updatedProperties, 'color') || getStyleProperty(item.properties, 'color') || (itemIsRoute ? '#287bda' : '#60A5F4');
     // $: itemIcon = getStyleProperty(updatedProperties, 'icon') || getStyleProperty(item.properties, 'icon');
-    // $: itemIcon = osmicon(formatter.geItemIcon(item));
-    // $: itemIconFontFamily = 'osm';
+    $: itemIcon = formatter.getItemIcon(item);
 
     let items: ObservableArray<any>;
     function refreshItems() {
@@ -426,7 +425,7 @@
 </script>
 
 <gesturerootview class="bottomsheet" {height} rows="auto,auto,*" {...$$restProps}>
-    <PanelHeader icon={osmicon(formatter.geItemIcon(item))} iconFontFamily="osm" title={formatter.getItemTitle(item) || ''}>
+    <PanelHeader icon={itemIcon.icon} iconFontFamily={itemIcon.fontFamily} title={formatter.getItemTitle(item) || ''}>
         <IconButton isVisible={Object.keys(extraProps).length > 0} text="mdi-content-save-outline" on:tap={() => saveItem()} />
         <IconButton text="mdi-autorenew" on:tap={() => refresh(true)} />
         <activityindicator busy={loading} height={$actionBarButtonHeight} verticalAlignment="middle" visibility={loading ? 'visible' : 'collapse'} width={$actionBarButtonHeight} />

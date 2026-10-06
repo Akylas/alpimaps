@@ -662,8 +662,10 @@ module.exports = (env, params = {}) => {
             noErrorOnMissing: true,
             globOptions
         },
-        // the map legend draws Massif's swatches itself: its icon font (ours, scripts/massif-iconfont.mjs) and pattern images, outside the style zip
-        { from: 'dev_assets/styles/massif/fonts/MassifIcons.ttf', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
+        // Massif's own icon font, beside app/fonts/MassifIconsOsm.ttf: the map loads the one picked
+        // (massifIconFont, MapModule.ts), the style zip carries none
+        { from: 'node_modules/@massif-maps/styles/cartocss-iconfont/fonts/MassifIcons.ttf', to: 'fonts/[name][ext]', globOptions },
+        // the map legend draws Massif's swatches itself: its pattern images, outside the style zip
         { context: 'node_modules/@massif-maps/styles/cartocss-iconfont', from: 'icons/*', to: 'assets/massif-legend', noErrorOnMissing: true, globOptions },
         {
             from: 'css/_osm.scss',
@@ -725,7 +727,8 @@ module.exports = (env, params = {}) => {
             from: '**/*',
             to: 'assets/styles/massif',
             noErrorOnMissing: true,
-            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*'] }
+            // its fonts too: the map draws with the app's MassifIcons (APP_FONTS in MapModule.ts)
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/**'] }
         });
         copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
     }
@@ -885,7 +888,8 @@ module.exports = (env, params = {}) => {
     if (buildstyle) {
         // every Massif project the app lists: each draws all five variants and all rankings, picked by style parameters
         const MASSIF_PROJECTS = ['massif', 'alpimaps'];
-        const css2xmlBin = `css2xml_${process.platform === 'darwin' ? 'macos' : process.platform}`;
+        // @massif-maps/style-tools: the SDK's own CartoCSS compiler as wasm, on every platform
+        const css2xml = 'node_modules/.bin/massif-style css2xml';
         let dir1 = join(projectRoot, 'dev_assets/styles/inner_cleaned');
         if (!existsSync(dir1)) {
             mkdirSync(dir1);
@@ -913,23 +917,24 @@ module.exports = (env, params = {}) => {
                         'fontforge --script ./fixFontDirection_overlap.pe app/fonts/osm.ttf ./dev_assets/fonts/osm.ttf',
                         'fontforge --script ./fixFontDirection.pe node_modules/@mdi/font/fonts/materialdesignicons-webfont.ttf ./dev_assets/fonts/materialdesignicons-webfont.ttf',
 
-                        `./${css2xmlBin} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
-                        `./${css2xmlBin} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
-                        `./${css2xmlBin} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
-                        `./${css2xmlBin} dev_assets/styles/osm/eink.json dev_assets/styles/osmxml_cleaned/eink.xml`,
+                        `${css2xml} dev_assets/styles/osm/streets.json dev_assets/styles/osmxml_cleaned/streets.xml`,
+                        `${css2xml} dev_assets/styles/osm/osm.json dev_assets/styles/osmxml_cleaned/osm.xml`,
+                        `${css2xml} dev_assets/styles/osm/outdoors.json dev_assets/styles/osmxml_cleaned/outdoors.xml`,
+                        `${css2xml} dev_assets/styles/osm/eink.json dev_assets/styles/osmxml_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/osmxml_cleaned && zip -r ../../../app/assets/styles/osm.zip ./* && cd -',
-                        `./${css2xmlBin} dev_assets/styles/inner/voyager.json dev_assets/styles/inner_cleaned/voyager.xml`,
-                        `./${css2xmlBin} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
+                        `${css2xml} dev_assets/styles/inner/voyager.json dev_assets/styles/inner_cleaned/voyager.xml`,
+                        `${css2xml} dev_assets/styles/inner/eink.json dev_assets/styles/inner_cleaned/eink.xml`,
                         'cd ./dev_assets/styles/inner_cleaned && zip -r ../../../app/assets/styles/inner.zip ./* && cd -',
-                        `./${css2xmlBin} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
+                        `${css2xml} dev_assets/styles/admin/voyager.json dev_assets/styles/admin_cleaned/voyager.xml`,
                         'cd ./dev_assets/styles/admin_cleaned && zip -r ../../../app/assets/styles/admin.zip ./* && cd -',
 
                         // Massif: the package's icon-font CartoCSS plus the Alpimaps child, compiled and zipped
                         'rm -rf dev_assets/styles/massif_cleaned && mkdir -p dev_assets/styles/massif_cleaned/src dev_assets/styles/massif_cleaned/out',
                         'cp -R node_modules/@massif-maps/styles/cartocss-iconfont/. dev_assets/styles/massif_cleaned/src/',
                         'cp -R dev_assets/styles/massif/. dev_assets/styles/massif_cleaned/src/',
-                        ...MASSIF_PROJECTS.map((name) => `./${css2xmlBin} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
-                        'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/fonts dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
+                        ...MASSIF_PROJECTS.map((name) => `${css2xml} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
+                        // no fonts/: the icon font is the app's (APP_FONTS in MapModule.ts)
+                        'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
                         'rm -f app/assets/styles/massif.zip && cd ./dev_assets/styles/massif_cleaned/out && zip -r ../../../../app/assets/styles/massif.zip ./* && cd -'
                     ],
                     blocking: true,

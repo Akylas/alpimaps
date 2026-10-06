@@ -3,7 +3,7 @@
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, formatDistance, openingHoursText, osmicon } from '~/helpers/formatter';
+    import { UNITS, convertDurationSeconds, convertElevation, convertValueToUnit, formatDistance, openingHoursText } from '~/helpers/formatter';
     import { onMapLanguageChanged } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import type { IItem as Item, ItemProperties } from '~/models/Item';
@@ -189,8 +189,7 @@
                 itemIconFontFamily = itemProps.fontFamily;
                 itemIcon = itemProps.icon;
             } else {
-                itemIconFontFamily = 'osm';
-                itemIcon = osmicon(formatter.geItemIcon(it));
+                ({ icon: itemIcon, fontFamily: itemIconFontFamily } = formatter.getItemIcon(it));
             }
         }
         updateItemText(it);

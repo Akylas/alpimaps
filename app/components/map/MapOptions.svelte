@@ -232,7 +232,7 @@
         return item.type || 'default';
     }
 
-    const nutiIconParams = ['contours', 'buildings'] as const;
+    const nutiIconParams = ['contours', 'buildings', 'mtb_markings'] as const;
     const layerIconParams = ['showSlopePercentages'] as const;
 </script>
 

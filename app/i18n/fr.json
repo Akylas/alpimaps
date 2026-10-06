@@ -935,5 +935,15 @@
     "local_map_online_fallback": "OpenFreeMap là où les fichiers hors ligne n'ont pas de tuile",
     "local_terrain_online_fallback": "Mapterhorn là où les fichiers hors ligne n'ont pas de tuile, ou au-delà de leur zoom",
     "online_fallback_description": "nécessite le réseau, désactivé par défaut",
-    "hillshade_max_zoom": "Zoom maximum de l'ombrage"
+    "hillshade_max_zoom": "Zoom maximum de l'ombrage",
+    "ranking_alpimaps": "Alpimaps",
+    "mtb_markings": "Lignes VTT",
+    "poi_label_color": "Noms des POI en couleur",
+    "icon_font": "Icônes",
+    "icon_font_osm": "OSM",
+    "icon_font_massif": "Massif",
+    "poi_icons": "Icônes des POI",
+    "poi_style_default": "Par défaut",
+    "poi_style_fill": "Pleines",
+    "poi_style_icononly": "Icône seule"
 }

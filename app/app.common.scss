@@ -453,10 +453,10 @@ label {
         border-color: black;
         color: black;
 
+        // reversed when on: a thicker outline alone did not read as toggled
         &.selected {
-            background-color: white;
-            color: black;
-            border-width: 2;
+            background-color: black;
+            color: white;
         }
 
         &.primary {

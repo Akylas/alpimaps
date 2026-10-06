@@ -4,6 +4,7 @@
     import { lang, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import { legendVersion, showLegend } from '~/stores/legendStore';
+    import { massifIconFont, massifIconFontFamily } from '~/utils/massif';
     import { colors } from '~/variables';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
 
@@ -82,7 +83,7 @@
     // its own paint, as the other icon canvases do: a family switched on a shared paint did not take
     const glyphPaint = new Paint();
     glyphPaint.setAntiAlias(true);
-    glyphPaint.fontFamily = 'MassifIcons';
+    $: glyphPaint.fontFamily = ($massifIconFont, massifIconFontFamily());
     glyphPaint.setTextAlign(Align.CENTER);
 
     function stroke(line: LegendLine, maxWidth: number) {
