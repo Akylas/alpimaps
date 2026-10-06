@@ -1181,5 +1181,10 @@
     "poi_icons": "POI icons",
     "poi_style_default": "Default",
     "poi_style_fill": "Filled",
-    "poi_style_icononly": "Icon only"
+    "poi_style_icononly": "Icon only",
+    "hybrid_imagery": "satellite imagery",
+    "change_source": "change source",
+    "default_source": "default",
+    "in_use": "in use",
+    "opacity": "opacity"
 }

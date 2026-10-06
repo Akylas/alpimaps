@@ -585,7 +585,10 @@ export const data: { [k: string]: Provider } = {
             },
             WorldImagery: {
                 sourceOptions: {
-                    maxZoom: 18
+                    maxZoom: 18,
+                    httpHeaders: {
+                        'User-Agent': __APP_ID__
+                    }
                 },
                 attribution: '{attribution.Esri} &mdash; ' + 'Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                 urlOptions: {
