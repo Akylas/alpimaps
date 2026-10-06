@@ -941,5 +941,9 @@
     "poi_label_color": "Noms des POI en couleur",
     "icon_font": "Icônes",
     "icon_font_osm": "OSM",
-    "icon_font_massif": "Massif"
+    "icon_font_massif": "Massif",
+    "poi_icons": "Icônes des POI",
+    "poi_style_default": "Par défaut",
+    "poi_style_fill": "Pleines",
+    "poi_style_icononly": "Icône seule"
 }

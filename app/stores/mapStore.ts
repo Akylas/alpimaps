@@ -324,8 +324,10 @@ const nutiParams = {
         icon: 'mdi-map-marker-outline',
         title: lc('poi_plain_icons'),
         settingsOptionsType: 'boolean',
+        // picked in the style sheet (StylePicker), default / fill / icon only
+        showAsIcon: true,
         // unset: each project keeps its own (Alpimaps OSM is plain, the variants badges)
-        defaultValue: -1,
+        defaultValue: -1 as number | boolean,
         nutiTransform: (value) => (value ? 'plain' : 'badge'),
         fromNuti: (value) => value === 'plain'
     },

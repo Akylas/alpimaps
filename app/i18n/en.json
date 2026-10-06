@@ -1177,5 +1177,9 @@
     "poi_label_color": "Colored POI names",
     "icon_font": "Icons",
     "icon_font_osm": "OSM",
-    "icon_font_massif": "Massif"
+    "icon_font_massif": "Massif",
+    "poi_icons": "POI icons",
+    "poi_style_default": "Default",
+    "poi_style_fill": "Filled",
+    "poi_style_icononly": "Icon only"
 }
