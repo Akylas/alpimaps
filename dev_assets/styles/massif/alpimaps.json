@@ -33,7 +33,7 @@
         "default": "default",
         "activities": "activities",
         "sports": "sports",
-        "classic": "classic"
+        "alpimaps": "alpimaps"
       }
     },
     "water_min_zoom": 16,

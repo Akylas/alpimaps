@@ -18,9 +18,12 @@
 #poi['param::ranking' = 'activities'][zoom >= 14][class = 'picnic_site']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 14][class = 'ranger_station']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 14][class = 'lodging']::poi,
+#poi['param::ranking' = 'activities'][zoom >= 14][class = 'bicycle']::poi,
+#poi['param::ranking' = 'activities'][zoom >= 14][class = 'bicycle_rental']::poi,
+#poi['param::ranking' = 'activities'][zoom >= 14][class = 'shop'][subclass = 'sports']::poi,
+#poi['param::ranking' = 'activities'][zoom >= 14][class = 'shop'][subclass = 'outdoor']::poi,
 #poi['param::ranking' = 'activities'][zoom >= 15][class = 'toilets']::poi,
-#poi['param::ranking' = 'activities'][zoom >= 15][class = 'parking']::poi,
-#poi['param::ranking' = 'activities'][zoom >= 15][class = 'bicycle_rental']::poi {
+#poi['param::ranking' = 'activities'][zoom >= 15][class = 'parking']::poi {
   @extend %poi;
 }
 
@@ -30,6 +33,10 @@
 #poi['param::ranking' = 'sports'][zoom >= 13][class = 'wilderness_hut']::poi {
   @extend %poi;
 }
+#poi['param::ranking' = 'sports'][zoom >= 14][class = 'bicycle']::poi,
+#poi['param::ranking' = 'sports'][zoom >= 14][class = 'bicycle_rental']::poi,
+#poi['param::ranking' = 'sports'][zoom >= 14][class = 'shop'][subclass = 'sports']::poi,
+#poi['param::ranking' = 'sports'][zoom >= 14][class = 'shop'][subclass = 'outdoor']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 14][class = 'stadium']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 14][class = 'swimming']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 14][class = 'golf']::poi,
@@ -42,57 +49,64 @@
 #poi['param::ranking' = 'sports'][zoom >= 15][class = 'tennis']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 15][class = 'soccer']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 15][class = 'basketball']::poi,
-#poi['param::ranking' = 'sports'][zoom >= 15][class = 'bicycle']::poi,
-#poi['param::ranking' = 'sports'][zoom >= 15][class = 'bicycle_rental']::poi,
 #poi['param::ranking' = 'sports'][zoom >= 15][class = 'playground']::poi {
   @extend %poi;
 }
 
-/* both: errands and services make way */
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'clothing_store']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'shop']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'furniture']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'gift']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'florist']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'hairdresser']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'laundry']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'bank']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'car']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'dentist']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'doctors']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'pharmacy']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'veterinary']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'embassy']::poi,
-#poi['param::ranking' != 'default']['param::ranking' != 'classic'][zoom < 17][class = 'post']::poi {
+/* both: errands and services make way, but a sports or outdoor shop */
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'clothing_store']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'shop'][subclass != 'sports'][subclass != 'outdoor']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'furniture']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'gift']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'florist']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'hairdresser']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'laundry']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'bank']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'car']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'dentist']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'doctors']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'pharmacy']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'veterinary']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'embassy']::poi,
+#poi['param::ranking' != 'default']['param::ranking' != 'alpimaps'][zoom < 17][class = 'post']::poi {
   display: none;
 }
 
-/* classic: the class order Alpimaps' planetiler fork bakes into `rank` (Poi.java CLASS_RANKS), rebuilt
-   here for tiles ranked by upstream OpenMapTiles (OpenFreeMap): upstream ranks pharmacies, bakeries,
-   banks, pubs and restaurants after every other class, the fork right after parks and schools. */
-#poi['param::ranking' = 'classic'][zoom >= 14][subclass = 'national_park']::poi {
+/* alpimaps: what a cycle tourer needs, in the class order Alpimaps' planetiler fork bakes into `rank`
+   (Poi.java CLASS_RANKS), rebuilt here for tiles ranked by upstream OpenMapTiles (OpenFreeMap): food
+   stores with the bakeries, bike and sports shops, care, transport and history early; who wins a
+   collision is app/utils/massif.ts. */
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][subclass = 'national_park']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'bakery']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'grocery']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'butcher']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'pharmacy']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'bicycle']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'bicycle_rental']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'shop'][subclass = 'sports']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'shop'][subclass = 'outdoor']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'museum']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'castle']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'fort']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'archaeological_site']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'monument']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 14][class = 'attraction'][subclass != 'viewpoint']::poi {
   @extend %poi;
 }
-#poi['param::ranking' = 'classic'][zoom >= 15][class = 'pharmacy']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 15][class = 'bakery']::poi {
+#poi['param::ranking' = 'alpimaps'][zoom >= 15][class = 'restaurant']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 15][class = 'fast_food']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 15][class = 'cafe']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 15][class = 'doctors']::poi {
   @extend %poi;
 }
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'pitch']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'bank']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'beer']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'bar']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'restaurant']::poi,
-#poi['param::ranking' = 'classic'][zoom >= 16][class = 'grocery']::poi {
+#poi['param::ranking' = 'alpimaps'][zoom >= 16][class = 'pitch']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 16][class = 'bank']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 16][class = 'beer']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom >= 16][class = 'bar']::poi {
   @extend %poi;
 }
-/* the fork moves libraries behind shops */
-#poi['param::ranking' = 'classic'][zoom < 16][class = 'library']::poi {
-  display: none;
-}
-
-/* classic: a community centre (town_hall to OpenMapTiles) and an attraction rank high in the fork but
-   crowd a town: from z16, and demoted in a collision (app/utils/massif.ts). A viewpoint keeps its layer. */
-#poi['param::ranking' = 'classic'][zoom < 16][subclass = 'community_centre']::poi,
-#poi['param::ranking' = 'classic'][zoom < 16][class = 'attraction'][subclass != 'viewpoint']::poi {
+/* the fork moves libraries behind shops; a community centre (town_hall to OpenMapTiles) crowds a town */
+#poi['param::ranking' = 'alpimaps'][zoom < 16][class = 'library']::poi,
+#poi['param::ranking' = 'alpimaps'][zoom < 16][subclass = 'community_centre']::poi {
   display: none;
 }

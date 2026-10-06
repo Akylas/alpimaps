@@ -12,7 +12,7 @@
         "default": "default",
         "activities": "activities",
         "sports": "sports",
-        "classic": "classic"
+        "alpimaps": "alpimaps"
       }
     },
     "glyph.fitness_centre": "",

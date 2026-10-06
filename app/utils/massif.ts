@@ -3,7 +3,7 @@ import { ApplicationSettings } from '@nativescript/core';
 /** The Massif projects the app ships (dev_assets/styles/massif): both draw every variant and every ranking. */
 export const MASSIF_PACKAGE = 'massif';
 export const MASSIF_VARIANTS = ['streets', 'outdoor', 'topo', 'hybrid', 'eink'] as const;
-export const MASSIF_RANKINGS = ['default', 'activities', 'sports', 'classic'] as const;
+export const MASSIF_RANKINGS = ['default', 'activities', 'sports', 'alpimaps'] as const;
 export type MassifVariant = (typeof MASSIF_VARIANTS)[number];
 export type MassifRanking = (typeof MASSIF_RANKINGS)[number];
 
@@ -39,6 +39,8 @@ const PROMOTE = 1000000;
 const FAVOUR = 500000;
 const DEMOTE = -1000000;
 const ERRANDS = ['clothing_store', 'shop', 'furniture', 'gift', 'florist', 'hairdresser', 'laundry', 'bank', 'car', 'dentist', 'doctors', 'pharmacy', 'veterinary', 'embassy', 'post'];
+// a sports or outdoor shop (Decathlon: class shop) and a bike shop, by subclass where its class is `shop`
+const SPORT_SHOPS = ['sports', 'outdoor', 'bicycle', 'bicycle_rental'];
 const boosts = (promote: string[], favour: string[]) =>
     Object.fromEntries([...ERRANDS.map((name) => [name, DEMOTE]), ...favour.map((name) => [name, FAVOUR]), ...promote.map((name) => [name, PROMOTE])]) as Record<string, number>;
 // the planetiler fork's CLASS_RANKS: the lower, the more a class matters in its tile
@@ -49,23 +51,33 @@ const CLASS_RANKS: Record<string, number> = {
     bar: 170, restaurant: 180, grocery: 190, shop: 250, library: 300, fast_food: 600, clothing_store: 700, lodging: 800,
     bicycle_repair_station: 900, viewpoint: 1001
 };
-// a class wins over every class ranked after it, an unlisted one (no boost) comes last; a community
-// centre (town_hall to OpenMapTiles) and an attraction ranked high there but crowd a town: demoted
-function classicBoosts() {
+// what a cycle tourer needs, over CLASS_RANKS' order: food stores with the bakeries, bike and sports
+// shops, care, and history; a community centre (town_hall to OpenMapTiles) crowds a town: demoted
+const FOOD_STORES = ['bakery', 'grocery', 'supermarket', 'convenience', 'greengrocer', 'butcher', 'deli'];
+const HISTORY = ['museum', 'castle', 'ruins', 'archaeological_site', 'monument', 'memorial', 'fort', 'attraction'];
+// a class wins over every class ranked after it, an unlisted one (no boost) comes last
+function alpimapsBoosts() {
     const boosts = Object.fromEntries(Object.entries(CLASS_RANKS).map(([name, rank]) => [name, (1100 - rank) * 1000]));
-    return { ...boosts, attraction: DEMOTE, community_centre: DEMOTE } as Record<string, number>;
+    const bakery = boosts.bakery;
+    return {
+        ...boosts,
+        ...Object.fromEntries(FOOD_STORES.map((name) => [name, bakery])),
+        ...Object.fromEntries(HISTORY.map((name) => [name, bakery - 10000])),
+        ...Object.fromEntries(SPORT_SHOPS.map((name) => [name, PROMOTE])),
+        community_centre: DEMOTE
+    } as Record<string, number>;
 }
 export const RANKING_BOOSTS: Record<MassifRanking, Record<string, number>> = {
     default: {},
     activities: boosts(
         ['alpine_hut', 'wilderness_hut', 'shelter', 'viewpoint', 'waterfall', 'cave_entrance', 'drinking_water', 'spring'],
-        ['picnic_site', 'ranger_station', 'lodging', 'toilets', 'parking', 'bicycle_rental', 'campsite', 'water_point']
+        ['picnic_site', 'ranger_station', 'lodging', 'toilets', 'parking', 'campsite', 'water_point', ...SPORT_SHOPS]
     ),
     sports: boosts(
-        ['skiing', 'alpine_hut', 'wilderness_hut', 'viewpoint'],
-        ['stadium', 'swimming', 'golf', 'pitch', 'shelter', 'tennis', 'soccer', 'basketball', 'bicycle', 'bicycle_rental', 'playground']
+        ['skiing', 'alpine_hut', 'wilderness_hut', 'viewpoint', ...SPORT_SHOPS],
+        ['stadium', 'swimming', 'golf', 'pitch', 'shelter', 'tennis', 'soccer', 'basketball', 'playground']
     ),
-    classic: classicBoosts()
+    alpimaps: alpimapsBoosts()
 };
 const BOOSTED_NAMES = [...new Set(Object.values(RANKING_BOOSTS).flatMap((table) => Object.keys(table)))];
 
@@ -87,7 +99,9 @@ export function massifLook(layerStyle: string, variant: string) {
 }
 
 export function rankingFor(look: string): MassifRanking {
-    return ApplicationSettings.getString('massifRanking.' + look, DEFAULT_RANKING[look] ?? 'default') as MassifRanking;
+    const ranking = ApplicationSettings.getString('massifRanking.' + look, DEFAULT_RANKING[look] ?? 'default');
+    // `classic` was the alpimaps ranking's name
+    return (ranking === 'classic' ? 'alpimaps' : ranking) as MassifRanking;
 }
 
 export function setRankingFor(look: string, ranking: MassifRanking) {
