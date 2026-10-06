@@ -1137,7 +1137,11 @@
     $: activeSheetHeight = $isNavigating ? navigationSteps[navigationStepIndex] : steps?.[bottomSheetStepIndex];
     $: {
         if (activeSheetHeight >= 0) {
-            mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
+            // the middle of the map left visible: above the sheet, or right of the landscape column (a
+            // positive x moves the focus left)
+            mapContext.focusOffset = landscapeNavigation
+                ? { x: -Utils.layout.toDevicePixels(navigationColumnLeft + navigationColumnWidth) / 2, y: 0 }
+                : { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
             // a ScreenPos crosses as `[x, y]`, not as the {x, y} the rest of the app passes around
             massifMap?.set('focusPointOffset', [mapContext.focusOffset.x, mapContext.focusOffset.y]);
         }
@@ -1646,8 +1650,14 @@
     const getLayerIndex = (layer: MassifLayer) => layerStack.getLayerIndex(layer);
     const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
     const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
-    // the banner is reserved in every navigation state, so the rail under it never moves
-    $: navigationRailTop = Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 20;
+    // landscape: banner and bar share a left column (a bike mount), the map gets the rest
+    $: landscapeNavigation = $isNavigating && isLandscape;
+    $: navigationColumnWidth = Math.round(Math.min(Math.max($windowSize.width * 0.42, 320), 460));
+    // the map button bar keeps its portrait place on the left edge, the column starts right of it
+    $: navigationColumnLeft = landscapeNavigation ? windowInsetLeft + 50 : 0;
+    // the banner is reserved in every navigation state, so what sits under it never moves; in
+    // landscape nothing does, the banner has the column to itself
+    $: navigationRailTop = landscapeNavigation ? 10 : Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 20;
     // the banner takes the search bar's place for the whole navigation, paused included
     $: hideChromeForNavigation = $isNavigating;
     $: hideChromeForPeakFinder = $peakFinderActive;
@@ -1718,7 +1728,8 @@
                 ? {
                       mapScrollingWidgets: {
                           target: mapScrollingWidgets.getNativeView(),
-                          translateY: translation,
+                          // beside the landscape column, not above it: nothing to make room for
+                          translateY: landscapeNavigation ? 0 : translation,
                           opacity: scrollingWidgetsOpacity
                       }
                   }
@@ -2123,7 +2134,12 @@
             translationFunction={navigationBottomSheetTranslationFunction}
             on:stepIndexChange={onNavigationStepIndexChanged}>
             <gridlayout height="100%" isPassThroughParentEnabled={true} width="100%" />
-            <gridlayout prop:bottomSheet height={navigationSteps[navigationSteps.length - 1]} width="100%">
+            <gridlayout
+                prop:bottomSheet
+                height={navigationSteps[navigationSteps.length - 1]}
+                horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                marginLeft={landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0}
+                width={landscapeNavigation ? navigationColumnWidth : '100%'}>
                 {#if navigationViewComponent}
                     <!-- tall enough for every step, the sheet decides how much of it shows -->
                     <svelte:component this={navigationViewComponent} />
@@ -2151,7 +2167,7 @@
                     gray={true}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={!$isNavigating || scrollingWidgetsOpacity > 0.3}
-                    marginLeft={5}
+                    marginLeft={landscapeNavigation ? windowInsetLeft + 5 : 5}
                     opacity={$isNavigating ? scrollingWidgetsOpacity : 1}
                     separatorColor={colorOutlineSoft}
                     verticalAlignment="top"
@@ -2161,12 +2177,12 @@
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
+                    hidden={$isNavigating || $peakFinderActive}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     marginLeft={53}
                     marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
-                    verticalAlignment="top"
-                    visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
+                    verticalAlignment="top" />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -2178,7 +2194,18 @@
                     visibility={hideChromeForNavigation || hideChromeForPeakFinder ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
                 {#if maneuverViewComponent}
-                    <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
+                    <!-- in landscape the expanded sheet runs up into it, so it fades with the sheet like the map buttons -->
+                    <svelte:component
+                        this={maneuverViewComponent}
+                        style="z-index:1001;"
+                        horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                        margin={10}
+                        opacity={landscapeNavigation ? scrollingWidgetsOpacity : 1}
+                        verticalAlignment="top"
+                        width={landscapeNavigation ? navigationColumnWidth - 20 : 'auto'}
+                        android:marginLeft={(landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10}
+                        ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
+                        android:marginTop={windowInsetTop + 10} />
                 {/if}
                 {#if navigationRailComponent}
                     <svelte:component
@@ -2249,6 +2276,7 @@
                 <MapScrollingWidgets
                     bind:this={mapScrollingWidgets}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    leftInset={landscapeNavigation ? navigationColumnLeft + navigationColumnWidth : 0}
                     opacity={scrollingWidgetsOpacity}
                     visibility={$peakFinderActive ? 'collapse' : 'visible'} />
                 <DirectionsPanel

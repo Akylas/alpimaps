@@ -31,6 +31,8 @@
     let selectedItem: IItem = null;
 
     export let isUserInteractionEnabled: boolean = true;
+    /** what covers the map on the left, the landscape navigation column */
+    export let leftInset = 0;
 
     // let scaleView: ScaleView;
     let userLocationModule: UserLocationModule = null;
@@ -255,7 +257,7 @@
         <mdbutton id="layers" class="small-floating-btn" text="mdi-layers" on:tap={showMapRightMenu} on:longPress={() => mapContext.selectStyle()} />
     </stacklayout>
 
-    <ScaleView col={1} horizontalAlignment={$isNavigating ? 'left' : 'right'} marginBottom={8} marginLeft={8} row={2} verticalAlignment="bottom" />
+    <ScaleView col={1} horizontalAlignment={$isNavigating ? 'left' : 'right'} marginBottom={8} marginLeft={8 + leftInset} row={2} verticalAlignment="bottom" />
     <IconButton
         col={1}
         horizontalAlignment="left"
