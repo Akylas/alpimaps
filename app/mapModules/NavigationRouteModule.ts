@@ -1,12 +1,14 @@
-import type { MassifLayer, MassifMap, MassifSource } from '@nativescript-community/ui-massifmaps/api';
+import type { Json, MassifLayer, MassifMap, MassifObject, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
 import type { Feature, Geometry } from 'geojson';
-import type { Unsubscriber } from 'svelte/store';
+import { type Unsubscriber, get } from 'svelte/store';
 import type { GeoLocation } from '~/handlers/GeoHandler';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { registerMapModule } from '~/mapModules/registry';
 import type { IItem } from '~/models/Item';
 import { type NavigationDetour, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
-import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationRejoinTarget } from '~/stores/navigationStore';
+import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationProgress, navigationRejoinTarget } from '~/stores/navigationStore';
+import { geometryCoordinates } from '~/utils/geo';
+import type { RouteProgress } from '~/utils/navigation';
 import type { RejoinTarget } from '~/utils/navigation';
 
 const TAG = '[NavigationRouteModule]';
@@ -17,6 +19,8 @@ const mapContext = getMapContext();
 const NAVIGATION_LAYER = 1;
 /** the connector, on its own layer because it is redrawn on every position */
 const HINT_LAYER = 2;
+/** metres of route a maneuver arrow keeps before and after its turn */
+const ARROW_LENGTH = 30;
 
 // Navigation follows its own route copy (`NavigationRoute`), never the selected item, so it is drawn
 // on its own layer. The `navigating` style parameter makes the item/directions styles drop their selected look.
@@ -29,6 +33,15 @@ export default class NavigationRouteModule extends MapModule {
     private detour: NavigationDetour = null;
     private rejoinTarget: RejoinTarget = null;
     private location: GeoLocation = null;
+    private arrowBuilder: MassifObject<'massif::ManeuverArrowBuilder'>;
+    // the arrows' own layer, stacked after the route's: a layer of the same tiles draws under the route
+    private maneuverSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
+    private maneuverLayer: MassifLayer<'massif::VectorTileLayer'>;
+    private maneuverLayerId: number;
+    /** the route as the builder takes it, rebuilt with the item */
+    private routePositions: Position[] = null;
+    /** what the arrow was last drawn for, so a fix on the same maneuver costs nothing */
+    private arrowKey: string = null;
 
     constructor() {
         super();
@@ -36,8 +49,11 @@ export default class NavigationRouteModule extends MapModule {
         this.subscriptions.push(
             navigationItem.subscribe((item) => {
                 this.item = item;
+                this.routePositions = null;
+                this.arrowKey = null;
                 this.draw();
             }),
+            navigationProgress.subscribe((progress) => this.drawManeuver(progress)),
             navigationDetour.subscribe((detour) => {
                 this.detour = detour;
                 this.draw();
@@ -66,6 +82,11 @@ export default class NavigationRouteModule extends MapModule {
         this.subscriptions.length = 0;
         this.dataSource = null;
         this.layer = null;
+        // released with the map
+        this.arrowBuilder = null;
+        this.maneuverSource = null;
+        this.maneuverLayer = null;
+        this.arrowKey = null;
     }
 
     onMapReady(map: MassifMap) {
@@ -104,8 +125,77 @@ export default class NavigationRouteModule extends MapModule {
         this.dataSource = null;
         oldLayer.destroy();
         mapContext.replaceLayer(oldLayer, this.getOrCreateLayer());
+        const oldManeuverLayer = this.maneuverLayer;
+        if (oldManeuverLayer) {
+            this.maneuverLayer = null;
+            this.maneuverSource?.destroy();
+            this.maneuverSource = null;
+            oldManeuverLayer.destroy();
+            mapContext.replaceLayer(oldManeuverLayer, this.getOrCreateManeuverLayer());
+        }
         this.draw();
         this.drawHint();
+        this.arrowKey = null;
+        this.drawManeuver(get(navigationProgress));
+    }
+
+    private getOrCreateManeuverLayer() {
+        if (!this.maneuverLayer) {
+            // after the route's layer, so it is added above it in the same stack slot
+            this.getOrCreateLayer();
+            const map = mapContext.getMap();
+            this.maneuverSource = map.source('source.navigation.maneuver', { type: 'geojson', minZoom: 0, maxZoom: 24 });
+            this.maneuverLayerId = this.maneuverSource.createLayer('maneuver');
+            this.maneuverLayer = map.buildLayer('layer.navigation.maneuver', {
+                type: 'vector',
+                source: this.maneuverSource.id,
+                style: mapContext.innerDecoder.id,
+                labelBlendingSpeed: 0,
+                layerBlendingSpeed: 0
+            });
+            mapContext.addLayer(this.maneuverLayer, 'navigation');
+        }
+        return this.maneuverLayer;
+    }
+
+    // the next maneuver and the one after it (the banner's "then"); none on a detour, whose
+    // instructions index the detour leg, nor off route
+    private drawManeuver(progress: RouteProgress) {
+        const item = this.item;
+        const onRoute = !!progress && !progress.offRoute && !progress.onDetour && !!progress.instruction && !!item;
+        const following = onRoute ? item.instructions?.[progress.instructionIndex + 1] : null;
+        const gap = progress?.distanceToFollowingInstruction;
+        // two turns closer than two arrows' worth of route: one arrow through both, one head, instead
+        // of the second arrow starting under the first one's head
+        const chained = !!following && gap > 0 && gap <= ARROW_LENGTH * 2;
+        const arrows: { index: number; lengthAfter: number }[] = !onRoute
+            ? []
+            : chained
+              ? [{ index: progress.instruction.index, lengthAfter: gap + ARROW_LENGTH }]
+              : [progress.instruction, following].filter(Boolean).map((instruction) => ({ index: instruction.index, lengthAfter: ARROW_LENGTH }));
+        const key = arrows.length ? `${item.id}:${arrows.map((arrow) => arrow.index + '/' + Math.round(arrow.lengthAfter)).join(',')}` : null;
+        if (key === this.arrowKey || (!key && !this.maneuverLayer)) {
+            return;
+        }
+        this.arrowKey = key;
+        this.getOrCreateManeuverLayer();
+        const features: Json[] = [];
+        if (key) {
+            if (!this.routePositions) {
+                this.routePositions = item.geometry ? geometryCoordinates(item.geometry).map((coordinates): Position => [coordinates[0], coordinates[1]]) : [];
+            }
+            if (!this.arrowBuilder) {
+                this.arrowBuilder = mapContext.getMap().object('geometry', 'navigation.maneuver', { type: 'maneuver-arrow', lengthBefore: ARROW_LENGTH, lengthAfter: ARROW_LENGTH });
+            }
+            arrows.forEach(({ index, lengthAfter }) => {
+                this.arrowBuilder.set('lengthAfter', lengthAfter);
+                const arrow = this.arrowBuilder.call('buildArrowAtIndex', this.routePositions, index);
+                if (arrow && typeof arrow === 'object' && !Array.isArray(arrow) && Array.isArray(arrow.features)) {
+                    features.push(...arrow.features);
+                }
+            });
+        }
+        this.maneuverSource.setGeoJSON(this.maneuverLayerId, { type: 'FeatureCollection', features });
     }
 
     // at most three features: rebuilding is cheapest

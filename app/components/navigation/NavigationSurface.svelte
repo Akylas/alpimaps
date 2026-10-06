@@ -13,6 +13,7 @@
 </script>
 
 <script lang="ts">
+    import { lc } from '@nativescript-community/l';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import NavigationCard, { NAVWIDGET_CARD_HEIGHT } from '~/components/navigation/NavigationCard.svelte';
     import { formatDistance } from '~/helpers/formatter';
@@ -20,7 +21,7 @@
     import { navigationItem, navigationProgress, navigationScale, navigationSurfaceSpan } from '~/stores/navigationStore';
     import { surfaceColors } from '~/utils/routing';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
-    import { colors, fonts } from '~/variables';
+    import { colors } from '~/variables';
 
     /** null lets the flex row share its width out; the canvas still needs an explicit height */
     export let height: number = null;
@@ -37,7 +38,14 @@
     $: profile = $navigationItem?.profile;
     $: onPathIndex = $navigationProgress?.onPathIndex ?? -1;
     $: available = !!segments?.length || !!stats?.surfaces?.length;
-    $: caption = segments?.length ? formatDistance($navigationSurfaceSpan) : '';
+    // the surface underfoot, and where the next one starts: what the band is a picture of
+    $: currentIndex = segments?.findIndex((segment) => onPathIndex >= segment.start && onPathIndex < segment.end) ?? -1;
+    $: current = currentIndex >= 0 ? segments[currentIndex] : null;
+    $: next = currentIndex >= 0 ? segments[currentIndex + 1] : null;
+    $: nextDistance = next && profile?.data?.[next.start] && profile.data[onPathIndex] ? profile.data[next.start].d - profile.data[onPathIndex].d : null;
+    // without positions, the route's main surface
+    $: mainSurface = !current && stats?.surfaces?.length ? stats.surfaces.reduce((best, surface) => (surface.perc > best.perc ? surface : best)) : null;
+    $: currentName = current ? lc(current.id) : mainSurface ? lc(mainSurface.id) : '-';
     // the band only moves with the position index, so don't redraw on every fix
     let drawnIndex = -2;
     let drawnSpan = -1;
@@ -161,13 +169,15 @@
 
 {#if available}
     <!-- the canvas has no intrinsic size, so the card has to carry explicit dimensions -->
-    <NavigationCard height={cardHeight} padding="3 6 4 6" {...$$restProps}>
-        <gridlayout rows="auto,*">
-            <label color={colorOnSurfaceVariant}>
-                <cspan fontFamily={$fonts.mdi} fontSize={11 * $navigationScale} text="mdi-road-variant" />
-                <cspan fontSize={10 * $navigationScale} text={caption ? ' ' + caption : ''} />
-            </label>
-            <canvasview bind:this={surfaceCanvas} borderRadius={3} marginTop={2} row={1} on:draw={onDraw} />
-        </gridlayout>
+    <NavigationCard height={cardHeight} padding="6 12 8 12" rows="auto,auto,*" {...$$restProps}>
+        <label color={colorOnSurfaceVariant} fontSize={12 * $navigationScale} text={lc('navigation_surface')} />
+        <label lineBreak="end" maxLines={1} row={1}>
+            <cspan color={colorOnSurface} fontSize={18 * $navigationScale} fontWeight="bold" text={currentName} />
+            <cspan
+                color={colorOnSurfaceVariant}
+                fontSize={12 * $navigationScale}
+                text={next && nextDistance > 0 ? '  ' + lc('navigation_next_surface', lc(next.id), formatDistance(nextDistance)) : ''} />
+        </label>
+        <canvasview bind:this={surfaceCanvas} borderRadius={4} marginTop={4} row={2} on:draw={onDraw} />
     </NavigationCard>
 {/if}

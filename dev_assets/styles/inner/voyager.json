@@ -6,6 +6,7 @@
         "directions",
         "navigation",
         "navigation_hint",
+        "maneuver",
         "stops",
         "poi",
         "search"

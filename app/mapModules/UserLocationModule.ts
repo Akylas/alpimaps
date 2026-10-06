@@ -40,7 +40,7 @@ const userBitmapUrls: { [key: string]: string } = {};
  * Written to a file and passed as a url: `create` serialises the spec as JSON, so an `ImageSource`
  * put straight in it stringifies to nothing and the marker falls back to carto's default pin.
  */
-function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: string) {
+export function getUserBitmapUrl(kind: UserMarkerKind, color: string, outlineColor: string) {
     const key = `${kind}|${color}|${outlineColor}`;
     let url = userBitmapUrls[key];
     if (!url) {

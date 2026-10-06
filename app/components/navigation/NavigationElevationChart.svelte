@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { lc } from '@nativescript-community/l';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import NavigationCard, { NAVWIDGET_CARD_HEIGHT } from '~/components/navigation/NavigationCard.svelte';
     import { convertElevation } from '~/helpers/formatter';
@@ -6,13 +7,13 @@
     import { navigationChartCurrentAscent, navigationGradeLookAhead, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { gradeAhead, gradeColor } from '~/utils/grade';
     import { getCurrentAscent } from '~/utils/navigation';
-    import { colors, fonts } from '~/variables';
+    import { colors } from '~/variables';
 
     // follows the navigation scale: it shares a row with the other widgets
     export let height: number = null;
     $: cardHeight = height ?? Math.round(NAVWIDGET_CARD_HEIGHT * $navigationScale);
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
     let elevationChart: ElevationChart;
 
@@ -57,27 +58,21 @@
 </script>
 
 {#if available}
-    <NavigationCard height={cardHeight} {...$$restProps}>
-        <gridlayout columns="*,auto">
-            <gridlayout>
-                <ElevationChart bind:this={elevationChart} filled={!isEInk} item={$navigationItem} mini={true} {range} showAscents={false} showProfileGrades={false} showWaypoints={false} />
-                {#if currentAscent}
-                    <label
-                        color={colorOnSurfaceVariant}
-                        fontSize={10 * $navigationScale}
-                        horizontalAlignment="right"
-                        marginRight={4}
-                        text={convertElevation(currentAscent.summitElevation)}
-                        verticalAlignment="top" />
-                {/if}
-            </gridlayout>
-            <stacklayout col={1} paddingLeft={6} paddingRight={8} verticalAlignment="center">
-                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={13 * $navigationScale} text="mdi-angle-acute" />
-                <label>
-                    <cspan color={gradeValueColor} fontSize={20 * $navigationScale} fontWeight="bold" text={gradeText} />
-                    <cspan color={colorOnSurfaceVariant} fontSize={13 * $navigationScale} text=" %" />
-                </label>
-            </stacklayout>
+    <!-- the figure first, like the bar: the grade ahead, then the chart it comes from -->
+    <NavigationCard columns="auto,*" height={cardHeight} padding="6 10 6 12" {...$$restProps}>
+        <stacklayout paddingRight={12} verticalAlignment="center">
+            <label color={colorOnSurfaceVariant} fontSize={12 * $navigationScale} text={lc('grade')} />
+            <label maxLines={1}>
+                <cspan color={gradeValueColor} fontSize={28 * $navigationScale} fontWeight="bold" text={gradeText} />
+                <cspan color={colorOnSurfaceVariant} fontSize={14 * $navigationScale} text=" %" />
+            </label>
+        </stacklayout>
+        <gridlayout borderColor={colorHairline} borderLeftWidth={1} col={1} paddingLeft={10} rows="auto,*">
+            <label color={colorOnSurfaceVariant} fontSize={12 * $navigationScale} lineBreak="end" maxLines={1}>
+                <cspan text={currentAscent ? lc('navigation_this_climb') : lc('navigation_elevation_ahead')} />
+                <cspan color={colorOnSurface} fontWeight="bold" text={currentAscent ? ' · ' + convertElevation(currentAscent.summitElevation) : ''} />
+            </label>
+            <ElevationChart bind:this={elevationChart} filled={!isEInk} item={$navigationItem} mini={true} {range} row={1} showAscents={false} showProfileGrades={false} showWaypoints={false} />
         </gridlayout>
     </NavigationCard>
 {/if}

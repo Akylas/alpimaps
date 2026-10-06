@@ -172,9 +172,6 @@ export default class ItemsModule extends MapModule {
     setVisibility(value: boolean) {
         this.localVectorLayer?.visible(value);
     }
-    createLocalPoint(position: MapPos, style: { [key: string]: any }) {
-        return mapContext.getMap().object('element', `element.point.${++localPointId}`, { type: 'point', position: toPosition(position), style: { type: 'point', ...style } });
-    }
     addItemToLayer(item: IItem, autoUpdate = false) {
         this.currentItems.push(item);
         // DEV_LOG && console.log('addItemToLayer', `${item.properties.color}`, JSON.stringify(item.properties));
