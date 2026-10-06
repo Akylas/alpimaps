@@ -57,8 +57,9 @@ function assetUrl(relativePath: string) {
 }
 
 // Fallback fonts for style face-names no device font carries, registered under their OWN name-table
-// name (`osm`, `Material Design Icons`); text faces come from the device.
-const APP_FONTS = ['fonts/osm.ttf', 'fonts/materialdesignicons-webfont.ttf'];
+// name (`osm`, `Material Design Icons`, `MassifIcons`); text faces come from the device. The Massif
+// styles ship no icon font: they draw with the app's, the one its UI shows a POI's icon with.
+const APP_FONTS = ['fonts/osm.ttf', 'fonts/materialdesignicons-webfont.ttf', 'fonts/MassifIcons.ttf'];
 
 // `create` returns the SAME object for an identical spec, so the bytes are read once and shared
 function addAppFonts(decoder: MapDecoder) {

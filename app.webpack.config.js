@@ -662,8 +662,8 @@ module.exports = (env, params = {}) => {
             noErrorOnMissing: true,
             globOptions
         },
-        // the map legend draws Massif's swatches itself: its icon font (ours, scripts/massif-iconfont.mjs) and pattern images, outside the style zip
-        { from: 'dev_assets/styles/massif/fonts/MassifIcons.ttf', to: 'fonts/[name][ext]', noErrorOnMissing: true, globOptions },
+        // the map legend draws Massif's swatches itself: its pattern images, outside the style zip (its
+        // icon font, app/fonts/MassifIcons.ttf, is the app's)
         { context: 'node_modules/@massif-maps/styles/cartocss-iconfont', from: 'icons/*', to: 'assets/massif-legend', noErrorOnMissing: true, globOptions },
         {
             from: 'css/_osm.scss',
@@ -725,9 +725,8 @@ module.exports = (env, params = {}) => {
             from: '**/*',
             to: 'assets/styles/massif',
             noErrorOnMissing: true,
-            // fonts/MassifIcons.ttf too: dev_assets' (scripts/massif-iconfont.mjs) has the osm glyphs, and the
-            // first pattern to emit a file keeps it
-            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/MassifIcons.ttf'] }
+            // its fonts too: the map draws with the app's MassifIcons (APP_FONTS in MapModule.ts)
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/**'] }
         });
         copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
     }
@@ -931,7 +930,8 @@ module.exports = (env, params = {}) => {
                         'cp -R node_modules/@massif-maps/styles/cartocss-iconfont/. dev_assets/styles/massif_cleaned/src/',
                         'cp -R dev_assets/styles/massif/. dev_assets/styles/massif_cleaned/src/',
                         ...MASSIF_PROJECTS.map((name) => `./${css2xmlBin} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
-                        'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/fonts dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
+                        // no fonts/: the icon font is the app's (APP_FONTS in MapModule.ts)
+                        'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
                         'rm -f app/assets/styles/massif.zip && cd ./dev_assets/styles/massif_cleaned/out && zip -r ../../../../app/assets/styles/massif.zip ./* && cd -'
                     ],
                     blocking: true,

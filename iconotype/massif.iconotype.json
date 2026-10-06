@@ -13,7 +13,7 @@
   "height": 1024,
   "output": {
     "fonts": {
-      "dir": "../dev_assets/styles/massif/fonts",
+      "dir": "../app/fonts",
       "formats": [
         "ttf"
       ]

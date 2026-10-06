@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Massif's icon font (MassifIcons) drawn with the osm font's glyphs, on Massif's codepoints, built into
-// dev_assets/styles/massif/fonts: `yarn massif-iconfont [--massif <cartocss-iconfont/iconfont>]`
+// app/fonts (the map takes it as a fallback font, the UI by name) with the name -> character map the UI
+// reads (app/utils/massifIcons.json): `yarn massif-iconfont [--massif <cartocss-iconfont/iconfont>]`
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,6 +12,7 @@ const args = process.argv.slice(2);
 const MASSIF = args.includes('--massif') ? args[args.indexOf('--massif') + 1] : 'node_modules/@massif-maps/styles/cartocss-iconfont/iconfont';
 const OSM = 'iconotype/osm.iconotype.json';
 const OUT = 'iconotype/massif.iconotype.json';
+const GLYPHS = 'app/utils/massifIcons.json';
 const PROJECTS = ['dev_assets/styles/massif/massif.json', 'dev_assets/styles/massif/alpimaps.json'];
 
 // Massif's name -> the osm glyph drawing it, where the osm font names it otherwise. A Massif name in
@@ -62,13 +64,14 @@ const massifNames = new Set(massif.icons.map((i) => i.name));
 const massifCodes = new Set(massif.icons.map((i) => i.code));
 const lock = { icons: [...massif.icons, ...previous.icons.filter((i) => !massifNames.has(i.name) && !massifCodes.has(i.code))] };
 const doc = project('MassifIcons', icons, lock);
-doc.output = { fonts: { dir: '../dev_assets/styles/massif/fonts', formats: ['ttf'] } };
+doc.output = { fonts: { dir: '../app/fonts', formats: ['ttf'] } };
 doc.credits = osm.credits;
 writeFileSync(OUT, JSON.stringify(doc, null, 2) + '\n');
 
 // the extras are names Massif's `glyph` table lacks: the child projects add them as `glyph.<name>`
-const glyphs = Object.fromEntries(doc.icons.filter((i) => extras.includes(i.name) && i.selected !== false)
-    .map((i) => ['glyph.' + i.name, String.fromCodePoint(parseInt(i.code, 16))]));
+const char = (icon) => String.fromCodePoint(parseInt(icon.code, 16));
+const glyphs = Object.fromEntries(doc.icons.filter((i) => extras.includes(i.name) && i.selected !== false).map((i) => ['glyph.' + i.name, char(i)]));
+writeFileSync(GLYPHS, JSON.stringify(Object.fromEntries(doc.icons.filter((i) => i.selected !== false).map((i) => [i.name, char(i)])), null, 2) + '\n');
 for (const file of PROJECTS) {
     const child = JSON.parse(readFileSync(file, 'utf8'));
     const params = Object.fromEntries(Object.entries(child.styleparameters ?? {}).filter(([key]) => !key.startsWith('glyph-') && !key.startsWith('glyph.')));

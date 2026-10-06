@@ -1,8 +1,10 @@
 import type { ValhallaProfile } from '~/utils/routing';
-import { formatAddress } from '~/helpers/formatter';
+import { ApplicationSettings } from '@nativescript/core';
+import { formatAddress, osmicon } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
+import { MASSIF_ICON_FONT, isMassifStyle, massifIcon } from '~/utils/massif';
 import { Profiles } from '~/utils/routing';
 const mapContext = getMapContext();
 
@@ -38,6 +40,17 @@ export default class ItemFormatter {
         }
         result.push('office');
         return result;
+    }
+
+    /** The icon the map shows for the item: Massif's glyph on a Massif map, else the osm font's. */
+    getItemIcon(item: Item): { icon: string; fontFamily: string } {
+        if (isMassifStyle(ApplicationSettings.getString('mapStyle', ''))) {
+            // the map's own chain: subclass, class, then Massif's `default`
+            const properties = item?.properties ?? {};
+            const names = [properties.osm_value, ...(properties.subclass?.split(';') ?? []), properties.class].filter(Boolean);
+            return { icon: massifIcon(names), fontFamily: MASSIF_ICON_FONT };
+        }
+        return { icon: osmicon(this.geItemIcon(item)), fontFamily: 'osm' };
     }
 
     getItemName(item: Item, lang = mapContext.getCurrentLanguage()) {

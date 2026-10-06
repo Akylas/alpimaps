@@ -20,6 +20,15 @@ export function isMassifStyle(layerStyle: string) {
     return !!layerStyle && layerStyle.split('~')[0].replace(/\.zip$/, '') === MASSIF_PACKAGE;
 }
 
+/** The icon font the Massif styles draw POIs with (app/fonts, scripts/massif-iconfont.mjs). */
+export const MASSIF_ICON_FONT = 'MassifIcons';
+const MASSIF_GLYPHS: Record<string, string> = require('./massifIcons.json');
+
+/** The glyph a Massif map draws for the first of `names` it has one for (subclass before class), else its `default`. */
+export function massifIcon(names: string[]) {
+    return MASSIF_GLYPHS[names.find((name) => MASSIF_GLYPHS[name])] ?? MASSIF_GLYPHS.default;
+}
+
 export function variantParameters(variant: string): Record<string, string> {
     const params = VARIANT_PROJECTS[variant]?.styleparameters ?? {};
     return Object.keys(params).reduce((acc, key) => {
