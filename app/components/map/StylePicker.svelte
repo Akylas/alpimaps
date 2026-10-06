@@ -26,7 +26,7 @@
     import { lc } from '~/helpers/locale';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
     import PanelHeader from '../common/PanelHeader.svelte';
-    import { MASSIF_RANKINGS, type MassifRanking, isMassifStyle, massifLook, rankingFor } from '~/utils/massif';
+    import { MASSIF_ICON_FONTS, MASSIF_RANKINGS, type MassifIconFont, type MassifRanking, isMassifStyle, massifIconFont, massifLook, rankingFor } from '~/utils/massif';
     $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
 
     export let families: StyleFamily[] = [];
@@ -35,6 +35,8 @@
     export let onSelect: (family: StyleFamily, variant: StyleVariant) => void;
     /** the POI ranking of the current Massif look, a style parameter too */
     export let onRanking: (ranking: MassifRanking) => void = null;
+    /** the icon font Massif draws POIs with, on the map and in the app: a new decoder */
+    export let onIconFont: (font: MassifIconFont) => void = null;
 
     const PREVIEW = 52;
     const CARD_WIDTH = PREVIEW + 10;
@@ -52,6 +54,13 @@
     $: ranking = showRanking ? rankingFor(massifLook(current.style, current.variant)) : null;
     const RANKING_ROW = 40;
 
+    $: showIconFont = !!onIconFont && isMassifStyle(current?.style);
+    function selectIconFont(value: MassifIconFont) {
+        if (value !== $massifIconFont) {
+            onIconFont?.(value);
+        }
+    }
+
     function selectRanking(value: MassifRanking) {
         ranking = value;
         onRanking?.(value);
@@ -65,8 +74,8 @@
 
 <gesturerootview
     class="bottomsheet"
-    height={Math.min(families.length * ROW_HEIGHT * $fontScaleMaxed + 64 + (showRanking ? RANKING_ROW : 0), 440)}
-    rows={`auto,${showRanking ? RANKING_ROW : 0},*`}
+    height={Math.min(families.length * ROW_HEIGHT * $fontScaleMaxed + 64 + (showRanking ? RANKING_ROW : 0) + (showIconFont ? RANKING_ROW : 0), 480)}
+    rows={`auto,${showRanking ? RANKING_ROW : 0},${showIconFont ? RANKING_ROW : 0},*`}
     {...$$restProps}>
     <PanelHeader icon="mdi-map-outline" subtitle={currentName ? `${currentName.f.name} · ${currentName.v.name}` : null} title={lc('select_style')} />
     <stacklayout orientation="horizontal" padding="0 12" row={1} verticalAlignment="center" visibility={showRanking ? 'visible' : 'collapse'}>
@@ -87,7 +96,25 @@
                 on:tap={() => selectRanking(value)} />
         {/each}
     </stacklayout>
-    <collectionview id="collectionView" items={rows} row={2} rowHeight={ROW_HEIGHT * $fontScaleMaxed} ios:contentInsetAdjustmentBehavior={2}>
+    <stacklayout orientation="horizontal" padding="0 12" row={2} verticalAlignment="center" visibility={showIconFont ? 'visible' : 'collapse'}>
+        <label color={colorOnSurfaceVariant} fontSize={12} marginRight={8} text={lc('icon_font')} verticalAlignment="middle" />
+        {#each MASSIF_ICON_FONTS as value}
+            <label
+                backgroundColor={$massifIconFont === value ? colorPrimary : 'transparent'}
+                borderColor={$massifIconFont === value ? colorPrimary : colorOutlineSoft}
+                borderRadius={14}
+                borderWidth={1}
+                color={$massifIconFont === value ? colorOnPrimary : colorOnSurface}
+                fontSize={12}
+                height={28}
+                marginRight={6}
+                padding="0 12"
+                text={lc('icon_font_' + value)}
+                verticalTextAlignment="middle"
+                on:tap={() => selectIconFont(value)} />
+        {/each}
+    </stacklayout>
+    <collectionview id="collectionView" items={rows} row={3} rowHeight={ROW_HEIGHT * $fontScaleMaxed} ios:contentInsetAdjustmentBehavior={2}>
         <Template let:item={family}>
             <gridlayout rows="20,*">
                 <stacklayout orientation="horizontal" padding="0 12">

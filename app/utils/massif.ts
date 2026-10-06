@@ -1,4 +1,6 @@
 import { ApplicationSettings } from '@nativescript/core';
+import { get } from 'svelte/store';
+import { settingsStore } from '~/stores/settingsStore';
 
 /** The Massif projects the app ships (dev_assets/styles/massif): both draw every variant and every ranking. */
 export const MASSIF_PACKAGE = 'massif';
@@ -20,13 +22,35 @@ export function isMassifStyle(layerStyle: string) {
     return !!layerStyle && layerStyle.split('~')[0].replace(/\.zip$/, '') === MASSIF_PACKAGE;
 }
 
-/** The icon font the Massif styles draw POIs with (app/fonts, scripts/massif-iconfont.mjs). */
-export const MASSIF_ICON_FONT = 'MassifIcons';
-const MASSIF_GLYPHS: Record<string, string> = require('./massifIcons.json');
+/** The icon fonts a Massif map can draw POIs with: Massif's own, or the osm glyphs on its codepoints
+ * (scripts/massif-iconfont.mjs). Both are `MassifIcons` to the map, told apart by file name in the UI. */
+export const MASSIF_ICON_FONTS = ['osm', 'massif'] as const;
+export type MassifIconFont = (typeof MASSIF_ICON_FONTS)[number];
+const ICON_FONTS: Record<MassifIconFont, { family: string; glyphs: Record<string, string> }> = {
+    osm: { family: 'MassifIconsOsm', glyphs: require('./massifIconsOsm.json') },
+    massif: { family: 'MassifIcons', glyphs: require('./massifIconsMassif.json') }
+};
+export const massifIconFont = settingsStore<MassifIconFont>('massifIconFont', 'osm');
+
+/** The font family the UI draws a Massif glyph with, and the file the map loads. */
+export function massifIconFontFamily() {
+    return ICON_FONTS[get(massifIconFont)].family;
+}
 
 /** The glyph a Massif map draws for the first of `names` it has one for (subclass before class), else its `default`. */
 export function massifIcon(names: string[]) {
-    return MASSIF_GLYPHS[names.find((name) => MASSIF_GLYPHS[name])] ?? MASSIF_GLYPHS.default;
+    const glyphs = ICON_FONTS[get(massifIconFont)].glyphs;
+    return glyphs[names.find((name) => glyphs[name])] ?? glyphs.default;
+}
+
+/** The osm glyphs Massif's font lacks (the projects' `glyph.<name>`): emptied with Massif's font, so they draw as unknown. */
+export function iconFontParameters(): Record<string, string> {
+    const font = get(massifIconFont);
+    return Object.fromEntries(
+        Object.keys(ICON_FONTS.osm.glyphs)
+            .filter((name) => !ICON_FONTS.massif.glyphs[name])
+            .map((name) => ['glyph.' + name, font === 'osm' ? ICON_FONTS.osm.glyphs[name] : ''])
+    );
 }
 
 export function variantParameters(variant: string): Record<string, string> {

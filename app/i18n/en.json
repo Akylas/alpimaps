@@ -1174,5 +1174,8 @@
     "hillshade_max_zoom": "Hillshade maximum zoom",
     "ranking_alpimaps": "Alpimaps",
     "mtb_markings": "MTB lines",
-    "poi_label_color": "Colored POI names"
+    "poi_label_color": "Colored POI names",
+    "icon_font": "Icons",
+    "icon_font_osm": "OSM",
+    "icon_font_massif": "Massif"
 }

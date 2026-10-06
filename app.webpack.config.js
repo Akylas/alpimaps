@@ -662,8 +662,10 @@ module.exports = (env, params = {}) => {
             noErrorOnMissing: true,
             globOptions
         },
-        // the map legend draws Massif's swatches itself: its pattern images, outside the style zip (its
-        // icon font, app/fonts/MassifIcons.ttf, is the app's)
+        // Massif's own icon font, beside app/fonts/MassifIconsOsm.ttf: the map loads the one picked
+        // (massifIconFont, MapModule.ts), the style zip carries none
+        { from: 'node_modules/@massif-maps/styles/cartocss-iconfont/fonts/MassifIcons.ttf', to: 'fonts/[name][ext]', globOptions },
+        // the map legend draws Massif's swatches itself: its pattern images, outside the style zip
         { context: 'node_modules/@massif-maps/styles/cartocss-iconfont', from: 'icons/*', to: 'assets/massif-legend', noErrorOnMissing: true, globOptions },
         {
             from: 'css/_osm.scss',

@@ -4,7 +4,7 @@ import { formatAddress, osmicon } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
-import { MASSIF_ICON_FONT, isMassifStyle, massifIcon } from '~/utils/massif';
+import { isMassifStyle, massifIcon, massifIconFontFamily } from '~/utils/massif';
 import { Profiles } from '~/utils/routing';
 const mapContext = getMapContext();
 
@@ -48,7 +48,7 @@ export default class ItemFormatter {
             // the map's own chain: subclass, class, then Massif's `default`
             const properties = item?.properties ?? {};
             const names = [properties.osm_value, ...(properties.subclass?.split(';') ?? []), properties.class].filter(Boolean);
-            return { icon: massifIcon(names), fontFamily: MASSIF_ICON_FONT };
+            return { icon: massifIcon(names), fontFamily: massifIconFontFamily() };
         }
         return { icon: osmicon(this.geItemIcon(item)), fontFamily: 'osm' };
     }

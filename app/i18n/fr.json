@@ -938,5 +938,8 @@
     "hillshade_max_zoom": "Zoom maximum de l'ombrage",
     "ranking_alpimaps": "Alpimaps",
     "mtb_markings": "Lignes VTT",
-    "poi_label_color": "Noms des POI en couleur"
+    "poi_label_color": "Noms des POI en couleur",
+    "icon_font": "Icônes",
+    "icon_font_osm": "OSM",
+    "icon_font_massif": "Massif"
 }
