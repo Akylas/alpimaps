@@ -347,6 +347,20 @@ const nutiParams = {
         settingsOptionsType: 'boolean',
         defaultValue: false
     },
+    mtb_markings: {
+        icon: 'mdi-bike',
+        title: lc('mtb_markings'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true
+    },
+    poi_label_color: {
+        icon: 'mdi-format-color-text',
+        title: lc('poi_label_color'),
+        settingsOptionsType: 'boolean',
+        defaultValue: true,
+        nutiTransform: (value) => (value ? 'category' : 'neutral'),
+        fromNuti: (value) => value !== 'neutral'
+    },
     show_boundaries: {
         icon: 'mdi-vector-polyline',
         title: lc('show_boundaries'),

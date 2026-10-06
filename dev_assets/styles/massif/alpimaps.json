@@ -27,6 +27,7 @@
     },
     "trails": 1,
     "road_osm_low": 1,
+    "path_osm": 1,
     "ranking": {
       "default": "default",
       "values": {
@@ -308,6 +309,7 @@
   },
   "constants": {
     "poi_bus_minzoom": 14,
-    "poi_bus_label_minzoom": 15
+    "poi_bus_label_minzoom": 15,
+    "poi_rank5_minzoom": 13
   }
 }

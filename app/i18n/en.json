@@ -1171,6 +1171,8 @@
     "local_map_online_fallback": "OpenFreeMap where offline files have no tile",
     "local_terrain_online_fallback": "Mapterhorn where offline files have no tile, or past their zoom",
     "online_fallback_description": "needs network, off by default",
+    "hillshade_max_zoom": "Hillshade maximum zoom",
     "ranking_alpimaps": "Alpimaps",
-    "hillshade_max_zoom": "Hillshade maximum zoom"
+    "mtb_markings": "MTB difficulty beside paths",
+    "poi_label_color": "Colored POI names"
 }
