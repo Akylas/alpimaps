@@ -83,9 +83,17 @@
 
 // the navigation layer, ie the route actually being followed. Same widths as a computed route, so
 // entering navigation does not resize the line under the user, but its own colours and dashes
-@nav_casing_color: @directions_casing_color;
+// white outline and arrows: the followed route has to stand out of any map, imagery included
+@nav_casing_color: #ffffff;
+@nav_border_width: linear([view::zoom], (10, 1.5), (16, 3), (18, 4));
 @nav_line_color: [param::main_color];
-@nav_arrow_color: @directions_selected_arrow_color;
+@nav_arrow_color: #ffffff;
+// the maneuver arrows, over the route: the fill as wide as the route with its white outline, the
+// casing wider still, else the route's outline shows past the arrow and it reads as under the route
+@nav_maneuver_color: #ffffff;
+@nav_maneuver_casing_color: [param::main_darker_color];
+@nav_maneuver_width: linear([view::zoom], (12, 8), (16, 15), (18, 20));
+@nav_maneuver_casing_width: linear([view::zoom], (12, 12), (16, 21), (18, 28));
 @nav_detour_color: [param::main_darker_color];
 @nav_detour_dash: 18, 10;
 @nav_connector_color: [param::main_darker_color];
