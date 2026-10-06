@@ -2177,12 +2177,12 @@
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
+                    hidden={$isNavigating || $peakFinderActive}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     marginLeft={53}
                     marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
-                    verticalAlignment="top"
-                    visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
+                    verticalAlignment="top" />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"

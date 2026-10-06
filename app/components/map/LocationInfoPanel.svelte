@@ -24,6 +24,8 @@
     let firstCanvas: NativeViewElementNode<GridLayout>;
 
     let showLocationInfo = false;
+    /** forced off whatever the user toggled, eg while navigating: a passed `visibility` would lose to the one below */
+    export let hidden = false;
     const hasBarometer = isSensorAvailable('barometer');
     let listeningForBarometer = false;
     let referencePressure = null;
@@ -239,7 +241,7 @@
     columns="104,104,auto"
     height={64}
     padding="6 3"
-    visibility={showLocationInfo ? 'visible' : 'collapse'}
+    visibility={showLocationInfo && !hidden ? 'visible' : 'collapse'}
     on:tap={moveToUserLocation}
     on:swipe={switchLocationInfo}>
     {#if loaded}
