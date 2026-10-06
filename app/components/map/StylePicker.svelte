@@ -23,12 +23,15 @@
 
 <script lang="ts">
     import { Template } from '@nativescript-community/svelte-native/components';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showError } from '@shared/utils/showError';
     import { lc } from '~/helpers/locale';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
     import PanelHeader from '../common/PanelHeader.svelte';
     import { MASSIF_ICON_FONTS, MASSIF_RANKINGS, type MassifIconFont, type MassifRanking, isMassifStyle, massifIconFont, massifLook, rankingFor } from '~/utils/massif';
     import { nutiProps } from '~/stores/mapStore';
-    $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
+    import { showPopoverMenu } from '~/utils/ui';
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
 
     export let families: StyleFamily[] = [];
     export let current: { style: string; variant?: string } = null;
@@ -72,23 +75,47 @@
         nutiProps.poiStyle = value === 'default' ? null : value === 'icononly';
     }
 
-    // the Massif rows over the style list: one chip per value, the current one filled
+    // the Massif settings over the style list: one chip each showing its value, the values in a menu
     const CHIP_ROW = 40;
-    interface ChipRow {
+    interface ChipMenu {
         label: string;
+        icon: string;
         values: readonly string[];
         selected: string;
         text: (value: string) => string;
         select: (value: string) => void;
     }
-    let chipRows: ChipRow[];
-    $: chipRows = isMassif
+    let chipMenus: ChipMenu[];
+    $: chipMenus = isMassif
         ? ([
-              onRanking && { label: lc('poi_ranking'), values: MASSIF_RANKINGS, selected: ranking, text: (v) => lc('ranking_' + v), select: selectRanking },
-              { label: lc('poi_icons'), values: POI_STYLES, selected: poiStyle, text: (v) => lc('poi_style_' + v), select: selectPoiStyle },
-              onIconFont && { label: lc('icon_font'), values: MASSIF_ICON_FONTS, selected: $massifIconFont, text: (v) => lc('icon_font_' + v), select: selectIconFont }
-          ].filter(Boolean) as ChipRow[])
+              onRanking && { label: lc('poi_ranking'), icon: 'mdi-sort-variant', values: MASSIF_RANKINGS, selected: ranking, text: (v) => lc('ranking_' + v), select: selectRanking },
+              { label: lc('poi_icons'), icon: 'mdi-map-marker-outline', values: POI_STYLES, selected: poiStyle, text: (v) => lc('poi_style_' + v), select: selectPoiStyle },
+              onIconFont && {
+                  label: lc('icon_font'),
+                  icon: 'mdi-format-font',
+                  values: MASSIF_ICON_FONTS,
+                  selected: $massifIconFont,
+                  text: (v) => lc('icon_font_' + v),
+                  select: selectIconFont
+              }
+          ].filter(Boolean) as ChipMenu[])
         : [];
+
+    async function showChipMenu(menu: ChipMenu, event) {
+        try {
+            await showPopoverMenu({
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_LEFT,
+                options: menu.values.map((value) => ({ id: value, name: menu.text(value), icon: value === menu.selected ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank' })),
+                // showPopoverMenu sizes for the rows alone: room for the title too
+                props: { title: menu.label, autoSizeListItem: true, height: Math.min((menu.values.length * 52 + 60) * Math.sqrt($fontScaleMaxed), 400) },
+                onClose: (option) => option && menu.select(option.id)
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     function select(family: StyleFamily, variant: StyleVariant) {
         current = { style: variant.style, variant: variant.variant };
@@ -98,31 +125,34 @@
 
 <gesturerootview
     class="bottomsheet"
-    height={Math.min(families.length * ROW_HEIGHT * $fontScaleMaxed + 64 + chipRows.length * CHIP_ROW, 520)}
-    rows={['auto', ...chipRows.map(() => CHIP_ROW), '*'].join(',')}
+    height={Math.min(families.length * ROW_HEIGHT * $fontScaleMaxed + 64 + (chipMenus.length ? CHIP_ROW : 0), 520)}
+    rows={['auto', ...(chipMenus.length ? [CHIP_ROW] : []), '*'].join(',')}
     {...$$restProps}>
     <PanelHeader icon="mdi-map-outline" subtitle={currentName ? `${currentName.f.name} · ${currentName.v.name}` : null} title={lc('select_style')} />
-    {#each chipRows as chipRow, index}
-        <stacklayout orientation="horizontal" padding="0 12" row={index + 1} verticalAlignment="center">
-            <label color={colorOnSurfaceVariant} fontSize={12} marginRight={8} text={chipRow.label} verticalAlignment="middle" />
-            {#each chipRow.values as value}
-                <label
-                    backgroundColor={chipRow.selected === value ? colorPrimary : 'transparent'}
-                    borderColor={chipRow.selected === value ? colorPrimary : colorOutlineSoft}
-                    borderRadius={14}
-                    borderWidth={1}
-                    color={chipRow.selected === value ? colorOnPrimary : colorOnSurface}
-                    fontSize={12}
-                    height={28}
-                    marginRight={6}
-                    padding="0 12"
-                    text={chipRow.text(value)}
-                    verticalTextAlignment="middle"
-                    on:tap={() => chipRow.select(value)} />
-            {/each}
-        </stacklayout>
-    {/each}
-    <collectionview id="collectionView" items={rows} row={chipRows.length + 1} rowHeight={ROW_HEIGHT * $fontScaleMaxed} ios:contentInsetAdjustmentBehavior={2}>
+    {#if chipMenus.length}
+        <scrollview orientation="horizontal" row={1} scrollBarIndicatorVisible={false}>
+            <stacklayout orientation="horizontal" padding="0 12" verticalAlignment="center">
+                {#each chipMenus as menu}
+                    <label
+                        borderColor={colorOutlineSoft}
+                        borderRadius={14}
+                        borderWidth={1}
+                        color={colorOnSurface}
+                        fontSize={12}
+                        height={28}
+                        marginRight={6}
+                        padding="0 8 0 10"
+                        verticalTextAlignment="middle"
+                        on:tap={(event) => showChipMenu(menu, event)}>
+                        <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={15} text={menu.icon} />
+                        <cspan text={' ' + menu.text(menu.selected) + ' '} />
+                        <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={15} text="mdi-chevron-down" />
+                    </label>
+                {/each}
+            </stacklayout>
+        </scrollview>
+    {/if}
+    <collectionview id="collectionView" items={rows} row={chipMenus.length ? 2 : 1} rowHeight={ROW_HEIGHT * $fontScaleMaxed} ios:contentInsetAdjustmentBehavior={2}>
         <Template let:item={family}>
             <gridlayout rows="20,*">
                 <stacklayout orientation="horizontal" padding="0 12">
