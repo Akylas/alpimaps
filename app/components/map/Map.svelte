@@ -62,7 +62,7 @@
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
-    import UserLocationModule from '~/mapModules/UserLocationModule';
+    import UserLocationModule, { getUserBitmapUrl } from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
@@ -135,7 +135,7 @@
     let selectedId: string;
     let selectedMapId: string;
     // parameterised on purpose: a bare MassifObject accepts ANY path, hiding read-only writes
-    let selectedPosMarker: MassifObject<'massif::Point'>;
+    let selectedPosMarker: MassifObject<'massif::Marker'>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
     let didIgnoreAlreadySelected = false;
@@ -534,11 +534,25 @@
         if (!localVectorLayer) {
             const localVectorDataSource = massifMap.source('source.selection', { type: 'local', projection: { type: 'EPSG:4326' } });
 
-            // no scaleWithDPI: it's a billboard-only style setting
-            selectedPosMarker = itemModule.createLocalPoint(position, {
-                color: new Color(colorPrimary).setAlpha(178).argb,
-                clickSize: 0,
-                size: 20
+            // a marker, not a point: drawn without depth, it sits on the terrain instead of above its drape lift
+            const selectionColor = new Color(colorPrimary).setAlpha(178).hex;
+            selectedPosMarker = massifMap.object('element', 'element.selection', {
+                type: 'marker',
+                position: toPosition(position),
+                style: {
+                    type: 'marker',
+                    size: 20,
+                    clickSize: 0,
+                    bitmap: { type: 'url', url: getUserBitmapUrl('dot', selectionColor, selectionColor) },
+                    // this dot *is* the place, so centred like the user marker
+                    anchorPointX: 0,
+                    anchorPointY: 0,
+                    causesOverlap: false,
+                    hideIfOverlapped: false,
+                    // lies on the ground like the point it replaces, rather than standing up to face the camera
+                    orientationMode: 'BILLBOARD_ORIENTATION_GROUND',
+                    scalingMode: 'BILLBOARD_SCALING_CONST_SCREEN_SIZE'
+                }
             });
             localVectorDataSource.call('add', selectedPosMarker.handle);
             localVectorLayer = massifMap.buildLayer('layer.selection', { type: 'elements', source: localVectorDataSource.id });
