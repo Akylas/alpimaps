@@ -11,8 +11,8 @@ const buildingsProps = nutiProps.getProps('buildings');
 registerMapFeature({
     id: 'styleToggles',
     sideButtons: derived(
-        [slopeProps.store, routesProps.store, buildingsProps.store, mapCapabilities, styleParameterKeys],
-        ([$showSlopes, $showRoutes, $buildings, $capabilities, $styleParameterKeys]): MapSideButton[] => [
+        [slopeProps.store, routesProps.store /* , buildingsProps.store */, mapCapabilities, styleParameterKeys],
+        ([$showSlopes, $showRoutes /* , $buildings */, $capabilities, $styleParameterKeys]): MapSideButton[] => [
             {
                 id: 'slopes',
                 order: 20,
@@ -32,15 +32,15 @@ registerMapFeature({
                 visible: !!routesProps.visible($capabilities) && styleHasParameter($styleParameterKeys, 'show_routes'),
                 onTap: () => routesProps.store.set(!get(routesProps.store)),
                 onLongPress: routesProps.onLongPress
-            },
-            {
-                id: 'buildings',
-                order: 40,
-                text: buildingsProps.icon,
-                tooltip: buildingsProps.title,
-                isSelected: !!$buildings,
-                visible: styleHasParameter($styleParameterKeys, 'buildings'),
-                onTap: () => buildingsProps.store.set(!get(buildingsProps.store))
+                // },
+                // {
+                //     id: 'buildings',
+                //     order: 40,
+                //     text: buildingsProps.icon,
+                //     tooltip: buildingsProps.title,
+                //     isSelected: !!$buildings,
+                //     visible: styleHasParameter($styleParameterKeys, 'buildings'),
+                //     onTap: () => buildingsProps.store.set(!get(buildingsProps.store))
             }
         ]
     )
