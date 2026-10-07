@@ -71,6 +71,8 @@ export const SessionUpdatedEvent = 'sessionUpdated';
 export const GPSStatusChangedEvent = 'status';
 export const SessionFirstPositionEvent = 'sessionFirstPosition';
 export const UserLocationdEvent = 'userLocation';
+/** the `provider` of a fix made up by the dev route simulator */
+export const SIMULATED_PROVIDER = 'simulated';
 
 interface GPSEvent extends EventData {
     data?: any;
@@ -377,11 +379,16 @@ export class GeoHandler extends Handler {
     onDeferred() {
         this._deferringUpdates = false;
     }
+    /** set by the dev route simulator: the receiver's fixes are dropped while it feeds its own */
+    simulating = false;
     @bind
     onLocation(loc: GeoLocation, manager?: any) {
         // if (DEV_LOG) {
         //     console.log('onLocation', JSON.stringify(loc));
         // }
+        if (this.simulating && loc?.provider !== SIMULATED_PROVIDER) {
+            return;
+        }
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
             this.notify({

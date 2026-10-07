@@ -14,7 +14,7 @@
 		// casing folded into the line as its border - see directions.mss. Above z15 the casing now
 		// fades with the route, since a border takes the line's own opacity.
 		line-border-color: @nav_casing_color;
-		line-border-width: (@directions_casing_width - @directions_line_width) / 2;
+		line-border-width: @nav_border_width;
 		line-color: @nav_line_color;
 		line-width: @directions_line_width;
 		line-opacity: @directions_line_opacity;
@@ -56,6 +56,39 @@
 		line-join: round;
 		line-cap: round;
 	}
+}
+
+// the next maneuvers, cut from the route by the SDK's maneuver-arrow builder. The head is drawn by the
+// line style itself; the casing's head numbers are smaller because they are read against its own wider
+// line (see the SDK's docs/features/maneuver-arrows.md). Named `maneuver` on purpose: the terrain's
+// no-drape filter (`^contour|maneuver.*`, whole name) keeps it live, drawn over the draped route in 3D
+#maneuver['mapnik::geometry_type'=2]::case {
+	line-color: @nav_maneuver_casing_color;
+	line-width: @nav_maneuver_casing_width;
+	line-join: round;
+	line-cap: round;
+}
+#maneuver['mapnik::geometry_type'=2]::fill {
+	line-color: @nav_maneuver_color;
+	line-width: @nav_maneuver_width;
+	line-join: round;
+	line-cap: round;
+}
+#maneuver['mapnik::geometry_type'=2]::headcase {
+	line-color: @nav_maneuver_casing_color;
+	line-width: @nav_maneuver_casing_width;
+	line-end-arrow: true;
+	line-arrow-only: true;
+	line-arrow-width: 2.18;
+	line-arrow-length: 1.72;
+}
+#maneuver['mapnik::geometry_type'=2]::head {
+	line-color: @nav_maneuver_color;
+	line-width: @nav_maneuver_width;
+	line-end-arrow: true;
+	line-arrow-only: true;
+	line-arrow-width: 2.4;
+	line-arrow-length: 1.9;
 }
 
 // its own layer because it is redrawn on every position while the rest of the navigation layer is

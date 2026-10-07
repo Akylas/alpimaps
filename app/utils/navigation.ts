@@ -23,37 +23,46 @@ const PROJECTION_LOOKAHEAD_TOLERANCE = 3;
 /** how many segments ahead of the last known position we look for the user */
 export const DEFAULT_PROJECTION_WINDOW = 200;
 
-export const NAVWIDGET_ROW_HEIGHT = 60;
 /** every navigation button, so the controls and the actions row cannot end up different sizes */
 export const NAVBUTTON_SIZE = 48;
-/** the actions step: one row of buttons and its margins */
-export const NAVACTIONS_HEIGHT = NAVBUTTON_SIZE + 10;
-export const NAVSTATS_HEIGHT = 32;
-/** the maneuver banner at the top of the map, everything anchored up there has to clear it */
-export const MANEUVER_VIEW_HEIGHT = 84;
-
-/** Lives here, not in the component, so the map can size the sheet without bundling the navigation ui. */
-export function navigationViewHeight(hasPreviewWidgets: boolean) {
-    // both widget rows are always reserved: sizing to the current content makes the sheet jump
-    // every time a preview appears or drops out
-    return NAVWIDGET_ROW_HEIGHT * 2 + NAVSTATS_HEIGHT;
-}
+/** the maneuver banner: its main line, then one line whose content depends on the state */
+export const MANEUVER_VIEW_HEIGHT = 104;
+/** the primary button */
+export const NAVPRIMARY_SIZE = 52;
+/** the buttons on the right of the map */
+export const NAVRAIL_BUTTON_SIZE = 44;
 
 /** full elevation chart and route stats, same heights the item sheet gives them */
 export const ROUTE_PROFILE_HEIGHT = 155;
 export const ROUTE_STATS_HEIGHT = 180;
 
-export function navigationSheetSteps({ actionsHeight = 0, barHeight, hasProfile, hasStats }: { barHeight: number; actionsHeight?: number; hasProfile: boolean; hasStats: boolean }) {
-    const steps = [0, barHeight];
-    if (actionsHeight > 0) {
-        steps.push(steps[steps.length - 1] + actionsHeight);
-    }
-    if (hasProfile) {
-        steps.push(steps[steps.length - 1] + ROUTE_PROFILE_HEIGHT);
-    }
-    if (hasStats) {
-        steps.push(steps[steps.length - 1] + ROUTE_STATS_HEIGHT);
-    }
+/**
+ * The sheet, top first: the bar (always), then one step per section. A section with nothing to show
+ * is 0 and has no step. Lives here, not in the component, so the map can size the sheet without
+ * bundling the navigation ui; both read it, so a step always ends where its section does.
+ */
+export function navigationSections(scale: number, { hasAhead, hasProfile, hasStats }: { hasAhead: boolean; hasProfile: boolean; hasStats: boolean }) {
+    return {
+        bar: Math.round(112 * scale),
+        trip: Math.round(72 * scale),
+        ahead: hasAhead ? Math.round(80 * scale) : 0,
+        // always there (astronomy), so the profile and stats can be fetched before they are shown
+        actions: Math.round((NAVBUTTON_SIZE + 8) * scale),
+        profile: hasProfile ? ROUTE_PROFILE_HEIGHT + 8 : 0,
+        stats: hasStats ? ROUTE_STATS_HEIGHT + 8 : 0
+    };
+}
+
+/** No 0 step: the bar is the only way out of navigation, so it can never be dismissed. */
+export function navigationSheetSteps(sections: ReturnType<typeof navigationSections>) {
+    const steps = [0];
+    let total = 0;
+    [sections.bar, sections.trip, sections.ahead, sections.actions, sections.profile, sections.stats].forEach((height) => {
+        if (height > 0) {
+            total += height;
+            steps.push(total);
+        }
+    });
     return steps;
 }
 

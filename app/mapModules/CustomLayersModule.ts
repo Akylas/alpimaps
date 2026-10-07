@@ -22,7 +22,7 @@ import { SDK_VERSION } from '@akylas/nativescript/utils';
 import { createView, showSnack } from '~/utils/ui';
 import { data as TileSourcesData } from '~/data/tilesources';
 import { openLink } from '~/utils/ui';
-import { clickFilterFor } from '~/utils/massif';
+import { clickFilterFor, massifVariant } from '~/utils/massif';
 import { Label } from '@nativescript-community/ui-label';
 import { colors } from '~/variables';
 import { SilentError } from '@akylas/nativescript-app-utils/error';
@@ -160,6 +160,16 @@ const HILLSHADE_OPTIONS = {
     }
 };
 
+/** Esri's world imagery, what the Massif demos draw hybrid over. */
+export const DEFAULT_IMAGERY_SOURCE = 'esri.worldimagery';
+const IMAGERY_SOURCE_KEY = 'hybridImagerySource';
+/** The imagery under the hybrid variant, while it is on the map. */
+export const hybridImagery = writable<SourceItem>(null);
+
+function isVectorUrl(url: string) {
+    return url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
+}
+
 // flips asynchronously while mbtiles are scanned: UI must react to the store, not read a snapshot
 export const mapCapabilities = writable({ hasLocalData: false, hasTerrain: false, hasRoute: false });
 
@@ -185,6 +195,8 @@ export interface SourceItem {
     local?: boolean;
     /** A DEM. Only the top-most one is woven into the base map's `#hillshade` slot. */
     terrain?: boolean;
+    /** The hybrid variant's imagery: under the whole stack, in neither the list nor the saved sources. */
+    imagery?: boolean;
     // A DEM's own hillshade layer, kept even when woven: it answers elevation queries.
     // `layer` is what is DRAWN: this one when stacked, the composite's child when in the slot.
     terrainLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
@@ -465,7 +477,7 @@ export default class CustomLayersModule extends MapModule {
                 // }
             }
         }
-        const vectorDataSource = url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
+        const vectorDataSource = isVectorUrl(url);
         // spec keys must use the SDK's declared name: `HTTPHeaders`
         const { encoding, httpHeaders, subdomains, ...sourceOptions } = (provider.sourceOptions ?? {}) as any;
         const httpSpec = {
@@ -511,7 +523,12 @@ export default class CustomLayersModule extends MapModule {
             }
         };
 
-        const { databasePath, sourceSpec, vectorDataSource } = await this.createDataSource(id, provider);
+        // none when a token was refused
+        const dataSource = await this.createDataSource(id, provider);
+        if (!dataSource) {
+            return null;
+        }
+        const { databasePath, sourceSpec, vectorDataSource } = dataSource;
         const map = mapContext.getMap();
         const layerId = `layer.custom.${id}`;
 
@@ -742,6 +759,7 @@ export default class CustomLayersModule extends MapModule {
                 this.setSlotVisible(CONTOUR_SLOT, !!event.value);
             }
         });
+        this.imageryUnsubscriber = massifVariant.subscribe((variant) => this.showImagery(variant === 'hybrid'));
         (async () => {
             try {
                 if (!this.listenForSourceChanges) {
@@ -1377,11 +1395,116 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
+    // The hybrid variant draws no land: the imagery goes under the whole stack while it is on. Hidden,
+    // it stays built so switching back is instant.
+    private imagery: SourceItem;
+    private imageryLoad = Promise.resolve();
+    private imageryUnsubscriber: () => void;
+
+    /** `providerId` switches the source, saved once its layer could be built. */
+    private showImagery(shown: boolean, providerId?: string) {
+        this.imageryLoad = this.imageryLoad.then(() => this.applyImagery(shown, providerId)).catch(showError);
+        return this.imageryLoad;
+    }
+
+    private async applyImagery(shown: boolean, providerId?: string) {
+        if (providerId) {
+            // built before the current one goes: a refused token keeps the current one
+            const item = await this.createImageryItem(providerId);
+            if (!item) {
+                return;
+            }
+            ApplicationSettings.setString(IMAGERY_SOURCE_KEY, providerId);
+            this.dropImagery();
+            this.imagery = item;
+        } else if (shown && !this.imagery) {
+            this.imagery = await this.createImageryItem(ApplicationSettings.getString(IMAGERY_SOURCE_KEY, DEFAULT_IMAGERY_SOURCE));
+        }
+        const item = this.imagery;
+        if (!item) {
+            return;
+        }
+        const inStack = mapContext.getLayerIndex(item.layer) !== -1;
+        if (shown && !inStack) {
+            mapContext.addLayer(item.layer, 'imagery');
+        } else if (!shown && inStack) {
+            mapContext.removeLayer(item.layer);
+        }
+        hybridImagery.set(shown ? item : null);
+        this.updateAttribution(item, !shown);
+    }
+
+    private async createImageryItem(providerId: string): Promise<SourceItem> {
+        await this.getSourcesLibrary();
+        const provider = this.baseProviders[providerId] ?? this.baseProviders[DEFAULT_IMAGERY_SOURCE];
+        // its own cache file and settings keys: the same provider may also be a layer of the stack
+        const data = await this.createDataSourceAndMapLayer(`hybrid_${provider.id}`, { ...provider, cacheable: true });
+        if (!data) {
+            return null;
+        }
+        return {
+            ...data,
+            imagery: true,
+            options: {
+                // not in the list, so the opacity is set in the options sheet
+                opacity: { min: 0, max: 1, write: (layer: MassifLayer, value: number) => layer.opacity(value).visible(value > 0) },
+                ...data.options
+            }
+        };
+    }
+
+    private dropImagery() {
+        const layer = this.imagery?.layer;
+        if (layer) {
+            if (mapContext.getLayerIndex(layer) !== -1) {
+                mapContext.removeLayer(layer);
+            }
+            layer.destroy();
+        }
+        this.imagery = null;
+    }
+
+    /** Any raster base map can be the imagery, the default first. */
+    async pickImagerySource() {
+        await this.getSourcesLibrary();
+        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+        const current = ApplicationSettings.getString(IMAGERY_SOURCE_KEY, DEFAULT_IMAGERY_SOURCE);
+        const ids = Object.keys(this.baseProviders)
+            .filter((id) => id !== DEFAULT_IMAGERY_SOURCE && !this.baseProviders[id].hillshade && !isVectorUrl(this.baseProviders[id].url))
+            .sort();
+        const results = await showBottomSheet({
+            parent: null,
+            view: OptionSelect,
+            skipCollapsedState: true,
+            props: {
+                height: 460,
+                title: lc('hybrid_imagery'),
+                titleIcon: 'mdi-satellite-variant',
+                showFilter: true,
+                rowHeight: 64,
+                options: [DEFAULT_IMAGERY_SOURCE, ...ids].map((id) => {
+                    const provider = this.baseProviders[id];
+                    const data = this.getTestImageAndHeaders(provider);
+                    const subtitle = [id === DEFAULT_IMAGERY_SOURCE && lc('default_source'), id === current && lc('in_use')].filter(Boolean).join(' · ');
+                    return { type: 'image', title: id, subtitle, data: provider, image: data?.url, imageHeaders: data?.headers };
+                })
+            }
+        });
+        const provider: Provider = (Array.isArray(results) ? results[0] : results)?.data;
+        if (provider && provider.id !== current) {
+            await this.showImagery(get(massifVariant) === 'hybrid', provider.id);
+        }
+    }
+
     onMapDestroyed() {
         super.onMapDestroyed();
         this.localDataUnsubscribers.forEach((unsubscribe) => unsubscribe());
         this.localDataUnsubscribers = [];
+        this.imageryUnsubscriber?.();
+        this.imageryUnsubscriber = null;
         // released with the map
+        this.imagery = null;
+        hybridImagery.set(null);
         this.localObjects = [];
         this.customSources.splice(0, this.customSources.length);
     }
@@ -1435,12 +1558,13 @@ export default class CustomLayersModule extends MapModule {
     }
 
     getAllAtributions() {
-        return this.customSources.map((d) => getProviderAttribution(d.provider)).filter((a) => !!a);
+        const imagery = get(hybridImagery);
+        return [...this.customSources.map((d) => getProviderAttribution(d.provider)), imagery && getProviderAttribution(imagery.provider)].filter((a) => !!a);
     }
     updateAttribution(item: SourceItem, removed: boolean = false) {
         if (getProviderAttribution(item.provider)) {
             if (removed && this.needsAttribution) {
-                this.needsAttribution = this.customSources.some((d, i) => !!getProviderAttribution(d.provider));
+                this.needsAttribution = this.getAllAtributions().length > 0;
                 this.notify({
                     eventName: 'attribution',
                     needsAttribution: this.needsAttribution

@@ -62,19 +62,33 @@
     import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
-    import UserLocationModule from '~/mapModules/UserLocationModule';
+    import UserLocationModule, { getUserBitmapUrl } from '~/mapModules/UserLocationModule';
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, isNavigationRunning, navigationHasPreviewWidgets, navigationHideChrome, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
-    import { MANEUVER_VIEW_HEIGHT, NAVACTIONS_HEIGHT, navigationSheetSteps, navigationViewHeight } from '~/utils/navigation';
+    import { isNavigating, navigationHasPreviewWidgets, navigationItem, navigationScale } from '~/stores/navigationStore';
+    import { MANEUVER_VIEW_HEIGHT, navigationSections, navigationSheetSteps } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
     import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
     import { legendVersion, showLegend } from '~/stores/legendStore';
-    import { MASSIF_PACKAGE, MASSIF_VARIANTS, type MassifIconFont, VARIANT_PARAMETER_KEYS, iconFontParameters, isMassifStyle, massifIconFont, massifLook, rankingFor, rankingParameters, setRankingFor, variantParameters } from '~/utils/massif';
+    import {
+        MASSIF_PACKAGE,
+        MASSIF_VARIANTS,
+        type MassifIconFont,
+        VARIANT_PARAMETER_KEYS,
+        iconFontParameters,
+        isMassifStyle,
+        massifIconFont,
+        massifLook,
+        massifVariant,
+        rankingFor,
+        rankingParameters,
+        setRankingFor,
+        variantParameters
+    } from '~/utils/massif';
     import type { MassifRanking } from '~/utils/massif';
     import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
@@ -92,7 +106,7 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorPrimary } = $colors);
+    $: ({ colorBackground, colorError, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom, left: windowInsetLeft, right: windowInsetRight, top: windowInsetTop } = $windowInset);
 
     let defaultLiveSync = global.__onLiveSync;
@@ -121,7 +135,7 @@
     let selectedId: string;
     let selectedMapId: string;
     // parameterised on purpose: a bare MassifObject accepts ANY path, hiding read-only writes
-    let selectedPosMarker: MassifObject<'massif::Point'>;
+    let selectedPosMarker: MassifObject<'massif::Marker'>;
     const selectedItem = watcher<Item>(null, onSelectedItemChanged);
     let editingItem: Item = null;
     let didIgnoreAlreadySelected = false;
@@ -135,32 +149,33 @@
     // navigation has its own sheet (sharing the item one made them fight over steps); views lazy-loaded
     let navigationViewComponent = null;
     let maneuverViewComponent = null;
-    let offRoutePanelComponent = null;
-    // lifted by the navigation sheet like the other widgets
-    let offRoutePanelHolder: NativeViewElementNode<GridLayout>;
+    let navigationRailComponent = null;
+    let routeSimulatorPanelComponent = null;
     let navigationStepIndex = 0;
-    // scaled text, so at a large font scale a fixed height would clip it
-    $: navigationSheetHeight = Math.round(navigationViewHeight($navigationHasPreviewWidgets) * $navigationScale);
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed
-    $: navigationSteps = navigationSheetSteps({
-        barHeight: navigationSheetHeight,
-        actionsHeight: Math.round(NAVACTIONS_HEIGHT * $navigationScale),
-        hasProfile: !!$navigationItem?.profile?.data?.length,
-        hasStats: !!$navigationItem?.stats
-    });
+    $: navigationSteps = navigationSheetSteps(
+        navigationSections($navigationScale, {
+            hasAhead: $navigationHasPreviewWidgets,
+            hasProfile: !!$navigationItem?.profile?.data?.length,
+            hasStats: !!$navigationItem?.stats
+        })
+    );
 
     async function loadNavigationViews() {
         if (navigationViewComponent) {
             return;
         }
-        const [navigationView, maneuverView, offRoutePanel] = await Promise.all([
+        const [navigationView, maneuverView, navigationRail] = await Promise.all([
             import('~/components/navigation/NavigationView.svelte'),
             import('~/components/navigation/ManeuverView.svelte'),
-            import('~/components/navigation/NavigationOffRoutePanel.svelte')
+            import('~/components/navigation/NavigationRail.svelte')
         ]);
         navigationViewComponent = navigationView.default;
         maneuverViewComponent = maneuverView.default;
-        offRoutePanelComponent = offRoutePanel.default;
+        navigationRailComponent = navigationRail.default;
+        if (!PRODUCTION) {
+            routeSimulatorPanelComponent = (await import('~/components/navigation/RouteSimulatorPanel.svelte')).default;
+        }
     }
     // lazy: Map is the root component, so mode-only views stay off the startup path
     let peakFinderOverlayComponent = null;
@@ -519,11 +534,25 @@
         if (!localVectorLayer) {
             const localVectorDataSource = massifMap.source('source.selection', { type: 'local', projection: { type: 'EPSG:4326' } });
 
-            // no scaleWithDPI: it's a billboard-only style setting
-            selectedPosMarker = itemModule.createLocalPoint(position, {
-                color: new Color(colorPrimary).setAlpha(178).argb,
-                clickSize: 0,
-                size: 20
+            // a marker, not a point: drawn without depth, it sits on the terrain instead of above its drape lift
+            const selectionColor = new Color(colorPrimary).setAlpha(178).hex;
+            selectedPosMarker = massifMap.object('element', 'element.selection', {
+                type: 'marker',
+                position: toPosition(position),
+                style: {
+                    type: 'marker',
+                    size: 20,
+                    clickSize: 0,
+                    bitmap: { type: 'url', url: getUserBitmapUrl('dot', selectionColor, selectionColor) },
+                    // this dot *is* the place, so centred like the user marker
+                    anchorPointX: 0,
+                    anchorPointY: 0,
+                    causesOverlap: false,
+                    hideIfOverlapped: false,
+                    // lies on the ground like the point it replaces, rather than standing up to face the camera
+                    orientationMode: 'BILLBOARD_ORIENTATION_GROUND',
+                    scalingMode: 'BILLBOARD_SCALING_CONST_SCREEN_SIZE'
+                }
             });
             localVectorDataSource.call('add', selectedPosMarker.handle);
             localVectorLayer = massifMap.buildLayer('layer.selection', { type: 'elements', source: localVectorDataSource.id });
@@ -1108,7 +1137,11 @@
     $: activeSheetHeight = $isNavigating ? navigationSteps[navigationStepIndex] : steps?.[bottomSheetStepIndex];
     $: {
         if (activeSheetHeight >= 0) {
-            mapContext.focusOffset = { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
+            // the middle of the map left visible: above the sheet, or right of the landscape column (a
+            // positive x moves the focus left)
+            mapContext.focusOffset = landscapeNavigation
+                ? { x: -Utils.layout.toDevicePixels(navigationColumnLeft + navigationColumnWidth) / 2, y: 0 }
+                : { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
             // a ScreenPos crosses as `[x, y]`, not as the {x, y} the rest of the app passes around
             massifMap?.set('focusPointOffset', [mapContext.focusOffset.x, mapContext.focusOffset.y]);
         }
@@ -1387,6 +1420,7 @@
                     //    showToast(JSON.stringify(nutiPropsToApply));
                     vectorTileDecoder.call('setStyleParameters', nutiPropsToApply);
                 }
+                massifVariant.set(mapStyleVariant(layerStyle));
                 styleParametersChanged();
             } catch (error) {
                 vectorTileDecoder = null;
@@ -1463,6 +1497,7 @@
         }
         // same decoder, a few parameters: a re-decode, not a new style
         vectorTileDecoder?.call('setStyleParameters', massifParameters(layerStyle, variant));
+        massifVariant.set(variant);
         const innerStyle = variant === 'eink' ? 'eink' : 'voyager';
         if (ApplicationSettings.getString('innerStyle') !== innerStyle) {
             mapContext.setInnerStyle(innerStyle, layerStyle.split('~')[0]);
@@ -1615,10 +1650,16 @@
     const getLayerIndex = (layer: MassifLayer) => layerStack.getLayerIndex(layer);
     const getLayerTypeFirstIndex = (layerId: LayerType) => layerStack.getLayerTypeFirstIndex(layerId);
     const getLayers = (layerId?: LayerType) => layerStack.getLayers(layerId);
-    // make room for the maneuver banner: same condition and scale as ManeuverView (shown off route too)
-    $: navigationTopOffset = $isNavigationRunning && (!!$navigationProgress?.instruction || !!$navigationProgress?.offRoute) ? Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) : 0;
-    // while running, the map is what the user needs: pausing brings the whole interface back
-    $: hideChromeForNavigation = $isNavigationRunning && $navigationHideChrome;
+    // landscape: banner and bar share a left column (a bike mount), the map gets the rest
+    $: landscapeNavigation = $isNavigating && isLandscape;
+    $: navigationColumnWidth = Math.round(Math.min(Math.max($windowSize.width * 0.42, 320), 460));
+    // the map button bar keeps its portrait place on the left edge, the column starts right of it
+    $: navigationColumnLeft = landscapeNavigation ? windowInsetLeft + 50 : 0;
+    // the banner is reserved in every navigation state, so what sits under it never moves; in
+    // landscape nothing does, the banner has the column to itself
+    $: navigationRailTop = landscapeNavigation ? 10 : Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 20;
+    // the banner takes the search bar's place for the whole navigation, paused included
+    $: hideChromeForNavigation = $isNavigating;
     $: hideChromeForPeakFinder = $peakFinderActive;
 
     let scrollingWidgetsOpacity = 1;
@@ -1687,19 +1728,13 @@
                 ? {
                       mapScrollingWidgets: {
                           target: mapScrollingWidgets.getNativeView(),
-                          translateY: translation,
+                          // beside the landscape column, not above it: nothing to make room for
+                          translateY: landscapeNavigation ? 0 : translation,
                           opacity: scrollingWidgetsOpacity
                       }
                   }
                 : {})
         } as any;
-        if (offRoutePanelHolder?.nativeView) {
-            // it sits right on top of the bar, so it has to move with it or the bar covers it
-            result.offRoutePanel = {
-                target: offRoutePanelHolder.nativeView,
-                translateY: translation
-            };
-        }
         return result;
     }
 
@@ -2040,9 +2075,6 @@
                 nativeView.translateY = 0;
             }
         });
-        if (offRoutePanelHolder?.nativeView) {
-            offRoutePanelHolder.nativeView.translateY = 0;
-        }
     }
     // translation only: the item sheet owns the widgets' opacity
     function navigationTranslationFunction(translation, maxTranslation, progress) {
@@ -2102,7 +2134,12 @@
             translationFunction={navigationBottomSheetTranslationFunction}
             on:stepIndexChange={onNavigationStepIndexChanged}>
             <gridlayout height="100%" isPassThroughParentEnabled={true} width="100%" />
-            <gridlayout prop:bottomSheet height={navigationSteps[navigationSteps.length - 1]} width="100%">
+            <gridlayout
+                prop:bottomSheet
+                height={navigationSteps[navigationSteps.length - 1]}
+                horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                marginLeft={landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0}
+                width={landscapeNavigation ? navigationColumnWidth : '100%'}>
                 {#if navigationViewComponent}
                     <!-- tall enough for every step, the sheet decides how much of it shows -->
                     <svelte:component this={navigationViewComponent} />
@@ -2129,19 +2166,23 @@
                     color={isEInk ? '#aaa' : colorOnSurfaceVariant}
                     gray={true}
                     horizontalAlignment="left"
-                    marginLeft={5}
-                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    isUserInteractionEnabled={!$isNavigating || scrollingWidgetsOpacity > 0.3}
+                    marginLeft={landscapeNavigation ? windowInsetLeft + 5 : 5}
+                    opacity={$isNavigating ? scrollingWidgetsOpacity : 1}
+                    separatorColor={colorOutlineSoft}
                     verticalAlignment="top"
-                    visibility={$peakFinderActive ? 'collapse' : 'visible'} />
+                    visibility={$peakFinderActive ? 'collapse' : 'visible'}
+                    android:marginTop={($isNavigating ? navigationRailTop : 66 + Math.max(topTranslationY - 90, 0)) + windowInsetTop}
+                    ios:marginTop={$isNavigating ? navigationRailTop : 66 + windowInsetTop + Math.max(topTranslationY - 90, 0)} />
 
                 <LocationInfoPanel
                     bind:this={locationInfoPanel}
+                    hidden={$isNavigating || $peakFinderActive}
                     horizontalAlignment="left"
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
                     marginLeft={53}
-                    marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
-                    verticalAlignment="top"
-                    visibility={$isNavigating || $peakFinderActive ? 'collapse' : 'visible'} />
+                    marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
+                    verticalAlignment="top" />
                 <Search
                     bind:this={searchView}
                     style="z-index:1000;"
@@ -2153,7 +2194,40 @@
                     visibility={hideChromeForNavigation || hideChromeForPeakFinder ? 'collapse' : 'visible'}
                     android:marginTop={windowInsetTop + 10} />
                 {#if maneuverViewComponent}
-                    <svelte:component this={maneuverViewComponent} style="z-index:1001;" margin={10} verticalAlignment="top" android:marginTop={windowInsetTop + 10} />
+                    <!-- in landscape the expanded sheet runs up into it, so it fades with the sheet like the map buttons -->
+                    <svelte:component
+                        this={maneuverViewComponent}
+                        style="z-index:1001;"
+                        horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                        margin={10}
+                        opacity={landscapeNavigation ? scrollingWidgetsOpacity : 1}
+                        verticalAlignment="top"
+                        width={landscapeNavigation ? navigationColumnWidth - 20 : 'auto'}
+                        android:marginLeft={(landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10}
+                        ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
+                        android:marginTop={windowInsetTop + 10} />
+                {/if}
+                {#if navigationRailComponent}
+                    <svelte:component
+                        this={navigationRailComponent}
+                        horizontalAlignment="right"
+                        isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                        marginRight={10}
+                        onCompass={resetBearing}
+                        opacity={scrollingWidgetsOpacity}
+                        rotation={currentMapRotation}
+                        verticalAlignment="top"
+                        visibility={$isNavigating ? 'visible' : 'collapse'}
+                        android:marginTop={windowInsetTop + navigationRailTop}
+                        ios:marginTop={navigationRailTop} />
+                {/if}
+                {#if routeSimulatorPanelComponent}
+                    <svelte:component
+                        this={routeSimulatorPanelComponent}
+                        horizontalAlignment="center"
+                        verticalAlignment="top"
+                        android:marginTop={windowInsetTop + navigationRailTop}
+                        ios:marginTop={navigationRailTop} />
                 {/if}
                 <canvaslabel
                     class="mdi"
@@ -2171,11 +2245,11 @@
                     id="orientation"
                     class="small-floating-btn"
                     horizontalAlignment="right"
-                    android:marginTop={66 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
-                    ios:marginTop={66 + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                    android:marginTop={66 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
+                    ios:marginTop={66 + Math.max(topTranslationY - 90, 0)}
                     shape="round"
                     verticalAlignment="top"
-                    visibility={currentMapRotation !== 0 && !$peakFinderActive ? 'visible' : 'collapse'}
+                    visibility={currentMapRotation !== 0 && !$peakFinderActive && !$isNavigating ? 'visible' : 'collapse'}
                     on:tap={resetBearing}>
                     <label class="mdi" color={colorPrimary} rotate={currentMapRotation} text="mdi-navigation" textAlignment="center" verticalAlignment="middle" />
                 </mdcardview>
@@ -2190,27 +2264,21 @@
                 horizontalAlignment="right"
                 translateY={Math.max(topTranslationY - 50, 0)}
             /> -->
-                {#if $showLegend && !$peakFinderActive}
+                {#if $showLegend && !$peakFinderActive && !$isNavigating}
                     <!-- below the compass, under half the screen: the map stays there to compare -->
                     <MapLegend
                         horizontalAlignment="right"
                         marginRight={5}
-                        marginTop={116 + windowInsetTop + navigationTopOffset + Math.max(topTranslationY - 90, 0)}
+                        marginTop={116 + windowInsetTop + Math.max(topTranslationY - 90, 0)}
                         maxHeight={$windowSize.height * 0.45}
                         verticalAlignment="top" />
                 {/if}
                 <MapScrollingWidgets
                     bind:this={mapScrollingWidgets}
                     isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    leftInset={landscapeNavigation ? navigationColumnLeft + navigationColumnWidth : 0}
                     opacity={scrollingWidgetsOpacity}
                     visibility={$peakFinderActive ? 'collapse' : 'visible'} />
-                <!-- floats above the navigation bar and rides up with it, like the scrolling widgets do
-                     over the item sheet: the navigation sheet has fixed steps and cannot grow a row -->
-                <gridlayout bind:this={offRoutePanelHolder} isPassThroughParentEnabled={true} verticalAlignment="bottom" width="100%">
-                    {#if offRoutePanelComponent}
-                        <svelte:component this={offRoutePanelComponent} />
-                    {/if}
-                </gridlayout>
                 <DirectionsPanel
                     bind:this={directionsPanel}
                     {editingItem}

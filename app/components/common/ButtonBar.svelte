@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, CanvasView, Paint, Style } from '@nativescript-community/ui-canvas';
     import { AbsoluteLayout } from '@nativescript/core';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { showToolTip } from '~/utils/ui';
@@ -20,6 +20,8 @@
     export let fontSize = null;
     export let buttonSize = small ? 30 : $actionBarButtonHeight;
     export let selectedColor = white ? 'white' : undefined;
+    /** hairlines between the buttons, none when unset */
+    export let separatorColor: string = null;
 
     let canvas: NativeViewElementNode<CanvasView>;
     let ripple: NativeViewElementNode<AbsoluteLayout>;
@@ -40,6 +42,7 @@
     $: rippleColor = color || gray ? colorOnSurfaceVariant : colorOnSurface;
 
     let iconPaint: Paint;
+    let separatorPaint: Paint;
 
     function visibleButtons(but = buttons) {
         return but.filter((b) => b.visible !== false);
@@ -80,6 +83,24 @@
                 deltaX += offsetX;
                 deltaY += offsetY;
                 canvas.drawText(button.text, deltaX, deltaY, iconPaint);
+            }
+            if (separatorColor) {
+                if (!separatorPaint) {
+                    separatorPaint = new Paint();
+                    separatorPaint.setStyle(Style.STROKE);
+                    separatorPaint.strokeWidth = 1;
+                }
+                separatorPaint.color = separatorColor;
+                // inset, so the lines read as dividers and not as a grid
+                const inset = buttonSize / 5;
+                for (let index = 1; index < buttonsLength; index++) {
+                    const position = index * buttonSize;
+                    if (orientation === 'vertical') {
+                        canvas.drawLine(inset, position, buttonSize - inset, position, separatorPaint);
+                    } else {
+                        canvas.drawLine(position, inset, position, buttonSize - inset, separatorPaint);
+                    }
+                }
             }
         } catch (err) {
             console.error(err, err.stack);
