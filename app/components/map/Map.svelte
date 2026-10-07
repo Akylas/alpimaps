@@ -1584,7 +1584,7 @@
             const StylePicker = (await import('./StylePicker.svelte')).default;
             await showBottomSheet({
                 view: StylePicker,
-                peekHeight: 200,
+                peekHeight: 280,
                 trackingScrollView: 'collectionView',
                 disableDimBackground: true,
                 dismissOnBackgroundTap: true,
@@ -1970,7 +1970,7 @@
 
                 await showPopoverMenu({
                     options,
-                    vertPos: VerticalPosition.ALIGN_BOTTOM,
+                    vertPos: VerticalPosition.BELOW,
                     horizPos: HorizontalPosition.LEFT,
                     anchor: event.object,
                     props: {
