@@ -83,7 +83,7 @@ try {
     CollectionViewElement.register();
     SwipeMenuElement.register();
     PagerElement.register();
-    if (PLAY_STORE_BUILD) {
+    if (__IOS__ && PLAY_STORE_BUILD) {
         import('@shared/utils/inapp-purchase').then((r) => r.init());
     }
 
