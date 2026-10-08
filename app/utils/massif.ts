@@ -40,6 +40,24 @@ export function massifIconFontFamily() {
     return ICON_FONTS[get(massifIconFont)].family;
 }
 
+// a class the map draws with another's glyph (pois.py ALIAS), which the font has no glyph under
+const CLASS_GLYPH_ALIAS: Record<string, string> = { border_control: 'barrier', national_park: 'park', sally_port: 'barrier', spring: 'water' };
+// the glyph the map draws for a feature outside the `poi` layer, where its class names none: `mountain_peak`
+// and `aerodrome_label` (class international, military...) are drawn with a sprite of the layer's own
+export const LAYER_GLYPHS: Record<string, string[]> = {
+    aerodrome_label: ['airport'],
+    mountain_peak: ['peak', 'mountain'],
+    park: ['park'],
+    place: ['place'],
+    water_name: ['water']
+};
+
+/** What a clicked feature is called in the icon font, most specific first: osm value, subclass, class (aliased), then its layer's glyph. */
+export function featureIconNames(properties: { osm_value?: string; subclass?: string; class?: string; layer?: string } = {}) {
+    const className = properties.class;
+    return [properties.osm_value, ...(properties.subclass?.split(';') ?? []), CLASS_GLYPH_ALIAS[className] ?? className, ...(LAYER_GLYPHS[properties.layer] ?? [])].filter(Boolean);
+}
+
 /** The glyph a Massif map draws for the first of `names` it has one for (subclass before class), else its `default`. */
 export function massifIcon(names: string[]) {
     const glyphs = ICON_FONTS[get(massifIconFont)].glyphs;
@@ -144,8 +162,9 @@ export function setRankingFor(look: string, ranking: MassifRanking) {
     ApplicationSettings.setString('massifRanking.' + look, ranking);
 }
 
-// what a tap on a Massif map may pick, layer::attachment: its labels and the routes, not every bin and tree under them
-const MASSIF_CLICK_FILTER = '(poi|mountain_peak|transportation_name|route|aerodrome_label|water_name|place|landcover_name)::.*';
+// what a tap on a Massif map may pick, layer::attachment: its labels and the routes, not every bin and tree under them.
+// `park` only for its label point and name, not the outlines drawn around it
+export const MASSIF_CLICK_FILTER = '(poi|mountain_peak|transportation_name|route|aerodrome_label|water_name|place|landcover_name)::.*|park::(poi|park_label)';
 
 /** The user's filter when set, else Massif's own on a Massif style. */
 export function clickFilterFor(userFilter: string) {
