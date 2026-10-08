@@ -118,14 +118,21 @@
                 });
                 break;
             case 'fill': {
+                const pattern = item.pattern && image(item.pattern);
                 if (item.color) {
                     fill(item.color, item.opacity);
                     canvas.drawRect(x, y, x + SWATCH_W, y + SWATCH_H, paint);
                 }
-                const pattern = item.pattern && image(item.pattern);
                 if (pattern) {
                     fill('#000');
-                    canvas.drawBitmap(pattern, null, new Rect(Math.round(x), Math.round(y), Math.round(x + SWATCH_W), Math.round(y + SWATCH_H)), paint);
+                    canvas.save();
+                    canvas.clipRect(x, y, x + SWATCH_W, y + SWATCH_H);
+                    for (let top = y; top < y + SWATCH_H; top += pattern.height) {
+                        for (let left = x; left < x + SWATCH_W; left += pattern.width) {
+                            canvas.drawBitmap(pattern, left, top, paint);
+                        }
+                    }
+                    canvas.restore();
                 }
                 if (item.outline) {
                     stroke(item.outline, 3);
