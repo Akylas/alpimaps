@@ -9,6 +9,7 @@
         "url": "https://github.com/Akylas/alpimaps/issues"
     },
     "scripts": {
+        "fonts": "iconotype build -i iconotype/osm.iconotype.json --lock node_modules/.cache/osm-codepoints.lock && iconotype build -i iconotype/alpimaps.iconotype.json --lock node_modules/.cache/alpimaps-codepoints.lock",
         "massif-iconfont": "node scripts/massif-iconfont.mjs",
         "createBase64Key": "openssl base64 < $KEYSTORE_PATH | tr -d '\n' | tee base64.txt",
         "postinstall": "npm run setup",
