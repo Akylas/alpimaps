@@ -116,49 +116,101 @@ const COMPOSITE_SOURCE_TYPE_HILLSHADE = 1;
 // max zoom (16 online, lower for a local .etiles)
 const CONTOUR_MAX_OVERZOOM = 8;
 
-// LAYER properties, not style ones: `#hillshade` declares only the slot so a symbolizer does not overwrite them
+// the woven layer takes the options carrying a `styleParameter` from the style; a stacked one has them as layer properties
+const HILLSHADE_METHODS = ['STANDARD', 'COMBINED', 'IGOR', 'MULTIDIRECTIONAL', 'BASIC'] as const;
+const DEFAULT_HILLSHADE_METHOD = 'IGOR';
+// the light's altitude too, which MULTIDIRECTIONAL reads (the composite writes the same 45 degrees)
+function illuminationVector(degrees: number): [number, number, number] {
+    return [Math.sin(toRadians(degrees)), Math.cos(toRadians(degrees)), -Math.SQRT1_2];
+}
+// a colour is edited as css, the layer takes argb
+const colorOption = {
+    type: 'color',
+    default: '#000000',
+    transform: (color: string) => new Color(color).argb,
+    transformBack: (argb: number) => new Color(argb).hex
+} satisfies LayerOption;
 const HILLSHADE_OPTIONS = {
-    contrast: {
-        min: 0,
-        max: 1
-    },
-    heightScale: {
-        min: 0,
-        max: 2
-    },
-    zoomLevelBias: {
-        min: 0,
-        max: 5
-    },
-    highlightColor: {
-        type: 'color'
-    },
-    accentColor: {
-        type: 'color'
-    },
-    shadowColor: {
-        type: 'color'
+    hillshadeMethod: {
+        type: 'enum',
+        default: DEFAULT_HILLSHADE_METHOD,
+        values: HILLSHADE_METHODS,
+        styleParameter: 'hillshade_method'
     },
     illuminationDirection: {
         min: 0,
         max: 359,
-        transform: (value) => [Math.sin(toRadians(value)), Math.cos(toRadians(value)), 0],
-        transformBack: (value) => toDegrees(((value.x || value[0]) > 0 ? 1 : -1) * Math.acos(value.y || value[1]))
+        step: 1,
+        default: 143,
+        transform: illuminationVector,
+        // the layer answers [x, y, z]; the angle must stay in 0..359, a slider throws outside its range
+        transformBack: (direction: number[] | { x: number; y: number }) => {
+            const east = Array.isArray(direction) ? direction[0] : direction?.x;
+            const north = Array.isArray(direction) ? direction[1] : direction?.y;
+            return Math.round((toDegrees(Math.atan2(east, north)) + 360) % 360) % 360;
+        }
+    },
+    illuminationMapRotationEnabled: {
+        type: 'switch',
+        default: false
+    },
+    contrast: {
+        min: 0,
+        max: 1,
+        step: 0.01,
+        default: 0.5,
+        styleParameter: 'hillshade_contrast'
+    },
+    heightScale: {
+        min: 0,
+        max: 2,
+        step: 0.01,
+        default: 0.2,
+        styleParameter: 'hillshade_height_scale'
+    },
+    exaggeration: {
+        min: 0,
+        max: 3,
+        step: 0.05,
+        default: 1
+    },
+    zoomLevelBias: {
+        min: 0,
+        max: 5,
+        step: 0.05,
+        default: 0
     },
     // the layer only has the pair, `visibleZoomRange`
     minVisibleZoom: {
         min: 0,
         max: 24,
+        step: 1,
+        default: 0,
         read: (layer: MassifLayer) => layer.get('visibleZoomRange')?.[0],
         write: (layer: MassifLayer, value: number) => layer.set('visibleZoomRange', [value, layer.get('visibleZoomRange')?.[1] ?? 24])
     },
     maxVisibleZoom: {
         min: 0,
         max: 24,
+        step: 1,
+        default: 24,
         read: (layer: MassifLayer) => layer.get('visibleZoomRange')?.[1],
         write: (layer: MassifLayer, value: number) => layer.set('visibleZoomRange', [layer.get('visibleZoomRange')?.[0] ?? 0, value])
+    },
+    highlightColor: { ...colorOption, styleParameter: 'hillshade_highlight_color' },
+    accentColor: { ...colorOption, styleParameter: 'hillshade_accent_color' },
+    shadowColor: { ...colorOption, styleParameter: 'hillshade_shadow_color' }
+} satisfies Record<string, LayerOption>;
+
+/** Writes an option's value on a layer, through its transform. */
+export function writeLayerOption(layer: MassifLayer, name: string, option: LayerOption, value) {
+    const written = option.transform ? option.transform(value) : value;
+    if (option.write) {
+        option.write(layer, written);
+    } else {
+        layer.set(name, written);
     }
-};
+}
 
 /** Esri's world imagery, what the Massif demos draw hybrid over. */
 export const DEFAULT_IMAGERY_SOURCE = 'esri.worldimagery';
@@ -182,8 +234,28 @@ export const LOCAL_DATA_SUPPORTED = !__DISABLE_OFFLINE__ && (!__ANDROID__ || !PL
 export const LOCAL_MAP_NAME = 'Local';
 export const LOCAL_TERRAIN_NAME = 'Hillshade';
 
-// the style draws the bathymap's `global_landcover` and `depth` below z8
-const BATHYMAP_LAST_ZOOM = 7;
+// the style fades the bathymap's `global_landcover` out over z8-9 (`lowzoom_landcover`), tile zoom 8 here
+const BATHYMAP_LAST_ZOOM = 8;
+
+/** A setting of a layer, shown in its options sheet and persisted as `${name}_<option>`. */
+export interface LayerOption {
+    /** a slider unless told otherwise */
+    type?: 'slider' | 'color' | 'enum' | 'switch';
+    min?: number;
+    max?: number;
+    step?: number;
+    /** what the layer is at while no setting exists */
+    default?: number | string | boolean;
+    /** the style parameter that carries it on the woven layer, where unset is the style's own value; `default` backs a stacked layer */
+    styleParameter?: string;
+    /** an enum's constant names */
+    values?: readonly string[];
+    transform?: (value) => unknown;
+    transformBack?: (value) => unknown;
+    /** for an option that is not a layer property of its own name */
+    read?: (layer: MassifLayer) => number;
+    write?: (layer: MassifLayer, value) => void;
+}
 
 export interface SourceItem {
     downloading?: boolean;
@@ -207,19 +279,7 @@ export interface SourceItem {
     spec?: any;
     provider: Provider;
     index?: number;
-    options?: {
-        [k: string]: {
-            min?: number;
-            max?: number;
-            value?: number;
-            transform?: Function;
-            transformBack?: Function;
-            type?: string;
-            /** for an option that is not a layer property of its own name */
-            read?: (layer: MassifLayer) => number;
-            write?: (layer: MassifLayer, value: number) => void;
-        };
-    };
+    options?: { [k: string]: LayerOption };
 }
 const TAG = 'CustomLayersModule';
 export default class CustomLayersModule extends MapModule {
@@ -282,20 +342,18 @@ export default class CustomLayersModule extends MapModule {
     toggleHillshadeSlope(value: boolean) {
         this.slopeMode = value;
         this.applySlopeMode(this.terrainAttachedTo);
+        this.applyHillshadeStyleParameters();
     }
     // Takes the composite: a second map has its own child. An EMPTY shader restores the built-in one.
     // Slopes need a TRUE-scale normal map (heightScale 1, no exaggeration): the shader reads the slope
-    // angle in degrees off the normal, and the artistic heightScale 0.2 would damp every slope.
+    // angle in degrees off the normal, and a damped heightScale would flatten every slope.
     private applySlopeMode(composite: MassifObject<'massif::CompositeVectorTileLayer'>) {
         this.withExternalChild(composite, HILLSHADE_SLOT, (result) => {
             const child = api.wrap(result.handle, 'massif::HillshadeRasterTileLayer');
-            // slopes off: back to what the sheet persisted (same key as applyHillshadeSettings)
-            const heightScale = this.slopeMode ? 1 : ApplicationSettings.getNumber(`${this.slotItem?.name}_heightScale`, 0.2);
             // guarded: both rebuild every normal map (`updateTiles`) and this runs on every attach
-            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode || child.get('heightScale') !== heightScale) {
+            if (child.get('exagerateHeightScaleEnabled') !== !this.slopeMode) {
                 child.apply({
                     exagerateHeightScaleEnabled: !this.slopeMode,
-                    heightScale,
                     normalMapLightingShader: this.slopeMode ? getSlopeHillshadeShader() : ''
                 });
             }
@@ -327,7 +385,8 @@ export default class CustomLayersModule extends MapModule {
         // a LAYER over the same handle for MassifLayer's `opacity()`/`visible()`; the result stays
         // alive, destroying it would unregister the handle
         const child = api.wrapLayer(this.hillshadeChildResult.handle, 'massif::HillshadeRasterTileLayer');
-        this.applyHillshadeSettings(child, item.name);
+        this.applyHillshadeSettings(child, item.name, true);
+        this.applyHillshadeStyleParameters();
         item.layer = child;
         item.options = HILLSHADE_OPTIONS;
         const index = this.customSources.indexOf(item);
@@ -336,29 +395,112 @@ export default class CustomLayersModule extends MapModule {
         }
     }
 
+    // Unset is the style's own value: `auto` for a text parameter, a negative for a number.
+    private hillshadeStyleParameters(name: string) {
+        const options: Record<string, LayerOption> = HILLSHADE_OPTIONS;
+        const parameters: Record<string, string> = {};
+        for (const [key, option] of Object.entries(options)) {
+            if (!option.styleParameter) {
+                continue;
+            }
+            const text = option.type === 'color' || option.type === 'enum';
+            const storageKey = `${name}_${key}`;
+            if (this.slopeMode && key === 'heightScale') {
+                parameters[option.styleParameter] = '1';
+            } else if (!ApplicationSettings.hasKey(storageKey)) {
+                parameters[option.styleParameter] = text ? 'auto' : '-1';
+            } else {
+                parameters[option.styleParameter] = text ? ApplicationSettings.getString(storageKey, '').toLowerCase() : String(ApplicationSettings.getNumber(storageKey, 0));
+            }
+        }
+        return parameters;
+    }
+    // Only what differs is set: a set re-reads the style. A style without a parameter has none to set.
+    private setStyleParameters(parameters: Record<string, string>) {
+        const decoder = mapContext.mapDecoder;
+        if (!decoder) {
+            return;
+        }
+        const changed: Record<string, string> = {};
+        for (const [parameter, value] of Object.entries(parameters)) {
+            try {
+                const current = String(decoder.call('getStyleParameter', parameter));
+                if (current !== value && Number(current) !== Number(value)) {
+                    changed[parameter] = value;
+                }
+            } catch (error) {
+                // not a parameter of this style
+            }
+        }
+        if (Object.keys(changed).length > 0) {
+            decoder.call('setStyleParameters', changed);
+        }
+    }
+    private applyHillshadeStyleParameters() {
+        if (this.slotItem) {
+            this.setStyleParameters(this.hillshadeStyleParameters(this.slotItem.name));
+        }
+    }
+    // the style draws the bathymap's landcover only where the app merges the archive in
+    private hasBathymap = false;
+    private applyLowzoomLandcover() {
+        this.setStyleParameters({ lowzoom_landcover: this.hasBathymap ? '1' : '0' });
+    }
+    private isWoven(item: SourceItem) {
+        return item === this.slotItem && item.layer !== item.terrainLayer;
+    }
+    /** The sheet persists the value first: the woven layer's options are read back from the settings. */
+    applyLayerOption(item: SourceItem, name: string, option: LayerOption, value) {
+        if (option.styleParameter && this.isWoven(item)) {
+            this.applyHillshadeStyleParameters();
+        } else {
+            writeLayerOption(item.layer, name, option, value);
+        }
+    }
+    // Back to the default: the style's own value on the woven layer, `default` on a stacked one.
+    resetLayerOption(item: SourceItem, name: string) {
+        const option = item.options?.[name];
+        if (!option) {
+            return;
+        }
+        ApplicationSettings.remove(`${item.name}_${name}`);
+        this.applyLayerOption(item, name, option, option.default);
+    }
+
     // same `${name}_<option>` keys the options sheet writes
-    private applyHillshadeSettings(layer: MassifLayer<'massif::HillshadeRasterTileLayer'>, name: string) {
-        const illuminationDirection = ApplicationSettings.getNumber(`${name}_illuminationDirection`, 143);
+    private applyHillshadeSettings(layer: MassifLayer<'massif::HillshadeRasterTileLayer'>, name: string, woven = false) {
+        const options = HILLSHADE_OPTIONS;
         const opacity = ApplicationSettings.getNumber(`${name}_opacity`, 1);
         const tileFilterModeStr = ApplicationSettings.getString(`${name}_tileFilterMode`, 'bilinear');
-        const accentColor = new Color(ApplicationSettings.getString(`${name}_accentColor`, '#000000'));
-        const shadowColor = new Color(ApplicationSettings.getString(`${name}_shadowColor`, '#000000'));
-        const highlightColor = new Color(ApplicationSettings.getString(`${name}_highlightColor`, '#000000'));
+        const storedMethod = ApplicationSettings.getString(`${name}_hillshadeMethod`, options.hillshadeMethod.default);
         layer.apply({
             tileFilterMode:
                 tileFilterModeStr === 'bicubic' ? 'RASTER_TILE_FILTER_MODE_BICUBIC' : tileFilterModeStr === 'nearest' ? 'RASTER_TILE_FILTER_MODE_NEAREST' : 'RASTER_TILE_FILTER_MODE_BILINEAR',
-            visibleZoomRange: [ApplicationSettings.getNumber(`${name}_minVisibleZoom`, 0), ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, 24)],
-            contrast: ApplicationSettings.getNumber(`${name}_contrast`, 0.5),
-            heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, 0.2),
+            visibleZoomRange: [
+                ApplicationSettings.getNumber(`${name}_minVisibleZoom`, options.minVisibleZoom.default),
+                ApplicationSettings.getNumber(`${name}_maxVisibleZoom`, options.maxVisibleZoom.default)
+            ],
+            exaggeration: ApplicationSettings.getNumber(`${name}_exaggeration`, options.exaggeration.default),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_ALL',
-            illuminationDirection: [Math.sin(toRadians(illuminationDirection)), Math.cos(toRadians(illuminationDirection)), 0],
-            highlightColor: highlightColor.argb,
-            hillshadeMethod: 'IGOR',
-            shadowColor: shadowColor.argb,
-            accentColor: accentColor.argb,
+            illuminationDirection: illuminationVector(ApplicationSettings.getNumber(`${name}_illuminationDirection`, options.illuminationDirection.default)),
+            illuminationMapRotationEnabled: ApplicationSettings.getBoolean(`${name}_illuminationMapRotationEnabled`, options.illuminationMapRotationEnabled.default),
             opacity,
             visible: opacity !== 0
         });
+        if (!woven) {
+            layer.apply({
+                contrast: ApplicationSettings.getNumber(`${name}_contrast`, options.contrast.default),
+                heightScale: ApplicationSettings.getNumber(`${name}_heightScale`, options.heightScale.default),
+                hillshadeMethod: HILLSHADE_METHODS.find((method) => method === storedMethod) ?? DEFAULT_HILLSHADE_METHOD,
+                highlightColor: new Color(ApplicationSettings.getString(`${name}_highlightColor`, options.highlightColor.default)).argb,
+                shadowColor: new Color(ApplicationSettings.getString(`${name}_shadowColor`, options.shadowColor.default)).argb,
+                accentColor: new Color(ApplicationSettings.getString(`${name}_accentColor`, options.accentColor.default)).argb
+            });
+        }
+        // not part of the defaults: the layer is left at its own until the user sets one
+        if (ApplicationSettings.hasKey(`${name}_zoomLevelBias`)) {
+            layer.set('zoomLevelBias', ApplicationSettings.getNumber(`${name}_zoomLevelBias`, options.zoomLevelBias.default));
+        }
     }
     // a call RESULT is owned by the caller: released so handles do not accumulate per toggle
     private withExternalChild(composite: MassifObject<'massif::CompositeVectorTileLayer'>, slot: string, work: (child: MassifObject<'massif::Layer'>) => void) {
@@ -515,11 +657,14 @@ export default class CustomLayersModule extends MapModule {
         const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
         // bitmaps are upsampled on high-DPI screens by default: compensate with a zoom bias
-        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, (Math.log(mapContext.getMap().get('DPI') / 160.0) / Math.log(2)) * 0.75);
-        const options = {
+        const dpiZoomLevelBias = (Math.log(mapContext.getMap().get('DPI') / 160.0) / Math.log(2)) * 0.75;
+        const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, dpiZoomLevelBias);
+        const options: Record<string, LayerOption> = {
             zoomLevelBias: {
                 min: 0,
-                max: 5
+                max: 5,
+                step: 0.05,
+                default: dpiZoomLevelBias
             }
         };
 
@@ -543,6 +688,7 @@ export default class CustomLayersModule extends MapModule {
             layer = terrainLayer;
         } else if (vectorDataSource) {
             // kept: vectorTileDecoderChanged rebuilds the layer from it, and skips items without one
+            options.zoomLevelBias.default = 0;
             spec = {
                 type: 'composite-vector',
                 source: sourceSpec,
@@ -759,7 +905,9 @@ export default class CustomLayersModule extends MapModule {
                 this.setSlotVisible(CONTOUR_SLOT, !!event.value);
             }
         });
-        this.imageryUnsubscriber = massifVariant.subscribe((variant) => this.showImagery(variant === 'hybrid'));
+        this.imageryUnsubscriber = massifVariant.subscribe((variant) => {
+            this.showImagery(variant === 'hybrid');
+        });
         (async () => {
             try {
                 if (!this.listenForSourceChanges) {
@@ -908,6 +1056,7 @@ export default class CustomLayersModule extends MapModule {
             oldLayer.destroy();
             item.layer = layer;
         });
+        this.applyLowzoomLandcover();
         // Every rebuilt layer is a fresh object with no external sources on it.
         this.updateTerrain();
     }
@@ -1164,6 +1313,8 @@ export default class CustomLayersModule extends MapModule {
 
         const archives = [...enabled.regions.flatMap((region) => region.archives), ...enabled.world];
         this.hasLocalData = !!local;
+        this.hasBathymap = !!local && archivesWithRole(enabled.world, 'bathymap').length > 0;
+        this.applyLowzoomLandcover();
         this.hasRoute = archives.some((archive) => archive.role === 'routes');
         packageService.setLocalVectorData(local?.layer, archivesWithRole(archives, 'map'));
         // before the replaced layers go: it moves the terrain slots off them
@@ -1280,7 +1431,9 @@ export default class CustomLayersModule extends MapModule {
             options: {
                 zoomLevelBias: {
                     min: 0,
-                    max: 5
+                    max: 5,
+                    step: 0.05,
+                    default: 0
                 }
             },
             legend: 'https://www.openstreetmap.org/key.html',
@@ -1447,7 +1600,7 @@ export default class CustomLayersModule extends MapModule {
             imagery: true,
             options: {
                 // not in the list, so the opacity is set in the options sheet
-                opacity: { min: 0, max: 1, write: (layer: MassifLayer, value: number) => layer.opacity(value).visible(value > 0) },
+                opacity: { min: 0, max: 1, step: 0.01, default: 1, write: (layer: MassifLayer, value: number) => layer.opacity(value).visible(value > 0) },
                 ...data.options
             }
         };
