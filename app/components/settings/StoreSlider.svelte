@@ -8,7 +8,7 @@
 
     export let title: string;
     export let description: string = null;
-    export let store: Writable<number>;
+    export let store: Writable<number> & { reset?: () => void };
     export let min: number;
     export let max: number;
     export let step = 1;
@@ -40,6 +40,11 @@
         }
     }
 
+    // a store without `reset` has no default to go back to
+    function resetValue() {
+        store.reset?.();
+    }
+
     async function promptForValue() {
         try {
             const result = await prompt({
@@ -61,10 +66,20 @@
 </script>
 
 <gridlayout columns="*,auto" padding="6 16 0 16" rows="auto,auto,auto" {...$$restProps}>
-    <label colSpan={2} color={colorOnSurface} fontSize={16} text={title} />
+    <label colSpan={2} color={colorOnSurface} fontSize={16} text={title} on:longPress={resetValue} />
     {#if description}
-        <label colSpan={2} color={colorOnSurfaceVariant} fontSize={13} row={1} text={description} textWrap={true} />
+        <label colSpan={2} color={colorOnSurfaceVariant} fontSize={13} row={1} text={description} textWrap={true} on:longPress={resetValue} />
     {/if}
     <slider col={0} maxValue={scaledMax} minValue={scaledMin} row={2} stepSize={scaledStep} value={sliderValue} on:valueChange={onValueChange} />
-    <label col={1} color={colorOnSurfaceVariant} fontSize={14} marginLeft={10} row={2} text={display($store)} verticalTextAlignment="center" width={70} on:tap={promptForValue} />
+    <label
+        col={1}
+        color={colorOnSurfaceVariant}
+        fontSize={14}
+        marginLeft={10}
+        row={2}
+        text={display($store)}
+        verticalTextAlignment="center"
+        width={70}
+        on:longPress={resetValue}
+        on:tap={promptForValue} />
 </gridlayout>

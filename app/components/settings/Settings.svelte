@@ -128,6 +128,7 @@
             key: title,
             title,
             store,
+            default: store.defaultValue,
             min,
             max,
             step,
@@ -889,6 +890,16 @@
                     }
                     break;
                 }
+                default:
+                    // a slider goes back to its default, wherever its value lives
+                    if (item.type === 'slider' && item.id === 'setting') {
+                        if (item.store) {
+                            item.store.reset?.();
+                        } else if (item.default !== undefined) {
+                            ApplicationSettings.remove(item.key);
+                        }
+                        updateItem(item);
+                    }
             }
         } catch (error) {
             showError(error);
