@@ -106,6 +106,8 @@ export async function showPopoverMenu<T = any>({
     const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
     const scale = Math.sqrt(get(fontScale));
     const rowHeight = props?.rowHeight ?? 60 * scale;
+    const separatorHeight = props?.separatorHeight ?? 12 * scale;
+    const separatorCount = options.filter((option) => option.type === 'separator').length;
     const result: T = await showPopover({
         backgroundColor: colorPanel,
         view: OptionSelect,
@@ -119,8 +121,9 @@ export async function showPopoverMenu<T = any>({
             margin: 4,
             fontWeight: 500,
             containerColumns: 'auto',
+            separatorHeight,
             // the toggle pill row above the list, when there is one
-            height: Math.min(rowHeight * options.length + (props?.toggles?.length ? 56 : 0), props?.maxHeight ?? 300),
+            height: Math.min(rowHeight * (options.length - separatorCount) + separatorHeight * separatorCount + (props?.toggles?.length ? 56 : 0), props?.maxHeight ?? 300),
             width: Math.min(200 * scale, screenWidthDips * 0.9),
             options,
             onLongPress,

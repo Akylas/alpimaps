@@ -25,6 +25,8 @@ export interface MapMenuItem {
     color?: string;
     /** `main`: behind the top-right button, `overflow`: behind the side bar's dots. Defaults to `main`. */
     menu?: 'main' | 'overflow';
+    /** Group in the main menu. Defaults to `app`. */
+    section?: 'map' | 'tools' | 'data' | 'app';
     /** Lower sorts earlier; the built-in entries sit at 0. */
     order?: number;
     run: () => void | Promise<void>;

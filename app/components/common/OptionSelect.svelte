@@ -2,6 +2,7 @@
 
 <script context="module" lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { TextField } from '@nativescript-community/ui-material-textfield';
@@ -40,6 +41,8 @@
     export let panel = false;
     export let borderRadius = 8;
     export let rowHeight = null;
+    /** Height of an item of `type: 'separator'`: a hairline between two groups of items. */
+    export let separatorHeight = 12;
     export let autofocus = false;
     export let estimatedItemSize = true;
     export let autoSize = false;
@@ -195,6 +198,11 @@
         return 'default';
     }
     function onDataPopulated(event) {
+    function onCollectionLoaded(event: EventData) {
+        if (event.object instanceof CollectionView) {
+            event.object.setTemplateRowHeight('separator', separatorHeight);
+        }
+    }
         if (selectedIndex !== undefined) {
             if (onlyOneSelected) {
                 currentlyCheckedItem = options instanceof ObservableArray ? options.getItem(selectedIndex) : options[selectedIndex];
@@ -278,6 +286,7 @@
             {rowHeight}
             on:dataPopulated={onDataPopulated}
             ios:autoReloadItemOnLayout={true}
+            on:loaded={onCollectionLoaded}
             ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
                 <svelte:component
@@ -399,6 +408,11 @@
             <Template let:item>
                 <svelte:component
                     this={component}
+            <Template key="separator">
+                <gridlayout>
+                    <absolutelayout backgroundColor={colorHairline} height={1} margin="0 12" verticalAlignment="middle" />
+                </gridlayout>
+            </Template>
                     {borderRadius}
                     {fontSize}
                     {fontWeight}
