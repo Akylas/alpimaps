@@ -1446,6 +1446,10 @@
                 // not a parameter of this style
             }
         }
+        // the hillshade layer's own max visible zoom is the limit, the style's z16 cut-off would override it
+        if (defaults.hillshade_max_zoom != null) {
+            defaults.hillshade_max_zoom = '24';
+        }
         styleDefaults = defaults;
         styleParameterKeys.set(Object.keys(defaults));
     }
