@@ -556,6 +556,10 @@
             });
             localVectorDataSource.call('add', selectedPosMarker.handle);
             localVectorLayer = massifMap.buildLayer('layer.selection', { type: 'elements', source: localVectorDataSource.id });
+            // billboards draw after every layer, over the map's last labels: this puts the marker under them.
+            // `trySet`: a no-op on an SDK without the property
+            const selectionLayer: MassifLayer = localVectorLayer;
+            selectionLayer.trySet('billboardsUnderLabels', true);
             localVectorLayer.onElementClick((e) => {
                 e.consumed = onVectorElementClicked(mapContext.elementClickData(e));
             });
