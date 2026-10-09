@@ -1,90 +1,35 @@
 <script lang="ts">
-    import { CoreTypes, Frame } from '@nativescript/core';
-    import { onMount } from 'svelte';
-    import { closeModal, goBack } from '@shared/utils/svelte/ui';
-    import { actionBarHeight, colors, fontScale, windowInset } from '~/variables';
-    import { showError } from '@shared/utils/showError';
-    $: ({ colorOnSurface } = $colors);
-    $: ({ top: windowInsetTop } = $windowInset);
+    import SharedCActionBar from '@shared/components/CActionBar.svelte';
+    import { actionBarHeight, fontScale, windowInset } from '~/variables';
 
-    export let title: string = null;
-    export let showMenuIcon: boolean = false;
     export let height = null;
     export let paddingTop = null;
-    export let canGoBack: boolean = false;
-    export let forceCanGoBack: boolean = false;
-    export let modalWindow: boolean = false;
-    export let disableBackButton: boolean = false;
     export let onClose: Function = null;
-    export let onGoBack: Function = null;
-    let menuIcon: string;
-    let menuIconVisible: boolean;
-    export let labelsDefaultVisualState = null;
-    export let buttonsDefaultVisualState = null;
 
-    let menuIconVisibility: CoreTypes.VisibilityType;
-
-    onMount(() => {
-        const frame = Frame.topmost();
-        canGoBack = frame?.canGoBack() || !!frame?.currentEntry;
-    });
-    function onMenuIcon() {
-        try {
-            if (onGoBack) {
-                onGoBack();
-            } else if (modalWindow) {
-                if (onClose) {
-                    onClose();
-                } else {
-                    closeModal(undefined);
-                }
-            } else {
-                const frame = Frame.topmost();
-                // frame is animating: goBack would go up 2 levels as the
-                // animating context is not yet in the backStack
-                if (frame['_executingContext']) {
-                    return;
-                }
-                goBack();
-            }
-        } catch (error) {
-            showError(error);
-        }
-    }
-    $: {
-        if (modalWindow) {
-            menuIcon = 'mdi-close';
-        } else {
-            menuIcon = forceCanGoBack || canGoBack ? (__IOS__ ? 'mdi-chevron-left' : 'mdi-arrow-left') : 'mdi-menu';
-        }
-    }
-    $: menuIconVisible = ((forceCanGoBack || canGoBack || modalWindow) && !disableBackButton) || showMenuIcon;
-    $: menuIconVisibility = menuIconVisible ? 'visible' : 'collapse';
+    $: ({ top: windowInsetTop } = $windowInset);
 </script>
 
-<gridlayout class="actionBar" columns="auto,*,auto" paddingTop={paddingTop || windowInsetTop} rows={`${height || $actionBarHeight},auto`} {...$$restProps} on:tap={() => {}}>
-    <label
-        id="actionBarTitle"
-        class="actionBarTitle"
-        autoFontSize={true}
-        col={1}
-        colSpan={3}
-        maxFontSize={20 * $fontScale}
-        maxLines={2}
-        minFontSize={12 * $fontScale}
-        text={title || ''}
-        textAlignment="left"
-        verticalTextAlignment="center"
-        visibility={!!title ? 'visible' : 'hidden'}
-        {...$$restProps?.titleProps}
-        defaultVisualState={labelsDefaultVisualState} />
-    <slot name="center" />
-    <stacklayout orientation="horizontal">
-        <slot name="left" />
-        <mdbutton class="actionBarButton" defaultVisualState={buttonsDefaultVisualState} text={menuIcon} variant="text" visibility={menuIconVisibility} on:tap={onMenuIcon} />
-    </stacklayout>
-    <stacklayout col={2} orientation="horizontal">
-        <slot />
-    </stacklayout>
-    <slot name="bottom" />
-</gridlayout>
+<!-- the app's design: a title spanning the bar, the top inset as padding, a second row for the `bottom` slot and no side padding -->
+<SharedCActionBar
+    blockTouches={true}
+    {onClose}
+    paddingLeft={0}
+    paddingRight={0}
+    paddingTop={paddingTop || windowInsetTop}
+    rows={`${height || $actionBarHeight},auto`}
+    titleLineBreak={null}
+    useInsetMargin={false}
+    {...$$restProps}
+    titleProps={{
+        id: 'actionBarTitle',
+        colSpan: 3,
+        maxFontSize: 20 * $fontScale,
+        minFontSize: 12 * $fontScale,
+        paddingLeft: 0,
+        ...$$restProps?.titleProps
+    }}>
+    <slot name="left" slot="left" />
+    <slot name="center" slot="center" />
+    <slot name="bottom" slot="bottom" />
+    <slot />
+</SharedCActionBar>
