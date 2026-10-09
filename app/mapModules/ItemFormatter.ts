@@ -4,7 +4,7 @@ import { formatAddress, osmicon } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
-import { isMassifStyle, massifIcon, massifIconFontFamily } from '~/utils/massif';
+import { LAYER_GLYPHS, featureIconNames, isMassifStyle, massifIcon, massifIconFontFamily } from '~/utils/massif';
 import { Profiles } from '~/utils/routing';
 const mapContext = getMapContext();
 
@@ -29,7 +29,7 @@ export default class ItemFormatter {
                 result.push(properties.class);
             }
             if (properties.layer && properties.layer !== 'housenumber') {
-                result.push(properties.layer);
+                result.push(properties.layer, ...(LAYER_GLYPHS[properties.layer] ?? []));
             }
         }
         if (properties.categories) {
@@ -45,10 +45,8 @@ export default class ItemFormatter {
     /** The icon the map shows for the item: Massif's glyph on a Massif map, else the osm font's. */
     getItemIcon(item: Item): { icon: string; fontFamily: string } {
         if (isMassifStyle(ApplicationSettings.getString('mapStyle', ''))) {
-            // the map's own chain: subclass, class, then Massif's `default`
-            const properties = item?.properties ?? {};
-            const names = [properties.osm_value, ...(properties.subclass?.split(';') ?? []), properties.class].filter(Boolean);
-            return { icon: massifIcon(names), fontFamily: massifIconFontFamily() };
+            // the map's own chain: subclass, class, the layer's glyph, then Massif's `default`
+            return { icon: massifIcon(featureIconNames(item?.properties ?? {})), fontFamily: massifIconFontFamily() };
         }
         return { icon: osmicon(this.geItemIcon(item)), fontFamily: 'osm' };
     }

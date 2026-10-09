@@ -11,6 +11,7 @@ registerMapFeature({
             title: lc($showLegend ? 'hide_legend' : 'show_legend'),
             icon: 'mdi-map-legend',
             order: 5,
+            section: 'map' as const,
             run: () => showLegend.set(!get(showLegend))
         }
     ])

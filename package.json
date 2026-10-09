@@ -9,6 +9,7 @@
         "url": "https://github.com/Akylas/alpimaps/issues"
     },
     "scripts": {
+        "fonts": "iconotype build -i iconotype/osm.iconotype.json --lock node_modules/.cache/osm-codepoints.lock && iconotype build -i iconotype/alpimaps.iconotype.json --lock node_modules/.cache/alpimaps-codepoints.lock",
         "massif-iconfont": "node scripts/massif-iconfont.mjs",
         "createBase64Key": "openssl base64 < $KEYSTORE_PATH | tr -d '\n' | tee base64.txt",
         "postinstall": "npm run setup",
@@ -52,7 +53,7 @@
         "@akylas/nativescript-inapp-purchase": "0.0.5",
         "@akylas/nativescript-inappbrowser": "3.1.8",
         "@mapbox/tilebelt": "2.0.3",
-        "@massif-maps/styles": "1.2.1",
+        "@massif-maps/styles": "1.2.2",
         "@mdi/font": "7.4.47",
         "@modern-dev/daylight": "^0.1.0",
         "@nativescript-community/arraybuffers": "1.1.5",

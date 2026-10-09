@@ -14,7 +14,7 @@
 
 //@name: [name:[param::lang]] ? [name:[param::lang]] : ([name_int] ? [name_int] : ([name:en] ? [name:en] : ([name]? [name] : [ref])));
 
-@name: [name:[param::lang]] ?? [name_int] ?? [name:en] ?? [name] ?? [ref];
+@name: [name:[param::lang]] ?? [name:[param::fallback_lang]] ?? [name_int] ?? [name:en] ?? [name] ?? [ref];
 @selected_item_id: ([osmid] ?? [ref] ?? [name]) + '';
 
 @background: #e6e4e0;

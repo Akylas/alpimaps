@@ -55,6 +55,7 @@
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
     import '~/mapModules/features/legend';
+    import { offerGesturesTutorial } from '~/mapModules/features/gestures';
     import MapLegend from './MapLegend.svelte';
     import '~/mapModules/features/terrain3d';
     import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
@@ -556,6 +557,10 @@
             });
             localVectorDataSource.call('add', selectedPosMarker.handle);
             localVectorLayer = massifMap.buildLayer('layer.selection', { type: 'elements', source: localVectorDataSource.id });
+            // billboards draw after every layer, over the map's last labels: this puts the marker under them.
+            // `trySet`: a no-op on an SDK without the property
+            const selectionLayer: MassifLayer = localVectorLayer;
+            selectionLayer.trySet('billboardsUnderLabels', true);
             localVectorLayer.onElementClick((e) => {
                 e.consumed = onVectorElementClicked(mapContext.elementClickData(e));
             });
@@ -656,6 +661,7 @@
                 ApplicationSettings.remove('searchOnLoad');
                 searchView.searchForQuery(searchOnLoad);
             }
+            offerGesturesTutorial();
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -1442,6 +1448,10 @@
                 // not a parameter of this style
             }
         }
+        // the hillshade layer's own max visible zoom is the limit, the style's z16 cut-off would override it
+        if (defaults.hillshade_max_zoom != null) {
+            defaults.hillshade_max_zoom = '24';
+        }
         styleDefaults = defaults;
         styleParameterKeys.set(Object.keys(defaults));
     }
@@ -1766,85 +1776,47 @@
     onDestroy(stopWebServer);
     const showMapMenu = tryCatchFunction(
         async (event) => {
-            const options = (
-                [
-                    {
-                        accessibilityValue: 'settingsBtn',
-                        title: lc('settings'),
-                        id: 'settings',
-                        icon: 'mdi-cogs'
-                    }
-                ] as any
-            )
-                .concat(
-                    customLayersModule.hasLocalData
-                        ? [
-                              {
-                                  title: lc('select_style'),
-                                  id: 'select_style',
-                                  icon: 'mdi-layers'
-                              }
-                          ]
-                        : []
-                )
-                .concat([
-                    {
-                        title: lc('location_info'),
-                        id: 'location_info',
-                        icon: 'mdi-speedometer'
-                    },
-                    {
-                        title: lc('share_screenshot'),
-                        id: 'share_screenshot',
-                        icon: 'mdi-cellphone-screenshot'
-                    },
-                    {
-                        title: lc('compass'),
-                        id: 'compass',
-                        icon: 'mdi-compass'
-                    }
-                ])
-                .concat(
-                    __ANDROID__
-                        ? [
-                              {
-                                  title: lc('satellites_view'),
-                                  id: 'gps_status',
-                                  icon: 'mdi-satellite-variant'
-                              }
-                          ]
-                        : ([] as any)
-                )
-                .concat([
-                    {
-                        title: lc('astronomy'),
-                        id: 'astronomy',
-                        icon: 'mdi-weather-night'
-                    },
-                    {
-                        title: lc('import_data'),
-                        id: 'import',
-                        icon: 'mdi-import'
-                    }
-                ] as any);
-
-            if (SENTRY_ENABLED && isSentryEnabled) {
-                options.push({
-                    title: lc('bug_report'),
-                    id: 'sentry',
-                    icon: 'mdi-bug'
-                });
-            }
-
-            if (isSensorAvailable('barometer')) {
-                options.splice(options.length - 2, 0, {
-                    title: lc('altimeter'),
-                    id: 'altimeter',
-                    icon: 'mdi-altimeter'
-                });
-            }
-            // whatever the registered features contribute to the main menu — see ~/mapModules/features/
-            options.push(...$mainMenuItemsStore.map(({ color, icon, id, title }) => ({ color, icon, id, title })));
+            const featureOptions = (section: string) => $mainMenuItemsStore.filter((item) => (item.section ?? 'app') === section).map(({ color, icon, id, title }) => ({ color, icon, id, title }));
+            // whatever the registered features contribute lands in its section — see ~/mapModules/features/
+            const sections: { id: string; options: any[] }[] = [
+                {
+                    id: 'map',
+                    options: [
+                        ...(customLayersModule.hasLocalData ? [{ title: lc('select_style'), id: 'select_style', icon: 'mdi-layers' }] : []),
+                        ...featureOptions('map'),
+                        { title: lc('location_info'), id: 'location_info', icon: 'mdi-speedometer' }
+                    ]
+                },
+                {
+                    id: 'tools',
+                    options: [
+                        { title: lc('compass'), id: 'compass', icon: 'mdi-compass' },
+                        ...(isSensorAvailable('barometer') ? [{ title: lc('altimeter'), id: 'altimeter', icon: 'mdi-altimeter' }] : []),
+                        ...(__ANDROID__ ? [{ title: lc('satellites_view'), id: 'gps_status', icon: 'mdi-satellite-variant' }] : []),
+                        { title: lc('astronomy'), id: 'astronomy', icon: 'mdi-weather-night' },
+                        ...featureOptions('tools')
+                    ]
+                },
+                {
+                    id: 'data',
+                    options: [
+                        { title: lc('share_screenshot'), id: 'share_screenshot', icon: 'mdi-cellphone-screenshot' },
+                        { title: lc('import_data'), id: 'import', icon: 'mdi-import' },
+                        ...featureOptions('data')
+                    ]
+                },
+                {
+                    id: 'app',
+                    options: [
+                        { accessibilityValue: 'settingsBtn', title: lc('settings'), id: 'settings', icon: 'mdi-cogs' },
+                        ...(SENTRY_ENABLED && isSentryEnabled ? [{ title: lc('bug_report'), id: 'sentry', icon: 'mdi-bug' }] : []),
+                        ...featureOptions('app')
+                    ]
+                }
+            ];
+            const options = sections
+                .filter((section) => section.options.length)
+                .flatMap((section, index) => (index > 0 ? [{ type: 'separator', id: `separator_${section.id}` }, ...section.options] : section.options));
 
             await showPopoverMenu({
                 options,

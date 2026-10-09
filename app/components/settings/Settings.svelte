@@ -24,6 +24,7 @@
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
+    import { showGesturesTutorial } from '~/mapModules/features/gestures';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
@@ -128,6 +129,7 @@
             key: title,
             title,
             store,
+            default: store.defaultValue,
             min,
             max,
             step,
@@ -772,6 +774,11 @@
                 )
                 .concat([
                     {
+                        id: 'gestures',
+                        title: lc('gestures_tips'),
+                        description: lc('gestures_tips_desc')
+                    },
+                    {
                         id: 'third_party',
                         title: lc('third_parties'),
                         description: lc('list_used_third_parties')
@@ -889,6 +896,16 @@
                     }
                     break;
                 }
+                default:
+                    // a slider goes back to its default, wherever its value lives
+                    if (item.type === 'slider' && item.id === 'setting') {
+                        if (item.store) {
+                            item.store.reset?.();
+                        } else if (item.default !== undefined) {
+                            ApplicationSettings.remove(item.key);
+                        }
+                        updateItem(item);
+                    }
             }
         } catch (error) {
             showError(error);
@@ -1073,6 +1090,10 @@
                     } else {
                         openLink(GIT_URL + '/issues');
                     }
+                    break;
+                }
+                case 'gestures': {
+                    await showGesturesTutorial();
                     break;
                 }
                 case 'third_party': {

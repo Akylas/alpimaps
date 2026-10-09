@@ -2,6 +2,7 @@
 
 <script context="module" lang="ts">
     import { CheckBox } from '@nativescript-community/ui-checkbox';
+    import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { TextField } from '@nativescript-community/ui-material-textfield';
@@ -40,6 +41,8 @@
     export let panel = false;
     export let borderRadius = 8;
     export let rowHeight = null;
+    /** Height of an item of `type: 'separator'`: a hairline between two groups of items. */
+    export let separatorHeight = 12;
     export let autofocus = false;
     export let estimatedItemSize = true;
     export let autoSize = false;
@@ -59,6 +62,7 @@
     export let onCheckBox: (item, value, e) => void = null;
     export let onChange: (item, value, e) => void = null;
     export let onRightIconTap: (item, e) => void = null;
+    export let onLongPress: (item, e) => void = null;
 
     export let titleProps: Partial<svelteNative.JSX.LabelAttributes> = {};
     export let titleHolderProps: Partial<svelteNative.JSX.StackLayoutAttributes> = {};
@@ -194,6 +198,11 @@
         }
         return 'default';
     }
+    function onCollectionLoaded(event: EventData) {
+        if (event.object instanceof CollectionView) {
+            event.object.setTemplateRowHeight('separator', separatorHeight);
+        }
+    }
     function onDataPopulated(event) {
         if (selectedIndex !== undefined) {
             if (onlyOneSelected) {
@@ -277,6 +286,7 @@
             row={2}
             {rowHeight}
             on:dataPopulated={onDataPopulated}
+            on:loaded={onCollectionLoaded}
             ios:autoReloadItemOnLayout={true}
             ios:contentInsetAdjustmentBehavior={2}>
             <Template key="checkbox" let:item>
@@ -289,6 +299,7 @@
                     iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
                     mainCol={1}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -315,6 +326,7 @@
                     iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
                     mainCol={1}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -334,6 +346,7 @@
                     {fontWeight}
                     iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -352,6 +365,7 @@
                     {fontWeight}
                     {item}
                     mainCol={1}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
@@ -379,6 +393,7 @@
                     iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
                     mainCol={1}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     title={item.name}
@@ -393,6 +408,11 @@
                     </gridlayout>
                 </svelte:component>
             </Template>
+            <Template key="separator">
+                <gridlayout>
+                    <absolutelayout backgroundColor={colorHairline} height={1} margin="0 12" verticalAlignment="middle" />
+                </gridlayout>
+            </Template>
             <Template key="slider" let:item>
                 <SettingsSlider {fontSize} {...item} onChange={(value, event) => (item.onChange || onChange)?.(item, value, event)} />
             </Template>
@@ -404,6 +424,7 @@
                     {fontWeight}
                     iconFontSize={item.iconFontSize || iconFontSize}
                     {item}
+                    {onLongPress}
                     showBottomLine={showBorders}
                     {subtitleProps}
                     {titleHolderProps}
