@@ -4,12 +4,12 @@
 
     export let title: string;
     export let description: string = null;
-    export let store: Writable<boolean>;
+    export let store: Writable<boolean> & { reset?: () => void };
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 </script>
 
-<gridlayout columns="*,auto" padding="6 16 6 16" rows="auto,auto" {...$$restProps}>
+<gridlayout columns="*,auto" padding="6 16 6 16" rows="auto,auto" {...$$restProps} on:longPress={() => store.reset?.()}>
     <label color={colorOnSurface} fontSize={16} text={title} verticalTextAlignment="center" />
     {#if description}
         <label col={0} color={colorOnSurfaceVariant} fontSize={13} row={1} text={description} textWrap={true} />

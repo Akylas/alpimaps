@@ -1260,5 +1260,7 @@
     "tutorial_page_routes": "Routes",
     "tutorial_page_navigation": "Navigation",
     "tutorial_page_lists": "Lists and settings",
-    "gestures_hint": "Tap a pulsing zone to see what it does. Long-press any icon without a label to see its name."
+    "gestures_hint": "Tap a pulsing zone to see what it does. Long-press any icon without a label to see its name.",
+    "hillshade_method": "hillshade method",
+    "light_rotates_with_map": "light rotates with the map"
 }

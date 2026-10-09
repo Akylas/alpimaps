@@ -1024,5 +1024,7 @@
     "tutorial_page_routes": "Itinéraires",
     "tutorial_page_navigation": "Navigation",
     "tutorial_page_lists": "Listes et réglages",
-    "gestures_hint": "Touchez une zone qui pulse pour voir ce qu'elle fait. Un appui long sur une icône sans libellé indique son nom."
+    "gestures_hint": "Touchez une zone qui pulse pour voir ce qu'elle fait. Un appui long sur une icône sans libellé indique son nom.",
+    "hillshade_method": "méthode d'ombrage",
+    "light_rotates_with_map": "la lumière suit la rotation de la carte"
 }

@@ -18,6 +18,7 @@ import {
     SETTINGS_SHOW_ELEVATION_PROFILE_WAYPOINTS
 } from '~/utils/constants';
 import { settingsStore } from '~/stores/settingsStore';
+import { MASSIF_CLICK_FILTER } from '~/utils/massif';
 
 export const watchingLocation = writable(false);
 export const queryingLocation = writable(false);
@@ -45,7 +46,7 @@ const APP_STYLE_PARAMS = ['contours', 'contoursOpacity'];
 export function styleHasParameter(keys: string[], key: string) {
     return !keys || APP_STYLE_PARAMS.includes(key) || keys.includes(key);
 }
-export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(poi|mountain_peak|transportation_name|route|aerodrome_label|water_name|place|landcover_name)::.*');
+export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', MASSIF_CLICK_FILTER);
 // export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
 
 const layersParams = {

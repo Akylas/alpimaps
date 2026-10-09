@@ -1,19 +1,20 @@
 <script lang="ts">
     import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
-    import { ApplicationSettings, Color } from '@nativescript/core';
+    import { ApplicationSettings } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
-    import { onMount } from 'svelte';
+    import { onDestroy } from 'svelte';
+    import { type Writable, writable } from 'svelte/store';
     import Pill from '~/components/common/Pill.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import { type LayerAction, layerCacheSize, layerCapabilities, layerTitle, runLayerAction } from '~/components/layers/layerActions';
     import { lc } from '~/helpers/locale';
-    import type { SourceItem } from '~/mapModules/CustomLayersModule';
-    import { pickColor } from '~/utils/utils';
+    import type { LayerOption, SourceItem } from '~/mapModules/CustomLayersModule';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import StoreColor from '~/components/settings/StoreColor.svelte';
+    import StoreSegment from '~/components/settings/StoreSegment.svelte';
+    import StoreSlider from '~/components/settings/StoreSlider.svelte';
     import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
     import { localMapOnlineFallback, localTerrainOnlineFallback } from '~/mapModules/localData/scan';
-    import { colors } from '~/variables';
-
-    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
     export let item: SourceItem;
 
@@ -37,6 +38,9 @@
         accentColor: 'accent_color',
         shadowColor: 'shadow_color',
         illuminationDirection: 'illumination_direction',
+        illuminationMapRotationEnabled: 'light_rotates_with_map',
+        hillshadeMethod: 'hillshade_method',
+        exaggeration: 'exageration',
         minVisibleZoom: 'min_visible_zoom',
         maxVisibleZoom: 'max_visible_zoom'
     };
@@ -44,71 +48,82 @@
         return OPTION_LABELS[name] ? lc(OPTION_LABELS[name]) : name;
     }
 
-    let options: {
-        [k: string]: {
-            type?: string;
-            value?: any;
-            min?: number;
-            max?: number;
-            transform?: Function;
-            transformBack?: Function;
-            read?: (layer: SourceItem['layer']) => number;
-            write?: (layer: SourceItem['layer'], value: number) => void;
-        };
-    } = {};
-    onMount(() => {
-        const layer = item.layer;
-        const opts = item.options || {};
-        const result = { ...item.options };
+    type OptionStore = Writable<any> & { reset: () => void };
+    const customLayers = getMapContext().mapModule('customLayers');
+    // after a reset to the style, the layer only has the style's value once it has drawn
+    const STYLE_SETTLE_DELAY = 700;
+    let settleTimer: ReturnType<typeof setTimeout>;
+    onDestroy(() => clearTimeout(settleTimer));
 
-        Object.keys(result).forEach((k) => {
-            // layer.get, not layer[k]: a surface handle has no JS properties
-            const value = opts[k].read ? opts[k].read(layer) : layer.get(k);
-            result[k].value = opts[k].transformBack ? opts[k].transformBack(value) : value;
-        });
-        options = result;
-    });
-    // a colour comes back from the layer as an argb number, not the css string a view takes
-    function optionColor(name: string) {
-        const value = options[name].value;
-        if (value === undefined || value === null || value === '') {
-            return null;
-        }
-        try {
-            return new Color(value).hex;
-        } catch (error) {
-            return null;
-        }
+    // the woven layer's option is the style's until the user sets it
+    const isStyleDriven = (option: LayerOption) => !!option.styleParameter && item.layer !== item.terrainLayer;
+
+    function readOption(name: string, option: LayerOption) {
+        // layer.get, not layer[k]: a surface handle has no JS properties
+        const value = option.read ? option.read(item.layer) : item.layer.get(name);
+        const transformed = option.transformBack ? option.transformBack(value) : value;
+        // on the slider's grid: an off-step style value would be written back as an override on open
+        const factor = option.step < 1 ? Math.round(1 / option.step) : 1;
+        const readValue = typeof transformed === 'number' && option.step ? Math.round(transformed * factor) / factor : transformed;
+        // a row built on NaN would throw in the native slider
+        return readValue === undefined || readValue === null || (typeof readValue === 'number' && !isFinite(readValue)) ? option.default : readValue;
     }
-    function optionValue(name: string) {
-        return Math.round(options[name].value * 100);
-    }
-    function onOptionChanged(name, event) {
-        let newValue = (event.value || 0) / 100;
-        ApplicationSettings.setNumber(`${item.name}_${name}`, newValue);
-        options[name].value = newValue;
-        if (options[name].transform) {
-            newValue = options[name].transform(newValue);
-        }
-        if (options[name].write) {
-            options[name].write(item.layer, newValue);
+    function persistOption(name: string, option: LayerOption, value) {
+        const key = `${item.name}_${name}`;
+        if (value === option.default && !isStyleDriven(option)) {
+            ApplicationSettings.remove(key);
+        } else if (typeof value === 'boolean') {
+            ApplicationSettings.setBoolean(key, value);
+        } else if (typeof value === 'string') {
+            ApplicationSettings.setString(key, value);
         } else {
-            item.layer.set(name, newValue);
+            ApplicationSettings.setNumber(key, value);
         }
     }
-    async function pickOptionColor(name: string, color: string) {
-        try {
-            const newColor = await pickColor(color ? new Color(color) : null);
-            if (!newColor) {
-                return;
+    // the same shape as a `settingsStore`, so the shared setting rows can reset it
+    function createOptionStore(name: string, option: LayerOption): OptionStore {
+        const store = writable(readOption(name, option));
+        let silent = true;
+        store.subscribe((value) => {
+            if (!silent) {
+                persistOption(name, option, value);
+                customLayers.applyLayerOption(item, name, option, value);
             }
-            ApplicationSettings.setString(`${item.name}_${name}`, newColor.hex);
-            options[name].value = newColor.hex;
-            // argb, the form every colour property on a layer is written in
-            item.layer.set(name, newColor.argb);
-        } catch (err) {
-            showError(err);
+        });
+        silent = false;
+        function setSilently(value) {
+            silent = true;
+            store.set(value);
+            silent = false;
         }
+        return {
+            subscribe: store.subscribe,
+            set: store.set,
+            update: store.update,
+            reset() {
+                customLayers.resetLayerOption(item, name);
+                if (isStyleDriven(option)) {
+                    clearTimeout(settleTimer);
+                    settleTimer = setTimeout(() => setSilently(readOption(name, option)), STYLE_SETTLE_DELAY);
+                } else {
+                    setSilently(option.default);
+                }
+            }
+        };
+    }
+
+    const optionRows = Object.entries(item.options || {}).map(([name, option]) => ({ name, option, store: createOptionStore(name, option) }));
+    const renderingOptions = optionRows.filter(({ option }) => option.type !== 'color');
+    const colorOptions = optionRows.filter(({ option }) => option.type === 'color');
+
+    function optionChoices(option: LayerOption) {
+        return option.values.map((value) => ({ value, title: value.toLowerCase() }));
+    }
+    function optionFormat(name: string, option: LayerOption) {
+        if (name === 'illuminationDirection') {
+            return (value: number) => `${Math.round(value)}°`;
+        }
+        return option.step < 1 ? (value: number) => value.toFixed(2) : null;
     }
     async function handleAction(layerAction: LayerAction) {
         try {
@@ -122,9 +137,6 @@
             showError(error);
         }
     }
-
-    $: sliderOptions = Object.entries(options).filter(([, option]) => option.type !== 'color');
-    $: colorOptions = Object.entries(options).filter(([, option]) => option.type === 'color');
 </script>
 
 <gesturerootview class="bottomsheet" {...$$restProps} height={420} rows="auto,auto,*,auto">
@@ -149,35 +161,23 @@
                 <label class="sectionHeader" text={lc('online_fallback')} />
                 <StoreSwitch description={lc('online_fallback_description')} store={onlineFallback.store} title={onlineFallback.title} />
             {/if}
-            {#if sliderOptions.length}
+            {#if renderingOptions.length}
                 <label class="sectionHeader" text={lc('rendering')} />
             {/if}
-            {#each sliderOptions as [name, option]}
-                <gridlayout columns="*,auto" padding="4 16 0 16" rows="auto,auto">
-                    <label color={colorOnSurface} fontSize={15} text={optionLabel(name)} />
-                    <label col={1} color={colorOnSurfaceVariant} fontSize={14} text={optionValue(name) / 100 + ''} />
-                    <slider
-                        colSpan={2}
-                        marginLeft={-8}
-                        marginRight={-8}
-                        maxValue={option.max * 100}
-                        minValue={option.min * 100}
-                        row={1}
-                        value={optionValue(name)}
-                        on:valueChange={(event) => onOptionChanged(name, event)} />
-                </gridlayout>
+            {#each renderingOptions as { name, option, store } (name)}
+                {#if option.type === 'enum'}
+                    <StoreSegment options={optionChoices(option)} {store} title={optionLabel(name)} />
+                {:else if option.type === 'switch'}
+                    <StoreSwitch {store} title={optionLabel(name)} />
+                {:else}
+                    <StoreSlider format={optionFormat(name, option)} max={option.max} min={option.min} step={option.step ?? 0.01} {store} title={optionLabel(name)} />
+                {/if}
             {/each}
             {#if colorOptions.length}
                 <label class="sectionHeader" text={lc('colors')} />
             {/if}
-            {#each colorOptions as [name]}
-                <gridlayout columns="*,auto" height={52} padding="0 16" rippleColor={colorOnSurface} on:tap={() => pickOptionColor(name, optionColor(name))}>
-                    <label color={colorOnSurface} fontSize={15} text={optionLabel(name)} verticalAlignment="middle" />
-                    <stacklayout col={1} orientation="horizontal" verticalAlignment="middle">
-                        <label color={colorOnSurfaceVariant} fontSize={13} marginRight={10} text={optionColor(name)?.toUpperCase()} verticalAlignment="middle" />
-                        <absolutelayout backgroundColor={optionColor(name)} borderColor={colorHairline} borderRadius={16} borderWidth={1} height={32} width={32} />
-                    </stacklayout>
-                </gridlayout>
+            {#each colorOptions as { name, store } (name)}
+                <StoreColor {store} title={optionLabel(name)} />
             {/each}
         </stacklayout>
     </scrollview>

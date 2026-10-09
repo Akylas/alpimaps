@@ -85,7 +85,7 @@ for (const file of PROJECTS) {
     child.styleparameters = { ...params, ...glyphs };
     writeFileSync(file, JSON.stringify(child, null, 2) + '\n');
 }
-const build = spawnSync('npx', ['--yes', '@iconotype/cli@0.3.0', 'build', '--input', OUT, '--lock', join(tmpdir(), 'massif-codepoints.lock')],
+const build = spawnSync('node_modules/.bin/iconotype', ['build', '--input', OUT, '--lock', join(tmpdir(), 'massif-codepoints.lock')],
     { stdio: 'inherit' });
 if (build.status !== 0) process.exit(build.status ?? 1);
 const rename = spawnSync('python3', ['-c', `from fontTools.ttLib import TTFont
