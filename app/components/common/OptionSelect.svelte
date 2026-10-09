@@ -12,6 +12,7 @@
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import { lc } from '~/helpers/locale';
+    import { isEInk } from '~/helpers/theme';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
     export interface OptionType extends IListItem {
         subtitle?: string;
@@ -72,7 +73,7 @@
 
     export let component = autoSizeListItem ? ListItemAutoSize : ListItem;
 
-    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary, colorSurfaceFill } = $colors);
+    $: ({ colorAccentContainer, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary, colorSurfaceFill } = $colors);
 
     // the app's ListItemAutoSize takes a leading icon in column 0
     function getRowProps(item: OptionType, templateType: string) {
@@ -119,6 +120,8 @@
     {subtitleProps}
     switchProps={{ col: 2, horizontalAlignment: 'right', verticalAlignment: 'center' }}
     {templateProps}
+    tileIconBackground={isEInk ? null : colorAccentContainer}
+    tileIconColor={isEInk ? colorOnSurface : colorPrimary}
     {tilesHeight}
     {title}
     {titleHolderProps}

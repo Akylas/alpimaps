@@ -399,6 +399,7 @@
     "location_notification": "Recherche GPS",
     "location_notification_desc": "l'application récupère votre position GPS en arrière-plan",
     "lod": "niveau de détails",
+    "menu_location": "position",
     "lodging": "hébergement",
     "logging": "enregistrement",
     "manor": "manoir",

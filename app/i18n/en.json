@@ -536,6 +536,7 @@
     "map_data_settings": "offline data, tile server and map interaction",
     "map_font_scale": "map font scale",
     "map_font_scale_desc": "font scale applied to the map style labels and icons",
+    "menu_location": "location",
     "map_language": "map language",
     "map_mode": "map mode",
     "map_outline": "map outline",

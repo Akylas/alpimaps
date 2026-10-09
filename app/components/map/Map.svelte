@@ -8,6 +8,7 @@
     import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { getUniversalLink, registerUniversalLinkCallback } from '@nativescript-community/universal-links';
     import { Application, ApplicationSettings, Color, File, GridLayout, Page, Utils, View } from '@nativescript/core';
     import type { AndroidActivityBackPressedEventData, OrientationChangedEventData } from '@nativescript/core/application/application-interfaces';
@@ -1782,7 +1783,6 @@
                 $mainMenuItemsStore.filter((item) => (item.section ?? 'app') === section && !notRows.has(item.id)).map(({ color, icon, id, title }) => ({ color, icon, id, title }));
             // whatever the registered features contribute lands in its section — see ~/mapModules/features/
             const groups: any[][] = [
-                [...(customLayersModule.hasLocalData ? [{ title: lc('select_style'), id: 'select_style', icon: 'mdi-layers' }] : []), ...featureOptions('map')],
                 [
                     {
                         type: 'tiles',
@@ -1798,7 +1798,13 @@
                         ]
                     }
                 ],
-                [{ title: lc('import_data'), id: 'import', icon: 'mdi-import' }, ...featureOptions('data'), ...featureOptions('app')],
+                [
+                    ...(customLayersModule.hasLocalData ? [{ title: lc('select_style'), id: 'select_style', icon: 'mdi-layers' }] : []),
+                    ...featureOptions('map'),
+                    { title: lc('import_data'), id: 'import', icon: 'mdi-import' },
+                    ...featureOptions('data'),
+                    ...featureOptions('app')
+                ],
                 [
                     {
                         type: 'footer',
@@ -1810,7 +1816,8 @@
                     }
                 ]
             ];
-            const options = groups.filter((group) => group.length).flatMap((group, index) => (index > 0 ? [{ type: 'separator', id: `separator_${index}` }, ...group] : group));
+            // the footer's own top line is the only divider: the pills' line above and nothing between the rows
+            const options = groups.flat();
 
             await showPopoverMenu({
                 options,
@@ -1821,12 +1828,12 @@
                     // autoSizeListItem: true,
                     maxHeight: Screen.mainScreen.heightDIPs - 100,
                     width: Math.min(280, Screen.mainScreen.widthDIPs * 0.8),
-                    // the two modes lead as toggle pills, switched in place without closing the menu
+                    // the toggles lead as pills; a tap applies it and closes the menu
                     toggles: [
                         { id: 'dark_mode', icon: 'mdi-theme-light-dark', label: lc('dark'), selected: $forceDarkMode },
                         { id: 'offline_mode', icon: 'mdi-wifi-strength-off-outline', label: lc('offline'), selected: networkService.forcedOffline },
                         { id: 'legend', icon: 'mdi-map-legend', label: lc('legend'), selected: $showLegend },
-                        { id: 'location_info', icon: 'mdi-speedometer', label: lc('location_info'), selected: locationInfoPanel.isLocationInfoShown() }
+                        { id: 'location_info', icon: 'mdi-speedometer', label: lc('menu_location'), selected: locationInfoPanel.isLocationInfoShown() }
                     ],
                     onToggle: (toggle) => {
                         switch (toggle.id) {
@@ -1846,6 +1853,7 @@
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
+                        closePopover();
                         await $mainMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
                     }
                 }),
