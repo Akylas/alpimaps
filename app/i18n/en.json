@@ -1201,5 +1201,7 @@
     "navigation_elevation_ahead": "elevation ahead",
     "navigation_surface_ahead": "surface ahead",
     "navigation_surface": "surface",
-    "navigation_next_surface": "%1$s in %2$s"
+    "navigation_next_surface": "%1$s in %2$s",
+    "hillshade_method": "hillshade method",
+    "light_rotates_with_map": "light rotates with the map"
 }

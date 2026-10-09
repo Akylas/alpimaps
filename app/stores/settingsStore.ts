@@ -1,7 +1,7 @@
 import { ApplicationSettings } from '@nativescript/core';
 import { Writable, writable } from 'svelte/store';
 
-export type SettingsStore<T> = Writable<T> & { reset: () => void };
+export type SettingsStore<T> = Writable<T> & { reset: () => void; defaultValue: T };
 
 /** Writing the default value removes the key, so the default can still change in a later version. */
 export function settingsStore<T = any>(key: string, defaultValue: T): SettingsStore<T> {
@@ -39,5 +39,6 @@ export function settingsStore<T = any>(key: string, defaultValue: T): SettingsSt
     (store as SettingsStore<T>).reset = () => {
         store.set(defaultValue);
     };
+    (store as SettingsStore<T>).defaultValue = defaultValue;
     return store as SettingsStore<T>;
 }

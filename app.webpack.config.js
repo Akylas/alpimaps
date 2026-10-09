@@ -728,9 +728,10 @@ module.exports = (env, params = {}) => {
             to: 'assets/styles/massif',
             noErrorOnMissing: true,
             // its fonts too: the map draws with the app's MassifIcons (APP_FONTS in MapModule.ts)
-            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/**'] }
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/**', '**/iconfont/**'] }
         });
-        copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions });
+        // the `buildstyle` scratch dirs are compiled into app/assets/styles/*.zip, not shipped as they are
+        copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/styles/*_cleaned/**'] } });
     }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
 
@@ -930,7 +931,7 @@ module.exports = (env, params = {}) => {
 
                         // Massif: the package's icon-font CartoCSS plus the Alpimaps child, compiled and zipped
                         'rm -rf dev_assets/styles/massif_cleaned && mkdir -p dev_assets/styles/massif_cleaned/src dev_assets/styles/massif_cleaned/out',
-                        'cp -R node_modules/@massif-maps/styles/cartocss-iconfont/. dev_assets/styles/massif_cleaned/src/',
+                        'rsync -a --exclude iconfont --exclude fonts node_modules/@massif-maps/styles/cartocss-iconfont/ dev_assets/styles/massif_cleaned/src/',
                         'cp -R dev_assets/styles/massif/. dev_assets/styles/massif_cleaned/src/',
                         ...MASSIF_PROJECTS.map((name) => `${css2xml} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
                         // no fonts/: the icon font is the app's (APP_FONTS in MapModule.ts)

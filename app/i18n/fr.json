@@ -965,5 +965,7 @@
     "navigation_elevation_ahead": "dénivelé à venir",
     "navigation_surface_ahead": "revêtement à venir",
     "navigation_surface": "revêtement",
-    "navigation_next_surface": "%1$s dans %2$s"
+    "navigation_next_surface": "%1$s dans %2$s",
+    "hillshade_method": "méthode d'ombrage",
+    "light_rotates_with_map": "la lumière suit la rotation de la carte"
 }

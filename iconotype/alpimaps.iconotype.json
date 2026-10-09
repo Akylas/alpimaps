@@ -14,7 +14,7 @@
   "height": 1024,
   "output": {
     "fonts": {
-      "dir": "app/fonts",
+      "dir": "../app/fonts",
       "formats": [
         "ttf"
       ]
@@ -22,7 +22,7 @@
     "styles": [
       {
         "kind": "scss-variables",
-        "path": "css/_alpimaps.scss"
+        "path": "../css/_alpimaps.scss"
       }
     ]
   },

@@ -205,3 +205,11 @@ Now that all is setup and that you prepared the 3rd party libraries you can actu
 * `ns run android --no-hmr --env.devlog` (replace by `ios` for iOS...)
 
 This should run the app on the first discovered device or emulator.
+
+### Map styles and icon fonts
+
+The Massif styles come from the `@massif-maps/styles` package (the `styles/massif` generator of the MassifMaps SDK repo). The package's `iconfont/MassifIcons.iconotype.json` is the canonical font project.
+
+* `yarn massif-iconfont`: derives `iconotype/massif.iconotype.json` (Massif's names and codepoints, drawn with the osm font's glyphs plus the extra osm names; commit it, it locks the codepoints), builds `app/fonts/MassifIconsOsm.ttf`, and writes `app/utils/massifIcons*.json` and the `glyph.<name>` entries of `dev_assets/styles/massif/*.json`. Run it after the package's font project changed.
+* `yarn fonts`: builds `app/fonts/osm.ttf` and `app/fonts/alpimaps.ttf` (and `css/_osm.scss`, `css/_alpimaps.scss`) from `iconotype/{osm,alpimaps}.iconotype.json`.
+* The `buildstyle` step of a production build compiles the package's CartoCSS plus `dev_assets/styles/massif` into `app/assets/styles/massif.zip`. `dev_assets/styles/massif_cleaned` is its scratch folder (gitignored, never packaged).
