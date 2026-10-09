@@ -38,7 +38,7 @@
     } from '~/utils/routing';
     import type { ValhallaProfile } from '~/utils/routing';
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
-    import { ClickType, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
+    import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
     import { showSliderPopover } from '~/utils/ui';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
@@ -341,6 +341,10 @@
             _routeLayer.onFeatureClick((e) => {
                 const info = mapContext.featureClickData(e);
                 const feature = features.find((f) => f.properties.id === info.featureData.id);
+                if (feature && info.clickType === ClickType.LONG && repeatWayPoint(feature)) {
+                    e.consumed = true;
+                    return;
+                }
                 if (feature) {
                     mapContext.selectItem({ item: feature as any, isFeatureInteresting: true });
                     e.consumed = true;
@@ -610,6 +614,42 @@
         }
 
         mapContext.selectItem({ item: { geometry: { type: 'Point', coordinates: [position.lon, position.lat] }, properties: {} }, isFeatureInteresting: true, setSelected: true });
+    }
+
+    // The waypoint added last is the one a new waypoint comes after: the start when a route is built from its destination.
+    function isLastAddedWayPoint(waypoint: { properties: { id?: string } }) {
+        const startDirectionWithDestination = ApplicationSettings.getBoolean(START_DIRECTION_DEST, false);
+        const lastAdded = waypoints.getItem(startDirectionWithDestination ? 0 : waypoints.length - 1);
+        return lastAdded.properties.id === waypoint.properties.id;
+    }
+    // Selecting a waypoint again makes it the next step, which is how a loop is drawn; selecting the last one does nothing.
+    function repeatWayPoint(feature: ItemFeature) {
+        if (feature.geometry.type !== 'Point') {
+            return false;
+        }
+        const index = waypoints.findIndex((item) => item.properties.id === feature.properties.id);
+        if (index === -1) {
+            return false;
+        }
+        const waypoint = waypoints.getItem(index);
+        if (!isLastAddedWayPoint(waypoint)) {
+            const { id, isStart, isStop, showOnMap, ...metaData } = waypoint.properties;
+            const [lon, lat] = waypoint.geometry.coordinates;
+            addWayPoint({ lat, lon }, metaData, false);
+        }
+        return true;
+    }
+
+    export function onVectorElementClicked(data: ElementClickData) {
+        const { clickType, metaData } = data;
+        if (clickType === ClickType.LONG && waypoints.length > 0 && metaData.userMarker) {
+            const location = mapContext.mapModule('userLocation')?.lastUserLocation;
+            if (location) {
+                mapContext.unFocusSearch();
+                addWayPoint({ lat: location.lat, lon: location.lon }, { title: lc('user_location') });
+                return true;
+            }
+        }
     }
 
     export function onVectorTileClicked(data: FeatureClickData) {

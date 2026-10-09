@@ -860,6 +860,7 @@
     "longpress_list_open_camera": "",
     "navigation_record_track": "",
     "location": "",
+    "user_location": "ma position",
     "openfreemap_presentation": "",
     "show_accuracy_marker": "",
     "debugging_settings_desc": "",
