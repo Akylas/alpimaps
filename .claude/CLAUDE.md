@@ -66,7 +66,7 @@ Beyond those:
 
 Alpi Maps — an offline hiking/topo map app. **svelte-native** (`@nativescript-community/svelte-native` 1.0.32, `@akylas/nativescript`) on **Svelte 4.2.20**. Svelte-native pins svelte 4 as a peer dep, so **Svelte 5 / runes are not available** — do not write runes syntax.
 
-Package manager is **yarn 4 (Berry)** — npm breaks the `portal:` local deps, so always use `yarn`. Yarn workspaces: `./`, `./3dmap`, `./peakfinder`, `./geo-three`, `./docs`; no nx / lerna.
+Package manager is **yarn 4 (Berry)** — npm breaks the `portal:` local deps, so always use `yarn`. Yarn workspaces: `./`, `./docs`; no nx / lerna.
 
 Entry: `app/main.ts` — installs the plugin mixins, registers the custom elements, then `svelteNative(Map, {})`. **`app/components/map/Map.svelte` is the root component**, so it is on the startup path for everything.
 
@@ -91,15 +91,13 @@ The contract runs both ways: `@shared/*` is the shared library, and `~/*` is the
 
 Be careful: several files exist as **drifted forks** in both places (components under `app/components/common/`, `variables.ts`, `helpers/theme.ts`). Check both copies before editing, and remember **a change under `tools/` affects the other apps** — it is a submodule, with its own commit.
 
-`geo-three` is the second submodule (3D terrain, used by `app/components/three/`).
-
 ### Build flags
 
 `app.webpack.config.js` injects compile-time globals via `DefinePlugin` — treat them as `if` guards that get dead-code-eliminated: `PRODUCTION`, `DEV_LOG`, `__ANDROID__` / `__IOS__`, `WITH_BUS_SUPPORT`, `SENTRY_ENABLED`, `TEST_ZIP_STYLES`, `PLAY_STORE_BUILD`. Declarations live in [`typings/references.d.ts`](../typings/references.d.ts).
 
 **Always gate `console.log` behind `DEV_LOG &&`** — ungated logs ship.
 
-Native/support: `App_Resources/`, `3dmap/` + `peakfinder/` (web bundles loaded in a WebView), `tools/`, `geo-three/`. Sentry is available but gated behind `NS_SENTRY=1` / `.sentry` build variants.
+Native/support: `App_Resources/`, `tools/`. Sentry is available but gated behind `NS_SENTRY=1` / `.sentry` build variants.
 
 ## Library documentation
 
