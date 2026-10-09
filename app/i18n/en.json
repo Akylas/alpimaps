@@ -355,6 +355,7 @@
     "geolocation_settings": "geolocation related settings",
     "geometry_size": "geometry size",
     "geoson": "GeoJSON",
+    "get_address": "get address",
     "get_app_source_code": "get app source code",
     "get_directions_for_track": "get directions for this track",
     "get_route": "get route",
