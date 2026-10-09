@@ -44,11 +44,10 @@
 
     when ([param::selected_id]=[id])['param::navigating'=0]::selected {
         // white backing folded into the line as its border: the + 5 backing against a + 2 line is
-        // 1.5 per side. The border shares the fill's geometry, so it is mitered with it - the
-        // backing used to be joined round on its own.
+        // 1.5 per side. The border shares the fill's geometry. Round: a miter spikes at a sharp turn.
         line-border-color: white;
         line-border-width: 1.5;
-        line-join: miter;
+        line-join: round;
         line-cap: round;
         line-color: @lineColor;
         line-width: @bicycle_line_width + 2;
