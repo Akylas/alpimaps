@@ -55,6 +55,7 @@
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
     import '~/mapModules/features/legend';
+    import { offerGesturesTutorial } from '~/mapModules/features/gestures';
     import MapLegend from './MapLegend.svelte';
     import '~/mapModules/features/terrain3d';
     import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
@@ -660,6 +661,7 @@
                 ApplicationSettings.remove('searchOnLoad');
                 searchView.searchForQuery(searchOnLoad);
             }
+            offerGesturesTutorial();
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -1627,7 +1629,7 @@
             const StylePicker = (await import('./StylePicker.svelte')).default;
             await showBottomSheet({
                 view: StylePicker,
-                peekHeight: 200,
+                peekHeight: 280,
                 trackingScrollView: 'collectionView',
                 disableDimBackground: true,
                 dismissOnBackgroundTap: true,
@@ -1975,7 +1977,7 @@
 
                 await showPopoverMenu({
                     options,
-                    vertPos: VerticalPosition.ALIGN_BOTTOM,
+                    vertPos: VerticalPosition.BELOW,
                     horizPos: HorizontalPosition.LEFT,
                     anchor: event.object,
                     props: {
