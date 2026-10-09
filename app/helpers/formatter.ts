@@ -401,17 +401,26 @@ export function formatAddress(item: IItem, startIndex = -1, endIndex = -1) {
     // return result.trim();
 }
 
+export const OPEN_COLOR = '#4ba787';
+export const CLOSED_COLOR = '#f90000';
+
 export function openingHoursText(item: IItem) {
-    const openingHours = item.properties['opening_hours'];
+    const openingHours = item?.properties?.['opening_hours'];
     if (!openingHours) {
         return null;
     }
-    const oh = new SimpleOpeningHours(openingHours);
-    const isOpened = oh.isOpen();
-    let text = isOpened ? lc('open') : lc('closed');
-    const nextTime = oh.nextTime();
-    if (nextTime && (isOpened || nextTime.getDate() === new Date().getDate())) {
-        text += ' - ' + (isOpened ? lc('until') : lc('opening_at')) + ' ' + formatTime(nextTime, 'LT');
+    try {
+        const oh = new SimpleOpeningHours(openingHours);
+        const isOpened = oh.isOpen();
+        const label = isOpened ? lc('is_open') : lc('closed');
+        let detail: string;
+        const nextTime = oh.nextTime();
+        if (nextTime && (isOpened || nextTime.getDate() === new Date().getDate())) {
+            detail = (isOpened ? lc('until') : lc('opening_at')) + ' ' + formatTime(nextTime, 'LT');
+        }
+        return { text: detail ? label + ' - ' + detail : label, label, detail, isOpened, color: isOpened ? OPEN_COLOR : CLOSED_COLOR, oh };
+    } catch (error) {
+        DEV_LOG && console.error('openingHoursText', openingHours, error);
+        return null;
     }
-    return { text, isOpened, color: isOpened ? '#4ba787' : '#f90000', oh };
 }

@@ -138,8 +138,11 @@ export const tutorialPages: TutorialPage[] = [
             pill(153, 240, 41, 40, { icon: 'mdi-chart-line' }),
             pill(200, 240, 41, 40, { icon: 'mdi-web' }),
             pill(247, 240, 41, 40, { icon: 'mdi-cloud' }),
-            card(12, 292, 276, 126),
-            { kind: 'bars', x: 24, y: 304, width: 252, height: 100, values: [20, 28, 26, 40, 52, 48, 60, 72, 66, 80, 92, 84, 70, 62, 54, 60, 48, 36, 30, 24] }
+            card(12, 292, 276, 86),
+            { kind: 'bars', x: 24, y: 304, width: 252, height: 62, values: [20, 28, 26, 40, 52, 48, 60, 72, 66, 80, 92, 84, 70, 62, 54, 60, 48, 36, 30, 24] },
+            card(12, 386, 276, 36),
+            pill(20, 390, 84, 28, { icon: 'mdi-phone-outline', labelKey: 'phone' }),
+            pill(110, 390, 84, 28, { icon: 'mdi-web', labelKey: 'website' })
         ],
         zones: [
             zone('place_swipe', 'swipe', 10, 178, 280, 56),
@@ -147,7 +150,8 @@ export const tutorialPages: TutorialPage[] = [
             zone('elevation', 'longPress', 151, 238, 45, 44),
             zone('web', 'longPress', 198, 238, 45, 44),
             zone('weather', 'longPress', 245, 238, 45, 44, () => __ANDROID__),
-            zone('chart', 'drag', 10, 290, 280, 130)
+            zone('chart', 'drag', 10, 290, 280, 90),
+            zone('contact_copy', 'longPress', 18, 388, 180, 32)
         ]
     },
     {

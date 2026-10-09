@@ -399,14 +399,15 @@ class PackageService extends Observable {
         return this._timezoneTileSearchService;
     }
 
-    async getItemAddress(item: IItem) {
+    /** `force` ignores the two address settings and a previously unavailable system geocoder: it is a manual request */
+    async getItemAddress(item: IItem, force = false) {
         try {
             const service = this.localOSMOfflineReverseGeocodingService;
             let foundAddress = false;
             const geometry = item.geometry as GeoJSONPoint;
             const location = { lat: geometry.coordinates[1], lon: geometry.coordinates[0] };
             DEV_LOG && console.log('fetching addresses', !!service, JSON.stringify(location), get(useOfflineGeocodeAddress), get(useSystemGeocodeAddress), geocodingAvailable, !!service);
-            if (get(useOfflineGeocodeAddress) && service) {
+            if ((force || get(useOfflineGeocodeAddress)) && service) {
                 const radius = 200;
                 const res = await packageService.searchInGeocodingService(service, { location, searchRadius: radius });
                 const props = item.properties;
@@ -440,7 +441,7 @@ class PackageService extends Observable {
                     }
                 }
             }
-            if (!foundAddress && get(useSystemGeocodeAddress) && geocodingAvailable) {
+            if (!foundAddress && (force || get(useSystemGeocodeAddress)) && (force || geocodingAvailable)) {
                 const results = await getFromLocation(location.lat, location.lon, 10);
                 // DEV_LOG && console.log('getFromLocation', JSON.stringify(results));
                 if (results?.length > 0) {

@@ -110,8 +110,8 @@ export async function showPopoverMenu<T = any>({
     const separatorCount = options.filter((option) => option.type === 'separator').length;
     const tilesOptions = options.filter((option) => option.type === 'tiles');
     const footerCount = options.filter((option) => option.type === 'footer').length;
-    const tileRowHeight = props?.tileRowHeight ?? 64 * scale;
-    const footerHeight = props?.footerHeight ?? 44 * scale;
+    const tileRowHeight = props?.tileRowHeight ?? 92 * scale;
+    const footerHeight = props?.footerHeight ?? 56 * scale;
     const tilesHeights = tilesOptions.map((option) => Math.ceil(option.tiles.length / (option.columns ?? 3)) * tileRowHeight);
     const tilesHeight = tilesHeights.length ? Math.max(...tilesHeights) : 0;
     const toggleColumns = Math.min(props?.toggles?.length ?? 0, 2);
@@ -135,7 +135,12 @@ export async function showPopoverMenu<T = any>({
             footerHeight,
             // the toggle pills above the list, when there are some
             height: Math.min(
-                rowHeight * (options.length - specialCount) + separatorHeight * separatorCount + tilesHeights.reduce((sum, value) => sum + value, 0) + footerHeight * footerCount + togglesHeight,
+                rowHeight * (options.length - specialCount) +
+                    separatorHeight * separatorCount +
+                    tilesHeights.reduce((sum, value) => sum + value, 0) +
+                    footerHeight * footerCount +
+                    togglesHeight +
+                    12 * scale,
                 props?.maxHeight ?? 300
             ),
             width: Math.min(200 * scale, screenWidthDips * 0.9),

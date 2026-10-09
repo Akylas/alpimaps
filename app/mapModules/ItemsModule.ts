@@ -9,6 +9,7 @@ import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
 import { get } from 'svelte/store';
 
 import { osmicon } from '~/helpers/formatter';
+import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
 
 import { lc } from '@nativescript-community/l';
@@ -33,16 +34,103 @@ function ring(corners: [number, number][]): GeoJSON.Polygon {
 
 const TAG = '[ItemsModule]';
 
-const osmOverpassUrls = [
-    // 'https://overpass.private.coffee/api/',
-    'http://overpass-api.de/api/'
-    // 'https://overpass.osm.ch/api/'
-];
-let index = 0;
-function overpassAPIURL() {
-    // return 'http://overpass-api.de/api/';
-    index = (index + 1) % osmOverpassUrls.length;
-    return osmOverpassUrls[index];
+// tried in order: the next one starts when the previous failed or is still silent after the hedge delay
+const overpassEndpoints = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter'];
+const OVERPASS_HEDGE_DELAY = 1500;
+const OVERPASS_MIN_INTERVAL = 300;
+const OSM_DETAILS_CACHE_SIZE = 100;
+
+interface OverpassElement {
+    type: string;
+    id: number;
+    lat?: number;
+    lon?: number;
+    center?: { lat: number; lon: number };
+    tags?: Record<string, string>;
+}
+
+let lastOverpassStart = 0;
+let overpassRequestCount = 0;
+async function waitOverpassTurn() {
+    const now = Date.now();
+    const startAt = Math.max(now, lastOverpassStart + OVERPASS_MIN_INTERVAL);
+    lastOverpassStart = startAt;
+    if (startAt > now) {
+        await new Promise((resolve) => setTimeout(resolve, startAt - now));
+    }
+}
+
+async function overpassRequest(data: string, force: boolean) {
+    await waitOverpassTurn();
+    const headers = {
+        'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1, force),
+        'User-Agent': __APP_ID__
+    };
+    const requestId = ++overpassRequestCount;
+    const tags: string[] = [];
+    return new Promise<{ elements: OverpassElement[] }>((resolve, reject) => {
+        let nextIndex = 0;
+        let pending = 0;
+        let settled = false;
+        let lastError;
+        let hedgeTimer;
+        const startNext = () => {
+            clearTimeout(hedgeTimer);
+            if (settled || nextIndex >= overpassEndpoints.length) {
+                return;
+            }
+            const tag = `overpass_${requestId}_${nextIndex}`;
+            tags.push(tag);
+            pending++;
+            networkService
+                .request({ url: overpassEndpoints[nextIndex++], method: 'GET', tag, headers, queryParams: { data } })
+                .then((result) => {
+                    if (!Array.isArray(result?.elements) || /runtime error/.test(result.remark ?? '')) {
+                        throw new Error('invalid overpass response');
+                    }
+                    return result;
+                })
+                .then(
+                    (result) => {
+                        if (!settled) {
+                            settled = true;
+                            clearTimeout(hedgeTimer);
+                            networkService.clearRequests(...tags.filter((t) => t !== tag));
+                            resolve(result);
+                        }
+                    },
+                    (error) => {
+                        pending--;
+                        lastError = error;
+                        if (settled) {
+                            return;
+                        }
+                        if (nextIndex < overpassEndpoints.length) {
+                            startNext();
+                        } else if (pending === 0) {
+                            settled = true;
+                            reject(lastError);
+                        }
+                    }
+                );
+            if (nextIndex < overpassEndpoints.length) {
+                hedgeTimer = setTimeout(startNext, OVERPASS_HEDGE_DELAY);
+            }
+        };
+        startNext();
+    });
+}
+
+function escapeOverpassString(value: string) {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+const osmDetailsCache = new Map<string, Promise<OverpassElement | undefined>>();
+
+/** what an OSM element adds to an item's properties, and when it was read */
+export interface OSMItemDetails {
+    properties: Record<string, any>;
+    fetchedAt: number;
 }
 
 export interface ItemFeature extends Feature {
@@ -794,50 +882,121 @@ export default class ItemsModule extends MapModule {
     ignoredOSMKeys = ['source', 'building', 'wall', 'bench', 'shelter_type', 'amenity', 'check_date', 'note', 'comment', 'ele', 'tourism'];
 
     async getOSMDetails(item: Item, mapZoom?: number, force = false) {
-        const coordinates = (item.geometry as GeometryPoint).coordinates;
-        const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : item.properties.class === 'country' ? 500 : 40;
-        const types = ['way', 'node'];
-        const data = `[out:json][timeout:25];${types.map((t) => `${t}['name'](around:${distance},${coordinates[1]},${coordinates[0]});out tags center;`).join('')}`;
-        const results = await networkService.request({
-            url: overpassAPIURL() + 'interpreter',
-            method: 'GET',
-            headers: {
-                'Cache-Control': networkService.getCacheControl(maxAgeMonth, maxAgeMonth - 1, force),
-                'User-Agent': __APP_ID__
-            },
-            queryParams: {
-                data
-            }
-        });
         const properties = item.properties;
+        const coordinates = (item.geometry as GeometryPoint).coordinates;
+        const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : properties.class === 'country' ? 500 : 40;
+        const osmType = osmElementTypes[properties.osm_type];
+        const osmId = /^\d+$/.test(String(properties.osm_id)) ? properties.osm_id : undefined;
+        const key = osmType && osmId ? `${osmType}/${osmId}` : `${coordinates[1]},${coordinates[0]},${distance},${properties.name}`;
+        let promise = force ? undefined : osmDetailsCache.get(key);
+        if (!promise) {
+            promise = this.fetchOSMElement(item, coordinates, distance, force, osmType && osmId ? `${osmType}(${osmId});out tags center;` : undefined);
+            osmDetailsCache.set(key, promise);
+            if (osmDetailsCache.size > OSM_DETAILS_CACHE_SIZE) {
+                const [oldest] = osmDetailsCache.keys();
+                osmDetailsCache.delete(oldest);
+            }
+            const created = promise;
+            created.catch(() => {
+                if (osmDetailsCache.get(key) === created) {
+                    osmDetailsCache.delete(key);
+                }
+            });
+        }
+        const result = await promise;
         if (properties.int_name) {
             properties.name_int = properties.int_name;
             delete properties.int_name;
         }
-        const matches = properties.name
-            ? results.elements.filter((e) => e.tags && e.tags.name === properties.name)
-            : results.elements
+        return result;
+    }
+
+    /** the item's properties an OSM element completes */
+    osmElementProperties(item: IItem, element: { id: number; tags?: Record<string, string> }) {
+        const properties: Record<string, any> = {};
+        for (const [key, value] of Object.entries(element.tags ?? {})) {
+            if (!key.startsWith('addr:') && !this.ignoredOSMKeys.includes(key) && value !== item.properties?.class) {
+                properties[key] = value;
+            }
+        }
+        properties.osmid = element.id;
+        return properties;
+    }
+
+    /** getOSMDetails, with the lookup state for the views and the saved copy for offline */
+    async fetchOSMDetails(item: Item, mapZoom?: number, force = false): Promise<OSMItemDetails | undefined> {
+        const key = osmItemKey(item);
+        updateOSMDetailsState(key, { loading: true });
+        try {
+            const element = await this.getOSMDetails(item, mapZoom, force);
+            if (!element?.tags) {
+                updateOSMDetailsState(key, { loading: false, missed: true });
+                return;
+            }
+            const fetchedAt = Date.now();
+            updateOSMDetailsState(key, { loading: false, missed: !element.tags.opening_hours, fetchedAt });
+            if (!item.route) {
+                setCachedOSMElement(key, { id: element.id, type: element.type, tags: element.tags, fetchedAt });
+            }
+            return { properties: this.osmElementProperties(item, element), fetchedAt };
+        } catch (error) {
+            updateOSMDetailsState(key, { loading: false, missed: true });
+            throw error;
+        }
+    }
+
+    async getCachedOSMDetails(item: IItem): Promise<OSMItemDetails | undefined> {
+        const key = osmItemKey(item);
+        const entry = await getCachedOSMElement(key);
+        if (entry) {
+            updateOSMDetailsState(key, { missed: !entry.tags.opening_hours, fetchedAt: entry.fetchedAt });
+            return { properties: this.osmElementProperties(item, entry), fetchedAt: entry.fetchedAt };
+        }
+    }
+
+    /** puts `properties` in the selected item when it is `item`, and in its saved copy, so every view of it updates */
+    async mergeSelectedItemProperties(item: IItem, properties: Record<string, any>) {
+        const selected = mapContext.getSelectedItem();
+        if (!selected || selected.geometry !== item.geometry) {
+            return false;
+        }
+        mapContext.setSelectedItem(selected, properties);
+        if (selected.id) {
+            await this.updateItem(selected, { properties: { ...properties } }, false, false);
+        }
+        return true;
+    }
+
+    /** fetches the details of the selected item and merges them in it */
+    async loadOSMDetails(item: Item, force = false) {
+        const details = await this.fetchOSMDetails(item, mapContext.getMap().camera().zoom(), force);
+        if (details) {
+            await this.mergeSelectedItemProperties(item, details.properties);
+        }
+        return details;
+    }
+
+    private async fetchOSMElement(item: Item, coordinates: number[], distance: number, force: boolean, idStatement?: string) {
+        if (idStatement) {
+            const { elements } = await overpassRequest(`[out:json][timeout:10];${idStatement}`, force);
+            const element = elements.find((e) => e.tags);
+            if (element) {
+                return element;
+            }
+        }
+        const name = item.properties.name;
+        const around = `(around:${distance},${coordinates[1]},${coordinates[0]})`;
+        const nameFilter = name ? `="${escapeOverpassString(name)}"` : '';
+        const data = `[out:json][timeout:10];${['way', 'node'].map((type) => `${type}["name"${nameFilter}]${around};out tags center;`).join('')}`;
+        const { elements } = await overpassRequest(data, force);
+        const matches = name
+            ? elements.filter((e) => e.tags && e.tags.name === name)
+            : elements
                   .filter((e) => e.tags)
                   .sort((a, b) => getDistanceSimple(a.center || a, coordinates) - getDistanceSimple(b.center || b, coordinates))
                   .sort((a, b) => (a.type === b.type ? 0 : a.type === 'node' ? -1 : 1));
-        const nb = matches.length;
-        if (nb) {
-            if (nb === 1) {
-                return matches[0];
-            }
-            // TODO: try to find the one with the same class / subclass
-            return matches[0];
-        }
-        // for (let index = 0; index < results.elements.length; index++) {
-        //     const result = results.elements[index];
-        //     if (!result.tags) {
-        //         continue;
-        //     }
-        //     // checking the name should be enough
-        //     if (result.tags.name === properties.name) {
-        //         return result;
-        //     }
-        // }
+        // TODO: try to find the one with the same class / subclass
+        return matches[0];
     }
     // async getFacebookDetails(item: Item, mapZoom?: number) {
     //     const coordinates = (item.geometry as GeometryPoint).coordinates;

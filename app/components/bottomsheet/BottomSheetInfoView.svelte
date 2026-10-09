@@ -13,6 +13,7 @@
     import SymbolShape from '../common/SymbolShape';
     import { getMapContext } from '~/mapModules/MapModule';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
+    import OpenStateChip from '../items/OpenStateChip.svelte';
 
     const propsPaint = new Paint();
     propsPaint.textSize = 13;
@@ -49,6 +50,8 @@
     export let showStats = true;
     /** The route's costing option icons. */
     export let showOptions = true;
+    /** The open state as a chip view at the bottom right, instead of its text drawn there. */
+    export let hoursChip = false;
     export let onDraw: (event: { canvas: Canvas; object: CanvasView }) => void = null;
     export let rightTextPadding = 0;
     let canvas: NativeViewElementNode<CanvasView>;
@@ -408,12 +411,12 @@
                 staticLayout.draw(canvas);
                 canvas.restore();
             }
-            if (item.properties?.['opening_hours']) {
+            const hoursData = hoursChip ? null : openingHoursText(item);
+            if (hoursData) {
                 propsPaint.textSize = 13 * $fontScaleMaxed;
-                const data = openingHoursText(item);
-                propsPaint.color = data.color;
+                propsPaint.color = hoursData.color;
                 propsPaint.setTextAlign(Align.RIGHT);
-                canvas.drawText(data.text, paddingLeft + w, paddingTop + h - 3, propsPaint);
+                canvas.drawText(hoursData.text, paddingLeft + w, paddingTop + h - 3, propsPaint);
             }
             if (actualShowSymbol) {
                 SymbolShape.drawSymbolOnCanvas(canvas, {
@@ -462,5 +465,8 @@
                 visibility={itemSubtitle ? 'visible' : 'collapse'} />
         {/if}
     </flexlayout>
+    {#if hoursChip}
+        <OpenStateChip horizontalAlignment="right" {item} marginBottom={8} marginRight={2} verticalAlignment="bottom" on:fetch />
+    {/if}
     <slot name="above" />
 </canvasview>

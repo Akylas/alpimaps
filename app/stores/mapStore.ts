@@ -28,8 +28,10 @@ export const preloading = settingsStore('preloading', true);
 export const rotateEnabled = settingsStore('mapRotateEnabled', true);
 export const pitchEnabled = settingsStore('mapPitchEnabled', true);
 
-export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', true);
-export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', true);
+export const useOfflineGeocodeAddress = settingsStore('useOfflineGeocodeAddress', false);
+export const useSystemGeocodeAddress = settingsStore('useSystemGeocodeAddress', false);
+/** open state chip, check hours and the OpenStreetMap details card on the selected item */
+export const osmItemDetails = settingsStore('osmItemDetails', true);
 
 export const showItemsLayer = settingsStore('showItemsLayer', true);
 export const itemLock = writable(false);

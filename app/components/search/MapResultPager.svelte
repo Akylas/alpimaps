@@ -7,7 +7,7 @@
 
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { convertElevation, formatDistance, getAddress, openingHoursText } from '~/helpers/formatter';
+    import { convertElevation, formatDistance, getAddress } from '~/helpers/formatter';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import { colors, fonts } from '~/variables';
@@ -38,6 +38,7 @@
     import { IItem } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import Pill from '../common/Pill.svelte';
+    import OpenStateChip from '../items/OpenStateChip.svelte';
     import { showToolTip } from '~/utils/ui';
     import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
     import { getDistanceSimple } from '~/helpers/geolib';
@@ -194,12 +195,7 @@
                 canvas.restore();
             }
 
-            // one row above the pills: opening hours on the left, the details on the right
-            if (itemProps?.['opening_hours']) {
-                const data = openingHoursText(item);
-                textPaint.color = data.color;
-                canvas.drawText(data.text, pad, h - 62, textPaint);
-            }
+            // one row above the pills: the open state chip on the left, the details on the right
             const spans = getItemSpans(item);
             if (spans.length) {
                 const nString = createNativeAttributedString({ spans });
@@ -218,19 +214,9 @@
 
     async function getItemDetails(item) {
         const itemsModule = mapContext.mapModule('items');
-        const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom());
-        if (result) {
-            const ignoredKeys = itemsModule.ignoredOSMKeys;
-            const itemProperties = { ...item.properties };
-            const newProps = {};
-            Object.keys(result.tags).forEach((k) => {
-                const value = result.tags[k];
-                if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
-                    newProps[k] = itemProperties[k] = value;
-                }
-            });
-            return { ...item, properties: { ...itemProperties, osmid: result.id } };
-            // extraProps = newProps;
+        const details = await itemsModule.fetchOSMDetails(item, mapContext.getMap().camera().zoom());
+        if (details) {
+            return { ...item, properties: { ...item.properties, ...details.properties } };
         }
     }
 
@@ -519,6 +505,7 @@
                         text={item.title}
                         verticalAlignment="top"
                         verticalTextAlignment="middle" />
+                    <OpenStateChip checkable={false} horizontalAlignment="left" {item} marginBottom={58} marginLeft={CARD_PADDING} verticalAlignment="bottom" />
                     <!-- the actions as pills, the save one labelled -->
                     <scrollview margin="0 8 6 8" orientation="horizontal" scrollBarIndicatorVisible={false} verticalAlignment="bottom">
                         <stacklayout orientation="horizontal">
