@@ -19,10 +19,11 @@
     import IconButton from '../common/IconButton.svelte';
     import PanelHeader from '../common/PanelHeader.svelte';
     import JsonViewer from './JSONViewer.svelte';
-    import ListItem2 from '../common/ListItem2.svelte';
+    import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
+    import OpeningHoursTable from './OpeningHoursTable.svelte';
     // import JSONViewer from '~/components/JSONViewer.svelte';
-    let { colorBackground, colorOnSurface, colorOutlineVariant } = $colors;
-    $: ({ colorBackground, colorOnSurface, colorOutlineVariant } = $colors);
+    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors;
+    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
 
     export let item: Item;
     export let openHoursExpanded = false;
@@ -75,7 +76,6 @@
                     leftIcon: 'mdi-clock-outline',
                     expandable: true,
                     expanded: openHoursExpanded,
-                    expandedHeight: 224,
                     opening_hours: data.oh
                 });
             }
@@ -436,20 +436,33 @@
             <JsonViewer backgroundColor={colorBackground} jsonText={item.src} padding={10} />
         </Template>
         <Template let:item>
-            <gridlayout on:tap={(e) => onItemTap(e, item)}>
-                <ListItem2 height={item.expanded ? item.expandedHeight : item.height || 70} smallHeight={item.height || 70} {...item} />
-                <IconButton
-                    id="rightButton"
-                    horizontalAlignment="right"
-                    isVisible={!!item.rightIcon || !!item.expandable}
-                    marginRight={10}
-                    marginTop={15}
-                    rotate={item.expanded ? 180 : 0}
-                    size={40}
-                    text={item.rightIcon || 'mdi-chevron-down'}
-                    verticalAlignment="top"
-                    on:tap={(e) => onItemRightTap(e, item)} />
-            </gridlayout>
+            <stacklayout>
+                <gridlayout on:tap={(e) => onItemTap(e, item)}>
+                    <ListItemAutoSize
+                        backgroundColor={colorBackground}
+                        columns="auto,*,auto"
+                        fontSize={13}
+                        icon={item.leftIcon}
+                        item={{ ...item, titleColor: colorOnSurfaceVariant, subtitleColor: item.subtitleColor || colorOnSurface }}
+                        mainCol={1}
+                        minHeight={70}
+                        subtitleFontSize={16} />
+                    <IconButton
+                        id="rightButton"
+                        horizontalAlignment="right"
+                        isVisible={!!item.rightIcon || !!item.expandable}
+                        marginRight={10}
+                        marginTop={15}
+                        rotate={item.expanded ? 180 : 0}
+                        size={40}
+                        text={item.rightIcon || 'mdi-chevron-down'}
+                        verticalAlignment="top"
+                        on:tap={(e) => onItemRightTap(e, item)} />
+                </gridlayout>
+                {#if item.expanded && item.opening_hours}
+                    <OpeningHoursTable openingHours={item.opening_hours} />
+                {/if}
+            </stacklayout>
         </Template>
     </collectionview>
 </gesturerootview>

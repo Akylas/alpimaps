@@ -1,127 +1,36 @@
-<script context="module" lang="ts">
-    import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
-    import { Color } from '@nativescript/core';
-    import { conditionalEvent } from '@shared/utils/svelte/ui';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { isEInk } from '~/helpers/theme';
-    import { actionBarButtonHeight, colors, fontScaleMaxed, fonts } from '~/variables';
-    import { showToolTip } from '@shared/utils/ui';
-
-    const iconPaints: { [k: string]: Paint } = {};
-</script>
-
 <script lang="ts">
-    let { colorAccentContainer, colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors;
-    $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant2, colorPrimary } = $colors);
-    export let isVisible = true;
-    export let isHidden = false;
+    import { Color } from '@nativescript/core';
+    import SharedIconButton from '@shared/components/IconButton.svelte';
+    import { isEInk } from '~/helpers/theme';
+    import { colors, fontScaleMaxed } from '~/variables';
+
+    let { colorAccentContainer, colorOnSurfaceVariant2, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorOnSurfaceVariant2, colorPrimary } = $colors);
     export let white = false;
-    export let isEnabled = true;
-    export let small = false;
     export let toggable = false;
     export let gray = toggable;
     export let isSelected = false;
     export let borderRadius = 4;
-    export let text = null;
-    export let fontFamily = $fonts.mdi;
     export let selectedColor = white ? 'white' : undefined;
-
     export let color: string | Color = toggable ? (isEInk ? '#C4C7C8' : null) : null;
-    export let onLongPress: Function = null;
-    export let fontSize = 0;
-    export let size: any = small ? 30 : $actionBarButtonHeight;
-    export let tooltip = null;
-    export let rounded = true;
-    export let shape = null;
-    export let height = null;
-    export let width = null;
     export let maxFontScale = null;
 
-    let canvas: NativeViewElementNode<CanvasView>;
-
-    // let actualColor = null;
-    // $: actualColor = white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant : color;
-    $: actualColor = !isEnabled ? colorOnSurfaceVariant2 : color || (white ? 'white' : !isEnabled || gray ? colorOnSurfaceVariant2 : colorOnSurface);
-    $: actualLongPress =
-        onLongPress || tooltip
-            ? (event) => {
-                  //   if (event.ios && event.ios.state !== 3) {
-                  //       return;
-                  //   }
-                  if (onLongPress) {
-                      onLongPress(event);
-                  } else {
-                      showToolTip(tooltip);
-                  }
-              }
-            : null;
-    $: refresh(text);
-    $: refresh(actualColor);
-    $: refresh(isSelected);
-
-    function refresh(...args) {
-        canvas?.nativeView?.redraw();
-    }
-    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        if (!text) {
-            return;
-        }
-        const theFontFamily = fontFamily || $fonts.mdi;
-        let iconPaint = iconPaints[theFontFamily];
-        if (!iconPaint) {
-            iconPaint = iconPaints[theFontFamily] = new Paint();
-            iconPaint.fontFamily = theFontFamily;
-        }
-        iconPaint.textSize = fontSize ? fontSize : small ? 16 : 24;
-        iconPaint.color = isEnabled ? (isSelected ? selectedColor || colorPrimary : actualColor) : isEInk ? '#ccc' : 'lightgray';
-        const w = canvas.getWidth();
-        const w2 = w / 2;
-        const h2 = canvas.getHeight() / 2;
-        const staticLayout = new StaticLayout(text, iconPaint, w, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
-        canvas.translate(0, h2 - staticLayout.getHeight() / 2);
-        staticLayout.draw(canvas);
-        // canvas.drawText(text, w2, w2+ textSize/3, iconPaint);
-    }
-    $: actualMaxFontScale = maxFontScale ?? Math.min($fontScaleMaxed, 1.4);
+    $: sizeScale = maxFontScale ?? Math.min($fontScaleMaxed, 1.4);
     // the sky toggles' on state; e-ink already greys the off state
     $: selectedBackgroundColor = toggable && isSelected && !isEInk ? colorAccentContainer : undefined;
 </script>
 
-{#if __ANDROID__}
-    <canvasview
-        bind:this={canvas}
-        backgroundColor={selectedBackgroundColor}
-        borderRadius={shape === 'round' || (rounded && !shape) ? (height || size) / 2 : borderRadius}
-        disableCss={true}
-        isUserInteractionEnabled={isEnabled}
-        rippleColor={actualColor}
-        visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
-        on:draw={onCanvasDraw}
-        {...$$restProps}
-        height={height || size}
-        width={width || size}
-        on:tap
-        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
-{:else}
-    <mdbutton
-        backgroundColor={selectedBackgroundColor}
-        color={isSelected ? selectedColor || colorPrimary : actualColor}
-        disableCss={true}
-        {fontFamily}
-        {isEnabled}
-        padding={0}
-        rippleColor={actualColor}
-        shape={shape || (rounded ? 'round' : null)}
-        {text}
-        variant="text"
-        visibility={isVisible ? 'visible' : isHidden ? 'hidden' : 'collapse'}
-        {...borderRadius && !(shape || rounded) ? { borderRadius } : {}}
-        {...$$restProps}
-        fontSize={(fontSize ? fontSize : small ? 16 : 24) * actualMaxFontScale}
-        height={(height || size) * actualMaxFontScale}
-        width={(width || size) * actualMaxFontScale}
-        on:tap
-        on:loaded
-        on:longPress={actualLongPress}
-        use:conditionalEvent={{ condition: !!actualLongPress, event: 'longPress', callback: actualLongPress }} />
-{/if}
+<SharedIconButton
+    {borderRadius}
+    {color}
+    disabledColor={isEInk ? '#ccc' : 'lightgray'}
+    {gray}
+    grayColor={colorOnSurfaceVariant2}
+    {isSelected}
+    {selectedBackgroundColor}
+    selectedColor={selectedColor || colorPrimary}
+    {sizeScale}
+    {white}
+    {...$$restProps}
+    on:tap
+    on:loaded />
