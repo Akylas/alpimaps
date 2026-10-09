@@ -43,6 +43,9 @@
     export let rowHeight = null;
     /** Height of an item of `type: 'separator'`: a hairline between two groups of items. */
     export let separatorHeight = 12;
+    /** Heights of the `type: 'tiles'` item (a wrapping grid of icon-over-label buttons) and of the `type: 'footer'` item (one row of small buttons). */
+    export let tilesHeight = 128;
+    export let footerHeight = 44;
     export let autofocus = false;
     export let estimatedItemSize = true;
     export let autoSize = false;
@@ -201,6 +204,8 @@
     function onCollectionLoaded(event: EventData) {
         if (event.object instanceof CollectionView) {
             event.object.setTemplateRowHeight('separator', separatorHeight);
+            event.object.setTemplateRowHeight('tiles', tilesHeight);
+            event.object.setTemplateRowHeight('footer', footerHeight);
         }
     }
     function onDataPopulated(event) {
@@ -261,13 +266,23 @@
             </gridlayout>
         {/if}
         {#if toggles?.length}
-            <gridlayout borderBottomColor={colorHairline} borderBottomWidth={1} columns={toggles.map(() => '*').join(',')} padding="6 4 8 4" row={1}>
+            {@const toggleColumns = Math.min(toggles.length, 2)}
+            <gridlayout
+                borderBottomColor={colorHairline}
+                borderBottomWidth={1}
+                columns={Array(toggleColumns).fill('*').join(',')}
+                padding="6 4 8 4"
+                row={1}
+                rows={Array(Math.ceil(toggles.length / toggleColumns))
+                    .fill('auto')
+                    .join(',')}>
                 {#each toggles as toggle, index}
                     <Pill
-                        col={index}
+                        col={index % toggleColumns}
                         horizontalAlignment="stretch"
                         icon={toggle.icon}
                         label={toggle.label}
+                        row={Math.floor(index / toggleColumns)}
                         selected={toggle.selected}
                         on:tap={() => {
                             toggle.selected = !toggle.selected;
@@ -408,6 +423,47 @@
                     </gridlayout>
                 </svelte:component>
             </Template>
+            <Template key="tiles" let:item>
+                <gridlayout
+                    columns={Array(item.columns ?? 3)
+                        .fill('*')
+                        .join(',')}
+                    padding="2 8"
+                    rows={Array(Math.ceil(item.tiles.length / (item.columns ?? 3)))
+                        .fill('*')
+                        .join(',')}>
+                    {#each item.tiles as tile, index}
+                        <gridlayout
+                            col={index % (item.columns ?? 3)}
+                            horizontalAlignment="stretch"
+                            rippleColor={colorPrimary}
+                            row={Math.floor(index / (item.columns ?? 3))}
+                            rows="*,auto"
+                            on:tap={() => close(tile)}
+                            on:longPress={(event) => onLongPress?.(tile, event)}>
+                            <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={24} text={tile.icon} textAlignment="center" verticalAlignment="bottom" />
+                            <label color={colorOnSurface} fontSize={12} lineBreak="end" maxLines={2} row={1} text={tile.title} textAlignment="center" verticalAlignment="top" />
+                        </gridlayout>
+                    {/each}
+                </gridlayout>
+            </Template>
+            <Template key="footer" let:item>
+                <gridlayout borderTopColor={colorHairline} borderTopWidth={1} columns={item.tiles.map(() => '*').join(',')} margin="0 8">
+                    {#each item.tiles as tile, index}
+                        <stacklayout
+                            col={index}
+                            horizontalAlignment="center"
+                            orientation="horizontal"
+                            rippleColor={colorPrimary}
+                            verticalAlignment="middle"
+                            on:tap={() => close(tile)}
+                            on:longPress={(event) => onLongPress?.(tile, event)}>
+                            <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={18} text={tile.icon} verticalAlignment="middle" />
+                            <label color={colorOnSurfaceVariant} fontSize={13} paddingLeft={6} text={tile.title} verticalAlignment="middle" />
+                        </stacklayout>
+                    {/each}
+                </gridlayout>
+            </Template>
             <Template key="separator">
                 <gridlayout>
                     <absolutelayout backgroundColor={colorHairline} height={1} margin="0 12" verticalAlignment="middle" />
@@ -431,8 +487,7 @@
                     {titleProps}
                     {...templateProps}
                     on:rightTap={(event) => onRightTap(item, event)}
-                    on:tap={(event) => onTap(item, event)}>
-                </svelte:component>
+                    on:tap={(event) => onTap(item, event)}></svelte:component>
             </Template>
         </collectionview>
     </gridlayout>

@@ -43,6 +43,9 @@
             return true;
         }
     });
+    export function isLocationInfoShown() {
+        return showLocationInfo;
+    }
     export function switchLocationInfo() {
         showLocationInfo = !showLocationInfo;
         if (showLocationInfo) {

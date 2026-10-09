@@ -108,6 +108,15 @@ export async function showPopoverMenu<T = any>({
     const rowHeight = props?.rowHeight ?? 60 * scale;
     const separatorHeight = props?.separatorHeight ?? 12 * scale;
     const separatorCount = options.filter((option) => option.type === 'separator').length;
+    const tilesOptions = options.filter((option) => option.type === 'tiles');
+    const footerCount = options.filter((option) => option.type === 'footer').length;
+    const tileRowHeight = props?.tileRowHeight ?? 64 * scale;
+    const footerHeight = props?.footerHeight ?? 44 * scale;
+    const tilesHeights = tilesOptions.map((option) => Math.ceil(option.tiles.length / (option.columns ?? 3)) * tileRowHeight);
+    const tilesHeight = tilesHeights.length ? Math.max(...tilesHeights) : 0;
+    const toggleColumns = Math.min(props?.toggles?.length ?? 0, 2);
+    const togglesHeight = toggleColumns ? 14 + Math.ceil(props.toggles.length / toggleColumns) * 42 : 0;
+    const specialCount = separatorCount + tilesOptions.length + footerCount;
     const result: T = await showPopover({
         backgroundColor: colorPanel,
         view: OptionSelect,
@@ -122,8 +131,13 @@ export async function showPopoverMenu<T = any>({
             fontWeight: 500,
             containerColumns: 'auto',
             separatorHeight,
-            // the toggle pill row above the list, when there is one
-            height: Math.min(rowHeight * (options.length - separatorCount) + separatorHeight * separatorCount + (props?.toggles?.length ? 56 : 0), props?.maxHeight ?? 300),
+            tilesHeight,
+            footerHeight,
+            // the toggle pills above the list, when there are some
+            height: Math.min(
+                rowHeight * (options.length - specialCount) + separatorHeight * separatorCount + tilesHeights.reduce((sum, value) => sum + value, 0) + footerHeight * footerCount + togglesHeight,
+                props?.maxHeight ?? 300
+            ),
             width: Math.min(200 * scale, screenWidthDips * 0.9),
             options,
             onLongPress,
