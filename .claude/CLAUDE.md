@@ -20,6 +20,7 @@ than restating any of it — see [`tools/.claude/skills/README.md`](../tools/.cl
 - **Define "done" before starting.** One line is enough — state the success condition up front.
 - **Verify against latest code.** Never act on assumption — read the current file, run the check, confirm the state.
 - **Minimum code.** Write what's needed now. No speculative features, no hypothetical abstractions.
+- **Keep the gestures tutorial in sync.** Adding, moving or changing a non-obvious interaction (long press, swipe, drag, a button that does more than it shows) means updating `app/components/tutorial/tutorialPages.ts` and the `gesture_<id>_*` / `tutorial_page_<id>` strings in `en.json` + `fr.json` in the same change. Removing the feature removes its zone. A new screen with such gestures gets its own page.
 
 ## Security — untrusted external data
 

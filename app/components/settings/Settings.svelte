@@ -24,6 +24,7 @@
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
+    import { showGesturesTutorial } from '~/mapModules/features/gestures';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
@@ -772,6 +773,11 @@
                 )
                 .concat([
                     {
+                        id: 'gestures',
+                        title: lc('gestures_tips'),
+                        description: lc('gestures_tips_desc')
+                    },
+                    {
                         id: 'third_party',
                         title: lc('third_parties'),
                         description: lc('list_used_third_parties')
@@ -1073,6 +1079,10 @@
                     } else {
                         openLink(GIT_URL + '/issues');
                     }
+                    break;
+                }
+                case 'gestures': {
+                    await showGesturesTutorial();
                     break;
                 }
                 case 'third_party': {
