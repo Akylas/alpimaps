@@ -230,7 +230,7 @@ export interface MapContext {
     clearSearch: () => void;
     getCurrentLanguage: () => string;
     getSelectedItem: () => IItem;
-    setSelectedItem: (item: IItem) => void;
+    setSelectedItem: (item: IItem, updateProperties?: Record<string, any>) => void;
     saveItem: (item?: IItem, peek?: boolean) => Promise<void>;
     getEditingItem: () => IItem;
     getLayers: (layerId?: LayerType) => AddedLayer[];

@@ -19,12 +19,13 @@
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import Pill from '~/components/common/Pill.svelte';
+    import OSMDetailsCard, { osmCardHeight, osmCardLayout } from '~/components/bottomsheet/OSMDetailsCard.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
     import { langStore } from '~/helpers/locale';
+    import { OSM_DETAILS_FRESH_DURATION, canLookupOSMDetails, networkOnline, osmDetailsStates, osmItemKey } from '~/helpers/osmDetails';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
     import { featureItemActions } from '~/mapModules/mapFeatures';
@@ -38,7 +39,7 @@
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
     import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
-    import { colors, fontScaleMaxed } from '~/variables';
+    import { colors, fontScaleMaxed, fonts } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
@@ -58,15 +59,16 @@
         SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW
     } from '~/utils/constants';
     import dayjs from 'dayjs';
-    import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
+    import { chartShowWaypoints, itemLock, osmItemDetails, showAscents, showGradeColors } from '~/stores/mapStore';
     import { screenWidthDips } from '~/variables';
 
-    $: ({ colorBackground, colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel, colorPrimary } = $colors);
+    $: ({ colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPanel, colorPrimary } = $colors);
     // the chart's height includes the band its selected point strip lives in
     const PROFILE_HEIGHT = 215;
     const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
-    const INFOVIEW_HEIGHT = 86;
+    // the title block over a band for the stats and the open state chip
+    const INFOVIEW_HEIGHT = 96;
     // the route header's stat tiles, under its title band
     const ROUTE_TILES_HEIGHT = 48;
     // a route's title band: the icon tile with its option icons below; the title takes the height beside
@@ -75,40 +77,54 @@
     const CARD_MARGIN = 6;
     /** the space above each card after the first, part of its row so the steps stay exact */
     const CARD_GAP = 6;
-    // what a pill takes in the row, to fit as many as the width allows and move the rest to "…"
-    const PILL_ICON_WIDTH = 54;
-    const PILL_CHAR_WIDTH = 8;
-    function pillWidth(action) {
-        const label = PILL_LABELS[action.id]?.();
-        return PILL_ICON_WIDTH + (label ? label.length * PILL_CHAR_WIDTH + 6 : 0);
-    }
-    function splitActions(actions: typeof itemActions, width: number) {
-        const budget = width - CARD_MARGIN * 2 - 12;
-        let used = 0;
-        const visible = [];
-        for (let index = 0; index < actions.length; index++) {
-            const needed = pillWidth(actions[index]) + (index < actions.length - 1 ? PILL_ICON_WIDTH : 0);
-            if (used + needed > budget) {
-                return { visible, overflow: actions.slice(index) };
-            }
-            used += pillWidth(actions[index]);
-            visible.push(actions[index]);
-        }
-        return { visible, overflow: [] };
-    }
-    // the few actions worth a word; the rest are icon pills, their tooltip on long press
-    const PILL_LABELS: Record<string, () => string> = {
+    // the actions row: a filled main button and a tonal one with their label, then round icon buttons
+    const ACTION_BUTTON_HEIGHT = 36;
+    const ACTION_BUTTON_GAP = 8;
+    const ACTION_ROW_PADDING = 12;
+    const ACTION_LABEL_PADDING = 14;
+    // the row's 10 over and under the buttons, under the card gap
+    const ACTIONS_HEIGHT = CARD_GAP + ACTION_BUTTON_HEIGHT + 20;
+    const OVERFLOW_ID = '__overflow';
+    // the words of the labelled buttons; the others fall back on their own label, then their tooltip
+    const ACTION_LABELS: Record<string, () => string> = {
+        information: () => lc('information'),
         navigate: () => lc('start'),
-        save: () => lc('save'),
-        edit: () => lc('edit'),
-        share: () => lc('share')
+        edit: () => lc('edit')
     };
-    const ACTIONS_HEIGHT = 58;
+    function actionLabel(action: { id: string; label?: string; tooltip?: string }) {
+        return action.label ?? ACTION_LABELS[action.id]?.() ?? action.tooltip;
+    }
+    // an estimate of the button's width: its icon, 6 of room and the label's text
+    function labelledWidth(action: { id: string; label?: string; tooltip?: string }, scale: number) {
+        return ACTION_LABEL_PADDING * 2 + 18 + 6 + Math.ceil(actionLabel(action).length * 8 * scale);
+    }
+    function layoutActions(actions: typeof itemActions, mainId: string, width: number, scale: number) {
+        const main = actions.find((action) => action.id === mainId);
+        let tonal = actions.find((action) => action.id === 'address') ?? actions.find((action) => action.id === 'information');
+        // every button takes its gap, so the row is one gap wider than its room
+        const room = width - CARD_MARGIN * 2 - ACTION_ROW_PADDING * 2 + ACTION_BUTTON_GAP;
+        const slot = ACTION_BUTTON_HEIGHT + ACTION_BUTTON_GAP;
+        // too narrow for both words and the "…": the tonal one goes round
+        if (tonal && (main ? labelledWidth(main, scale) + ACTION_BUTTON_GAP : 0) + labelledWidth(tonal, scale) + ACTION_BUTTON_GAP + slot > room) {
+            tonal = undefined;
+        }
+        const labelled = [main, tonal].filter((action) => !!action);
+        const used = labelled.reduce((total, action) => total + labelledWidth(action, scale) + ACTION_BUTTON_GAP, 0);
+        const rest = actions.filter((action) => !labelled.includes(action));
+        if (used + rest.length * slot <= room) {
+            return { labelled, round: rest, overflow: [] };
+        }
+        // the last slot is the "…"
+        const count = Math.max(0, Math.floor((room - used) / slot) - 1);
+        return { labelled, round: rest.slice(0, count), overflow: rest.slice(count) };
+    }
     function headerHeight(it: Item) {
         return it?.route ? ROUTE_TITLE_HEIGHT + ROUTE_TILES_HEIGHT : INFOVIEW_HEIGHT;
     }
 
     const mapContext = getMapContext();
+    // looked up on use: the items module registers after this component is created
+    const getItemsModule = () => mapContext.mapModule('items');
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
     // highlightPaint.setTextAlign(Align.CENTER);
@@ -137,6 +153,9 @@
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
     let currentLocation: MapPos = null;
+    let osmStepIndex = -1;
+    let osmLookupKey: string = null;
+    let osmSavedKey: string = null;
 
     onMount(() => {
         updateSteps();
@@ -328,6 +347,17 @@
             console.error('item changed', !!err, err, err.stack);
         }
     }
+    // the OpenStreetMap card: a place we can match, whatever the connection, its height part of the steps
+    $: osmCardVisible = $osmItemDetails && canLookupOSMDetails(item);
+    $: osmHeight = osmCardVisible ? osmCardHeight(osmCardLayout(item, $networkOnline, $osmDetailsStates[osmItemKey(item)]), $fontScaleMaxed, CARD_GAP) : 0;
+    $: updateSteps(osmHeight);
+    // the lookup waits for the card to be on show, the hours chip asks for it sooner
+    $: if (osmCardVisible && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
+        startOSMDetails(item);
+    } else if (!osmCardVisible) {
+        osmLookupKey = null;
+    }
+    $: loadSavedOSMDetails(item, osmCardVisible);
     $: updateSelectedItem(item);
     $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
@@ -350,12 +380,19 @@
         astronomy: { tap: () => showAstronomy() },
         compass: { tap: () => openCompass() },
         transit: { tap: () => getTransitLines() },
+        address: { tap: () => getItemAddress() },
         share: { tap: (event) => shareItem(event) }
     };
 
     $: itemActions = [
         { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
-        { id: 'save', when: itemCanBeAdded, text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus', tooltip: lc('save') },
+        {
+            id: 'save',
+            when: itemCanBeAdded,
+            text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus',
+            label: itemIsEditingItem ? lc('save') : lc('add'),
+            tooltip: itemIsEditingItem ? lc('save') : lc('add')
+        },
         { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
         { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
         { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
@@ -368,6 +405,7 @@
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
         { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
+        { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
     ]
         // numbered before the filter so order doesn't depend on which entries apply; spaced 10 apart
@@ -376,9 +414,16 @@
         .filter((action) => action.when)
         .concat(featureItemActions(item) as any)
         .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
-    $: ({ overflow: overflowActions, visible: visibleActions } = splitActions(itemActions, sheetWidth));
+    // what the filled button does for this item: save while editing, start a route, add a new place, else edit
+    $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : null;
+    $: labelScale = Math.min($fontScaleMaxed, 1.3);
+    $: ({ labelled: labelledActions, overflow: overflowActions, round: roundActions } = layoutActions(itemActions, mainActionId, sheetWidth, labelScale));
+    $: roundButtons = overflowActions.length ? [...roundActions, { id: OVERFLOW_ID, text: 'mdi-dots-horizontal', tooltip: lc('more') }] : roundActions;
 
     function runAction(action, event) {
+        if (action.id === OVERFLOW_ID) {
+            return showOverflowActions(event);
+        }
         return (action['onTap'] ?? actionHandlers[action.id]?.tap)?.(event);
     }
     function longPressAction(action, event) {
@@ -513,6 +558,8 @@
     /** the sheet's width, landscape is narrower than the screen */
     export let sheetWidth = screenWidthDips;
     export let steps;
+    /** the sheet's current step */
+    export let stepIndex = 0;
     export let navigationInstructions: {
         remainingDistance: number;
         remainingTime: number;
@@ -550,8 +597,9 @@
         }
     }
 
-    function updateSteps() {
+    function updateSteps(osmCardRowHeight = osmHeight) {
         if (!item) {
+            osmStepIndex = -1;
             steps = [0];
             return;
         }
@@ -570,6 +618,12 @@
             total += STATS_HEIGHT;
             result.push(total);
         }
+        osmStepIndex = -1;
+        if (osmCardRowHeight) {
+            total += osmCardRowHeight;
+            result.push(total);
+            osmStepIndex = result.length - 1;
+        }
         // if (listViewAvailable) {
         //     total += WEB_HEIGHT;
         //     result.push(total);
@@ -584,6 +638,81 @@
     }
 
     let updatingItem = false;
+
+    // what the places we looked up before already tell: the hours show right away, offline too
+    async function loadSavedOSMDetails(selected: Item, enabled: boolean) {
+        if (!enabled) {
+            osmSavedKey = null;
+            return;
+        }
+        const key = osmItemKey(selected);
+        if (key === osmSavedKey) {
+            return;
+        }
+        osmSavedKey = key;
+        try {
+            const saved = await getItemsModule().getCachedOSMDetails(selected);
+            if (saved && !selected.properties.opening_hours) {
+                await getItemsModule().mergeSelectedItemProperties(selected, saved.properties);
+            }
+        } catch (error) {
+            DEV_LOG && console.error('loadSavedOSMDetails', error);
+        }
+    }
+    // once per selection, when the card is on show: a lookup less than a day old is left alone
+    async function startOSMDetails(selected: Item) {
+        const key = osmItemKey(selected);
+        if (key === osmLookupKey) {
+            return;
+        }
+        osmLookupKey = key;
+        if (!$networkOnline) {
+            return;
+        }
+        try {
+            const fetchedAt = $osmDetailsStates[key]?.fetchedAt;
+            if (fetchedAt === undefined || Date.now() - fetchedAt >= OSM_DETAILS_FRESH_DURATION) {
+                await getItemsModule().loadOSMDetails(selected, fetchedAt !== undefined);
+            }
+        } catch (error) {
+            DEV_LOG && console.error('startOSMDetails', error);
+        }
+    }
+    // the hours chip: quiet when it fails, it just goes away
+    async function fetchHours() {
+        try {
+            await getItemsModule().loadOSMDetails(item);
+        } catch (error) {
+            DEV_LOG && console.error('fetchHours', error);
+        }
+    }
+    async function refreshOSMDetails() {
+        try {
+            await getItemsModule().loadOSMDetails(item, true);
+        } catch (error) {
+            showError(error);
+        }
+    }
+    async function getItemAddress() {
+        const selected = item;
+        try {
+            updatingItem = true;
+            const address = await packageService.getItemAddress(selected, true);
+            if (!address) {
+                showSnack({ message: lc('no_result_found') });
+                return;
+            }
+            const toUpdate: Record<string, any> = { address };
+            if (address.name && !selected.properties.name) {
+                toUpdate.name = address.name;
+            }
+            await getItemsModule().mergeSelectedItemProperties(selected, toUpdate);
+        } catch (error) {
+            showError(error);
+        } finally {
+            updatingItem = false;
+        }
+    }
 
     async function updateEditedItem() {
         try {
@@ -1104,7 +1233,7 @@
 </script>
 
 <!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
-<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${PROFILE_HEIGHT},${STATS_HEIGHT},auto`} on:tap={() => {}}>
+<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${graphAvailable ? PROFILE_HEIGHT : 0},${statsAvailable ? STATS_HEIGHT : 0},auto`} on:tap={() => {}}>
     {#if loaded}
         <swipemenu
             bind:this={swipemenu}
@@ -1120,7 +1249,17 @@
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
             <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${(itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT) - CARD_GAP},*`}>
-                <BottomSheetInfoView bind:this={infoView} iconLeft={30} iconTile={true} {item} marginBottom={itemIsRoute ? 2 : 24} marginLeft={62} propsBottom={24} showStats={!itemIsRoute}>
+                <BottomSheetInfoView
+                    bind:this={infoView}
+                    hoursChip={!itemIsRoute}
+                    iconLeft={30}
+                    iconTile={true}
+                    {item}
+                    marginBottom={itemIsRoute ? 2 : 36}
+                    marginLeft={62}
+                    propsBottom={30}
+                    showStats={!itemIsRoute}
+                    on:fetch={fetchHours}>
                     <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                 </BottomSheetInfoView>
                 {#if itemIsRoute}
@@ -1161,19 +1300,51 @@
         </swipemenu>
 
         <gridlayout class="panel" borderRadius={CARD_RADIUS} colSpan={2} margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`} row={1}>
-            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding="0 6" verticalAlignment="middle">
-                {#each visibleActions as action (action.id)}
-                    <Pill
+            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding={`10 ${ACTION_ROW_PADDING}`} verticalAlignment="middle">
+                {#each labelledActions as action (action.id)}
+                    {@const filled = action.id === mainActionId}
+                    {@const contentColor = filled ? (isEInk ? 'white' : colorOnPrimary) : isEInk ? colorOnSurface : colorPrimary}
+                    <gridlayout
                         id={action.id}
-                        icon={action.text}
-                        label={PILL_LABELS[action.id]?.()}
-                        primary={action.id === 'navigate'}
+                        backgroundColor={filled ? (isEInk ? 'black' : colorPrimary) : isEInk ? null : colorAccentContainer}
+                        borderColor={colorOnSurface}
+                        borderRadius={ACTION_BUTTON_HEIGHT / 2}
+                        borderWidth={isEInk && !filled ? 1 : 0}
+                        height={ACTION_BUTTON_HEIGHT}
+                        horizontalAlignment="left"
+                        marginRight={ACTION_BUTTON_GAP}
+                        rippleColor={filled ? colorOnPrimary : colorPrimary}
+                        verticalAlignment="middle"
                         on:tap={(event) => runAction(action, event)}
-                        on:longPress={(event) => longPressAction(action, event)} />
+                        on:longPress={(event) => longPressAction(action, event)}>
+                        <stacklayout horizontalAlignment="center" orientation="horizontal" padding={`0 ${ACTION_LABEL_PADDING}`} verticalAlignment="middle">
+                            <label color={contentColor} fontFamily={$fonts.mdi} fontSize={18} text={action.text} verticalAlignment="middle" />
+                            <label color={contentColor} fontSize={14 * labelScale} fontWeight="500" maxLines={1} paddingLeft={6} text={actionLabel(action)} verticalAlignment="middle" />
+                        </stacklayout>
+                    </gridlayout>
                 {/each}
-                {#if overflowActions.length}
-                    <Pill icon="mdi-dots-horizontal" on:tap={showOverflowActions} />
-                {/if}
+                {#each roundButtons as action (action.id)}
+                    <gridlayout
+                        id={action.id}
+                        borderColor={colorOutlineSoft}
+                        borderRadius={ACTION_BUTTON_HEIGHT / 2}
+                        borderWidth={1}
+                        height={ACTION_BUTTON_HEIGHT}
+                        marginRight={ACTION_BUTTON_GAP}
+                        rippleColor={colorPrimary}
+                        verticalAlignment="middle"
+                        width={ACTION_BUTTON_HEIGHT}
+                        on:tap={(event) => runAction(action, event)}
+                        on:longPress={(event) => longPressAction(action, event)}>
+                        <label
+                            color={isEInk ? colorOnSurface : colorOnSurfaceVariant}
+                            fontFamily={$fonts.mdi}
+                            fontSize={20}
+                            horizontalAlignment="center"
+                            text={action.text}
+                            verticalAlignment="middle" />
+                    </gridlayout>
+                {/each}
             </stacklayout>
         </gridlayout>
         <ElevationChart
@@ -1200,6 +1371,15 @@
             margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
             row={3}
             visibility={statsAvailable ? 'visible' : 'collapse'} />
+        <OSMDetailsCard
+            borderRadius={CARD_RADIUS}
+            colSpan={2}
+            height={osmHeight ? osmHeight - CARD_GAP : 0}
+            {item}
+            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+            row={4}
+            visibility={osmCardVisible ? 'visible' : 'collapse'}
+            on:refresh={refreshOSMDetails} />
 
         <!-- <AWebView
             row={3}

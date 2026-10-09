@@ -12,7 +12,9 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { Item } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
+    import { packageService } from '~/services/PackageService';
     import { showError } from '@shared/utils/showError';
+    import { showSnack } from '@shared/utils/ui';
     import { share } from '@akylas/nativescript-app-utils/share';
     import { openURL } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, actionBarHeight, colors, fonts } from '~/variables';
@@ -21,9 +23,10 @@
     import JsonViewer from './JSONViewer.svelte';
     import ListItemAutoSize from '../common/ListItemAutoSize.svelte';
     import OpeningHoursTable from './OpeningHoursTable.svelte';
+    import OpenStateChip from './OpenStateChip.svelte';
     // import JSONViewer from '~/components/JSONViewer.svelte';
-    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors;
-    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant } = $colors);
+    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
     export let item: Item;
     export let openHoursExpanded = false;
@@ -71,12 +74,13 @@
                 newItems.push({
                     id: 'opening_hours',
                     title: lc('opening_hours'),
-                    subtitle: data.text,
-                    subtitleColor: data.color,
+                    // the state is the chip; hours we cannot read stay as written
+                    subtitle: data ? undefined : itemProperties[k],
+                    hoursItem: data ? item : undefined,
                     leftIcon: 'mdi-clock-outline',
-                    expandable: true,
+                    expandable: !!data,
                     expanded: openHoursExpanded,
-                    opening_hours: data.oh
+                    opening_hours: data?.oh
                 });
             }
             if (k === 'phone' || k === 'contact:phone') {
@@ -154,6 +158,16 @@
             }
         });
 
+        if (!item.route && !itemProperties.address && item.geometry?.type === 'Point') {
+            newItems.unshift({
+                id: 'get_address',
+                title: lc('address'),
+                subtitle: lc('get_address'),
+                subtitleColor: colorPrimary,
+                leftIcon: 'mdi-home-search-outline'
+            });
+        }
+
         const devMode = mapContext.mapModule('customLayers').devMode;
         if (devMode) {
             newItems.push({
@@ -229,28 +243,22 @@
     let loading = false;
     async function refresh(force = false) {
         try {
-            const ignoredKeys = itemsModule.ignoredOSMKeys;
-            const itemProperties = { ...item.properties };
             const needsSaving = !!item.id;
             DEV_LOG && console.log('refresh', needsSaving, item);
             // if (!itemProperties.osmid) {
-            if (force || !itemProperties.osmid) {
+            if (force || !item.properties.osmid) {
                 if (!force) {
                     refreshItems();
                 }
                 loading = true;
-                const result = await itemsModule.getOSMDetails(item, mapContext.getMap().camera().zoom(), force);
-                // DEV_LOG && console.log('result', result);
-                if (result) {
-                    const newProps = {};
-                    Object.keys(result.tags).forEach((k) => {
-                        const value = result.tags[k];
-                        if (!k.startsWith('addr:') && ignoredKeys.indexOf(k) === -1 && value !== item.properties.class) {
-                            newProps[k] = itemProperties[k] = value;
-                        }
-                    });
-                    item = { ...item, properties: { ...itemProperties, osmid: result.id } };
-                    extraProps = newProps;
+                const details = await itemsModule.fetchOSMDetails(item, mapContext.getMap().camera().zoom(), force);
+                // DEV_LOG && console.log('details', details);
+                if (details) {
+                    // the selected item gets them too, so its header and cards follow
+                    await itemsModule.mergeSelectedItemProperties(item, details.properties);
+                    item = { ...item, properties: { ...item.properties, ...details.properties } };
+                    extraProps = { ...details.properties };
+                    delete extraProps['osmid'];
                 }
                 if (needsSaving) {
                     saveItem(false);
@@ -329,10 +337,35 @@
             showError(err);
         }
     }
+    async function getItemAddress() {
+        try {
+            loading = true;
+            const address = await packageService.getItemAddress(item, true);
+            if (!address) {
+                showSnack({ message: lc('no_result_found') });
+                return;
+            }
+            const toUpdate: Record<string, any> = { address };
+            if (address.name && !item.properties.name) {
+                toUpdate.name = address.name;
+            }
+            await itemsModule.mergeSelectedItemProperties(item, toUpdate);
+            item = { ...item, properties: { ...item.properties, ...toUpdate } };
+            extraProps = { ...extraProps, ...toUpdate };
+            refreshItems();
+        } catch (error) {
+            showError(error);
+        } finally {
+            loading = false;
+        }
+    }
     async function onItemTap(event, listItem) {
         DEV_LOG && console.log('onItemTap', listItem);
         try {
             switch (listItem.id) {
+                case 'get_address':
+                    await getItemAddress();
+                    break;
                 case 'website':
                     await openURL(listItem.subtitle);
                     break;
@@ -446,7 +479,11 @@
                         item={{ ...item, titleColor: colorOnSurfaceVariant, subtitleColor: item.subtitleColor || colorOnSurface }}
                         mainCol={1}
                         minHeight={70}
-                        subtitleFontSize={16} />
+                        subtitleFontSize={16}>
+                        {#if item.hoursItem}
+                            <OpenStateChip checkable={false} col={1} horizontalAlignment="right" item={item.hoursItem} marginRight={40} verticalAlignment="middle" />
+                        {/if}
+                    </ListItemAutoSize>
                     <IconButton
                         id="rightButton"
                         horizontalAlignment="right"

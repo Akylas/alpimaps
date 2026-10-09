@@ -29,7 +29,7 @@
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
     import { getNavigationSettingsOptions } from '~/stores/navigationStore';
-    import { clickHandlerLayerFilter, immersive, layerProps, useOfflineGeocodeAddress, useSystemGeocodeAddress } from '~/stores/mapStore';
+    import { clickHandlerLayerFilter, immersive, layerProps, osmItemDetails, useSystemGeocodeAddress } from '~/stores/mapStore';
     import {
         DEFAULT_TILE_SERVER_AUTO_START,
         DEFAULT_TILE_SERVER_PORT,
@@ -151,7 +151,7 @@
         url_use_inapp_browser: 'mdi-web',
         list_longpress_camera: 'mdi-camera-outline',
         immersive: 'mdi-fullscreen',
-        useOfflineGeocodeAddress: 'mdi-map-search-outline',
+        osmItemDetails: 'mdi-store-clock-outline',
         useSystemGeocodeAddress: 'mdi-cellphone-marker',
         startDirDest: 'mdi-directions',
         [SETTINGS_VALHALLA_ONLINE_URL]: 'mdi-link-variant',
@@ -286,6 +286,14 @@
                         key: 'url_use_inapp_browser',
                         value: ApplicationSettings.getBoolean('url_use_inapp_browser', true),
                         title: lc('url_use_inapp_browser')
+                    },
+                    {
+                        type: 'switch',
+                        key: 'osmItemDetails',
+                        store: osmItemDetails,
+                        value: $osmItemDetails,
+                        title: lc('osm_item_details'),
+                        description: lc('osm_item_details_desc')
                     }
                 ].concat(
                     __ANDROID__
@@ -308,13 +316,6 @@
                 );
             case 'address':
                 return [
-                    {
-                        type: 'switch',
-                        key: 'useOfflineGeocodeAddress',
-                        store: useOfflineGeocodeAddress,
-                        value: $useOfflineGeocodeAddress,
-                        title: lc('use_offline_geocoding_address')
-                    },
                     {
                         type: 'switch',
                         key: 'useSystemGeocodeAddress',

@@ -41,9 +41,9 @@
 </script>
 
 {#if typeof data === 'object'}
-    <stacklayout padding="0 16 12 16">
+    <stacklayout padding="0 16 12 16" {...$$restProps}>
         {#each days as day, index}
-            <gridlayout columns="*,auto" padding="3 0">
+            <gridlayout columns="*,auto" padding="3 0" rows="auto">
                 <label color={colorOnSurface} fontSize={14} fontWeight={index === today ? 'bold' : 'normal'} text={day.name} />
                 <label col={1} color={colorOnSurface} fontSize={14} fontWeight={index === today ? 'bold' : 'normal'} text={formatRanges(data[day.key])} />
             </gridlayout>

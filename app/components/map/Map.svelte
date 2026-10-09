@@ -19,7 +19,7 @@
     import { showError } from '@shared/utils/showError';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
-    import { onDestroy, onMount } from 'svelte';
+    import { onDestroy, onMount, tick } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import BottomSheetInner from '~/components/bottomsheet/BottomSheetInner.svelte';
     import ButtonBar from '~/components/common/ButtonBar.svelte';
@@ -146,6 +146,9 @@
     let vectorTileDecoder: MapDecoder;
 
     let bottomSheetStepIndex = 0;
+    // where a selected item's sheet opens: the step the user last dragged it to, 1 header only or 2 with the
+    // actions. 0 until he chose, then the default
+    let sheetRestingStep = ApplicationSettings.getNumber('bottom_sheet_resting_step', 0);
     let steps;
 
     // navigation has its own sheet (sharing the item one made them fight over steps); views lazy-loaded
@@ -798,8 +801,10 @@
                 if (peek) {
                     // the item sheet is not mounted while navigating: selecting still works, the sheet
                     // just comes back with the item already set once navigation ends
-                    bottomSheetInner?.loadView().then(() => {
-                        bottomSheetStepIndex = Math.max(showButtons ? 2 : 1, bottomSheetStepIndex);
+                    bottomSheetInner?.loadView().then(async () => {
+                        // after the sheet has rebuilt its steps: raised first, the steps clamp drops it back to 0 and closes the sheet
+                        await tick();
+                        bottomSheetStepIndex = Math.max(sheetRestingStep || (showButtons ? 2 : 1), bottomSheetStepIndex);
                     });
                 }
                 if (setSelected) {
@@ -1022,7 +1027,6 @@
 
         // the route being followed cannot be dropped: a map tap or a pan would otherwise leave
         // navigation running against an item nothing is showing anymore
-
         if ($itemLock) {
             if (forceUnlock) {
                 $itemLock = false;
@@ -1849,11 +1853,11 @@
                             default:
                                 networkService.forcedOffline = toggle.selected;
                         }
+                        closePopover();
                     }
                 },
                 onLongPress: tryCatchFunction(async (result) => {
                     if (result) {
-                        closePopover();
                         await $mainMenuItemsStore.find((item) => item.id === result.id)?.onLongPress?.();
                     }
                 }),
@@ -2040,6 +2044,11 @@
     function onStepIndexChanged(e) {
         if (e.value !== bottomSheetStepIndex) {
             bottomSheetStepIndex = e.value;
+            // a drag: our own changes come back as the value we already hold
+            if (e.value > 0 && !$isNavigating) {
+                sheetRestingStep = Math.min(e.value, 2);
+                ApplicationSettings.setNumber('bottom_sheet_resting_step', sheetRestingStep);
+            }
         }
     }
     function onNavigationStepIndexChanged(e) {
@@ -2283,6 +2292,7 @@
                 horizontalAlignment={isLandscape ? 'left' : 'stretch'}
                 item={$selectedItem}
                 sheetWidth={isLandscape ? Math.max($windowSize.width / 2, 400) : $windowSize.width}
+                stepIndex={bottomSheetStepIndex}
                 updating={itemLoading}
                 width={isLandscape ? Math.max($windowSize.width / 2, 400) : '100%'}
                 bind:navigationInstructions
