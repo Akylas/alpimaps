@@ -68,15 +68,15 @@
     const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
     // the title block over a band for the stats and the open state chip
-    const INFOVIEW_HEIGHT = 96;
+    const INFOVIEW_HEIGHT = 90;
     // the route header's stat tiles, under its title band
     const ROUTE_TILES_HEIGHT = 48;
     // a route's title band: the icon tile with its option icons below; the title takes the height beside
-    const ROUTE_TITLE_HEIGHT = 76;
+    const ROUTE_TITLE_HEIGHT = 70;
     const CARD_RADIUS = 20;
     const CARD_MARGIN = 6;
     /** the space above each card after the first, part of its row so the steps stay exact */
-    const CARD_GAP = 6;
+    const CARD_GAP = 4;
     // the actions row: a filled main button and a tonal one with their label, then round icon buttons
     const ACTION_BUTTON_HEIGHT = 36;
     const ACTION_BUTTON_GAP = 8;
@@ -1243,13 +1243,13 @@
             borderRadius={CARD_RADIUS}
             borderWidth={1}
             closeAnimationDuration={100}
-            height={headerHeight(item) - CARD_GAP}
+            height={headerHeight(item)}
             leftSwipeDistance={0}
             margin={`0 ${CARD_MARGIN}`}
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${(itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT) - CARD_GAP},*`}>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT},*`}>
                 <BottomSheetInfoView
                     bind:this={infoView}
                     hoursChip={!itemIsRoute}
