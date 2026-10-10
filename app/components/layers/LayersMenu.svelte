@@ -173,8 +173,9 @@
     async function showLayerMenu(item: SourceItem, event) {
         try {
             const capabilities = layerCapabilities(item);
+            const hidden = item.layer.opacity() === 0;
             const options = [
-                { id: 'settings', name: lc('layer_settings'), icon: 'mdi-tune-variant' },
+                { id: 'toggle_visible', name: hidden ? lc('show') : lc('hide'), icon: hidden ? 'mdi-eye-off-outline' : 'mdi-eye-outline' },
                 capabilities.downloadable && { id: 'download_area', name: lc('download_area'), icon: 'mdi-download' },
                 capabilities.cacheable && { id: 'clear_cache', name: lc('clear_cache'), icon: 'mdi-clock-remove-outline' },
                 capabilities.removable && { id: 'delete', name: lc('remove_layer'), icon: 'mdi-delete', color: colorError }
@@ -186,8 +187,8 @@
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
                 props: { autoSizeListItem: true },
                 onClose: async (option) => {
-                    if (option.id === 'settings') {
-                        showSourceOptions(item);
+                    if (option.id === 'toggle_visible') {
+                        toggleLayerVisible(item);
                     } else {
                         await runLayerAction(item, option.id);
                     }
@@ -287,7 +288,7 @@
                     openAnimationDuration={100}
                     startingSide={item.startingSide}
                     translationFunction={drawerTranslationFunction}>
-                    <gridlayout prop:mainContent backgroundColor={colorBackground} columns="auto,*,auto,auto" padding="8 0 0 0" rows="auto,*">
+                    <gridlayout prop:mainContent backgroundColor={colorBackground} columns="auto,*,auto" padding="8 0 0 0" rows="auto,*">
                         <!-- drag to reorder -->
                         <IconButton
                             color={colorOnSurfaceVariant}
@@ -323,7 +324,7 @@
                             col={1}
                             marginBottom={8}
                             marginLeft={-10}
-                            marginRight={-10}
+                            marginRight={24}
                             marginTop={0}
                             maxValue={1}
                             minValue={0}
@@ -333,12 +334,13 @@
                             on:valueChange={(event) => onLayerOpacityChanged(item, event)} />
                         <IconButton
                             col={2}
-                            gray={true}
+                            color={colorOnSurfaceVariant}
+                            onLongPress={(event) => showLayerMenu(item, event)}
                             rowSpan={2}
-                            text={item.layer.opacity() === 0 ? 'mdi-eye-off-outline' : 'mdi-eye-outline'}
-                            tooltip={item.layer.opacity() === 0 ? lc('show') : lc('hide')}
-                            on:tap={() => toggleLayerVisible(item)} />
-                        <IconButton col={3} color={colorOnSurfaceVariant} rowSpan={2} text="mdi-dots-vertical" width={40} on:tap={(event) => showLayerMenu(item, event)} />
+                            text="mdi-tune-variant"
+                            tooltip={lc('layer_settings')}
+                            width={44}
+                            on:tap={() => showSourceOptions(item)} />
                         <progress col={1} row={1} value={item.downloadProgress} verticalAlignment="bottom" visibility={item.downloading > 0 ? 'visible' : 'collapse'} />
                     </gridlayout>
                     <mdbutton
