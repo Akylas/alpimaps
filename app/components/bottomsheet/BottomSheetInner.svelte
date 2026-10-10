@@ -19,7 +19,7 @@
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import OSMDetailsCard, { osmCardHeight, osmCardLayout } from '~/components/bottomsheet/OSMDetailsCard.svelte';
+    import OSMDetailsCard, { osmCardHeight, osmCardLayout, osmFacts } from '~/components/bottomsheet/OSMDetailsCard.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
@@ -347,17 +347,18 @@
             console.error('item changed', !!err, err, err.stack);
         }
     }
-    // the OpenStreetMap card: a place we can match, whatever the connection, its height part of the steps
-    $: osmCardVisible = $osmItemDetails && canLookupOSMDetails(item);
+    // the OpenStreetMap card: a place we can match, whatever the connection, or one with facts to show
+    $: osmLookupAllowed = $osmItemDetails && canLookupOSMDetails(item);
+    $: osmCardVisible = osmLookupAllowed || ($osmItemDetails && osmFacts(item).length > 0);
     $: osmHeight = osmCardVisible ? osmCardHeight(osmCardLayout(item, $networkOnline, $osmDetailsStates[osmItemKey(item)]), $fontScaleMaxed, CARD_GAP) : 0;
     $: updateSteps(osmHeight);
     // the lookup waits for the card to be on show, the hours chip asks for it sooner
-    $: if (osmCardVisible && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
+    $: if (osmLookupAllowed && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
         startOSMDetails(item);
-    } else if (!osmCardVisible) {
+    } else if (!osmLookupAllowed) {
         osmLookupKey = null;
     }
-    $: loadSavedOSMDetails(item, osmCardVisible);
+    $: loadSavedOSMDetails(item, osmLookupAllowed);
     $: updateSelectedItem(item);
     $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
