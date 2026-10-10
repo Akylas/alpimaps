@@ -1234,6 +1234,8 @@
     "gesture_side_buttons_desc": "Long-press slopes, routes or 3D for their settings, and keep screen on for full brightness.",
     "gesture_reorder_title": "Reorder layers",
     "gesture_reorder_desc": "In the layers list, long-press a layer then drag it to change its order.",
+    "gesture_layer_options_title": "Show, hide or remove a layer",
+    "gesture_layer_options_desc": "In the layers list, tap a layer's settings button for its options; long-press it to hide or show the layer, download an area, clear its cache or remove it.",
     "gesture_waypoint_title": "Add a waypoint",
     "gesture_waypoint_desc": "While planning a route, long-press the map to add a waypoint.",
     "gesture_profile_title": "Transport mode settings",

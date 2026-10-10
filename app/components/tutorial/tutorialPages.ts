@@ -113,16 +113,14 @@ export const tutorialPages: TutorialPage[] = [
             icon(16, 220, 'mdi-drag-vertical', 24),
             text(50, 208, 150, 'hillshade_strength', { key: true, bold: true }),
             { kind: 'meter', x: 50, y: 244, width: 130, height: 6, value: 0.7 },
-            icon(210, 222, 'mdi-eye', 24),
-            icon(250, 222, 'mdi-dots-vertical', 24),
+            icon(250, 222, 'mdi-tune-variant', 24),
             card(10, 278, 280, 72),
             icon(16, 302, 'mdi-drag-vertical', 24),
             text(50, 290, 150, 'hybrid_imagery', { key: true, bold: true }),
             { kind: 'meter', x: 50, y: 326, width: 130, height: 6, value: 0.4 },
-            icon(210, 304, 'mdi-eye', 24),
-            icon(250, 304, 'mdi-dots-vertical', 24)
+            icon(250, 304, 'mdi-tune-variant', 24)
         ],
-        zones: [zone('map_options', 'longPress', 10, 148, 278, 36), zone('reorder', 'drag', 12, 206, 40, 52, () => __ANDROID__), zone('layer_swipe', 'swipe', 10, 278, 280, 72)]
+        zones: [zone('map_options', 'longPress', 10, 148, 278, 36), zone('reorder', 'drag', 12, 206, 40, 52, () => __ANDROID__), zone('layer_options', 'longPress', 244, 212, 44, 44), zone('layer_swipe', 'swipe', 10, 278, 280, 72)]
     },
     {
         id: 'place',

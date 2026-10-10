@@ -999,6 +999,8 @@
     "gesture_side_buttons_desc": "Un appui long sur pentes, itinéraires ou 3D ouvre leurs réglages. Sur « écran allumé », il active la pleine luminosité.",
     "gesture_reorder_title": "Réordonner les couches",
     "gesture_reorder_desc": "Dans la liste des couches, appuyez longuement sur une couche puis glissez-la pour changer son ordre.",
+    "gesture_layer_options_title": "Afficher, masquer ou retirer une couche",
+    "gesture_layer_options_desc": "Dans la liste des couches, touchez le bouton réglages d'une couche pour ses options ; un appui long permet de la masquer ou l'afficher, télécharger une zone, vider son cache ou la retirer.",
     "gesture_waypoint_title": "Ajouter une étape",
     "gesture_waypoint_desc": "Pendant la préparation d'un itinéraire, un appui long sur la carte ajoute une étape.",
     "gesture_profile_title": "Réglages du mode de transport",
