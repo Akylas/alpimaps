@@ -19,7 +19,7 @@
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import OSMDetailsCard, { osmCardHeight, osmCardLayout } from '~/components/bottomsheet/OSMDetailsCard.svelte';
+    import OSMDetailsCard, { osmCardHeight, osmCardLayout, osmFacts } from '~/components/bottomsheet/OSMDetailsCard.svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
@@ -68,15 +68,15 @@
     const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
     // the title block over a band for the stats and the open state chip
-    const INFOVIEW_HEIGHT = 96;
+    const INFOVIEW_HEIGHT = 90;
     // the route header's stat tiles, under its title band
     const ROUTE_TILES_HEIGHT = 48;
     // a route's title band: the icon tile with its option icons below; the title takes the height beside
-    const ROUTE_TITLE_HEIGHT = 76;
+    const ROUTE_TITLE_HEIGHT = 70;
     const CARD_RADIUS = 20;
     const CARD_MARGIN = 6;
     /** the space above each card after the first, part of its row so the steps stay exact */
-    const CARD_GAP = 6;
+    const CARD_GAP = 4;
     // the actions row: a filled main button and a tonal one with their label, then round icon buttons
     const ACTION_BUTTON_HEIGHT = 36;
     const ACTION_BUTTON_GAP = 8;
@@ -347,17 +347,18 @@
             console.error('item changed', !!err, err, err.stack);
         }
     }
-    // the OpenStreetMap card: a place we can match, whatever the connection, its height part of the steps
-    $: osmCardVisible = $osmItemDetails && canLookupOSMDetails(item);
+    // the OpenStreetMap card: a place we can match, whatever the connection, or one with facts to show
+    $: osmLookupAllowed = $osmItemDetails && canLookupOSMDetails(item);
+    $: osmCardVisible = osmLookupAllowed || ($osmItemDetails && osmFacts(item).length > 0);
     $: osmHeight = osmCardVisible ? osmCardHeight(osmCardLayout(item, $networkOnline, $osmDetailsStates[osmItemKey(item)]), $fontScaleMaxed, CARD_GAP) : 0;
     $: updateSteps(osmHeight);
     // the lookup waits for the card to be on show, the hours chip asks for it sooner
-    $: if (osmCardVisible && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
+    $: if (osmLookupAllowed && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
         startOSMDetails(item);
-    } else if (!osmCardVisible) {
+    } else if (!osmLookupAllowed) {
         osmLookupKey = null;
     }
-    $: loadSavedOSMDetails(item, osmCardVisible);
+    $: loadSavedOSMDetails(item, osmLookupAllowed);
     $: updateSelectedItem(item);
     $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
@@ -1242,13 +1243,13 @@
             borderRadius={CARD_RADIUS}
             borderWidth={1}
             closeAnimationDuration={100}
-            height={headerHeight(item) - CARD_GAP}
+            height={headerHeight(item)}
             leftSwipeDistance={0}
             margin={`0 ${CARD_MARGIN}`}
             openAnimationDuration={100}
             rightSwipeDistance={0}
             translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${(itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT) - CARD_GAP},*`}>
+            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT},*`}>
                 <BottomSheetInfoView
                     bind:this={infoView}
                     hoursChip={!itemIsRoute}
