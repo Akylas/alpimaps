@@ -171,9 +171,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@akylas/nativescript@npm:9.0.23":
-  version: 9.0.23
-  resolution: "@akylas/nativescript@npm:9.0.23"
+"@akylas/nativescript@npm:9.0.24":
+  version: 9.0.24
+  resolution: "@akylas/nativescript@npm:9.0.24"
   dependencies:
     "@csstools/css-calc": "npm:~2.1.4"
     "@csstools/css-color-parser": "npm:^3.0.10"
@@ -187,7 +187,7 @@ __metadata:
     source-map: "npm:0.7.6"
     source-map-js: "npm:^1.2.1"
     tslib: "npm:^2.0.0"
-  checksum: 10/976b2e07b7088a48856f95162395e6470874c3d89f5250ec467a221630594089e3c456579e0d747981c6aefe11f01453c2fff00c995cdc60b64ecccd8f9480ca
+  checksum: 10/218554e81b7e6dba2e9cad90e901338c80da89fff05ce4f78cec8a7f1b84a24b9d02bba77cebf37f5729c25337b63a7e7474895e7d03b619a9c45b2a42a98384
   languageName: node
   linkType: hard
 
@@ -971,9 +971,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@iconotype/cli@npm:0.3.0":
-  version: 0.3.0
-  resolution: "@iconotype/cli@npm:0.3.0"
+"@iconotype/cli@npm:0.3.1":
+  version: 0.3.1
+  resolution: "@iconotype/cli@npm:0.3.1"
   dependencies:
     "@resvg/resvg-js": "npm:^2.6.2"
     css-tree: "npm:^3.2.1"
@@ -987,7 +987,7 @@ __metadata:
     woff2-encoder: "npm:^2.0.0"
   bin:
     iconotype: bin/iconotype.cjs
-  checksum: 10/5a061d491aad36eae5934e6c1425e37b5fe585132740f2f35e33d3257eea1f91cb627a5548d3d74885d24e4f2d2bda720da54435be82cd1479b5d4ee188e6ddd
+  checksum: 10/9116730488219e3e7063bb87602ae974af9ca6f8c91170662fc05985819a1d4f3721ada9281585369b89c3ad0947bca3a0aa19256b3cfd6cc34c1b0557fcca30
   languageName: node
   linkType: hard
 
@@ -1331,10 +1331,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/systemui@npm:1.1.25":
-  version: 1.1.25
-  resolution: "@nativescript-community/systemui@npm:1.1.25"
-  checksum: 10/42fd950e7d6de803f8f88144a6acd79a75a1f03517a1798441970e307b6461c985c32eb65af006700e40be51534f0f897c93e49edde016520bedc0390230a343
+"@nativescript-community/systemui@npm:1.1.26":
+  version: 1.1.26
+  resolution: "@nativescript-community/systemui@npm:1.1.26"
+  checksum: 10/52af4c822672b3cb1a026d18ebf31480f8930b9cd4e1bcf29d73aacb7fbf69d2182982ff7c8b332107fe08e71683e8916846688fb8e541e3ccbf7864801fbd55
   languageName: node
   linkType: hard
 
@@ -1486,12 +1486,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-material-bottomsheet@npm:7.3.2":
-  version: 7.3.2
-  resolution: "@nativescript-community/ui-material-bottomsheet@npm:7.3.2"
+"@nativescript-community/ui-material-bottomsheet@npm:7.3.3":
+  version: 7.3.3
+  resolution: "@nativescript-community/ui-material-bottomsheet@npm:7.3.3"
   dependencies:
-    "@nativescript-community/ui-material-core": "npm:^7.3.2"
-  checksum: 10/99697f7c75e37c555276c73fb6cf21bc15b00a955d65b35f1ddec8ab470dc41a9eba105cb954a49face19de6abc1026cf85e4b49e6cf45d1f2069234f949991b
+    "@nativescript-community/ui-material-core": "npm:^7.3.3"
+  checksum: 10/ccb2465ed6e1dee07191cc2a0d57887bb4f416f5a5de1ae57799e883925faebcbfe15798ee4fbd34158ac91c25500a1ee5f8a6fa82d3ed38aae9b4a9846d105b
   languageName: node
   linkType: hard
 
@@ -1518,13 +1518,6 @@ __metadata:
   version: 7.3.3
   resolution: "@nativescript-community/ui-material-core@npm:7.3.3"
   checksum: 10/64b35cb8dade1e6c44e251738e90a8b355731798d99f4e742f15ed115bf5c706ce5abac497cdc03daf9dab60b4d5efd9d166d1f4eab90667ec6f82b35957168f
-  languageName: node
-  linkType: hard
-
-"@nativescript-community/ui-material-core@npm:^7.3.2":
-  version: 7.3.2
-  resolution: "@nativescript-community/ui-material-core@npm:7.3.2"
-  checksum: 10/83b734b779054599a92489aad89fa29a4dbb7954e3119e1995829237a4696d7316eb86d6d958be8583e2c91bb07bef005cee69b228d92b7e05af3ea7a5aa60b9
   languageName: node
   linkType: hard
 
@@ -2706,10 +2699,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tmcw/togeojson@npm:7.1.2":
-  version: 7.1.2
-  resolution: "@tmcw/togeojson@npm:7.1.2"
-  checksum: 10/b16395a54966ea0745541cdde98ce3be026c19441a42d05e74414119efd08041434f7bc6aa35f416fdae1348a358166aa509c785ae07e21cb763c896f528391b
+"@tmcw/togeojson@npm:7.1.3":
+  version: 7.1.3
+  resolution: "@tmcw/togeojson@npm:7.1.3"
+  checksum: 10/8a1f41ea181763ba43ad2f05f3dbb3fbd8cac2386bbb4cafe817935bb9460ff0625fb2c2aca6388baa44e4275cee68f12c4e2592a855a6b60cd1515c7a00452a
   languageName: node
   linkType: hard
 
@@ -3278,10 +3271,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:0.9.10":
-  version: 0.9.10
-  resolution: "@xmldom/xmldom@npm:0.9.10"
-  checksum: 10/8d39ed498baf33dc8bbc82ec575e7448ddf08a0d6874bcc30a70c001b7519e6df6564f98d13c03836fa8be099c6d74cbc4078cfcfcbcf005681d4e67f1363412
+"@xmldom/xmldom@npm:0.9.12":
+  version: 0.9.12
+  resolution: "@xmldom/xmldom@npm:0.9.12"
+  checksum: 10/4a38ed437688b0e33919f7597c6669f8b0507e80ee15497ee163d6e4bbf7a69fd24a4fe4c2d3ee9fe1e861d42b4030d72895a64a92cb8d4ebc3091f560c29111
   languageName: node
   linkType: hard
 
@@ -9726,14 +9719,14 @@ __metadata:
   dependencies:
     "@akylas/address-formatter": "npm:5.3.1"
     "@akylas/kiss-orm": "npm:2.1.14"
-    "@akylas/nativescript": "npm:9.0.23"
+    "@akylas/nativescript": "npm:9.0.24"
     "@akylas/nativescript-app-tools": "portal:tools"
     "@akylas/nativescript-app-utils": "npm:2.2.15"
     "@akylas/nativescript-inapp-purchase": "npm:0.0.5"
     "@akylas/nativescript-inappbrowser": "npm:3.1.8"
     "@akylas/nativescript-ios-runtime": "npm:9.0.3"
     "@akylas/nativescript-webpack": "npm:5.0.35"
-    "@iconotype/cli": "npm:0.3.0"
+    "@iconotype/cli": "npm:0.3.1"
     "@mapbox/tilebelt": "npm:2.0.3"
     "@massif-maps/style-tools": "npm:6.1.3"
     "@massif-maps/styles": "npm:1.2.2"
@@ -9755,7 +9748,7 @@ __metadata:
     "@nativescript-community/sentry": "npm:4.6.49"
     "@nativescript-community/sqlite": "npm:3.5.9"
     "@nativescript-community/svelte-native": "npm:1.0.32"
-    "@nativescript-community/systemui": "npm:1.1.25"
+    "@nativescript-community/systemui": "npm:1.1.26"
     "@nativescript-community/text": "npm:1.6.25"
     "@nativescript-community/ui-cameraview": "npm:0.8.0"
     "@nativescript-community/ui-canvas": "npm:4.6.54"
@@ -9771,7 +9764,7 @@ __metadata:
     "@nativescript-community/ui-lottie": "npm:6.0.0"
     "@nativescript-community/ui-massifmaps": "npm:4.0.0"
     "@nativescript-community/ui-material-activityindicator": "npm:7.3.3"
-    "@nativescript-community/ui-material-bottomsheet": "npm:7.3.2"
+    "@nativescript-community/ui-material-bottomsheet": "npm:7.3.3"
     "@nativescript-community/ui-material-button": "npm:7.3.3"
     "@nativescript-community/ui-material-cardview": "npm:7.3.3"
     "@nativescript-community/ui-material-core": "npm:7.3.3"
@@ -9797,12 +9790,12 @@ __metadata:
     "@nativescript/ios": "npm:9.1.0"
     "@sentry/cli": "npm:3.5.0"
     "@swc/core": "npm:1.16.1"
-    "@tmcw/togeojson": "npm:7.1.2"
+    "@tmcw/togeojson": "npm:7.1.3"
     "@types/geojson": "npm:^7946.0.16"
     "@types/offscreencanvas": "npm:^2019.7.3"
     "@types/suncalc": "npm:^1.9.2"
     "@types/three": "npm:0.171.0"
-    "@xmldom/xmldom": "npm:0.9.10"
+    "@xmldom/xmldom": "npm:0.9.12"
     additween: "npm:3.0.0"
     alpimaps-non-playstore: "portal:plugin_non_playstore"
     dayjs: "npm:1.11.20"
