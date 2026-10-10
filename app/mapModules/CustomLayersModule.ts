@@ -1450,7 +1450,10 @@ export default class CustomLayersModule extends MapModule {
             return null;
         }
         const online = get(localTerrainOnlineFallback) ? await this.onlineFallback('mapterhorn') : null;
-        const source = fallbackChain({ regions: this.localMulti('terrain', regionSources), online: online?.sourceSpec, world: worldSource });
+        const chain = fallbackChain({ regions: this.localMulti('terrain', regionSources), online: online?.sourceSpec, world: worldSource });
+        // the offline tiles carry no encoding of their own and would borrow the online source's terrarium, which flattens
+        // their mapbox relief; an archive declaring its own encoding still wins
+        const source = online && typeof chain === 'object' ? { ...chain, metaData: { dem_encoding: 'mapbox' } } : chain;
         // no addLayer: updateTerrain stacks it or weaves it into `#hillshade`
         const layer = this.createHillshadeLayer(`layer.hillshade.local.${this.localGeneration}`, LOCAL_TERRAIN_NAME, source);
         return {
