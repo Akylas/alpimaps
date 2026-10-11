@@ -104,7 +104,9 @@
     const GEO_TEXT_REGEXP = /([+-]?([0-9]*[.])?[0-9])+\,([+-]?([0-9]*[.])?[0-9]+)(?:\(.*\))/;
 
     // Alpimaps OSM over Massif: a folder while developing, massif.zip in release (styleSpec picks)
-    const DEFAULT_STYLE = `${MASSIF_PACKAGE}~alpimaps`;
+    // a fresh install opens on the Massif project's Outdoor variant
+    const DEFAULT_STYLE = `${MASSIF_PACKAGE}~${MASSIF_PACKAGE}`;
+    const DEFAULT_VARIANT = 'outdoor';
 </script>
 
 <script lang="ts">
@@ -630,6 +632,9 @@
             tryCatch(async () => {
                 packageService.start();
                 transitService.start();
+                if (!ApplicationSettings.hasKey('mapStyle')) {
+                    ApplicationSettings.setString('mapStyleVariant.' + DEFAULT_STYLE, DEFAULT_VARIANT);
+                }
                 setMapStyle(ApplicationSettings.getString('mapStyle', DEFAULT_STYLE), true);
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
