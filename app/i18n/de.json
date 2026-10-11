@@ -929,5 +929,8 @@
     "accent_color": "Akzent",
     "add": "hinzufügen",
     "alternatives": "Alternativen",
-    "ar_mode": "Kameraansicht"
+    "ar_mode": "Kameraansicht",
+    "osm_details": "OpenStreetMap-Details",
+    "motorcycle": "Motorrad",
+    "offline": "offline"
 }
