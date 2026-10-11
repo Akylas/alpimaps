@@ -64,12 +64,29 @@ export function osmItemKey(item: IItem) {
     return '';
 }
 
-// kinds of place that do not have hours, phone or website worth a lookup
-const NO_DETAILS_CLASSES = ['natural', 'place', 'boundary', 'waterway', 'landuse'];
+// the kinds of place that have hours, a phone or a website: a shop, a restaurant, a museum, but not a peak
+const DETAILS_OSM_KEYS = ['amenity', 'shop', 'tourism', 'leisure', 'office', 'craft', 'healthcare'];
+const NO_DETAILS_OSM_VALUES = ['bench', 'shelter', 'toilets', 'viewpoint', 'information', 'picnic_site', 'drinking_water', 'waste_basket', 'parking_space', 'pitch'];
+const DETAILS_CLASSES = [
+    ...['alcohol_shop', 'bakery', 'bar', 'beer', 'butcher', 'cafe', 'fast_food', 'grocery', 'ice_cream', 'restaurant', 'sushi'],
+    ...['clothing_store', 'florist', 'furniture', 'gift', 'hairdresser', 'laundry', 'shop'],
+    ...['amusement_park', 'aquarium', 'art_gallery', 'attraction', 'castle', 'cinema', 'museum', 'theatre', 'zoo'],
+    ...['alpine_hut', 'atm', 'bank', 'bicycle', 'bicycle_rental', 'campsite', 'car', 'embassy', 'fuel', 'lodging', 'parking', 'parking_garage', 'police', 'post', 'town_hall', 'wilderness_hut'],
+    ...['nightclub', 'stadium', 'swimming'],
+    ...['dentist', 'doctors', 'hospital', 'pharmacy', 'veterinary'],
+    ...['college', 'library', 'school', 'place_of_worship']
+];
 
-/** a place we can match on OpenStreetMap: a point with a name or a geocoder osm id */
+function hasDetailsWorthALookup(properties: IItem['properties']) {
+    if (properties?.osm_key) {
+        return DETAILS_OSM_KEYS.includes(properties.osm_key) && !NO_DETAILS_OSM_VALUES.includes(properties.osm_value);
+    }
+    return DETAILS_CLASSES.includes(properties?.class);
+}
+
+/** a place we can match on OpenStreetMap: a point of a kind that has details, with a name or a geocoder osm id */
 export function canLookupOSMDetails(item: IItem) {
-    return !!item && !item.route && (item.geometry as Point)?.type === 'Point' && !NO_DETAILS_CLASSES.includes(item.properties?.class) && (!!item.properties?.name || !!osmItemRef(item));
+    return !!item && !item.route && (item.geometry as Point)?.type === 'Point' && hasDetailsWorthALookup(item.properties) && (!!item.properties?.name || !!osmItemRef(item));
 }
 
 export interface CachedOSMElement {
