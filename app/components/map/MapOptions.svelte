@@ -13,7 +13,19 @@
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
-    import { innerNutiProps, layerProps, nutiProps, pitchEnabled, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleHasParameter, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
+    import {
+        innerNutiProps,
+        layerProps,
+        nutiProps,
+        pitchEnabled,
+        preloading,
+        projectionModeSpherical,
+        rotateEnabled,
+        showItemsLayer,
+        styleHasParameter,
+        styleParameterKeys,
+        styleParameterValues
+    } from '~/stores/mapStore';
     import { ALERT_OPTION_MAX_HEIGHT } from '~/utils/constants';
     import { showAlertOptionSelect, showSliderPopover } from '~/utils/ui';
     import Pill from '../common/Pill.svelte';
@@ -203,6 +215,7 @@
         refresh();
     });
     // another style, other parameters
+    // eslint-disable-next-line no-unused-expressions
     $: ($styleParameterKeys, $styleParameterValues, items && refresh());
 
     function onCheckBox(item, value, event) {
@@ -243,11 +256,7 @@
             <label class="sectionHeader" text={item.title} />
         </Template>
         <Template key="switch" let:item>
-            <SettingsSwitch
-                item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }}
-                {onCheckBox}
-                onLongPress={resetToStyle}
-                on:tap={(event) => onTap(item, event)} />
+            <SettingsSwitch item={{ ...item, title: getTitle(item), subtitle: getSubtitle(item) }} {onCheckBox} onLongPress={resetToStyle} on:tap={(event) => onTap(item, event)} />
         </Template>
         <Template let:item>
             <ListItemAutoSize
@@ -278,7 +287,7 @@
                     <Pill icon={option.icon} label={lc('slopes')} selected={value} on:tap={() => option.store.set(!value)} on:longPress={(event) => option.onLongPress?.(event)} />
                 </StoreValue>
             {/each}
-            <Pill icon="mdi-globe-model" label={lc('globe')} selected={$projectionModeSpherical} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} />
+            <!-- <Pill icon="mdi-globe-model" label={lc('globe')} selected={$projectionModeSpherical} on:tap={() => projectionModeSpherical.set(!$projectionModeSpherical)} /> -->
             <Pill icon="mdi-rotate-3d-variant" label={lc('rotation')} selected={$rotateEnabled} on:tap={() => rotateEnabled.set(!$rotateEnabled)} />
             <Pill icon="mdi-rotate-orbit" label={lc('pitch')} selected={$pitchEnabled} on:tap={() => pitchEnabled.set(!$pitchEnabled)} />
             <Pill icon="mdi-map-clock" label={lc('preload')} selected={$preloading} on:tap={() => preloading.set(!$preloading)} />
