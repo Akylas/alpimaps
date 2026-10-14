@@ -40,6 +40,10 @@ module.exports = {
     cssParser: 'rework',
     hooks: [
         {
+            type: 'before-prepareNativeApp',
+            script: 'scripts/before-prepareNativeApp-massif.js'
+        },
+        {
             type: 'after-prepareNativeApp',
             script: 'tools/scripts/after-prepareNativeApp.js'
         }
