@@ -29,6 +29,7 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
     private lastPoint: CGPoint;
     private rightDownPoint: CGPoint;
     private rightDragging: boolean;
+    private scrollAnchor: CGPoint;
     private lastPinchScale: number;
     private lastRotation: number;
 
@@ -70,8 +71,15 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         return this.mapView.screenToMap({ x: point.x * scale, y: point.y * scale });
     }
 
-    private zoomBy(delta: number, recognizer: UIGestureRecognizer) {
-        this.mapView.setZoom(this.mapView.zoom + delta, this.mapPosAt(recognizer.locationInView(recognizer.view), recognizer.view), 0);
+    // the SDK's wheel zoom holds the ground under the cursor still when tilted or over terrain, setZoom with a target does not
+    private zoomBy(delta: number, view: UIView, location: CGPoint) {
+        const nativeMapView = this.mapView.mapView;
+        if (nativeMapView.onWheelZoomXY) {
+            const scale = view.contentScaleFactor;
+            nativeMapView.onWheelZoomXY(delta, location.x * scale, location.y * scale);
+        } else {
+            this.mapView.setZoom(this.mapView.zoom + delta, this.mapPosAt(location, view), 0);
+        }
     }
 
     // a right-drag rotates and tilts, a right-click is the place's menu, as on the web
@@ -127,11 +135,15 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         if (delta > 0) {
             scale = 1 / scale;
         }
-        this.zoomBy(Math.log2(scale), recognizer);
+        this.zoomBy(Math.log2(scale), recognizer.view, this.scrollAnchor);
     }
 
     // the translation since the last event, against the content like a browser wheel delta
     private takeScrollDelta(recognizer: UIPanGestureRecognizer) {
+        // a scroll pan's location moves with its translation: only where it began is the cursor
+        if (recognizer.state === UIGestureRecognizerState.Began) {
+            this.scrollAnchor = recognizer.locationInView(recognizer.view);
+        }
         const delta = -recognizer.translationInView(recognizer.view).y;
         recognizer.setTranslationInView({ x: 0, y: 0 }, recognizer.view);
         return recognizer.state === UIGestureRecognizerState.Changed ? delta : 0;
@@ -156,7 +168,7 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         if (recognizer.state === UIGestureRecognizerState.Began) {
             this.lastPinchScale = 1;
         } else if (recognizer.state === UIGestureRecognizerState.Changed) {
-            this.zoomBy(Math.log2(recognizer.scale / this.lastPinchScale), recognizer);
+            this.zoomBy(Math.log2(recognizer.scale / this.lastPinchScale), recognizer.view, recognizer.locationInView(recognizer.view));
             this.lastPinchScale = recognizer.scale;
         }
     }
