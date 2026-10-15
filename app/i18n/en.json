@@ -1006,6 +1006,7 @@
     "terrain_lighting_desc": "lights the relief with the sun instead of a baked hillshade. Costs frames",
     "terrain_zoom_cap": "terrain detail",
     "terrain_zoom_cap_desc": "tile zoom the mesh is cut at. Higher means finer relief near the eye, at more tiles to load — and the height field takes longer to settle",
+    "terrain_zoom_cap_3d_desc": "tile zoom the mesh and the height field are cut at. Above it the hillshade keeps its own finer tiles, drawn flat instead of shaded from the mesh",
     "thank_you": "thank you !",
     "thank_you_subtitle": "your donation will help the project grow and give me time to implement more features",
     "theatre": "theatre",

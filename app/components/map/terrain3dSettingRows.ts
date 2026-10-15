@@ -13,6 +13,7 @@ import {
     terrainFogVerticalEnd,
     terrainFogVerticalStart,
     terrainLighting,
+    terrainMaxZoom,
     terrainMeshResolution,
     terrainNodeResolution,
     terrainShadowCascades,
@@ -51,6 +52,17 @@ export function terrain3dSettingRows(show = { lighting: true, shadows: true }): 
         section(header(lc('terrain_3d'))),
         { type: 'slider', store: terrainExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
         { type: 'slider', store: terrainMeshResolution, title: lc('mesh_resolution'), min: 16, max: 256, step: 16, format: (value) => String(Math.round(value)) },
+        {
+            type: 'slider',
+            store: terrainMaxZoom,
+            title: lc('terrain_zoom_cap'),
+            description: lc('terrain_zoom_cap_3d_desc'),
+            // 0 is not a zoom but the SDK's own distance rule
+            min: 0,
+            max: 17,
+            step: 1,
+            format: (value) => (value === 0 ? lc('auto') : `z${Math.round(value)}`)
+        },
         {
             type: 'slider',
             store: terrainNodeResolution,

@@ -37,6 +37,7 @@ import {
     terrainFogVerticalEnd,
     terrainFogVerticalStart,
     terrainLighting,
+    terrainMaxZoom,
     terrainMeshResolution,
     terrainNodeResolution,
     terrainShadowCascades,
@@ -158,6 +159,7 @@ export function ensureTerrain(): boolean {
         autoFlattenRiseDuration: get(terrainSwitchDuration),
         exaggeration: get(terrainExaggeration),
         meshResolution: get(terrainMeshResolution),
+        maxZoom: get(terrainMaxZoom),
         viewDistanceFactor: get(terrainViewDistanceFactor),
         cameraClearance: get(terrainCameraClearance),
         // drawn LIVE, not baked: a baked contour survives in cached drape tiles past its zoom range
@@ -505,6 +507,7 @@ function applyLive<T>(store: { subscribe: (run: (value: T) => void) => unknown }
 
 applyLive(terrainExaggeration, (value) => terrain().set('exaggeration', value));
 applyLive(terrainMeshResolution, (value) => terrain().set('meshResolution', value));
+applyLive(terrainMaxZoom, (value) => terrain().set('maxZoom', value));
 // The field, not the lattice: this is the one that moves the relief. Both re-decode every cached DEM
 // grid, so neither is free to drag.
 applyLive(terrainNodeResolution, applyNodeResolution);

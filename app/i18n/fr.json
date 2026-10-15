@@ -1046,5 +1046,6 @@
     "tutorial_page_lists": "Listes et réglages",
     "gestures_hint": "Touchez une zone qui pulse pour voir ce qu'elle fait. Un appui long sur une icône sans libellé indique son nom.",
     "hillshade_method": "méthode d'ombrage",
-    "light_rotates_with_map": "la lumière suit la rotation de la carte"
+    "light_rotates_with_map": "la lumière suit la rotation de la carte",
+    "terrain_zoom_cap_3d_desc": "niveau de zoom auquel le maillage et le champ de hauteurs sont coupés. Au-delà, l'ombrage garde ses propres tuiles plus fines, dessinées à plat plutôt que calculées depuis le maillage"
 }
