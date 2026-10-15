@@ -1,7 +1,7 @@
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { tryCatchFunction } from '@shared/utils/ui';
-import type { FreeRoamMode, Position } from '@nativescript-community/ui-massifmaps/api';
+import type { FreeRoamMode, MassifMap, Position } from '@nativescript-community/ui-massifmaps/api';
 import { Color } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
 import { lc } from '~/helpers/locale';
@@ -71,6 +71,8 @@ const EINK_SKY = new Color('#ffffff').argb;
  * gradient from the style background, which is dithered noise on e-ink.
  */
 const NO_SKY_BITMAP = 0;
+/** Fractions of the view distance, not the orbit multiples of `TERRAIN_FOG`: fully fogged just short of the far clip. */
+const FIRST_PERSON_FOG_RANGE = { start: 0.15, end: 0.9 };
 const FREE_ROAM_MODES: Record<TerrainTouchMode, FreeRoamMode> = {
     classic: 'FREE_ROAM_MODE_OFF',
     look: 'FREE_ROAM_MODE_LOOK',
@@ -78,7 +80,8 @@ const FREE_ROAM_MODES: Record<TerrainTouchMode, FreeRoamMode> = {
 };
 
 let terrainAttached = false;
-let attachedSourceId: string = null;
+// the DEM's registry handle: `layer.source()` returns a fresh object with no `id`, so a new DEM source went unnoticed
+let attachedSourceId: ReturnType<typeof demSource>['handle'] = null;
 let rampTimer: NodeJS.Timeout = null;
 /** True while `toggle3D` owns the terrain, so the store subscriptions below do not fight the ramp. */
 let switching = false;
@@ -90,23 +93,12 @@ function terrain() {
     return getMapContext().getMap()?.terrain();
 }
 
-/** Native object for options the bridge's generated schema doesn't know yet: `apply()` silently drops them. */
-function terrainNative(): Record<string, (value: unknown) => void> {
-    return (terrain() as { native?: Record<string, (value: unknown) => void> })?.native;
-}
-
 /**
  * Height field resolution, NOT the mesh's. Read when a DEM grid is DECODED, so a late value only applies
  * to grids decoded afterwards.
  */
 function applyNodeResolution() {
-    const native = terrainNative();
-    if (typeof native?.setSurfaceNodeResolution !== 'function') {
-        DEV_LOG && console.log('terrain3d: node resolution not in this SDK build, the height field follows the mesh');
-        return;
-    }
-    native.setSurfaceNodeResolution(get(terrainNodeResolution));
-    DEV_LOG && console.log('terrain3d: height field resolution set to', get(terrainNodeResolution));
+    terrain()?.set('surfaceNodeResolution', get(terrainNodeResolution));
 }
 
 function argb(color: string) {
@@ -136,7 +128,7 @@ export function ensureTerrain(): boolean {
     if (!map || !source) {
         return false;
     }
-    if (terrainAttached && attachedSourceId === source.id) {
+    if (terrainAttached && attachedSourceId === source.handle) {
         return true;
     }
     if (terrainAttached) {
@@ -173,10 +165,10 @@ export function ensureTerrain(): boolean {
         elevationPrefetchEnabled: true
     });
     terrainAttached = true;
-    attachedSourceId = source.id;
+    attachedSourceId = source.handle;
     // After the flag: it goes through the native object, which needs the terrain to exist.
     applyNodeResolution();
-    DEV_LOG && console.log('terrain3d attached', source.id);
+    DEV_LOG && console.log('terrain3d attached', source.handle);
     return true;
 }
 
@@ -244,8 +236,37 @@ function stopRamp() {
     switching = false;
 }
 
+export interface SkyAndFog {
+    sky: boolean;
+    fog: boolean;
+    /** Multiples of the camera-to-focus distance, not metres. */
+    rangeStart: number;
+    rangeEnd: number;
+    verticalRangeStart: number;
+    verticalRangeEnd: number;
+}
+
+/** The sky shader and the fog of any map: the 3D mode and the panorama share the colours and the e-ink rule (no shader sky). */
+export function applySkyAndFog(map: MassifMap, { fog, rangeEnd, rangeStart, sky, verticalRangeEnd, verticalRangeStart }: SkyAndFog) {
+    map.sky({ type: 'sky' }).set('enabled', sky && !isEInk);
+    // colours on the same call: `FogOptions` starts them transparent, and a fog with no alpha doesn't draw
+    map.fog({ type: 'fog' }).apply({
+        enabled: fog,
+        rangeStart,
+        rangeEnd,
+        horizonBlend: TERRAIN_FOG.horizonBlend,
+        starIntensity: TERRAIN_FOG.starIntensity,
+        // The altitudes the haze fades out between: what leaves a summit standing clear of it.
+        verticalRangeStart,
+        verticalRangeEnd,
+        color: argb(TERRAIN_FOG.color),
+        highColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.highColor),
+        spaceColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.spaceColor)
+    });
+}
+
 /**
- * Lighting stays the user's choice (a real cost). E-ink gets no sky: shader sky and legacy band off
+ * E-ink gets no sky: shader sky and legacy band off
  * (`NO_SKY_BITMAP`), so the CLEAR colour carries the paper white.
  */
 function applyAtmosphere(on: boolean) {
@@ -253,7 +274,16 @@ function applyAtmosphere(on: boolean) {
     if (!map) {
         return;
     }
-    map.sky({ type: 'sky' }).set('enabled', on && !isEInk && get(terrainSky));
+    // first person: the SDK ranges the fog from the view distance, since the focus moves with the look
+    const firstPerson = get(terrainTouchMode) === 'fps';
+    applySkyAndFog(map, {
+        sky: on && get(terrainSky),
+        fog: on && get(terrainFog),
+        rangeStart: firstPerson ? FIRST_PERSON_FOG_RANGE.start : TERRAIN_FOG.rangeStart,
+        rangeEnd: firstPerson ? FIRST_PERSON_FOG_RANGE.end : TERRAIN_FOG.rangeEnd,
+        verticalRangeStart: get(terrainFogVerticalStart),
+        verticalRangeEnd: get(terrainFogVerticalEnd)
+    });
     if (isEInk) {
         if (on) {
             if (savedSkyColor === null) {
@@ -269,25 +299,22 @@ function applyAtmosphere(on: boolean) {
             savedClearColor = null;
         }
     }
-    // colours on the same call: `FogOptions` starts them transparent, and a fog with no alpha doesn't draw
-    map.fog({ type: 'fog' }).apply({
-        enabled: on && get(terrainFog),
-        rangeStart: TERRAIN_FOG.rangeStart,
-        rangeEnd: TERRAIN_FOG.rangeEnd,
-        horizonBlend: TERRAIN_FOG.horizonBlend,
-        starIntensity: TERRAIN_FOG.starIntensity,
-        // The altitudes the haze fades out between: what leaves a summit standing clear of it.
-        verticalRangeStart: get(terrainFogVerticalStart),
-        verticalRangeEnd: get(terrainFogVerticalEnd),
-        color: argb(TERRAIN_FOG.color),
-        highColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.highColor),
-        spaceColor: argb(isEInk ? TERRAIN_FOG_EINK : TERRAIN_FOG.spaceColor)
-    });
-    const lit = on && get(terrainLighting);
-    // strength is where shadows OFF lives: `LightOptions` has no shadow switch
+}
+
+/**
+ * Not tied to 3D: the SDK casts building and model shadows on the flat map too, so the lighting choice
+ * holds in both. Strength is where shadows OFF lives: `LightOptions` has no shadow switch.
+ */
+function applyLight() {
+    // the stores below subscribe at module load, when the context has no `getMap` yet
+    const map = getMapContext()?.getMap?.();
+    if (!map) {
+        return;
+    }
+    const lit = get(terrainLighting);
     map.light({ type: 'light' }).apply({
         terrainLightingEnabled: lit,
-        // follows the lighting switch, or the override would change the style's sun on the 2D map
+        // follows the lighting switch, or the override would change the style's sun
         sunOverridingStyle: lit,
         sunAzimuth: get(terrainSunAzimuth),
         sunAltitude: get(terrainSunAltitude),
@@ -457,7 +484,7 @@ function onTerrainSourceChanged() {
         applyViewDistance(false);
         return;
     }
-    if (source.id === attachedSourceId) {
+    if (source.handle === attachedSourceId) {
         return;
     }
     const wasIn3D = is3D();
@@ -537,22 +564,35 @@ applyLive(terrainFogVerticalStart, () => applyAtmosphere(is3D()));
 applyLive(terrainFogVerticalEnd, () => applyAtmosphere(is3D()));
 applyLive(terrainViewDistanceMetres, () => applyViewDistance(is3D()));
 applyLive(terrainViewDistanceMax, () => applyViewDistance(is3D()));
-applyLive(terrainLighting, () => applyAtmosphere(is3D()));
-// The sun goes through the same rule: it is written on the same call, and only while the ground is lit.
-applyLive(terrainSunAzimuth, () => applyAtmosphere(is3D()));
-applyLive(terrainSunAltitude, () => applyAtmosphere(is3D()));
-// The shadow knobs go through the same rule, since the strength depends on the lighting switch too.
-applyLive(terrainShadows, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowStrength, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowDistance, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowMapSize, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowCascades, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowSoftness, () => applyAtmosphere(is3D()));
-applyLive(terrainShadowCasterMargin, () => applyAtmosphere(is3D()));
+// The light follows the lighting switch whether or not the terrain is attached, so not through `applyLive`.
+for (const store of [
+    terrainLighting,
+    terrainSunAzimuth,
+    terrainSunAltitude,
+    terrainShadows,
+    terrainShadowStrength,
+    terrainShadowDistance,
+    terrainShadowMapSize,
+    terrainShadowCascades,
+    terrainShadowSoftness,
+    terrainShadowCasterMargin
+]) {
+    store.subscribe(() => {
+        try {
+            applyLight();
+        } catch (error) {
+            showError(error);
+        }
+    });
+}
 // Same: the touch model only applies while the 3D mode is the one on screen.
-applyLive(terrainTouchMode, () => applyTouchMode(is3D()));
+applyLive(terrainTouchMode, () => {
+    applyTouchMode(is3D());
+    applyAtmosphere(is3D());
+});
 
 registerMapModule('terrain3d', {
+    onMapReady: applyLight,
     onMapDestroyed,
     onTerrainSourceChanged,
     onMapMove: () => syncAutoFlattenState(false),
@@ -561,7 +601,7 @@ registerMapModule('terrain3d', {
 
 declare module '~/mapModules/registry' {
     interface MapModules {
-        terrain3d: { onMapDestroyed: () => void; onTerrainSourceChanged: () => void; onMapMove: () => void; onMapStable: () => void };
+        terrain3d: { onMapReady: () => void; onMapDestroyed: () => void; onTerrainSourceChanged: () => void; onMapMove: () => void; onMapStable: () => void };
     }
 }
 

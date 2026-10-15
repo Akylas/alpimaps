@@ -13,7 +13,7 @@ export const terrainExaggeration = settingsStore('terrainExaggeration', 1);
  * Grid cells per tile edge of the draped surface: multiplies all surface cost (128 vs 64: 8.5 vs 15.2 fps
  * on a Crosscall). SDK clamps to 256; the bare surface and depth pre-pass cap at 96 (`MAX_MESH_GRID_SIZE`).
  */
-export const terrainMeshResolution = settingsStore('terrainMeshResolution', 64);
+export const terrainMeshResolution = settingsStore('terrainMeshResolution', __CATALYST__ ? 256 : 64);
 /**
  * Height-field resolution (`surfaceNodeResolution`) per DEM tile edge; 0 follows `terrainMeshResolution`.
  * This, not the mesh, carries relief. 256 is one node per texel of a 512 px DEM tile: more buys nothing.
@@ -76,26 +76,27 @@ export const TERRAIN_FOG_EINK = '#ffffff';
  */
 export const terrainFogVerticalStart = settingsStore('terrainFogVerticalStart', 1000);
 export const terrainFogVerticalEnd = settingsStore('terrainFogVerticalEnd', 2500);
-/** Terrain lighting and the sun's shadows; off as in the demo: a real cost and a change of look. */
-export const terrainLighting = settingsStore('terrainLighting', false);
+/** Terrain lighting and the sun's shadows: a real cost and a change of look, so on by default only on the Mac. */
+export const terrainLighting = settingsStore('terrainLighting', __CATALYST__);
 
 /**
- * Sun position, degrees clockwise from north / above the horizon (SDK defaults). Only written while
+ * Sun position, degrees clockwise from north / above the horizon. Only written while
  * `terrainLighting` is on: a style's own sun lights the flat map, so an override would change 2D.
  */
-export const terrainSunAzimuth = settingsStore('terrainSunAzimuth', 315);
-export const terrainSunAltitude = settingsStore('terrainSunAltitude', 45);
+export const terrainSunAzimuth = settingsStore('terrainSunAzimuth', 330);
+export const terrainSunAltitude = settingsStore('terrainSunAltitude', 60);
 
 /**
  * Subordinate to `terrainLighting`: the shadow scales the direct light. `LightOptions` has no
  * `shadowsEnabled`, so off is `shadowStrength` 0.
  */
-export const terrainShadows = settingsStore('terrainShadows', false);
+export const terrainShadows = settingsStore('terrainShadows', __CATALYST__);
 /**
  * Fraction of the direct light a shadow takes; 1 is physical (mapbox's default), above exaggerates.
- * Scaled by the sun's share of the light, so raising it does not add shadows at dusk.
+ * Scaled by the sun's share of the light, so raising it does not add shadows at dusk. 0.3 reads as a
+ * soft shadow on the light Massif map.
  */
-export const terrainShadowStrength = settingsStore('terrainShadowStrength', 1);
+export const terrainShadowStrength = settingsStore('terrainShadowStrength', 0.3);
 /**
  * Shadow reach in multiples of the camera-to-focus distance; 0 takes the SDK's 4.5. Further costs texel
  * size, the shadow map resolution being fixed.
