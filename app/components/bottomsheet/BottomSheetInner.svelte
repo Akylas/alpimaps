@@ -558,6 +558,8 @@
     // const listViewVisible = false;
     /** the sheet's width, landscape is narrower than the screen */
     export let sheetWidth = screenWidthDips;
+    export let innerWidth = null;
+    export let innerHorizontalAlignment = null;
     export let steps;
     /** the sheet's current step */
     export let stepIndex = 0;
@@ -1234,155 +1236,160 @@
 </script>
 
 <!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
-<gridlayout id="bottomSheetInner" {...$$restProps} rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${graphAvailable ? PROFILE_HEIGHT : 0},${statsAvailable ? STATS_HEIGHT : 0},auto`} on:tap={() => {}}>
-    {#if loaded}
-        <swipemenu
-            bind:this={swipemenu}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
-            borderRadius={CARD_RADIUS}
-            borderWidth={1}
-            closeAnimationDuration={100}
-            height={headerHeight(item)}
-            leftSwipeDistance={0}
-            margin={`0 ${CARD_MARGIN}`}
-            openAnimationDuration={100}
-            rightSwipeDistance={0}
-            translationFunction={drawerTranslationFunction}>
-            <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT},*`}>
-                <BottomSheetInfoView
-                    bind:this={infoView}
-                    hoursChip={!itemIsRoute}
-                    iconLeft={30}
-                    iconTile={true}
-                    {item}
-                    marginBottom={itemIsRoute ? 2 : 36}
-                    marginLeft={62}
-                    propsBottom={30}
-                    showStats={!itemIsRoute}
-                    on:fetch={fetchHours}>
-                    <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
-                </BottomSheetInfoView>
-                {#if itemIsRoute}
-                    <RouteStatTiles {item} row={1} verticalAlignment="top" />
-                {/if}
+<gridlayout {...$$restProps} id="bottomSheetInner" width="100%" isPassThroughParentEnabled={true}>
+    <gridlayout
+        horizontalAlignment={innerHorizontalAlignment}
+        rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${graphAvailable ? PROFILE_HEIGHT : 0},${statsAvailable ? STATS_HEIGHT : 0},auto`}
+        width={innerWidth}
+        on:tap={() => {}}>
+        {#if loaded}
+            <swipemenu
+                bind:this={swipemenu}
+                backgroundColor={colorPanel}
+                borderColor={colorHairline}
+                borderRadius={CARD_RADIUS}
+                borderWidth={1}
+                closeAnimationDuration={100}
+                height={headerHeight(item)}
+                leftSwipeDistance={0}
+                margin={`0 ${CARD_MARGIN}`}
+                openAnimationDuration={100}
+                rightSwipeDistance={0}
+                translationFunction={drawerTranslationFunction}>
+                <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT},*`}>
+                    <BottomSheetInfoView
+                        bind:this={infoView}
+                        hoursChip={!itemIsRoute}
+                        iconLeft={30}
+                        iconTile={true}
+                        {item}
+                        marginBottom={itemIsRoute ? 2 : 36}
+                        marginLeft={62}
+                        propsBottom={30}
+                        showStats={!itemIsRoute}
+                        on:fetch={fetchHours}>
+                        <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
+                    </BottomSheetInfoView>
+                    {#if itemIsRoute}
+                        <RouteStatTiles {item} row={1} verticalAlignment="top" />
+                    {/if}
+                </gridlayout>
+                <IconButton
+                    prop:leftDrawer
+                    backgroundColor={isEInk ? 'white' : colorError}
+                    color={isEInk ? 'black' : 'white'}
+                    height="100%"
+                    shape="none"
+                    text="mdi-trash-can"
+                    tooltip={lc('delete')}
+                    width={60}
+                    on:tap={deleteItem} />
+
+                <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
+                    <IconButton
+                        id="locate"
+                        backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                        color={isEInk ? 'black' : 'white'}
+                        height="100%"
+                        shape="none"
+                        text="mdi-crosshairs-gps"
+                        width={60}
+                        on:tap={zoomToItem} />
+                    <IconButton
+                        id="lock"
+                        backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
+                        color={isEInk ? 'black' : 'white'}
+                        height="100%"
+                        shape="none"
+                        text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
+                        width={60}
+                        on:tap={() => ($itemLock = !$itemLock)} />
+                </stacklayout>
+            </swipemenu>
+
+            <gridlayout class="panel" borderRadius={CARD_RADIUS} colSpan={2} margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`} row={1}>
+                <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding={`10 ${ACTION_ROW_PADDING}`} verticalAlignment="middle">
+                    {#each labelledActions as action (action.id)}
+                        {@const filled = action.id === mainActionId}
+                        {@const contentColor = filled ? (isEInk ? 'white' : colorOnPrimary) : isEInk ? colorOnSurface : colorPrimary}
+                        <gridlayout
+                            id={action.id}
+                            backgroundColor={filled ? (isEInk ? 'black' : colorPrimary) : isEInk ? null : colorAccentContainer}
+                            borderColor={colorOnSurface}
+                            borderRadius={ACTION_BUTTON_HEIGHT / 2}
+                            borderWidth={isEInk && !filled ? 1 : 0}
+                            height={ACTION_BUTTON_HEIGHT}
+                            horizontalAlignment="left"
+                            marginRight={ACTION_BUTTON_GAP}
+                            rippleColor={filled ? colorOnPrimary : colorPrimary}
+                            verticalAlignment="middle"
+                            on:tap={(event) => runAction(action, event)}
+                            on:longPress={(event) => longPressAction(action, event)}>
+                            <stacklayout horizontalAlignment="center" orientation="horizontal" padding={`0 ${ACTION_LABEL_PADDING}`} verticalAlignment="middle">
+                                <label color={contentColor} fontFamily={$fonts.mdi} fontSize={18} text={action.text} verticalAlignment="middle" />
+                                <label color={contentColor} fontSize={14 * labelScale} fontWeight="500" maxLines={1} paddingLeft={6} text={actionLabel(action)} verticalAlignment="middle" />
+                            </stacklayout>
+                        </gridlayout>
+                    {/each}
+                    {#each roundButtons as action (action.id)}
+                        <gridlayout
+                            id={action.id}
+                            borderColor={colorOutlineSoft}
+                            borderRadius={ACTION_BUTTON_HEIGHT / 2}
+                            borderWidth={1}
+                            height={ACTION_BUTTON_HEIGHT}
+                            marginRight={ACTION_BUTTON_GAP}
+                            rippleColor={colorPrimary}
+                            verticalAlignment="middle"
+                            width={ACTION_BUTTON_HEIGHT}
+                            on:tap={(event) => runAction(action, event)}
+                            on:longPress={(event) => longPressAction(action, event)}>
+                            <label
+                                color={isEInk ? colorOnSurface : colorOnSurfaceVariant}
+                                fontFamily={$fonts.mdi}
+                                fontSize={20}
+                                horizontalAlignment="center"
+                                text={action.text}
+                                verticalAlignment="middle" />
+                        </gridlayout>
+                    {/each}
+                </stacklayout>
             </gridlayout>
-            <IconButton
-                prop:leftDrawer
-                backgroundColor={isEInk ? 'white' : colorError}
-                color={isEInk ? 'black' : 'white'}
-                height="100%"
-                shape="none"
-                text="mdi-trash-can"
-                tooltip={lc('delete')}
-                width={60}
-                on:tap={deleteItem} />
+            <ElevationChart
+                bind:this={elevationChart}
+                class="panel"
+                borderRadius={CARD_RADIUS}
+                {chartShowWaypoints}
+                colSpan={2}
+                infoStrip={true}
+                {item}
+                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+                padding="0 6 4 6"
+                row={2}
+                showAscents={$showAscents}
+                showProfileGrades={$showGradeColors}
+                visibility={graphAvailable ? 'visible' : 'collapse'}
+                on:highlight={onChartHighlight} />
+            <RouteStatsView
+                bind:this={statsView}
+                class="panel"
+                borderRadius={CARD_RADIUS}
+                colSpan={2}
+                {item}
+                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+                row={3}
+                visibility={statsAvailable ? 'visible' : 'collapse'} />
+            <OSMDetailsCard
+                borderRadius={CARD_RADIUS}
+                colSpan={2}
+                height={osmHeight ? osmHeight - CARD_GAP : 0}
+                {item}
+                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+                row={4}
+                visibility={osmCardVisible ? 'visible' : 'collapse'}
+                on:refresh={refreshOSMDetails} />
 
-            <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
-                <IconButton
-                    id="locate"
-                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
-                    color={isEInk ? 'black' : 'white'}
-                    height="100%"
-                    shape="none"
-                    text="mdi-crosshairs-gps"
-                    width={60}
-                    on:tap={zoomToItem} />
-                <IconButton
-                    id="lock"
-                    backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
-                    color={isEInk ? 'black' : 'white'}
-                    height="100%"
-                    shape="none"
-                    text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
-                    width={60}
-                    on:tap={() => ($itemLock = !$itemLock)} />
-            </stacklayout>
-        </swipemenu>
-
-        <gridlayout class="panel" borderRadius={CARD_RADIUS} colSpan={2} margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`} row={1}>
-            <stacklayout id="bottomsheetbuttons" orientation="horizontal" padding={`10 ${ACTION_ROW_PADDING}`} verticalAlignment="middle">
-                {#each labelledActions as action (action.id)}
-                    {@const filled = action.id === mainActionId}
-                    {@const contentColor = filled ? (isEInk ? 'white' : colorOnPrimary) : isEInk ? colorOnSurface : colorPrimary}
-                    <gridlayout
-                        id={action.id}
-                        backgroundColor={filled ? (isEInk ? 'black' : colorPrimary) : isEInk ? null : colorAccentContainer}
-                        borderColor={colorOnSurface}
-                        borderRadius={ACTION_BUTTON_HEIGHT / 2}
-                        borderWidth={isEInk && !filled ? 1 : 0}
-                        height={ACTION_BUTTON_HEIGHT}
-                        horizontalAlignment="left"
-                        marginRight={ACTION_BUTTON_GAP}
-                        rippleColor={filled ? colorOnPrimary : colorPrimary}
-                        verticalAlignment="middle"
-                        on:tap={(event) => runAction(action, event)}
-                        on:longPress={(event) => longPressAction(action, event)}>
-                        <stacklayout horizontalAlignment="center" orientation="horizontal" padding={`0 ${ACTION_LABEL_PADDING}`} verticalAlignment="middle">
-                            <label color={contentColor} fontFamily={$fonts.mdi} fontSize={18} text={action.text} verticalAlignment="middle" />
-                            <label color={contentColor} fontSize={14 * labelScale} fontWeight="500" maxLines={1} paddingLeft={6} text={actionLabel(action)} verticalAlignment="middle" />
-                        </stacklayout>
-                    </gridlayout>
-                {/each}
-                {#each roundButtons as action (action.id)}
-                    <gridlayout
-                        id={action.id}
-                        borderColor={colorOutlineSoft}
-                        borderRadius={ACTION_BUTTON_HEIGHT / 2}
-                        borderWidth={1}
-                        height={ACTION_BUTTON_HEIGHT}
-                        marginRight={ACTION_BUTTON_GAP}
-                        rippleColor={colorPrimary}
-                        verticalAlignment="middle"
-                        width={ACTION_BUTTON_HEIGHT}
-                        on:tap={(event) => runAction(action, event)}
-                        on:longPress={(event) => longPressAction(action, event)}>
-                        <label
-                            color={isEInk ? colorOnSurface : colorOnSurfaceVariant}
-                            fontFamily={$fonts.mdi}
-                            fontSize={20}
-                            horizontalAlignment="center"
-                            text={action.text}
-                            verticalAlignment="middle" />
-                    </gridlayout>
-                {/each}
-            </stacklayout>
-        </gridlayout>
-        <ElevationChart
-            bind:this={elevationChart}
-            class="panel"
-            borderRadius={CARD_RADIUS}
-            {chartShowWaypoints}
-            colSpan={2}
-            infoStrip={true}
-            {item}
-            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-            padding="0 6 4 6"
-            row={2}
-            showAscents={$showAscents}
-            showProfileGrades={$showGradeColors}
-            visibility={graphAvailable ? 'visible' : 'collapse'}
-            on:highlight={onChartHighlight} />
-        <RouteStatsView
-            bind:this={statsView}
-            class="panel"
-            borderRadius={CARD_RADIUS}
-            colSpan={2}
-            {item}
-            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-            row={3}
-            visibility={statsAvailable ? 'visible' : 'collapse'} />
-        <OSMDetailsCard
-            borderRadius={CARD_RADIUS}
-            colSpan={2}
-            height={osmHeight ? osmHeight - CARD_GAP : 0}
-            {item}
-            margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-            row={4}
-            visibility={osmCardVisible ? 'visible' : 'collapse'}
-            on:refresh={refreshOSMDetails} />
-
-        <!-- <AWebView
+            <!-- <AWebView
             row={3}
             height={webViewHeight}
             displayZoomControls={false}
@@ -1392,7 +1399,7 @@
             isScrollEnabled={scrollEnabled}
             src={webViewSrc}
         /> -->
-        <!-- <collectionView
+            <!-- <collectionView
             id="bottomsheetListView"
             row={3}
             rowHeight={40}
@@ -1407,5 +1414,6 @@
                 </gridlayout>
             </v-template>
         </collectionView> -->
-    {/if}
+        {/if}
+    </gridlayout>
 </gridlayout>

@@ -380,6 +380,16 @@
     let isLandscape = Application.orientation() === 'landscape';
     // a Mac window has no orientation, only a size
     $: if (__CATALYST__) isLandscape = $windowSize.width > $windowSize.height;
+    // large screen (Mac window, tablet): the item sheet is a centered column, not full width
+    $: shortSide = Math.min($windowSize.width, $windowSize.height);
+    // the window store only follows a Mac window: elsewhere the width comes from the orientation
+    $: windowWidth = __CATALYST__ ? $windowSize.width : isLandscape ? Math.max($windowSize.width, $windowSize.height) : shortSide;
+    $: largeScreen = (__CATALYST__ ? windowWidth : shortSide) >= LARGE_SCREEN_MIN_WIDTH;
+    $: largeSheetWidth = Math.round(Math.min(windowWidth, LARGE_SCREEN_MIN_WIDTH + Math.max(0, windowWidth - LARGE_SCREEN_MIN_WIDTH) * LARGE_SHEET_GROWTH, LARGE_SHEET_MAX_WIDTH));
+    $: itemSheetWidth = largeScreen ? largeSheetWidth : isLandscape ? Math.max($windowSize.width / 2, 400) : $windowSize.width;
+    // the map buttons sit on both edges: once the column leaves them room, the sheet cannot cover them
+    $: widgetsClearOfSheet = !$isNavigating && largeScreen && (windowWidth - largeSheetWidth) / 2 >= WIDGETS_EDGE_WIDTH;
+    $: moveWidgetsWithSheet(widgetsClearOfSheet);
     function onOrientationChanged(event: OrientationChangedEventData) {
         DEV_LOG && console.log('onOrientationChanged', event.newValue);
         isLandscape = event.newValue === 'landscape';
@@ -1694,6 +1704,15 @@
 
     $: scrollingWidgetsOpacity = windowInsetBottom > 200 ? 0 : getWidgetsOpacity(mapTranslation);
 
+    // the translation function only runs while the sheet moves: a resize must apply the new rule itself
+    function moveWidgetsWithSheet(clearOfSheet: boolean) {
+        const nativeView = mapScrollingWidgets?.getNativeView();
+        if (nativeView && !$isNavigating) {
+            nativeView.translateY = clearOfSheet ? 0 : mapTranslation;
+            nativeView.opacity = clearOfSheet ? 1 : scrollingWidgetsOpacity;
+        }
+    }
+
     function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
         if (!$isNavigating) {
             scrollingWidgetsOpacity = getWidgetsOpacity(translation);
@@ -1716,8 +1735,8 @@
                 ? {
                       mapScrollingWidgets: {
                           target: mapScrollingWidgets.getNativeView(),
-                          translateY: translation,
-                          opacity: scrollingWidgetsOpacity
+                          translateY: widgetsClearOfSheet ? 0 : translation,
+                          opacity: widgetsClearOfSheet ? 1 : scrollingWidgetsOpacity
                       }
                   }
                 : {})
@@ -2273,9 +2292,9 @@
                 {/if}
                 <MapScrollingWidgets
                     bind:this={mapScrollingWidgets}
-                    isUserInteractionEnabled={scrollingWidgetsOpacity > 0.3}
+                    isUserInteractionEnabled={widgetsClearOfSheet || scrollingWidgetsOpacity > 0.3}
                     leftInset={landscapeNavigation ? navigationColumnLeft + navigationColumnWidth : 0}
-                    opacity={scrollingWidgetsOpacity}
+                    opacity={widgetsClearOfSheet ? 1 : scrollingWidgetsOpacity}
                     visibility={$peakFinderActive ? 'collapse' : 'visible'} />
                 <DirectionsPanel
                     bind:this={directionsPanel}
@@ -2294,12 +2313,12 @@
             <BottomSheetInner
                 prop:bottomSheet
                 bind:this={bottomSheetInner}
-                horizontalAlignment={isLandscape ? 'left' : 'stretch'}
+                innerHorizontalAlignment={largeScreen ? 'center' : isLandscape ? 'left' : 'stretch'}
+                innerWidth={largeScreen || isLandscape ? itemSheetWidth : '100%'}
                 item={$selectedItem}
-                sheetWidth={isLandscape ? Math.max($windowSize.width / 2, 400) : $windowSize.width}
+                sheetWidth={itemSheetWidth}
                 stepIndex={bottomSheetStepIndex}
                 updating={itemLoading}
-                width={isLandscape ? Math.max($windowSize.width / 2, 400) : '100%'}
                 bind:navigationInstructions
                 bind:steps />
         </bottomsheet>
