@@ -1,6 +1,7 @@
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { tryCatchFunction } from '@shared/utils/ui';
+import { destroy as unregisterObject } from '@nativescript-community/ui-massifmaps/api';
 import type { FreeRoamMode, Position } from '@nativescript-community/ui-massifmaps/api';
 import { Color } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
@@ -143,6 +144,8 @@ export function ensureTerrain(): boolean {
         // the DEM is spec-only, so a new one means a new options object. Release the id first: the same
         // id with a different spec is refused
         map.child('terrainOptions')?.destroy();
+        // destroying the handle leaves the id registered, and `map.terrain(spec)` then fails with RESULT_DUPLICATE_ID
+        unregisterObject('options', `${map.id}.terrain`);
         terrainAttached = false;
     }
     map.terrain({ type: 'terrain', source: source.handle }).apply({
