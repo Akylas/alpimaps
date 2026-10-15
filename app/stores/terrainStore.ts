@@ -198,7 +198,7 @@ export const peakFinderViewDistanceMetres = settingsStore('peakFinderViewDistanc
  * Grid cells per tile edge in the panorama: geo-three's `geometrySize` / 3 up to z12, halved per level
  * above, min 16. `setSubdivideDistance` lifts the SDK's cap of 96.
  */
-export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 171);
+export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', __CATALYST__ ? 256 : 171);
 /**
  * Tile zoom the panorama mesh is cut at (`setMaxZoom`, also caps the elevation data); 0 = distance rule.
  * 17 is geo-three's. Never past the source's max + 3 anyway.
@@ -253,6 +253,36 @@ export const peakFinderExaggeration = settingsStore('peakFinderExaggeration', 1)
 /** AR versions of the two above, where a thick line hides the photo. 0 = use the above. */
 export const peakFinderArOutlineWidth = settingsStore('peakFinderArOutlineWidth', 0);
 export const peakFinderArHorizonBoost = settingsStore('peakFinderArHorizonBoost', 0);
+
+/** `relief`: ink on paper, drawn by the surface shader. `realistic`: draped imagery, lit by the sun, with sky and haze. */
+export type PeakFinderLook = 'relief' | 'realistic';
+export const peakFinderLook = settingsStore<PeakFinderLook>('peakFinderLook', 'relief');
+/** Realistic only: the imagery provider id, apart from the hybrid map's. `esri.worldimagery` is `DEFAULT_IMAGERY_SOURCE`. */
+export const peakFinderSource = settingsStore('peakFinderSource', 'esri.worldimagery');
+/** Realistic only: the shader sky (never on e-ink). */
+export const peakFinderSky = settingsStore('peakFinderSky', true);
+/** Realistic only: the haze that hides the ground's hard cut at the viewing distance. */
+export const peakFinderFog = settingsStore('peakFinderFog', true);
+/** Realistic only: where the haze is total, as a fraction of the viewing distance. */
+export const peakFinderFogDistance = settingsStore('peakFinderFogDistance', 0.9);
+/**
+ * Realistic only, apart from `peakFinderViewDistanceMetres`. Same default: 60 km never reached Mont Blanc from
+ * Grenoble (114 km); bounded by the imagery's zoom and the drape's size instead, and hidden by the haze.
+ */
+export const peakFinderRealisticViewDistance = settingsStore('peakFinderRealisticViewDistance', 150000);
+/**
+ * Realistic only: the imagery drape's cache in MB. At 512 px its entries are the MB, and 70% of them are the tile
+ * budget of the distance cut (up to the SDK's 256-entry ceiling): more MB, finer far ground.
+ */
+export const peakFinderDrapeCacheSize = settingsStore('peakFinderDrapeCacheSize', __CATALYST__ ? 256 : 160);
+/**
+ * Realistic only: `tileLODFactor`, the SDK's own default 0.5; larger keeps tiles coarser. It rules a cut that fits the
+ * budget: one over it is held to the budget whatever the factor, so finer values then change nothing.
+ */
+export const peakFinderTileLodFactor = settingsStore('peakFinderTileLodFactor', 0.5);
+/** Realistic only: the sun's shadows. A real cost, so on by default only on the Mac, as `terrainShadows`. Off is strength 0, `LightOptions` has no switch. */
+export const peakFinderShadows = settingsStore('peakFinderShadows', __CATALYST__);
+export const peakFinderShadowStrength = settingsStore('peakFinderShadowStrength', 0.6);
 
 // these are style text: changing one needs a new decoder, see rebuildPeaksLayer in features/peakFinder.ts
 /**

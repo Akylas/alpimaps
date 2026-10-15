@@ -92,7 +92,7 @@
         variantParameters
     } from '~/utils/massif';
     import type { MassifRanking } from '~/utils/massif';
-    import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
+    import { mapTiltRange, peakFinderActive, peakFinderArActive, terrain3dActive, terrainTouchMode } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
@@ -123,6 +123,12 @@
     let uninstallMacMouse: () => void;
     let macMenuAnchor: NativeViewElementNode<View>;
     const isCatalyst = __CATALYST__;
+    const LARGE_SCREEN_MIN_WIDTH = 600;
+    // the item sheet is full width at the smallest large window, then takes this share of each extra dip
+    const LARGE_SHEET_GROWTH = 0.6;
+    const LARGE_SHEET_MAX_WIDTH = Number.MAX_SAFE_INTEGER;
+    // the widest the map buttons and the scale reach in from a screen edge
+    const WIDGETS_EDGE_WIDTH = 220;
     let directionsPanel: DirectionsPanel;
     let directionsPanelVisible: boolean;
     let mapResultsPager: MapResultPager;
@@ -615,7 +621,7 @@
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
             if (__CATALYST__) {
-                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick);
+                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick, () => ($terrain3dActive ? $terrainTouchMode : 'classic'));
             }
 
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos;
