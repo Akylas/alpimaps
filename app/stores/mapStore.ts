@@ -46,7 +46,7 @@ export const styleParameterValues = writable<Record<string, string>>({});
 // the app's own, not the style's: listed with any style
 const APP_STYLE_PARAMS = ['contours', 'contoursOpacity'];
 export function styleHasParameter(keys: string[], key: string) {
-    return !keys || APP_STYLE_PARAMS.includes(key) || keys.includes(key);
+    return !keys || APP_STYLE_PARAMS.includes(key) || (keys.includes(key) && (key !== 'models_3d' || __CATALYST__));
 }
 export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', MASSIF_CLICK_FILTER);
 // export const clickHandlerLayerFilter = settingsStore('clickHandlerLayerFilter', '(transportation_name|route|.*::(icon|label))');
@@ -309,6 +309,14 @@ const nutiParams = {
         description: lc('style_lighting_desc'),
         settingsOptionsType: 'boolean',
         defaultValue: true
+    },
+    // the glb models ship in Catalyst builds only (app.webpack.config.js): the tree dots stay everywhere else
+    models_3d: {
+        icon: 'mdi-pine-tree',
+        title: lc('models_3d'),
+        description: lc('models_3d_desc'),
+        settingsOptionsType: 'boolean',
+        defaultValue: __CATALYST__
     },
     label_occlusion: {
         icon: 'mdi-eye-off-outline',

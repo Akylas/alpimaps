@@ -21,3 +21,20 @@
   polygon-pattern-file: url('icons/pattern-rock.png');
   polygon-pattern-opacity: 0.5;
 }
+
+/* Unnamed tree dots keep their distance: the converter makes every circle overlap-free, so the dots
+   are made to collide, each with an invisible bigger spacer. Same-feature pairs don't collide, so a
+   dot never loses to its own spacer. */
+#poi[zoom >= 16][zoom < 18][class = 'tree'][name = null]['param::models_3d' = 0]['param::variant' != 'hybrid']::poi_tree_dot {
+  marker-allow-overlap: false;
+  marker-allow-overlap-same-feature-id: true;
+  marker-placement-priority: -1;
+}
+#poi[zoom >= 16][zoom < 18][class = 'tree'][name = null]['param::models_3d' = 0]['param::variant' != 'hybrid']::poi_tree_spacer {
+  marker-width: (2 * linear([view::zoom], (16, 5), (18, 7)));
+  marker-fill-opacity: 0;
+  marker-line-width: 0;
+  marker-allow-overlap: false;
+  marker-allow-overlap-same-feature-id: true;
+  marker-placement-priority: -1;
+}
