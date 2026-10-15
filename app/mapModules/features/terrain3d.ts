@@ -80,8 +80,8 @@ const FREE_ROAM_MODES: Record<TerrainTouchMode, FreeRoamMode> = {
 };
 
 let terrainAttached = false;
-// the DEM's registry handle: `layer.source()` returns a fresh object with no `id`, so a new DEM source went unnoticed
-let attachedSourceId: ReturnType<typeof demSource>['handle'] = null;
+// the DEM layer's handle, not its source's: `layer.source()` registers a NEW handle on every call, so two reads never compare equal
+let attachedSourceId: ReturnType<typeof demLayerHandle> = null;
 let rampTimer: NodeJS.Timeout = null;
 /** True while `toggle3D` owns the terrain, so the store subscriptions below do not fight the ramp. */
 let switching = false;
@@ -117,6 +117,11 @@ function demSource() {
     return packageService.hillshadeLayer?.source();
 }
 
+/** Stable while the DEM stays the same, unlike a handle of `demSource()`. */
+function demLayerHandle() {
+    return packageService.hillshadeLayer?.handle;
+}
+
 /**
  * Attaches once, FLAT: with `flattened` and `flattenMode` FULL the map decodes and culls as if no terrain
  * were attached, so it costs nothing until 3D is asked for.
@@ -124,12 +129,16 @@ function demSource() {
 export function ensureTerrain(): boolean {
     // `getMap?.()`: store subscriptions run at import time, before `setMapContext` has run
     const map = getMapContext()?.getMap?.();
-    const source = demSource();
-    if (!map || !source) {
+    const layerHandle = demLayerHandle();
+    if (!map || !layerHandle) {
         return false;
     }
-    if (terrainAttached && attachedSourceId === source.handle) {
+    if (terrainAttached && attachedSourceId === layerHandle) {
         return true;
+    }
+    const source = demSource();
+    if (!source) {
+        return false;
     }
     if (terrainAttached) {
         // the DEM is spec-only, so a new one means a new options object. Release the id first: the same
@@ -165,10 +174,10 @@ export function ensureTerrain(): boolean {
         elevationPrefetchEnabled: true
     });
     terrainAttached = true;
-    attachedSourceId = source.handle;
+    attachedSourceId = layerHandle;
     // After the flag: it goes through the native object, which needs the terrain to exist.
     applyNodeResolution();
-    DEV_LOG && console.log('terrain3d attached', source.handle);
+    DEV_LOG && console.log('terrain3d attached', layerHandle);
     return true;
 }
 
@@ -176,20 +185,29 @@ export function ensureTerrain(): boolean {
  * Pushes the tilt range NOW: Map.svelte's reactive write lands after the mode's camera call, and tilt is
  * clamped every frame, so a flight started under the flat `[90, 90]` range stays pinned at 90.
  */
-export function applyTiltRange() {
-    getMapContext().getMap()?.set('tiltRange', get(mapTiltRange));
+export function applyTiltRange(who: string) {
+    pushTiltRange(who, get(mapTiltRange));
+}
+
+function pushTiltRange(who: string, range: [number, number]) {
+    const map = getMapContext().getMap();
+    if (!map) {
+        return;
+    }
+    map.set('tiltRange', range);
+    DEV_LOG && console.log('terrain3d: tiltRange', who, JSON.stringify(range), 'sdk', JSON.stringify(map.get('tiltRange')), 'active', get(terrain3dActive), 'transition', get(mapTiltTransition));
 }
 
 /** Opens the range for a transition's flight and pushes it, so leaving a mode animates. */
 export function beginTiltTransition() {
     mapTiltTransition.set(true);
-    getMapContext().getMap()?.set('tiltRange', TILTED_RANGE);
+    pushTiltRange('beginTiltTransition', TILTED_RANGE);
 }
 
 /** The flight has landed: back to whatever the modes now in play allow. */
 export function endTiltTransition() {
     mapTiltTransition.set(false);
-    applyTiltRange();
+    applyTiltRange('endTiltTransition');
 }
 
 function terrainFlattenMode() {
@@ -212,7 +230,7 @@ export function setTerrain3DImmediate(on: boolean): boolean {
     applyTouchMode(on);
     applyViewDistance(on);
     terrain3dActive.set(on);
-    applyTiltRange();
+    applyTiltRange('setTerrain3DImmediate');
     return true;
 }
 
@@ -423,6 +441,7 @@ function rampWithFlight(leaving3D: boolean) {
     });
     stopRamp();
     endTiltTransition();
+    DEV_LOG && console.log('terrain3d: switch end', leaving3D ? '3D->2D' : '2D->3D', 'is3D', is3D(), 'tilt', mapCamera?.tilt());
     // The sky and the fog come down here rather than at the start of the flight, for the same reason
     // the touch model does: the animation still has a horizon in it (see `toggle3D`).
     if (leaving3D) {
@@ -438,6 +457,7 @@ function rampWithFlight(leaving3D: boolean) {
  * True once the auto rule has moved the mode and the two expensive halves of the switch still owe it.
  */
 let autoFlattenPending = false;
+let lastSyncSkip: string = null;
 
 /**
  * `autoFlattenTilt` flips 3D inside the SDK with no event, so the app side is synced by polling on moves.
@@ -445,14 +465,20 @@ let autoFlattenPending = false;
  */
 function syncAutoFlattenState(settled: boolean) {
     // `switching` is the button's own flight, which applies all of this itself.
-    if (switching || !terrainAttached) {
+    const skipReason = switching ? 'switching' : !terrainAttached ? 'detached' : null;
+    if (DEV_LOG && skipReason !== lastSyncSkip) {
+        console.log('terrain3d: auto-flatten sync', skipReason ? `skipped (${skipReason})` : 'resumed');
+    }
+    lastSyncSkip = skipReason;
+    if (skipReason) {
         return;
     }
     const on = is3D();
     if (on !== get(terrain3dActive)) {
         terrain3dActive.set(on);
+        DEV_LOG && console.log('terrain3d: auto-flatten followed', on ? '3D' : '2D');
         applyAtmosphere(on);
-        applyTiltRange();
+        applyTiltRange('syncAutoFlattenState');
         autoFlattenPending = true;
     }
     if (settled && autoFlattenPending) {
@@ -472,8 +498,8 @@ function onTerrainSourceChanged() {
         }
         return;
     }
-    const source = demSource();
-    if (!source) {
+    const layerHandle = demLayerHandle();
+    if (!layerHandle) {
         // The DEM went away — there is nothing to build a mesh from, so drop back to a flat map.
         stopRamp();
         terrainAttached = false;
@@ -484,13 +510,16 @@ function onTerrainSourceChanged() {
         applyViewDistance(false);
         return;
     }
-    if (source.handle === attachedSourceId) {
+    if (layerHandle === attachedSourceId) {
         return;
     }
     const wasIn3D = is3D();
     if (wasIn3D) {
         // ensureTerrain opens flat, so the mode has to be asked for again afterwards.
         setTerrain3DImmediate(true);
+    } else if (get(terrainAutoFlattenByTilt)) {
+        // Not detached: the old terrain keeps its tilt rule, and a detached one flips 3D with nobody syncing the tilt range.
+        ensureTerrain();
     } else {
         terrainAttached = false;
         attachedSourceId = null;
