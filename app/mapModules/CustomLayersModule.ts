@@ -1414,7 +1414,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             preloading: get(preloading),
             clickRadius: layerProps['clickRadius'],
-            tileCacheCapacity: 30 * 1024 * 1024,
+            tileCacheCapacity: (__CATALYST__ ? 256 : 30) * 1024 * 1024,
             clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
             visible: opacity !== 0
