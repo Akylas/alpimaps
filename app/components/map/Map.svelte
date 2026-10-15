@@ -92,7 +92,7 @@
         variantParameters
     } from '~/utils/massif';
     import type { MassifRanking } from '~/utils/massif';
-    import { mapTiltRange, peakFinderActive, peakFinderArActive } from '~/stores/terrainStore';
+    import { mapTiltRange, peakFinderActive, peakFinderArActive, terrain3dActive, terrainTouchMode } from '~/stores/terrainStore';
     import { type MapBounds, type MapPos, fromPosition, geometryBounds, getBoundsZoomLevel, toBounds, toPosition } from '~/utils/geo';
     import { parseUrlQueryParameters } from '~/utils/http';
     import { hideLoading, onBackButton, showLoading, showPopoverMenu, showSnack } from '~/utils/ui';
@@ -615,7 +615,7 @@
             mapContext.setMapDefaultOptions(massifMap);
             subscribeToMapEvents();
             if (__CATALYST__) {
-                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick);
+                uninstallMacMouse = installMacMouse(mapViewInstance, onMapSecondaryClick, () => ($terrain3dActive ? $terrainTouchMode : 'classic'));
             }
 
             const pos = JSON.parse(ApplicationSettings.getString('mapFocusPos', '{"lat":45.2012,"lon":5.7222}')) as MapPos;
