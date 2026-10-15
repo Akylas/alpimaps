@@ -135,6 +135,11 @@ export default class NavigationRouteModule extends MapModule {
         this.drawManeuver(get(navigationProgress));
     }
 
+    // the throttled move event can skip the final zoom, which would leave the arrows of the old one
+    onMapStable() {
+        this.drawManeuver(get(navigationProgress));
+    }
+
     private getOrCreateLayer() {
         if (!this.layer) {
             const map = mapContext.getMap();
