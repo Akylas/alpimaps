@@ -2,12 +2,13 @@ import type { Json, MassifLayer, MassifMap, MassifObject, MassifSource, Position
 import type { Feature, Geometry } from 'geojson';
 import { type Unsubscriber, get } from 'svelte/store';
 import type { GeoLocation } from '~/handlers/GeoHandler';
+import { getMetersPerPixel } from '~/helpers/geolib';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { registerMapModule } from '~/mapModules/registry';
 import type { IItem } from '~/models/Item';
 import { type NavigationDetour, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationProgress, navigationRejoinTarget } from '~/stores/navigationStore';
-import { geometryCoordinates } from '~/utils/geo';
+import { fromPosition, geometryCoordinates } from '~/utils/geo';
 import type { RouteProgress } from '~/utils/navigation';
 import type { RejoinTarget } from '~/utils/navigation';
 
@@ -19,8 +20,21 @@ const mapContext = getMapContext();
 const NAVIGATION_LAYER = 1;
 /** the connector, on its own layer because it is redrawn on every position */
 const HINT_LAYER = 2;
-/** metres of route a maneuver arrow keeps before and after its turn */
+/** metres of route a maneuver arrow keeps before and after its turn, at the closest zooms */
 const ARROW_LENGTH = 30;
+/**
+ * Screen length (dp) an arrow keeps before and after its turn when zoomed out. The style's widths barely
+ * shrink with zoom, so an arrow of fixed metres collapses to its head: the length follows the zoom instead.
+ */
+const ARROW_SCREEN_LENGTH = 36;
+/** below this the turn is not readable anyway and the arrow would swamp the route */
+const ARROW_MIN_ZOOM = 13;
+
+/** metres for `ARROW_SCREEN_LENGTH` at this zoom, stepped by half a zoom so the arrow is not rebuilt every frame */
+function arrowLengthAt(zoom: number, latitude: number) {
+    const steppedZoom = Math.round(zoom * 2) / 2;
+    return Math.max(ARROW_LENGTH, Math.round(ARROW_SCREEN_LENGTH * getMetersPerPixel({ lat: latitude }, steppedZoom)));
+}
 
 // Navigation follows its own route copy (`NavigationRoute`), never the selected item, so it is drawn
 // on its own layer. The `navigating` style parameter makes the item/directions styles drop their selected look.
@@ -93,6 +107,12 @@ export default class NavigationRouteModule extends MapModule {
         super.onMapReady(map);
         // navigation may have been running before the map came back (an android activity re-create)
         this.draw();
+        this.drawManeuver(get(navigationProgress));
+    }
+
+    // the arrow's length follows the zoom
+    onMapMove() {
+        this.drawManeuver(get(navigationProgress));
     }
 
     private getOrCreateLayer() {
@@ -161,19 +181,26 @@ export default class NavigationRouteModule extends MapModule {
     // the next maneuver and the one after it (the banner's "then"); none on a detour, whose
     // instructions index the detour leg, nor off route
     private drawManeuver(progress: RouteProgress) {
+        const map = mapContext.getMap();
+        if (!map) {
+            return;
+        }
         const item = this.item;
-        const onRoute = !!progress && !progress.offRoute && !progress.onDetour && !!progress.instruction && !!item;
+        const camera = map.camera();
+        const zoom = camera.zoom();
+        const onRoute = !!progress && !progress.offRoute && !progress.onDetour && !!progress.instruction && !!item && zoom >= ARROW_MIN_ZOOM;
         const following = onRoute ? item.instructions?.[progress.instructionIndex + 1] : null;
         const gap = progress?.distanceToFollowingInstruction;
+        const arrowLength = onRoute ? arrowLengthAt(zoom, fromPosition(camera.position()).lat) : ARROW_LENGTH;
         // two turns closer than two arrows' worth of route: one arrow through both, one head, instead
         // of the second arrow starting under the first one's head
-        const chained = !!following && gap > 0 && gap <= ARROW_LENGTH * 2;
+        const chained = !!following && gap > 0 && gap <= arrowLength * 2;
         const arrows: { index: number; lengthAfter: number }[] = !onRoute
             ? []
             : chained
-              ? [{ index: progress.instruction.index, lengthAfter: gap + ARROW_LENGTH }]
-              : [progress.instruction, following].filter(Boolean).map((instruction) => ({ index: instruction.index, lengthAfter: ARROW_LENGTH }));
-        const key = arrows.length ? `${item.id}:${arrows.map((arrow) => arrow.index + '/' + Math.round(arrow.lengthAfter)).join(',')}` : null;
+              ? [{ index: progress.instruction.index, lengthAfter: gap + arrowLength }]
+              : [progress.instruction, following].filter(Boolean).map((instruction) => ({ index: instruction.index, lengthAfter: arrowLength }));
+        const key = arrows.length ? `${item.id}:${arrowLength}:${arrows.map((arrow) => arrow.index + '/' + Math.round(arrow.lengthAfter)).join(',')}` : null;
         if (key === this.arrowKey || (!key && !this.maneuverLayer)) {
             return;
         }
@@ -187,6 +214,7 @@ export default class NavigationRouteModule extends MapModule {
             if (!this.arrowBuilder) {
                 this.arrowBuilder = mapContext.getMap().object('geometry', 'navigation.maneuver', { type: 'maneuver-arrow', lengthBefore: ARROW_LENGTH, lengthAfter: ARROW_LENGTH });
             }
+            this.arrowBuilder.set('lengthBefore', arrowLength);
             arrows.forEach(({ index, lengthAfter }) => {
                 this.arrowBuilder.set('lengthAfter', lengthAfter);
                 const arrow = this.arrowBuilder.call('buildArrowAtIndex', this.routePositions, index);
