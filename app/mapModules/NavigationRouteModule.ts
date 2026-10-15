@@ -8,7 +8,7 @@ import { registerMapModule } from '~/mapModules/registry';
 import type { IItem } from '~/models/Item';
 import { type NavigationDetour, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationProgress, navigationRejoinTarget } from '~/stores/navigationStore';
-import { fromPosition, geometryCoordinates } from '~/utils/geo';
+import { computeDistanceBetween, fromPosition, geometryCoordinates } from '~/utils/geo';
 import type { RouteProgress } from '~/utils/navigation';
 import type { RejoinTarget } from '~/utils/navigation';
 
@@ -20,20 +20,37 @@ const mapContext = getMapContext();
 const NAVIGATION_LAYER = 1;
 /** the connector, on its own layer because it is redrawn on every position */
 const HINT_LAYER = 2;
-/** metres of route a maneuver arrow keeps before and after its turn, at the closest zooms */
-const ARROW_LENGTH = 30;
 /**
- * Screen length (dp) an arrow keeps before and after its turn when zoomed out. The style's widths barely
- * shrink with zoom, so an arrow of fixed metres collapses to its head: the length follows the zoom instead.
+ * Screen length (dp) an arrow keeps before its turn. The style's widths barely shrink with zoom, so an
+ * arrow of fixed metres collapses to its head when zoomed out: lengths follow the zoom instead.
  */
 const ARROW_SCREEN_LENGTH = 36;
+/** screen length (dp) of shaft kept between the turn and the head, which comes on top of the head's own length */
+const ARROW_SHAFT_AFTER = 10;
+/** floor in metres, so a very close zoom does not shrink the arrow below its head */
+const ARROW_MIN_LENGTH = 6;
 /** below this the turn is not readable anyway and the arrow would swamp the route */
 const ARROW_MIN_ZOOM = 13;
+/** a turn this close to the end of the route is the arrival: no route left to draw past it */
+const ARROW_END_TOLERANCE = 2;
 
-/** metres for `ARROW_SCREEN_LENGTH` at this zoom, stepped by half a zoom so the arrow is not rebuilt every frame */
-function arrowLengthAt(zoom: number, latitude: number) {
+/** the casing head's length (dp): `line-arrow-length` times `@nav_maneuver_casing_width`, keep in sync with the style */
+function arrowHeadScreenLength(zoom: number) {
+    const casingWidth = zoom <= 12 ? 12 : zoom <= 16 ? 12 + ((zoom - 12) * 9) / 4 : zoom <= 18 ? 21 + (zoom - 16) * 3.5 : 28;
+    return casingWidth * 1.72;
+}
+
+/** metres for the arrow's screen lengths at this zoom, stepped by half a zoom so the arrow is not rebuilt every frame */
+function arrowSizesAt(zoom: number, latitude: number) {
     const steppedZoom = Math.round(zoom * 2) / 2;
-    return Math.max(ARROW_LENGTH, Math.round(ARROW_SCREEN_LENGTH * getMetersPerPixel({ lat: latitude }, steppedZoom)));
+    const metersPerPixel = getMetersPerPixel({ lat: latitude }, steppedZoom);
+    const headScreenLength = arrowHeadScreenLength(steppedZoom);
+    return {
+        before: Math.max(ARROW_MIN_LENGTH, Math.round(ARROW_SCREEN_LENGTH * metersPerPixel)),
+        // the head eats the end of the line: the shaft past the turn only shows beyond it
+        after: Math.max(ARROW_MIN_LENGTH, Math.round((headScreenLength + ARROW_SHAFT_AFTER) * metersPerPixel)),
+        head: Math.round(headScreenLength * metersPerPixel)
+    };
 }
 
 // Navigation follows its own route copy (`NavigationRoute`), never the selected item, so it is drawn
@@ -54,6 +71,8 @@ export default class NavigationRouteModule extends MapModule {
     private maneuverLayerId: number;
     /** the route as the builder takes it, rebuilt with the item */
     private routePositions: Position[] = null;
+    /** metres from the start of the route to each of `routePositions` */
+    private routeDistances: number[] = null;
     /** what the arrow was last drawn for, so a fix on the same maneuver costs nothing */
     private arrowKey: string = null;
 
@@ -64,7 +83,8 @@ export default class NavigationRouteModule extends MapModule {
             navigationItem.subscribe((item) => {
                 this.item = item;
                 this.routePositions = null;
-                this.arrowKey = null;
+                this.routeDistances = null;
+                this.clearManeuver();
                 this.draw();
             }),
             navigationProgress.subscribe((progress) => this.drawManeuver(progress)),
@@ -178,9 +198,18 @@ export default class NavigationRouteModule extends MapModule {
         return this.maneuverLayer;
     }
 
+    private clearManeuver() {
+        this.arrowKey = null;
+        this.maneuverSource?.setGeoJSON(this.maneuverLayerId, { type: 'FeatureCollection', features: [] });
+    }
+
     // the next maneuver and the one after it (the banner's "then"); none on a detour, whose
     // instructions index the detour leg, nor off route
     private drawManeuver(progress: RouteProgress) {
+        // idle, and nothing drawn: onMapMove lands here on every frame
+        if (!progress?.instruction && !this.arrowKey) {
+            return;
+        }
         const map = mapContext.getMap();
         if (!map) {
             return;
@@ -189,18 +218,8 @@ export default class NavigationRouteModule extends MapModule {
         const camera = map.camera();
         const zoom = camera.zoom();
         const onRoute = !!progress && !progress.offRoute && !progress.onDetour && !!progress.instruction && !!item && zoom >= ARROW_MIN_ZOOM;
-        const following = onRoute ? item.instructions?.[progress.instructionIndex + 1] : null;
-        const gap = progress?.distanceToFollowingInstruction;
-        const arrowLength = onRoute ? arrowLengthAt(zoom, fromPosition(camera.position()).lat) : ARROW_LENGTH;
-        // two turns closer than two arrows' worth of route: one arrow through both, one head, instead
-        // of the second arrow starting under the first one's head
-        const chained = !!following && gap > 0 && gap <= arrowLength * 2;
-        const arrows: { index: number; lengthAfter: number }[] = !onRoute
-            ? []
-            : chained
-              ? [{ index: progress.instruction.index, lengthAfter: gap + arrowLength }]
-              : [progress.instruction, following].filter(Boolean).map((instruction) => ({ index: instruction.index, lengthAfter: arrowLength }));
-        const key = arrows.length ? `${item.id}:${arrowLength}:${arrows.map((arrow) => arrow.index + '/' + Math.round(arrow.lengthAfter)).join(',')}` : null;
+        const arrows = onRoute ? this.computeArrows(progress, zoom, fromPosition(camera.position()).lat) : [];
+        const key = arrows.length ? `${item.id}:${arrows.map((arrow) => `${arrow.index}/${Math.round(arrow.lengthBefore)}/${Math.round(arrow.lengthAfter)}`).join(',')}` : null;
         if (key === this.arrowKey || (!key && !this.maneuverLayer)) {
             return;
         }
@@ -208,14 +227,11 @@ export default class NavigationRouteModule extends MapModule {
         this.getOrCreateManeuverLayer();
         const features: Json[] = [];
         if (key) {
-            if (!this.routePositions) {
-                this.routePositions = item.geometry ? geometryCoordinates(item.geometry).map((coordinates): Position => [coordinates[0], coordinates[1]]) : [];
-            }
             if (!this.arrowBuilder) {
-                this.arrowBuilder = mapContext.getMap().object('geometry', 'navigation.maneuver', { type: 'maneuver-arrow', lengthBefore: ARROW_LENGTH, lengthAfter: ARROW_LENGTH });
+                this.arrowBuilder = mapContext.getMap().object('geometry', 'navigation.maneuver', { type: 'maneuver-arrow', lengthBefore: ARROW_MIN_LENGTH, lengthAfter: ARROW_MIN_LENGTH });
             }
-            this.arrowBuilder.set('lengthBefore', arrowLength);
-            arrows.forEach(({ index, lengthAfter }) => {
+            arrows.forEach(({ index, lengthAfter, lengthBefore }) => {
+                this.arrowBuilder.set('lengthBefore', lengthBefore);
                 this.arrowBuilder.set('lengthAfter', lengthAfter);
                 const arrow = this.arrowBuilder.call('buildArrowAtIndex', this.routePositions, index);
                 if (arrow && typeof arrow === 'object' && !Array.isArray(arrow) && Array.isArray(arrow.features)) {
@@ -224,6 +240,44 @@ export default class NavigationRouteModule extends MapModule {
             });
         }
         this.maneuverSource.setGeoJSON(this.maneuverLayerId, { type: 'FeatureCollection', features });
+    }
+
+    // The head eats the end of its line, so the route past the last turn has to be longer than the head:
+    // otherwise the shaft after the turn is gone and the head sits on the corner as a blob.
+    private computeArrows(progress: RouteProgress, zoom: number, latitude: number) {
+        const item = this.item;
+        if (!this.routePositions) {
+            this.routePositions = item.geometry ? geometryCoordinates(item.geometry).map((coordinates): Position => [coordinates[0], coordinates[1]]) : [];
+            this.routeDistances = this.routePositions.map(() => 0);
+            for (let index = 1; index < this.routePositions.length; index++) {
+                this.routeDistances[index] = this.routeDistances[index - 1] + computeDistanceBetween(fromPosition(this.routePositions[index - 1]), fromPosition(this.routePositions[index]));
+            }
+        }
+        const routeLength = this.routeDistances[this.routeDistances.length - 1] ?? 0;
+        const sizes = arrowSizesAt(zoom, latitude);
+        const instruction = progress.instruction;
+        const following = item.instructions?.[progress.instructionIndex + 1];
+        const previousLegLength = item.instructions?.[progress.instructionIndex - 1]?.dist;
+        // not back through the previous turn
+        const lengthBefore = previousLegLength > 0 ? Math.min(sizes.before, previousLegLength / 2) : sizes.before;
+        const routeAfter = (turnIndex: number) => routeLength - (this.routeDistances[turnIndex] ?? routeLength);
+        const fits = (turnIndex: number) => {
+            const left = routeAfter(turnIndex);
+            return left >= sizes.after || left <= ARROW_END_TOLERANCE;
+        };
+        // at the end of the route there is no shaft past the turn, so the one before it has to hold the head
+        const arrow = (turn: { index: number }, before: number, length = sizes.after) => ({
+            index: turn.index,
+            lengthBefore: routeAfter(turn.index) <= ARROW_END_TOLERANCE ? Math.max(before, sizes.after) : before,
+            lengthAfter: length
+        });
+        const gap = progress.distanceToFollowingInstruction;
+        // two turns closer than their arrows and a head apart: one arrow through both, one head, instead
+        // of the second arrow starting under the first one's head
+        if (following && gap >= 0 && gap <= sizes.before + sizes.after + sizes.head && fits(following.index)) {
+            return [arrow(instruction, lengthBefore, gap + sizes.after)];
+        }
+        return [fits(instruction.index) ? arrow(instruction, lengthBefore) : null, following && fits(following.index) ? arrow(following, sizes.before) : null].filter(Boolean);
     }
 
     // at most three features: rebuilding is cheapest
