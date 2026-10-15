@@ -9,8 +9,12 @@
 //   connector  the straight hint from the user to the point they are heading back to
 //   original   the route a full reroute replaced, kept visible so the change is readable
 
-// How much of the route and the maneuver arrows shows through a 3D building in front of them
+// How much of the route and the maneuver arrows shows through a 3D building or ridge in front of them
 // (0 = hidden, as before). Needs an SDK with line-occlusion-opacity: older ones ignore it.
+// COST: each ghosted rule is drawn again after the last layer, in up to 4 passes, whether or not anything
+// is in front of it (about 2-3 ms/frame on a desktop GPU for the route + arrows + a few lines; not measured
+// on phones). Keep it on the few lines that must stay readable (route, arrows, selected item), never on
+// dense layers (roads, contours, all saved items). Without an 8-bit stencil buffer the ghost tints.
 @nav_occlusion_opacity: 0.35;
 
 #navigation['mapnik::geometry_type'=2] {
