@@ -825,7 +825,7 @@
     "navigation_section_off_route": "",
     "navigation_off_route_fixes_desc": "",
     "show_items_routes": "",
-    "advanced": "",
+    "advanced": "дополнительно",
     "no_directions_found_for_track": "",
     "navigation_auto_pause_desc": "",
     "navigation_turn_refresh_delay": "",
@@ -853,7 +853,7 @@
     "navigation_show_elevation_chart_desc": "",
     "navigation_section_display": "",
     "navigation_settings": "",
-    "a9_settings": "",
+    "a9_settings": "смарт-часы A9",
     "navigation_auto_zoom_desc": "",
     "scrub_pattern_zoom": "",
     "elevation_profile_grade_min_section": "",
@@ -896,8 +896,8 @@
     "navigation_auto_reroute_desc": "",
     "show_tram_lines": "",
     "navigation_record_stats_desc": "",
-    "a9_settings_desc": "",
-    "a9_refresh_screen_on_location": "",
+    "a9_settings_desc": "настройки для смарт-часов A9",
+    "a9_refresh_screen_on_location": "обновлять экран при обновлении местоположения",
     "forest_pattern_zoom_desc": "",
     "river_label_min_zoom_desc": "",
     "navigation_auto_reroute_max_distance": "",
@@ -920,5 +920,8 @@
     "remaining_time": "",
     "navigation_maneuver_refresh_distance": "",
     "navigation_arrow_marker_desc": "",
-    "navigation_auto_pause_delay": ""
+    "navigation_auto_pause_delay": "",
+    "accent_color": "акцентный",
+    "add": "добавить",
+    "alternatives": "альтернативы"
 }
