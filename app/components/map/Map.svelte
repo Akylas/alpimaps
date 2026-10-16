@@ -1144,7 +1144,10 @@
     // `rotationGestures`, not `rotatable`: the latter blocks EVERY rotation, compass reset included
     $: massifMap?.set('rotationGestures', $rotateEnabled);
     // derived: the 3D and peak-finder modes also constrain tilt (see mapTiltRange in terrainStore)
-    $: massifMap?.set('tiltRange', $mapTiltRange);
+    $: if (massifMap) {
+        massifMap.set('tiltRange', $mapTiltRange);
+        DEV_LOG && console.log('terrain3d: tiltRange Map.svelte', JSON.stringify($mapTiltRange));
+    }
     // $: currentLayer && (currentLayer.preloading = $preloading);
     let wasNavigating = false;
     // the item sheet steps aside while navigating and comes back after. Must stay before the
