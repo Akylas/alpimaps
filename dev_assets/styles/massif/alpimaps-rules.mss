@@ -1,5 +1,11 @@
 /* Listed AFTER style.mss: new attachments draw with their source layer's topmost entry. */
 
+/* Massif's 0.8 / 0.2 leaves a tenth of a shade between a wall facing the sun and one facing away */
+Map {
+  building-ambient: 0.5;
+  building-light-intensity: 0.5;
+}
+
 /* Alpimaps' textures over the flat colours, from the zoom each says something, tinted as it tints
    them. Massif's own pattern sprites are e-ink's grey; the tint puts the colour back. */
 #landcover[zoom >= 12][class = 'wood']::osm_wood_pattern {
