@@ -13,6 +13,32 @@ import { Handler } from './Handler';
 import { navigationService } from '~/services/NavigationService';
 import { getBGServiceInstance } from '~/services/BgService';
 
+// The iOS settings URL opens nothing useful on a Mac: the privacy pane is addressed by its own scheme. The first is
+// System Settings' (macOS 13+), the second the older name, which newer systems still redirect.
+const MAC_LOCATION_SETTINGS_URLS = [
+    'x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_LocationServices',
+    'x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices'
+];
+
+function openMacSettingsUrl(index: number): Promise<boolean> {
+    if (index >= MAC_LOCATION_SETTINGS_URLS.length) {
+        return Promise.resolve(false);
+    }
+    return new Promise((resolve) => {
+        UIApplication.sharedApplication.openURLOptionsCompletionHandler(NSURL.URLWithString(MAC_LOCATION_SETTINGS_URLS[index]), null, (success) => {
+            resolve(success);
+        });
+    }).then((opened: boolean) => opened || openMacSettingsUrl(index + 1));
+}
+
+/** The location pane on a Mac (Catalyst), the app's own settings page elsewhere. */
+function openLocationSettings(): Promise<boolean> {
+    if (__CATALYST__) {
+        return openMacSettingsUrl(0).then((opened) => opened || geolocation.openGPSSettings());
+    }
+    return geolocation.openGPSSettings();
+}
+
 let geolocation: GPS;
 
 export const desiredAccuracy = __ANDROID__ ? CoreTypes.Accuracy.high : kCLLocationAccuracyBestForNavigation;
@@ -274,7 +300,7 @@ export class GeoHandler extends Handler {
                 cancelButtonText: lc('cancel')
             }).then((result) => {
                 if (!!result) {
-                    return geolocation.openGPSSettings();
+                    return openLocationSettings();
                 }
                 return Promise.reject();
             });
@@ -283,7 +309,7 @@ export class GeoHandler extends Handler {
     async authorizeLocation() {
         const result = await request('location');
         if (!isPermResultAuthorized(result)) {
-            throw new Error(lc('missing_location_permission'));
+            throw new Error(`${lc('missing_location_permission')} (${String(result)})`);
         }
         this.gpsEnabled = geolocation.isEnabled();
         return result;
@@ -293,14 +319,14 @@ export class GeoHandler extends Handler {
             await this.authorizeLocation();
             await this.askToEnableIfNotEnabled();
         } catch (err) {
-            if (err && /denied/i.test(err.message)) {
+            if (err && /denied|restricted/i.test(err.message)) {
                 confirm({
                     message: lc('gps_not_authorized'),
                     okButtonText: lc('settings'),
                     cancelButtonText: lc('cancel')
                 }).then((result) => {
                     if (result) {
-                        geolocation.openGPSSettings().catch(() => {});
+                        openLocationSettings().catch(() => {});
                     }
                 });
                 return Promise.reject();
