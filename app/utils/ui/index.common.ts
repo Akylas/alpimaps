@@ -83,7 +83,8 @@ const PANEL_HEADER_HEIGHT = 64;
 // the shared slider popovers, in the PanelPopover look
 export function panelPopoverStyle(currentColors = get(colors)) {
     const { colorHairline, colorPanel } = currentColors;
-    return { backgroundColor: colorPanel, props: { backgroundColor: colorPanel, borderColor: colorHairline, borderRadius: 20, borderWidth: 1 } };
+    // null on iOS: keep the native popover background
+    return { backgroundColor: __IOS__ ? null : colorPanel, props: { backgroundColor: colorPanel, borderColor: colorHairline, borderRadius: 20, borderWidth: 1 } };
 }
 export function showSliderPopover(options: Parameters<typeof showSharedSliderPopover>[0]) {
     return showSharedSliderPopover({ ...panelPopoverStyle(), ...options });
@@ -118,16 +119,17 @@ export async function showPopoverMenu<T = any>({
     const togglesHeight = toggleColumns ? 14 + Math.ceil(props.toggles.length / toggleColumns) * 42 : 0;
     const specialCount = separatorCount + tilesOptions.length + footerCount;
     const result: T = await showPopover({
-        backgroundColor: colorPanel,
+        // null on iOS: keep the native popover background, which draws the radius and shadow too
+        backgroundColor: __IOS__ ? null : colorPanel,
         view: OptionSelect,
         anchor,
         horizPos: horizPos ?? HorizontalPosition.ALIGN_LEFT,
         vertPos: vertPos ?? VerticalPosition.CENTER,
         props: {
-            borderRadius: 20,
-            panel: true,
+            borderRadius: __IOS__ ? 0 : 20,
+            panel: !__IOS__,
             elevation: __ANDROID__ ? 3 : 0,
-            margin: 4,
+            margin: __IOS__ ? 0 : 4,
             fontWeight: 500,
             containerColumns: 'auto',
             separatorHeight,
