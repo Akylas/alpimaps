@@ -488,3 +488,30 @@ label {
     vertical-text-alignment: middle;
     width: 50;
 }
+.selectionToolbar {
+    // the app's floating panel: translucent surface, hairline
+    background-color: var(--colorPanel);
+    border-color: var(--colorHairline);
+    border-width: 1;
+    border-radius: 30;
+    elevation: 3;
+    height: var(--actionBarHeight);
+    horizontal-align: stretch;
+    vertical-align: bottom;
+    .ns-eink & {
+        background-color: white;
+        border-color: black;
+        elevation: 0;
+    }
+}
+
+.selectionToolbarButton {
+    @extend .mdi;
+    width: var(--actionBarButtonHeight);
+    height: var(--actionBarButtonHeight);
+    border-radius: 25;
+    ripple-color: var(--colorPrimary);
+    font-size: 24;
+    padding: 0;
+    margin: 4 2;
+}
