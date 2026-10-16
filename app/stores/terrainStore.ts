@@ -13,7 +13,7 @@ export const terrainExaggeration = settingsStore('terrainExaggeration', 1);
  * Grid cells per tile edge of the draped surface: multiplies all surface cost (128 vs 64: 8.5 vs 15.2 fps
  * on a Crosscall). SDK clamps to 256; the bare surface and depth pre-pass cap at 96 (`MAX_MESH_GRID_SIZE`).
  */
-export const terrainMeshResolution = settingsStore('terrainMeshResolution', 64);
+export const terrainMeshResolution = settingsStore('terrainMeshResolution', __CATALYST__ ? 256 : 64);
 /**
  * Height-field resolution (`surfaceNodeResolution`) per DEM tile edge; 0 follows `terrainMeshResolution`.
  * This, not the mesh, carries relief. 256 is one node per texel of a 512 px DEM tile: more buys nothing.
@@ -76,26 +76,27 @@ export const TERRAIN_FOG_EINK = '#ffffff';
  */
 export const terrainFogVerticalStart = settingsStore('terrainFogVerticalStart', 1000);
 export const terrainFogVerticalEnd = settingsStore('terrainFogVerticalEnd', 2500);
-/** Terrain lighting and the sun's shadows; off as in the demo: a real cost and a change of look. */
-export const terrainLighting = settingsStore('terrainLighting', false);
+/** Terrain lighting and the sun's shadows: a real cost and a change of look, so on by default only on the Mac. */
+export const terrainLighting = settingsStore('terrainLighting', __CATALYST__);
 
 /**
- * Sun position, degrees clockwise from north / above the horizon (SDK defaults). Only written while
+ * Sun position, degrees clockwise from north / above the horizon. Only written while
  * `terrainLighting` is on: a style's own sun lights the flat map, so an override would change 2D.
  */
-export const terrainSunAzimuth = settingsStore('terrainSunAzimuth', 315);
-export const terrainSunAltitude = settingsStore('terrainSunAltitude', 45);
+export const terrainSunAzimuth = settingsStore('terrainSunAzimuth', 330);
+export const terrainSunAltitude = settingsStore('terrainSunAltitude', 60);
 
 /**
  * Subordinate to `terrainLighting`: the shadow scales the direct light. `LightOptions` has no
  * `shadowsEnabled`, so off is `shadowStrength` 0.
  */
-export const terrainShadows = settingsStore('terrainShadows', false);
+export const terrainShadows = settingsStore('terrainShadows', __CATALYST__);
 /**
  * Fraction of the direct light a shadow takes; 1 is physical (mapbox's default), above exaggerates.
- * Scaled by the sun's share of the light, so raising it does not add shadows at dusk.
+ * Scaled by the sun's share of the light, so raising it does not add shadows at dusk. 0.3 reads as a
+ * soft shadow on the light Massif map.
  */
-export const terrainShadowStrength = settingsStore('terrainShadowStrength', 1);
+export const terrainShadowStrength = settingsStore('terrainShadowStrength', 0.3);
 /**
  * Shadow reach in multiples of the camera-to-focus distance; 0 takes the SDK's 4.5. Further costs texel
  * size, the shadow map resolution being fixed.
@@ -198,7 +199,7 @@ export const peakFinderViewDistanceMetres = settingsStore('peakFinderViewDistanc
  * Grid cells per tile edge in the panorama: geo-three's `geometrySize` / 3 up to z12, halved per level
  * above, min 16. `setSubdivideDistance` lifts the SDK's cap of 96.
  */
-export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', 171);
+export const peakFinderMeshResolution = settingsStore('peakFinderMeshResolution', __CATALYST__ ? 256 : 171);
 /**
  * Tile zoom the panorama mesh is cut at (`setMaxZoom`, also caps the elevation data); 0 = distance rule.
  * 17 is geo-three's. Never past the source's max + 3 anyway.
@@ -253,6 +254,36 @@ export const peakFinderExaggeration = settingsStore('peakFinderExaggeration', 1)
 /** AR versions of the two above, where a thick line hides the photo. 0 = use the above. */
 export const peakFinderArOutlineWidth = settingsStore('peakFinderArOutlineWidth', 0);
 export const peakFinderArHorizonBoost = settingsStore('peakFinderArHorizonBoost', 0);
+
+/** `relief`: ink on paper, drawn by the surface shader. `realistic`: draped imagery, lit by the sun, with sky and haze. */
+export type PeakFinderLook = 'relief' | 'realistic';
+export const peakFinderLook = settingsStore<PeakFinderLook>('peakFinderLook', 'relief');
+/** Realistic only: the imagery provider id, apart from the hybrid map's. `esri.worldimagery` is `DEFAULT_IMAGERY_SOURCE`. */
+export const peakFinderSource = settingsStore('peakFinderSource', 'esri.worldimagery');
+/** Realistic only: the shader sky (never on e-ink). */
+export const peakFinderSky = settingsStore('peakFinderSky', true);
+/** Realistic only: the haze that hides the ground's hard cut at the viewing distance. */
+export const peakFinderFog = settingsStore('peakFinderFog', true);
+/** Realistic only: where the haze is total, as a fraction of the viewing distance. */
+export const peakFinderFogDistance = settingsStore('peakFinderFogDistance', 0.9);
+/**
+ * Realistic only, apart from `peakFinderViewDistanceMetres`. Same default: 60 km never reached Mont Blanc from
+ * Grenoble (114 km); bounded by the imagery's zoom and the drape's size instead, and hidden by the haze.
+ */
+export const peakFinderRealisticViewDistance = settingsStore('peakFinderRealisticViewDistance', 150000);
+/**
+ * Realistic only: the imagery drape's cache in MB. At 512 px its entries are the MB, and 70% of them are the tile
+ * budget of the distance cut (up to the SDK's 256-entry ceiling): more MB, finer far ground.
+ */
+export const peakFinderDrapeCacheSize = settingsStore('peakFinderDrapeCacheSize', __CATALYST__ ? 256 : 160);
+/**
+ * Realistic only: `tileLODFactor`, the SDK's own default 0.5; larger keeps tiles coarser. It rules a cut that fits the
+ * budget: one over it is held to the budget whatever the factor, so finer values then change nothing.
+ */
+export const peakFinderTileLodFactor = settingsStore('peakFinderTileLodFactor', 0.5);
+/** Realistic only: the sun's shadows. A real cost, so on by default only on the Mac, as `terrainShadows`. Off is strength 0, `LightOptions` has no switch. */
+export const peakFinderShadows = settingsStore('peakFinderShadows', __CATALYST__);
+export const peakFinderShadowStrength = settingsStore('peakFinderShadowStrength', 0.6);
 
 // these are style text: changing one needs a new decoder, see rebuildPeaksLayer in features/peakFinder.ts
 /**

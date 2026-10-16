@@ -160,7 +160,9 @@ export async function runLayerAction(item: SourceItem, layerAction: LayerAction)
             }
             break;
         case 'change_source':
-            if (item.imagery) {
+            if (item.panorama) {
+                await customLayers.pickPanoramaSource();
+            } else if (item.imagery) {
                 await customLayers.pickImagerySource();
             }
             break;

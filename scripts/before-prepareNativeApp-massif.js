@@ -9,10 +9,11 @@ module.exports = function ($logger, projectData, injector, hookArgs) {
     if (!process.env['DEBUGMASSIF'] || process.env['CI']) {
         return;
     }
-    const platformName = String(
-        (hookArgs && hookArgs.platformData && hookArgs.platformData.normalizedPlatformName) || (hookArgs && hookArgs.checkForChangesOpts && hookArgs.checkForChangesOpts.platform) || ''
-    ).toLowerCase();
-    if (platformName !== 'catalyst') {
+    // Not platformData.normalizedPlatformName: the CLI reports Catalyst as "iOS", so that check never matched
+    const requested = hookArgs && hookArgs.prepareData && hookArgs.prepareData.platform;
+    const projectRoot = hookArgs && hookArgs.platformData && hookArgs.platformData.projectRoot;
+    const isCatalyst = String(requested || '').toLowerCase() === 'catalyst' || (!!projectRoot && path.basename(projectRoot) === 'catalyst');
+    if (!isCatalyst) {
         return;
     }
     $logger.info('DEBUGMASSIF: building the SDK for Mac Catalyst');

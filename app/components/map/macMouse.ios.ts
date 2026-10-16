@@ -183,10 +183,10 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         return recognizer.state === UIGestureRecognizerState.Changed ? translation : { x: 0, y: 0 };
     }
 
-    // look pans with the two-finger touch drag, as the Mac's two-finger scroll; classic and the first person zoom
+    // in the free roam modes the two-finger touch drag moves the camera: a Mac's two-finger scroll does the same
     public onScroll(recognizer: UIPanGestureRecognizer) {
         const mode = this.touchMode();
-        if (mode === 'classic' || mode === 'fps') {
+        if (mode === 'classic') {
             const delta = this.takeScrollDelta(recognizer);
             if (delta !== 0) {
                 this.zoomByWheelDelta(delta, recognizer);
@@ -196,7 +196,11 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         const translation = this.takeScrollTranslation(recognizer);
         if (translation.x !== 0 || translation.y !== 0) {
             const scale = recognizer.view.contentScaleFactor;
-            this.panBy(this.scrollAnchor.x * scale, this.scrollAnchor.y * scale, translation.x * scale, translation.y * scale);
+            if (mode === 'fps') {
+                this.walkBy(translation.x * scale, translation.y * scale);
+            } else {
+                this.panBy(this.scrollAnchor.x * scale, this.scrollAnchor.y * scale, translation.x * scale, translation.y * scale);
+            }
         }
     }
 
@@ -270,8 +274,7 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
 /**
  * Mac Catalyst mouse and trackpad on the map, like the web version. Returns the uninstall.
  * `touchMode` is read per event: a left-drag is the SDK's one-finger touch drag whatever the mode. The two-finger drag has
- * no Mac equivalent but a two-finger scroll, which in `look` pans instead of zooming. In `fps` the right button walks the camera
- * (rather than rotating) and the scroll zooms; `fps` has no rotate gesture.
+ * no Mac equivalent but a two-finger scroll, which in `look` pans and in `fps` walks instead of zooming; `fps` has no rotate gesture.
  */
 export function installMacMouse(mapView: MassifMapView, onSecondaryClick?: SecondaryClickCallback, touchMode: () => TerrainTouchMode = () => 'classic') {
     const nativeView: UIView = mapView.nativeViewProtected;

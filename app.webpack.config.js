@@ -731,7 +731,17 @@ module.exports = (env, params = {}) => {
             globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/osm*', '**/custom*', '**/fonts/**', '**/iconfont/**'] }
         });
         // the `buildstyle` scratch dirs are compiled into app/assets/styles/*.zip, not shipped as they are
-        copyPatterns.push({ context: 'dev_assets', from: '**/*', to: 'assets', globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/styles/*_cleaned/**'] } });
+        // massif-models: the 3D models, shipped below on Catalyst only
+        copyPatterns.push({
+            context: 'dev_assets',
+            from: '**/*',
+            to: 'assets',
+            globOptions: { ...globOptions, ignore: [...globOptions.ignore, '**/styles/*_cleaned/**', '**/styles/massif-models/**'] }
+        });
+        if (isCatalyst) {
+            // beside the style (url('models/...') is style-relative), for the folder style
+            copyPatterns.push({ from: 'dev_assets/styles/massif-models/*.glb', to: 'assets/styles/massif/models/[name][ext]', globOptions });
+        }
     }
     config.plugins.unshift(new CopyPlugin({ patterns: copyPatterns }));
 
@@ -936,6 +946,8 @@ module.exports = (env, params = {}) => {
                         ...MASSIF_PROJECTS.map((name) => `${css2xml} dev_assets/styles/massif_cleaned/src/${name}.json dev_assets/styles/massif_cleaned/out/${name}.xml`),
                         // no fonts/: the icon font is the app's (APP_FONTS in MapModule.ts)
                         'cp -R dev_assets/styles/massif_cleaned/src/icons dev_assets/styles/massif_cleaned/src/icons-glyph dev_assets/styles/massif_cleaned/src/legend.json dev_assets/styles/massif_cleaned/out/',
+                        // Catalyst only: the 3D models, at the zip root where the style's url('models/...') resolves
+                        ...(isCatalyst ? ['mkdir -p dev_assets/styles/massif_cleaned/out/models && cp dev_assets/styles/massif-models/*.glb dev_assets/styles/massif_cleaned/out/models/'] : []),
                         'rm -f app/assets/styles/massif.zip && cd ./dev_assets/styles/massif_cleaned/out && zip -r ../../../../app/assets/styles/massif.zip ./* && cd -'
                     ],
                     blocking: true,

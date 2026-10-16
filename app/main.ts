@@ -22,6 +22,7 @@ import { networkService } from '~/services/NetworkService';
 import { startSentry } from '@shared/utils/sentry';
 import { NestedScrollView } from '@shared/components/NestedScrollView';
 import { SETTINGS_ENABLE_CRASH_REPORT } from '~/utils/constants';
+import { installBottomSheetMinHeight } from '~/utils/ui/bottomSheetSize';
 
 try {
     const shouldEnableSentry = ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD);
@@ -31,6 +32,10 @@ try {
     installGestures(true);
     installMixins();
     installBottomSheets();
+    installBottomSheetMinHeight();
+    if (__CATALYST__) {
+        require('~/utils/ui/catalystDialogs').installCatalystDialogButtons();
+    }
     installUIMixins();
     overrideSpanAndFormattedString();
     initialize();
@@ -56,7 +61,7 @@ try {
     registerNativeViewElement('activityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
     registerNativeViewElement('progress', () => require('@nativescript-community/ui-material-progress').Progress);
     registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
-    registerNativeViewElement('slider', () => require('@nativescript-community/ui-material-slider').Slider, null, {}, { override: true });
+    registerNativeViewElement('slider', () => require('~/components/common/Slider').Slider, null, {}, { override: true });
     registerNativeViewElement('switch', () => require('@nativescript-community/ui-material-switch').Switch, null, {}, { override: true });
     registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
     registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
@@ -73,7 +78,7 @@ try {
     registerNativeViewElement('cgroup', () => require('@nativescript-community/ui-canvaslabel').Group);
     // registerNativeViewElement('svgview', () => require('@nativescript-community/ui-svg').SVGView);
     // registerNativeViewElement('svg', () => require('@nativescript-community/ui-svg').SVG);
-    registerNativeViewElement('bottomsheet', () => require('@nativescript-community/ui-persistent-bottomsheet').PersistentBottomSheet);
+    registerNativeViewElement('bottomsheet', () => require('~/components/common/PersistentBottomSheet').PersistentBottomSheet);
     registerNativeViewElement('gesturerootview', () => require('@nativescript-community/gesturehandler').GestureRootView);
     registerNativeViewElement('symbolshape', () => require('~/components/common/SymbolShape').default);
     registerNativeViewElement('awebview', () => require('@nativescript-community/ui-webview').AWebView);
