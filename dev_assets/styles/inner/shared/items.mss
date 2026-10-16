@@ -6,7 +6,7 @@
     ['param::hide_unselected'=0] {
         when ([param::selected_id] !=[id]) {
             back/line-color: white;
-            back/line-width: @bicycle_line_width + 2;
+            back/line-width: @bicycle_line_width + linear([view::zoom], (16, 2), (18, 4));
             back/line-join: round;
             back/line-cap: round;
             back/line-opacity: @itemBackLineOpacity;

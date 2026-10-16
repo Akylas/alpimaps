@@ -46,8 +46,8 @@
 //@shield-margin: 40;
 @shield-clip: false;
 
-@pedestrian_line_width: linear([view::zoom], (16, 2), (18, 2));
-@bicycle_line_width: linear([view::zoom], (16, 2), (18, 2));
+@pedestrian_line_width: linear([view::zoom], (16, 2), (18, 4));
+@bicycle_line_width: linear([view::zoom], (16, 2), (18, 4));
 @default_icon_size: [style.iconSize] = 'osm' ? 16 : 20;
 
 @default_icon_dx : [style.iconDx] = 'osm' ? 0 : -2;
@@ -59,8 +59,8 @@
 
 @itemContrastColor: brightness(color([style.color] ? [style.color]:@itemColor)) > 160 ? #33333388 : #f2f5f888;
 
-@itemLineOpacity: linear([view::zoom], (16, 1), (18, 0.3)) *([param::editing_id]=[id] ? 0.5 :1);
-@itemBackLineOpacity: linear([view::zoom], (16, 1), (18, 0.3));
+@itemLineOpacity: linear([view::zoom], (16, 1), (19, 1), (22, 0.3)) *([param::editing_id]=[id] ? 0.5 :1);
+@itemBackLineOpacity: linear([view::zoom], (16, 1), (19, 1), (22, 0.3));
 // a selected route is the one you are following: it must stay readable at navigation zooms,
 // where the generic item fade would drop it to 0.3
 @itemSelectedLineOpacity: linear([view::zoom], (13, 1), (18, 0.9));
