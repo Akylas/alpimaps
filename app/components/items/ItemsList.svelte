@@ -11,6 +11,7 @@
     import { onDestroy, onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import type { OptionType } from '@shared/components/OptionSelect.svelte';
     import { UNITS, convertElevation, convertValueToUnit, formatDistance, osmicon } from '~/helpers/formatter';
     import { convertDurationSeconds, lc, onLanguageChanged } from '~/helpers/locale';
     import { colorTheme, isEInk, onThemeChanged } from '~/helpers/theme';
@@ -26,6 +27,7 @@
     import IconButton from '../common/IconButton.svelte';
     import Pill from '../common/Pill.svelte';
     import SelectedIndicator from '../common/SelectedIndicator.svelte';
+    import SelectionToolbar from '../common/SelectionToolbar.svelte';
     type MapGroup = Group;
     type CollectionGroup = MapGroup & { type: 'group'; count: number; selected?: boolean; totalTime?: number; totalDistance?: number };
     type CollectionItem = Item & { selected?: boolean };
@@ -41,9 +43,23 @@
 </script>
 
 <script lang="ts">
-    $: ({ colorBackground, colorCanvas, colorCard, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh, colorSurfaceFill } =
-        $colors);
+    $: ({
+        colorAccentContainerSolid,
+        colorBackground,
+        colorCanvas,
+        colorCard,
+        colorError,
+        colorHairline,
+        colorOnPrimary,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorPrimary,
+        colorSurfaceContainerHigh,
+        colorSurfaceFill
+    } = $colors);
     $: ({ bottom: windowInsetBottom, keyboard: keyboardInset } = $windowInset);
+    // a selected card is tinted and outlined in primary, like a selected pill
+    $: colorSelectedCard = colorAccentContainerSolid || colorCard;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let items: ObservableArray<CollectionItemOrGroup>;
@@ -68,7 +84,6 @@
     let nbSelected = 0;
     const itemsModule = getMapContext().mapModule('items');
     let needsFirstRefresh = true;
-    let ignoreRefresh = false;
     let navigatedTo = false;
     let loading = false;
 
@@ -143,7 +158,7 @@
     }
 
     async function refresh() {
-        if (ignoreRefresh || loading) {
+        if (loading) {
             return;
         }
         const firstLoad = !!needsFirstRefresh;
@@ -206,69 +221,60 @@ LEFT JOIN  (
         });
     }
 
-    function switchGroupCollapsed(item: Group, event) {
+    function switchGroupCollapsed(item: Group, event?) {
         const groupKey = item.name || 'none';
-        const collapse = (1 - groups[groupKey].collapse) as 0 | 1;
-        if (collapse === groups[groupKey].collapse) {
-            return;
+        const group = groups[groupKey];
+        const collapse = group.collapse ? 0 : 1;
+        group.collapse = collapse;
+        itemsModule.groupsRepository.update(group, { collapse });
+        let chevron: View = event?.object;
+        if (chevron instanceof LayoutBase) {
+            chevron = chevron.getViewById<View>('collapseButton');
         }
-        groups[groupKey].collapse = collapse;
-        itemsModule.groupsRepository.update(groups[groupKey], { collapse });
-        let collapseButton = event.object as View;
-        if (collapseButton instanceof LayoutBase) {
-            collapseButton = collapseButton.getViewById('collapseButton');
-        }
-        collapseButton.animate({
+        chevron?.animate({
             duration: 200,
             rotate: collapse ? 180 : 0
         });
         const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
         if (groupIndex >= 0) {
-            const groupItem = items.getItem(groupIndex);
-            (groupItem as CollectionGroup).collapse = collapse;
+            const groupItem = items.getItem(groupIndex) as CollectionGroup;
+            groupItem.collapse = collapse;
             items.setItem(groupIndex, groupItem);
+            const subItems = groupedItems[groupKey];
             if (collapse) {
-                items.splice(groupIndex + 1, groupedItems[groupKey].length);
+                items.splice(groupIndex + 1, subItems.length);
             } else {
-                items.splice(groupIndex + 1, 0, ...groupedItems[groupKey]);
+                items.splice(groupIndex + 1, 0, ...subItems);
             }
         }
     }
-    async function switchGroupOnMap(item: Group, event) {
-        try {
-            await showLoading();
-            ignoreRefresh = true;
-            const groupKey = item.name || 'none';
 
+    // sets the rows' state from the items, which `ItemsModule.setItemsOnMap` has just updated
+    async function setItemsOnMap(targets: Item[], onMap: 0 | 1) {
+        await itemsModule.setItemsOnMap(targets, !!onMap);
+        const targetSet = new Set<CollectionItemOrGroup>(targets);
+        for (let index = 0; index < items.length; index++) {
+            const row = items.getItem(index);
+            if (row.type === 'group') {
+                const groupOnMap = groupedItems[(row as CollectionGroup).name || 'none']?.some((subItem) => subItem.onMap === 1) ? 1 : 0;
+                if (groupOnMap !== row.onMap) {
+                    row.onMap = groupOnMap;
+                    items.setItem(index, row);
+                }
+            } else if (targetSet.has(row)) {
+                items.setItem(index, row);
+            }
+        }
+    }
+    async function switchGroupOnMap(item: Group) {
+        try {
+            const groupKey = item.name || 'none';
             const groupIndex = items.findIndex((i) => i.type === 'group' && i.id === item.id);
             if (groupIndex >= 0) {
-                const groupItem = items.getItem(groupIndex);
-                const onMap = (1 - groupItem.onMap) as 0 | 1;
-                groupItem.onMap = onMap;
-                items.setItem(groupIndex, groupItem);
-                const subItems = groupedItems[groupKey];
-                const collapsed = (item as CollectionGroup).collapse;
-                const groupCount = subItems.length;
-                DEV_LOG && console.log('switchGroupOnMap', groupKey, groupIndex, onMap, groupCount);
-                for (let j = 0; j < groupCount; j++) {
-                    const subItem = subItems[j];
-                    if (onMap) {
-                        await itemsModule.showItem(subItem as Item);
-                    } else {
-                        await itemsModule.hideItem(subItem as Item);
-                    }
-                    subItem.onMap = onMap;
-                    if (!collapsed) {
-                        items.setItem(groupIndex + 1 + j, subItem);
-                    }
-                }
+                await setItemsOnMap(groupedItems[groupKey] as Item[], items.getItem(groupIndex).onMap ? 0 : 1);
             }
         } catch (error) {
             showError(error);
-        } finally {
-            DEV_LOG && console.log('switchGroupOnMap done');
-            ignoreRefresh = false;
-            hideLoading();
         }
     }
     // async function refresh() {
@@ -359,10 +365,13 @@ LEFT JOIN  (
         showSnack({ message: item.onMap ? lc('item_now_visible') : lc('item_now_hidden') });
     }
 
-    // the row gets the tap too and would open the item
-    function showItemOnMapAfterTap(item: Item) {
+    // a button's tap reaches the row too, which would open the item or toggle its group
+    function ignoreRowTap() {
         ignoreTap = true;
         setTimeout(() => (ignoreTap = false), 300);
+    }
+    function showItemOnMapAfterTap(item: Item) {
+        ignoreRowTap();
         showItemOnMap(item);
     }
 
@@ -510,12 +519,15 @@ LEFT JOIN  (
     }
     function unselectAll() {
         nbSelected = 0;
-        items.splice(0, items.length, ...items.map((i) => ({ ...i, selected: false })));
-        // documents?.forEach((d, index) => {
-        //         d.selected = false;
-        //         documents.setItem(index, d);
-        //     });
-        // refresh();
+        // in place: the rows and `groupedItems` share the same objects
+        Object.values(groupedItems ?? {}).forEach((list) => list.forEach((subItem) => (subItem.selected = false)));
+        for (let index = 0; index < items.length; index++) {
+            const row = items.getItem(index);
+            if (row.selected) {
+                row.selected = false;
+                items.setItem(index, row);
+            }
+        }
     }
     let ignoreTap = false;
     function onItemLongPress(item: CollectionItemOrGroup, event?) {
@@ -558,16 +570,23 @@ LEFT JOIN  (
                 unselectAll();
             }
         });
+    // collapsed rows are not in `items`, so look in every group too
     function getSelected() {
-        const selected: Item[] = [];
-        items.forEach((d, index) => {
-            if (d.selected && d.type === 'group' && (d as CollectionGroup).collapse) {
-                selected.push(...groupedItems[(d as CollectionGroup).name]);
-            } else if (d.selected && d.type !== 'group') {
-                selected.push(d as Item);
+        const selected = new Set<Item>();
+        items.forEach((row) => {
+            if (row.selected && row.type !== 'group') {
+                selected.add(row as Item);
             }
         });
-        return selected;
+        Object.values(groupedItems ?? {}).forEach((list) => list.forEach((subItem) => subItem.selected && selected.add(subItem as Item)));
+        return [...selected];
+    }
+    async function setSelectedOnMap(onMap: 0 | 1) {
+        try {
+            await setItemsOnMap(getSelected(), onMap);
+        } catch (error) {
+            showError(error);
+        }
     }
     async function shareSelectedItems() {
         try {
@@ -600,6 +619,29 @@ LEFT JOIN  (
             } finally {
                 hideLoading();
             }
+        }
+    }
+
+    let selectionOptions: OptionType[];
+    $: selectionOptions = [
+        { icon: 'mdi-eye', id: 'show', name: lc('show') },
+        { icon: 'mdi-eye-off', id: 'hide', name: lc('hide') },
+        { icon: 'mdi-share-variant', id: 'share', name: lc('share') },
+        { icon: 'mdi-tag-plus-outline', id: 'group', name: lc('group') },
+        { color: colorError, icon: 'mdi-delete', id: 'delete', name: lc('delete') }
+    ];
+    function onSelectionAction(event, option: OptionType) {
+        switch (option.id) {
+            case 'show':
+                return setSelectedOnMap(1);
+            case 'hide':
+                return setSelectedOnMap(0);
+            case 'share':
+                return shareSelectedItems();
+            case 'group':
+                return setSelectedGroup();
+            case 'delete':
+                return deleteSelectedItems();
         }
     }
 
@@ -821,35 +863,66 @@ LEFT JOIN  (
             android:paddingBottom={windowInsetBottom + keyboardInset}
             on:swipe={onCollectionSwipe}>
             <Template key="group" let:item>
-                <gridlayout height={56} rippleColor={colorPrimary} on:tap={(e) => onItemTap(item, e)} on:longPress={(e) => onItemLongPress(item, e)}>
-                    <canvasview id="canvas" margin="8 100 4 16" on:draw={(e) => onDrawGroup(item, e)} />
+                <!-- a section header: a folder tile that turns into the check when selected, the name and totals, then the actions -->
+                <gridlayout
+                    backgroundColor={item.selected ? colorSelectedCard : 'transparent'}
+                    borderColor={item.selected ? colorPrimary : 'transparent'}
+                    borderRadius={20}
+                    borderWidth={1}
+                    columns="auto,*,auto,auto"
+                    height={64}
+                    margin="6 12 2 12"
+                    rippleColor={colorPrimary}
+                    on:tap={(e) => onItemTap(item, e)}
+                    on:longPress={(e) => onItemLongPress(item, e)}>
+                    <label
+                        backgroundColor={item.selected ? colorPrimary : colorAccentContainerSolid || colorSurfaceFill}
+                        borderRadius={20}
+                        color={item.selected ? colorOnPrimary : colorPrimary}
+                        fontFamily={$fonts.mdi}
+                        fontSize={22}
+                        height={40}
+                        horizontalAlignment="left"
+                        marginLeft={10}
+                        text={item.selected ? 'mdi-check' : 'mdi-folder-outline'}
+                        textAlignment="center"
+                        verticalAlignment="middle"
+                        verticalTextAlignment="middle"
+                        width={40} />
+                    <canvasview id="canvas" col={1} margin="13 0 0 12" on:draw={(e) => onDrawGroup(item, e)} />
                     <IconButton
-                        horizontalAlignment="right"
-                        marginRight={60}
+                        col={2}
+                        color={colorOnSurfaceVariant}
                         size={40}
-                        text={item.onMap === 0 ? 'mdi-eye-off-outline' : 'mdi-eye'}
+                        text={item.onMap === 0 ? 'mdi-eye-off-outline' : 'mdi-eye-outline'}
                         tooltip={item.onMap === 0 ? lc('show') : lc('hide')}
                         verticalAlignment="middle"
-                        on:tap={(e) => switchGroupOnMap(item, e)} />
+                        on:tap={() => {
+                            ignoreRowTap();
+                            switchGroupOnMap(item);
+                        }} />
                     <IconButton
                         id="collapseButton"
-                        horizontalAlignment="right"
-                        marginRight={10}
+                        col={3}
+                        color={colorOnSurfaceVariant}
+                        marginRight={6}
                         rotate={item.collapse ? 180 : 0}
                         size={40}
                         text="mdi-chevron-up"
                         tooltip={lc('collapse')}
                         verticalAlignment="middle"
-                        on:tap={(e) => switchGroupCollapsed(item, e)} />
-                    <SelectedIndicator selected={item.selected} />
+                        on:tap={(e) => {
+                            ignoreRowTap();
+                            switchGroupCollapsed(item, e);
+                        }} />
                 </gridlayout>
             </Template>
             <Template key="route" let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorCard}
-                    borderColor={colorHairline}
+                    backgroundColor={item.selected ? colorSelectedCard : colorCard}
+                    borderColor={item.selected ? colorPrimary : colorHairline}
                     borderRadius={20}
-                    borderWidth={1}
+                    borderWidth={item.selected ? 2 : 1}
                     height={88}
                     {item}
                     margin="4 12 4 12"
@@ -889,10 +962,10 @@ LEFT JOIN  (
             </Template>
             <Template let:item>
                 <BottomSheetInfoView
-                    backgroundColor={colorCard}
-                    borderColor={colorHairline}
+                    backgroundColor={item.selected ? colorSelectedCard : colorCard}
+                    borderColor={item.selected ? colorPrimary : colorHairline}
                     borderRadius={20}
-                    borderWidth={1}
+                    borderWidth={item.selected ? 2 : 1}
                     height={80}
                     iconLeft={30}
                     iconTile={true}
@@ -926,13 +999,13 @@ LEFT JOIN  (
         <activityindicator busy={true} horizontalAlignment="center" row={1} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
 
         <CActionBar forceCanGoBack={nbSelected > 0} height={64} onGoBack={nbSelected ? unselectAll : null} paddingBottom={0} title={nbSelected ? lc('selected', nbSelected) : lc('items')}>
-            <IconButton color={colorError} isVisible={nbSelected > 0} text="mdi-delete" on:tap={deleteSelectedItems} />
-            <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-share-variant" on:tap={shareSelectedItems} />
-            <IconButton color={colorOnSurface} isVisible={nbSelected > 0} text="mdi-tag-plus-outline" on:tap={setSelectedGroup} />
             <gridlayout slot="bottom" colSpan={3} columns="*,*" padding="0 12 8 12" row={1}>
                 <Pill horizontalAlignment="stretch" label={tabLabel(lc('routes'), routesCount)} selected={tabIndex === 0} on:tap={() => setTabIndex(0)} />
                 <Pill col={1} horizontalAlignment="stretch" label={tabLabel(lc('markers'), markersCount)} selected={tabIndex === 1} on:tap={() => setTabIndex(1)} />
             </gridlayout>
         </CActionBar>
+        {#if nbSelected > 0}
+            <SelectionToolbar onAction={onSelectionAction} options={selectionOptions} row={1} />
+        {/if}
     </gridlayout>
 </page>
