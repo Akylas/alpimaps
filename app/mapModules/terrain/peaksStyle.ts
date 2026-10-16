@@ -74,7 +74,8 @@ export function peaksStyle(options: PeaksStyleOptions = {}) {
         selectable ? "Map { param-selected_peak: ''; }" : '',
         selectable ? "@selected: [name] + '|' + [ele] = [param::selected_peak];" : '',
         `#mountain_peak['class'='peak'][zoom>=${minZoom}] {`,
-        '  text-name: [name];',
+        // the first of a bilingual name ("Mont Blanc / Monte Bianco"): wrapped it is three lines, past the row budget's two
+        "  text-name: replace([name], ' / .*', '');",
         // an empty face keeps the decoder's own
         selectable ? "  text-face-name: @selected ? 'Roboto Bold, Helvetica Neue Bold, Arial Bold' : '';" : '',
         // the elevation as a second run of text: same label, same plate, smaller font

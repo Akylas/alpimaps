@@ -23,6 +23,7 @@
         peakFinderElevation,
         peakFinderHeading,
         peakFinderHeadingFollowing,
+        peakFinderLook,
         peakFinderMinElevation,
         peakFinderSelectedPeak,
         peakFinderSelectedSky,
@@ -215,13 +216,16 @@
     <!-- An active toggle shows its filled icon, its outline one otherwise: a tint is invisible on e-ink.
          Centred: at the bottom the last button fell under the navigation bar. -->
     <stacklayout horizontalAlignment="left" marginLeft={$windowInset.left + 4} orientation="vertical" verticalAlignment="middle">
-        <mdbutton
-            backgroundColor={colorWidgetBackground}
-            class="small-floating-btn"
-            color={colorOnSurface}
-            text={$peakFinderHeadingFollowing ? 'mdi-compass' : 'mdi-compass-outline'}
-            on:tap={() => toggleHeadingFollowing()}
-            on:longPress={() => showToolTip(lc('compass'))} />
+        <!-- a Mac has no sensors: nothing to follow, no camera to overlay -->
+        {#if !__CATALYST__}
+            <mdbutton
+                backgroundColor={colorWidgetBackground}
+                class="small-floating-btn"
+                color={colorOnSurface}
+                text={$peakFinderHeadingFollowing ? 'mdi-compass' : 'mdi-compass-outline'}
+                on:tap={() => toggleHeadingFollowing()}
+                on:longPress={() => showToolTip(lc('compass'))} />
+        {/if}
         <mdbutton
             backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
@@ -229,13 +233,22 @@
             text="mdi-theme-light-dark"
             on:tap={() => ($peakFinderArActive ? peakFinderArDark.set(!$peakFinderArDark) : peakFinderDark.set(!$peakFinderDark))}
             on:longPress={() => showToolTip(lc('dark_mode'))} />
+        {#if !__CATALYST__}
+            <mdbutton
+                backgroundColor={colorWidgetBackground}
+                class="small-floating-btn"
+                color={colorOnSurface}
+                text={$peakFinderArActive ? 'mdi-camera' : 'mdi-camera-outline'}
+                on:tap={() => toggleArMode()}
+                on:longPress={() => showToolTip(lc('ar_mode'))} />
+        {/if}
         <mdbutton
             backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
             color={colorOnSurface}
-            text={$peakFinderArActive ? 'mdi-camera' : 'mdi-camera-outline'}
-            on:tap={() => toggleArMode()}
-            on:longPress={() => showToolTip(lc('ar_mode'))} />
+            text={$peakFinderLook === 'realistic' ? 'mdi-image-area' : 'mdi-terrain'}
+            on:tap={() => peakFinderLook.set($peakFinderLook === 'realistic' ? 'relief' : 'realistic')}
+            on:longPress={() => showToolTip(lc('toggle_look'))} />
         <mdbutton
             backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
@@ -250,14 +263,31 @@
             text="mdi-cog"
             on:tap={() => showPeakFinderSettings()}
             on:longPress={() => showToolTip(lc('settings'))} />
+        {#if !__CATALYST__}
+            <mdbutton
+                backgroundColor={colorWidgetBackground}
+                class="small-floating-btn"
+                color={colorOnSurface}
+                text="mdi-close"
+                on:tap={() => exitPeakFinder()}
+                on:longPress={() => showToolTip(lc('close'))} />
+        {/if}
+    </stacklayout>
+
+    <!-- A Mac window has no back gesture and may be too short for the whole column: close stays in a corner -->
+    {#if __CATALYST__}
         <mdbutton
             backgroundColor={colorWidgetBackground}
             class="small-floating-btn"
             color={colorOnSurface}
+            horizontalAlignment="right"
+            marginRight={$windowInset.right + 10}
+            marginTop={$windowInset.top + 10}
             text="mdi-close"
+            verticalAlignment="top"
             on:tap={() => exitPeakFinder()}
             on:longPress={() => showToolTip(lc('close'))} />
-    </stacklayout>
+    {/if}
 
     <mdbutton
         backgroundColor="orange"

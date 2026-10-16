@@ -2,6 +2,7 @@ import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { SettingsStore } from '~/stores/settingsStore';
 import {
+    type PeakFinderLook,
     peakFinderArHorizonBoost,
     peakFinderArOutlineWidth,
     peakFinderConstellationArt,
@@ -10,8 +11,11 @@ import {
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
     peakFinderDetailSource,
+    peakFinderDrapeCacheSize,
     peakFinderExaggeration,
     peakFinderFlyElevation,
+    peakFinderFog,
+    peakFinderFogDistance,
     peakFinderHillshade,
     peakFinderHorizonBoost,
     peakFinderLabelAngle,
@@ -25,6 +29,7 @@ import {
     peakFinderLabelTextSize,
     peakFinderLabelWrap,
     peakFinderLensCorrection,
+    peakFinderLook,
     peakFinderMaxFieldOfView,
     peakFinderMeshResolution,
     peakFinderMoon,
@@ -32,7 +37,11 @@ import {
     peakFinderOutlineWidth,
     peakFinderPeakZoom,
     peakFinderPlanets,
+    peakFinderRealisticViewDistance,
     peakFinderScreenOrientation,
+    peakFinderShadowStrength,
+    peakFinderShadows,
+    peakFinderSky,
     peakFinderStars,
     peakFinderStarsLabelsOnSummits,
     peakFinderStaticPeaks,
@@ -40,15 +49,19 @@ import {
     peakFinderSunHours,
     peakFinderTerrainMaxZoom,
     peakFinderTileCoarsening,
+    peakFinderTileLodFactor,
     peakFinderTilt,
     peakFinderViewDistanceMetres
 } from '~/stores/terrainStore';
 
 // One list shared by `PeakFinderSettings` and the `Settings` screen, so rows/ranges/formats cannot drift.
-// `suntime` is panorama-only: the moment the sky is drawn for is not a persisted setting.
+// `suntime` and `source` are panorama-only: the moment the sky is drawn for is not a persisted setting, and
+// the imagery's options are those of a layer that only exists on the panorama.
 export interface PeakFinderSettingRow {
-    type: 'sectionheader' | 'switch' | 'slider' | 'segment' | 'suntime';
+    type: 'sectionheader' | 'switch' | 'slider' | 'segment' | 'suntime' | 'source';
     title: string;
+    /** Listed with this look only; every row of a list built with no look. */
+    only?: PeakFinderLook;
     description?: string;
     store?: SettingsStore<any>;
     min?: number;
@@ -58,14 +71,37 @@ export interface PeakFinderSettingRow {
     options?: { value: string; title: string }[];
 }
 
-const section = (title: string): PeakFinderSettingRow => ({ type: 'sectionheader', title: title.toUpperCase() });
+const section = (title: string, only?: PeakFinderLook): PeakFinderSettingRow => ({ type: 'sectionheader', title: title.toUpperCase(), only });
 const degrees = (value: number) => `${Math.round(value)}°`;
 const hundredths = (value: number) => value.toFixed(2);
 const whole = (value: number) => String(Math.round(value));
 const pixels = (value: number) => `${Math.round(value)} px`;
 
-export function peakFinderSettingRows(): PeakFinderSettingRow[] {
+/** `look` hides the rows of the other look; none (the Settings screen) lists them all. */
+export function peakFinderSettingRows(look?: PeakFinderLook): PeakFinderSettingRow[] {
+    return rows().filter((row) => !look || !row.only || row.only === look);
+}
+
+function rows(): PeakFinderSettingRow[] {
     return [
+        section(lc('look')),
+        {
+            type: 'segment',
+            store: peakFinderLook,
+            title: lc('look'),
+            description: lc('look_desc'),
+            options: [
+                { value: 'relief', title: lc('relief') },
+                { value: 'realistic', title: lc('look_realistic') }
+            ]
+        },
+        { type: 'source', title: lc('imagery_source'), description: lc('imagery_source_desc'), only: 'realistic' },
+        { type: 'switch', store: peakFinderSky, title: lc('panorama_sky'), description: lc('panorama_sky_desc'), only: 'realistic' },
+        { type: 'switch', store: peakFinderFog, title: lc('fog'), description: lc('terrain_fog_desc'), only: 'realistic' },
+        { type: 'slider', store: peakFinderFogDistance, title: lc('fog_distance'), description: lc('fog_distance_desc'), min: 0.2, max: 1, step: 0.05, format: hundredths, only: 'realistic' },
+        { type: 'switch', store: peakFinderShadows, title: lc('shadows'), description: lc('panorama_shadows_desc'), only: 'realistic' },
+        { type: 'slider', store: peakFinderShadowStrength, title: lc('shadow_strength'), min: 0, max: 1.5, step: 0.05, format: hundredths, only: 'realistic' },
+
         section(lc('view')),
         { type: 'switch', store: peakFinderDark, title: lc('dark_mode') },
         {
@@ -160,10 +196,10 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
             format: hundredths
         },
 
-        section(lc('relief')),
-        { type: 'slider', store: peakFinderOutlineWidth, title: lc('outline_width'), min: 0.5, max: 4, step: 0.1, format: (value) => value.toFixed(1) },
+        section(lc('relief'), 'relief'),
+        { type: 'slider', store: peakFinderOutlineWidth, title: lc('outline_width'), min: 0.5, max: 4, step: 0.1, format: (value) => value.toFixed(1), only: 'relief' },
         // 0 is the plain silhouette line; above it, a heavier skyline stroke that many texels wide
-        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1) },
+        { type: 'slider', store: peakFinderHorizonBoost, title: lc('horizon_boost'), min: 0, max: 6, step: 0.5, format: (value) => value.toFixed(1), only: 'relief' },
         {
             type: 'slider',
             store: peakFinderArOutlineWidth,
@@ -172,7 +208,8 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
             min: 0,
             max: 4,
             step: 0.1,
-            format: (value) => (value === 0 ? lc('same') : value.toFixed(1))
+            format: (value) => (value === 0 ? lc('same') : value.toFixed(1)),
+            only: 'relief'
         },
         {
             type: 'slider',
@@ -182,10 +219,11 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
             min: 0,
             max: 6,
             step: 0.5,
-            format: (value) => (value === 0 ? lc('same') : value.toFixed(1))
+            format: (value) => (value === 0 ? lc('same') : value.toFixed(1)),
+            only: 'relief'
         },
-        { type: 'slider', store: peakFinderHillshade, title: lc('hillshade_strength'), min: 0, max: 1, step: 0.05, format: hundredths },
-        { type: 'slider', store: peakFinderExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
+        { type: 'slider', store: peakFinderHillshade, title: lc('hillshade_strength'), min: 0, max: 1, step: 0.05, format: hundredths, only: 'relief' },
+        { type: 'slider', store: peakFinderExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×`, only: 'relief' },
 
         section(lc('advanced')),
         {
@@ -196,7 +234,41 @@ export function peakFinderSettingRows(): PeakFinderSettingRow[] {
             min: 10000,
             max: 400000,
             step: 10000,
-            format: formatDistance
+            format: formatDistance,
+            only: 'relief'
+        },
+        {
+            type: 'slider',
+            store: peakFinderRealisticViewDistance,
+            title: lc('viewing_distance_realistic'),
+            description: lc('viewing_distance_desc'),
+            min: 10000,
+            max: 200000,
+            step: 5000,
+            format: formatDistance,
+            only: 'realistic'
+        },
+        {
+            type: 'slider',
+            store: peakFinderDrapeCacheSize,
+            title: lc('panorama_drape_cache'),
+            description: lc('panorama_drape_cache_desc'),
+            min: 64,
+            max: 512,
+            step: 32,
+            format: (value) => `${value} MB`,
+            only: 'realistic'
+        },
+        {
+            type: 'slider',
+            store: peakFinderTileLodFactor,
+            title: lc('panorama_tile_lod'),
+            description: lc('panorama_tile_lod_desc'),
+            min: 0.25,
+            max: 2,
+            step: 0.05,
+            format: (value) => value.toFixed(2),
+            only: 'realistic'
         },
         {
             type: 'slider',
