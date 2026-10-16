@@ -3,7 +3,8 @@
 // with the name -> character maps the UI reads for it and for Massif's own font (app/utils/massifIcons*.json).
 // `yarn massif-iconfont [--massif <cartocss-iconfont/iconfont>]`; needs python3 with fontTools.
 // The map finds either by its full name, MassifIcons (MapModule.ts loads the one picked); the UI by file
-// name on Android and PostScript name on iOS, so this one's PostScript name is MassifIconsOsm.
+// name on Android and family name on iOS, so this one's family and PostScript names are MassifIconsOsm
+// (its full name stays MassifIcons, which is what the map matches).
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -91,7 +92,7 @@ if (build.status !== 0) process.exit(build.status ?? 1);
 const rename = spawnSync('python3', ['-c', `from fontTools.ttLib import TTFont
 f = TTFont('${FONT}')
 for record in f['name'].names:
-    if record.nameID == 6:
+    if record.nameID in (1, 6):
         record.string = 'MassifIconsOsm'
 f.save('${OSM_FONT}')`], { stdio: 'inherit' });
 if (rename.status !== 0) process.exit(rename.status ?? 1);
