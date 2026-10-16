@@ -7,12 +7,16 @@ import { showError } from '@shared/utils/showError';
 import { showToast, tryCatchFunction } from '@shared/utils/ui';
 import { get } from 'svelte/store';
 import { lc } from '~/helpers/locale';
+import { isEInk } from '~/helpers/theme';
+import { type SourceItem, panoramaImagery } from '~/mapModules/CustomLayersModule';
 import { type FeatureClickData, featureClickData, getMapContext } from '~/mapModules/MapModule';
+import { applySkyAndFog } from '~/mapModules/features/terrain3d';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
 import { GEO_THREE, PEAKFINDER_LOOK, RELIEF_DEFAULTS, RELIEF_SURFACE_SHADER, reliefPalette, reliefSilhouetteShader } from '~/mapModules/terrain/reliefShaders';
 import { PANORAMA_PEAKS_LAYER, collectPanoramaPeaks, peaksToGeoJSON } from '~/mapModules/terrain/panoramaPeaks';
 import { peaksStyle } from '~/mapModules/terrain/peaksStyle';
+import { PANORAMA_SKY_SHADER } from '~/mapModules/terrain/skyShaders';
 import { type PeakFinderSkyContext, clearSkySelection, raiseSkySelection, setupSkySelection, skyMoment, teardownSkySelection } from '~/mapModules/features/peakFinderCelestial';
 import { setupPeakFinderMoon, teardownPeakFinderMoon, updatePeakFinderMoon } from '~/mapModules/features/peakFinderMoon';
 import { setupPeakFinderStars, teardownPeakFinderStars, updatePeakFinderStars } from '~/mapModules/features/peakFinderStars';
@@ -23,6 +27,7 @@ import { archiveSpec } from '~/mapModules/localData/archives';
 import { nutiProps } from '~/stores/mapStore';
 import {
     PANORAMA_RANGE,
+    TERRAIN_FOG,
     isPeakFinderDark,
     peakFinderActive,
     peakFinderArActive,
@@ -33,12 +38,15 @@ import {
     peakFinderDetailFeatures,
     peakFinderDetailLevels,
     peakFinderDetailSource,
+    peakFinderDrapeCacheSize,
     peakFinderElevation,
     peakFinderElevationCacheSize,
     peakFinderEnabled,
     peakFinderExaggeration,
     peakFinderFlyElevation,
     peakFinderFlyZoom,
+    peakFinderFog,
+    peakFinderFogDistance,
     peakFinderHeading,
     peakFinderHeadingFollowing,
     peakFinderHillshade,
@@ -54,6 +62,7 @@ import {
     peakFinderLabelTextSize,
     peakFinderLabelWrap,
     peakFinderLensCorrection,
+    peakFinderLook,
     peakFinderMaxFieldOfView,
     peakFinderMeshCacheSize,
     peakFinderMeshResolution,
@@ -63,20 +72,32 @@ import {
     peakFinderPeakCount,
     peakFinderPeakMinElevation,
     peakFinderPeakZoom,
+    peakFinderRealisticViewDistance,
     peakFinderScreenOrientation,
     peakFinderSelectedPeak,
+    peakFinderShadowStrength,
+    peakFinderShadows,
+    peakFinderSky,
     peakFinderSkyPanel,
     peakFinderSkyTime,
+    peakFinderSource,
     peakFinderStars,
     peakFinderStarsLabelsOnSummits,
     peakFinderStaticPeaks,
     peakFinderSun,
     peakFinderTerrainMaxZoom,
     peakFinderTileCoarsening,
+    peakFinderTileLodFactor,
     peakFinderTilt,
     peakFinderViewDistance,
     peakFinderViewDistanceMetres,
     terrainCameraClearance,
+    terrainDrapeResolution,
+    terrainShadowCascades,
+    terrainShadowCasterMargin,
+    terrainShadowDistance,
+    terrainShadowMapSize,
+    terrainShadowSoftness,
     terrainSunAltitude,
     terrainSunAzimuth
 } from '~/stores/terrainStore';
@@ -130,6 +151,13 @@ let peaksDecoder: api.MassifObject<'massif::MBVectorTileDecoder'> = null;
 let peaksGeneration = 0;
 let effect = null;
 let effectVariant = '';
+/** The realistic look's imagery on the panorama, and the provider id it was built for. */
+let imagery: SourceItem = null;
+let imageryId: string = null;
+/** Serialises the builds: each awaits a source, and two at once would race on the layer's id. */
+let imageryLoad = Promise.resolve();
+/** The panorama carries settings only the realistic look writes, so the relief look has them to put back. */
+let realisticApplied = false;
 /** The live EYE position, not the camera focus nor the entry point: distances and bearings are measured from it. */
 let viewpoint: MapPos = null;
 /** Where the camera is aimed at setup, and only that. */
@@ -402,6 +430,29 @@ function screenOrientation() {
 
 function palette() {
     return reliefPalette(isPeakFinderDark());
+}
+
+function isRealistic() {
+    return get(peakFinderLook) === 'realistic';
+}
+
+/** Each look has its own: imagery is far costlier than ink, and the haze hides the cut anyway. */
+function viewDistanceMetres() {
+    return get(isRealistic() ? peakFinderRealisticViewDistance : peakFinderViewDistanceMetres);
+}
+
+/**
+ * The SDK measures its distances in Mercator metres, which stretch by 1/cos(latitude): 150 km reaches 106 km
+ * of ground at Grenoble, short of Mont Blanc (114 km). The realistic look asks for true metres. The relief
+ * look keeps the raw number it was tuned with.
+ */
+function terrainViewDistance() {
+    const metres = viewDistanceMetres();
+    const latitude = (viewpoint ?? entryPosition)?.lat;
+    if (!isRealistic() || !Number.isFinite(latitude)) {
+        return metres;
+    }
+    return metres / Math.max(0.2, Math.cos(latitude * TO_RADIANS));
 }
 
 function argb(color: string) {
@@ -694,7 +745,7 @@ async function loadStaticPeaks() {
     if (!centre) {
         return;
     }
-    const radius = get(peakFinderViewDistanceMetres) * PEAKS_COLLECT_MARGIN;
+    const radius = viewDistanceMetres() * PEAKS_COLLECT_MARGIN;
     staticPeaksLoading = true;
     try {
         const peaks = await collectPanoramaPeaks(centre, {
@@ -740,7 +791,7 @@ function checkStaticPeaks() {
         return;
     }
     const centre = currentEye();
-    if (centre && computeDistanceBetween(staticPeaksCentre, centre) > staticPeaksRadius - get(peakFinderViewDistanceMetres)) {
+    if (centre && computeDistanceBetween(staticPeaksCentre, centre) > staticPeaksRadius - viewDistanceMetres()) {
         loadStaticPeaks();
     }
 }
@@ -777,7 +828,7 @@ function rebuildPeaksLayer() {
 
 /** The shader source is a facade property but its uniforms are not, so they go through the view's object API. */
 function applyReliefSurface() {
-    if (!panorama) {
+    if (!panorama || isRealistic()) {
         return;
     }
     const colors = palette();
@@ -800,7 +851,7 @@ function applyReliefSurface() {
 
 /** Silhouettes (operator 2) and the skyline stroke. Object API only: the surface API has no `postProcessEffect`. */
 function applyReliefOutline() {
-    if (!panoramaView) {
+    if (!panoramaView || isRealistic()) {
         return;
     }
     const colors = palette();
@@ -850,10 +901,20 @@ function applyBackground() {
     });
 }
 
+/** Where the haze starts, as a fraction of where it is total. */
+const PANORAMA_FOG_START = 0.15;
+/** A mid earth tone: unpainted ground in the realistic look must not read as the white of the fog. */
+const PANORAMA_GROUND_COLOR = '#76796a';
+
 function applyAtmosphere() {
     if (!panorama) {
         return;
     }
+    if (isRealistic()) {
+        applyRealisticAtmosphere();
+        return;
+    }
+    skyShaderApplied = false;
     panorama.sky({ type: 'sky' }).apply({ enabled: false, shaderSource: '' });
     panorama.fog({ type: 'fog' }).set('enabled', false);
     applyBackground();
@@ -861,36 +922,307 @@ function applyAtmosphere() {
 }
 
 /**
- * The real sun at the chosen moment while it is up, else the 3D mode's. Overrides the style's sun, with no
- * shadows: the surface shader draws all the light.
+ * The shader sky and the haze; no sky leaves the fog colour as the clear colour. In AR the sky is the
+ * camera preview (a clear colour of 0), so the shader sky stays off.
+ */
+function applyRealisticAtmosphere() {
+    const ar = get(peakFinderArActive);
+    // A first person camera's fog range is of the view distance (SDK): the slider's fraction of it is fully fogged,
+    // so the cut at the far clip is hidden whatever the eye looks at.
+    const fogEnd = get(peakFinderFogDistance);
+    // uniform over altitude: the point is to hide the ground's cut, high ground included
+    applySkyAndFog(panorama, {
+        sky: get(peakFinderSky) && !ar,
+        fog: get(peakFinderFog),
+        rangeStart: fogEnd * PANORAMA_FOG_START,
+        rangeEnd: fogEnd,
+        verticalRangeStart: 0,
+        verticalRangeEnd: 0
+    });
+    const haze = ar ? 0 : applyShaderSky();
+    panorama.apply({ skyColor: NO_SKY_BITMAP, backgroundBitmap: null, clearColor: haze });
+    // What an imagery tile not baked yet (or a ground with no elevation) shows: the fog's white read as holes.
+    terrain().set('backgroundColor', ar ? 0 : argb(PANORAMA_GROUND_COLOR));
+}
+
+type Argb = [number, number, number, number];
+
+/**
+ * What the atmosphere does not derive from the sun (SDK atmosphere example): the haze and upper-air tints and the
+ * star brightness. The high and space colours are the 3D mode's DAYTIME blues, which at night were the
+ * blue-to-black gradient: they are transparent by day, where the scattering alone is the sky.
+ */
+const SKY_STOPS: { altitude: number; fog: Argb; high: Argb; space: Argb; stars: number; luminance: number }[] = [
+    { altitude: -12, fog: [255, 0x1a, 0x23, 0x38], high: [255, 0x10, 0x1a, 0x34], space: [255, 0x05, 0x07, 0x0f], stars: 0.9, luminance: 3.2 },
+    { altitude: 0, fog: [255, 0xc9, 0x8a, 0x63], high: [255, 0xe0, 0x6a, 0x3a], space: [0x88, 0x14, 0x1c, 0x38], stars: 0.35, luminance: 1.8 },
+    { altitude: 10, fog: [255, 255, 255, 255], high: [0, 0xe0, 0x6a, 0x3a], space: [0, 0x14, 0x1c, 0x38], stars: 0, luminance: 1 }
+];
+
+function mixArgb(from: Argb, to: Argb, amount: number) {
+    const [alpha, red, green, blue] = from.map((channel, index) => Math.round(channel + (to[index] - channel) * amount));
+    return new Color(alpha, red, green, blue).argb;
+}
+
+function skyAt(sunAltitude: number) {
+    const upper = SKY_STOPS.findIndex((stop) => sunAltitude < stop.altitude);
+    // past the last stop it is the last: from = to
+    const from = SKY_STOPS[upper < 0 ? SKY_STOPS.length - 1 : Math.max(0, upper - 1)];
+    const to = SKY_STOPS[upper < 0 ? SKY_STOPS.length - 1 : Math.max(1, upper)];
+    const span = to.altitude - from.altitude;
+    const amount = span > 0 ? Math.min(1, Math.max(0, (sunAltitude - from.altitude) / span)) : 0;
+    return {
+        fog: mixArgb(from.fog, to.fog, amount),
+        high: mixArgb(from.high, to.high, amount),
+        space: mixArgb(from.space, to.space, amount),
+        stars: from.stars + (to.stars - from.stars) * amount,
+        luminance: from.luminance + (to.luminance - from.luminance) * amount
+    };
+}
+
+/** The custom source is set once: it rebuilds the sky program. */
+let skyShaderApplied = false;
+
+/**
+ * The SDK's atmosphere with clouds by day, the sun's altitude deciding the rest, over the shared fog. Its own
+ * stars are the night sky, unless the panorama's star layer is on: then that one is. Returns the clear colour,
+ * which is the haze the ground fades into.
+ */
+function applyShaderSky() {
+    if (!get(peakFinderSky) || isEInk) {
+        if (skyShaderApplied) {
+            skyShaderApplied = false;
+            panorama.sky({ type: 'sky' }).set('shaderSource', '');
+        }
+        return argb(TERRAIN_FOG.color);
+    }
+    const look = skyAt(panoramaSun().altitude);
+    panorama.fog({ type: 'fog' }).apply({
+        color: look.fog,
+        highColor: look.high,
+        spaceColor: look.space,
+        starIntensity: get(peakFinderStars) ? 0 : look.stars
+    });
+    panorama.sky({ type: 'sky' }).apply({
+        type: 'SKY_TYPE_ATMOSPHERE',
+        atmosphereLuminance: look.luminance,
+        // what a ray below the mathematical horizon sees where no terrain is drawn (past the view distance, or a tile
+        // not there yet): the haze, not the default light blue, which shows as a band under the sky
+        groundColor: look.fog,
+        // the sun layer draws the disc, or it would be drawn twice
+        sunDiscEnabled: !get(peakFinderSun),
+        ...(skyShaderApplied ? {} : { shaderSource: PANORAMA_SKY_SHADER })
+    });
+    skyShaderApplied = true;
+    return look.fog;
+}
+
+/**
+ * The real sun at the chosen moment while it is up (at any height in the realistic look, which is lit by
+ * it), else the 3D mode's. Overrides the style's sun. The relief look has no shadows: the surface shader
+ * draws all the light.
  */
 const LIT_BY_THE_SUN_ABOVE = 2;
-function applySun() {
-    let sunAzimuth = get(terrainSunAzimuth);
-    let sunAltitude = get(terrainSunAltitude);
+const PANORAMA_SHADOW_MAP_SIZE = 2048;
+const PANORAMA_SHADOW_CASCADES = 1;
+function panoramaSun() {
+    let azimuth = get(terrainSunAzimuth);
+    let altitude = get(terrainSunAltitude);
     const eye = viewpoint ?? entryPosition;
     if (get(peakFinderSun) && eye) {
         const sun = sunPositionAt(skyMoment(), eye);
-        if (sun.altitude > LIT_BY_THE_SUN_ABOVE) {
-            sunAzimuth = sun.azimuth;
-            sunAltitude = sun.altitude;
+        if (isRealistic() || sun.altitude > LIT_BY_THE_SUN_ABOVE) {
+            azimuth = sun.azimuth;
+            altitude = sun.altitude;
         }
     }
-    panorama?.light({ type: 'light' }).apply({
-        sunOverridingStyle: true,
-        sunAzimuth,
-        sunAltitude,
-        shadowStrength: 0
+    return { azimuth, altitude };
+}
+
+function applySun() {
+    const { altitude: sunAltitude, azimuth: sunAzimuth } = panoramaSun();
+    const realistic = isRealistic();
+    panorama?.light({ type: 'light' }).apply(
+        realistic
+            ? {
+                  sunOverridingStyle: true,
+                  terrainLightingEnabled: true,
+                  sunAzimuth,
+                  sunAltitude,
+                  // strength is where shadows OFF lives: `LightOptions` has no shadow switch
+                  shadowStrength: get(peakFinderShadows) ? get(peakFinderShadowStrength) : 0,
+                  shadowDistance: get(terrainShadowDistance),
+                  shadowMapSize: Math.min(get(terrainShadowMapSize), PANORAMA_SHADOW_MAP_SIZE),
+                  // one caster pass: a second cascade doubles it for a view that is mostly far ground
+                  shadowCascades: Math.min(get(terrainShadowCascades), PANORAMA_SHADOW_CASCADES),
+                  shadowSoftness: get(terrainShadowSoftness),
+                  shadowCasterMargin: get(terrainShadowCasterMargin)
+              }
+            : {
+                  sunOverridingStyle: true,
+                  sunAzimuth,
+                  sunAltitude,
+                  shadowStrength: 0
+              }
+    );
+    // the sky follows the sun's altitude
+    if (realistic && panorama) {
+        applyRealisticAtmosphere();
+    }
+}
+
+/** The ground the look draws: ink and paper from the surface shader, or the imagery draped and lit. */
+function applyLook() {
+    if (!panorama) {
+        return;
+    }
+    if (isRealistic()) {
+        // once: rewriting the drape's size on a palette change would flush its cache
+        if (!realisticApplied) {
+            applyRealisticTerrain();
+        }
+        panoramaView?.setPostProcessEffect(null);
+        effect = null;
+        terrain().set('surfaceShaderSource', '');
+    } else {
+        if (realisticApplied) {
+            restoreReliefTerrain();
+        }
+        applyReliefSurface();
+        applyReliefOutline();
+    }
+    applyAtmosphere();
+    applySun();
+}
+
+/** A look change on a running panorama: the first frame's `applyLook` plus what needs the map up. */
+function changeLook() {
+    applyLook();
+    applyViewDistance();
+    applyImagery();
+}
+
+/** The relief look paints the ground itself, which is why it needs none of these. */
+function applyRealisticTerrain() {
+    realisticApplied = true;
+    terrain().apply({
+        drapeFillsEnabled: true,
+        drapeLinesEnabled: false,
+        sharedGroundEnabled: true,
+        seamlessTileEdgesEnabled: true,
+        drapeResolution: panoramaDrapeResolution(),
+        // always WITH the resolution: a fixed one isn't sized against the cache (see `resolveDrapeCacheSize`)
+        drapeCacheSize: get(peakFinderDrapeCacheSize)
     });
+    panorama.set('tileLODFactor', get(peakFinderTileLodFactor));
+}
+
+/**
+ * Not the map's 1024: the imagery is 256 px tiles, so 512 loses nothing, and the cover is hundreds of leaves
+ * where the map's is a few dozen (4 MB each at 1024 is the 3.4 GB the first run reached).
+ */
+const PANORAMA_DRAPE_RESOLUTION = 512;
+/** The SDK's own `tileLODFactor` default, put back when the look leaves realistic. */
+const SDK_TILE_LOD_FACTOR = 0.5;
+
+function panoramaDrapeResolution() {
+    const setting = get(terrainDrapeResolution);
+    return setting > 0 ? Math.min(setting, PANORAMA_DRAPE_RESOLUTION) : PANORAMA_DRAPE_RESOLUTION;
+}
+
+/**
+ * The SDK floors a vector layer's tile zoom at (camera zoom - coarsening), and a first-person camera takes its
+ * zoom from the ground it looks at: 14 at the horizon, 21+ looking down. Left alone, the floor follows it and
+ * the whole viewing disc is cut into hundreds of fine tiles (954 drape leaves in the first run). The coarsening
+ * is raised with the zoom to hold the floor where the opening view put it. The imagery is out of it: its
+ * tile zoom follows the distance alone.
+ */
+let appliedCoarsening = -1;
+function applyTileCoarsening() {
+    if (!panorama) {
+        return;
+    }
+    const base = get(peakFinderTileCoarsening);
+    const cameraZoom = camera()?.zoom();
+    const coarsening = Number.isFinite(cameraZoom) ? Math.max(base, Math.ceil(cameraZoom - (effectiveZoom() - base))) : base;
+    if (coarsening === appliedCoarsening) {
+        return;
+    }
+    appliedCoarsening = coarsening;
+    try {
+        terrain()?.set('maxTileZoomCoarsening', coarsening);
+    } catch (error) {
+        // a move can land before the terrain exists or after it is gone: the next one sets it
+        if (!String(error?.message).includes('NULL_OBJECT')) {
+            throw error;
+        }
+        appliedCoarsening = -1;
+        return;
+    }
+    DEV_LOG && console.log('peakFinder: tile coarsening', coarsening, 'at camera zoom', cameraZoom);
+}
+
+function restoreReliefTerrain() {
+    realisticApplied = false;
+    terrain().apply({ drapeFillsEnabled: false, drapeLinesEnabled: false, sharedGroundEnabled: false, seamlessTileEdgesEnabled: false });
+    panorama.set('tileLODFactor', SDK_TILE_LOD_FACTOR);
+    panorama.light({ type: 'light' }).set('terrainLightingEnabled', false);
+}
+
+/** Under the summit layer, on its own cache: the live map's hybrid imagery is another map's. */
+function applyImagery() {
+    imageryLoad = imageryLoad.then(syncImagery).catch(showError);
+}
+
+async function syncImagery() {
+    const map = panorama;
+    if (!map) {
+        return;
+    }
+    const wanted = isRealistic() ? get(peakFinderSource) : null;
+    if (wanted === imageryId) {
+        return;
+    }
+    if (!wanted) {
+        dropImagery();
+        return;
+    }
+    // built before the current one goes: a refused token keeps the current one
+    const item = await getMapContext().mapModule('customLayers').createPanoramaImagery(map, wanted);
+    if (!item) {
+        return;
+    }
+    // the map went, or the choice changed again meanwhile: the call that changed it queued its own sync
+    if (panorama !== map || !isRealistic() || get(peakFinderSource) !== wanted) {
+        try {
+            item.layer.destroy();
+        } catch (error) {
+            DEV_LOG && console.log('peakFinder: could not release a stale imagery layer', error);
+        }
+        return;
+    }
+    dropImagery();
+    map.layers().insert(0, item.layer);
+    imagery = item;
+    imageryId = wanted;
+    panoramaImagery.set(item);
+}
+
+function dropImagery() {
+    const layer = imagery?.layer;
+    if (layer) {
+        panorama?.removeLayer(layer);
+        layer.destroy();
+    }
+    imagery = null;
+    imageryId = null;
+    panoramaImagery.set(null);
 }
 
 /** The label palette is style text, hence the decoder rebuild. */
 function applyPalette() {
     updatePeakFinderMoon();
     updatePeakFinderStars();
-    applyReliefSurface();
-    applyReliefOutline();
-    applyAtmosphere();
+    applyLook();
     rebuildPeaksLayer();
 }
 
@@ -1014,9 +1346,9 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         // far ranges: tangram's factor rule alone stops the ground a few km out...
         viewDistanceFactor: get(peakFinderViewDistance),
         // ...and shrinks near the ground, hence a floor in metres...
-        viewDistance: get(peakFinderViewDistanceMetres),
+        viewDistance: terrainViewDistance(),
         // ...and the same ceiling, else the factor rule reaches past a shorter setting
-        viewDistanceMax: get(peakFinderViewDistanceMetres),
+        viewDistanceMax: terrainViewDistance(),
         // no drape: this map has no base layers; the surface shader paints the ground
         drapeFillsEnabled: false,
         drapeLinesEnabled: false,
@@ -1038,6 +1370,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         // ElevationManager busy (11x the render thread on a Crosscall)
         elevationCacheSize: get(peakFinderElevationCacheSize)
     });
+    appliedCoarsening = -1;
     // After the terrain exists — it is what carries these.
     applyTerrainZoomCap();
     applyGeoThreeTerrain();
@@ -1054,10 +1387,8 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
     // the focus km away at this tilt
     map.set('freeRoamMode', 'FREE_ROAM_MODE_FIRST_PERSON');
 
-    applyReliefSurface();
-    applyReliefOutline();
-    applyAtmosphere();
-    applySun();
+    applyLook();
+    applyImagery();
     // before the layer: the style bakes the eye altitude into `text-rank`; after the camera: it reads the eye
     eyeGroundElevation = await resolveEyeGroundElevation();
     buildPeaksLayer();
@@ -1092,6 +1423,7 @@ export const setupPanorama = tryCatchFunction(async (map: MassifMap, view: Massi
         () => {
             updateViewpoint();
             publishHeading();
+            applyTileCoarsening();
             checkStaticPeaks();
             updatePeakFinderSun();
             updatePeakFinderMoon();
@@ -1125,6 +1457,13 @@ export function teardownPanorama() {
     teardownPeakFinderMoon();
     teardownPeakFinderStars();
     teardownSkySelection();
+    // the imagery goes with the cleared layers and the map; the item is dropped, not destroyed twice
+    imagery = null;
+    imageryId = null;
+    realisticApplied = false;
+    skyShaderApplied = false;
+    appliedCoarsening = -1;
+    panoramaImagery.set(null);
     try {
         panorama?.layers().clear();
     } catch (error) {
@@ -1356,6 +1695,15 @@ function applyLive(store: { subscribe: (run: (value) => void) => unknown }, appl
 applyLive(peakFinderDark, () => !get(peakFinderArActive) && applyPalette());
 applyLive(peakFinderArDark, () => get(peakFinderArActive) && applyPalette());
 applyLive(peakFinderSelectedPeak, () => applySelectedPeak());
+applyLive(peakFinderLook, changeLook);
+applyLive(peakFinderSource, applyImagery);
+applyLive(peakFinderSky, applyAtmosphere);
+applyLive(peakFinderFog, applyAtmosphere);
+applyLive(peakFinderFogDistance, applyAtmosphere);
+// its star layer replaces the sky shader's stars
+applyLive(peakFinderStars, applyAtmosphere);
+applyLive(peakFinderShadows, applySun);
+applyLive(peakFinderShadowStrength, applySun);
 applyLive(peakFinderOutlineWidth, applyReliefOutline);
 applyLive(peakFinderHorizonBoost, applyReliefOutline);
 applyLive(peakFinderExaggeration, () => terrain().set('exaggeration', get(peakFinderExaggeration)));
@@ -1368,11 +1716,17 @@ applyLive(peakFinderSun, applySun);
 applyLive(peakFinderSkyTime, applySun);
 applyLive(peakFinderOcclusion, () => terrain().set('billboardOcclusionTolerance', get(peakFinderOcclusion)));
 applyLive(peakFinderViewDistance, () => terrain().set('viewDistanceFactor', get(peakFinderViewDistance)));
-applyLive(peakFinderViewDistanceMetres, () => {
-    terrain().apply({ viewDistance: get(peakFinderViewDistanceMetres), viewDistanceMax: get(peakFinderViewDistanceMetres) });
+function applyViewDistance() {
+    const distance = terrainViewDistance();
+    terrain().apply({ viewDistance: distance, viewDistanceMax: distance });
+    DEV_LOG && console.log('peakFinder: view distance', viewDistanceMetres(), 'm asked,', Math.round(distance), 'm to the SDK');
     // It sizes the collected disc as well as the ground, so the set has to be re-cut to match.
     refreshStaticPeaks();
-});
+}
+applyLive(peakFinderViewDistanceMetres, () => !isRealistic() && applyViewDistance());
+applyLive(peakFinderRealisticViewDistance, () => isRealistic() && applyViewDistance());
+applyLive(peakFinderDrapeCacheSize, () => isRealistic() && terrain().set('drapeCacheSize', get(peakFinderDrapeCacheSize)));
+applyLive(peakFinderTileLodFactor, () => isRealistic() && panorama.set('tileLODFactor', get(peakFinderTileLodFactor)));
 // The other three knobs that decide WHAT was collected rather than how it is drawn.
 applyLive(peakFinderPeakZoom, () => {
     // Shared with the engine-side source, where it is the zoom the tiles are READ at - and part of
@@ -1398,7 +1752,7 @@ applyLive(peakFinderDetailSource, rebuildPeaksLayer);
 applyLive(peakFinderMeshResolution, () => terrain().set('meshResolution', get(peakFinderMeshResolution)));
 applyLive(peakFinderTerrainMaxZoom, applyTerrainZoomCap);
 // A re-cull, not a re-decode: `TileLayer` watches this one and drops its cull state when it moves.
-applyLive(peakFinderTileCoarsening, () => terrain().set('maxTileZoomCoarsening', get(peakFinderTileCoarsening)));
+applyLive(peakFinderTileCoarsening, applyTileCoarsening);
 applyLive(peakFinderTilt, () => panoramaView?.setTilt(get(peakFinderTilt), 0));
 applyLive(peakFinderMaxFieldOfView, applyFieldOfView);
 applyLive(peakFinderLensCorrection, applyFieldOfView);

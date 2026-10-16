@@ -1,5 +1,11 @@
 /* Listed AFTER style.mss: new attachments draw with their source layer's topmost entry. */
 
+/* Massif's 0.8 / 0.2 leaves a tenth of a shade between a wall facing the sun and one facing away */
+Map {
+  building-ambient: 0.5;
+  building-light-intensity: 0.5;
+}
+
 /* Alpimaps' textures over the flat colours, from the zoom each says something, tinted as it tints
    them. Massif's own pattern sprites are e-ink's grey; the tint puts the colour back. */
 #landcover[zoom >= 12][class = 'wood']::osm_wood_pattern {
@@ -20,4 +26,21 @@
 #landcover[zoom >= 11][class = 'rock']::osm_rock_pattern {
   polygon-pattern-file: url('icons/pattern-rock.png');
   polygon-pattern-opacity: 0.5;
+}
+
+/* Unnamed tree dots keep their distance: the converter makes every circle overlap-free, so the dots
+   are made to collide, each with an invisible bigger spacer. Same-feature pairs don't collide, so a
+   dot never loses to its own spacer. */
+#poi[zoom >= 16][zoom < 18][class = 'tree'][name = null]['param::models_3d' = 0]['param::variant' != 'hybrid']::poi_tree_dot {
+  marker-allow-overlap: false;
+  marker-allow-overlap-same-feature-id: true;
+  marker-placement-priority: -1;
+}
+#poi[zoom >= 16][zoom < 18][class = 'tree'][name = null]['param::models_3d' = 0]['param::variant' != 'hybrid']::poi_tree_spacer {
+  marker-width: (2 * linear([view::zoom], (16, 5), (18, 7)));
+  marker-fill-opacity: 0;
+  marker-line-width: 0;
+  marker-allow-overlap: false;
+  marker-allow-overlap-same-feature-id: true;
+  marker-placement-priority: -1;
 }

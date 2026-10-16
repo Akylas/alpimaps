@@ -9,6 +9,14 @@
 //   connector  the straight hint from the user to the point they are heading back to
 //   original   the route a full reroute replaced, kept visible so the change is readable
 
+// How much of the route and the maneuver arrows shows through a 3D building or ridge in front of them
+// (0 = hidden, as before). Needs an SDK with line-occlusion-opacity: older ones ignore it.
+// COST: each ghosted rule is drawn again after the last layer, in up to 4 passes, whether or not anything
+// is in front of it (about 2-3 ms/frame on a desktop GPU for the route + arrows + a few lines; not measured
+// on phones). Keep it on the few lines that must stay readable (route, arrows, selected item), never on
+// dense layers (roads, contours, all saved items). Without an 8-bit stencil buffer the ghost tints.
+@nav_occlusion_opacity: 0.35;
+
 #navigation['mapnik::geometry_type'=2] {
 	[class='route'] {
 		// casing folded into the line as its border - see directions.mss. Above z15 the casing now
@@ -20,6 +28,7 @@
 		line-opacity: @directions_line_opacity;
 		line-join: round;
 		line-cap: round;
+		line-occlusion-opacity: @nav_occlusion_opacity;
 
 		[zoom>=13] {
 			marker-placement: line;
@@ -67,12 +76,14 @@
 	line-width: @nav_maneuver_casing_width;
 	line-join: round;
 	line-cap: round;
+	line-occlusion-opacity: @nav_occlusion_opacity;
 }
 #maneuver['mapnik::geometry_type'=2]::fill {
 	line-color: @nav_maneuver_color;
 	line-width: @nav_maneuver_width;
 	line-join: round;
 	line-cap: round;
+	line-occlusion-opacity: @nav_occlusion_opacity;
 }
 #maneuver['mapnik::geometry_type'=2]::headcase {
 	line-color: @nav_maneuver_casing_color;
@@ -81,6 +92,7 @@
 	line-arrow-only: true;
 	line-arrow-width: 2.18;
 	line-arrow-length: 1.72;
+	line-occlusion-opacity: @nav_occlusion_opacity;
 }
 #maneuver['mapnik::geometry_type'=2]::head {
 	line-color: @nav_maneuver_color;
@@ -89,6 +101,7 @@
 	line-arrow-only: true;
 	line-arrow-width: 2.4;
 	line-arrow-length: 1.9;
+	line-occlusion-opacity: @nav_occlusion_opacity;
 }
 
 // its own layer because it is redrawn on every position while the rest of the navigation layer is

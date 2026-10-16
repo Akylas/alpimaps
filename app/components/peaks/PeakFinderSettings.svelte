@@ -8,10 +8,12 @@
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import { lc } from '~/helpers/locale';
     import PeakFinderSkyTime from '~/components/peaks/PeakFinderSkyTime.svelte';
+    import PeakFinderSource from '~/components/peaks/PeakFinderSource.svelte';
     import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
+    import { peakFinderLook } from '~/stores/terrainStore';
     import { screenHeightDips, windowInset } from '~/variables';
 
-    const rows = peakFinderSettingRows();
+    $: rows = peakFinderSettingRows($peakFinderLook);
 
     function itemTemplateSelector(item: PeakFinderSettingRow) {
         return item.type;
@@ -33,6 +35,9 @@
         </Template>
         <Template key="suntime" let:item>
             <PeakFinderSkyTime title={item.title} />
+        </Template>
+        <Template key="source" let:item>
+            <PeakFinderSource description={item.description} title={item.title} />
         </Template>
         <Template key="slider" let:item>
             <StoreSlider description={item.description} format={item.format} max={item.max} min={item.min} step={item.step} store={item.store} title={item.title} />

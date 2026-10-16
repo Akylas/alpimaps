@@ -14,7 +14,7 @@ import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
 import { type NutiParamKey, type PropsChangeEvent, clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
-import { terrainMaxZoom } from '~/stores/terrainStore';
+import { peakFinderSource, terrainMaxZoom } from '~/stores/terrainStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
@@ -218,6 +218,8 @@ export const DEFAULT_IMAGERY_SOURCE = 'esri.worldimagery';
 const IMAGERY_SOURCE_KEY = 'hybridImagerySource';
 /** The imagery under the hybrid variant, while it is on the map. */
 export const hybridImagery = writable<SourceItem>(null);
+/** The imagery under the peak finder's realistic look, while it is on the panorama. */
+export const panoramaImagery = writable<SourceItem>(null);
 
 function isVectorUrl(url: string) {
     return url.indexOf('.mvt') >= 0 || url.indexOf('.pbf') >= 0;
@@ -237,6 +239,22 @@ export const LOCAL_TERRAIN_NAME = 'Hillshade';
 
 // the style fades the bathymap's `global_landcover` out over z8-9 (`lowzoom_landcover`), tile zoom 8 here
 const BATHYMAP_LAST_ZOOM = 8;
+
+/**
+ * Finest imagery the peak finder asks for: a first-person camera looking down takes a camera zoom of 20+, and
+ * past this the drape would bake hundreds of tiles of upsampled pixels (0.8 m per texel at z17, lat 45).
+ */
+const PANORAMA_IMAGERY_MAX_ZOOM = 17;
+
+/** No overzoom targets either: the SDK asks terrain layers for tiles past the data's max zoom, each one a bake of the same pixels. */
+function panoramaProvider(provider: Provider): Provider {
+    return {
+        ...provider,
+        cacheable: true,
+        sourceOptions: { ...provider.sourceOptions, maxZoom: Math.min(provider.sourceOptions?.maxZoom ?? PANORAMA_IMAGERY_MAX_ZOOM, PANORAMA_IMAGERY_MAX_ZOOM) },
+        layerOptions: { ...provider.layerOptions, maxOverzoomLevel: 0 }
+    };
+}
 
 /** A setting of a layer, shown in its options sheet and persisted as `${name}_<option>`. */
 export interface LayerOption {
@@ -270,6 +288,8 @@ export interface SourceItem {
     terrain?: boolean;
     /** The hybrid variant's imagery: under the whole stack, in neither the list nor the saved sources. */
     imagery?: boolean;
+    /** ...or the peak finder's, which lives on the panorama's map instead. */
+    panorama?: boolean;
     // A DEM's own hillshade layer, kept even when woven: it answers elevation queries.
     // `layer` is what is DRAWN: this one when stacked, the composite's child when in the slot.
     terrainLayer?: MassifLayer<'massif::HillshadeRasterTileLayer'>;
@@ -665,11 +685,12 @@ export default class CustomLayersModule extends MapModule {
             vectorDataSource
         };
     }
-    async createDataSourceAndMapLayer(id: string, provider: Provider) {
+    /** `map` is the live map unless the layer is for another one (the peak finder's panorama). */
+    async createDataSourceAndMapLayer(id: string, provider: Provider, map = mapContext.getMap()) {
         const opacity = ApplicationSettings.getNumber(`${id}_opacity`, 1);
 
         // bitmaps are upsampled on high-DPI screens by default: compensate with a zoom bias
-        const dpiZoomLevelBias = (Math.log(mapContext.getMap().get('DPI') / 160.0) / Math.log(2)) * 0.75;
+        const dpiZoomLevelBias = (Math.log(map.get('DPI') / 160.0) / Math.log(2)) * 0.75;
         const zoomLevelBias = ApplicationSettings.getNumber(`${id}_zoomLevelBias`, dpiZoomLevelBias);
         const options: Record<string, LayerOption> = {
             zoomLevelBias: {
@@ -686,7 +707,6 @@ export default class CustomLayersModule extends MapModule {
             return null;
         }
         const { databasePath, sourceSpec, vectorDataSource } = dataSource;
-        const map = mapContext.getMap();
         const layerId = `layer.custom.${id}`;
 
         let layer: MassifLayer;
@@ -1604,17 +1624,29 @@ export default class CustomLayersModule extends MapModule {
         this.updateAttribution(item, !shown);
     }
 
-    private async createImageryItem(providerId: string): Promise<SourceItem> {
+    private createImageryItem(providerId: string) {
+        return this.buildImageryItem('hybrid', providerId);
+    }
+
+    /** Built on the panorama's map, with settings and cache of its own: `layer` is the caller's to add and destroy. */
+    createPanoramaImagery(map: MassifMap, providerId: string) {
+        return this.buildImageryItem('panorama', providerId, map);
+    }
+
+    private async buildImageryItem(prefix: 'hybrid' | 'panorama', providerId: string, map = mapContext.getMap()): Promise<SourceItem> {
         await this.getSourcesLibrary();
         const provider = this.baseProviders[providerId] ?? this.baseProviders[DEFAULT_IMAGERY_SOURCE];
-        // its own cache file and settings keys: the same provider may also be a layer of the stack
-        const data = await this.createDataSourceAndMapLayer(`hybrid_${provider.id}`, { ...provider, cacheable: true });
+        // its own cache file and settings keys: the same provider may also be a layer of the stack, and two
+        // maps must not open the same persistent cache
+        const panorama = prefix === 'panorama';
+        const data = await this.createDataSourceAndMapLayer(`${prefix}_${provider.id}`, panorama ? panoramaProvider(provider) : { ...provider, cacheable: true }, map);
         if (!data) {
             return null;
         }
         return {
             ...data,
             imagery: true,
+            panorama: prefix === 'panorama',
             options: {
                 // not in the list, so the opacity is set in the options sheet
                 opacity: { min: 0, max: 1, step: 0.01, default: 1, write: (layer: MassifLayer, value: number) => layer.opacity(value).visible(value > 0) },
@@ -1636,9 +1668,25 @@ export default class CustomLayersModule extends MapModule {
 
     /** Any raster base map can be the imagery, the default first. */
     async pickImagerySource() {
+        const current = ApplicationSettings.getString(IMAGERY_SOURCE_KEY, DEFAULT_IMAGERY_SOURCE);
+        const provider = await this.chooseImagery(current);
+        if (provider && provider.id !== current) {
+            await this.showImagery(get(massifVariant) === 'hybrid', provider.id);
+        }
+    }
+
+    /** The peak finder's own choice, kept apart from the hybrid map's. */
+    async pickPanoramaSource() {
+        const current = get(peakFinderSource);
+        const provider = await this.chooseImagery(current, lc('peak_finder_source'));
+        if (provider && provider.id !== current) {
+            peakFinderSource.set(provider.id);
+        }
+    }
+
+    private async chooseImagery(current: string, title = lc('hybrid_imagery')): Promise<Provider> {
         await this.getSourcesLibrary();
         const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-        const current = ApplicationSettings.getString(IMAGERY_SOURCE_KEY, DEFAULT_IMAGERY_SOURCE);
         const ids = Object.keys(this.baseProviders)
             .filter((id) => id !== DEFAULT_IMAGERY_SOURCE && !this.baseProviders[id].hillshade && !isVectorUrl(this.baseProviders[id].url))
             .sort();
@@ -1648,7 +1696,7 @@ export default class CustomLayersModule extends MapModule {
             skipCollapsedState: true,
             props: {
                 height: 460,
-                title: lc('hybrid_imagery'),
+                title,
                 titleIcon: 'mdi-satellite-variant',
                 showFilter: true,
                 rowHeight: 64,
@@ -1660,10 +1708,7 @@ export default class CustomLayersModule extends MapModule {
                 })
             }
         });
-        const provider: Provider = (Array.isArray(results) ? results[0] : results)?.data;
-        if (provider && provider.id !== current) {
-            await this.showImagery(get(massifVariant) === 'hybrid', provider.id);
-        }
+        return (Array.isArray(results) ? results[0] : results)?.data;
     }
 
     onMapDestroyed() {
@@ -1677,6 +1722,7 @@ export default class CustomLayersModule extends MapModule {
         // released with the map
         this.imagery = null;
         hybridImagery.set(null);
+        panoramaImagery.set(null);
         this.localObjects = [];
         this.customSources.splice(0, this.customSources.length);
     }
