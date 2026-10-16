@@ -360,7 +360,8 @@
     }
     $: loadSavedOSMDetails(item, osmLookupAllowed);
     $: updateSelectedItem(item);
-    $: itemCanBeNavigated = !$isNavigating && !!item && navigationService.canNavigate(item);
+    // only a saved route: a computed one has to be added first
+    $: itemCanBeNavigated = !$isNavigating && !!item?.id && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
     $: itemNeedsInstructions = !$isNavigating && !!item && isNavigableRoute(item) && !item.instructions?.length;
 
