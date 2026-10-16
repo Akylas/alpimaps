@@ -1,6 +1,7 @@
 import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { tryCatchFunction } from '@shared/utils/ui';
+import { destroy as unregisterObject } from '@nativescript-community/ui-massifmaps/api';
 import type { FreeRoamMode, MassifMap, Position } from '@nativescript-community/ui-massifmaps/api';
 import { Color } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
@@ -36,6 +37,7 @@ import {
     terrainFogVerticalEnd,
     terrainFogVerticalStart,
     terrainLighting,
+    terrainMaxZoom,
     terrainMeshResolution,
     terrainNodeResolution,
     terrainShadowCascades,
@@ -144,6 +146,8 @@ export function ensureTerrain(): boolean {
         // the DEM is spec-only, so a new one means a new options object. Release the id first: the same
         // id with a different spec is refused
         map.child('terrainOptions')?.destroy();
+        // destroying the handle leaves the id registered, and `map.terrain(spec)` then fails with RESULT_DUPLICATE_ID
+        unregisterObject('options', `${map.id}.terrain`);
         terrainAttached = false;
     }
     map.terrain({ type: 'terrain', source: source.handle }).apply({
@@ -156,6 +160,7 @@ export function ensureTerrain(): boolean {
         autoFlattenRiseDuration: get(terrainSwitchDuration),
         exaggeration: get(terrainExaggeration),
         meshResolution: get(terrainMeshResolution),
+        maxZoom: get(terrainMaxZoom),
         viewDistanceFactor: get(terrainViewDistanceFactor),
         cameraClearance: get(terrainCameraClearance),
         // drawn LIVE, not baked: a baked contour survives in cached drape tiles past its zoom range
@@ -558,6 +563,7 @@ function applyLive<T>(store: { subscribe: (run: (value: T) => void) => unknown }
 
 applyLive(terrainExaggeration, (value) => terrain().set('exaggeration', value));
 applyLive(terrainMeshResolution, (value) => terrain().set('meshResolution', value));
+applyLive(terrainMaxZoom, (value) => terrain().set('maxZoom', value));
 // The field, not the lattice: this is the one that moves the relief. Both re-decode every cached DEM
 // grid, so neither is free to drag.
 applyLive(terrainNodeResolution, applyNodeResolution);

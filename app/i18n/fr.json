@@ -1047,6 +1047,7 @@
     "gestures_hint": "Touchez une zone qui pulse pour voir ce qu'elle fait. Un appui long sur une icône sans libellé indique son nom.",
     "hillshade_method": "méthode d'ombrage",
     "light_rotates_with_map": "la lumière suit la rotation de la carte",
+    "terrain_zoom_cap_3d_desc": "niveau de zoom auquel le maillage et le champ de hauteurs sont coupés. Au-delà, l'ombrage garde ses propres tuiles plus fines, dessinées à plat plutôt que calculées depuis le maillage",
     "look": "rendu",
     "look_desc": "Relief trace des lignes d'encre sur du papier. Réaliste plaque l'imagerie de la carte sur le terrain, éclairé par le soleil",
     "toggle_look": "rendu relief / réaliste",

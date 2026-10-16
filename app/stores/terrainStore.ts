@@ -19,6 +19,8 @@ export const terrainMeshResolution = settingsStore('terrainMeshResolution', __CA
  * This, not the mesh, carries relief. 256 is one node per texel of a 512 px DEM tile: more buys nothing.
  */
 export const terrainNodeResolution = settingsStore('terrainNodeResolution', 256);
+/** Tile zoom the 3D mesh and its elevation data are cut at (`maxZoom`); 0 = the SDK's distance rule. */
+export const terrainMaxZoom = settingsStore('terrainMaxZoom', 0);
 /** How far the ground goes on, as a factor on tangram's rule. */
 export const terrainViewDistanceFactor = settingsStore('terrainViewDistanceFactor', 1);
 /**

@@ -14,7 +14,7 @@ import { getMapModule } from '~/mapModules/registry';
 import { fromPosition } from '~/utils/geo';
 import { packageService } from '~/services/PackageService';
 import { type NutiParamKey, type PropsChangeEvent, clickHandlerLayerFilter, layerProps, nutiProps, preloading } from '~/stores/mapStore';
-import { peakFinderSource } from '~/stores/terrainStore';
+import { peakFinderSource, terrainMaxZoom } from '~/stores/terrainStore';
 import { showError } from '@shared/utils/showError';
 import { toDegrees, toRadians } from '~/utils/geo';
 import { getDataFolder, getDefaultMBTilesDir } from '~/utils/utils';
@@ -488,6 +488,16 @@ export default class CustomLayersModule extends MapModule {
         this.applyLayerOption(item, name, option, option.default);
     }
 
+    /**
+     * The terrain paint shades from the mesh's own elevation grids, so a capped terrain detail would cap the hillshade
+     * with it. With a cap, the layer keeps its own DEM tiles, which refine past the mesh.
+     */
+    private applyTerrainPaint() {
+        const paint = get(terrainMaxZoom) === 0;
+        packageService.hillshadeLayer?.set('terrainPaintEnabled', paint);
+        this.withExternalChild(this.terrainAttachedTo, HILLSHADE_SLOT, (child) => api.wrap(child.handle, 'massif::HillshadeRasterTileLayer').set('terrainPaintEnabled', paint));
+    }
+
     // same `${name}_<option>` keys the options sheet writes
     private applyHillshadeSettings(layer: MassifLayer<'massif::HillshadeRasterTileLayer'>, name: string, woven = false) {
         const options = HILLSHADE_OPTIONS;
@@ -518,6 +528,7 @@ export default class CustomLayersModule extends MapModule {
                 accentColor: new Color(ApplicationSettings.getString(`${name}_accentColor`, options.accentColor.default)).argb
             });
         }
+        layer.set('terrainPaintEnabled', get(terrainMaxZoom) === 0);
         // not part of the defaults: the layer is left at its own until the user sets one
         if (ApplicationSettings.hasKey(`${name}_zoomLevelBias`)) {
             layer.set('zoomLevelBias', ApplicationSettings.getNumber(`${name}_zoomLevelBias`, options.zoomLevelBias.default));
@@ -926,6 +937,7 @@ export default class CustomLayersModule extends MapModule {
                 this.setSlotVisible(CONTOUR_SLOT, !!event.value);
             }
         });
+        this.terrainPaintUnsubscriber = terrainMaxZoom.subscribe(() => this.applyTerrainPaint());
         this.imageryUnsubscriber = massifVariant.subscribe((variant) => {
             this.showImagery(variant === 'hybrid');
         });
@@ -1435,7 +1447,7 @@ export default class CustomLayersModule extends MapModule {
             opacity,
             preloading: get(preloading),
             clickRadius: layerProps['clickRadius'],
-            tileCacheCapacity: 30 * 1024 * 1024,
+            tileCacheCapacity: (__CATALYST__ ? 256 : 30) * 1024 * 1024,
             clickHandlerLayerFilter: clickFilterFor(get(clickHandlerLayerFilter)),
             tileSubstitutionPolicy: 'TILE_SUBSTITUTION_POLICY_VISIBLE',
             visible: opacity !== 0
@@ -1577,6 +1589,7 @@ export default class CustomLayersModule extends MapModule {
     private imagery: SourceItem;
     private imageryLoad = Promise.resolve();
     private imageryUnsubscriber: () => void;
+    private terrainPaintUnsubscriber: () => void;
 
     /** `providerId` switches the source, saved once its layer could be built. */
     private showImagery(shown: boolean, providerId?: string) {
@@ -1704,6 +1717,8 @@ export default class CustomLayersModule extends MapModule {
         this.localDataUnsubscribers = [];
         this.imageryUnsubscriber?.();
         this.imageryUnsubscriber = null;
+        this.terrainPaintUnsubscriber?.();
+        this.terrainPaintUnsubscriber = null;
         // released with the map
         this.imagery = null;
         hybridImagery.set(null);
