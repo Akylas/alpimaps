@@ -507,6 +507,31 @@ export default class ItemsModule extends MapModule {
             this.addItemToLayer(item, true);
         }
     }
+    /** Shows or hides many items at once: one UPDATE per chunk and one layer refresh, not a round trip per item. */
+    async setItemsOnMap(items: IItem[], onMap: boolean) {
+        const value = onMap ? 1 : 0;
+        const toChange = items.filter((item) => (onMap ? item.onMap === 0 : item.onMap !== 0));
+        if (!toChange.length) {
+            return;
+        }
+        const ids = toChange.map((item) => item.id);
+        // sqlite caps the bound variables of a statement
+        for (let start = 0; start < ids.length; start += 500) {
+            const idParams = SqlQuery.join(ids.slice(start, start + 500).map((id) => SqlQuery.createFromTemplateString`${id}`));
+            await this.itemRepository.database.query(SqlQuery.createFromTemplateString`UPDATE Items SET onMap = ${value} WHERE id IN (${idParams})`);
+        }
+        if (onMap) {
+            toChange.forEach((item) => this.addItemToLayer(item));
+        } else {
+            const changedIds = new Set(ids);
+            if (changedIds.has(mapContext.getSelectedItem()?.id)) {
+                mapContext.unselectItem(true, true);
+            }
+            this.currentItems = this.currentItems.filter((item) => !changedIds.has(item.id));
+        }
+        toChange.forEach((item) => (item.onMap = value));
+        this.setLayerGeoJSONString();
+    }
     onItemSelected(item: IItem) {
         const startTime = Date.now();
         if (item?.route) {

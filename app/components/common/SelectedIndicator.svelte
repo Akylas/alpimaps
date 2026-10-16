@@ -1,28 +1,43 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
+    import { isEInk } from '~/helpers/theme';
     import { colors, fonts } from '~/variables';
-    const paint = new Paint();
+    const ringPaint = new Paint();
+    const badgePaint = new Paint();
     const iconPaint = new Paint();
-    iconPaint.color = 'white';
     iconPaint.textSize = 16;
     iconPaint.setTextAlign(Align.CENTER);
-    const radius = 10;
+    const size = 30;
+    const center = size / 2;
     const text = 'mdi-check';
 </script>
 
 <script lang="ts">
-    let { colorPrimary } = $colors;
-    $: ({ colorPrimary } = $colors);
-    paint.color = colorPrimary;
-    iconPaint.fontFamily = $fonts.mdi;
+    let { colorCard, colorOnPrimary, colorPrimary } = $colors;
+    $: ({ colorCard, colorOnPrimary, colorPrimary } = $colors);
 
     export let selected: boolean = false;
 
-    function onCanvasDraw({ canvas, object }: { canvas: Canvas; object: CanvasView }) {
-        const w2 = canvas.getWidth() / 2;
-        canvas.drawCircle(radius, radius, radius, paint);
-        canvas.drawText(text, radius, radius + 6, iconPaint);
+    // a primary check badge, ringed in the card colour so it lifts off whatever it sits on
+    function onCanvasDraw({ canvas }: { canvas: Canvas; object: CanvasView }) {
+        ringPaint.color = colorCard;
+        badgePaint.color = isEInk ? 'black' : colorPrimary;
+        iconPaint.color = isEInk ? 'white' : colorOnPrimary;
+        iconPaint.fontFamily = $fonts.mdi;
+        canvas.drawCircle(center, center, 14, ringPaint);
+        canvas.drawCircle(center, center, 11.5, badgePaint);
+        canvas.drawText(text, center, center + 5.5, iconPaint);
     }
 </script>
 
-<canvasview disableCss={true} height={40} horizontalAlignment="left" verticalAlignment="top" visibility={selected ? 'visible' : 'hidden'} width={40} on:draw={onCanvasDraw} {...$$restProps} />
+<canvasview
+    disableCss={true}
+    height={size}
+    horizontalAlignment="left"
+    isUserInteractionEnabled={false}
+    margin="6 0 0 6"
+    verticalAlignment="top"
+    visibility={selected ? 'visible' : 'hidden'}
+    width={size}
+    on:draw={onCanvasDraw}
+    {...$$restProps} />

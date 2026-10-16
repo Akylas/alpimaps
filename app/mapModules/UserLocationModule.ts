@@ -98,6 +98,9 @@ export default class UserLocationModule extends MapModule {
     accuracyMarker: MassifObject<'massif::Polygon'>;
     /** last heading we were given, so a fix without one does not swing the arrow back to north */
     private lastKnownBearing = 0;
+    /** the user zoomed or tilted while navigating: the next fixes keep their camera instead of the navigation one */
+    private userZoomOverride = false;
+    private userTiltOverride = false;
     mUserFollow = false;
     get userFollow() {
         return this.mUserFollow;
@@ -116,6 +119,9 @@ export default class UserLocationModule extends MapModule {
     }
     set navigationMode(value: boolean) {
         navigationModeStore.set(value);
+        // (re)engaging the mode, or leaving it, hands the camera back
+        this.userZoomOverride = false;
+        this.userTiltOverride = false;
         // redraw now: an unchanged position is dropped before it reaches the markers, so the next fix may never come
         if (this.mLastUserLocation) {
             this.updateMarkers(this.mLastUserLocation);
@@ -180,8 +186,20 @@ export default class UserLocationModule extends MapModule {
     }
     override onMapInteraction(e: { data: MapInteraction }) {
         const interaction = e.data;
-        if (!interaction.zoomAction && interaction.panAction && !interaction.animationStarted) {
+        if (interaction.animationStarted) {
+            return;
+        }
+        // pinch and tilt gestures report a pan too: they change the view, not where the user is looked at
+        if (!interaction.zoomAction && !interaction.tiltAction && interaction.panAction) {
             this.userFollow = false;
+        }
+        if (this.navigationMode) {
+            if (interaction.zoomAction) {
+                this.userZoomOverride = true;
+            }
+            if (interaction.tiltAction) {
+                this.userTiltOverride = true;
+            }
         }
     }
     public mLastUserLocation: GeoLocation = null;
@@ -334,7 +352,7 @@ export default class UserLocationModule extends MapModule {
         }
         const map = mapContext.getMap();
         const camera = map.camera();
-        const zoom = this.navigationZoom > 0 ? this.navigationZoom : Math.max(camera.zoom(), 10);
+        const zoom = this.navigationZoom > 0 && !this.userZoomOverride ? this.navigationZoom : Math.max(camera.zoom(), 10);
         const target = toPosition(this.mLastUserLocation);
         if (!this.navigationMode) {
             camera.moveTo(target, { zoom, duration });
@@ -352,7 +370,7 @@ export default class UserLocationModule extends MapModule {
             // same bearing as the arrow. A fix bearing can be missing: NaN is written as null and the
             // native decoder then rejects the whole flyTo
             rotation: -this.lastKnownBearing,
-            tilt: tilt > 0 ? tilt : undefined,
+            tilt: tilt > 0 && !this.userTiltOverride ? tilt : undefined,
             duration
         });
     }
