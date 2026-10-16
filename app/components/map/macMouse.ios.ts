@@ -101,7 +101,14 @@ class MacMouseHandler extends NSObject implements UIGestureRecognizerDelegate {
         } else if (phase === MacRightMousePhase.Dragged) {
             if (this.rightDragging || Math.hypot(location.x - this.rightDownPoint.x, location.y - this.rightDownPoint.y) >= CLICK_TOLERANCE) {
                 this.rightDragging = true;
-                this.dragRotate(location, view.bounds.size);
+                if (this.touchMode() === 'fps') {
+                    // the viewpoint is the camera: the right button moves it over the map, a left-drag looks around
+                    const scale = view.contentScaleFactor;
+                    this.walkBy((location.x - this.lastPoint.x) * scale, (location.y - this.lastPoint.y) * scale);
+                    this.lastPoint = location;
+                } else {
+                    this.dragRotate(location, view.bounds.size);
+                }
             }
         } else if (!this.rightDragging) {
             const { latitude, longitude } = this.mapPosAt(this.rightDownPoint, view);
