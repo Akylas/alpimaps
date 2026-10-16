@@ -2,7 +2,7 @@ const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const MASSIF_IOS_DEV = process.env['MASSIF_SDK_DIR'] || '/Volumes/dev/carto/mobile-sdk';
+const MASSIF_IOS_DEV = process.env['MASSIF_SDK_DIR'] || process.env['MASSIF_SDK_HOME'] || '/Volumes/dev/massif/massif-sdk';
 
 // DEBUGMASSIF=1 on Catalyst: rebuild the SDK from source (incremental) before the app links it
 module.exports = function ($logger, projectData, injector, hookArgs) {

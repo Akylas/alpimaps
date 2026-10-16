@@ -25,6 +25,7 @@ module.exports = {
         sveltePreprocess({
             replace: [
                 [/PRODUCTION/g, !!webpack_env.production],
+                [/__CATALYST__/g, !!webpack_env.catalyst],
                 [/__ANDROID__/g, !!webpack_env.android],
                 [/__IOS__/g, !!webpack_env.ios]
             ].concat(customPreprocess?.replace || []),
