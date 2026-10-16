@@ -3,6 +3,7 @@
   "styles": [
     "variables.mss",
     "style.mss",
+    "models.mss",
     "alpimaps-ranking.mss"
   ],
   "styleparameters": {

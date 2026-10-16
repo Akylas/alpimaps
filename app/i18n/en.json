@@ -1154,6 +1154,8 @@
     "no_legend": "This style has no legend",
     "style_lighting": "Relief lighting",
     "style_lighting_desc": "Shade buildings and relief with the sun",
+    "models_3d": "3D trees",
+    "models_3d_desc": "Draw trees as 3D models instead of dots",
     "label_occlusion": "Hide labels behind buildings",
     "label_occlusion_desc": "In 3D, a label a building stands in front of is hidden",
     "poi_on_roof": "Points of interest on roofs",
