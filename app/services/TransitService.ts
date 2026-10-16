@@ -4,7 +4,7 @@ import { Color } from '@nativescript/core';
 import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
 
 import { createAndWaitForWorkerMessage } from '@akylas/nativescript-app-utils/worker';
-import { SQLiteDatabase } from '@nativescript-community/sqlite';
+import type { SQLiteDatabase } from '@nativescript-community/sqlite-core';
 export const MOBILITY_URL = 'https://data.mobilites-m.fr';
 export const MOBILITY_API_URL = MOBILITY_URL + '/api';
 // const navitiaAPIEndPoint = 'https://api.navitia.io/v1/';

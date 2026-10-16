@@ -1,5 +1,7 @@
 // first: sets the Mac Catalyst app delegate before plugins create their own
 import { startWindowHelper } from '@shared/utils/window';
+// the default SQLite engine (androidx on Android with WAL, the process SQLite on iOS) for @nativescript-community/sqlite-core
+import '@nativescript-community/sqlite-default-engine';
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';

@@ -118,6 +118,8 @@ android {
     exclude "assets/app/**/*.LICENSE.txt"
     exclude "org/bouncycastle/**"
     exclude "license/**"
+    // sqlite-bridge is for iOS (its runtime has no Node-API yet): Android uses sqlite-napi, so the JNI bridge library is not packaged
+    exclude "**/libnssqlite_jni.so"
     jniLibs {
         // we should not need this. why did it start creating twice as big apks  (gradle 8.4?)?
         // only enable it for apk build
