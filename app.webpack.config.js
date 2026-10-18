@@ -960,8 +960,9 @@ module.exports = (env, params = {}) => {
 
     if (hiddenSourceMap || sourceMap) {
         if (!!sentry) {
-            config.devtool = false;
-            config.devtool = 'source-map';
+            // in production maps are only emitted by the plugin below, outside the app bundle: devtool would
+            // add a copy next to each chunk. Dev keeps it, the CLI uses those maps for device logs.
+            config.devtool = production ? false : 'source-map';
             config.plugins.push(
                 new webpack.SourceMapDevToolPlugin({
                     append: `\n//# sourceMappingURL=${process.env.SOURCEMAP_REL_DIR}/[name].js.map`,
