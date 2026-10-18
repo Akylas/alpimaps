@@ -53,6 +53,8 @@
     </array>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.navigation</string>
     <key>UIApplicationSceneManifest</key>
