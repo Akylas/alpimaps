@@ -283,6 +283,20 @@ export default class ItemsModule extends MapModule {
             features: this.currentItems.map((item) => ({ type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry }))
         });
     }
+    /** `updateFeature` fails for a feature the source does not hold (and may drop it): fall back to a clean re-add. */
+    upsertFeature(item: IItem) {
+        const source = this.getLocalVectorDataSource();
+        const feature: Feature = { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry };
+        try {
+            source.updateFeature(1, feature);
+        } catch (error) {
+            DEV_LOG && console.log(TAG, 'updateFeature failed, re-adding', item.id, error);
+            try {
+                source.removeFeature(1, item.id);
+            } catch {}
+            source.addFeature(1, feature);
+        }
+    }
     async updateItem(item: IItem, data?: Partial<IItem>, autoUpdateLayer = true, updatePicture = true) {
         item = await this.itemRepository.updateItem(item as Item, data);
         const index = this.currentItems.findIndex((d) => d.id === item.id);
@@ -290,7 +304,7 @@ export default class ItemsModule extends MapModule {
         if (index !== -1) {
             this.currentItems.splice(index, 1, item);
             if (autoUpdateLayer && item.onMap !== 0) {
-                this.getLocalVectorDataSource().updateFeature(1, { type: 'Feature', id: item.id, properties: item.properties, geometry: item.geometry });
+                this.upsertFeature(item);
             }
             if (item.route && updatePicture) {
                 this.takeItemPicture(item);

@@ -328,7 +328,8 @@ export class ItemRepository extends BaseRepository<Item> {
                 instructions: item._instructions || JSON.stringify(item.instructions),
                 geometry: item._geometry || JSON.stringify(item.geometry)
             } as any;
-            await this.update(item, toUpdate);
+            // update() copies the raw DB row (JSON strings) onto the model it is given: hand it a throwaway copy
+            await this.update({ ...item }, toUpdate);
             return item;
         }
         const toSave: Partial<Item> = {};
@@ -350,7 +351,7 @@ export class ItemRepository extends BaseRepository<Item> {
         });
         const updatedItem = { ...item, ...toSave };
         // console.log('update', item.id, JSON.stringify(toUpdate), JSON.stringify(toSave));
-        await this.update(updatedItem, toUpdate);
+        await this.update({ ...item }, toUpdate);
         return updatedItem;
     }
     async addGroupToItem(item: Item, groupId: string) {
