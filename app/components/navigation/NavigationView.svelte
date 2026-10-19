@@ -1,6 +1,6 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { DismissReasons } from '@nativescript-community/ui-material-snackbar';
+    import { DismissReasons } from '@nativescript-community/ui-snackbar';
     import type { EventData } from '@nativescript/core';
     import { onDestroy } from 'svelte';
     import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';

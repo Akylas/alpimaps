@@ -1,6 +1,6 @@
 import { GPS, GenericGeoLocation, Options as GeolocationOptions } from '@nativescript-community/gps';
 import { check, isPermResultAuthorized, request } from '@nativescript-community/perms';
-import { confirm } from '@nativescript-community/ui-material-dialogs';
+import { confirm } from '@nativescript-community/ui-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';

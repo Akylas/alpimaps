@@ -1,7 +1,7 @@
 <script lang="ts">
     // The native slider works in whole steps, so a fractional `step` is carried by scaling the
     // whole range by a factor.
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-dialogs';
     import { showError } from '@shared/utils/showError';
     import type { Writable } from 'svelte/store';
     import { colors } from '~/variables';

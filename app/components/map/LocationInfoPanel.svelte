@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, isSensorAvailable, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-dialogs';
     import type { ApplicationEventData, GridLayout } from '@nativescript/core';
     import { Application } from '@nativescript/core';
     import { onDestroy, onMount } from 'svelte';
@@ -35,14 +35,14 @@
     let currentLocation: GeoLocation = null;
 
     const mapContext = getMapContext();
-    mapContext.onVectorElementClicked((data) => {
-        const { metaData } = data;
-        // the user marker is the app's own: `metaData` is what it was registered with
-        if (metaData['userMarker'] === true || metaData['userMarker'] === 'true') {
-            switchLocationInfo();
-            return true;
-        }
-    });
+    // mapContext.onVectorElementClicked((data) => {
+    //     const { metaData } = data;
+    //     // the user marker is the app's own: `metaData` is what it was registered with
+    //     if (metaData['userMarker'] === true || metaData['userMarker'] === 'true') {
+    //         switchLocationInfo();
+    //         return true;
+    //     }
+    // });
     export function isLocationInfoShown() {
         return showLocationInfo;
     }

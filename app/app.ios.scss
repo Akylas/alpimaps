@@ -1,6 +1,6 @@
 @import './app.common';
 
-mdbutton {
+button {
     // material3 basic design
     shape: round;
 }
@@ -8,8 +8,8 @@ mdbutton {
 htmllabel,
 canvasview,
 label,
-mdtextfield,
-mdbutton {
+textfield,
+button {
     ios-a11y-adjusts-font-size: true;
     ios-a11y-max-font-scale: 2.5;
 }
@@ -18,23 +18,16 @@ mdbutton {
     ios-a11y-adjusts-font-size: false;
 }
 
-checkbox {
-    off-animation-type: 3;
-    on-animation-type: 3;
-    on-check-color: var(--colorOnPrimary);
-    on-tint-color: var(--colorPrimary);
-}
-
-mdswitch {
+switch {
     on-background-color: var(--colorPrimary)
 }
 
 
-mdslider {
+slider {
     track-fill-color: var(--colorPrimary);
 }
 
-mdcardview {
+card {
     // material3 basic design
     shape: medium;
 }
@@ -47,6 +40,6 @@ mdcardview {
     ios-a11y-max-font-scale: 1.5;
 }
 
-mdtextfield[variant=none] {
+textfield[variant=none] {
     padding: 0;
 }

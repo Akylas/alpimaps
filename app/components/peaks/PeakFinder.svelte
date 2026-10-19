@@ -4,7 +4,7 @@
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-dialogs';
     import { AWebView, LoadFinishedEventData } from '@nativescript-community/ui-webview';
     import { Folder, LoadEventData, ObservableArray, Page, Utils, path } from '@nativescript/core';
     import { getBoolean, getNumber, setBoolean, setNumber } from '@nativescript/core/application-settings';

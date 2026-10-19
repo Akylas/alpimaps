@@ -2,7 +2,7 @@
     import { l, lc } from '@nativescript-community/l';
     import { CheckBox } from '@nativescript-community/ui-checkbox';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-dialogs';
     import { ApplicationSettings, Color, ObservableArray, Utils, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { Template } from '@nativescript-community/svelte-native/components';

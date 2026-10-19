@@ -8,7 +8,7 @@ export class PersistentBottomSheet extends BaseBottomSheet {
 
     private isOnSlider(x: number, y: number) {
         const sheetView: UIView = this.nativeViewProtected;
-        const sliderClass = NSClassFromString('MDCSlider');
+        const sliderClass = NSClassFromString('UISlider');
         let view = sheetView?.hitTestWithEvent({ x, y }, null);
         while (view && view !== sheetView) {
             if (view.isKindOfClass(sliderClass)) {

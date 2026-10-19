@@ -1,4 +1,4 @@
-import { DismissReasons } from '@nativescript-community/ui-material-snackbar';
+import { DismissReasons } from '@nativescript-community/ui-snackbar';
 import { ApplicationSettings } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';

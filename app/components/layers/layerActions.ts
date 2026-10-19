@@ -2,7 +2,7 @@
 import { GestureRootView } from '@nativescript-community/gesturehandler';
 import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-community/svelte-native/dom';
 import type { MassifSource } from '@nativescript-community/ui-massifmaps/api';
-import { action, confirm } from '@nativescript-community/ui-material-dialogs';
+import { action, confirm } from '@nativescript-community/ui-dialogs';
 import { ApplicationSettings, File, ScrollView } from '@nativescript/core';
 import type SettingsSlider__SvelteComponent_ from '@shared/components/SettingsSlider.svelte';
 import { formatSize } from '~/helpers/formatter';
