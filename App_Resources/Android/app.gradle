@@ -114,6 +114,10 @@ android {
     pickFirst 'lib/arm64-v8a/libc++_shared.so'
     pickFirst 'lib/x86_64/libc++_shared.so'
     pickFirst 'lib/x86/libc++_shared.so'
+    pickFirst 'lib/armeabi-v7a/libsqlite.so'
+    pickFirst 'lib/arm64-v8a/libsqlite.so'
+    pickFirst 'lib/x86_64/libsqlite.so'
+    pickFirst 'lib/x86/libsqlite.so'
     exclude "assets/app/**/*.js.map"
     exclude "assets/app/**/*.LICENSE.txt"
     exclude "org/bouncycastle/**"
@@ -148,6 +152,16 @@ tasks.register('copyMassifLibcxx', Sync) {
 }
 android.sourceSets.main.jniLibs.srcDir(massifLibcxxDir)
 tasks.named('preBuild') { dependsOn 'copyMassifLibcxx' }
+
+// massif and sqlite-shared-engine both ship libsqlite.so. Ship the plugin's (newer, FTS5, WAL, thread-safe): the app's
+// own jniLibs win over the dependencies' copies, which pickFirst alone would not guarantee.
+def sharedSqliteDir = layout.buildDirectory.dir('sharedSqlite')
+tasks.register('copySharedSqlite', Sync) {
+    from(new File(rootProject.projectDir, '../../node_modules/@nativescript-community/sqlite-shared-engine/platforms/android/jniLibs'))
+    into sharedSqliteDir
+}
+android.sourceSets.main.jniLibs.srcDir(sharedSqliteDir)
+tasks.named('preBuild') { dependsOn 'copySharedSqlite' }
 
 task createProguard {
     dependsOn 'buildMetadata'
