@@ -72,11 +72,12 @@
         "@nativescript-community/sentry": "4.6.49",
         "@nativescript-community/sqlite-bridge": "4.0.0",
         "@nativescript-community/sqlite-core": "4.0.0",
-        "@nativescript-community/sqlite-default-engine": "4.0.1",
         "@nativescript-community/sqlite-napi": "4.0.0",
+        "@nativescript-community/sqlite-shared-engine": "4.0.1",
         "@nativescript-community/svelte-native": "1.0.32",
         "@nativescript-community/systemui": "1.1.26",
         "@nativescript-community/text": "1.6.25",
+        "@nativescript-community/ui-bottomsheet": "1.0.0",
         "@nativescript-community/ui-cameraview": "0.8.0",
         "@nativescript-community/ui-canvas": "4.6.54",
         "@nativescript-community/ui-canvaslabel": "1.2.57",
@@ -84,6 +85,7 @@
         "@nativescript-community/ui-checkbox": "2.0.18",
         "@nativescript-community/ui-collectionview": "6.0.29",
         "@nativescript-community/ui-collectionview-swipemenu": "6.0.29",
+        "@nativescript-community/ui-datetimepicker": "1.0.0",
         "@nativescript-community/ui-document-picker": "1.1.29",
         "@nativescript-community/ui-drawer": "0.1.32",
         "@nativescript-community/ui-image": "4.6.20",
@@ -91,7 +93,6 @@
         "@nativescript-community/ui-lottie": "5.0.11",
         "@nativescript-community/ui-massifmaps": "4.0.0",
         "@nativescript-community/ui-material-activityindicator": "7.3.3",
-        "@nativescript-community/ui-material-bottomsheet": "7.3.3",
         "@nativescript-community/ui-material-button": "7.3.3",
         "@nativescript-community/ui-material-cardview": "7.3.3",
         "@nativescript-community/ui-material-core": "7.3.3",
@@ -163,10 +164,12 @@
     "resolutions": {
         "webpack": "5.107.2",
         "@massif-maps/styles": "portal:../../massif/massif-sdk/styles/massif/dist/npm",
+        "@nativescript-community/ui-bottomsheet": "portal:../ui-native-components/packages/ui-bottomsheet",
+        "@nativescript-community/ui-datetimepicker": "portal:../ui-native-components/packages/ui-datetimepicker",
         "@nativescript-community/ui-massifmaps": "portal:../ui-massifmaps/packages/ui-massifmaps",
         "@nativescript-community/sqlite-bridge": "portal:../sqlite/packages/sqlite-bridge",
         "@nativescript-community/sqlite-core": "portal:../sqlite/packages/sqlite-core",
-        "@nativescript-community/sqlite-default-engine": "portal:../sqlite/packages/sqlite-default-engine",
+        "@nativescript-community/sqlite-shared-engine": "portal:../sqlite/packages/sqlite-shared-engine",
         "@nativescript-community/sqlite-napi": "portal:../sqlite/packages/sqlite-napi"
     }
 }

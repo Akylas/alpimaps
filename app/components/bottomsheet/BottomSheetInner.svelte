@@ -9,10 +9,10 @@
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
     import { SwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { Application, ApplicationSettings, Color, Utils, View } from '@nativescript/core';
-    import { debounce, openUrl } from '@nativescript/core/utils';
+    import { debounce } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
     import { onDestroy, onMount, tick } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
@@ -27,7 +27,21 @@
     import { langStore } from '~/helpers/locale';
     import { OSM_DETAILS_FRESH_DURATION, canLookupOSMDetails, networkOnline, osmDetailsStates, osmItemKey } from '~/helpers/osmDetails';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
+    import { getMapContext } from '~/mapModules/MapModule';
+    import {
+        itemIsBusStop as isBusStop,
+        itemIsRailStation as isRailStation,
+        openItemInOpenStreetMap,
+        openItemWeather,
+        openItemWeatherAlternate,
+        openItemWikipedia,
+        searchItemOnWeb,
+        shareItemPosition,
+        showItemAstronomy,
+        showItemInformation,
+        showItemRailStation,
+        showItemTransitLines
+    } from '~/mapModules/itemActions';
     import { featureItemActions } from '~/mapModules/mapFeatures';
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
@@ -131,8 +145,6 @@
     highlightPaint.setStrokeWidth(1);
     highlightPaint.setTextSize(12);
 
-    const Intent = __ANDROID__ ? android.content.Intent : undefined;
-
     export let item: Item;
 
     let graphAvailable = false;
@@ -149,6 +161,7 @@
     let itemIsEditingItem = false;
     let itemCanBeEdited = false;
     let itemIsBusStop = false;
+    let itemIsRailStation = false;
     let itemCanBeAdded = false;
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
@@ -227,86 +240,6 @@
         }
     }
 
-    function openWikipedia() {
-        try {
-            const props = item && item.properties;
-            if (props?.wikipedia) {
-                const url = `https://wikipedia.org/wiki/${props.wikipedia}`;
-                openURL(url);
-            } else if (props?.name) {
-                const url = `https://wikipedia.org/wiki/Special:Search?search=${props.name}`;
-                openURL(url);
-            }
-        } catch (error) {
-            showError(error);
-        }
-    }
-    function openOpenStreetMap() {
-        try {
-            if (item && !itemIsRoute) {
-                const geometry = item.geometry as Point;
-                openURL(`https://www.openstreetmap.org/#map=${Math.round(mapContext.getMap().camera().zoom())}/${geometry.coordinates[1]}/${geometry.coordinates[0]}`);
-            }
-        } catch (error) {
-            showError(error);
-        }
-    }
-    function searchWeb(canUseWebsite = true) {
-        let query;
-        try {
-            const props = item && item.properties;
-            if (props) {
-                query = formatter.getItemName(item) || formatter.getItemPositionToString(item);
-                if (canUseWebsite && props.website) {
-                    query = props.website;
-                } else {
-                    // if (props.wikipedia) {
-                    //     query = props.wikipedia.split(':')[1];
-                    // }
-                    if (props.address?.county && props.address?.county !== query) {
-                        query += ' ' + props.address.county;
-                    }
-                }
-                DEV_LOG && console.log('searchWeb', query);
-                if (query) {
-                    if (__ANDROID__) {
-                        const intent = new Intent(Intent.ACTION_WEB_SEARCH);
-                        intent.putExtra('query', query);
-                        Application.android.startActivity.startActivity(intent);
-                    } else {
-                        throw new Error();
-                    }
-                }
-            }
-        } catch (err) {
-            // console.error(err, err.stack);
-            if (query) {
-                const url = `https://duckduckgo.com/?ks=s&ko=-2&kaj=m&k1=-1&q=${encodeURIComponent(query).toLowerCase().replace('/s+/g', '+')}`;
-                openURL(url);
-            }
-        }
-    }
-    async function showInformation() {
-        try {
-            // if (!item.properties?.osmid && !networkService.connected) {
-            //     throw new NoNetworkError();
-            // }
-            const ItemInfo = (await import('~/components/items/ItemInfo.svelte')).default;
-            // const hasOpenHours = !!item.properties?.opening_hours;
-            const hasOpenHours = __ANDROID__;
-            await showBottomSheet({
-                parent: mapContext.getMainPage(),
-                view: ItemInfo,
-                peekHeight: hasOpenHours ? 300 : undefined,
-                props: {
-                    item,
-                    height: hasOpenHours ? undefined : 300
-                }
-            });
-        } catch (error) {
-            showError(error);
-        }
-    }
     function updateGraphAvailable() {
         graphAvailable = itemIsRoute && !!item.profile && !!item.profile.data && item.profile.data.length > 0;
     }
@@ -323,7 +256,8 @@
                 itemIsEditingItem = !!item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemCanBeEdited = !!item && !!item.id && !itemIsEditingItem;
                 itemCanBeAdded = !!item && ((!item.id && !item.route?.osmid) || !!itemIsEditingItem);
-                itemIsBusStop = !!item && (item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop');
+                itemIsBusStop = !!item && isBusStop(item);
+                itemIsRailStation = !!item && isRailStation(item);
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
                 updateGraphAvailable();
@@ -368,7 +302,7 @@
     // kept out of the reactive statement below: referencing them there makes the linter trace into
     // functions that assign `item`, which would be a loop
     const actionHandlers: Record<string, { tap: (event?) => void; long?: (event?) => void }> = {
-        information: { tap: () => showInformation(), long: () => openOpenStreetMap() },
+        information: { tap: () => showItemInformation(item), long: () => openItemInOpenStreetMap(item) },
         save: { tap: () => saveItem() },
         navigate: { tap: () => startNavigation() },
         instructions: { tap: () => getTrackInstructions() },
@@ -376,12 +310,13 @@
         stats: { tap: () => getStats() },
         hide: { tap: () => hideItem() },
         edit: { tap: () => startEditingItem() },
-        web: { tap: () => searchWeb(), long: () => searchWeb(false) },
-        wikipedia: { tap: () => openWikipedia() },
-        weather: { tap: () => checkWeather(), long: () => openWeather() },
-        astronomy: { tap: () => showAstronomy() },
+        web: { tap: () => searchItemOnWeb(item), long: () => searchItemOnWeb(item, false) },
+        wikipedia: { tap: () => openItemWikipedia(item) },
+        weather: { tap: () => openItemWeather(item), long: () => openItemWeatherAlternate(item) },
+        astronomy: { tap: () => showItemAstronomy(item) },
         compass: { tap: () => openCompass() },
         transit: { tap: () => getTransitLines() },
+        rail: { tap: () => showItemRailStation(item) },
         address: { tap: () => getItemAddress() },
         share: { tap: (event) => shareItem(event) }
     };
@@ -407,17 +342,19 @@
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
         { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
+        { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
         { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
     ]
         // numbered before the filter so order doesn't depend on which entries apply; spaced 10 apart
         // so a feature can slot between two built-ins
         .map((action, index) => ({ ...action, order: index * 10 }))
-        .filter((action) => action.when)
+        // a journey drawn from the itineraries sheet is not a place: only its own action (back to the sheet) applies
+        .filter((action) => action.when && !item?.properties?.itinerary)
         .concat(featureItemActions(item) as any)
         .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
     // what the filled button does for this item: save while editing, start a route, add a new place, else edit
-    $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : null;
+    $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : item?.properties?.itinerary ? 'itineraries' : null;
     $: labelScale = Math.min($fontScaleMaxed, 1.3);
     $: ({ labelled: labelledActions, overflow: overflowActions, round: roundActions } = layoutActions(itemActions, mainActionId, sheetWidth, labelScale));
     $: roundButtons = overflowActions.length ? [...roundActions, { id: OVERFLOW_ID, text: 'mdi-dots-horizontal', tooltip: lc('more') }] : roundActions;
@@ -539,14 +476,6 @@
         // console.log('onNewLocation', currentLocation);
     }
 
-    function showAstronomy() {
-        if (item) {
-            const positions = item.geometry.type === 'Point' ? item.geometry?.['coordinates'] : item.geometry?.['coordinates'][0];
-            const name = formatter.getItemTitle(item);
-            const subtitle = formatter.getItemSubtitle(item, name);
-            handleMapAction('astronomy', { name, subtitle, location: { lat: positions[1], lon: positions[0] }, timezone: item.properties.timezone });
-        }
-    }
     function closeSwipeMenu(animated = true) {
         swipemenu?.nativeView?.close(undefined, animated ? undefined : 0);
     }
@@ -914,16 +843,7 @@
                                 );
                                 break;
                             case 'position':
-                                // clipboard.copy(formatter.getItemPositionToString(item));
-
-                                share(
-                                    {
-                                        message: formatter.getItemPositionToString(item)
-                                    },
-                                    {
-                                        dialogTitle: lc('share')
-                                    }
-                                );
+                                shareItemPosition(item);
                                 break;
                             case 'export_geojson':
                                 showLoading();
@@ -954,45 +874,6 @@
         }
         // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
-    async function checkWeather() {
-        try {
-            updatingItem = true;
-            const query = formatter.getItemTitle(item);
-            const geometry = item.geometry as Point;
-            let url;
-            if (__ANDROID__) {
-                url = `weather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
-                if (item.properties.address) {
-                    url += `&address=${JSON.stringify(item.properties.address)}`;
-                }
-            } else {
-                url = `https://weather.apple.com/?lat=${geometry.coordinates[1]}&lng=${geometry.coordinates[0]}`;
-            }
-            DEV_LOG && console.log('checkWeather', url);
-            openUrl(url);
-        } catch (err) {
-            showError(err);
-        } finally {
-            updatingItem = false;
-        }
-    }
-
-    async function openWeather() {
-        if (__ANDROID__) {
-            try {
-                const query = formatter.getItemTitle(item);
-                const geometry = item.geometry as Point;
-                let url = `ossweather://query?lat=${geometry.coordinates[1]}&lon=${geometry.coordinates[0]}&name=${query}`;
-                if (item.properties.address) {
-                    url += `&address=${JSON.stringify(item.properties.address)}`;
-                }
-                openUrl(url);
-            } catch (err) {
-                showError(err);
-            }
-        }
-    }
-
     async function openCompass() {
         try {
             const selected = mapContext.getSelectedItem();
@@ -1032,10 +913,7 @@
                     }
                 });
             } else {
-                const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
-                const geometry = item.geometry as Point;
-                const position = { lat: geometry.coordinates[1], lon: geometry.coordinates[0], altitude: geometry.coordinates[2] };
-                showBottomSheet({ parent: mapContext.getMainPage(), trackingScrollView: 'scrollView', view: TransitLinesBottomSheet, props: { name: formatter.getItemName(item), position } });
+                showItemTransitLines(item);
             }
         } catch (err) {
             showError(err);

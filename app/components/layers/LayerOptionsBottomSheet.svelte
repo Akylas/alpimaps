@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { closeBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { ApplicationSettings } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { onDestroy } from 'svelte';

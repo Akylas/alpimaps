@@ -1,7 +1,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { CollectionViewWithSwipeMenu } from '@nativescript-community/ui-collectionview-swipemenu';
-    import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { ContentView, GridLayout } from '@nativescript/core';
     // not from the barrel: ui/gestures/index.d.ts redeclares TouchGestureEventData with an unexported
     // Pointer type that startDragging does not accept

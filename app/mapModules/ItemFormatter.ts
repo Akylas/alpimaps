@@ -18,6 +18,10 @@ export default class ItemFormatter {
         if (properties) {
             if (properties.osm_value) {
                 result.push(properties.osm_value);
+                // the icon font has no bus station: it is the stop's
+                if (properties.osm_value === 'bus_station') {
+                    result.push('bus_stop');
+                }
             }
             if (properties.osm_key) {
                 result.push(properties.osm_key);

@@ -1,6 +1,6 @@
 import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifMap, MassifObject, MassifSource, SpecArg } from '@nativescript-community/ui-massifmaps/api';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { alert, confirm, login, prompt } from '@nativescript-community/ui-material-dialogs';
 import { Application, ApplicationSettings, Color, profile } from '@nativescript/core';
 import { ChangeType, ChangedData, ObservableArray } from '@nativescript/core/data/observable-array';

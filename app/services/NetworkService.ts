@@ -289,7 +289,7 @@ export interface NetworkConnectionStateEventData extends EventData {
     };
 }
 
-function decompress(encoded: string, precision: number) {
+export function decompress(encoded: string, precision: number) {
     precision = Math.pow(10, -precision);
     let index = 0,
         lat = 0,
