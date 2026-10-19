@@ -13,6 +13,7 @@
     import { lc } from '~/helpers/locale';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
+    import { type SearchRankMode, searchRank } from '~/utils/searchRank';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import type { Photon } from '~/photon';
@@ -24,6 +25,7 @@
     import { showSnack } from '~/utils/ui';
     import { arraySortOn } from '~/utils/utils';
     import { colors } from '~/variables';
+    import IconButton from '~/components/common/IconButton.svelte';
     import { HereFeature, PhotonFeature } from './Features';
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
@@ -35,12 +37,19 @@
     export let loading = false;
     let currentQuery;
     export let searchResultsCount = 0;
+    /** the kinds of result come first (see searchRank), each kind by distance */
+    export let rankMode: SearchRankMode = 'poi';
+    export let showItemMenu = true;
     const mapContext = getMapContext();
 
     // export function getFilteredDataItems() {
     //     return filteredDataItems;
     // }
     const PHOTON_SUPPORTED_LANGUAGES = ['en', 'de', 'fr'];
+    const PHOTON_STATION_TAGS = ['railway:station', 'railway:halt'];
+    // what Photon returns that nobody searches for: area outlines, land use, building parts, rail points and bus shelters.
+    // Station and stop results stay, they have their own tags (railway=station, highway=bus_stop…)
+    const PHOTON_EXCLUDED_TAGS = ['!boundary', '!landuse', '!building', '!railway:stop', '!railway:platform', '!highway:platform', '!information', '!amenity:shelter', '!amenity:bench'];
 
     const providerColors = {
         here: 'blue',
@@ -162,7 +171,12 @@
         }
         return [];
     }
-    async function photonSearch(enabled: boolean, options: { query: string; language?: string; location?: MapPos; locationRadius?: number; bounds?: MapBounds }) {
+    async function photonSearch(
+        enabled: boolean,
+        options: { query: string; language?: string; location?: MapPos; locationRadius?: number; bounds?: MapBounds },
+        // only these, or all but the excluded ones
+        onlyTags?: string[]
+    ) {
         if (!enabled) {
             return [];
         }
@@ -171,21 +185,22 @@
             actualLang = 'en';
         }
         const results = await networkService.request<Photon>({
-            url: 'https://photon.komoot.io/api',
-            tag: 'photon',
+            url: `https://photon.komoot.io/api?${(onlyTags ?? PHOTON_EXCLUDED_TAGS).map((tag) => 'osm_tag=' + encodeURIComponent(tag)).join('&')}`,
+            tag: onlyTags ? 'photon-only' : 'photon',
             method: 'GET',
             queryParams: {
                 q: options.query,
                 lat: options.location && options.location.lat,
                 lon: options.location && options.location.lon,
                 lang: actualLang,
-                limit: 40
+                limit: onlyTags ? 10 : 40
                 // bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
             }
         });
         return arraySortOn(
             results.features
-                .filter((r) => r.properties.osm_type !== 'R')
+                // relations are routes and outlines, except the main result for a city: Paris, Grenoble, Lyon are relations
+                .filter((r) => r.properties.osm_type !== 'R' || r.properties.osm_key === 'place')
                 .map((f) => {
                     const r = new PhotonFeature(f);
                     if (options.location) {
@@ -254,12 +269,26 @@
             // DEV_LOG && console.log('instantSearch', JSON.stringify(position), mapContext.getMap().getZoom(), mpp, JSON.stringify(options));
             let newDataItems = new ObservableArray<SearchItem>();
 
-            function addItems(items: SearchItem[]) {
+            function precedes(first: SearchItem, second: SearchItem) {
+                const rankDifference = searchRank(first.properties, rankMode) - searchRank(second.properties, rankMode);
+                return rankDifference ? rankDifference < 0 : first.distance < second.distance;
+            }
+            // the station query and the general one both find a station
+            const seen = new Set<string>();
+            function addItems(allItems: SearchItem[]) {
+                const items = allItems.filter((candidate) => {
+                    const { osm_id: osmId, osm_type: osmType } = candidate.properties;
+                    if (osmId === undefined) {
+                        return true;
+                    }
+                    const key = `${osmType}${osmId}`;
+                    return !seen.has(key) && !!seen.add(key);
+                });
                 if (newDataItems.length === 0) {
-                    dataItems = newDataItems = new ObservableArray(items);
+                    dataItems = newDataItems = new ObservableArray(items.slice().sort((first, second) => (precedes(first, second) ? -1 : precedes(second, first) ? 1 : 0)));
                 } else {
                     items.forEach((item) => {
-                        const index = dataItems.findIndex((i) => i.distance > item.distance);
+                        const index = dataItems.findIndex((i) => precedes(item, i));
                         if (index >= 0) {
                             dataItems.splice(index, 0, item);
                         } else {
@@ -316,7 +345,11 @@
                         .catch((err) => console.error('herePlaceSearch', err, err.stack)),
                     photonSearch(searchUsingPhoton, options as any)
                         .then((r) => prepareItems(r, addItems))
-                        .catch((err) => console.error('photonSearch', err, err.stack))
+                        .catch((err) => console.error('photonSearch', err, err.stack)),
+                    // far stations are not in a general query's 40 results: ask for them alone
+                    photonSearch(searchUsingPhoton && rankMode === 'journey', options as any, PHOTON_STATION_TAGS)
+                        .then((r) => prepareItems(r, addItems))
+                        .catch((err) => console.error('photonSearch stations', err, err.stack))
                 ]);
             }
             if (newDataItems.length === 0) {
@@ -334,7 +367,7 @@
     }
     export function clearSearch(clearQuery = true) {
         // DEV_LOG && console.log('clearSearch', clearQuery, new Error().stack);
-        networkService.clearRequests('photon', 'here');
+        networkService.clearRequests('photon', 'photon-only', 'here');
         loading = false;
         dataItems = new ObservableArray();
         // filteredDataItems = [];
@@ -352,7 +385,7 @@
 <!-- the items list's marker row: a tile tinted with the provider colour, title and address, distance -->
 <collectionview bind:this={collectionView} items={dataItems} rowHeight={60} {...$$restProps}>
     <Template let:item>
-        <gridlayout columns="auto,*,auto" padding="0 16 0 12" rippleColor={colorOnSurface} on:tap={() => dispatch('tap', item)}>
+        <gridlayout columns="auto,*,auto,auto" padding={showItemMenu ? '0 4 0 12' : '0 16 0 12'} rippleColor={colorOnSurface} on:tap={() => dispatch('tap', item)}>
             <label
                 backgroundColor={isEInk ? null : new Color(item.style.color || colorOnSurface).setAlpha(36).hex}
                 borderColor={colorOnSurface}
@@ -372,6 +405,7 @@
                 <label color={colorOnSurfaceVariant} fontSize={12} maxLines={1} text={item.subtitle} visibility={item.subtitle ? 'visible' : 'collapse'} />
             </stacklayout>
             <label col={2} color={colorOnSurfaceVariant} fontSize={12} text={item.distance ? formatDistance(item.distance) : null} verticalAlignment="middle" />
+            <IconButton col={3} gray={true} text="mdi-dots-vertical" visibility={showItemMenu ? 'visible' : 'collapse'} on:tap={(event) => dispatch('menu', { item, event })} />
         </gridlayout>
     </Template>
 </collectionview>
