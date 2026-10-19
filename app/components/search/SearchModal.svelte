@@ -8,6 +8,7 @@
     import { showError } from '@shared/utils/showError';
     import { colors } from '~/variables';
     import { PhotonFeature } from './Features';
+    import type { SearchRankMode } from '~/utils/searchRank';
     import SearchCollectionView from './SearchCollectionView.svelte';
     $: ({ colorHairline, colorPanel } = $colors);
 
@@ -23,6 +24,7 @@
     export let elevation = 0;
     export let margin = 0;
     export let query: string = null;
+    export let rankMode: SearchRankMode = 'poi';
 
     // function focus() {
     //     textField && textField.nativeView.requestFocus();
@@ -104,7 +106,7 @@
             on:unloaded={blurTextField}
             on:textChange={onTextChange}
             on:loaded={focus} />
-        <SearchCollectionView bind:this={collectionView} row={2} on:tap={close} />
+        <SearchCollectionView bind:this={collectionView} {rankMode} row={2} showItemMenu={false} on:tap={close} />
     </gridlayout>
 </gesturerootview>
 <!-- </page> -->

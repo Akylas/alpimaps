@@ -1,7 +1,7 @@
 // first: sets the Mac Catalyst app delegate before plugins create their own
 import { startWindowHelper } from '@shared/utils/window';
-// the default SQLite engine (androidx on Android with WAL, the process SQLite on iOS) for @nativescript-community/sqlite-core
-import '@nativescript-community/sqlite-default-engine';
+// the SQLite engine (libsqlite.so shared with massif on Android with WAL, the process SQLite on iOS) for @nativescript-community/sqlite-core
+import '@nativescript-community/sqlite-shared-engine';
 // (com as any).tns.Runtime.getCurrentRuntime().enableVerboseLogging();
 import { GestureRootView, install as installGestures } from '@nativescript-community/gesturehandler';
 import { setGeoLocationKeys } from '@nativescript-community/gps';
@@ -10,7 +10,7 @@ import { overrideSpanAndFormattedString } from '@nativescript-community/text';
 import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemenu/svelte';
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import { initialize } from '@nativescript-community/ui-image';
-import { install as installBottomSheets } from '@nativescript-community/ui-material-bottomsheet';
+import { install as installBottomSheets } from '@nativescript-community/ui-bottomsheet';
 import { installMixins, themer } from '@nativescript-community/ui-material-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application, ApplicationSettings, Trace } from '@nativescript/core';

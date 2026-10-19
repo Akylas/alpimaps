@@ -672,15 +672,18 @@ module.exports = (env, params = {}) => {
             to: 'osm_icons.json',
             globOptions,
             transform: {
-                cache: !production,
+                // the key carries a version: the cache would otherwise keep the file the old transformer made
+                cache: !production && { keys: (defaultCacheKeys) => ({ ...defaultCacheKeys, aliases: 1 }) },
                 transformer(manifestBuffer, path) {
-                    const symbols = symbolsParser.parseSymbols(manifestBuffer.toString());
-                    const icons = symbols.variables.reduce(function (acc, value) {
-                        if (value.name.startsWith('$osm-')) {
-                            acc[value.name.slice(5)] = String.fromCharCode(parseInt(value.value.slice(2, -1), 16));
+                    // `$osm-bus_stop, tram_stop: "\e98d";` names one glyph with several aliases: scss-symbols-parser only
+                    // keeps the first, with its comma (`bus_stop,`), so the aliases are split here
+                    const icons = {};
+                    for (const [, names, code] of manifestBuffer.toString().matchAll(/^\$osm-([^:]+):\s*"\\([0-9a-fA-F]+)"/gm)) {
+                        const glyph = String.fromCharCode(parseInt(code, 16));
+                        for (const name of names.split(',')) {
+                            icons[name.trim()] = glyph;
                         }
-                        return acc;
-                    }, {});
+                    }
                     return Buffer.from(JSON.stringify(icons));
                 }
             }

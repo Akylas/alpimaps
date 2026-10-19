@@ -7,6 +7,8 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
+    import { pickDateTime } from '@nativescript-community/ui-datetimepicker';
+    import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import type { Feature, Point } from 'geojson';
@@ -18,13 +20,13 @@
     import { getDistance } from '~/helpers/geolib';
     import { fullLangStore, lc } from '~/helpers/locale';
     import { Themes, isEInk, onThemeChanged } from '~/helpers/theme';
+    import dayjs from 'dayjs';
+    import { clearItineraryFromMap } from '~/mapModules/features/itinerary';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
     import { Route } from '~/models/Item';
-    import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { MOBILITY_URL } from '~/services/TransitService';
     import {
         Profiles,
         defaultProfileCostingOptions,
@@ -40,6 +42,7 @@
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
     import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
     import { showSliderPopover } from '~/utils/ui';
+    import { TRANSIT_SHEET_DETENTS } from '~/utils/ui/transitSheet';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
@@ -121,6 +124,11 @@
     let nbWayPoints = 0;
     let features: ItemFeature[] = [];
     let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
+    // public transport is a mode of the panel rather than a Valhalla profile: it has its own options and result
+    let transit = false;
+    /** null: leave now */
+    let departureTime: Date = null;
+    let arriveBy = false;
     let bicycle_type: 'enduro' | 'road' | 'normal' | 'gravel' | 'mountain' = ApplicationSettings.getString('bicycle_type', 'normal') as any;
     let pedestrian_type: 'normal' | 'mountainairing' | 'running' = ApplicationSettings.getString('pedestrian_type', 'normal') as any;
     const showOptions = true;
@@ -681,6 +689,7 @@
         waypoints = new ObservableArray([]);
         nbWayPoints = 0;
         clearRouteDatasource();
+        clearItineraryFromMap();
         if (unselect) {
             mapContext.unselectItem();
         }
@@ -769,68 +778,53 @@
         let positions;
         const { style, ...options } = optionsWithStyle;
         const points = waypoints['_array'].map((r) => ({ lat: r.geometry.coordinates[1], lon: r.geometry.coordinates[0] }));
-        let costing_options;
-        if (WITH_BUS_SUPPORT && profile === 'bus') {
-            const positions = points['_array'].map((r) => `${r.lat.toFixed(6)},${r.lon.toFixed(6)}`);
-            const result = networkService.request({
-                url: MOBILITY_URL + '/otp/routers/default/plan',
-                method: 'GET',
-                queryParams: {
-                    fromPlace: positions[0],
-                    toPlace: positions[positions.length - 1],
-                    date: new Date(),
-                    time: new Date()
-                }
-            });
-        } else {
-            costing_options = {
-                [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile], options || {})
-            };
+        const costing_options = {
+            [profile]: Object.assign({}, costingOptions, profileCostingOptions[profile], options || {})
+        };
 
-            if (profile === 'bicycle') {
-                switch (bicycle_type) {
-                    case 'enduro':
-                    case 'mountain':
-                        costing_options[profile]['bicycle_type'] = 'Mountain';
-                        break;
-                    case 'gravel':
-                        costing_options[profile]['bicycle_type'] = 'Cross';
-                        break;
-                    case 'road':
-                        costing_options[profile]['bicycle_type'] = 'Road';
-                        break;
-                    default:
-                        costing_options[profile]['bicycle_type'] = 'Hybrid';
-                        break;
-                }
+        if (profile === 'bicycle') {
+            switch (bicycle_type) {
+                case 'enduro':
+                case 'mountain':
+                    costing_options[profile]['bicycle_type'] = 'Mountain';
+                    break;
+                case 'gravel':
+                    costing_options[profile]['bicycle_type'] = 'Cross';
+                    break;
+                case 'road':
+                    costing_options[profile]['bicycle_type'] = 'Road';
+                    break;
+                default:
+                    costing_options[profile]['bicycle_type'] = 'Hybrid';
+                    break;
             }
-            const profile_used_settings = used_settings[profile].concat(used_settings.common);
-            profile_used_settings.forEach((key) => {
-                if (!costing_options[profile].hasOwnProperty(key)) {
-                    costing_options[profile][key] = valhallaSettingsDefaultValue(profile, key, costing_options[profile]);
-                }
-            });
+        }
+        const profile_used_settings = used_settings[profile].concat(used_settings.common);
+        profile_used_settings.forEach((key) => {
+            if (!costing_options[profile].hasOwnProperty(key)) {
+                costing_options[profile][key] = valhallaSettingsDefaultValue(profile, key, costing_options[profile]);
+            }
+        });
 
-            let startTime = Date.now();
-            DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(costing_options));
-            try {
-                const computed = await packageService.computeRoute({ points, profile, costingOptions: costing_options });
-                DEV_LOG && console.log('got route', computed.totalDistance, computed.totalTime, Date.now() - startTime, 'ms');
-                positions = computed.positions;
-                startTime = Date.now();
-                route = routingResultToJSON(computed, costing_options, waypoints.toJSON().slice(0), positions);
-                DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
-                if (requestStats) {
-                    route.stats = await packageService.fetchStats({ positions, route: route.route, profile });
-                }
-                if (requestProfile) {
-                    route.profile = await packageService.getElevationProfile(null, positions);
-                }
-            } catch (error) {
-                showError(error, { forcedMessage: 'error computing route: ' + ellipsiseString(error.message, 30), showAsSnack: true });
-                console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(costing_options));
-                return;
+        let startTime = Date.now();
+        DEV_LOG && console.log('calculateRoute', profile, JSON.stringify(points), JSON.stringify(costing_options));
+        try {
+            const computed = await packageService.computeRoute({ points, profile, costingOptions: costing_options });
+            DEV_LOG && console.log('got route', computed.totalDistance, computed.totalTime, Date.now() - startTime, 'ms');
+            positions = computed.positions;
+            startTime = Date.now();
+            route = routingResultToJSON(computed, costing_options, waypoints.toJSON().slice(0), positions);
+            DEV_LOG && console.log('parsed route', requestStats, Date.now() - startTime, 'ms');
+            if (requestStats) {
+                route.stats = await packageService.fetchStats({ positions, route: route.route, profile });
             }
+            if (requestProfile) {
+                route.profile = await packageService.getElevationProfile(null, positions);
+            }
+        } catch (error) {
+            showError(error, { forcedMessage: 'error computing route: ' + ellipsiseString(error.message, 30), showAsSnack: true });
+            console.error('error computing route', profile, error, JSON.stringify(points), JSON.stringify(costing_options));
+            return;
         }
 
         if (route && positions) {
@@ -891,6 +885,46 @@
             features.push(item);
             DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms', JSON.stringify(route.route.waypoints));
             return item as ItemFeature;
+        }
+    }
+    function waypointPlace(waypoint: WayPoint) {
+        const [lon, lat] = waypoint.geometry.coordinates;
+        return { name: formatter.getItemTitle(waypoint), position: { lat, lon } };
+    }
+    async function pickDepartureTime() {
+        try {
+            const picked = await pickDateTime({ date: departureTime ?? new Date(), title: lc(arriveBy ? 'arrive_by' : 'depart_at'), is24Hour: true });
+            if (picked) {
+                departureTime = picked;
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    // the itineraries are not a single route to select: they live in their own sheet, drawn on their own layer
+    async function computeTransit() {
+        try {
+            // like a route: the straight lines between the points would cross the journey
+            clearCurrentRoutes(false);
+            clearWaypointLines(false);
+            setLayerGeoJSONString();
+            clearItineraryFromMap();
+            const ItinerariesBottomSheet = (await import('~/components/transit/ItinerariesBottomSheet.svelte')).default;
+            showBottomSheet({
+                parent: mapContext.getMainPage(),
+                trackingScrollView: 'scrollView',
+                detents: TRANSIT_SHEET_DETENTS,
+                initialDetentIndex: 0,
+                view: ItinerariesBottomSheet,
+                props: {
+                    from: waypointPlace(waypoints.getItem(0)),
+                    to: waypointPlace(waypoints.getItem(waypoints.length - 1)),
+                    time: departureTime,
+                    arriveBy
+                }
+            });
+        } catch (error) {
+            showError(error);
         }
     }
     async function computeRoutes(forceOnline = false) {
@@ -1241,22 +1275,43 @@
         }
     }
 
+    // stations, stops and cities first: these are what a journey starts and ends at
+    async function pickPlace(event): Promise<any> {
+        const SearchModal = (await import('~/components/search/SearchModal.svelte')).default;
+        const position = fromPosition(mapContext.getMap().camera().position()) as GeoLocation;
+        const anchorView = event.object as View;
+        return showPopover({
+            vertPos: VerticalPosition.ALIGN_TOP,
+            horizPos: HorizontalPosition.ALIGN_LEFT,
+            view: SearchModal,
+            anchor: anchorView,
+            props: {
+                width: Utils.layout.toDeviceIndependentPixels(anchorView.getMeasuredWidth()),
+                position,
+                rankMode: 'journey'
+            }
+        });
+    }
+    // the row after a lone first point: searching it adds the other end, no need to tap the map
+    async function searchSecondPoint(event) {
+        try {
+            const result = await pickPlace(event);
+            if (result) {
+                const [lon, lat] = result.geometry.coordinates;
+                const metaData = { ...result, name: result.title };
+                if (waypoints.getItem(0)?.properties.isStop) {
+                    addInternalStartPoint({ lat, lon }, metaData);
+                } else {
+                    addInternalStopPoint({ lat, lon }, metaData);
+                }
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
     async function openSearchFromItem(event, item: WayPoint) {
         try {
-            const SearchModal = (await import('~/components/search/SearchModal.svelte')).default;
-            const position = fromPosition(mapContext.getMap().camera().position()) as GeoLocation;
-            // const result: any = await showModal({ page: Settings, fullscreen: true, props: { position } });
-            const anchorView = event.object as View;
-            const result: any = await showPopover({
-                vertPos: VerticalPosition.ALIGN_TOP,
-                horizPos: HorizontalPosition.ALIGN_LEFT,
-                view: SearchModal,
-                anchor: anchorView,
-                props: {
-                    width: Utils.layout.toDeviceIndependentPixels(anchorView.getMeasuredWidth()),
-                    position
-                }
-            });
+            const result = await pickPlace(event);
             if (result) {
                 const id = Date.now() + '';
                 const toAdd: ItemFeature = {
@@ -1335,14 +1390,19 @@
                     <Pill
                         icon={profileBtn.icon}
                         iconFontFamily={profileBtn.fontFamily}
-                        label={profile === profileBtn.id ? profileLabel(profileBtn.id) : null}
-                        selected={profile === profileBtn.id}
-                        on:tap={() => setProfile(profileBtn.id)}
+                        selected={!transit && profile === profileBtn.id}
+                        on:tap={() => {
+                            transit = false;
+                            setProfile(profileBtn.id);
+                        }}
                         on:longPress={(event) => showProfileSettings(profileBtn.id, event)} />
                 {/each}
+                <Pill icon="mdi-train" selected={transit} on:tap={() => (transit = true)} />
             </stacklayout>
             <gridlayout colSpan={2} columns="*,auto,auto" margin="4 5 0 8" row={3}>
-                <Pill col={1} icon="mdi-dots-vertical" marginLeft={6} on:tap={showMoreOptions} />
+                {#if !transit}
+                    <Pill col={1} icon="mdi-dots-vertical" marginLeft={6} on:tap={showMoreOptions} />
+                {/if}
                 <Pill col={2} icon={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
                 <Pill
                     horizontalAlignment="stretch"
@@ -1351,8 +1411,8 @@
                     margin={0}
                     opacity={nbWayPoints > 1 ? 1 : 0.4}
                     primary={true}
-                    on:tap={() => computeRoutes()}
-                    on:longPress={() => computeRoutes(true)} />
+                    on:tap={() => (transit ? computeTransit() : computeRoutes())}
+                    on:longPress={() => !transit && computeRoutes(true)} />
                 <activityindicator busy={true} color={isEInk ? 'white' : colorOnPrimary} height={28} visibility={loading ? 'visible' : 'hidden'} width={28} />
             </gridlayout>
             <collectionview
@@ -1416,6 +1476,36 @@
                     </canvaslabel>
                 </Template>
             </collectionview>
+            <canvaslabel
+                colSpan={2}
+                color={buttonsColor}
+                height={50 * $fontScaleMaxed}
+                marginTop={50 * $fontScaleMaxed}
+                paddingLeft={10}
+                row={1}
+                verticalAlignment="top"
+                visibility={nbWayPoints === 1 ? 'visible' : 'collapse'}>
+                <cspan fontFamily={$fonts.mdi} fontSize={14 * $fontScaleMaxed} paddingTop={-2} text="mdi-dots-vertical" verticalAlignment="top" />
+                <cspan color={isEInk ? buttonsColor : colorError} fontFamily={$fonts.mdi} fontSize={18 * $fontScaleMaxed} text="mdi-map-marker" verticalAlignment="middle" />
+                <gridlayout
+                    backgroundColor={isEInk ? 'white' : colorSurfaceFill}
+                    borderColor={isEInk ? 'black' : colorHairline}
+                    borderRadius={21 * $fontScaleMaxed}
+                    borderWidth={1}
+                    height={42 * $fontScaleMaxed}
+                    margin="0 40 0 30"
+                    on:tap={searchSecondPoint}>
+                    <label
+                        class="ignoreA11yFontScale"
+                        color={colorOnSurfaceVariant}
+                        fontSize={15 * $fontScaleMaxed}
+                        lineBreak="end"
+                        marginLeft={15}
+                        maxLines={1}
+                        text={lc('search_destination')}
+                        verticalTextAlignment="center" />
+                </gridlayout>
+            </canvaslabel>
             <IconButton
                 col={1}
                 color={buttonsColor}
@@ -1429,7 +1519,14 @@
             <gridlayout colSpan={2} columns="*,auto" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 <scrollview orientation="horizontal" scrollBarIndicatorVisible={false}>
                     <stacklayout id="directionsbuttons" orientation="horizontal" paddingLeft={4}>
-                        {#if profile === 'auto' || profile === 'motorcycle'}
+                        {#if transit}
+                            <Pill
+                                icon="mdi-clock-outline"
+                                label={departureTime ? dayjs(departureTime).format('ddd D MMM HH:mm') : lc('now')}
+                                on:tap={pickDepartureTime}
+                                on:longPress={() => (departureTime = null)} />
+                            <Pill icon={arriveBy ? 'mdi-clock-end' : 'mdi-clock-start'} label={lc(arriveBy ? 'arrive_by' : 'depart_at')} on:tap={() => (arriveBy = !arriveBy)} />
+                        {:else if profile === 'auto' || profile === 'motorcycle'}
                             <Pill
                                 color={valhallaSettingColor('use_highways', profile, profileCostingOptions, buttonsColor)}
                                 icon={valhallaSettingIcon['use_highways']}
@@ -1503,8 +1600,10 @@
                                 on:tap={() => switchValhallaSetting('step_penalty')}
                                 on:longPress={(event) => setSliderCostingOptions('step_penalty', event)} />
                         {/if}
-                        <Pill icon="mdi-timer-outline" label={lc('shortest')} selected={costingOptions.shortest} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
-                        <Pill icon="mdi-arrow-decision" label={lc('alternatives')} selected={computeMultiple} on:tap={() => (computeMultiple = !computeMultiple)} />
+                        {#if !transit}
+                            <Pill icon="mdi-timer-outline" label={lc('shortest')} selected={costingOptions.shortest} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
+                            <Pill icon="mdi-arrow-decision" label={lc('alternatives')} selected={computeMultiple} on:tap={() => (computeMultiple = !computeMultiple)} />
+                        {/if}
                     </stacklayout>
                 </scrollview>
             </gridlayout>

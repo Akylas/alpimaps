@@ -40,7 +40,7 @@
     import Pill from '../common/Pill.svelte';
     import OpenStateChip from '../items/OpenStateChip.svelte';
     import { showToolTip } from '~/utils/ui';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { getDistanceSimple } from '~/helpers/geolib';
     import { isEInk } from '~/helpers/theme';
     import { onDestroy, onMount } from 'svelte';

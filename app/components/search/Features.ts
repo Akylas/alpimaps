@@ -1,11 +1,13 @@
 import type { Point } from 'geojson';
+import { searchResultKind } from '~/utils/searchRank';
 
 export class PhotonFeature {
     properties: { [k: string]: any };
     public geometry!: Point;
     constructor(data) {
         const properties = data.properties || {};
-        const actualName = properties.name === properties.city ? undefined : properties.name;
+        // a name equal to the city is the address's: but a station or stop named after its town keeps it
+        const actualName = properties.name === properties.city && searchResultKind(properties) !== 'station' && searchResultKind(properties) !== 'transit' ? undefined : properties.name;
         const { city, country, housenumber, name, neighbourhood, postcode, region, state, street, ...actualProperties } = properties;
         actualProperties.address = {
             state,

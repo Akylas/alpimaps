@@ -1,7 +1,7 @@
 import * as api from '@nativescript-community/ui-massifmaps/api';
 import type { MassifLayer, MassifMap, MassifSource, Position } from '@nativescript-community/ui-massifmaps/api';
 import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { Color, File, Folder, Screen, knownFolders, path } from '@nativescript/core';
 import { showError } from '@shared/utils/showError';
 import { showToast, tryCatchFunction } from '@shared/utils/ui';

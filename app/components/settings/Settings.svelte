@@ -4,7 +4,7 @@
     import { SDK_VERSION } from '@nativescript-community/sentry';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
     import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
     import { TextView } from '@nativescript-community/ui-material-textview';

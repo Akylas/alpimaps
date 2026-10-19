@@ -1,7 +1,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { Label } from '@nativescript-community/ui-label';
-    import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { alert } from '@nativescript-community/ui-material-dialogs';
     import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';

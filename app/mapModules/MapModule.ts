@@ -5,7 +5,7 @@ import type { MassifEventData, MassifLayer, MassifMap, MassifObject, SpecArg } f
 // type-only: the `ui` module carries the view class, and importing it for real would pull it onto
 // the startup path for every module that imports this file
 import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { Application, ApplicationSettings, File, Folder, Frame, Page, knownFolders, path } from '@nativescript/core';
 import { executeOnMainThread } from '@nativescript/core/utils';
 import { createGlobalEventListener, globalObservable, navigate } from '@shared/utils/svelte/ui';

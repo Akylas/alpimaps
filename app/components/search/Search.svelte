@@ -9,6 +9,7 @@
     import { lc, slc } from '~/helpers/locale';
     import { currentTheme, isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { getItemMenuActions } from '~/mapModules/itemActions';
     import { geoJSONBounds } from '~/utils/geo';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
@@ -293,6 +294,31 @@
     function showMapOptions(event) {
         mapContext.showMapOptions(event);
     }
+    // the shared dispatcher hands the payload over as is, not as an event with a `detail`
+    async function onItemMenu(payload) {
+        const { event, item } = payload;
+        const actions = getItemMenuActions(item);
+        try {
+            await showPopoverMenu({
+                options: actions.map(({ icon, id, name }) => ({ icon, id, name })),
+                anchor: event.object,
+                vertPos: VerticalPosition.BELOW,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
+                props: { autoSizeListItem: true },
+                onClose: (option) => {
+                    const action = actions.find((candidate) => candidate.id === option?.id);
+                    if (action) {
+                        if (action.leavesSearch) {
+                            unfocus();
+                        }
+                        action.run();
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
     function onItemTap(item /*: SearchItem*/) {
         if (!searchResultsVisible || !item) {
             return;
@@ -492,7 +518,14 @@
     {#if loaded}
         <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
             <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
-                <SearchCollectionView bind:this={collectionView} colSpan={3} isUserInteractionEnabled={searchResultsVisible} bind:searchResultsCount bind:dataItems on:tap={onItemTap} />
+                <SearchCollectionView
+                    bind:this={collectionView}
+                    colSpan={3}
+                    isUserInteractionEnabled={searchResultsVisible}
+                    bind:searchResultsCount
+                    bind:dataItems
+                    on:tap={onItemTap}
+                    on:menu={onItemMenu} />
                 <!-- the result count, and showing them on the map as a pill -->
                 <gridlayout borderColor={colorHairline} borderTopWidth={1} colSpan={3} columns="*,auto" padding="2 8 2 16" row={1} on:tap={() => {}}>
                     <label color={colorOnSurfaceVariant} fontSize={12} text={lc('results_count', searchResultsCount)} verticalAlignment="middle" />
