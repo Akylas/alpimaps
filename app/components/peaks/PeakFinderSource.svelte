@@ -1,6 +1,6 @@
 <script lang="ts">
     // the realistic look's imagery: tap to pick the provider, the button opens its layer options
-    import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { showError } from '@shared/utils/showError';
     import { panoramaImagery } from '~/mapModules/CustomLayersModule';
     import { getMapContext } from '~/mapModules/MapModule';

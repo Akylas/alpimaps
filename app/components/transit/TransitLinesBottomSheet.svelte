@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { MapPos } from '~/utils/geo';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { closeBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { closeBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';

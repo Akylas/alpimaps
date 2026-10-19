@@ -5,7 +5,7 @@
     import type { MassifLayer, MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
     import { openFilePicker } from '@nativescript-community/ui-document-picker';
-    import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+    import { isBottomSheetOpened, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { prompt } from '@nativescript-community/ui-material-dialogs';
     import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';

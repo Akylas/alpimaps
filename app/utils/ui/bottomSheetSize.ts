@@ -1,4 +1,4 @@
-import type { BottomSheetOptions } from '@nativescript-community/ui-material-bottomsheet';
+import type { BottomSheetOptions } from '@nativescript-community/ui-bottomsheet';
 import { Screen, View } from '@nativescript/core';
 import { get } from 'svelte/store';
 import { windowSize } from '~/variables';
@@ -27,8 +27,8 @@ function getFixedHeight(view: View) {
 
 function applyMinHeight(options: BottomSheetOptions) {
     const { view } = options;
-    // peek sheets and transparent overlays have their own sizing
-    if (!(view instanceof View) || options.peekHeight || options.transparent) {
+    // peek/detent sheets and transparent overlays have their own sizing
+    if (!(view instanceof View) || options.peekHeight || options.detents?.length || options.transparent) {
         return;
     }
     const { height: windowHeight, width } = getWindowSize();

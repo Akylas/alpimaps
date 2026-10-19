@@ -1,4 +1,4 @@
-import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { clearTimeout, setTimeout } from '~/utils/utils';

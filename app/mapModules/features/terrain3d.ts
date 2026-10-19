@@ -1,4 +1,4 @@
-import { showBottomSheet } from '@nativescript-community/ui-material-bottomsheet/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { tryCatchFunction } from '@shared/utils/ui';
 import { destroy as unregisterObject } from '@nativescript-community/ui-massifmaps/api';
