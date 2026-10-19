@@ -1,6 +1,6 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
-    import { confirm } from '@nativescript-community/ui-material-dialogs';
+    import { confirm } from '@nativescript-community/ui-dialogs';
     import { showError } from '@shared/utils/showError';
     import IconButton from '~/components/common/IconButton.svelte';
     import { navigationService } from '~/services/NavigationService';

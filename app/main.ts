@@ -11,7 +11,7 @@ import SwipeMenuElement from '@nativescript-community/ui-collectionview-swipemen
 import CollectionViewElement from '@nativescript-community/ui-collectionview/svelte';
 import { initialize } from '@nativescript-community/ui-image';
 import { install as installBottomSheets } from '@nativescript-community/ui-bottomsheet';
-import { installMixins, themer } from '@nativescript-community/ui-material-core';
+import { installMixins, themer } from '@nativescript-community/ui-core';
 import PagerElement from '@nativescript-community/ui-pager/svelte';
 import { Application, ApplicationSettings, Trace } from '@nativescript/core';
 import { Frame, NavigatedData, Page } from '@nativescript/core/ui';
@@ -35,9 +35,6 @@ try {
     installMixins();
     installBottomSheets();
     installBottomSheetMinHeight();
-    if (__CATALYST__) {
-        require('~/utils/ui/catalystDialogs').installCatalystDialogButtons();
-    }
     installUIMixins();
     overrideSpanAndFormattedString();
     initialize();
@@ -58,15 +55,15 @@ try {
     registerNativeViewElement('span', () => require('@nativescript/core').Span);
     registerNativeViewElement('button', () => require('@nativescript/core').Button);
 
-    registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-material-button').Button, null, {}, { override: true });
+    registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-button').Button, null, {}, { override: true });
     registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
-    registerNativeViewElement('activityindicator', () => require('@nativescript-community/ui-material-activityindicator').ActivityIndicator);
-    registerNativeViewElement('progress', () => require('@nativescript-community/ui-material-progress').Progress);
-    registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-material-cardview').CardView);
-    registerNativeViewElement('slider', () => require('~/components/common/Slider').Slider, null, {}, { override: true });
-    registerNativeViewElement('switch', () => require('@nativescript-community/ui-material-switch').Switch, null, {}, { override: true });
-    registerNativeViewElement('textfield', () => require('@nativescript-community/ui-material-textfield').TextField, null, {}, { override: true });
-    registerNativeViewElement('textview', () => require('@nativescript-community/ui-material-textview').TextView, null, {}, { override: true });
+    registerNativeViewElement('activityindicator', () => require('@nativescript-community/ui-activityindicator').ActivityIndicator);
+    registerNativeViewElement('progress', () => require('@nativescript-community/ui-progress').Progress);
+    registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-card').Card);
+    registerNativeViewElement('slider', () => require('@nativescript-community/ui-slider').Slider, null, {}, { override: true });
+    registerNativeViewElement('switch', () => require('@nativescript-community/ui-switch').Switch, null, {}, { override: true });
+    registerNativeViewElement('textfield', () => require('@nativescript-community/ui-textfield').TextField, null, {}, { override: true });
+    registerNativeViewElement('textview', () => require('@nativescript-community/ui-textview').TextView, null, {}, { override: true });
     registerNativeViewElement('lineChart', () => require('@nativescript-community/ui-chart').LineChart);
     // the view class, from the surface API: the app imports nothing else from the plugin
     registerNativeViewElement('massifmap', () => require('@nativescript-community/ui-massifmaps/api').mapViewClass());

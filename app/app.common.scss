@@ -69,13 +69,13 @@
     @extend %alpimaps;
 }
 
-mdslider {
+slider {
     track-background-color: #aaaaaa88;
 }
 
-mdtextfield[variant=outline],
-mdtextfield[variant=fill],
-mdtextview[variant=outline] {
+textfield[variant=outline],
+textfield[variant=fill],
+textview[variant=outline] {
     color: var(--colorOnSurface);
     stroke-color: var(--colorPrimary);
     stroke-inactive-color: var(--colorOutlineSoft);
@@ -100,7 +100,7 @@ mdtextview[variant=outline] {
 checkbox {
     margin-left: 10;
     color: var(--colorOnSurface);
-    fill-color: var(--colorPrimary);
+    checked-color: var(--colorPrimary);
 }
 
 frame {

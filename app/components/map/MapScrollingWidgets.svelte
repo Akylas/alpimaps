@@ -2,7 +2,7 @@
     import { lc } from '@nativescript-community/l';
     import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
-    import { alert } from '@nativescript-community/ui-material-dialogs';
+    import { alert } from '@nativescript-community/ui-dialogs';
     import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';

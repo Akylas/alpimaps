@@ -1,6 +1,6 @@
 import { restartApp } from '@akylas/nativescript-app-utils';
 import { lc } from '@nativescript-community/l';
-import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-material-dialogs';
+import { MDCAlertControlerOptions, alert, confirm } from '@nativescript-community/ui-dialogs';
 import { HorizontalPosition, PopoverOptions, VerticalPosition } from '@nativescript-community/ui-popover';
 import { closePopover, showPopover } from '@nativescript-community/ui-popover/svelte';
 import { AlertOptions, Application, ApplicationSettings, GridLayout, Utils, View } from '@nativescript/core';

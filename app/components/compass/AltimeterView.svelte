@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
     import { getAirportPressureAtLocation, getAltitude, startListeningForSensor, stopListeningForSensor } from '@nativescript-community/sensors';
-    import { prompt } from '@nativescript-community/ui-material-dialogs';
+    import { prompt } from '@nativescript-community/ui-dialogs';
     import { showSnack } from '~/utils/ui';
     import { Application, ApplicationSettings } from '@nativescript/core';
     import type { ApplicationEventData } from '@nativescript/core/application';

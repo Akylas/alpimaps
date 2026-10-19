@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Paint } from '@nativescript-community/ui-canvas';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { TextField } from '@nativescript-community/ui-material-textfield';
+    import { TextField } from '@nativescript-community/ui-textfield';
     import { closePopover } from '@nativescript-community/ui-popover/svelte';
     import { Utils } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';

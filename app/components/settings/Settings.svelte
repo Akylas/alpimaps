@@ -5,9 +5,9 @@
     import { Template } from '@nativescript-community/svelte-native/components';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
-    import { alert, confirm, prompt } from '@nativescript-community/ui-material-dialogs';
-    import { TextField, TextFieldProperties } from '@nativescript-community/ui-material-textfield';
-    import { TextView } from '@nativescript-community/ui-material-textview';
+    import { alert, confirm, prompt } from '@nativescript-community/ui-dialogs';
+    import { TextField, TextFieldProperties } from '@nativescript-community/ui-textfield';
+    import { TextView } from '@nativescript-community/ui-textview';
     import { ApplicationSettings, Device, File, Folder, ScrollView, StackLayout, Utils, path } from '@nativescript/core';
     import BaseSettingsPage from '@shared/components/BaseSettingsPage.svelte';
     import { presentInAppSponsorBottomsheet } from '@shared/utils/inapp-purchase';
