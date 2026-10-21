@@ -9,8 +9,11 @@
     import { lc } from '~/helpers/locale';
     import { focusItinerary, rememberItinerarySession, showItineraryOnMap } from '~/mapModules/features/itinerary';
     import { onNetworkChanged } from '~/services/NetworkService';
+    import { trainFollowService, trainFollowSupported } from '~/services/TrainFollowService';
     import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, isRailMode, itineraryTicketUrl, modeIcon, transitousService } from '~/services/TransitousService';
     import type { MapPos } from '~/utils/geo';
+    import { itineraryFollowId } from '~/utils/trainFollow';
+    import { showSnack } from '~/utils/ui';
     import { openURL, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
@@ -47,6 +50,26 @@
     let noNetworkAndNoData = false;
     /** the legs whose intermediate stops are listed, by index */
     let expandedLegs: Record<number, boolean> = {};
+    const { followedIds } = trainFollowService;
+
+    // the trains of a trip can be followed on the home screen and in notifications; walking only has none
+    function canFollow(itinerary: TransitousItinerary) {
+        return trainFollowSupported && !!itineraryFollowId(itinerary);
+    }
+    function isFollowed(itinerary: TransitousItinerary, followed: string[]) {
+        return followed.includes(itineraryFollowId(itinerary));
+    }
+    async function toggleFollow(itinerary: TransitousItinerary) {
+        try {
+            if (isFollowed(itinerary, $followedIds)) {
+                trainFollowService.unfollow(itineraryFollowId(itinerary));
+            } else if ((await trainFollowService.followItinerary(itinerary, `${from.name} → ${to.name}`)) === 'full') {
+                showSnack({ message: lc('train_follow_limit') });
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     async function refresh() {
         try {
@@ -95,7 +118,14 @@
             const options = [
                 { id: 'open', name: lc('open'), icon: 'mdi-timeline-text-outline' },
                 { id: 'map', name: lc('show_on_map'), icon: 'mdi-map-marker-path' },
-                ...(url ? [{ id: 'ticket', name: lc('get_tickets'), subtitle: url, icon: 'mdi-ticket-outline' }] : [])
+                ...(url ? [{ id: 'ticket', name: lc('get_tickets'), subtitle: url, icon: 'mdi-ticket-outline' }] : []),
+                ...(canFollow(itinerary)
+                    ? [
+                          isFollowed(itinerary, $followedIds)
+                              ? { id: 'follow', name: lc('train_unfollow'), icon: 'mdi-bell-off-outline' }
+                              : { id: 'follow', name: lc('train_follow'), icon: 'mdi-bell-plus-outline' }
+                      ]
+                    : [])
             ];
             await showPopoverMenu({
                 options,
@@ -111,6 +141,9 @@
                             break;
                         case 'ticket':
                             openTicket(itinerary);
+                            break;
+                        case 'follow':
+                            toggleFollow(itinerary);
                             break;
                     }
                 }
@@ -231,6 +264,10 @@
                 selected = null;
                 remember();
             }} />
+        <IconButton
+            isVisible={!!selected && canFollow(selected)}
+            text={selected && isFollowed(selected, $followedIds) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'}
+            on:tap={() => toggleFollow(selected)} />
         <IconButton isVisible={!!selected} text="mdi-map-marker-path" on:tap={showSelectedOnMap} />
         <IconButton text="mdi-refresh" on:tap={refresh} />
     </PanelHeader>

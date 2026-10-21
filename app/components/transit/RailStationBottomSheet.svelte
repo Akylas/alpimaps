@@ -9,7 +9,10 @@
     import { showRailTrip } from '~/mapModules/itemActions';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { type TransitousStop, type TransitousStopTime, transitousService } from '~/services/TransitousService';
+    import { trainFollowService, trainFollowSupported } from '~/services/TrainFollowService';
     import type { MapPos } from '~/utils/geo';
+    import { followIdOf } from '~/utils/trainFollow';
+    import { showSnack } from '~/utils/ui';
     import { openURL } from '~/utils/ui/index.common';
     import { colors, fonts, windowInset } from '~/variables';
     import IconButton from '../common/IconButton.svelte';
@@ -32,6 +35,9 @@
     let times: TransitousStopTime[] = null;
     let noNetworkAndNoData = false;
     let refreshTimer: ReturnType<typeof setInterval>;
+    const { followedIds } = trainFollowService;
+    // the widget follows an arrival, so departures have nothing to follow
+    $: showBell = arrivals && trainFollowSupported;
 
     async function refresh() {
         try {
@@ -46,6 +52,17 @@
             showError(error);
         } finally {
             loading = false;
+        }
+    }
+    async function toggleFollow(stopTime: TransitousStopTime) {
+        try {
+            if ($followedIds.includes(followIdOf(stopTime))) {
+                trainFollowService.unfollow(followIdOf(stopTime));
+            } else if ((await trainFollowService.followArrival(stopTime, name)) === 'full') {
+                showSnack({ message: lc('train_follow_limit') });
+            }
+        } catch (error) {
+            showError(error);
         }
     }
     function selectBoard(showArrivals: boolean) {
@@ -100,7 +117,13 @@
     </stacklayout>
     <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={times} row={2} rowHeight={64}>
         <Template let:item>
-            <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="56,auto,*,auto" padding="0 16" rippleColor={colorPrimary} on:tap={() => showRailTrip(item)}>
+            <gridlayout
+                borderBottomColor={colorOutlineVariant}
+                borderBottomWidth={1}
+                columns={showBell ? '56,auto,*,auto,auto' : '56,auto,*,auto'}
+                padding="0 16"
+                rippleColor={colorPrimary}
+                on:tap={() => showRailTrip(item)}>
                 <stacklayout verticalAlignment="middle">
                     <label
                         color={item.cancelled ? colorError : colorOnSurface}
@@ -134,6 +157,9 @@
                         horizontalAlignment="right"
                         text={item.realTime ? 'mdi-access-point' : 'mdi-clock-outline'} />
                 </stacklayout>
+                {#if showBell}
+                    <IconButton col={4} text={$followedIds.includes(followIdOf(item)) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'} on:tap={() => toggleFollow(item)} />
+                {/if}
             </gridlayout>
         </Template>
     </collectionview>
