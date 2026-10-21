@@ -1,17 +1,17 @@
 <script lang="ts">
     import { l } from '@nativescript-community/l';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { ApplicationSettings, Color, ObservableArray, Screen } from '@nativescript/core';
+    import { ApplicationSettings, ObservableArray, Screen } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import deburr from 'deburr';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { GeoLocation } from '~/handlers/GeoHandler';
-    import { formatDistance, osmicon } from '~/helpers/formatter';
+    import { osmicon } from '~/helpers/formatter';
     import { getBoundsOfDistance, getDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
     import { lc } from '~/helpers/locale';
-    import { isEInk, onThemeChanged } from '~/helpers/theme';
+    import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { type SearchRankMode, searchRank } from '~/utils/searchRank';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -25,10 +25,10 @@
     import { showSnack } from '~/utils/ui';
     import { arraySortOn } from '~/utils/utils';
     import { colors } from '~/variables';
-    import IconButton from '~/components/common/IconButton.svelte';
+    import SearchRow from '~/components/search/SearchRow.svelte';
     import { HereFeature, PhotonFeature } from './Features';
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorOnSurface } = $colors);
 
     const dispatch = createEventDispatcher();
     export let dataItems: ObservableArray<SearchItem> = new ObservableArray();
@@ -40,6 +40,8 @@
     /** the kinds of result come first (see searchRank), each kind by distance */
     export let rankMode: SearchRankMode = 'poi';
     export let showItemMenu = true;
+    /** the owner shows the empty state itself */
+    export let notifyNoResult = true;
     const mapContext = getMapContext();
 
     // export function getFilteredDataItems() {
@@ -354,7 +356,9 @@
             }
             if (newDataItems.length === 0) {
                 dataItems = newDataItems;
-                showSnack({ message: l('no_result_found') });
+                if (notifyNoResult) {
+                    showSnack({ message: l('no_result_found') });
+                }
                 // } else {
                 // await loadView();
             } else {
@@ -382,30 +386,8 @@
     onThemeChanged(refreshCollectionView);
 </script>
 
-<!-- the items list's marker row: a tile tinted with the provider colour, title and address, distance -->
 <collectionview bind:this={collectionView} items={dataItems} rowHeight={60} {...$$restProps}>
     <Template let:item>
-        <gridlayout columns="auto,*,auto,auto" padding={showItemMenu ? '0 4 0 12' : '0 16 0 12'} rippleColor={colorOnSurface} on:tap={() => dispatch('tap', item)}>
-            <label
-                backgroundColor={isEInk ? null : new Color(item.style.color || colorOnSurface).setAlpha(36).hex}
-                borderColor={colorOnSurface}
-                borderRadius={12}
-                borderWidth={isEInk ? 1 : 0}
-                color={isEInk ? colorOnSurface : item.style.color}
-                fontFamily="osm"
-                fontSize={20}
-                height={40}
-                text={item.style.icon}
-                textAlignment="center"
-                verticalAlignment="middle"
-                verticalTextAlignment="center"
-                width={40} />
-            <stacklayout col={1} paddingLeft={12} paddingRight={8} verticalAlignment="middle">
-                <label color={colorOnSurface} fontSize={15} fontWeight="bold" maxLines={1} text={item.title} />
-                <label color={colorOnSurfaceVariant} fontSize={12} maxLines={1} text={item.subtitle} visibility={item.subtitle ? 'visible' : 'collapse'} />
-            </stacklayout>
-            <label col={2} color={colorOnSurfaceVariant} fontSize={12} text={item.distance ? formatDistance(item.distance) : null} verticalAlignment="middle" />
-            <IconButton col={3} gray={true} text="mdi-dots-vertical" visibility={showItemMenu ? 'visible' : 'collapse'} on:tap={(event) => dispatch('menu', { item, event })} />
-        </gridlayout>
+        <SearchRow actionIcon={showItemMenu ? 'mdi-dots-vertical' : null} {item} on:tap={() => dispatch('tap', item)} on:action={(payload) => dispatch('menu', payload)} />
     </Template>
 </collectionview>

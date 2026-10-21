@@ -1321,5 +1321,9 @@
     "panorama_drape_cache": "imagery cache",
     "panorama_drape_cache_desc": "memory for the draped imagery tiles: more keeps far ground sharper",
     "panorama_tile_lod": "imagery detail factor",
-    "panorama_tile_lod_desc": "lower asks for finer tiles; it only changes the picture while the tiles fit the cache"
+    "panorama_tile_lod_desc": "lower asks for finer tiles; it only changes the picture while the tiles fit the cache",
+    "search_history": "recent searches",
+    "clear_history": "clear",
+    "transit_history": "recent trips",
+    "remove_from_history": "remove from history"
 }

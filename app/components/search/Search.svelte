@@ -9,14 +9,16 @@
     import { lc, slc } from '~/helpers/locale';
     import { currentTheme, isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { getItemMenuActions } from '~/mapModules/itemActions';
+    import { type ItemMenuAction, getItemMenuActions } from '~/mapModules/itemActions';
     import { geoJSONBounds } from '~/utils/geo';
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
+    import { rememberSearchItem, searchHistory } from '~/stores/historyStore';
     import { showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
+    import SearchHistoryList, { HISTORY_HEADER_HEIGHT, HISTORY_ROW_HEIGHT, NO_RESULT_HEIGHT } from '~/components/search/SearchHistoryList.svelte';
     import Pill from '~/components/common/Pill.svelte';
 
     let { colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPanel } = $colors;
@@ -121,6 +123,20 @@
     let focused = false;
     let searchResultsCount;
     $: searchResultsVisible = focused && searchResultsCount > 0;
+    // the history takes the place of the results as long as there are none
+    $: historyItems = focused && !searchResultsCount ? $searchHistory : [];
+    $: showNoResult = focused && didSearch && !loading && !searchResultsCount && !!currentSearchText && currentSearchText.length > 2;
+    $: if (focused && $searchHistory.length > 0) {
+        loaded = true;
+    }
+    $: dropdownHeight = searchResultsVisible
+        ? SEARCH_COLLECTIONVIEW_HEIGHT
+        : (showNoResult ? NO_RESULT_HEIGHT : 0) + (historyItems.length ? HISTORY_HEADER_HEIGHT + historyItems.length * HISTORY_ROW_HEIGHT : 0);
+    // kept while closing, so the content does not shrink under the animation
+    let dropdownContentHeight = SEARCH_COLLECTIONVIEW_HEIGHT;
+    $: if (dropdownHeight > 0) {
+        dropdownContentHeight = dropdownHeight;
+    }
     // $: DEV_LOG && console.log('searchResultsVisible', searchResultsVisible, focused, searchResultsCount);
     // $: {
     //     if (nGridLayout) {
@@ -133,8 +149,8 @@
         const nGridLayout = gridLayout?.nativeView;
         if (nCollectionView || nGridLayout) {
             animateTargets([
-                { target: nCollectionView, height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : __ANDROID__ ? 0 : 0.01, duration: 100 },
-                { target: nGridLayout, elevation: $currentTheme !== 'dark' && !isEInk && focused ? 6 : 0, borderRadius: searchResultsVisible ? 24 : 25, duration: 100 }
+                { target: nCollectionView, height: dropdownHeight || (__ANDROID__ ? 0 : 0.01), duration: 100 },
+                { target: nGridLayout, elevation: $currentTheme !== 'dark' && !isEInk && focused ? 6 : 0, borderRadius: dropdownHeight ? 24 : 25, duration: 100 }
             ]);
             // animateView(nCollectionView, { height: searchResultsVisible ? SEARCH_COLLECTIONVIEW_HEIGHT : 0 }, 100);
         }
@@ -295,9 +311,9 @@
         mapContext.showMapOptions(event);
     }
     // the shared dispatcher hands the payload over as is, not as an event with a `detail`
-    async function onItemMenu(payload) {
+    async function onItemMenu(payload, extraActions: ItemMenuAction[] = []) {
         const { event, item } = payload;
-        const actions = getItemMenuActions(item);
+        const actions = [...extraActions, ...getItemMenuActions(item)];
         try {
             await showPopoverMenu({
                 options: actions.map(({ icon, id, name }) => ({ icon, id, name })),
@@ -308,6 +324,9 @@
                 onClose: (option) => {
                     const action = actions.find((candidate) => candidate.id === option?.id);
                     if (action) {
+                        if (!extraActions.includes(action)) {
+                            rememberSearchItem(item);
+                        }
                         if (action.leavesSearch) {
                             unfocus();
                         }
@@ -319,12 +338,19 @@
             showError(error);
         }
     }
+    function selectSearchItem(item) {
+        rememberSearchItem(item);
+        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 17, preventZoom: false });
+        unfocus();
+    }
+    function onHistoryItemMenu(payload) {
+        onItemMenu(payload, [{ id: 'remove_from_history', icon: 'mdi-history', name: lc('remove_from_history'), run: () => searchHistory.remove(payload.item) }]);
+    }
     function onItemTap(item /*: SearchItem*/) {
         if (!searchResultsVisible || !item) {
             return;
         }
-        mapContext.selectItem({ item, isFeatureInteresting: true, minZoom: 17, preventZoom: false });
-        unfocus();
+        selectSearchItem(item);
     }
     // function toggleFilterOSMKey() {
     // filteringOSMKey = !filteringOSMKey;
@@ -516,18 +542,37 @@
     <IconButton col={4} gray={true} isVisible={currentSearchText && currentSearchText.length > 0} text="mdi-close" on:tap={() => clearSearch()} />
     <IconButton accessibilityValue="menuBtn" col={5} gray={true} onLongPress={showMapOptions} text="mdi-dots-vertical" on:tap={showMapMenu} />
     {#if loaded}
-        <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={searchResultsVisible} row={1}>
-            <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={SEARCH_COLLECTIONVIEW_HEIGHT} rows="*,auto" width="100%">
+        <absolutelayout bind:this={collectionViewHolder} id="searchCollectionViewHolder" clipToBounds={true} colSpan={7} height={0} isUserInteractionEnabled={dropdownHeight > 0} row={1}>
+            <gridlayout id="searchCollectionViewSubHolder" columns="auto,auto,*" height={dropdownContentHeight} rows="*,auto" width="100%">
                 <SearchCollectionView
                     bind:this={collectionView}
                     colSpan={3}
                     isUserInteractionEnabled={searchResultsVisible}
+                    notifyNoResult={false}
                     bind:searchResultsCount
                     bind:dataItems
                     on:tap={onItemTap}
                     on:menu={onItemMenu} />
+                {#if historyItems.length > 0 || showNoResult}
+                    <SearchHistoryList
+                        colSpan={3}
+                        items={historyItems}
+                        noResult={showNoResult}
+                        verticalAlignment="top"
+                        on:clear={() => searchHistory.clear()}
+                        on:menu={onHistoryItemMenu}
+                        on:tap={selectSearchItem} />
+                {/if}
                 <!-- the result count, and showing them on the map as a pill -->
-                <gridlayout borderColor={colorHairline} borderTopWidth={1} colSpan={3} columns="*,auto" padding="2 8 2 16" row={1} on:tap={() => {}}>
+                <gridlayout
+                    borderColor={colorHairline}
+                    borderTopWidth={1}
+                    colSpan={3}
+                    columns="*,auto"
+                    padding="2 8 2 16"
+                    row={1}
+                    visibility={searchResultsVisible ? 'visible' : 'collapse'}
+                    on:tap={() => {}}>
                     <label color={colorOnSurfaceVariant} fontSize={12} text={lc('results_count', searchResultsCount)} verticalAlignment="middle" />
                     <Pill
                         col={1}
