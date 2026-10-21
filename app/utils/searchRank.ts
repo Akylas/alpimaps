@@ -23,15 +23,16 @@ export function searchResultKind(props: SearchRankProperties): SearchResultKind 
     if ((itemClass === 'railway' && STATION_VALUES.includes(subclass)) || (osmKey === 'railway' && STATION_VALUES.includes(osmValue)) || (osmKey === 'building' && osmValue === 'train_station')) {
         return 'station';
     }
-    if (
-        itemClass === 'bus' ||
-        STOP_VALUES.includes(subclass) ||
-        STOP_VALUES.includes(osmValue) ||
-        osmKey === 'public_transport'
-    ) {
+    if (itemClass === 'bus' || STOP_VALUES.includes(subclass) || STOP_VALUES.includes(osmValue) || osmKey === 'public_transport') {
         return 'transit';
     }
-    if (SETTLEMENT_VALUES.includes(itemClass) || layer === 'place' || (osmKey === 'place' && SETTLEMENT_VALUES.includes(osmValue)) || (osmKey === 'boundary' && osmValue === 'administrative') || type === 'city') {
+    if (
+        SETTLEMENT_VALUES.includes(itemClass) ||
+        layer === 'place' ||
+        (osmKey === 'place' && SETTLEMENT_VALUES.includes(osmValue)) ||
+        (osmKey === 'boundary' && osmValue === 'administrative') ||
+        type === 'city'
+    ) {
         return 'settlement';
     }
     if (POI_LAYERS.includes(layer) || POI_OSM_KEYS.includes(osmKey) || provider === 'here') {
@@ -47,5 +48,23 @@ export function searchRank(props: SearchRankProperties, mode: SearchRankMode) {
         // a far station before the bus stops named after the same town
         return kind === 'station' ? 0 : kind === 'settlement' ? 1 : kind === 'transit' ? 2 : kind === 'poi' ? 3 : 4;
     }
-    return kind === 'station' || kind === 'transit' || kind === 'poi' ? 0 : kind === 'settlement' ? 1 : 2;
+    // a station or a town is what a bare name is most likely after, the places named after it come next
+    return kind === 'station' || kind === 'settlement' ? 0 : kind === 'transit' || kind === 'poi' ? 1 : 2;
+}
+
+/**
+ * lower first. `0`: the title is the query, `1`: a word of the title starts with it or a category is it,
+ * `2`: anything else. Everything is expected cleaned up already (lower case, no accents).
+ */
+export function searchMatchTier(title: string, query: string, categories: string[] = []) {
+    if (!query || !title) {
+        return 2;
+    }
+    if (title === query) {
+        return 0;
+    }
+    if (` ${title.replace(/-/g, ' ')}`.includes(` ${query}`) || categories.some((category) => category === query || category.startsWith(query))) {
+        return 1;
+    }
+    return 2;
 }

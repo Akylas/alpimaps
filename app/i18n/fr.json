@@ -1092,5 +1092,8 @@
     "search_history": "recherches récentes",
     "clear_history": "effacer",
     "transit_history": "trajets récents",
-    "remove_from_history": "retirer de l'historique"
+    "remove_from_history": "retirer de l'historique",
+    "railway_station": "gare",
+    "railway_halt": "halte",
+    "bus_station": "gare routière"
 }

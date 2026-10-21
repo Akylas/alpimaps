@@ -37,6 +37,7 @@ export interface SearchHistoryItem extends IItem {
     geometry: Point;
     title: string;
     subtitle?: string;
+    categoryLabel?: string;
     style: { color?: string; icon: string };
 }
 
@@ -57,8 +58,8 @@ export function rememberSearchItem(item: SearchHistoryItem) {
     if (item?.geometry?.type !== 'Point' || !item.title) {
         return;
     }
-    const { geometry, properties, style, subtitle, title } = item;
-    searchHistory.add({ geometry, properties, title, subtitle, style });
+    const { categoryLabel, geometry, properties, style, subtitle, title } = item;
+    searchHistory.add({ geometry, properties, title, subtitle, categoryLabel, style });
 }
 
 export interface TransitHistoryPlace {

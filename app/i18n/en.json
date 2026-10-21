@@ -1325,5 +1325,8 @@
     "search_history": "recent searches",
     "clear_history": "clear",
     "transit_history": "recent trips",
-    "remove_from_history": "remove from history"
+    "remove_from_history": "remove from history",
+    "railway_station": "railway station",
+    "railway_halt": "railway halt",
+    "bus_station": "bus station"
 }

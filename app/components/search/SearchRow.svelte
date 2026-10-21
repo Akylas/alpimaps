@@ -6,15 +6,15 @@
     import { colors } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
+    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
     const dispatch = createEventDispatcher();
-    export let item: { title?: string; subtitle?: string; distance?: number; style: { color?: string; icon: string } };
+    export let item: { title?: string; subtitle?: string; distance?: number; categoryLabel?: string; style: { color?: string; icon: string } };
     /** icon of the trailing button, no button without it */
     export let actionIcon: string = null;
 </script>
 
-<!-- a result row: a tile tinted with the provider colour, title and address, distance -->
+<!-- a result row: a tile tinted with the provider colour, title and address, the kind of place over the distance -->
 <gridlayout columns="auto,*,auto,auto" {...$$restProps} padding={actionIcon ? '0 4 0 12' : '0 16 0 12'} rippleColor={colorOnSurface} on:tap={() => dispatch('tap', item)}>
     <label
         backgroundColor={isEInk ? null : new Color(item.style.color || colorOnSurface).setAlpha(36).hex}
@@ -34,6 +34,24 @@
         <label color={colorOnSurface} fontSize={15} fontWeight="bold" maxLines={1} text={item.title} />
         <label color={colorOnSurfaceVariant} fontSize={12} maxLines={1} text={item.subtitle} visibility={item.subtitle ? 'visible' : 'collapse'} />
     </stacklayout>
-    <label col={2} color={colorOnSurfaceVariant} fontSize={12} text={item.distance ? formatDistance(item.distance) : null} verticalAlignment="middle" />
+    <stacklayout col={2} horizontalAlignment="right" verticalAlignment="middle">
+        <label
+            borderColor={isEInk ? colorOnSurface : colorHairline}
+            borderRadius={8}
+            borderWidth={1}
+            color={colorOnSurfaceVariant}
+            fontSize={10}
+            horizontalAlignment="right"
+            maxLines={1}
+            padding="1 6"
+            text={item.categoryLabel}
+            visibility={item.categoryLabel ? 'visible' : 'collapse'} />
+        <label
+            color={colorOnSurfaceVariant}
+            fontSize={12}
+            horizontalAlignment="right"
+            text={item.distance ? formatDistance(item.distance) : null}
+            visibility={item.distance ? 'visible' : 'collapse'} />
+    </stacklayout>
     <IconButton col={3} gray={true} text={actionIcon} visibility={actionIcon ? 'visible' : 'collapse'} on:tap={(event) => dispatch('action', { item, event })} />
 </gridlayout>

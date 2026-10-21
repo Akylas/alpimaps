@@ -10,10 +10,9 @@
     import { GeoLocation } from '~/handlers/GeoHandler';
     import { osmicon } from '~/helpers/formatter';
     import { getBoundsOfDistance, getDistance, getDistanceSimple, getMetersPerPixel } from '~/helpers/geolib';
-    import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { formatter } from '~/mapModules/ItemFormatter';
-    import { type SearchRankMode, searchRank } from '~/utils/searchRank';
+    import { type SearchRankMode, searchMatchTier, searchRank } from '~/utils/searchRank';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
     import type { Photon } from '~/photon';
@@ -70,6 +69,8 @@
     interface SearchItem extends Item {
         geometry: GeoJSONPoint;
         distance: number;
+        matchTier?: number;
+        categoryLabel?: string;
     }
 
     $: searchResultsCount = dataItems ? dataItems.length : 0;
@@ -103,7 +104,17 @@
         callback(
             r.map((s: SearchItem) => {
                 const title = getItemTitle(s);
-                return { ...s, style: { color: getItemIconColor(s), icon: getItemIcon(s) }, title, subtitle: getItemSubtitle(s, title) || lc(s.properties.class) };
+                const categoryLabel = formatter.getItemCategory(s);
+                const { class: itemClass, osm_value: osmValue, subclass } = s.properties;
+                const categories = [itemClass, osmValue, subclass, categoryLabel].filter((category) => !!category).map((category) => cleanUpString(String(category).replace(/[_-]/g, ' ')));
+                return {
+                    ...s,
+                    style: { color: getItemIconColor(s), icon: getItemIcon(s) },
+                    title,
+                    subtitle: getItemSubtitle(s, title),
+                    categoryLabel,
+                    matchTier: searchMatchTier(cleanUpString(title), currentQuery, categories)
+                };
             })
         );
     }
@@ -272,6 +283,11 @@
             let newDataItems = new ObservableArray<SearchItem>();
 
             function precedes(first: SearchItem, second: SearchItem) {
+                // the name first, then what kind of place, then how close
+                const tierDifference = (first.matchTier ?? 2) - (second.matchTier ?? 2);
+                if (tierDifference) {
+                    return tierDifference < 0;
+                }
                 const rankDifference = searchRank(first.properties, rankMode) - searchRank(second.properties, rankMode);
                 return rankDifference ? rankDifference < 0 : first.distance < second.distance;
             }
