@@ -57,8 +57,8 @@ try {
 
     registerNativeViewElement('mdbutton', () => require('@nativescript-community/ui-button').Button, null, {}, { override: true });
     registerNativeViewElement('label', () => require('@nativescript-community/ui-label').Label, null, {}, { override: true });
-    registerNativeViewElement('activityindicator', () => require('@nativescript-community/ui-activityindicator').ActivityIndicator);
-    registerNativeViewElement('progress', () => require('@nativescript-community/ui-progress').Progress);
+    registerNativeViewElement('activityindicator', () => require('@nativescript-community/ui-activityindicator').ActivityIndicator, null, {}, { override: true });
+    registerNativeViewElement('progress', () => require('@nativescript-community/ui-progress').Progress, null, {}, { override: true });
     registerNativeViewElement('mdcardview', () => require('@nativescript-community/ui-card').Card);
     registerNativeViewElement('slider', () => require('@nativescript-community/ui-slider').Slider, null, {}, { override: true });
     registerNativeViewElement('switch', () => require('@nativescript-community/ui-switch').Switch, null, {}, { override: true });
