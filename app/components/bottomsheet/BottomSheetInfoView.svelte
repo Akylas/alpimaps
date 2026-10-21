@@ -192,7 +192,7 @@
                 itemIconFontFamily = itemProps.fontFamily;
                 itemIcon = itemProps.icon;
             } else {
-                ({ icon: itemIcon, fontFamily: itemIconFontFamily } = formatter.getItemIcon(it));
+                ({ fontFamily: itemIconFontFamily, icon: itemIcon } = formatter.getItemIcon(it));
             }
         }
         updateItemText(it);
@@ -447,6 +447,7 @@
             fontSize={18 * $fontScaleMaxed}
             fontWeight="bold"
             maxFontSize={18 * $fontScaleMaxed}
+            minFontSize={14 * $fontScaleMaxed}
             {selectable}
             text={itemTitle}
             textWrap={true}
@@ -458,7 +459,7 @@
                 flexGrow={1}
                 flexShrink={0}
                 fontSize={13 * $fontScaleMaxed}
-                maxLines={2}
+                maxLines={iconTile ? 1 : 2}
                 {selectable}
                 text={itemSubtitle}
                 verticalTextAlignment="top"
