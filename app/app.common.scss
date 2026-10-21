@@ -255,14 +255,6 @@ label {
     }
 }
 
-// the sky toggle's on state, opaque as it floats over the map. E-ink uses .buttonthemed instead
-.btn-themed {
-    background-color: var(--colorAccentContainerSolid);
-    ripple-color: var(--colorPrimary);
-    color: var(--colorPrimary);
-    border-color: var(--colorPrimary);
-}
-
 .actionBar {
     // the material 3 top app bar, 64: the shared CActionBar sizes itself to its buttons otherwise
     padding-top: 9;

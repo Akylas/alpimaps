@@ -16,7 +16,6 @@
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { isNavigating, isNavigationRunning } from '~/stores/navigationStore';
-    import { isEInk } from '~/helpers/theme';
     import { openLink } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
@@ -58,8 +57,8 @@
         // userLocationModule.on('location', onNewLocation);
     });
     $: watchingLocationActive = !$queryingLocation && $watchingLocation;
-    // e-ink keeps the filled button: a tint does not show there
-    $: locationButtonClass = watchingLocationActive ? (isEInk ? 'buttonthemed' : 'btn-themed') : 'buttontext';
+    // filled while following: a tint is too close to the idle button
+    $: locationButtonClass = watchingLocationActive ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
     // $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
@@ -233,7 +232,7 @@
             <label
                 ios:iosAccessibilityAdjustsFontSize={false}
                 class={`mdi ${locationButtonLabelClass}`}
-                color={watchingLocationActive && isEInk ? colorOnPrimary : colorPrimary}
+                color={watchingLocationActive ? colorOnPrimary : colorPrimary}
                 fontSize={24 * $fontScaleMaxed}
                 text="mdi-crosshairs-gps"
                 textAlignment="center"
