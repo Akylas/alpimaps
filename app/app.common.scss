@@ -343,18 +343,17 @@ label {
     background-color: var(--colorMapControl);
 }
 
-// matches ShapeAppearance.App.Panel on the native Android sheet behind it, with the sky panel's hairline
+// On Android the native sheet behind it (grabber, background, 24dp corners) is the one surface: this only keeps the
+// content clear of the grabber. The iOS sheet is the system's, so the content paints the app's background there.
 .bottomsheet {
-    background-color: var(--colorBackground);
-    border-top-left-radius: 24;
-    border-top-right-radius: 24;
-    border-width: 1;
-    border-color: var(--colorHairline);
     padding-top: 8;
 
-    .ns-eink & {
-        background-color: white;
-        border-color: black;
+    .ns-ios & {
+        background-color: var(--colorBackground);
+
+        .ns-eink & {
+            background-color: white;
+        }
     }
 }
 
