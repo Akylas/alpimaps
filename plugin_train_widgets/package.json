@@ -1,0 +1,10 @@
+{
+    "name": "alpimaps-train-widgets",
+    "version": "1.0.0",
+    "description": "Android home screen widget following the trains of Alpi Maps",
+    "nativescript": {
+        "platforms": {
+            "android": "6.2.1"
+        }
+    }
+}

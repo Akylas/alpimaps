@@ -77,6 +77,9 @@ export interface TransitousLeg {
     /** encoded polyline, precision in `legGeometry.precision` */
     legGeometry?: { points: string; length: number; precision?: number };
     intermediateStops?: TransitousPlace[];
+    cancelled?: boolean;
+    /** the commercial train number, as text */
+    tripShortName?: string;
 }
 
 export interface TransitousItinerary {

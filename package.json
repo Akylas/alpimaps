@@ -117,6 +117,7 @@
         "@xmldom/xmldom": "0.9.12",
         "additween": "3.0.0",
         "alpimaps-non-playstore": "portal:plugin_non_playstore",
+        "alpimaps-train-widgets": "portal:plugin_train_widgets",
         "dayjs": "1.11.20",
         "deburr": "0.0.3",
         "downsample": "1.4.0",
