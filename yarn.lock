@@ -3505,6 +3505,12 @@ __metadata:
   languageName: node
   linkType: soft
 
+"alpimaps-train-widgets@portal:plugin_train_widgets::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "alpimaps-train-widgets@portal:plugin_train_widgets::locator=root-workspace-0b6124%40workspace%3A."
+  languageName: node
+  linkType: soft
+
 "anser@npm:^2.1.1":
   version: 2.3.5
   resolution: "anser@npm:2.3.5"
@@ -9830,6 +9836,7 @@ __metadata:
     "@xmldom/xmldom": "npm:0.9.12"
     additween: "npm:3.0.0"
     alpimaps-non-playstore: "portal:plugin_non_playstore"
+    alpimaps-train-widgets: "portal:plugin_train_widgets"
     dayjs: "npm:1.11.20"
     deburr: "npm:0.0.3"
     downsample: "npm:1.4.0"

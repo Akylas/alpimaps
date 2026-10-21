@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tf_widget_label">Followed trains</string>
+    <string name="tf_widget_description">Arrival time and delay of the trains you follow.</string>
+    <string name="tf_empty_hint">No train followed</string>
+    <string name="tf_from">from %1$s</string>
+    <string name="tf_track">track %1$s</string>
+    <string name="tf_delay">+%1$d min</string>
+    <string name="tf_on_time">on time</string>
+    <string name="tf_cancelled">Cancelled</string>
+    <string name="tf_arrived">Arrived</string>
+    <string name="tf_lost">Train not found</string>
+    <string name="tf_refresh">Refresh</string>
+    <string name="tf_remove">Stop following</string>
+    <string name="tf_channel_name">Followed trains</string>
+    <string name="tf_notification_title">%1$s to %2$s</string>
+    <string name="tf_scheduled">scheduled %1$s</string>
+    <string name="tf_on_board">To %1$s</string>
+    <string name="tf_change_missed_title">Change missed</string>
+    <string name="tf_change_next">Next:</string>
+    <string name="tf_change_risk">At risk:</string>
+    <string name="tf_change_missed">Missed:</string>
+    <string name="tf_connect">%1$s · %2$d min</string>
+    <string name="tf_connect_risk">%1$s · %2$d min (was %3$d)</string>
+    <string name="tf_left_at">left %1$s</string>
+    <string name="tf_replan">Re-plan</string>
+    <string name="tf_leaves_countdown">leaves in %1$s</string>
+</resources>

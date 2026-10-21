@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="tf_bg">#1C1B1F</color>
+    <color name="tf_card">#2B2930</color>
+    <color name="tf_card_alt">#36343B</color>
+    <color name="tf_text">#E6E1E5</color>
+    <color name="tf_text_secondary">#CAC4D0</color>
+    <color name="tf_accent">#CFBCFF</color>
+    <color name="tf_accent_container">#4A4458</color>
+    <color name="tf_ok">#8FD9A0</color>
+    <color name="tf_ok_bg">#12381F</color>
+    <color name="tf_warn">#FFC670</color>
+    <color name="tf_warn_bg">#4A2E00</color>
+    <color name="tf_bad">#FFB4AB</color>
+    <color name="tf_bad_bg">#5C1A17</color>
+    <color name="tf_line">#4A4458</color>
+</resources>
