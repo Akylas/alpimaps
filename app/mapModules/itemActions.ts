@@ -6,6 +6,7 @@ import { share } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
 import { formatter } from '~/mapModules/ItemFormatter';
 import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
+import { type ItemKind, sortItemActions } from '~/mapModules/itemActionOrder';
 import { featureItemActions } from '~/mapModules/mapFeatures';
 import type { IItem, Item } from '~/models/Item';
 import { networkService } from '~/services/NetworkService';
@@ -230,6 +231,16 @@ export function shareItemPosition(item: Item) {
     return share({ message: formatter.getItemPositionToString(item) }, { dialogTitle: lc('share') });
 }
 
+export function itemKind(item: IItem): ItemKind {
+    if (!item) {
+        return 'default';
+    }
+    if (item.properties?.itinerary) {
+        return 'itinerary';
+    }
+    return itemIsRailStation(item) ? 'railStation' : itemIsBusStop(item) ? 'busStop' : 'default';
+}
+
 /** The menu behind a search result: the actions of the selected-item sheet that only need the item itself. */
 export function getItemMenuActions(item: Item): ItemMenuAction[] {
     if (!item) {
@@ -257,8 +268,9 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
     if (!item.id && !item.route?.osmid) {
         actions.push({ id: 'save', icon: 'mdi-map-plus', name: lc('add'), leavesSearch: true, run: () => mapContext.saveItem(item) });
     }
+    const kind = itemKind(item);
     if (item.route) {
-        return actions;
+        return sortItemActions(actions, kind);
     }
     if (item.properties?.name) {
         actions.push({ id: 'wikipedia', icon: 'mdi-wikipedia', name: lc('wikipedia'), run: () => openItemWikipedia(item) });
@@ -285,5 +297,5 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
             await shareItemPosition(item);
         }
     });
-    return actions;
+    return sortItemActions(actions, kind);
 }

@@ -14,7 +14,7 @@
     import type { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
     import { rememberSearchItem, searchHistory } from '~/stores/historyStore';
-    import { showPopoverMenu } from '~/utils/ui/index.common';
+    import { showActionsGrid, showPopoverMenu } from '~/utils/ui/index.common';
     import { actionBarButtonHeight, colors, fontScaleMaxed, screenHeightDips, screenWidthDips } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import SearchCollectionView from '~/components/search/SearchCollectionView.svelte';
@@ -315,23 +315,18 @@
         const { event, item } = payload;
         const actions = [...extraActions, ...getItemMenuActions(item)];
         try {
-            await showPopoverMenu({
-                options: actions.map(({ icon, id, name }) => ({ icon, id, name })),
+            await showActionsGrid(actions, {
                 anchor: event.object,
                 vertPos: VerticalPosition.BELOW,
                 horizPos: HorizontalPosition.ALIGN_RIGHT,
-                props: { autoSizeListItem: true },
-                onClose: (option) => {
-                    const action = actions.find((candidate) => candidate.id === option?.id);
-                    if (action) {
-                        if (!extraActions.includes(action)) {
-                            rememberSearchItem(item);
-                        }
-                        if (action.leavesSearch) {
-                            unfocus();
-                        }
-                        action.run();
+                onPick: (action) => {
+                    if (!extraActions.includes(action)) {
+                        rememberSearchItem(item);
                     }
+                    if (action.leavesSearch) {
+                        unfocus();
+                    }
+                    action.run();
                 }
             });
         } catch (error) {

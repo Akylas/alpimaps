@@ -31,6 +31,7 @@
     import {
         itemIsBusStop as isBusStop,
         itemIsRailStation as isRailStation,
+        itemKind,
         openItemInOpenStreetMap,
         openItemWeather,
         openItemWeatherAlternate,
@@ -42,6 +43,7 @@
         showItemRailStation,
         showItemTransitLines
     } from '~/mapModules/itemActions';
+    import { sortItemActions } from '~/mapModules/itemActionOrder';
     import { featureItemActions } from '~/mapModules/mapFeatures';
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
@@ -52,7 +54,7 @@
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
-    import { hideLoading, openURL, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
+    import { hideLoading, openURL, showActionsGrid, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
     import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
@@ -321,38 +323,38 @@
         share: { tap: (event) => shareItem(event) }
     };
 
-    $: itemActions = [
-        { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
-        {
-            id: 'save',
-            when: itemCanBeAdded,
-            text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus',
-            label: itemIsEditingItem ? lc('save') : lc('add'),
-            tooltip: itemIsEditingItem ? lc('save') : lc('add')
-        },
-        { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
-        { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
-        { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
-        { id: 'stats', when: itemIsRoute && itemCanQueryStats, text: 'mdi-chart-bar-stacked', tooltip: lc('road_stats') },
-        { id: 'hide', when: !!item?.id && itemIsRoute, text: 'mdi-eye-off', tooltip: lc('hide') },
-        { id: 'edit', when: itemCanBeEdited, text: 'mdi-pencil', tooltip: lc('edit') },
-        { id: 'web', when: !!item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false)), text: 'mdi-web', tooltip: lc('search_web') },
-        { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
-        { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
-        { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
-        { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
-        { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
-        { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
-        { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
-        { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
-    ]
-        // numbered before the filter so order doesn't depend on which entries apply; spaced 10 apart
-        // so a feature can slot between two built-ins
-        .map((action, index) => ({ ...action, order: index * 10 }))
-        // a journey drawn from the itineraries sheet is not a place: only its own action (back to the sheet) applies
-        .filter((action) => action.when && !item?.properties?.itinerary)
-        .concat(featureItemActions(item) as any)
-        .sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+    $: itemActions = sortItemActions(
+        [
+            { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
+            {
+                id: 'save',
+                when: itemCanBeAdded,
+                text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus',
+                label: itemIsEditingItem ? lc('save') : lc('add'),
+                tooltip: itemIsEditingItem ? lc('save') : lc('add')
+            },
+            { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
+            { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
+            { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
+            { id: 'stats', when: itemIsRoute && itemCanQueryStats, text: 'mdi-chart-bar-stacked', tooltip: lc('road_stats') },
+            { id: 'hide', when: !!item?.id && itemIsRoute, text: 'mdi-eye-off', tooltip: lc('hide') },
+            { id: 'edit', when: itemCanBeEdited, text: 'mdi-pencil', tooltip: lc('edit') },
+            { id: 'web', when: !!item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false)), text: 'mdi-web', tooltip: lc('search_web') },
+            { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
+            { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
+            { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
+            { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
+            { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
+            { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
+            { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
+            { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
+        ]
+            // a journey drawn from the itineraries sheet is not a place: only its own action (back to the sheet) applies
+            .filter((action) => action.when && !item?.properties?.itinerary)
+            .concat(featureItemActions(item) as any),
+        // the order is in itemActionOrder.ts
+        itemKind(item)
+    );
     // what the filled button does for this item: save while editing, start a route, add a new place, else edit
     $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : item?.properties?.itinerary ? 'itineraries' : null;
     $: labelScale = Math.min($fontScaleMaxed, 1.3);
@@ -371,18 +373,19 @@
     }
     async function showActionsPopover(actions: typeof itemActions, event, position?: { vertPos: VerticalPosition; horizPos: HorizontalPosition }) {
         try {
-            await showPopoverMenu({
-                options: actions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
-                anchor: event.object,
-                ...position,
-                props: { autoSizeListItem: true },
-                onClose: (option) => {
-                    const action = actions.find((candidate) => candidate.id === option.id);
-                    if (action) {
-                        runAction(action, event);
+            await showActionsGrid(
+                actions.map((action) => ({ id: action.id, name: action.tooltip, icon: action.text })),
+                {
+                    anchor: event.object,
+                    ...position,
+                    onPick: (picked) => {
+                        const action = actions.find((candidate) => candidate.id === picked.id);
+                        if (action) {
+                            runAction(action, event);
+                        }
                     }
                 }
-            });
+            );
         } catch (error) {
             showError(error);
         }
@@ -1115,7 +1118,7 @@
 </script>
 
 <!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
-<gridlayout {...$$restProps} id="bottomSheetInner" width="100%" isPassThroughParentEnabled={true}>
+<gridlayout {...$$restProps} id="bottomSheetInner" isPassThroughParentEnabled={true} width="100%">
     <gridlayout
         horizontalAlignment={innerHorizontalAlignment}
         rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${graphAvailable ? PROFILE_HEIGHT : 0},${statsAvailable ? STATS_HEIGHT : 0},auto`}
