@@ -1,12 +1,18 @@
 import type { ValhallaProfile } from '~/utils/routing';
 import { ApplicationSettings } from '@nativescript/core';
 import { formatAddress, osmicon } from '~/helpers/formatter';
+import { getCurrentLocales } from '@nativescript-community/l';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem as Item } from '~/models/Item';
 import { LAYER_GLYPHS, featureIconNames, isMassifStyle, massifIcon, massifIconFontFamily } from '~/utils/massif';
 import { Profiles } from '~/utils/routing';
 const mapContext = getMapContext();
+
+// the values the data says that the translations name differently
+const CATEGORY_ALIASES: Record<string, string> = { station: 'railway_station', halt: 'railway_halt', townhall: 'town_hall' };
+// values that are a translation key too, but no kind of place
+const CATEGORY_IGNORED = ['yes', 'no'];
 
 export default class ItemFormatter {
     geItemIcon(item: Item) {
@@ -67,6 +73,29 @@ export default class ItemFormatter {
             (properties.subclass && lc(properties.subclass.replace(/-/g, '_'))) ||
             (properties.class && lc(properties.class.replace(/-/g, '_')))
         );
+    }
+    /** What kind of place it is, as the translated word of its first known subclass, value or class. */
+    getItemCategory(item: Item): string | undefined {
+        const properties = item?.properties;
+        if (!properties) {
+            return undefined;
+        }
+        const { categories, class: itemClass, osm_value: osmValue, subclass } = properties;
+        const candidates = [...(subclass ? String(subclass).split(';') : []), osmValue, itemClass, categories?.[categories.length - 1]];
+        for (const candidate of candidates) {
+            if (typeof candidate !== 'string' || CATEGORY_IGNORED.includes(candidate)) {
+                continue;
+            }
+            const normalized = candidate.replace(/-/g, '_');
+            const key = CATEGORY_ALIASES[normalized] ?? normalized;
+            // not `l(key) !== key`: plenty of words translate to themselves (cafe, hotel...)
+            if (key in (getCurrentLocales() ?? {})) {
+                return lc(key);
+            }
+        }
+        // no word for it: the data's own, which beats no chip. The class is too generic (amenity, shop...)
+        const raw = [...(subclass ? String(subclass).split(';') : []), osmValue].find((candidate) => typeof candidate === 'string' && !CATEGORY_IGNORED.includes(candidate));
+        return raw ? lc(raw.replace(/[-_]/g, ' ')) : undefined;
     }
     getItemPositionToString(item: Item) {
         if (item.geometry?.type === 'Point') {
@@ -133,28 +162,28 @@ export default class ItemFormatter {
         switch (type) {
             case 'pedestrian':
                 switch (subtype) {
-                case 'mountainairing':
-                    return 'alpimaps-mountainairing';
-                case 'running':
-                    return 'alpimaps-running';
-                default:
-                    return Profiles[type].icon;
-            }
+                    case 'mountainairing':
+                        return 'alpimaps-mountainairing';
+                    case 'running':
+                        return 'alpimaps-running';
+                    default:
+                        return Profiles[type].icon;
+                }
             case 'bicycle':
                 switch (subtype) {
-                case 'enduro':
-                    return 'alpimaps-enduro';
-                case 'gravel':
-                    return 'alpimaps-gravel';
-                case 'road':
-                    return 'alpimaps-road-cycling';
-                case 'mountain':
-                    return 'alpimaps-mountain-biking';
-                default:
-                    return Profiles[type].icon;
-            }
+                    case 'enduro':
+                        return 'alpimaps-enduro';
+                    case 'gravel':
+                        return 'alpimaps-gravel';
+                    case 'road':
+                        return 'alpimaps-road-cycling';
+                    case 'mountain':
+                        return 'alpimaps-mountain-biking';
+                    default:
+                        return Profiles[type].icon;
+                }
             default:
-                    return Profiles[type].icon;
+                return Profiles[type].icon;
         }
     }
 }

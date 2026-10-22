@@ -13,6 +13,7 @@
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import type { Feature, Point } from 'geojson';
     import { onDestroy } from 'svelte';
+    import { get } from 'svelte/store';
     import IconButton from '~/components/common/IconButton.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
@@ -41,6 +42,7 @@
     import type { ValhallaProfile } from '~/utils/routing';
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
     import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
+    import { type TransitHistoryEntry, transitHistory } from '~/stores/historyStore';
     import { showSliderPopover } from '~/utils/ui';
     import { TRANSIT_SHEET_DETENTS } from '~/utils/ui/transitSheet';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
@@ -927,6 +929,68 @@
             showError(error);
         }
     }
+    function transitHistorySubtitle({ arriveBy: entryArriveBy, time }: TransitHistoryEntry) {
+        return time ? `${lc(entryArriveBy ? 'arrive_by' : 'depart_at')} ${dayjs(time).format('ddd D MMM HH:mm')}` : lc('now');
+    }
+    async function showTransitHistory() {
+        try {
+            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+            const options = new ObservableArray(
+                get(transitHistory).map((entry) => ({
+                    title: `${entry.from.name} → ${entry.to.name}`,
+                    subtitle: transitHistorySubtitle(entry),
+                    rightIcon: 'mdi-close',
+                    data: entry
+                }))
+            );
+            const results = await showBottomSheet({
+                parent: null,
+                view: OptionSelect,
+                skipCollapsedState: true,
+                props: {
+                    height: Math.min(460, 80 + 64 * options.length),
+                    title: lc('transit_history'),
+                    titleIcon: 'mdi-history',
+                    rowHeight: 64,
+                    options,
+                    onRightIconTap: (item) => {
+                        transitHistory.remove(item.data);
+                        options.splice(options.indexOf(item), 1);
+                    }
+                }
+            });
+            const entry: TransitHistoryEntry = (Array.isArray(results) ? results[0] : results)?.data;
+            if (entry) {
+                restoreTransit(entry);
+                // closing the sheet hands the focus back to the search field
+                mapContext.unFocusSearch();
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    function restoreTransit({ arriveBy: entryArriveBy, from, time, to }: TransitHistoryEntry) {
+        const id = Date.now();
+        const restored: ItemFeature[] = [from, to].map(({ name, position }, index) => ({
+            type: 'Feature',
+            properties: { id: id + index + '', showOnMap: false, isStart: index === 0, isStop: index === 1, name },
+            geometry: { type: 'Point', coordinates: [position.lon, position.lat] }
+        }));
+        waypoints.splice(0, waypoints.length);
+        waypoints.push(...(restored as any));
+        nbWayPoints = restored.length;
+        features.splice(0, features.length);
+        features.push(...restored);
+        updateWayPointLines();
+        setLayerGeoJSONString();
+        transit = true;
+        departureTime = time ? new Date(time) : null;
+        arriveBy = entryArriveBy;
+        // a trip in the past would only give back what has already left
+        if (!departureTime || departureTime.getTime() > Date.now()) {
+            computeTransit();
+        }
+    }
     async function computeRoutes(forceOnline = false) {
         try {
             loading = true;
@@ -1402,6 +1466,8 @@
             <gridlayout colSpan={2} columns="*,auto,auto" margin="4 5 0 8" row={3}>
                 {#if !transit}
                     <Pill col={1} icon="mdi-dots-vertical" marginLeft={6} on:tap={showMoreOptions} />
+                {:else if $transitHistory.length > 0}
+                    <Pill col={1} icon="mdi-history" marginLeft={6} on:tap={showTransitHistory} />
                 {/if}
                 <Pill col={2} icon={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
                 <Pill

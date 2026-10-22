@@ -1088,5 +1088,12 @@
     "fog": "brume",
     "relief": "relief",
     "sky": "ciel",
-    "shadow_strength": "intensité des ombres"
+    "shadow_strength": "intensité des ombres",
+    "search_history": "recherches récentes",
+    "clear_history": "effacer",
+    "transit_history": "trajets récents",
+    "remove_from_history": "retirer de l'historique",
+    "railway_station": "gare",
+    "railway_halt": "halte",
+    "bus_station": "gare routière"
 }

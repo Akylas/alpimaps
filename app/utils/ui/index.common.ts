@@ -14,7 +14,7 @@ import { ComponentInstanceInfo, resolveComponentElement } from '@nativescript-co
 import { get } from 'svelte/store';
 import type OptionSelect__SvelteComponent_ from '~/components/common/OptionSelect.svelte';
 import { Group } from '~/models/Item';
-import { colors, fontScale, screenWidthDips } from '~/variables';
+import { colors, fontScale, screenHeightDips, screenWidthDips } from '~/variables';
 
 export * from '@shared/utils/ui';
 
@@ -176,6 +176,28 @@ export async function showPopoverMenu<T = any>({
         }
     });
     return result;
+}
+
+const ACTION_GRID_COLUMNS = 3;
+
+/** The actions as the app menu's icon-over-label tiles, all in view: no list to scroll. */
+export function showActionsGrid<T extends { id: string; icon: string; name: string }>(
+    actions: T[],
+    { anchor, onPick, ...position }: { anchor: View; onPick: (action: T) => void } & Pick<Partial<PopoverOptions>, 'horizPos' | 'vertPos'>
+) {
+    const scale = Math.sqrt(get(fontScale));
+    return showPopoverMenu({
+        options: [{ type: 'tiles', id: 'actions', columns: ACTION_GRID_COLUMNS, tiles: actions.map(({ icon, id, name }) => ({ id, icon, title: name })) }],
+        anchor,
+        ...position,
+        props: { width: Math.min(ACTION_GRID_COLUMNS * 100 * scale, screenWidthDips * 0.9), maxHeight: screenHeightDips * 0.7 },
+        onClose: (tile) => {
+            const action = actions.find((candidate) => candidate.id === tile?.id);
+            if (action) {
+                onPick(action);
+            }
+        }
+    });
 }
 
 export function createView<T extends View>(claz: new () => T, props: Partial<Pick<T, keyof T>> = {}, events?) {

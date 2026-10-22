@@ -11,6 +11,7 @@
     import { onNetworkChanged } from '~/services/NetworkService';
     import { trainFollowService, trainFollowSupported } from '~/services/TrainFollowService';
     import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, isRailMode, itineraryTicketUrl, modeIcon, transitousService } from '~/services/TransitousService';
+    import { transitHistory } from '~/stores/historyStore';
     import type { MapPos } from '~/utils/geo';
     import { itineraryFollowId } from '~/utils/trainFollow';
     import { showSnack } from '~/utils/ui';
@@ -77,6 +78,9 @@
             itineraries = (await transitousService.plan({ from: from.position, to: to.position, time: time ?? undefined, arriveBy })).itineraries;
             selected = null;
             remember();
+            if (itineraries.length > 0) {
+                transitHistory.add({ from: { name: from.name, position: from.position }, to: { name: to.name, position: to.position }, time: time?.toISOString() ?? null, arriveBy });
+            }
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !itineraries) {
