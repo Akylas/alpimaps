@@ -353,7 +353,8 @@ export default class UserLocationModule extends MapModule {
         const map = mapContext.getMap();
         const camera = map.camera();
         const zoom = this.navigationZoom > 0 && !this.userZoomOverride ? this.navigationZoom : Math.max(camera.zoom(), 10);
-        const target = toPosition(this.mLastUserLocation);
+        // no altitude: the camera follows the ground, and a height in the target lifts it for a frame
+        const target: [number, number] = [this.mLastUserLocation.lon, this.mLastUserLocation.lat];
         if (!this.navigationMode) {
             camera.moveTo(target, { zoom, duration });
             return;
