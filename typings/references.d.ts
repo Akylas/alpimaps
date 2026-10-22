@@ -5,7 +5,6 @@ declare const gVars: {
     platform: string;
     // FACEBOOK_TOKEN: string;
     IGN_TOKEN: string;
-    AMERICANA_OSM_URL: string;
     THUNDERFOREST_TOKEN: string;
     MAPBOX_TOKEN: string;
     MAPTILER_TOKEN: string;
@@ -19,7 +18,6 @@ declare const gVars: {
 
 // FACEBOOK_TOKEN: string;
 declare const IGN_TOKEN: string;
-declare const AMERICANA_OSM_URL: string;
 declare const THUNDERFOREST_TOKEN: string;
 declare const MAPBOX_TOKEN: string;
 declare const MAPTILER_TOKEN: string;
