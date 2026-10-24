@@ -318,53 +318,29 @@ function applyFieldOfView() {
     applyLensCorrection();
 }
 
-/** Written on the NATIVE options: the plugin's generated schema does not know this option yet. */
 function applyLabelPadding() {
-    // the bridge's options object is the one the renderer reads, not the view's wrapper
-    const native = (panorama as { native?: { getOptions?: () => { setLabelPadding?: (value: number) => void } } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.();
-    if (typeof native?.setLabelPadding !== 'function') {
-        DEV_LOG && console.log('peakFinder: label padding not in this SDK build, names will churn as the view turns');
+    if (!panorama) {
         return;
     }
     const padding = get(peakFinderLabelPadding);
-    native.setLabelPadding(padding > 0 ? padding : -1);
+    panorama.set('labelPadding', padding > 0 ? padding : -1);
     DEV_LOG && console.log('peakFinder: label padding set to', padding);
-}
-
-/**
- * Either the bridge's terrain or the view's wrapper carries the native object, depending on the build;
- * a write to the wrong one silently does nothing.
- */
-function terrainNative(): Record<string, (value: unknown) => void> {
-    const fromBridge = (terrain() as { native?: Record<string, (value: unknown) => void> })?.native;
-    return fromBridge ?? (panoramaView?.getTerrainOptions?.()?.getNative?.() as Record<string, (value: unknown) => void>);
 }
 
 /** Capping the mesh zoom lets the height field settle, and with it the labels and the camera. */
 function applyTerrainZoomCap() {
-    const native = terrainNative();
-    if (typeof native?.setMaxZoom !== 'function') {
-        DEV_LOG && console.log('peakFinder: terrain zoom cap not in this SDK build, the height field will keep refining');
-        return;
-    }
     const zoom = get(peakFinderTerrainMaxZoom);
-    native.setMaxZoom(zoom);
+    terrain()?.set('maxZoom', zoom);
     DEV_LOG && console.log('peakFinder: terrain mesh zoom capped at', zoom);
 }
 
-/**
- * geo-three's terrain cut, full-resolution depth (half makes the skyline staircase) and the ridge-ink
- * sample span. Native: none of the three is in the plugin's generated schema.
- */
+/** geo-three's terrain cut, full-resolution depth (half makes the skyline staircase) and the ridge-ink sample span. */
 function applyGeoThreeTerrain() {
-    const native = terrainNative();
-    if (typeof native?.setSubdivideDistance !== 'function') {
-        DEV_LOG && console.log('peakFinder: geo-three terrain cut not in this SDK build, the SDK cut is used');
-    } else {
-        native.setSubdivideDistance(GEO_THREE.subdivideDistance);
-    }
-    native?.setPostProcessDownscale?.(1);
-    native?.setNormalSampleDistance?.(PEAKFINDER_LOOK.normalSampleDistance);
+    terrain()?.apply({
+        subdivideDistance: GEO_THREE.subdivideDistance,
+        postProcessDownscale: 1,
+        normalSampleDistance: PEAKFINDER_LOOK.normalSampleDistance
+    });
 }
 
 function currentFieldOfViewY(): number {
@@ -592,20 +568,13 @@ function buildPeaksLayer() {
     panorama.add(peaksLayer);
 }
 
-/**
- * Written on the NATIVE object: the facade maps a spec type newer than its generated schema to
- * `massif::Layer`, so property writes miss. Constructor spec args (`detailZoom`) do arrive.
- */
 function applyDetailPeaksOptions() {
-    const native = detailPeaksSource?.native;
-    if (!native?.setMaxDetailLevels) {
-        DEV_LOG && console.log('peakFinder: detail source options not settable, defaults stand');
-        return;
-    }
-    native.setMaxDetailLevels(get(peakFinderDetailLevels));
-    native.setMaxFeatures(get(peakFinderDetailFeatures));
-    // What the cap ranks by, and the order a panorama is read in.
-    native.setRankProperty('ele');
+    detailPeaksSource?.apply({
+        maxDetailLevels: get(peakFinderDetailLevels),
+        maxFeatures: get(peakFinderDetailFeatures),
+        // What the cap ranks by, and the order a panorama is read in.
+        rankProperty: 'ele'
+    } as never);
 }
 
 /**
@@ -1478,14 +1447,7 @@ export function teardownPanorama() {
     detailPeaksCache = detailPeaksStore = detailPeaksSource = detailPeaksBase = null;
     // detach the terrain: the view's Options still holds it, with its ElevationManager, threads and grid
     // cache (a GB leaked per visit). The bridge's options object resolves; the view wrapper's does not.
-    const options = ((panorama as { native?: { getOptions?: () => unknown } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.()) as {
-        setTerrainOptions?: (value: unknown) => void;
-    };
-    if (typeof options?.setTerrainOptions === 'function') {
-        options.setTerrainOptions(null);
-    } else {
-        DEV_LOG && console.log('peakFinder: cannot detach the terrain, the elevation cache will outlive the panorama');
-    }
+    panorama?.set('terrainOptions', null as never);
     panorama?.destroy();
     panorama = null;
     panoramaView = null;

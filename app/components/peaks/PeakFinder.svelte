@@ -535,9 +535,9 @@
     }
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
         const originalClient = new webClientClass(webview);
-        // the client is the app's own Java class, so it takes the SDK objects themselves
-        const vDataSource = (vectorDataSource || getDefaultDataSource()).native;
-        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.native, vDataSource, vDataSource, rasterDataSource?.native, null);
+        // the client is the app's own Java class: it takes the sources' surface-API handles
+        const vHandle = (vectorDataSource || getDefaultDataSource()).handle;
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, dataSource?.handle ?? 0, vHandle, vHandle, rasterDataSource?.handle ?? 0, 0);
         // this crashes in production saying no originalClient property ...
         // client.originalClient = originalClient;
         return client;

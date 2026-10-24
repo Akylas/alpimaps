@@ -22,22 +22,6 @@ import android.webkit.WebResourceRequest;
 import android.graphics.Bitmap;
 import android.net.Uri;
 
-import com.massifmaps.core.MapPos;
-import com.massifmaps.core.MapPosVector;
-import com.massifmaps.core.MapTile;
-import com.massifmaps.core.BinaryData;
-import com.massifmaps.datasources.TileDataSource;
-import com.massifmaps.datasources.components.TileData;
-import com.massifmaps.geometry.GeoJSONGeometryWriter;
-import com.massifmaps.geometry.PolygonGeometry;
-import com.massifmaps.geometry.VectorTileFeatureCollection;
-import com.massifmaps.projections.EPSG4326;
-import com.massifmaps.search.SearchRequest;
-import com.massifmaps.search.VectorTileSearchService;
-import com.massifmaps.styles.CartoCSSStyleSet;
-import com.massifmaps.vectortiles.MBVectorTileDecoder;
-import com.massifmaps.core.MapBounds;
-
 
 public class WebViewClient extends android.webkit.WebViewClient {
     static final String AUTHORITY = "127.0.0.1:8080";
@@ -51,45 +35,22 @@ public class WebViewClient extends android.webkit.WebViewClient {
     
     android.webkit.WebViewClient originalClient;
 
-    TileDataSource heightDataSource;
-    TileDataSource peaksDataSource;
-    TileDataSource contoursDataSource;
-    TileDataSource rasterDataSource;
-    TileDataSource routesDataSource;
-    MBVectorTileDecoder decoder;
-    EPSG4326 projection;
-    GeoJSONGeometryWriter geojsonWriter;
+    // Handles of the SDK's tile sources, 0 for none.
+    final int heightSource;
+    final int peaksSource;
+    final int contoursSource;
+    final int rasterSource;
+    final int routesSource;
     HashMap<String, String> localResources = new HashMap<String, String>();
-    
 
-    private double tile2lon(int x, int z) {
-        return x / Math.pow(2, z) * 360.0f - 180.0f;
-    }
-    private static final double r2d = 180 / Math.PI;
-    private double tile2lat(int y, int z) {
-        double n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
-        return r2d * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
-    }
-    private double[] tileToBBOX(int x, int y, int z) {
-        double e = tile2lon(x + 1, z);
-        double w = tile2lon(x, z);
-        double s = tile2lat(y + 1, z);
-        double n = tile2lat(y, z);
-        return new double[] {w, s, e, n};
-    }
-
-    public WebViewClient(android.webkit.WebViewClient originalClient, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource, TileDataSource routesDataSource) {
+    public WebViewClient(android.webkit.WebViewClient originalClient, int heightSource, int peaksSource, int contoursSource, int rasterSource, int routesSource) {
         super();
         this.originalClient = originalClient;
-        this.heightDataSource = heightDataSource;
-        this.peaksDataSource = peaksDataSource;
-        this.rasterDataSource = rasterDataSource;
-        this.contoursDataSource = contoursDataSource;
-        this.routesDataSource = routesDataSource;
-        decoder = new MBVectorTileDecoder(new CartoCSSStyleSet("#mountain_peak { text-name: [name];}"));
-        projection = new EPSG4326();
-        geojsonWriter = new GeoJSONGeometryWriter();
-        geojsonWriter.setSourceProjection(peaksDataSource.getProjection());
+        this.heightSource = heightSource;
+        this.peaksSource = peaksSource;
+        this.rasterSource = rasterSource;
+        this.contoursSource = contoursSource;
+        this.routesSource = routesSource;
     }
 
     public void registerLocalResource(String key, String value) {
@@ -196,73 +157,47 @@ public class WebViewClient extends android.webkit.WebViewClient {
         Set<String> args = uri.getQueryParameterNames();
         final String source = uri.getQueryParameter("source");
         final String imageFormat = args.contains("format") ? uri.getQueryParameter("format") : "png";
-        TileDataSource dataSource = null;
-
+        int dataSource;
         switch (source) {
             case "raster":
-                dataSource = rasterDataSource;
+                dataSource = rasterSource;
                 break;
             case "height":
-                dataSource = heightDataSource;
+                dataSource = heightSource;
                 break;
             case "contours":
-                dataSource = contoursDataSource;
+                dataSource = contoursSource;
                 break;
             case "routes":
-                dataSource = routesDataSource;
+                dataSource = routesSource;
                 break;
             case "peaks":
             case "data":
             default:
-                dataSource = peaksDataSource;
+                dataSource = peaksSource;
                 break;
         }
 
         int z = Integer.parseInt(uri.getQueryParameter("z"));
         int x = Integer.parseInt(uri.getQueryParameter("x"));
         int y = Integer.parseInt(uri.getQueryParameter("y"));
-        if (dataSource == null) {
+        if (dataSource == 0) {
             return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("source not found".getBytes(StandardCharsets.UTF_8)));
         }
 
 
         if (source.equals("peaks")) {
             try {
-                double[] bbox = tileToBBOX(x, y, z);
-                MapPosVector poses = new MapPosVector();
-                poses.add(new MapPos(bbox[0], bbox[3], 0));
-                poses.add(new MapPos(bbox[0], bbox[1], 0));
-                poses.add(new MapPos(bbox[2], bbox[1], 0));
-                poses.add(new MapPos(bbox[2], bbox[3], 0));
-                poses.add(new MapPos(bbox[0], bbox[3], 0));
-                PolygonGeometry geometry = new PolygonGeometry(poses);
-                MapBounds bounds  = geometry.getBounds();
-                VectorTileSearchService searchService = new VectorTileSearchService(dataSource,
-                        decoder);
-                searchService.setMinZoom(z);
-                searchService.setMaxZoom(z);
-                SearchRequest searchRequest = new SearchRequest();
-                searchRequest.setProjection(projection);
-                searchRequest.setGeometry(geometry);
-                searchRequest.setFilterExpression("layer::name='mountain_peak'");
-                VectorTileFeatureCollection result = searchService.findFeatures(searchRequest);
-    
-                return new WebResourceResponse("text/plain", "utf-8", 200, "OK", headers, new ByteArrayInputStream(geojsonWriter.writeFeatureCollection(result).getBytes(StandardCharsets.UTF_8)));
-            } catch(Exception exception) {
+                return new WebResourceResponse("text/plain", "utf-8", 200, "OK", headers, new ByteArrayInputStream(TileSupport.peaksGeoJson(dataSource, x, y, z).getBytes(StandardCharsets.UTF_8)));
+            } catch (Exception exception) {
                 return new WebResourceResponse("text/plain", "utf-8", 200, "OK", headers, new ByteArrayInputStream(exception.toString().getBytes(StandardCharsets.UTF_8)));
             }
-            
         }
 
-        TileData tileData = dataSource.loadTile(new MapTile(x, y, z, 0));
-        if (tileData == null) {
+        byte[] binaryDataData = TileSupport.loadTile(dataSource, x, y, z);
+        if (binaryDataData == null) {
             return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("not found".getBytes(StandardCharsets.UTF_8)));
         }
-        BinaryData binaryData = tileData.getData();
-        if (binaryData == null) {
-            return new WebResourceResponse("text/plain", "utf-8", new ByteArrayInputStream("not found".getBytes(StandardCharsets.UTF_8)));
-        }
-        byte[] binaryDataData = binaryData.getData();
         InputStream targetStream = new ByteArrayInputStream(binaryDataData);
         if (source.equals("data") || source.equals("routes") || source.equals("contours")) {
             try {
