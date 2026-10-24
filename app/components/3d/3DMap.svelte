@@ -39,9 +39,9 @@
 
     function createCustomWebViewClient(webview: AWebView, webClientClass) {
         const originalClient = new webClientClass(webview);
-        const vDataSource = vectorSource?.native;
+        const vHandle = vectorSource?.handle ?? 0;
 
-        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, hillshadeSource?.native, vDataSource, vDataSource, null, routeSource?.native);
+        const client = new (akylas as any).alpi.maps.WebViewClient(originalClient, hillshadeSource?.handle ?? 0, vHandle, vHandle, 0, routeSource?.handle ?? 0);
 
         client.registerLocalResource('http://127.0.0.1/sprite@2x.json', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.json'));
         client.registerLocalResource('http://127.0.0.1/sprite@2x.png', path.join(knownFolders.currentApp().path, 'assets/3dmap/sprite@2x.png'));

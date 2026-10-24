@@ -27,12 +27,12 @@ export function startStopWebServer() {
         return;
     }
     try {
-        // the server is the app's own Java class, so it takes the native SDK objects
+        // the server is the app's own Java class: it takes the sources' surface-API handles
         const hillshadeSource = packageService.hillshadeLayer?.source();
         const vectorSource = packageService.localVectorTileLayer?.source();
-        const vDataSource = vectorSource?.native;
-        DEV_LOG && console.log('webserver', vDataSource, hillshadeSource?.native);
-        webserver = new (akylas.alpi as any).maps.WebServer(serverPort(), hillshadeSource?.native, vDataSource, vDataSource, null);
+        const vHandle = vectorSource?.handle ?? 0;
+        DEV_LOG && console.log('webserver', vHandle, hillshadeSource?.handle);
+        webserver = new (akylas.alpi as any).maps.WebServer(serverPort(), hillshadeSource?.handle ?? 0, vHandle, vHandle, 0);
         webserver.start();
         running.set(true);
     } catch (error) {

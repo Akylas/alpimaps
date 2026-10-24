@@ -318,53 +318,29 @@ function applyFieldOfView() {
     applyLensCorrection();
 }
 
-/** Written on the NATIVE options: the plugin's generated schema does not know this option yet. */
 function applyLabelPadding() {
-    // the bridge's options object is the one the renderer reads, not the view's wrapper
-    const native = (panorama as { native?: { getOptions?: () => { setLabelPadding?: (value: number) => void } } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.();
-    if (typeof native?.setLabelPadding !== 'function') {
-        DEV_LOG && console.log('peakFinder: label padding not in this SDK build, names will churn as the view turns');
+    if (!panorama) {
         return;
     }
     const padding = get(peakFinderLabelPadding);
-    native.setLabelPadding(padding > 0 ? padding : -1);
+    panorama.set('labelPadding', padding > 0 ? padding : -1);
     DEV_LOG && console.log('peakFinder: label padding set to', padding);
-}
-
-/**
- * Either the bridge's terrain or the view's wrapper carries the native object, depending on the build;
- * a write to the wrong one silently does nothing.
- */
-function terrainNative(): Record<string, (value: unknown) => void> {
-    const fromBridge = (terrain() as { native?: Record<string, (value: unknown) => void> })?.native;
-    return fromBridge ?? (panoramaView?.getTerrainOptions?.()?.getNative?.() as Record<string, (value: unknown) => void>);
 }
 
 /** Capping the mesh zoom lets the height field settle, and with it the labels and the camera. */
 function applyTerrainZoomCap() {
-    const native = terrainNative();
-    if (typeof native?.setMaxZoom !== 'function') {
-        DEV_LOG && console.log('peakFinder: terrain zoom cap not in this SDK build, the height field will keep refining');
-        return;
-    }
     const zoom = get(peakFinderTerrainMaxZoom);
-    native.setMaxZoom(zoom);
+    terrain()?.set('maxZoom', zoom);
     DEV_LOG && console.log('peakFinder: terrain mesh zoom capped at', zoom);
 }
 
-/**
- * geo-three's terrain cut, full-resolution depth (half makes the skyline staircase) and the ridge-ink
- * sample span. Native: none of the three is in the plugin's generated schema.
- */
+/** geo-three's terrain cut, full-resolution depth (half makes the skyline staircase) and the ridge-ink sample span. */
 function applyGeoThreeTerrain() {
-    const native = terrainNative();
-    if (typeof native?.setSubdivideDistance !== 'function') {
-        DEV_LOG && console.log('peakFinder: geo-three terrain cut not in this SDK build, the SDK cut is used');
-    } else {
-        native.setSubdivideDistance(GEO_THREE.subdivideDistance);
-    }
-    native?.setPostProcessDownscale?.(1);
-    native?.setNormalSampleDistance?.(PEAKFINDER_LOOK.normalSampleDistance);
+    terrain()?.apply({
+        subdivideDistance: GEO_THREE.subdivideDistance,
+        postProcessDownscale: 1,
+        normalSampleDistance: PEAKFINDER_LOOK.normalSampleDistance
+    });
 }
 
 function currentFieldOfViewY(): number {
@@ -407,19 +383,21 @@ function applyLensCorrection() {
     const height = panoramaView?.getMeasuredHeight() ?? 0;
     const geometry = width > 0 && height > 0 ? arGeometry(width / height) : null;
     const distortion = geometry?.distortion;
-    effect.setFloatParameter('uDistortK1', distortion?.k1 ?? 0);
-    effect.setFloatParameter('uDistortK2', distortion?.k2 ?? 0);
-    effect.setFloatParameter('uDistortK3', distortion?.k3 ?? 0);
-    effect.setFloatParameter('uDistortP1', distortion?.p1 ?? 0);
-    effect.setFloatParameter('uDistortP2', distortion?.p2 ?? 0);
-    effect.setFloatParameter('uDistortCenterX', distortion?.centerX ?? 0);
-    effect.setFloatParameter('uDistortCenterY', distortion?.centerY ?? 0);
-    // 1 when there is no warp: these are divisors (never read then)
-    effect.setFloatParameter('uDistortScreenTanX', geometry?.screenTan[0] ?? 1);
-    effect.setFloatParameter('uDistortScreenTanY', geometry?.screenTan[1] ?? 1);
-    effect.setFloatParameter('uDistortRenderTanX', geometry?.renderTan[0] ?? 1);
-    effect.setFloatParameter('uDistortRenderTanY', geometry?.renderTan[1] ?? 1);
-    effect.setFloatParameter('uDistortRotate', geometry?.rotated ? 1 : 0);
+    effect.apply({
+        'floatParams.uDistortK1': distortion?.k1 ?? 0,
+        'floatParams.uDistortK2': distortion?.k2 ?? 0,
+        'floatParams.uDistortK3': distortion?.k3 ?? 0,
+        'floatParams.uDistortP1': distortion?.p1 ?? 0,
+        'floatParams.uDistortP2': distortion?.p2 ?? 0,
+        'floatParams.uDistortCenterX': distortion?.centerX ?? 0,
+        'floatParams.uDistortCenterY': distortion?.centerY ?? 0,
+        // 1 when there is no warp: these are divisors (never read then)
+        'floatParams.uDistortScreenTanX': geometry?.screenTan[0] ?? 1,
+        'floatParams.uDistortScreenTanY': geometry?.screenTan[1] ?? 1,
+        'floatParams.uDistortRenderTanX': geometry?.renderTan[0] ?? 1,
+        'floatParams.uDistortRenderTanY': geometry?.renderTan[1] ?? 1,
+        'floatParams.uDistortRotate': geometry?.rotated ? 1 : 0
+    } as never);
 }
 
 /** `auto` turns with the device even when the system is locked to portrait: a panorama wants landscape. */
@@ -592,20 +570,13 @@ function buildPeaksLayer() {
     panorama.add(peaksLayer);
 }
 
-/**
- * Written on the NATIVE object: the facade maps a spec type newer than its generated schema to
- * `massif::Layer`, so property writes miss. Constructor spec args (`detailZoom`) do arrive.
- */
 function applyDetailPeaksOptions() {
-    const native = detailPeaksSource?.native;
-    if (!native?.setMaxDetailLevels) {
-        DEV_LOG && console.log('peakFinder: detail source options not settable, defaults stand');
-        return;
-    }
-    native.setMaxDetailLevels(get(peakFinderDetailLevels));
-    native.setMaxFeatures(get(peakFinderDetailFeatures));
-    // What the cap ranks by, and the order a panorama is read in.
-    native.setRankProperty('ele');
+    detailPeaksSource?.apply({
+        maxDetailLevels: get(peakFinderDetailLevels),
+        maxFeatures: get(peakFinderDetailFeatures),
+        // What the cap ranks by, and the order a panorama is read in.
+        rankProperty: 'ele'
+    } as never);
 }
 
 /**
@@ -826,7 +797,6 @@ function rebuildPeaksLayer() {
     previousDecoder?.destroy();
 }
 
-/** The shader source is a facade property but its uniforms are not, so they go through the view's object API. */
 function applyReliefSurface() {
     if (!panorama || isRealistic()) {
         return;
@@ -834,22 +804,32 @@ function applyReliefSurface() {
     const colors = palette();
     // no surface shader in AR (the ground is the camera preview); the ridge lines still come from the
     // post-process effect off the terrain depth
-    terrain().set('surfaceShaderSource', get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER);
-    const terrainOptions = panoramaView?.getTerrainOptions();
-    if (!terrainOptions) {
-        return;
-    }
-    terrainOptions.setSurfaceColorParameter('uPaperColor', colors.paper);
-    terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
-    terrainOptions.setSurfaceParameter('uRidgeInkStrength', PEAKFINDER_LOOK.ridgeInk);
-    terrainOptions.setSurfaceParameter('uSlopeShade', 0);
-    terrainOptions.setSurfaceParameter('uShadeStrength', 0);
-    terrainOptions.setSurfaceParameter('uAmbient', PEAKFINDER_LOOK.ambient);
-    terrainOptions.setSurfaceParameter('uInkCap', PEAKFINDER_LOOK.inkCap);
-    terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
+    terrain().apply({
+        surfaceShaderSource: get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER,
+        'surfaceColorParams.uPaperColor': colors.paper,
+        'surfaceColorParams.uShadeColor': colors.shade,
+        'surfaceParams.uRidgeInkStrength': PEAKFINDER_LOOK.ridgeInk,
+        'surfaceParams.uSlopeShade': 0,
+        'surfaceParams.uShadeStrength': 0,
+        'surfaceParams.uAmbient': PEAKFINDER_LOOK.ambient,
+        'surfaceParams.uInkCap': PEAKFINDER_LOOK.inkCap,
+        'surfaceParams.uHillshade': get(peakFinderHillshade)
+    } as never);
 }
 
-/** Silhouettes (operator 2) and the skyline stroke. Object API only: the surface API has no `postProcessEffect`. */
+/** The post-process effect rides on the renderer; null takes it off. */
+function attachEffect(value: unknown) {
+    panorama?.camera().renderer().set('postProcessEffect', (value ?? null) as never);
+}
+
+function dropEffect() {
+    attachEffect(null);
+    effect?.destroy();
+    effect = null;
+    effectVariant = '';
+}
+
+/** Silhouettes (operator 2) and the skyline stroke. */
 function applyReliefOutline() {
     if (!panoramaView || isRealistic()) {
         return;
@@ -863,30 +843,39 @@ function applyReliefOutline() {
     const rings = Math.min(3, Math.max(0, Math.ceil(outlineWidth) - 1));
     const variant = `${ar ? 'ar' : 'view'}.${rings}`;
     if (!effect || effectVariant !== variant) {
-        // Required lazily: `renderers` is object-API code that nothing else in the app pulls in.
-        const { PostProcessEffect } = require('@nativescript-community/ui-massifmaps/renderers');
-        effect = new PostProcessEffect({ name: `${EFFECT_ID}.${variant}`, fragmentShader: reliefSilhouetteShader({ ar, rings }) });
-        effect.terrainDepthRequired = true;
+        const previous = effect;
+        effect = panorama.object('effect', `${EFFECT_ID}.${variant}`, {
+            type: 'postprocess',
+            name: `${EFFECT_ID}.${variant}`,
+            fragmentShader: reliefSilhouetteShader({ ar, rings }),
+            terrainDepthRequired: true
+        } as never) as never;
         effectVariant = variant;
+        if (previous) {
+            // the new one is attached below, so the old id can go
+            previous.destroy();
+        }
     }
     const skylineWidth = (ar && get(peakFinderArHorizonBoost)) || get(peakFinderHorizonBoost);
-    effect.setFloatParameter('uOperator', 2);
-    effect.setFloatParameter('uIntensity', PEAKFINDER_LOOK.silhouetteInk);
-    effect.setFloatParameter('uOutlineWidth', outlineWidth);
-    effect.setFloatParameter('uOutlineGain', PEAKFINDER_LOOK.silhouetteGain);
-    effect.setFloatParameter('uOutlinePower', 1);
-    effect.setFloatParameter('uOutlineFloor', PEAKFINDER_LOOK.silhouetteFloor);
-    effect.setFloatParameter('uOutlineCeiling', 1);
-    effect.setFloatParameter('uInkSky', 0);
-    effect.setFloatParameter('uHorizonBoost', skylineWidth > 0 ? PEAKFINDER_LOOK.skylineInk : 0);
-    effect.setFloatParameter('uHorizonWidth', Math.max(skylineWidth, 1));
-    // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
-    effect.setFloatParameter('uMetersPerUnit', RELIEF_DEFAULTS.metersPerUnit);
-    // AR draws the ink alone, over the camera preview — see the shader's own note.
-    effect.setFloatParameter('uTransparent', get(peakFinderArActive) ? 1 : 0);
-    effect.setColorParameter('uInkColor', colors.ink);
+    effect.apply({
+        'floatParams.uOperator': 2,
+        'floatParams.uIntensity': PEAKFINDER_LOOK.silhouetteInk,
+        'floatParams.uOutlineWidth': outlineWidth,
+        'floatParams.uOutlineGain': PEAKFINDER_LOOK.silhouetteGain,
+        'floatParams.uOutlinePower': 1,
+        'floatParams.uOutlineFloor': PEAKFINDER_LOOK.silhouetteFloor,
+        'floatParams.uOutlineCeiling': 1,
+        'floatParams.uInkSky': 0,
+        'floatParams.uHorizonBoost': skylineWidth > 0 ? PEAKFINDER_LOOK.skylineInk : 0,
+        'floatParams.uHorizonWidth': Math.max(skylineWidth, 1),
+        // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
+        'floatParams.uMetersPerUnit': RELIEF_DEFAULTS.metersPerUnit,
+        // AR draws the ink alone, over the camera preview — see the shader's own note.
+        'floatParams.uTransparent': get(peakFinderArActive) ? 1 : 0,
+        'colorParams.uInkColor': colors.ink
+    } as never);
     applyLensCorrection();
-    panoramaView.setPostProcessEffect(effect);
+    attachEffect(effect);
 }
 
 /**
@@ -1080,8 +1069,7 @@ function applyLook() {
         if (!realisticApplied) {
             applyRealisticTerrain();
         }
-        panoramaView?.setPostProcessEffect(null);
-        effect = null;
+        dropEffect();
         terrain().set('surfaceShaderSource', '');
     } else {
         if (realisticApplied) {
@@ -1449,8 +1437,7 @@ export function teardownPanorama() {
     }
     panoramaView?.off('layoutChanged', onPanoramaLayout);
     panoramaView?.off('mapInteraction', onPanoramaInteraction);
-    panoramaView?.setPostProcessEffect(null);
-    effect = null;
+    dropEffect();
     // layers off the map first: `destroy()` leaves them in the native `Layers`, keeping the ElevationManager
     // and its prefetch threads alive (six threads burned 11x the render thread on a Crosscall)
     teardownPeakFinderSun();
@@ -1478,14 +1465,7 @@ export function teardownPanorama() {
     detailPeaksCache = detailPeaksStore = detailPeaksSource = detailPeaksBase = null;
     // detach the terrain: the view's Options still holds it, with its ElevationManager, threads and grid
     // cache (a GB leaked per visit). The bridge's options object resolves; the view wrapper's does not.
-    const options = ((panorama as { native?: { getOptions?: () => unknown } })?.native?.getOptions?.() ?? panoramaView?.getOptions?.()?.getNative?.()) as {
-        setTerrainOptions?: (value: unknown) => void;
-    };
-    if (typeof options?.setTerrainOptions === 'function') {
-        options.setTerrainOptions(null);
-    } else {
-        DEV_LOG && console.log('peakFinder: cannot detach the terrain, the elevation cache will outlive the panorama');
-    }
+    panorama?.set('terrainOptions', null as never);
     panorama?.destroy();
     panorama = null;
     panoramaView = null;

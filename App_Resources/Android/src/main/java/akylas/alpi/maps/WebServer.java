@@ -11,91 +11,47 @@ import java.lang.Exception;
 
 import fi.iki.elonen.NanoHTTPD;
 
-import com.massifmaps.core.MapPos;
-import com.massifmaps.core.MapPosVector;
-import com.massifmaps.core.MapTile;
-import com.massifmaps.core.BinaryData;
-import com.massifmaps.datasources.TileDataSource;
-import com.massifmaps.datasources.components.TileData;
-import com.massifmaps.geometry.GeoJSONGeometryWriter;
-import com.massifmaps.geometry.PolygonGeometry;
-import com.massifmaps.geometry.VectorTileFeatureCollection;
-import com.massifmaps.projections.EPSG4326;
-import com.massifmaps.search.SearchRequest;
-import com.massifmaps.search.VectorTileSearchService;
-import com.massifmaps.styles.CartoCSSStyleSet;
-import com.massifmaps.vectortiles.MBVectorTileDecoder;
-import com.massifmaps.core.MapBounds;
-
 import android.util.Log;
 
 public class WebServer extends NanoHTTPD {
-    TileDataSource heightDataSource;
-    TileDataSource peaksDataSource;
-    TileDataSource contoursDataSource;
-    TileDataSource rasterDataSource;
-    MBVectorTileDecoder decoder;
-    EPSG4326 projection;
-    GeoJSONGeometryWriter geojsonWriter;
+    // Handles of the SDK's tile sources, 0 for none.
+    final int heightSource;
+    final int peaksSource;
+    final int contoursSource;
+    final int rasterSource;
 
-    private double tile2lon(int x, int z) {
-        return x / Math.pow(2, z) * 360.0f - 180.0f;
-    }
-    private static final double r2d = 180 / Math.PI;
-    private double tile2lat(int y, int z) {
-        double n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
-        return r2d * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
-    }
-    private double[] tileToBBOX(int x, int y, int z) {
-        double e = tile2lon(x + 1, z);
-        double w = tile2lon(x, z);
-        double s = tile2lat(y + 1, z);
-        double n = tile2lat(y, z);
-        return new double[] {w, s, e, n};
-    }
-
-    public WebServer(int port, TileDataSource heightDataSource, TileDataSource peaksDataSource, TileDataSource contoursDataSource, TileDataSource rasterDataSource) {
+    public WebServer(int port, int heightSource, int peaksSource, int contoursSource, int rasterSource) {
         super(port);
-        this.heightDataSource = heightDataSource;
-        this.rasterDataSource = rasterDataSource;
-        this.contoursDataSource = contoursDataSource;
-        if (peaksDataSource != null) {
-            decoder = new MBVectorTileDecoder(new CartoCSSStyleSet("#mountain_peak { text-name: [name];}"));
-            this.peaksDataSource = peaksDataSource;
-        }
-        projection = new EPSG4326();
-        geojsonWriter = new GeoJSONGeometryWriter();
-        geojsonWriter.setSourceProjection(peaksDataSource.getProjection());
+        this.heightSource = heightSource;
+        this.rasterSource = rasterSource;
+        this.contoursSource = contoursSource;
+        this.peaksSource = peaksSource;
     }
 
     @Override
     public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
-        String uri = session.getUri();
-        NanoHTTPD.Method method = session.getMethod();
         Map<String, String> parms = session.getParms();
         final String source = parms.get("source");
         final String imageFormat = parms.containsKey("format") ? parms.get("format") : "png";
 
-        TileDataSource dataSource = null;
-
-
+        int dataSource;
         switch (source) {
             case "raster":
-                dataSource = rasterDataSource;
+                dataSource = rasterSource;
                 break;
             case "height":
-                dataSource = heightDataSource;
+                dataSource = heightSource;
                 break;
             case "contours":
-                dataSource = contoursDataSource;
+                dataSource = contoursSource;
                 break;
             case "peaks":
             case "data":
             default:
-                dataSource = peaksDataSource;
+                dataSource = peaksSource;
                 break;
         }
-        if (dataSource == null) {
+        if (dataSource == 0) {
             return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "source not found: " + source);
         }
 
@@ -103,53 +59,24 @@ public class WebServer extends NanoHTTPD {
         int x = Integer.parseInt(parms.get("x"));
         int y = Integer.parseInt(parms.get("y"));
 
-
         if (source.equals("peaks")) {
             try {
-                double[] bbox = tileToBBOX(x, y, z);
-                MapPosVector poses = new MapPosVector();
-                poses.add(new MapPos(bbox[0], bbox[3], 0));
-                poses.add(new MapPos(bbox[0], bbox[1], 0));
-                poses.add(new MapPos(bbox[2], bbox[1], 0));
-                poses.add(new MapPos(bbox[2], bbox[3], 0));
-                poses.add(new MapPos(bbox[0], bbox[3], 0));
-                PolygonGeometry geometry = new PolygonGeometry(poses);
-                MapBounds bounds  = geometry.getBounds();
-                VectorTileSearchService searchService = new VectorTileSearchService(dataSource,
-                        decoder);
-                searchService.setMinZoom(z);
-                searchService.setMaxZoom(z);
-                SearchRequest searchRequest = new SearchRequest();
-                searchRequest.setProjection(projection);
-                searchRequest.setGeometry(geometry);
-                searchRequest.setFilterExpression("layer::name='mountain_peak'");
-                VectorTileFeatureCollection result = searchService.findFeatures(searchRequest);
-                geojsonWriter.writeFeatureCollection(result);
-    
-                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "plain/text", geojsonWriter.writeFeatureCollection(result));
-            } catch(Exception exception) {
+                return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "plain/text", TileSupport.peaksGeoJson(dataSource, x, y, z));
+            } catch (Exception exception) {
                 return NanoHTTPD.newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "plain/text", exception.toString());
             }
-            
         }
 
-        TileData tileData = dataSource.loadTile(new MapTile(x, y, z, 0));
-
-        if (tileData == null) {
+        byte[] data = TileSupport.loadTile(dataSource, x, y, z);
+        if (data == null) {
             return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "not found");
         }
-        BinaryData binaryData = tileData.getData();
-        if (binaryData == null) {
-            return newFixedLengthResponse(NanoHTTPD.Response.Status.NOT_FOUND, "text/plain", "not found");
-        }
-        byte[] binaryDataData = binaryData.getData();
-        InputStream targetStream = new ByteArrayInputStream(binaryDataData);
+        InputStream targetStream = new ByteArrayInputStream(data);
         if (source.equals("data") || source.equals("contours")) {
-            Response response =  NanoHTTPD.newChunkedResponse(Response.Status.OK, "application/x-protobuf", targetStream);
+            Response response = NanoHTTPD.newChunkedResponse(Response.Status.OK, "application/x-protobuf", targetStream);
             response.addHeader("Content-Encoding", "gzip");
             return response;
         }
-        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream,
-                binaryDataData.length);
+        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, "image/" + imageFormat, targetStream, data.length);
     }
 }
