@@ -383,19 +383,21 @@ function applyLensCorrection() {
     const height = panoramaView?.getMeasuredHeight() ?? 0;
     const geometry = width > 0 && height > 0 ? arGeometry(width / height) : null;
     const distortion = geometry?.distortion;
-    effect.setFloatParameter('uDistortK1', distortion?.k1 ?? 0);
-    effect.setFloatParameter('uDistortK2', distortion?.k2 ?? 0);
-    effect.setFloatParameter('uDistortK3', distortion?.k3 ?? 0);
-    effect.setFloatParameter('uDistortP1', distortion?.p1 ?? 0);
-    effect.setFloatParameter('uDistortP2', distortion?.p2 ?? 0);
-    effect.setFloatParameter('uDistortCenterX', distortion?.centerX ?? 0);
-    effect.setFloatParameter('uDistortCenterY', distortion?.centerY ?? 0);
-    // 1 when there is no warp: these are divisors (never read then)
-    effect.setFloatParameter('uDistortScreenTanX', geometry?.screenTan[0] ?? 1);
-    effect.setFloatParameter('uDistortScreenTanY', geometry?.screenTan[1] ?? 1);
-    effect.setFloatParameter('uDistortRenderTanX', geometry?.renderTan[0] ?? 1);
-    effect.setFloatParameter('uDistortRenderTanY', geometry?.renderTan[1] ?? 1);
-    effect.setFloatParameter('uDistortRotate', geometry?.rotated ? 1 : 0);
+    effect.apply({
+        'floatParams.uDistortK1': distortion?.k1 ?? 0,
+        'floatParams.uDistortK2': distortion?.k2 ?? 0,
+        'floatParams.uDistortK3': distortion?.k3 ?? 0,
+        'floatParams.uDistortP1': distortion?.p1 ?? 0,
+        'floatParams.uDistortP2': distortion?.p2 ?? 0,
+        'floatParams.uDistortCenterX': distortion?.centerX ?? 0,
+        'floatParams.uDistortCenterY': distortion?.centerY ?? 0,
+        // 1 when there is no warp: these are divisors (never read then)
+        'floatParams.uDistortScreenTanX': geometry?.screenTan[0] ?? 1,
+        'floatParams.uDistortScreenTanY': geometry?.screenTan[1] ?? 1,
+        'floatParams.uDistortRenderTanX': geometry?.renderTan[0] ?? 1,
+        'floatParams.uDistortRenderTanY': geometry?.renderTan[1] ?? 1,
+        'floatParams.uDistortRotate': geometry?.rotated ? 1 : 0
+    } as never);
 }
 
 /** `auto` turns with the device even when the system is locked to portrait: a panorama wants landscape. */
