@@ -795,7 +795,6 @@ function rebuildPeaksLayer() {
     previousDecoder?.destroy();
 }
 
-/** The shader source is a facade property but its uniforms are not, so they go through the view's object API. */
 function applyReliefSurface() {
     if (!panorama || isRealistic()) {
         return;
@@ -803,22 +802,32 @@ function applyReliefSurface() {
     const colors = palette();
     // no surface shader in AR (the ground is the camera preview); the ridge lines still come from the
     // post-process effect off the terrain depth
-    terrain().set('surfaceShaderSource', get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER);
-    const terrainOptions = panoramaView?.getTerrainOptions();
-    if (!terrainOptions) {
-        return;
-    }
-    terrainOptions.setSurfaceColorParameter('uPaperColor', colors.paper);
-    terrainOptions.setSurfaceColorParameter('uShadeColor', colors.shade);
-    terrainOptions.setSurfaceParameter('uRidgeInkStrength', PEAKFINDER_LOOK.ridgeInk);
-    terrainOptions.setSurfaceParameter('uSlopeShade', 0);
-    terrainOptions.setSurfaceParameter('uShadeStrength', 0);
-    terrainOptions.setSurfaceParameter('uAmbient', PEAKFINDER_LOOK.ambient);
-    terrainOptions.setSurfaceParameter('uInkCap', PEAKFINDER_LOOK.inkCap);
-    terrainOptions.setSurfaceParameter('uHillshade', get(peakFinderHillshade));
+    terrain().apply({
+        surfaceShaderSource: get(peakFinderArActive) ? '' : RELIEF_SURFACE_SHADER,
+        'surfaceColorParams.uPaperColor': colors.paper,
+        'surfaceColorParams.uShadeColor': colors.shade,
+        'surfaceParams.uRidgeInkStrength': PEAKFINDER_LOOK.ridgeInk,
+        'surfaceParams.uSlopeShade': 0,
+        'surfaceParams.uShadeStrength': 0,
+        'surfaceParams.uAmbient': PEAKFINDER_LOOK.ambient,
+        'surfaceParams.uInkCap': PEAKFINDER_LOOK.inkCap,
+        'surfaceParams.uHillshade': get(peakFinderHillshade)
+    } as never);
 }
 
-/** Silhouettes (operator 2) and the skyline stroke. Object API only: the surface API has no `postProcessEffect`. */
+/** The post-process effect rides on the renderer; null takes it off. */
+function attachEffect(value: unknown) {
+    panorama?.camera().renderer().set('postProcessEffect', (value ?? null) as never);
+}
+
+function dropEffect() {
+    attachEffect(null);
+    effect?.destroy();
+    effect = null;
+    effectVariant = '';
+}
+
+/** Silhouettes (operator 2) and the skyline stroke. */
 function applyReliefOutline() {
     if (!panoramaView || isRealistic()) {
         return;
@@ -832,30 +841,39 @@ function applyReliefOutline() {
     const rings = Math.min(3, Math.max(0, Math.ceil(outlineWidth) - 1));
     const variant = `${ar ? 'ar' : 'view'}.${rings}`;
     if (!effect || effectVariant !== variant) {
-        // Required lazily: `renderers` is object-API code that nothing else in the app pulls in.
-        const { PostProcessEffect } = require('@nativescript-community/ui-massifmaps/renderers');
-        effect = new PostProcessEffect({ name: `${EFFECT_ID}.${variant}`, fragmentShader: reliefSilhouetteShader({ ar, rings }) });
-        effect.terrainDepthRequired = true;
+        const previous = effect;
+        effect = panorama.object('effect', `${EFFECT_ID}.${variant}`, {
+            type: 'postprocess',
+            name: `${EFFECT_ID}.${variant}`,
+            fragmentShader: reliefSilhouetteShader({ ar, rings }),
+            terrainDepthRequired: true
+        } as never) as never;
         effectVariant = variant;
+        if (previous) {
+            // the new one is attached below, so the old id can go
+            previous.destroy();
+        }
     }
     const skylineWidth = (ar && get(peakFinderArHorizonBoost)) || get(peakFinderHorizonBoost);
-    effect.setFloatParameter('uOperator', 2);
-    effect.setFloatParameter('uIntensity', PEAKFINDER_LOOK.silhouetteInk);
-    effect.setFloatParameter('uOutlineWidth', outlineWidth);
-    effect.setFloatParameter('uOutlineGain', PEAKFINDER_LOOK.silhouetteGain);
-    effect.setFloatParameter('uOutlinePower', 1);
-    effect.setFloatParameter('uOutlineFloor', PEAKFINDER_LOOK.silhouetteFloor);
-    effect.setFloatParameter('uOutlineCeiling', 1);
-    effect.setFloatParameter('uInkSky', 0);
-    effect.setFloatParameter('uHorizonBoost', skylineWidth > 0 ? PEAKFINDER_LOOK.skylineInk : 0);
-    effect.setFloatParameter('uHorizonWidth', Math.max(skylineWidth, 1));
-    // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
-    effect.setFloatParameter('uMetersPerUnit', RELIEF_DEFAULTS.metersPerUnit);
-    // AR draws the ink alone, over the camera preview — see the shader's own note.
-    effect.setFloatParameter('uTransparent', get(peakFinderArActive) ? 1 : 0);
-    effect.setColorParameter('uInkColor', colors.ink);
+    effect.apply({
+        'floatParams.uOperator': 2,
+        'floatParams.uIntensity': PEAKFINDER_LOOK.silhouetteInk,
+        'floatParams.uOutlineWidth': outlineWidth,
+        'floatParams.uOutlineGain': PEAKFINDER_LOOK.silhouetteGain,
+        'floatParams.uOutlinePower': 1,
+        'floatParams.uOutlineFloor': PEAKFINDER_LOOK.silhouetteFloor,
+        'floatParams.uOutlineCeiling': 1,
+        'floatParams.uInkSky': 0,
+        'floatParams.uHorizonBoost': skylineWidth > 0 ? PEAKFINDER_LOOK.skylineInk : 0,
+        'floatParams.uHorizonWidth': Math.max(skylineWidth, 1),
+        // The outline effect's uFar is in INTERNAL units and its depth range is in metres.
+        'floatParams.uMetersPerUnit': RELIEF_DEFAULTS.metersPerUnit,
+        // AR draws the ink alone, over the camera preview — see the shader's own note.
+        'floatParams.uTransparent': get(peakFinderArActive) ? 1 : 0,
+        'colorParams.uInkColor': colors.ink
+    } as never);
     applyLensCorrection();
-    panoramaView.setPostProcessEffect(effect);
+    attachEffect(effect);
 }
 
 /**
@@ -1049,8 +1067,7 @@ function applyLook() {
         if (!realisticApplied) {
             applyRealisticTerrain();
         }
-        panoramaView?.setPostProcessEffect(null);
-        effect = null;
+        dropEffect();
         terrain().set('surfaceShaderSource', '');
     } else {
         if (realisticApplied) {
@@ -1418,8 +1435,7 @@ export function teardownPanorama() {
     }
     panoramaView?.off('layoutChanged', onPanoramaLayout);
     panoramaView?.off('mapInteraction', onPanoramaInteraction);
-    panoramaView?.setPostProcessEffect(null);
-    effect = null;
+    dropEffect();
     // layers off the map first: `destroy()` leaves them in the native `Layers`, keeping the ElevationManager
     // and its prefetch threads alive (six threads burned 11x the render thread on a Crosscall)
     teardownPeakFinderSun();
