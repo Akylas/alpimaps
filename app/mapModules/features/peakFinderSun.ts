@@ -22,7 +22,6 @@ import type { MapPos } from '~/utils/geo';
 // the terrain. Two layers because layer order is z order, labels included: the path under the summit
 // names, the sun and its times over them.
 
-const TO_DEGREES = 180 / Math.PI;
 const TO_RADIANS = Math.PI / 180;
 const SAMPLE_MINUTES = 2;
 // Where the sun can meet the skyline: a little under the flat horizon (a skyline seen from high up is
@@ -44,16 +43,10 @@ export interface SunPosition {
     altitude: number;
 }
 
-/** Where the sun is, degrees: azimuth clockwise from north, geometric altitude. */
+/** Where the sun is, degrees: azimuth clockwise from north, altitude as seen (refraction included, so it compares with a skyline). */
 export function sunPositionAt(time: number, position: MapPos): SunPosition {
     const { altitude, azimuth } = getPosition(new Date(time), position.lat, position.lon);
-    // suncalc's azimuth runs from the SOUTH, towards the west.
-    return { azimuth: (azimuth * TO_DEGREES + 180 + 360) % 360, altitude: altitude * TO_DEGREES };
-}
-
-/** Where the air lifts the sun to (Saemundsson), so it is compared with an apparent skyline. */
-function apparent(altitude: number) {
-    return altitude + (altitude > -2 ? 1.02 / Math.tan((altitude + 10.3 / (altitude + 5.11)) * TO_RADIANS) / 60 : 0);
+    return { azimuth, altitude };
 }
 
 function dayStart(time: number) {
@@ -144,7 +137,7 @@ function planPath(eye: MapPos, time: number) {
     for (let minute = 0; minute <= 1440; minute += SAMPLE_MINUTES) {
         const sampleTime = start + minute * 60000;
         const { altitude, azimuth } = sunPositionAt(sampleTime, eye);
-        samples.push({ time: sampleTime, az: azimuth, alt: apparent(altitude) });
+        samples.push({ time: sampleTime, az: azimuth, alt: altitude });
     }
     path.call(
         'setDirections',
@@ -265,7 +258,7 @@ function placeSun(eye: MapPos, time: number) {
     }
     placed = { azimuth, altitude };
     for (const sprite of [disc, glow]) {
-        sprite.call('setDirection', azimuth, apparent(altitude), 0);
+        sprite.call('setDirection', azimuth, altitude, 0);
         sprite.set('visible', altitude > -1.5);
     }
 }
@@ -345,7 +338,7 @@ function build(sunContext: PeakFinderSkyContext) {
                           return null;
                       }
                       const { altitude, azimuth } = sunPositionAt(skyMoment(), eye);
-                      return { azimuth, altitude: apparent(altitude) };
+                      return { azimuth, altitude };
                   }
               }
             : null
