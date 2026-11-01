@@ -39,9 +39,9 @@ let clickSubscription: SkyClicks = null;
 let generation = 0;
 
 function moonPositionAt(time: number, eye: MapPos) {
-    // Refraction included by suncalc. Its azimuth runs from the SOUTH, towards the west.
+    // Degrees, azimuth from the north, refraction included: what suncalc 2 returns as is.
     const { altitude, azimuth } = getMoonPosition(new Date(time), eye.lat, eye.lon);
-    return { azimuth: (azimuth * TO_DEGREES + 180 + 360) % 360, altitude: altitude * TO_DEGREES };
+    return { azimuth, altitude };
 }
 
 /**

@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-    import { GetMoonIlluminationResult, GetTimesResult, getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
+    import { MoonIllumination, SunTimes, getMoonIllumination, getMoonPosition, getPosition, getTimes } from 'suncalc';
     // import { moon, MoonPhase, MoonPosition, sun, SunPosition, SunTimes } from '@modern-dev/daylight/lib/es6';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
@@ -22,7 +22,7 @@
     import { formatTime, getLocalTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { packageService } from '~/services/PackageService';
-    import { PI_DIV2, TO_DEG, TO_RAD } from '~/utils/geo';
+    import { TO_RAD } from '~/utils/geo';
     import { pickDate } from '~/utils/utils';
     import { clearInterval } from '~/utils/utils/index.ios';
     import { colors, fonts } from '~/variables';
@@ -78,8 +78,8 @@
         }
     });
     // let limitLine: LimitLine;
-    let illumination: GetMoonIlluminationResult; // MoonPhase;
-    let sunTimes: GetTimesResult; // SunTimes;
+    let illumination: MoonIllumination; // MoonPhase;
+    let sunTimes: SunTimes; // SunTimes;
     let sunriseEndAzimuth: CompassInfo; // SunTimes;
     let sunsetStartAzimuth: CompassInfo; // SunTimes;
     let moonAzimuth: CompassInfo;
@@ -177,8 +177,8 @@
             leftAxis.drawGridLines = false;
             leftAxis.drawAxisLine = false;
             leftAxis.drawLabels = false;
-            leftAxis.axisMinimum = -PI_DIV2;
-            leftAxis.axisMaximum = PI_DIV2;
+            leftAxis.axisMinimum = -90;
+            leftAxis.axisMaximum = 90;
             xAxis.position = XAxisPosition.BOTTOM_INSIDE;
             xAxis.forcedInterval = 24;
             xAxis.drawAxisLine = false;
@@ -276,11 +276,11 @@
         try {
             const date = startTime.toDate();
             illumination = getMoonIllumination(date);
-            moonAzimuth = getCompassInfo(getMoonPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180);
+            moonAzimuth = getCompassInfo(getMoonPosition(date, location.lat, location.lon).azimuth);
             sunTimes = getTimes(date, location.lat, location.lon);
-            sunriseEnd = dayjs.utc(sunTimes.sunriseEnd.valueOf()).valueOf();
-            sunsetStart = dayjs.utc(sunTimes.sunsetStart.valueOf()).valueOf();
-            sunAzimuth = getCompassInfo(getPosition(date, location.lat, location.lon).azimuth * TO_DEG + 180);
+            sunriseEnd = dayjs.utc(sunTimes.sunriseEnd?.valueOf() ?? NaN).valueOf();
+            sunsetStart = dayjs.utc(sunTimes.sunsetStart?.valueOf() ?? NaN).valueOf();
+            sunAzimuth = getCompassInfo(getPosition(date, location.lat, location.lon).azimuth);
             // sunriseEndAzimuth = getCompassInfo(getPosition(sunTimes.sunriseEnd, undefined, timezoneOffset, location.lat, location.lon).azimuth * TO_DEG + 180);
             // sunsetStartAzimuth = getCompassInfo(getPosition(sunTimes.sunsetStart, undefined, timezoneOffset, location.lat, location.lon).azimuth * TO_DEG + 180);
         } catch (err) {

@@ -6,7 +6,7 @@
     import { SVG } from '@nativescript-community/ui-svg/canvas';
     import { executeOnMainThread } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
-    import { GetMoonPositionResult, GetSunPositionResult, getMoonPosition, getPosition } from 'suncalc';
+    import { MoonPosition, Position, getMoonPosition, getPosition } from 'suncalc';
     import { onDestroy, onMount } from 'svelte';
     import type { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import SmoothCompassBehavior, { wrap } from '~/components/compass/SmoothCompassBehavior';
@@ -17,7 +17,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import { IItem as Item } from '~/models/Item';
     import { packageService } from '~/services/PackageService';
-    import { TO_DEG, TO_RAD } from '~/utils/geo';
+    import { TO_RAD } from '~/utils/geo';
     import { colors, fonts } from '~/variables';
     import CompassDialView from './CompassDialView.svelte';
     import PanelHeader from '../common/PanelHeader.svelte';
@@ -40,8 +40,8 @@
     /** Its own sheet: a panel header with the heading, and the sensor toggle as a pill. */
     export let standalone = false;
 
-    let moonBearing: GetMoonPositionResult = null;
-    let sunBearing: GetSunPositionResult = null;
+    let moonBearing: MoonPosition = null;
+    let sunBearing: Position = null;
     const behavior = new SmoothCompassBehavior(0.5);
     let canvas: NativeViewElementNode<CanvasView>;
 
@@ -107,11 +107,7 @@
         if (location) {
             const ddate = date.toDate();
             moonBearing = getMoonPosition(ddate, location.lat, location.lon);
-            moonBearing.azimuth = moonBearing.azimuth * TO_DEG + 180;
-            moonBearing.altitude = moonBearing.altitude * TO_DEG;
             sunBearing = getPosition(ddate, location.lat, location.lon);
-            sunBearing.azimuth = sunBearing.azimuth * TO_DEG + 180;
-            sunBearing.altitude = sunBearing.altitude * TO_DEG;
             canvas?.nativeView.invalidate();
         }
     }

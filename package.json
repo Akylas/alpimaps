@@ -132,7 +132,7 @@
         "nativescript-social-share": "1.6.0",
         "opening_hours": "3.12.0",
         "stream": "0.0.3",
-        "suncalc": "^1.9.0",
+        "suncalc": "2.1.1",
         "timers": "0.1.1"
     },
     "devDependencies": {
@@ -147,7 +147,6 @@
         "@swc/core": "1.16.1",
         "@types/geojson": "^7946.0.16",
         "@types/offscreencanvas": "^2019.7.3",
-        "@types/suncalc": "^1.9.2",
         "@types/three": "0.171.0",
         "fast-xml-parser": "5.8.0",
         "merge-properties-files": "^1.1.6",
