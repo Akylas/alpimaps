@@ -53,6 +53,14 @@ Ensure deps are installed
 
 Setup
 
+### run_sh
+
+```sh
+[bundle exec] fastlane run_sh
+```
+
+Run command in fastlane "env"
+
 ### prepare
 
 ```sh
@@ -153,6 +161,59 @@ Ship iOS build to Testflight.
 ```
 
 Ship iOS build to AppStore.
+
+----
+
+
+## Mac
+
+### mac sentry_upload
+
+```sh
+[bundle exec] fastlane mac sentry_upload
+```
+
+Upload Dsyms to Sentry
+
+### mac upload_store
+
+```sh
+[bundle exec] fastlane mac upload_store
+```
+
+
+
+### mac build
+
+```sh
+[bundle exec] fastlane mac build
+```
+
+Build the Mac Catalyst application: App Store pkg and notarized Developer ID app.
+
+### mac beta
+
+```sh
+[bundle exec] fastlane mac beta
+```
+
+Ship Mac Catalyst build to Testflight.
+
+### mac alpha
+
+```sh
+[bundle exec] fastlane mac alpha
+```
+
+Ship Mac Catalyst build to Testflight.
+
+### mac production
+
+```sh
+[bundle exec] fastlane mac production
+```
+
+Ship Mac Catalyst build to AppStore.
 
 ----
 
