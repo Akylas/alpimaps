@@ -24,5 +24,8 @@ ext {
     licenseReporterVersion = "2.4"
     sentryVersion = "7.22.6"
     sentryGradleVersion = "4.14.1"
-    massifSDKVersion = "6.2.0"
+    massifSDKVersion = "6.4.0"
+    // The local surface-only AAR built from massif-sdk; remove both lines to use the published one.
+    // massifAar = "massif-release"
+    // massifAarDir = "/Volumes/dev/massif/massif-sdk/scripts/android-dev/massif/build/outputs/aar"
 }
