@@ -198,7 +198,6 @@
             item.selected = true;
             dataItems.setItem(selectedIndex, item);
             focusOnItem(item);
-            showStopLines(item.name, { lat: item.lat, lon: item.lon });
         } catch (error) {
             showError(error);
         }
@@ -208,7 +207,17 @@
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridlayout rows="auto,auto,4*,6*">
         <CActionBar>
-            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={20} height={38} horizontalAlignment="center" mode={line.mode} textColor={line.textColor} />
+            <LineChip
+                name={line.shortName || line.longName}
+                slot="center"
+                col={0}
+                colSpan={3}
+                color={line.color}
+                fontSize={20}
+                height={38}
+                horizontalAlignment="center"
+                mode={line.mode}
+                textColor={line.textColor} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
         <DirectionHeader
@@ -220,7 +229,7 @@
         <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
-                <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
+                <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={32} startY={0} stopX={32} stopY="50%" strokeColor={item.color} strokeWidth={5} visibility={item.first ? 'hidden' : 'visible'} />
                     <line horizontalAlignment="left" startX={32} startY="50%" stopX={32} stopY="100%" strokeColor={item.color} strokeWidth={5} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
@@ -247,9 +256,11 @@
                         color={item.delay > 0 ? colorError : colorOnSurfaceVariant}
                         fontSize={14}
                         horizontalAlignment="right"
+                        marginRight={8}
                         text={item.time}
                         verticalTextAlignment="middle"
                         visibility={item.time ? 'visible' : 'collapse'} />
+                    <IconButton col={2} text="mdi-bus-clock" verticalAlignment="middle" on:tap={() => showStopLines(item.name, { lat: item.lat, lon: item.lon })} />
                 </canvasview>
             </Template>
         </collectionview>

@@ -196,7 +196,17 @@
 <page bind:this={page} actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,auto,*">
         <CActionBar>
-            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={20} height={38} horizontalAlignment="center" mode={line.mode} textColor={line.textColor} />
+            <LineChip
+                name={line.shortName || line.longName}
+                slot="center"
+                col={0}
+                colSpan={3}
+                color={line.color}
+                fontSize={20}
+                height={38}
+                horizontalAlignment="center"
+                mode={line.mode}
+                textColor={line.textColor} />
             <IconButton text="mdi-map-marker-path" on:tap={showDetails} />
         </CActionBar>
         <DirectionHeader
