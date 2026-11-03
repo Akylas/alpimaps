@@ -42,6 +42,38 @@ export interface RouteSheetCardLayout {
     height: number;
 }
 
+export type LensId = 'overview' | 'climbs' | 'road' | 'weather' | 'sun' | 'surface';
+
+/** The lens bar's fixed order, whatever the order the features register in. */
+export const LENS_ORDER: LensId[] = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface'];
+
+/** What a lens shows on its chip, next to its label. */
+export interface LensChip {
+    /** The lens' headline figure; none for a lens that has none. */
+    value?: string;
+    /** The lens has something serious to look at: a dot on the chip. */
+    alert?: boolean;
+    /** Absent: the data is there and fresh. */
+    state?: 'missing' | 'running' | 'outdated' | 'offline';
+}
+
+/** The sentence under the lens bar, with the button that goes with it when it asks for something. */
+export interface LensHeadline {
+    text: string;
+    action?: { label: string; run: () => void };
+}
+
+/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
+export interface RouteLens {
+    id: LensId;
+    icon: string;
+    label: () => string;
+    /** A lens a route cannot show is not in the bar. */
+    available: (ctx: RouteCtx) => boolean;
+    chip: (ctx: RouteCtx) => LensChip;
+    headline: (ctx: RouteCtx) => LensHeadline;
+}
+
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
 export interface RouteNavSection {
     id: string;
@@ -91,6 +123,8 @@ export interface RouteFeature {
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */
     tiles?: (ctx: RouteCtx) => RouteTile[];
+    /** The ways of reading the route this feature adds to the lens bar. */
+    lenses?: RouteLens[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
@@ -195,4 +229,17 @@ export function routeMapFeatures(features: RouteFeature[], ctx: RouteCtx & { nav
 /** The stages the enabled features contribute to the route analysis pipeline. */
 export function routeStages(features: RouteFeature[]): AnalysisStage[] {
     return features.flatMap((feature) => (feature.compute ? [feature.compute] : []));
+}
+
+/** The lenses the enabled features offer this route, in the bar's order. */
+export function routeLenses(features: RouteFeature[], ctx: RouteCtx): RouteLens[] {
+    return features
+        .flatMap((feature) => feature.lenses ?? [])
+        .filter((lens) => lens.available(ctx))
+        .sort((first, second) => LENS_ORDER.indexOf(first.id) - LENS_ORDER.indexOf(second.id));
+}
+
+/** The lens to show: the one asked for, or the overview when this route cannot show it. */
+export function resolveLens(requested: LensId, lenses: RouteLens[]): LensId {
+    return lenses.some((lens) => lens.id === requested) ? requested : 'overview';
 }
