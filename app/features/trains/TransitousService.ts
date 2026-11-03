@@ -11,6 +11,8 @@ const HEADERS = { 'User-Agent': `${__APP_ID__}/${__APP_VERSION__} (https://githu
 const ARRIVALS_LOOKAHEAD = 90 * 60 * 1000;
 const GONE_TOLERANCE = 2 * 60 * 1000;
 const RAIL_MODES = ['NIGHT_RAIL', 'HIGHSPEED_RAIL', 'LONG_DISTANCE', 'REGIONAL_RAIL', 'SUBURBAN'];
+// what a station board lists: trains, long distance coaches (FlixBus...) and on-demand services (Flexibus...), not the local trams and buses
+const STATION_MODES = [...RAIL_MODES, 'COACH', 'ODM'];
 
 export interface TransitousPlace {
     name: string;
@@ -167,18 +169,19 @@ class TransitousService {
     }
     /** the stops a train can be taken from around `position`, nearest first */
     findRailStops(position: MapPos, maxStops = 3) {
-        return this.findStops(position, { maxStops, modes: RAIL_MODES });
+        return this.findStops(position, { maxStops, modes: STATION_MODES });
     }
     async geocode(text: string, language: string): Promise<TransitousStop[]> {
         return this.get<TransitousStop[]>('v1/geocode', { text, type: 'STOP', language });
     }
 
     /** `arrivals`: the trains reaching the stop instead of leaving it */
-    async getStopTimes(stopId: string, { arrivals = false, count = 30, time }: { arrivals?: boolean; count?: number; time?: Date } = {}) {
+    async getStopTimes(stopId: string, { arrivals = false, count = 30, modes, time }: { arrivals?: boolean; count?: number; modes?: string[]; time?: Date } = {}) {
         const { stopTimes } = await this.get<{ stopTimes: TransitousStopTime[] }>('v6/stoptimes', {
             stopId,
             n: count,
             arriveBy: arrivals,
+            ...(modes ? { mode: modes.join(',') } : {}),
             ...(time ? { time: time.toISOString() } : {})
         });
         return stopTimes;
@@ -194,7 +197,7 @@ class TransitousService {
         // arrivals can only be paged backwards: ask for the ones before a time in the future, then drop the gone ones
         const now = Date.now();
         const time = arrivals ? new Date(now + ARRIVALS_LOOKAHEAD) : undefined;
-        const lists = await Promise.all(stops.map((stop) => this.getStopTimes(stop.id, { arrivals, count, time }).then((stopTimes) => addSncfRealtime(stopTimes, arrivals))));
+        const lists = await Promise.all(stops.map((stop) => this.getStopTimes(stop.id, { arrivals, count, modes: STATION_MODES, time }).then((stopTimes) => addSncfRealtime(stopTimes, arrivals))));
         const timeOf = (stopTime: TransitousStopTime) => Date.parse((arrivals ? stopTime.place.arrival : stopTime.place.departure) ?? stopTime.place.arrival ?? stopTime.place.departure);
         return lists
             .flat()
