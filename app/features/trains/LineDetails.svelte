@@ -1,31 +1,35 @@
 <script lang="ts">
     import * as api from '@nativescript-community/ui-massifmaps/api';
-    import type { MassifMap } from '@nativescript-community/ui-massifmaps/api';
+    import type { MassifMap, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { ObservableArray, Page } from '@nativescript/core';
-    import { openUrl } from '@nativescript/core/utils';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '@shared/components/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { cloneLayerSpec, createTileDecoder, getMapContext } from '~/mapModules/MapModule';
-    import { onNetworkChanged } from '~/services/NetworkService';
+    import { decompress, onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { MetroLineStop, TransitRoute, transitService } from '~/features/transit/TransitService';
+    import { type StopLine } from '~/features/trains/lines';
+    import { transitousService } from '~/features/trains/TransitousService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import { geoJSONBounds } from '~/utils/geo';
     import IconButton from '~/components/common/IconButton.svelte';
-    import { FeatureCollection } from 'geojson';
+    import type { Feature, FeatureCollection } from 'geojson';
     import type { MapPos } from '~/utils/geo';
     import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorOnBackground, colorPrimary } = $colors;
     $: ({ colorBackground, colorOnBackground, colorPrimary } = $colors);
-    interface Item extends MetroLineStop {
+    interface Item {
+        id: string;
+        name: string;
+        lat: number;
+        lon: number;
         selected: boolean;
         color: string;
         first: boolean;
@@ -33,11 +37,13 @@
     }
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
-    export let line: TransitRoute;
+    export let line: StopLine;
     export let position: MapPos = null;
     export let selectedStop = line.stopIds?.[0];
 
     let massifMap: MassifMap;
+    let lineDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
+    let directionIndex = 0;
     let selectedIndex = -1;
 
     DEV_LOG && console.log('line', selectedStop, JSON.stringify(line));
@@ -46,37 +52,55 @@
     let noNetworkAndNoData = false;
     export let decoder = createTileDecoder('inner');
     const mapContext = getMapContext();
-    const lineColor = line.color || transitService.defaultTransitLineColor;
 
     async function refresh() {
         try {
             if (!massifMap) {
                 return;
             }
+            loading = true;
+            const leg = await transitousService.getTrip(line.directions[directionIndex].tripId);
+            const places = [leg.from, ...(leg.intermediateStops ?? []), leg.to];
+            selectedIndex = -1;
             dataItems = new ObservableArray(
-                (await transitService.getLineStops(line.id))
-                    .filter((i) => i.visible === true)
-                    .map((i, index, array) => {
-                        const selected = i.id === selectedStop || (position && getDistanceSimple(i, position) < 50);
-                        if (selected) {
-                            selectedIndex = index;
-                        }
-                        return { ...i, color: lineColor, first: index === 0, last: index === array.length - 1, selected };
-                    })
+                places.map((place, index, array) => {
+                    const selected = line.stopIds.includes(place.stopId) || (position && getDistanceSimple(place, position) < 50);
+                    if (selected && selectedIndex === -1) {
+                        selectedIndex = index;
+                    }
+                    return { id: place.stopId, name: place.name, lat: place.lat, lon: place.lon, color: line.color, first: index === 0, last: index === array.length - 1, selected };
+                })
             );
 
-            const lineGeoJSON: FeatureCollection = await transitService.getTransitLines(line.id);
+            const path: Feature = {
+                type: 'Feature',
+                geometry: { type: 'LineString', coordinates: decompress(leg.legGeometry.points, leg.legGeometry.precision ?? 6).map(({ lat, lon }) => [lon, lat]) },
+                properties: {
+                    route_id: line.id,
+                    route_mode: line.mode,
+                    route_short_name: line.shortName,
+                    route_long_name: line.longName,
+                    shortName: line.shortName,
+                    longName: line.longName,
+                    name: line.longName,
+                    route_color: line.color,
+                    route_text_color: line.textColor,
+                    color: line.color,
+                    textColor: line.textColor
+                }
+            };
+            const lineGeoJSON: FeatureCollection = { type: 'FeatureCollection', features: [path] };
             dataItems.forEach((i) => {
                 lineGeoJSON.features.unshift({ type: 'Feature', geometry: { type: 'Point', coordinates: [i.lon, i.lat] }, properties: { id: i.id, name: i.name, color: i.color } as any });
             });
-            // lineGeoJSON = lineGeoJSON.replace('features":[{', `features":[${JSON.stringify(stopsGeoJSON).slice(1, -1)},{`);
 
-            const transitVectorTileDataSource = massifMap.source('source.transitLine', { type: 'geojson', minZoom: 0, maxZoom: 24 });
-            transitVectorTileDataSource.createLayer('routes');
-            transitVectorTileDataSource.setGeoJSON(1, lineGeoJSON);
-
-            massifMap.addLayer('layer.transitLine', { type: 'vector', source: transitVectorTileDataSource.id, style: decoder.id });
-            if (selectedIndex) {
+            if (!lineDataSource) {
+                lineDataSource = massifMap.source('source.transitLine', { type: 'geojson', minZoom: 0, maxZoom: 24 });
+                lineDataSource.createLayer('routes');
+                massifMap.addLayer('layer.transitLine', { type: 'vector', source: lineDataSource.id, style: decoder.id });
+            }
+            lineDataSource.setGeoJSON(1, lineGeoJSON);
+            if (selectedIndex !== -1) {
                 focusOnItem(dataItems.getItem(selectedIndex), true);
             } else {
                 massifMap.camera().fitBounds(geoJSONBounds(lineGeoJSON), { integerZoom: true, resetRotation: true, resetTilt: true });
@@ -90,6 +114,10 @@
         } finally {
             loading = false;
         }
+    }
+    function reverseDirection() {
+        directionIndex = (directionIndex + 1) % line.directions.length;
+        refresh();
     }
     // onMount(() => {
     //     focus();
@@ -126,17 +154,9 @@
         }
     });
 
-    async function downloadPDF() {
-        try {
-            openUrl(`https://data.mobilites-m.fr/api/planligne/pdf?route=${line.id.replace('_', ':')}`);
-        } catch (error) {
-            showError(error);
-        }
-    }
-
     async function showTimesheet() {
         try {
-            const component = (await import('~/features/transit/TransitTimesheet.svelte')).default;
+            const component = (await import('~/features/trains/LineTimesheet.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -206,10 +226,10 @@
             maxLines={3}
             padding="0 10 5 10"
             row={1}
-            text={(line.longName || line.name)?.replace(' / ', '\n')}
+            text={(line.longName || line.directions[directionIndex].headsign)?.replace(' / ', '\n')}
             textAlignment="center"
             verticalTextAlignment="center"
-            visibility={line.longName ? 'visible' : 'collapse'} />
+            visibility={line.longName || line.directions[directionIndex]?.headsign ? 'visible' : 'collapse'} />
         <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
@@ -245,13 +265,13 @@
                 slot="center"
                 class="transitIconLabel"
                 autoFontSize={true}
-                backgroundColor={transitService.getRouteColor(line)}
+                backgroundColor={line.color}
                 colSpan={3}
-                color={transitService.getRouteTextColor(line)}
+                color={line.textColor}
                 horizontalAlignment="center"
-                text={line.shortName || line.name} />
+                text={line.shortName || line.longName} />
 
-            <IconButton text="mdi-file-pdf-box" on:tap={() => downloadPDF()} />
+            <IconButton text="mdi-swap-vertical" visibility={line.directions.length > 1 ? 'visible' : 'collapse'} on:tap={reverseDirection} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
     </gridlayout>

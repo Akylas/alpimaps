@@ -35,7 +35,10 @@ export interface TransitousStopTime {
     displayName?: string;
     /** the commercial train number, as text */
     tripShortName?: string;
+    routeId?: string;
+    directionId?: number;
     routeShortName?: string;
+    routeLongName?: string;
     routeColor?: string;
     routeTextColor?: string;
     agencyName?: string;
@@ -63,7 +66,10 @@ export interface TransitousLeg {
     realTime: boolean;
     headsign?: string;
     displayName?: string;
+    routeId?: string;
+    directionId?: number;
     routeShortName?: string;
+    routeLongName?: string;
     routeColor?: string;
     routeTextColor?: string;
     agencyName?: string;
@@ -144,22 +150,25 @@ class TransitousService {
         });
     }
 
-    /** the stops a train can be taken from around `position`, nearest first */
-    async findRailStops(position: MapPos, maxStops = 3): Promise<TransitousStop[]> {
+    /** the stops around `position`, nearest first; `modes`: only those a vehicle of these modes serves */
+    async findStops(position: MapPos, { maxStops = 3, modes, radius = STATION_RADIUS_DEGREES }: { maxStops?: number; modes?: string[]; radius?: number } = {}): Promise<TransitousStop[]> {
         const stops = await this.get<TransitousPlace[]>('v6/map/stops', {
-            min: formatPosition({ lat: position.lat - STATION_RADIUS_DEGREES, lon: position.lon - STATION_RADIUS_DEGREES }),
-            max: formatPosition({ lat: position.lat + STATION_RADIUS_DEGREES, lon: position.lon + STATION_RADIUS_DEGREES }),
+            min: formatPosition({ lat: position.lat - radius, lon: position.lon - radius }),
+            max: formatPosition({ lat: position.lat + radius, lon: position.lon + radius }),
             grouped: false,
-            modes: RAIL_MODES.join(',')
+            ...(modes ? { modes: modes.join(',') } : {})
         });
         const squaredDistance = (stop: TransitousPlace) => (stop.lat - position.lat) ** 2 + (stop.lon - position.lon) ** 2;
         return stops
-            .filter((stop) => stop.stopId && stop.modes?.some(isRailMode))
+            .filter((stop) => stop.stopId && (!modes || stop.modes?.some((mode) => modes.includes(mode))))
             .sort((first, second) => squaredDistance(first) - squaredDistance(second))
             .slice(0, maxStops)
             .map((stop) => ({ id: stop.stopId, name: stop.name, lat: stop.lat, lon: stop.lon, modes: stop.modes }));
     }
-
+    /** the stops a train can be taken from around `position`, nearest first */
+    findRailStops(position: MapPos, maxStops = 3) {
+        return this.findStops(position, { maxStops, modes: RAIL_MODES });
+    }
     async geocode(text: string, language: string): Promise<TransitousStop[]> {
         return this.get<TransitousStop[]>('v1/geocode', { text, type: 'STOP', language });
     }

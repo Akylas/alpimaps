@@ -3,7 +3,6 @@
     import type { MapPos } from '~/utils/geo';
     import { CollectionView } from '@nativescript-community/ui-collectionview';
     import { Page } from '@nativescript/core';
-    import { openUrl } from '@nativescript/core/utils';
     import dayjs, { Dayjs } from 'dayjs';
     import { onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
@@ -12,7 +11,7 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/features/transit/TransitService';
+    import { type StopLine, type TimesheetPage, type TimesheetStop, getLineTimesheet } from '~/features/trains/lines';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
@@ -29,44 +28,35 @@
     $: ({ colorOnBackground, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
     $: ({ bottom: windowInsetBottom } = $windowInset);
 
-    export let line: TransitRoute;
+    export let line: StopLine;
     let loading = false;
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
     let noNetworkAndNoData = false;
-    let timelineItems: MetroTripStop[] = null;
-    let lineData: MetroTimesheet = null;
-    let lineDataIndex: 0 | 1 = 0;
+    let timelineItems: TimesheetStop[] = null;
+    let timesheet: TimesheetPage = null;
+    let directionIndex = 0;
     let directionText: string;
     let currentTime = dayjs().set('s', 0).set('ms', 0);
-    let currentStopId: string = null;
+    // where the pages before this one started, to go back to them
+    let previousStarts: Dayjs[] = [];
     DEV_LOG && console.log('line', line);
 
-    async function fetchLineTimeline(time?: Dayjs, scrollToItem = false) {
+    async function fetchTimesheet(time: Dayjs, scrollToItem = false) {
         try {
             loading = true;
+            const result = await getLineTimesheet(line, line.directions[directionIndex].directionId, time.toDate());
             currentTime = time;
-            lineData = await transitService.getLineTimeline(line.id, time?.utc(true).valueOf());
-            DEV_LOG && console.log('lineData', line.id, JSON.stringify(lineData));
-            // prevTime = lineData[lineDataIndex].prevTime;
-            // nextTime = lineData[lineDataIndex].nextTime;
-            timelineItems = lineData[lineDataIndex].arrets;
+            timesheet = result;
+            timelineItems = result.stops;
+            directionText = line.directions[directionIndex].headsign;
             if (timelineItems.length === 0) {
                 showSnack({ message: lc('no_timesheet_data') });
                 return;
             }
-            // console.log('fetchLineTimeline', time.valueOf(), lineData[lineDataIndex].prevTime, lineData[lineDataIndex].nextTime);
-            directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
-            if (line.stopIds) {
-                currentStopId = line.stopIds[lineDataIndex];
-                const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
-                DEV_LOG && console.log('currentStopId', currentStopId, index);
-                if (index === -1) {
-                    line.stopIds = line.stopIds.reverse();
-                    currentStopId = line.stopIds[lineDataIndex];
-                }
-                if (scrollToItem) {
-                    const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
+            if (scrollToItem) {
+                const scrollIndex = timelineItems.findIndex((stop) => isCurrentStop(stop));
+                if (scrollIndex >= 0) {
                     collectionView.nativeView.scrollToIndex(scrollIndex, false);
                 }
             }
@@ -80,37 +70,26 @@
             loading = false;
         }
     }
+    function isCurrentStop(stop: TimesheetStop) {
+        return line.stopIds.includes(stop.stopId);
+    }
 
     onNetworkChanged((connected) => {
         if (connected && noNetworkAndNoData) {
-            fetchLineTimeline(undefined, true);
+            fetchTimesheet(currentTime, true);
         }
     });
     function reverseTimesheet() {
-        lineDataIndex = 1 - lineDataIndex;
-        timelineItems = lineData[lineDataIndex].arrets;
-        directionText = timelineItems[0].stopName + '\n' + timelineItems[timelineItems.length - 1].stopName;
-        if (line.stopIds) {
-            currentStopId = line.stopIds[lineDataIndex];
-            const index = timelineItems.findIndex((a) => a.stopId === currentStopId);
-            if (index === -1) {
-                line.stopIds = line.stopIds.reverse();
-                currentStopId = line.stopIds[lineDataIndex];
-            }
-            const scrollIndex = timelineItems.findIndex((s) => s.stopId === currentStopId);
-            collectionView.nativeView.scrollToIndex(scrollIndex, false);
+        if (line.directions.length > 1) {
+            directionIndex = (directionIndex + 1) % line.directions.length;
+            previousStarts = [];
+            fetchTimesheet(currentTime, true);
         }
     }
 
-    function getTripTime(item, index) {
-        const data = item.trips[index];
-        if (typeof data === 'string') {
-            return data;
-        }
-        if (index !== undefined) {
-            return formatTime(dayjs().startOf('d').add(data, 's'));
-        }
-        return '|';
+    function getTripTime(item: TimesheetStop, index: number) {
+        const time = item.times[index];
+        return time ? formatTime(dayjs(time)) : '|';
     }
 
     async function selectDate() {
@@ -118,7 +97,7 @@
             const dayStart = currentTime.startOf('d');
             const date = await pickDate(currentTime);
             if (date && dayStart.valueOf() !== date) {
-                fetchLineTimeline(dayjs(date).set('h', currentTime.get('h')).set('m', currentTime.get('m')));
+                fetchTimesheet(dayjs(date).set('h', currentTime.get('h')).set('m', currentTime.get('m')));
             }
         } catch (error) {
             showError(error);
@@ -131,34 +110,28 @@
             const [minute, hour] = await pickTime(currentTime);
 
             if (currentMinute !== minute && currentHour !== hour) {
-                fetchLineTimeline(currentTime.set('h', hour).set('m', minute));
+                fetchTimesheet(currentTime.set('h', hour).set('m', minute));
             }
         } catch (error) {
             showError(error);
         }
     }
     async function previousDates() {
-        if (lineData[lineDataIndex].prevTime) {
-            fetchLineTimeline(dayjs.utc(lineData[lineDataIndex].prevTime));
+        const previous = previousStarts.pop();
+        if (previous) {
+            fetchTimesheet(previous);
         }
     }
     async function nextDates() {
-        if (lineData[lineDataIndex].nextTime) {
-            fetchLineTimeline(dayjs.utc(lineData[lineDataIndex].nextTime));
-        }
-    }
-
-    async function downloadPDF() {
-        try {
-            openUrl(`https://data.mobilites-m.fr/api/ficheHoraires/pdf?route=${line.id.replace('_', ':')}`);
-        } catch (error) {
-            showError(error);
+        if (timesheet?.nextTime) {
+            previousStarts.push(currentTime);
+            fetchTimesheet(dayjs(timesheet.nextTime));
         }
     }
 
     async function showDetails() {
         try {
-            const component = (await import('~/features/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/features/trains/LineDetails.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -170,12 +143,12 @@
         }
     }
 
-    function drawTripTime(item: MetroTripStop, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
+    function drawTripTime(item: TimesheetStop, { canvas, object }: { canvas: Canvas; object: CanvasView }) {
         try {
             const w = canvas.getWidth();
             const h = canvas.getHeight();
             const w5 = w / 5;
-            timePaint.color = item.stopId === currentStopId ? colorPrimary : colorOnBackground;
+            timePaint.color = isCurrentStop(item) ? colorPrimary : colorOnBackground;
             for (let index = 0; index < 4; index++) {
                 const staticLayout = new StaticLayout(getTripTime(item, index), timePaint, w5 - 10, LayoutAlignment.ALIGN_CENTER, 1, 0, true);
                 canvas.save();
@@ -200,7 +173,7 @@
     }
 
     onMount(() => {
-        fetchLineTimeline(currentTime, true);
+        fetchTimesheet(currentTime, true);
     });
 
     onThemeChanged(() => collectionView?.nativeView.refreshVisibleItems());
@@ -228,10 +201,10 @@
             maxLines={3}
             padding="15 10 15 10"
             row={1}
-            text={(line.longName || line.name)?.replace(' / ', '\n')}
+            text={(line.longName || directionText)?.replace(' / ', '\n')}
             textAlignment="center"
             verticalTextAlignment="center"
-            visibility={line.longName ? 'visible' : 'collapse'} />
+            visibility={line.longName || directionText ? 'visible' : 'collapse'} />
         <gridlayout colSpan={3} columns="*,40,*" row={2} rows="50,auto" visibility={noNetworkAndNoData ? 'hidden' : 'visible'} on:swipe={onSwipe}>
             <canvaslabel borderBottomColor={colorOutlineVariant} borderBottomWidth={1} marginLeft={20} rippleColor={colorOnBackground} on:tap={() => selectDate()}>
                 <cspan color={colorOnSurfaceVariant} fontSize={11} text={lc('date')} verticalAlignment="top" />
@@ -253,16 +226,16 @@
 
         <collectionview bind:this={collectionView} colSpan={3} items={timelineItems} row={3} android:marginBottom={windowInsetBottom} rowHeight={56} on:swipe={onSwipe}>
             <Template let:item>
-                <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding="0 10 0 10" rippleColor={item.color}>
+                <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="*,200" padding="0 10 0 10" rippleColor={line.color}>
                     <label
                         id="test"
                         autoFontSize={true}
-                        color={item.stopId === currentStopId ? colorPrimary : colorOnBackground}
+                        color={isCurrentStop(item) ? colorPrimary : colorOnBackground}
                         fontSize={13}
                         maxFontSize={13}
                         maxLines={3}
                         padding="4 10 4 0"
-                        text={item.stopName}
+                        text={item.name}
                         verticalTextAlignment="center" />
                     <canvasview id="canvas" col={1} on:draw={(e) => drawTripTime(item, e)} />
                 </gridlayout>
@@ -282,12 +255,11 @@
                 slot="center"
                 class="transitIconLabel"
                 autoFontSize={true}
-                backgroundColor={transitService.getRouteColor(line)}
+                backgroundColor={line.color}
                 colSpan={3}
-                color={transitService.getRouteTextColor(line)}
+                color={line.textColor}
                 horizontalAlignment="center"
-                text={line.shortName || line.name} />
-            <IconButton text="mdi-file-pdf-box" on:tap={downloadPDF} />
+                text={line.shortName || line.longName} />
             <IconButton text="mdi-information-outline" on:tap={showDetails} />
         </CActionBar>
     </gridlayout>
