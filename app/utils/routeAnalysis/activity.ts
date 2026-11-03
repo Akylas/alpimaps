@@ -1,3 +1,4 @@
+import type { ValhallaProfile } from '~/utils/routing';
 import type { Activity, RouteAnalysis } from './types';
 
 const BIKE_SUBTYPES: Activity['subtype'][] = ['road', 'gravel', 'normal', 'mountain', 'enduro'];
@@ -31,4 +32,19 @@ export function activityOf(item: { properties?: { imported?: boolean; route?: { 
 /** True when a lens that needs an activity has to ask for it. */
 export function needsActivity(item: Parameters<typeof activityOf>[0], analysis?: RouteAnalysis | null): boolean {
     return !activityOf(item, analysis);
+}
+
+const VALHALLA_PROFILES: ValhallaProfile[] = ['car', 'auto', 'bus', 'bicycle', 'pedestrian', 'truck', 'motorcycle'];
+
+/**
+ * The Valhalla profile to match a saved route with: what the user said it is, else the profile it
+ * was computed with, else pedestrian. An imported track's `route.type` is whatever its GPX said.
+ */
+export function statsProfile(item: { properties?: { imported?: boolean; route?: { type?: string } } }, analysis?: RouteAnalysis | null): ValhallaProfile {
+    const picked = analysis?.inputs.activity;
+    if (picked?.origin === 'user') {
+        return picked.kind === 'bike' ? 'bicycle' : picked.kind === 'motor' ? 'auto' : 'pedestrian';
+    }
+    const type = item.properties?.route?.type;
+    return (!item.properties?.imported && VALHALLA_PROFILES.find((profile) => profile === type)) || 'pedestrian';
 }

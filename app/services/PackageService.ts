@@ -14,6 +14,7 @@ const toLngLat = (positions: MapPos[]): [number, number][] => positions.map((p) 
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
 import { type RawInstruction, type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
+import { statsProfile } from '~/utils/routeAnalysis/activity';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import type { LocalArchive } from '~/mapModules/localData/archives';
 import { networkService } from './NetworkService';
@@ -823,7 +824,9 @@ class PackageService extends Observable {
         }
         const webResult = await networkService.getValhallaTraceAttributes(toLngLat(positions), {
             shape_match,
-            filters: { attributes, action: 'include' }
+            filters: { attributes, action: 'include' },
+            // without it the request keeps the web service's pedestrian default
+            ...(profile && { costing: profile })
         });
         DEV_LOG && console.log('getStats done', Date.now() - startTime, 'ms');
         return webResult.edges;
@@ -833,6 +836,8 @@ class PackageService extends Observable {
         if (!route) {
             route = item.route;
         }
+        // a saved route is matched with its own profile, not whichever the routing service was left on
+        profile = profile ?? (item ? statsProfile(item, item.analysis) : undefined);
         const edges = await this.getStats({ item, points: positions, profile });
         if (!edges) {
             return;

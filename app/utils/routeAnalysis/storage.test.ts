@@ -1,6 +1,6 @@
 import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
-import { activityFromRoute, activityOf, needsActivity } from './activity';
+import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
 import { createAnalysis, parseAnalysis, reconcileAnalysis, withActivity } from './storage';
 import type { Layer } from './types';
@@ -119,5 +119,31 @@ describe('activity', () => {
         expect(activityOf(computed)?.subtype).toBe('road');
         const picked = withActivity(createAnalysis(line(10)), line(10), { kind: 'bike', subtype: 'mountain', origin: 'user' });
         expect(activityOf(computed, picked)?.subtype).toBe('mountain');
+    });
+});
+
+describe('statsProfile', () => {
+    it('matches a computed route with the profile it was computed with', () => {
+        expect(statsProfile({ properties: { route: { type: 'bicycle' } } })).toBe('bicycle');
+        expect(statsProfile({ properties: { route: { type: 'motorcycle' } } })).toBe('motorcycle');
+        expect(statsProfile({ properties: { route: { type: 'pedestrian' } } })).toBe('pedestrian');
+    });
+    it('falls back to pedestrian for anything else', () => {
+        expect(statsProfile({})).toBe('pedestrian');
+        expect(statsProfile({ properties: { route: { type: 'cycling' } } })).toBe('pedestrian');
+    });
+    it('does not trust the type of an imported track', () => {
+        expect(statsProfile({ properties: { imported: true, route: { type: 'bicycle' } } })).toBe('pedestrian');
+    });
+    it('follows the activity the user picked, even over the route', () => {
+        const bike = withActivity(null, line(10), { kind: 'bike', subtype: 'road', origin: 'user' });
+        const motor = withActivity(null, line(10), { kind: 'motor', origin: 'user' });
+        expect(statsProfile({ properties: { imported: true } }, bike)).toBe('bicycle');
+        expect(statsProfile({ properties: { route: { type: 'pedestrian' } } }, bike)).toBe('bicycle');
+        expect(statsProfile({ properties: { imported: true } }, motor)).toBe('auto');
+    });
+    it('ignores an activity that only came from the route', () => {
+        const fromRoute = createAnalysis(line(10), { kind: 'bike', origin: 'route' });
+        expect(statsProfile({ properties: { route: { type: 'pedestrian' } } }, fromRoute)).toBe('pedestrian');
     });
 });
