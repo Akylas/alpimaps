@@ -23,7 +23,6 @@
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
     import { lc } from '~/helpers/locale';
-    import GradeLegend from '~/components/chart/GradeLegend.svelte';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
     let { colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
@@ -40,7 +39,20 @@
         return arr.filter((x) => x >= target).sort((a, b) => a - b)[0];
     }
 
-    const dispatch = createEventDispatcher();
+    // the shared dispatcher hands the payload itself to the listener, not a `CustomEvent`
+    interface $$Events {
+        highlight: { lat: number; lon: number; highlight: Highlight<Entry> };
+        /** the cursor's point and, when the sheet knows them, the figures to the end of the route. `null`: no cursor */
+        cursor: {
+            index: number;
+            entry: { d: number; a: number; g?: number };
+            remainingDistance?: number;
+            remainingTime?: number;
+            dplus?: number;
+            dmin?: number;
+        } | null;
+    }
+    const dispatch = createEventDispatcher<$$Events>();
     const mapContext = getMapContext();
 
     const cursorPaint = new Paint();
@@ -105,14 +117,12 @@
     export let filled = true;
     /** profile index range to zoom on, eg the climb underway. Whole route when null */
     export let range: { fromIndex: number; toIndex: number } = null;
-    /** the selected point's figures in a strip above the chart, instead of text drawn over it */
-    export let infoStrip = false;
-
-    let highlightInfo: { at: string; values: { icon: string; fontFamily: string; value: string }[] } = null;
+    /** the lens card's chart: its cursor's figures leave through the `cursor` event instead of being drawn over it */
+    export let inCard = false;
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
-        highlightInfo = null;
+        dispatch('cursor', null);
     }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
@@ -283,7 +293,7 @@
         // DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
-            highlightInfo = null;
+            dispatch('cursor', null);
             if (nChart) {
                 nChart.highlight(null);
             }
@@ -364,21 +374,7 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
-                if (infoStrip) {
-                    const grade = itemData.g || 0;
-                    highlightInfo = {
-                        at: formatDistance(itemData.d),
-                        values: [
-                            !isNaN(params.remainingTime) && { icon: 'mdi-timer-outline', fontFamily: $fonts.mdi, value: convertDurationSeconds(params.remainingTime) },
-                            { icon: 'mdi-flag-checkered', fontFamily: $fonts.mdi, value: formatDistance(params.remainingDistance) },
-                            { icon: 'mdi-triangle-outline', fontFamily: $fonts.mdi, value: convertElevation(itemData.a || 0) },
-                            { icon: 'mdi-angle-acute', fontFamily: $fonts.mdi, value: grade.toFixed(1) + ' %' },
-                            !isNaN(itemData.dp) && params.dplus - itemData.dp > 0 && { icon: 'mdi-arrow-top-right', fontFamily: $fonts.mdi, value: convertElevation(params.dplus - itemData.dp) },
-                            !isNaN(itemData.dm) &&
-                                Math.abs(params.dmin - itemData.dm) > 0 && { icon: 'mdi-arrow-bottom-right', fontFamily: $fonts.mdi, value: convertElevation(-(params.dmin - itemData.dm)) }
-                        ].filter(Boolean)
-                    };
-                }
+                dispatch('cursor', { index: onPathIndex, entry: { d: itemData.d, a: itemData.a, g: itemData.g }, ...params });
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
@@ -457,8 +453,8 @@
                 chartView.minOffset = 0;
                 // the mini chart is drawn under the widget's own labels — the summit elevation sits in
                 // its top right corner — so the curve needs headroom rather than the whole card
-                // with the strip above, the highlight needs no room of its own
-                chartView.setExtraOffsets(0, mini ? 14 : infoStrip ? 6 : 24, mini ? 4 : 10, mini ? 2 : infoStrip ? 16 : 10);
+                // with the readout above, the highlight needs no room of its own
+                chartView.setExtraOffsets(0, mini ? 14 : inCard ? 6 : 24, mini ? 4 : 10, mini ? 2 : inCard ? 16 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -469,8 +465,8 @@
                 }
                 leftAxis.textColor = colorOnSurface;
                 leftAxis.drawZeroLine = true;
-                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(infoStrip ? 140 : 70).hex;
-                if (infoStrip) {
+                leftAxis.gridColor = new Color(colorOutlineVariant).setAlpha(inCard ? 140 : 70).hex;
+                if (inCard) {
                     leftAxis.gridLineWidth = 0.5;
                 } else {
                     leftAxis.gridDashPathEffect = new DashPathEffect([6, 3], 0);
@@ -514,16 +510,16 @@
                             c.drawCircle(x, h.drawY, 4, highlightPaint);
                             return;
                         }
-                        if (highlightNString && !infoStrip) {
+                        if (highlightNString && !inCard) {
                             const staticLayout = new StaticLayout(highlightNString, nstringPaint, c.getWidth(), LayoutAlignment.ALIGN_NORMAL, 1, 0, true);
                             c.save();
                             c.translate(10, 0);
                             staticLayout.draw(c);
                             c.restore();
                         }
-                        if (infoStrip) {
-                            // the strip's accent, so the cursor reads as its point: a line from the
-                            // strip down, a ringed dot on the curve and the distance on the axis
+                        if (inCard) {
+                            // the readout's accent, so the cursor reads as its point: a line from the
+                            // readout down, a ringed dot on the curve and the distance on the axis
                             const bottom = chartView.viewPortHandler.contentBottom;
                             cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
                             c.drawLine(x, 0, x, bottom, cursorPaint);
@@ -557,7 +553,7 @@
                 //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
             }
-            const labelCount = infoStrip ? 3 : 5;
+            const labelCount = inCard ? 3 : 5;
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
             const interval = Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / step) * step;
             leftAxis.forcedInterval = interval;
@@ -567,7 +563,7 @@
             leftAxis.textSize = 9 * $fontScale;
 
             const totalDistance = it.route.totalDistance;
-            const xLabelCount = infoStrip ? X_LABEL_COUNT : 6;
+            const xLabelCount = inCard ? X_LABEL_COUNT : 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
@@ -697,34 +693,7 @@
     }
 </script>
 
-<gridlayout rows={infoStrip ? '46,*,auto' : '*'} {...$$restProps}>
-    {#if infoStrip}
-        <!-- the selected point's strip, in the accent the cursor shares; tapping it clears the selection -->
-        <label class="sectionHeader" padding="16 8 0 8" text={lc('elevation_profile')} visibility={highlightInfo ? 'collapse' : 'visible'} />
-        <gridlayout
-            backgroundColor={isEInk ? null : colorAccentContainer}
-            borderColor={isEInk ? colorOnSurface : colorPrimary}
-            borderRadius={14}
-            borderWidth={1}
-            columns="auto,*"
-            margin="4 4 0 4"
-            visibility={highlightInfo ? 'visible' : 'collapse'}
-            on:tap={clearHighlight}>
-            <stacklayout padding="0 8 0 10" verticalAlignment="middle">
-                <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={16} text="mdi-map-marker" textAlignment="center" />
-                <label color={isEInk ? colorOnSurface : colorPrimary} fontSize={11} fontWeight="bold" text={highlightInfo?.at} textAlignment="center" />
-            </stacklayout>
-            <!-- each figure an icon over its value, so none needs a label -->
-            <gridlayout col={1} columns={(highlightInfo?.values ?? []).map(() => '*').join(',') || '*'} paddingRight={4} verticalAlignment="middle">
-                {#each highlightInfo?.values ?? [] as info, index}
-                    <stacklayout col={index} verticalAlignment="middle">
-                        <label color={isEInk ? colorOnSurface : colorPrimary} fontFamily={info.fontFamily} fontSize={15} text={info.icon} textAlignment="center" />
-                        <label autoFontSize={true} color={colorOnSurface} fontSize={12} fontWeight="bold" maxFontSize={12} maxLines={1} minFontSize={9} text={info.value} textAlignment="center" />
-                    </stacklayout>
-                {/each}
-            </gridlayout>
-        </gridlayout>
-    {/if}
+<gridlayout {...$$restProps}>
     <linechart
         bind:this={chart}
         doubleTapGestureOptions={{
@@ -736,11 +705,7 @@
             failOffsetYStart: -20,
             failOffsetYEnd: 20
         }}
-        row={infoStrip ? 1 : 0}
         on:highlight={onChartHighlight}
         on:zoom={onChartPanOrZoom}
         on:pan={onChartPanOrZoom} />
-    {#if infoStrip && showProfileGrades && !isEInk}
-        <GradeLegend row={2} />
-    {/if}
 </gridlayout>

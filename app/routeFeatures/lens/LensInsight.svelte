@@ -13,7 +13,15 @@
     export let readout: { text: string; value?: string } = null;
     export let focus: { text: string } = null;
 
-    const dispatch = createEventDispatcher();
+    // no payload: the listener gets `undefined`
+    interface $$Events {
+        clearReadout: undefined;
+        previous: undefined;
+        next: undefined;
+        clearFocus: undefined;
+        more: undefined;
+    }
+    const dispatch = createEventDispatcher<$$Events>();
     let { colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 

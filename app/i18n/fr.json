@@ -1059,7 +1059,7 @@
     "gesture_layer_swipe_title": "Retirer une couche",
     "gesture_layer_swipe_desc": "Dans la liste des couches, balayez une couche ajoutée sur le côté pour révéler son bouton de retrait.",
     "gesture_chart_title": "Explorer le profil",
-    "gesture_chart_desc": "Glissez ou pincez le graphique d'élévation pour zoomer. La carte suit la partie de l'itinéraire affichée.",
+    "gesture_chart_desc": "Glissez le long du graphique d'élévation pour lire un point de l'itinéraire dans la ligne au-dessus : touchez cette ligne pour l'effacer. Pincez pour zoomer, la carte suit la partie de l'itinéraire affichée.",
     "gesture_place_swipe_title": "Raccourcis de l'en-tête d'un lieu",
     "gesture_place_swipe_desc": "Balayez l'en-tête d'un lieu sélectionné sur le côté : d'un côté, zoomer dessus ou le verrouiller pour que d'autres touches ne le remplacent pas, de l'autre, supprimer un élément enregistré.",
     "gesture_contact_copy_title": "Copier un téléphone ou un site",
@@ -1111,5 +1111,6 @@
     "bus_station": "gare routière",
     "route_analysis": "analyse d'itinéraire",
     "route_analysis_settings": "choisir ce qui est affiché pour un itinéraire",
-    "route_features": "fonctionnalités"
+    "route_features": "fonctionnalités",
+    "lens_overview": "aperçu"
 }

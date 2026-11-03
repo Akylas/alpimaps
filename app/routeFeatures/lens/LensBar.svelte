@@ -16,7 +16,11 @@
     const OUTDATED_COLOR = '#F0902B';
     const CHIP_HEIGHT = 32;
 
-    const dispatch = createEventDispatcher();
+    // the shared dispatcher hands the payload itself to the listener, not a `CustomEvent`
+    interface $$Events {
+        select: { id: LensId };
+    }
+    const dispatch = createEventDispatcher<$$Events>();
     let { colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors;
     $: ({ colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
 
