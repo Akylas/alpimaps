@@ -1,5 +1,7 @@
+import type { ComponentType } from 'svelte';
 import { type Readable, derived, readable } from 'svelte/store';
 import type { IItem } from '~/models/Item';
+import type { MapPos } from '~/utils/geo';
 
 /** Matches what `ButtonBar` consumes. */
 export interface MapSideButton {
@@ -47,6 +49,32 @@ export interface MapItemAction {
     onLongPress?: (event?) => void | Promise<void>;
 }
 
+/** An end of the route the directions panel asks a mode to compute. */
+export interface DirectionsPlace {
+    name: string;
+    position: MapPos;
+}
+
+/**
+ * Another way of getting from A to B than a routing profile: the directions panel offers it next to the profiles, and
+ * hands it the first and last points when the user asks for the route.
+ */
+export interface DirectionsMode {
+    id: string;
+    /** The icon of the mode's pill. */
+    icon: string;
+    /** Lower sorts earlier. */
+    order?: number;
+    /** The pills of the options row while the mode is on, loaded the first time. They keep their own state. */
+    options?: () => Promise<{ default: ComponentType }>;
+    /** A list of the user's past requests: the panel shows its button while it is not empty. */
+    history?: { items: Readable<unknown[]>; show: () => void | Promise<void> };
+    /** The panel has already cleared the routes it drew. */
+    compute: (context: { from: DirectionsPlace; to: DirectionsPlace }) => void | Promise<void>;
+    /** The panel is cancelled: whatever the mode drew on the map goes. */
+    clear?: () => void;
+}
+
 /** `sideButtons`/`menuItems` are stores: their content depends on state that changes long after startup. */
 export interface MapFeature {
     id: string;
@@ -62,6 +90,7 @@ export interface MapFeature {
     claimsItem?: (item: IItem) => boolean;
     /** A tap on a map feature that becomes this item opens the sheet with its buttons. */
     showsItemButtons?: (item: IItem) => boolean;
+    directionsModes?: DirectionsMode[];
 }
 
 const features: MapFeature[] = [];
@@ -119,6 +148,10 @@ export function featureClaimsItem(item: IItem): boolean {
 
 export function featureShowsItemButtons(item: IItem): boolean {
     return features.some((feature) => feature.showsItemButtons?.(item));
+}
+
+export function featureDirectionsModes(): DirectionsMode[] {
+    return features.flatMap((feature) => feature.directionsModes ?? []).sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 }
 
 export function featureMenuItems(menu: 'main' | 'overflow' = 'main'): Readable<MapMenuItem[]> {

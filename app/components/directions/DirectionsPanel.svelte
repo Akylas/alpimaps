@@ -7,13 +7,12 @@
     import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { ApplicationSettings, Color, ContentView, GridLayout, ObservableArray, StackLayout, TextField, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
-    import { pickDateTime } from '@nativescript-community/ui-datetimepicker';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import type { Feature, Point } from 'geojson';
-    import { onDestroy } from 'svelte';
-    import { get } from 'svelte/store';
+    import { type ComponentType, onDestroy } from 'svelte';
+    import type { Readable } from 'svelte/store';
     import IconButton from '~/components/common/IconButton.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import { GeoLocation } from '~/handlers/GeoHandler';
@@ -21,8 +20,7 @@
     import { getDistance } from '~/helpers/geolib';
     import { fullLangStore, lc } from '~/helpers/locale';
     import { Themes, isEInk, onThemeChanged } from '~/helpers/theme';
-    import dayjs from 'dayjs';
-    import { clearItineraryFromMap } from '~/mapModules/features/itinerary';
+    import { type DirectionsMode, type DirectionsPlace, featureDirectionsModes } from '~/mapModules/mapFeatures';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem, IItem as Item, RouteInstruction, RouteProfile, RouteStats, DirectionWayPoint as WayPoint } from '~/models/Item';
@@ -42,9 +40,7 @@
     import type { ValhallaProfile } from '~/utils/routing';
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
     import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
-    import { type TransitHistoryEntry, transitHistory } from '~/stores/historyStore';
     import { showSliderPopover } from '~/utils/ui';
-    import { TRANSIT_SHEET_DETENTS } from '~/utils/ui/transitSheet';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
@@ -126,11 +122,13 @@
     let nbWayPoints = 0;
     let features: ItemFeature[] = [];
     let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
-    // public transport is a mode of the panel rather than a Valhalla profile: it has its own options and result
-    let transit = false;
-    /** null: leave now */
-    let departureTime: Date = null;
-    let arriveBy = false;
+    // a mode a feature adds (public transport...) is not a Valhalla profile: it has its own options and result
+    const modes = featureDirectionsModes();
+    let activeMode: DirectionsMode = null;
+    let modeOptions: ComponentType = null;
+    let modeHistoryItems: Readable<unknown[]>;
+    $: modeHistoryItems = activeMode?.history?.items;
+    $: loadModeOptions(activeMode);
     let bicycle_type: 'enduro' | 'road' | 'normal' | 'gravel' | 'mountain' = ApplicationSettings.getString('bicycle_type', 'normal') as any;
     let pedestrian_type: 'normal' | 'mountainairing' | 'running' = ApplicationSettings.getString('pedestrian_type', 'normal') as any;
     const showOptions = true;
@@ -691,7 +689,7 @@
         waypoints = new ObservableArray([]);
         nbWayPoints = 0;
         clearRouteDatasource();
-        clearItineraryFromMap();
+        modes.forEach((mode) => mode.clear?.());
         if (unselect) {
             mapContext.unselectItem();
         }
@@ -893,87 +891,35 @@
         const [lon, lat] = waypoint.geometry.coordinates;
         return { name: formatter.getItemTitle(waypoint), position: { lat, lon } };
     }
-    async function pickDepartureTime() {
-        try {
-            const picked = await pickDateTime({ date: departureTime ?? new Date(), title: lc(arriveBy ? 'arrive_by' : 'depart_at'), is24Hour: true });
-            if (picked) {
-                departureTime = picked;
-            }
-        } catch (error) {
-            showError(error);
+    async function loadModeOptions(mode: DirectionsMode) {
+        modeOptions = null;
+        const component = await mode?.options?.();
+        // another mode may have been picked while this one loaded
+        if (mode === activeMode) {
+            modeOptions = component?.default ?? null;
         }
     }
-    // the itineraries are not a single route to select: they live in their own sheet, drawn on their own layer
-    async function computeTransit() {
+    // a mode's result is not a single route to select: it lives in its own sheet or layer
+    export async function computeMode() {
+        if (!activeMode) {
+            return;
+        }
         try {
-            // like a route: the straight lines between the points would cross the journey
+            // like a route: the straight lines between the points would cross the result
             clearCurrentRoutes(false);
             clearWaypointLines(false);
             setLayerGeoJSONString();
-            clearItineraryFromMap();
-            const ItinerariesBottomSheet = (await import('~/components/transit/ItinerariesBottomSheet.svelte')).default;
-            showBottomSheet({
-                parent: mapContext.getMainPage(),
-                trackingScrollView: 'scrollView',
-                detents: TRANSIT_SHEET_DETENTS,
-                initialDetentIndex: 0,
-                view: ItinerariesBottomSheet,
-                props: {
-                    from: waypointPlace(waypoints.getItem(0)),
-                    to: waypointPlace(waypoints.getItem(waypoints.length - 1)),
-                    time: departureTime,
-                    arriveBy
-                }
-            });
+            await activeMode.compute({ from: waypointPlace(waypoints.getItem(0)), to: waypointPlace(waypoints.getItem(waypoints.length - 1)) });
         } catch (error) {
             showError(error);
         }
     }
-    function transitHistorySubtitle({ arriveBy: entryArriveBy, time }: TransitHistoryEntry) {
-        return time ? `${lc(entryArriveBy ? 'arrive_by' : 'depart_at')} ${dayjs(time).format('ddd D MMM HH:mm')}` : lc('now');
-    }
-    async function showTransitHistory() {
-        try {
-            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-            const options = new ObservableArray(
-                get(transitHistory).map((entry) => ({
-                    title: `${entry.from.name} → ${entry.to.name}`,
-                    subtitle: transitHistorySubtitle(entry),
-                    rightIcon: 'mdi-close',
-                    data: entry
-                }))
-            );
-            const results = await showBottomSheet({
-                parent: null,
-                view: OptionSelect,
-                skipCollapsedState: true,
-                props: {
-                    height: Math.min(460, 80 + 64 * options.length),
-                    title: lc('transit_history'),
-                    titleIcon: 'mdi-history',
-                    rowHeight: 64,
-                    options,
-                    onRightIconTap: (item) => {
-                        transitHistory.remove(item.data);
-                        options.splice(options.indexOf(item), 1);
-                    }
-                }
-            });
-            const entry: TransitHistoryEntry = (Array.isArray(results) ? results[0] : results)?.data;
-            if (entry) {
-                restoreTransit(entry);
-                // closing the sheet hands the focus back to the search field
-                mapContext.unFocusSearch();
-            }
-        } catch (error) {
-            showError(error);
-        }
-    }
-    function restoreTransit({ arriveBy: entryArriveBy, from, time, to }: TransitHistoryEntry) {
+    /** Replaces the route's points, and picks the mode asked for. */
+    export function setPlaces(places: DirectionsPlace[], modeId?: string) {
         const id = Date.now();
-        const restored: ItemFeature[] = [from, to].map(({ name, position }, index) => ({
+        const restored: ItemFeature[] = places.map(({ name, position }, index) => ({
             type: 'Feature',
-            properties: { id: id + index + '', showOnMap: false, isStart: index === 0, isStop: index === 1, name },
+            properties: { id: id + index + '', showOnMap: false, isStart: index === 0, isStop: index === places.length - 1, name },
             geometry: { type: 'Point', coordinates: [position.lon, position.lat] }
         }));
         waypoints.splice(0, waypoints.length);
@@ -983,13 +929,7 @@
         features.push(...restored);
         updateWayPointLines();
         setLayerGeoJSONString();
-        transit = true;
-        departureTime = time ? new Date(time) : null;
-        arriveBy = entryArriveBy;
-        // a trip in the past would only give back what has already left
-        if (!departureTime || departureTime.getTime() > Date.now()) {
-            computeTransit();
-        }
+        activeMode = modes.find((mode) => mode.id === modeId) ?? null;
     }
     async function computeRoutes(forceOnline = false) {
         try {
@@ -1454,20 +1394,22 @@
                     <Pill
                         icon={profileBtn.icon}
                         iconFontFamily={profileBtn.fontFamily}
-                        selected={!transit && profile === profileBtn.id}
+                        selected={!activeMode && profile === profileBtn.id}
                         on:tap={() => {
-                            transit = false;
+                            activeMode = null;
                             setProfile(profileBtn.id);
                         }}
                         on:longPress={(event) => showProfileSettings(profileBtn.id, event)} />
                 {/each}
-                <Pill icon="mdi-train" selected={transit} on:tap={() => (transit = true)} />
+                {#each modes as mode (mode.id)}
+                    <Pill icon={mode.icon} selected={activeMode === mode} on:tap={() => (activeMode = mode)} />
+                {/each}
             </stacklayout>
             <gridlayout colSpan={2} columns="*,auto,auto" margin="4 5 0 8" row={3}>
-                {#if !transit}
+                {#if !activeMode}
                     <Pill col={1} icon="mdi-dots-vertical" marginLeft={6} on:tap={showMoreOptions} />
-                {:else if $transitHistory.length > 0}
-                    <Pill col={1} icon="mdi-history" marginLeft={6} on:tap={showTransitHistory} />
+                {:else if $modeHistoryItems?.length > 0}
+                    <Pill col={1} icon="mdi-history" marginLeft={6} on:tap={() => activeMode.history.show()} />
                 {/if}
                 <Pill col={2} icon={expanded ? 'mdi-chevron-up' : 'mdi-chevron-down'} on:tap={onExpandedChevron} />
                 <Pill
@@ -1477,8 +1419,8 @@
                     margin={0}
                     opacity={nbWayPoints > 1 ? 1 : 0.4}
                     primary={true}
-                    on:tap={() => (transit ? computeTransit() : computeRoutes())}
-                    on:longPress={() => !transit && computeRoutes(true)} />
+                    on:tap={() => (activeMode ? computeMode() : computeRoutes())}
+                    on:longPress={() => !activeMode && computeRoutes(true)} />
                 <activityindicator busy={true} color={isEInk ? 'white' : colorOnPrimary} height={28} visibility={loading ? 'visible' : 'hidden'} width={28} />
             </gridlayout>
             <collectionview
@@ -1585,13 +1527,10 @@
             <gridlayout colSpan={2} columns="*,auto" row={2} visibility={showOptions ? 'visible' : 'collapse'}>
                 <scrollview orientation="horizontal" scrollBarIndicatorVisible={false}>
                     <stacklayout id="directionsbuttons" orientation="horizontal" paddingLeft={4}>
-                        {#if transit}
-                            <Pill
-                                icon="mdi-clock-outline"
-                                label={departureTime ? dayjs(departureTime).format('ddd D MMM HH:mm') : lc('now')}
-                                on:tap={pickDepartureTime}
-                                on:longPress={() => (departureTime = null)} />
-                            <Pill icon={arriveBy ? 'mdi-clock-end' : 'mdi-clock-start'} label={lc(arriveBy ? 'arrive_by' : 'depart_at')} on:tap={() => (arriveBy = !arriveBy)} />
+                        {#if activeMode}
+                            {#if modeOptions}
+                                <svelte:component this={modeOptions} />
+                            {/if}
                         {:else if profile === 'auto' || profile === 'motorcycle'}
                             <Pill
                                 color={valhallaSettingColor('use_highways', profile, profileCostingOptions, buttonsColor)}
@@ -1666,7 +1605,7 @@
                                 on:tap={() => switchValhallaSetting('step_penalty')}
                                 on:longPress={(event) => setSliderCostingOptions('step_penalty', event)} />
                         {/if}
-                        {#if !transit}
+                        {#if !activeMode}
                             <Pill icon="mdi-timer-outline" label={lc('shortest')} selected={costingOptions.shortest} on:tap={() => (costingOptions.shortest = !costingOptions.shortest)} />
                             <Pill icon="mdi-arrow-decision" label={lc('alternatives')} selected={computeMultiple} on:tap={() => (computeMultiple = !computeMultiple)} />
                         {/if}
