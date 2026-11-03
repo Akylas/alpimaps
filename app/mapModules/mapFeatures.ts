@@ -154,20 +154,27 @@ export function featureSideButtons(): Readable<MapSideButton[]> {
     );
 }
 
+// the sheet asks before anything is selected: a feature is never called without an item
 export function featureItemActions(item: IItem): MapItemAction[] {
+    if (!item) {
+        return [];
+    }
     return features.flatMap((feature) => feature.itemActions?.(item) ?? []).sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 }
 
 export function featureLeadingActions(item: IItem): string[] {
+    if (!item) {
+        return [];
+    }
     return features.flatMap((feature) => feature.leadingActions?.(item) ?? []);
 }
 
 export function featureClaimsItem(item: IItem): boolean {
-    return features.some((feature) => feature.claimsItem?.(item));
+    return !!item && features.some((feature) => feature.claimsItem?.(item));
 }
 
 export function featureShowsItemButtons(item: IItem): boolean {
-    return features.some((feature) => feature.showsItemButtons?.(item));
+    return !!item && features.some((feature) => feature.showsItemButtons?.(item));
 }
 
 export function featureDirectionsModes(): DirectionsMode[] {
