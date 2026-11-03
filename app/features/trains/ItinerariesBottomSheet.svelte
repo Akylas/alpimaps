@@ -20,6 +20,7 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
+    import LineChip from '~/features/trains/LineChip.svelte';
 
     export let from: { name: string; position: MapPos };
     export let to: { name: string; position: MapPos };
@@ -415,10 +416,14 @@
                         <label color={colorOnSurface} fontSize={17} fontWeight="bold" text={`${formatTime(item.startTime)} → ${formatTime(item.endTime)}`} />
                         <wraplayout marginTop={2}>
                             {#each summaryLegs(item) as leg}
-                                <stacklayout backgroundColor={legChipColor(leg)} borderRadius={4} height={CHIP_HEIGHT} marginRight={6} marginTop={4} orientation="horizontal" padding="0 6">
-                                    <label color={legTextColor(leg)} fontFamily={$fonts.mdi} fontSize={14} text={modeIcon(leg.mode)} verticalAlignment="middle" />
-                                    <label color={legTextColor(leg)} fontSize={13} lineBreak="end" maxLines={1} paddingLeft={3} text={legName(leg)} verticalAlignment="middle" />
-                                </stacklayout>
+                                <LineChip
+                                    name={legName(leg)}
+                                    color={leg.routeColor ? `#${leg.routeColor}` : null}
+                                    height={CHIP_HEIGHT}
+                                    marginRight={6}
+                                    marginTop={4}
+                                    mode={leg.mode}
+                                    textColor={leg.routeTextColor ? `#${leg.routeTextColor}` : null} />
                             {/each}
                         </wraplayout>
                     </stacklayout>

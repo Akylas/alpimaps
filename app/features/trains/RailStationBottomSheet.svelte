@@ -1,7 +1,6 @@
 <script lang="ts">
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { Template } from '@nativescript-community/svelte-native/components';
-    import { Color } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
@@ -18,6 +17,7 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
+    import LineChip from '~/features/trains/LineChip.svelte';
 
     export let position: MapPos;
     export let name: string;
@@ -98,12 +98,6 @@
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
     }
-    function trainColor(stopTime: TransitousStopTime) {
-        return stopTime.routeColor ? `#${stopTime.routeColor}` : new Color(colorPrimary).setAlpha(36).hex;
-    }
-    function trainTextColor(stopTime: TransitousStopTime) {
-        return stopTime.routeTextColor ? `#${stopTime.routeTextColor}` : colorOnSurface;
-    }
     $: anyRealTime = !!times?.some((stopTime) => stopTime.realTime);
 </script>
 
@@ -133,17 +127,7 @@
                         textDecoration={item.cancelled ? 'line-through' : 'none'} />
                     <label color={colorError} fontSize={12} text={delayMinutes(item) > 0 ? `+${delayMinutes(item)} min` : null} visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
                 </stacklayout>
-                <label
-                    backgroundColor={trainColor(item)}
-                    borderRadius={4}
-                    col={1}
-                    color={trainTextColor(item)}
-                    fontSize={13}
-                    fontWeight="bold"
-                    maxLines={1}
-                    padding="2 6"
-                    text={trainName(item)}
-                    verticalAlignment="middle" />
+                <LineChip name={trainName(item)} col={1} color={item.routeColor ? `#${item.routeColor}` : null} textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
                 <stacklayout col={2} paddingLeft={10} verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={1} text={otherEnd(item)} />
                     <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={item.cancelled ? lc('cancelled') : item.agencyName} />
