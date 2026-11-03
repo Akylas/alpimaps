@@ -1,6 +1,7 @@
 import type { Feature } from 'geojson';
 import type { ComponentType } from 'svelte';
-import { type Readable, type Writable, derived, writable } from 'svelte/store';
+import { type Readable, derived, writable } from 'svelte/store';
+import type { SettingsStore } from '~/stores/settingsStore';
 import type { IItem } from '~/models/Item';
 
 /** What every contribution is asked about. */
@@ -63,6 +64,18 @@ export interface RouteNavSectionLayout {
     height: number;
 }
 
+/** A row of a feature's settings, drawn by the settings screen. Backed by a store, which owns the persistence. */
+export interface RouteSettingRow {
+    type: 'sectionheader' | 'switch' | 'slider';
+    title: string;
+    description?: string;
+    store?: SettingsStore<any>;
+    min?: number;
+    max?: number;
+    step?: number;
+    format?: (value: number) => string;
+}
+
 /**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
@@ -74,7 +87,9 @@ export interface RouteFeature {
     /** Build-flag or platform gate. Checked once at registration. */
     enabled?: () => boolean;
     /** The user's switch, listed in Settings > Routing > Route analysis. A store, so existing settings are reused. */
-    setting?: { title: () => string; store: Writable<boolean> };
+    setting?: { title: () => string; store: SettingsStore<boolean> };
+    /** The feature's own settings, in a page opened from under its switch while it is on. */
+    settings?: () => RouteSettingRow[];
     /** Fires when a contribution depends on something other than the item (a setting, the network...). */
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */

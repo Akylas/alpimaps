@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { lc } from '~/helpers/locale';
-import { routeFeatureProfile } from '~/routeFeatures/profile/settings';
+import { profileSettingRows, routeFeatureProfile } from '~/routeFeatures/profile/settings';
 import { registerRouteFeature } from '~/routeFeatures/registry';
 import { navigationShowElevationChart } from '~/stores/navigationStore';
 import { NAVIGATION_AHEAD_HEIGHT, ROUTE_PROFILE_HEIGHT } from '~/utils/navigation';
@@ -12,6 +12,7 @@ registerRouteFeature({
     id: 'profile',
     order: 10,
     setting: { title: () => lc('elevation_profile'), store: routeFeatureProfile },
+    settings: profileSettingRows,
     // the navigation setting for the chart widget
     changes: navigationShowElevationChart,
     sheetCard: {

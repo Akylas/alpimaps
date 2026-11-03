@@ -65,13 +65,12 @@
         DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
         SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
         SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
-        SETTINGS_ELEVATION_PROFILE_FILTER_STEP,
         SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE,
         SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION,
-        SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW
     } from '~/utils/constants';
     import dayjs from 'dayjs';
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
+    import { elevationProfileFilterStep, elevationProfileSmoothWindow } from '~/routeFeatures/profile/settings';
     import { type RouteSheetCardLayout, lazyComponents, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
     import { screenWidthDips } from '~/variables';
 
@@ -971,9 +970,9 @@
                         max: 50,
                         defaultValue: DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW,
                         step: 1,
-                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW),
+                        value: get(elevationProfileSmoothWindow),
                         onChange: debounce((item, value) => {
-                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW, value);
+                            elevationProfileSmoothWindow.set(value);
                         }, 10)
                     },
                     {
@@ -984,9 +983,9 @@
                         max: 50,
                         defaultValue: DEFAULT_ELEVATION_PROFILE_FILTER_STEP,
                         step: 1,
-                        value: ApplicationSettings.getNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_FILTER_STEP),
+                        value: get(elevationProfileFilterStep),
                         onChange: debounce((item, value) => {
-                            ApplicationSettings.setNumber(SETTINGS_ELEVATION_PROFILE_FILTER_STEP, value);
+                            elevationProfileFilterStep.set(value);
                         }, 10)
                     },
                     {

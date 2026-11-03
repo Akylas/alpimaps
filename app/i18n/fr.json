@@ -1095,5 +1095,8 @@
     "remove_from_history": "retirer de l'historique",
     "railway_station": "gare",
     "railway_halt": "halte",
-    "bus_station": "gare routière"
+    "bus_station": "gare routière",
+    "route_analysis": "analyse d'itinéraire",
+    "route_analysis_settings": "choisir ce qui est affiché pour un itinéraire",
+    "route_features": "fonctionnalités"
 }

@@ -1,12 +1,25 @@
+import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { registerRouteFeature } from '~/routeFeatures/registry';
-import { navigationShowSurface } from '~/stores/navigationStore';
+import { navigationShowSurface, navigationSurfaceSpan } from '~/stores/navigationStore';
 import { NAVIGATION_AHEAD_HEIGHT } from '~/utils/navigation';
 
 registerRouteFeature({
     id: 'surface',
     order: 15,
     setting: { title: () => lc('navigation_show_surface'), store: navigationShowSurface },
+    settings: () => [
+        {
+            type: 'slider',
+            store: navigationSurfaceSpan,
+            title: lc('navigation_surface_span'),
+            description: lc('navigation_surface_span_desc'),
+            min: 500,
+            max: 20000,
+            step: 500,
+            format: formatDistance
+        }
+    ],
     navSections: [
         {
             id: 'surface',

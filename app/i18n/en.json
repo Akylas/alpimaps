@@ -1328,5 +1328,8 @@
     "remove_from_history": "remove from history",
     "railway_station": "railway station",
     "railway_halt": "railway halt",
-    "bus_station": "bus station"
+    "bus_station": "bus station",
+    "route_analysis": "route analysis",
+    "route_analysis_settings": "choose what is shown for a route",
+    "route_features": "features"
 }
