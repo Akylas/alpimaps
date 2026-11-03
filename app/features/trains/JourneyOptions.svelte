@@ -3,8 +3,8 @@
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { lc } from '~/helpers/locale';
-    import { journeyArriveBy, journeyTime } from '~/mapModules/features/itinerary';
-    import Pill from '../common/Pill.svelte';
+    import { journeyArriveBy, journeyTime } from '~/features/trains/itinerary';
+    import Pill from '~/components/common/Pill.svelte';
 
     async function pickDepartureTime() {
         try {

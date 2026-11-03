@@ -10,11 +10,11 @@ import { photonSearch } from '~/helpers/photonSearch';
 import { type DirectionsPlace, registerMapFeature } from '~/mapModules/mapFeatures';
 import type { IItem } from '~/models/Item';
 import { decompress, networkService } from '~/services/NetworkService';
-import type { TransitousItinerary, TransitousLeg } from '~/services/TransitousService';
-import { type TransitHistoryEntry, transitHistory } from '~/stores/historyStore';
+import type { TransitousItinerary, TransitousLeg } from '~/features/trains/TransitousService';
+import { type TransitHistoryEntry, transitHistory } from '~/features/trains/history';
 import type { MapPos } from '~/utils/geo';
 import { geoJSONBounds } from '~/utils/geo';
-import { TRANSIT_SHEET_DETENTS, TRANSIT_SHEET_PEEK_HEIGHT } from '~/utils/ui/transitSheet';
+import { TRANSIT_SHEET_DETENTS, TRANSIT_SHEET_PEEK_HEIGHT } from '~/features/trains/transitSheet';
 
 const PHOTON_STATION_TAGS = ['railway:station', 'railway:halt'];
 const WALK_COLOR = '#808080';
@@ -137,7 +137,7 @@ export async function reopenItineraries() {
     }
     try {
         getMapContext().unselectItem();
-        const ItinerariesBottomSheet = (await import('~/components/transit/ItinerariesBottomSheet.svelte')).default;
+        const ItinerariesBottomSheet = (await import('~/features/trains/ItinerariesBottomSheet.svelte')).default;
         await showBottomSheet({
             parent: getMapContext().getMainPage(),
             trackingScrollView: 'scrollView',
@@ -176,7 +176,7 @@ export const journeyArriveBy = writable(false);
 
 async function computeJourney({ from, to }: { from: DirectionsPlace; to: DirectionsPlace }) {
     clearItineraryFromMap();
-    const ItinerariesBottomSheet = (await import('~/components/transit/ItinerariesBottomSheet.svelte')).default;
+    const ItinerariesBottomSheet = (await import('~/features/trains/ItinerariesBottomSheet.svelte')).default;
     showBottomSheet({
         parent: getMapContext().getMainPage(),
         trackingScrollView: 'scrollView',
@@ -259,7 +259,7 @@ registerMapFeature({
         {
             id: 'journey',
             icon: 'mdi-train',
-            options: () => import('~/components/transit/JourneyOptions.svelte'),
+            options: () => import('~/features/trains/JourneyOptions.svelte'),
             history: { items: transitHistory, show: showJourneyHistory },
             compute: computeJourney,
             clear: clearItineraryFromMap

@@ -1,4 +1,4 @@
-import type { TransitousItinerary, TransitousLeg, TransitousPlace, TransitousStopTime } from '~/services/TransitousService';
+import type { TransitousItinerary, TransitousLeg, TransitousPlace, TransitousStopTime } from '~/features/trains/TransitousService';
 
 export const MAX_FOLLOWS = 3;
 

@@ -1,6 +1,6 @@
 import type { MapPos } from '~/utils/geo';
-import { networkService } from './NetworkService';
-import { addSncfRealtime } from './SncfRealtimeService';
+import { networkService } from '~/services/NetworkService';
+import { addSncfRealtime } from '~/features/trains/SncfRealtimeService';
 
 const STATION_RADIUS_DEGREES = 0.003;
 

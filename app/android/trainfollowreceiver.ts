@@ -1,4 +1,4 @@
-import { trainFollowService } from '~/services/TrainFollowService';
+import { trainFollowService } from '~/features/trains/TrainFollowService';
 
 /** Woken by the follow alarm or the widget's refresh button: fetches the followed trains, then lets the widget redraw. */
 @NativeClass

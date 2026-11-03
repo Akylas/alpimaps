@@ -26,8 +26,6 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import {
-        itemIsRailStation as isRailStation,
-        itemLeadingActions,
         openItemInOpenStreetMap,
         openItemWeather,
         openItemWeatherAlternate,
@@ -35,11 +33,10 @@
         searchItemOnWeb,
         shareItemPosition,
         showItemAstronomy,
-        showItemInformation,
-        showItemRailStation
+        showItemInformation
     } from '~/mapModules/itemActions';
     import { sortItemActions } from '~/mapModules/itemActionOrder';
-    import { type MapItemAction, featureClaimsItem, featureItemActions } from '~/mapModules/mapFeatures';
+    import { type MapItemAction, featureClaimsItem, featureItemActions, featureLeadingActions } from '~/mapModules/mapFeatures';
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -156,7 +153,6 @@
     let itemIsRoute = false;
     let itemIsEditingItem = false;
     let itemCanBeEdited = false;
-    let itemIsRailStation = false;
     let itemCanBeAdded = false;
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
@@ -251,7 +247,6 @@
                 itemIsEditingItem = !!item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemCanBeEdited = !!item && !!item.id && !itemIsEditingItem;
                 itemCanBeAdded = !!item && ((!item.id && !item.route?.osmid) || !!itemIsEditingItem);
-                itemIsRailStation = !!item && isRailStation(item);
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
                 updateSteps();
@@ -304,7 +299,6 @@
         weather: { tap: () => openItemWeather(item), long: () => openItemWeatherAlternate(item) },
         astronomy: { tap: () => showItemAstronomy(item) },
         compass: { tap: () => openCompass() },
-        rail: { tap: () => showItemRailStation(item) },
         address: { tap: () => getItemAddress() },
         share: { tap: (event) => shareItem(event) }
     };
@@ -331,7 +325,6 @@
         { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
-        { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
         { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
     ];
@@ -339,7 +332,7 @@
     $: itemActions = sortItemActions(
         [...builtInActions.filter((action) => action.when && !featureClaimsItem(item)), ...featureActions.map((action) => ({ ...action, when: true }))],
         // the order is in itemActionOrder.ts
-        itemLeadingActions(item)
+        featureLeadingActions(item)
     );
     // what the filled button does for this item: save while editing, start a route, add a new place, else edit
     $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : (featureActions.find((action) => action.main)?.id ?? null);

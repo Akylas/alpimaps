@@ -1,19 +1,16 @@
 import { lc } from '@nativescript-community/l';
-import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { Application } from '@nativescript/core';
 import { openUrl } from '@nativescript/core/utils';
 import { share } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
 import { formatter } from '~/mapModules/ItemFormatter';
 import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
-import { ITEM_ACTION_FIRST, type ItemKind, sortItemActions } from '~/mapModules/itemActionOrder';
+import { sortItemActions } from '~/mapModules/itemActionOrder';
 import { featureItemActions, featureLeadingActions } from '~/mapModules/mapFeatures';
 import type { IItem, Item } from '~/models/Item';
 import { networkService } from '~/services/NetworkService';
-import { decompress } from '~/services/NetworkService';
-import { type TransitousStopTime, transitousService } from '~/services/TransitousService';
 import { openURL } from '~/utils/ui/index.common';
-import { TRANSIT_SHEET_DETENTS } from '~/utils/ui/transitSheet';
 
 const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
@@ -25,14 +22,6 @@ export interface ItemMenuAction {
     /** the action needs the map: search should let go of the screen */
     leavesSearch?: boolean;
     run: () => void | Promise<void>;
-}
-
-const RAIL_STATION_VALUES = ['station', 'halt'];
-
-/** vector tiles say class/subclass, the geocoders osm_key/osm_value */
-export function itemIsRailStation(item: IItem) {
-    const props = item.properties;
-    return (props?.class === 'railway' && RAIL_STATION_VALUES.includes(props.subclass)) || (props?.osm_key === 'railway' && RAIL_STATION_VALUES.includes(props.osm_value));
 }
 
 export function openItemWikipedia(item: Item) {
@@ -158,64 +147,8 @@ export function openItemWeatherAlternate(item: Item) {
     }
 }
 
-export async function showItemRailStation(item: Item) {
-    try {
-        const RailStationBottomSheet = (await import('~/components/transit/RailStationBottomSheet.svelte')).default;
-        if (item.geometry.type === 'Point') {
-            const [lon, lat] = item.geometry.coordinates;
-            await showBottomSheet({
-                parent: getMapContext().getMainPage(),
-                trackingScrollView: 'scrollView',
-                detents: TRANSIT_SHEET_DETENTS,
-                initialDetentIndex: 0,
-                view: RailStationBottomSheet,
-                props: { name: formatter.getItemName(item), position: { lat, lon } }
-            });
-        }
-    } catch (err) {
-        showError(err);
-    }
-}
-
-/** a train's whole path, selected on the map like any line */
-export async function showRailTrip(stopTime: TransitousStopTime) {
-    try {
-        const leg = await transitousService.getTrip(stopTime.tripId);
-        if (!leg?.legGeometry) {
-            return;
-        }
-        const coordinates = decompress(leg.legGeometry.points, leg.legGeometry.precision ?? 6).map(({ lat, lon }) => [lon, lat]);
-        closeBottomSheet();
-        await getMapContext().selectItem({
-            item: {
-                geometry: { type: 'LineString', coordinates },
-                properties: {
-                    class: 'railway',
-                    name: [leg.displayName, leg.tripTo?.name].filter(Boolean).join(' → '),
-                    subtitle: leg.agencyName,
-                    color: leg.routeColor ? `#${leg.routeColor}` : undefined
-                },
-                route: { osmid: leg.tripId, type: 'rail' }
-            },
-            isFeatureInteresting: true,
-            showButtons: true
-        });
-    } catch (err) {
-        showError(err);
-    }
-}
-
 export function shareItemPosition(item: Item) {
     return share({ message: formatter.getItemPositionToString(item) }, { dialogTitle: lc('share') });
-}
-
-function itemKind(item: IItem): ItemKind {
-    return item && itemIsRailStation(item) ? 'railStation' : 'default';
-}
-
-/** The ids that come first for this item: what its kind asks for, then what the features add. */
-export function itemLeadingActions(item: IItem): string[] {
-    return item ? [...ITEM_ACTION_FIRST[itemKind(item)], ...featureLeadingActions(item)] : [];
 }
 
 /** The menu behind a search result: the actions of the selected-item sheet that only need the item itself. */
@@ -245,7 +178,7 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
     if (!item.id && !item.route?.osmid) {
         actions.push({ id: 'save', icon: 'mdi-map-plus', name: lc('add'), leavesSearch: true, run: () => mapContext.saveItem(item) });
     }
-    const leading = itemLeadingActions(item);
+    const leading = featureLeadingActions(item);
     if (item.route) {
         return sortItemActions(actions, leading);
     }
@@ -257,9 +190,6 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
         actions.push({ id: 'weather', icon: 'mdi-weather-partly-cloudy', name: lc('weather'), run: () => openItemWeather(item) });
     }
     actions.push({ id: 'astronomy', icon: 'mdi-weather-night', name: lc('astronomy'), run: () => showItemAstronomy(item) });
-    if (itemIsRailStation(item)) {
-        actions.push({ id: 'rail', icon: 'mdi-train', name: lc('rail_station_infos'), run: () => showItemRailStation(item) });
-    }
     for (const featureAction of featureItemActions(item)) {
         actions.push({ id: featureAction.id, icon: featureAction.text, name: featureAction.tooltip, leavesSearch: featureAction.leavesSearch ?? true, run: () => featureAction.onTap() });
     }

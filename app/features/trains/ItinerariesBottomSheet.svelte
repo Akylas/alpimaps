@@ -7,19 +7,19 @@
     import { onMount } from 'svelte';
     import { formatDistance, formatDuration } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
-    import { focusItinerary, rememberItinerarySession, showItineraryOnMap } from '~/mapModules/features/itinerary';
+    import { focusItinerary, rememberItinerarySession, showItineraryOnMap } from '~/features/trains/itinerary';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { trainFollowService, trainFollowSupported } from '~/services/TrainFollowService';
-    import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, isRailMode, itineraryTicketUrl, modeIcon, transitousService } from '~/services/TransitousService';
-    import { transitHistory } from '~/stores/historyStore';
+    import { trainFollowService, trainFollowSupported } from '~/features/trains/TrainFollowService';
+    import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, isRailMode, itineraryTicketUrl, modeIcon, transitousService } from '~/features/trains/TransitousService';
+    import { transitHistory } from '~/features/trains/history';
     import type { MapPos } from '~/utils/geo';
-    import { itineraryFollowId } from '~/utils/trainFollow';
+    import { itineraryFollowId } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
     import { openURL, showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fonts, windowInset } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
-    import PanelHeader from '../common/PanelHeader.svelte';
-    import Pill from '../common/Pill.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import Pill from '~/components/common/Pill.svelte';
 
     export let from: { name: string; position: MapPos };
     export let to: { name: string; position: MapPos };
