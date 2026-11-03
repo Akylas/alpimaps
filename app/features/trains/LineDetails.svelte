@@ -1,3 +1,8 @@
+<script context="module" lang="ts">
+    // map, source and layer ids are global: a line's page opened from another one, which stays in the stack, must not clash with it
+    let instances = 0;
+</script>
+
 <script lang="ts">
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifMap, MassifSource } from '@nativescript-community/ui-massifmaps/api';
@@ -56,6 +61,7 @@
     let loading = false;
     let dataItems: ObservableArray<Item> = null;
     let noNetworkAndNoData = false;
+    const instanceId = instances++;
     export let decoder = createTileDecoder('inner');
     const mapContext = getMapContext();
 
@@ -103,9 +109,9 @@
             });
 
             if (!lineDataSource) {
-                lineDataSource = massifMap.source('source.transitLine', { type: 'geojson', minZoom: 0, maxZoom: 24 });
+                lineDataSource = massifMap.source(`source.transitLine.${instanceId}`, { type: 'geojson', minZoom: 0, maxZoom: 24 });
                 lineDataSource.createLayer('routes');
-                massifMap.addLayer('layer.transitLine', { type: 'vector', source: lineDataSource.id, style: decoder.id });
+                massifMap.addLayer(`layer.transitLine.${instanceId}`, { type: 'vector', source: lineDataSource.id, style: decoder.id });
             }
             lineDataSource.setGeoJSON(1, lineGeoJSON);
             if (selectedIndex !== -1) {
@@ -135,7 +141,7 @@
     }
     async function onMapReady(e) {
         // its own registry id: two maps in one app must not share the "map" one
-        massifMap = api.attach(e.object, { id: 'map.transitLine' });
+        massifMap = api.attach(e.object, { id: `map.transitLine.${instanceId}` });
         mapContext.setMapDefaultOptions(massifMap);
         try {
             let layers = mapContext.getLayers('map');
@@ -146,7 +152,7 @@
                 const spec = cloneLayerSpec(l.layer);
                 if (spec) {
                     // its own composite, so it needs its own hillshade and contour children
-                    mapContext.mapModule('customLayers')?.attachTerrain(massifMap.addLayer(`layer.transitLine.base${index}`, spec));
+                    mapContext.mapModule('customLayers')?.attachTerrain(massifMap.addLayer(`layer.transitLine.${instanceId}.base${index}`, spec));
                 }
             });
             refresh();
