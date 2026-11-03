@@ -93,9 +93,10 @@
         return Math.round((Date.parse(actualTime(stopTime)) - Date.parse(scheduledTime(stopTime))) / 60000);
     }
     // the chip says what kind of train it is, the number goes with the operator under the destination
+    // a coach's line (K21) is its short name, a train's "TER 96601" is a product and a number
     function trainParts(stopTime: TransitousStopTime) {
         const { number, product } = splitTrainName(stopTime.displayName || stopTime.routeShortName);
-        return { product: product || stopTime.mode, number: stopTime.tripShortName || number };
+        return { product: stopTime.routeShortName || product || stopTime.mode, number: stopTime.tripShortName || number };
     }
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
@@ -144,25 +145,13 @@
                         marginTop={4}
                         textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
                 </stacklayout>
-                <stacklayout col={1} verticalAlignment="middle">
-                    <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={2} text={otherEnd(item)} />
-                    <stacklayout orientation="horizontal">
-                        <label
-                            color={item.cancelled ? colorError : colorOnSurface}
-                            fontSize={14}
-                            fontWeight="bold"
-                            text={item.cancelled ? lc('cancelled') : trainParts(item).number}
-                            visibility={item.cancelled || trainParts(item).number ? 'visible' : 'collapse'} />
-                        <label
-                            color={colorOnSurfaceVariant}
-                            fontSize={11}
-                            lineBreak="end"
-                            maxLines={1}
-                            paddingLeft={item.cancelled || trainParts(item).number ? 6 : 0}
-                            text={item.agencyName}
-                            verticalAlignment="middle" />
-                    </stacklayout>
-                </stacklayout>
+                <canvaslabel col={1} paddingLeft={10}>
+                    <cgroup lineBreak="end" verticalAlignment="middle">
+                        <cspan color={colorOnSurface} fontSize={17} text={otherEnd(item)} />
+                        <cspan color={item.cancelled ? colorError : colorOnSurface} fontSize={14} text={'\n' + (item.cancelled ? lc('cancelled') : (trainParts(item).number ?? ''))} />
+                        <cspan color={colorOnSurfaceVariant} fontSize={11} text={(item.cancelled || trainParts(item).number ? ' ' : '') + (item.agencyName ?? '')} />
+                    </cgroup>
+                </canvaslabel>
                 <stacklayout col={2} horizontalAlignment="right" verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={15} fontWeight="bold" horizontalAlignment="right" text={item.place.track} visibility={item.place.track ? 'visible' : 'collapse'} />
                     <label
