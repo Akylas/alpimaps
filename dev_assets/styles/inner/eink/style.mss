@@ -33,3 +33,7 @@
 @nav_original_width: linear([view::zoom], (10, 2), (16, 3));
 @nav_original_dash: 8, 8;
 
+@transit_stop_fill: #ffffff;
+@transit_stop_selected_fill: #000000;
+@transit_stop_border_color: #000000;
+@transit_stop_border_width: 3;

@@ -1,5 +1,6 @@
 import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
+import { TRANSIT_SHEET_DETENTS } from '~/features/trains/transitSheet';
 import { lc } from '~/helpers/locale';
 import { formatter } from '~/mapModules/ItemFormatter';
 import { getMapContext } from '~/mapModules/MapModule';
@@ -22,6 +23,8 @@ async function showItemStopLines(item: IItem) {
         await showBottomSheet({
             parent: getMapContext().getMainPage(),
             trackingScrollView: 'scrollView',
+            detents: TRANSIT_SHEET_DETENTS,
+            initialDetentIndex: 0,
             view: StopLinesBottomSheet,
             props: { name: formatter.getItemName(item), position: { lat, lon } }
         });

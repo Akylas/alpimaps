@@ -2,20 +2,28 @@ import { Color } from '@nativescript/core';
 import { type TransitousPlace, type TransitousStopTime, transitousService } from '~/features/trains/TransitousService';
 import type { MapPos } from '~/utils/geo';
 
-/** A feed with no colour for a line. */
-const DEFAULT_LINE_COLOR = '#37333A';
 /** Stops this close to the tapped one are its platforms and directions. */
-const STOP_RADIUS_DEGREES = 0.0015;
-const MAX_STOPS = 6;
-const LINES_TIMES_COUNT = 40;
+const STOP_RADIUS = 100;
+const STOP_TIMES_COUNT = 60;
+const TIMESHEET_TIMES_COUNT = 40;
+/** The departures a line shows per direction. */
+const NEXT_DEPARTURES = 3;
 /** The trips a timesheet page lists, one column each. */
 export const TIMESHEET_TRIPS = 4;
+
+export interface LineDeparture {
+    /** with the real-time delay, when the feed has one */
+    time: Date;
+    scheduled: Date;
+    realTime: boolean;
+}
 
 export interface LineDirection {
     directionId: number;
     headsign: string;
     /** the next trip going this way: its path is the line's */
     tripId: string;
+    departures: LineDeparture[];
 }
 
 /** A line serving a stop, as the stop's next departures tell it. */
@@ -24,20 +32,17 @@ export interface StopLine {
     shortName: string;
     longName?: string;
     mode: string;
-    color: string;
-    textColor: string;
+    /** `#rrggbb`, null when the feed has none */
+    color: string | null;
+    textColor: string | null;
     /** the stops of the line around the one asked for, a line may leave from several */
     stopIds: string[];
     position: MapPos;
     directions: LineDirection[];
 }
 
-export function lineColor(routeColor?: string) {
-    return routeColor ? `#${routeColor}` : DEFAULT_LINE_COLOR;
-}
-
-export function lineTextColor(color: string, routeTextColor?: string) {
-    return routeTextColor ? `#${routeTextColor}` : new Color(color).getBrightness() >= 170 ? '#000000' : '#ffffff';
+function feedColor(color?: string) {
+    return color ? `#${color}` : null;
 }
 
 /** Shortest code first, then alphabetically: line numbers read as a list that way. */
@@ -45,6 +50,11 @@ export function compareLines(first: StopLine, second: StopLine) {
     const firstName = first.shortName || first.longName || '';
     const secondName = second.shortName || second.longName || '';
     return firstName.length === secondName.length ? firstName.localeCompare(secondName) : firstName.length - secondName.length;
+}
+
+function stopTimeDate(stopTime: TransitousStopTime, scheduled = false) {
+    const { place } = stopTime;
+    return new Date((scheduled ? (place.scheduledDeparture ?? place.scheduledArrival) : null) ?? place.departure ?? place.arrival);
 }
 
 /** The departures of one or several stops, one line per route. */
@@ -56,14 +66,13 @@ export function groupStopLines(stopTimes: TransitousStopTime[]): StopLine[] {
         }
         let line = lines.get(stopTime.routeId);
         if (!line) {
-            const color = lineColor(stopTime.routeColor);
             line = {
                 id: stopTime.routeId,
                 shortName: stopTime.routeShortName || stopTime.displayName,
                 longName: stopTime.routeLongName,
                 mode: stopTime.mode,
-                color,
-                textColor: lineTextColor(color, stopTime.routeTextColor),
+                color: feedColor(stopTime.routeColor),
+                textColor: feedColor(stopTime.routeTextColor),
                 stopIds: [],
                 position: { lat: stopTime.place.lat, lon: stopTime.place.lon },
                 directions: []
@@ -74,18 +83,23 @@ export function groupStopLines(stopTimes: TransitousStopTime[]): StopLine[] {
             line.stopIds.push(stopTime.place.stopId);
         }
         const directionId = stopTime.directionId ?? 0;
-        if (!line.directions.some((direction) => direction.directionId === directionId)) {
-            line.directions.push({ directionId, headsign: stopTime.headsign, tripId: stopTime.tripId });
+        let direction = line.directions.find((candidate) => candidate.directionId === directionId);
+        if (!direction) {
+            direction = { directionId, headsign: stopTime.headsign, tripId: stopTime.tripId, departures: [] };
+            line.directions.push(direction);
+        }
+        if (direction.departures.length < NEXT_DEPARTURES) {
+            direction.departures.push({ time: stopTimeDate(stopTime), scheduled: stopTimeDate(stopTime, true), realTime: stopTime.realTime });
         }
     }
-    return [...lines.values()].sort(compareLines);
+    const result = [...lines.values()].sort(compareLines);
+    result.forEach((line) => line.directions.sort((first, second) => first.directionId - second.directionId));
+    return result;
 }
 
-/** The lines leaving the stops around `position`. */
+/** The lines leaving the stops around `position`, with their next departures: one request. */
 export async function getStopLines(position: MapPos) {
-    const stops = await transitousService.findStops(position, { maxStops: MAX_STOPS, radius: STOP_RADIUS_DEGREES });
-    const lists = await Promise.all(stops.map((stop) => transitousService.getStopTimes(stop.id, { count: LINES_TIMES_COUNT })));
-    return groupStopLines(lists.flat());
+    return groupStopLines(await transitousService.getStopTimesAround(position, { radius: STOP_RADIUS, count: STOP_TIMES_COUNT }));
 }
 
 export interface TimesheetTrip {
@@ -94,11 +108,17 @@ export interface TimesheetTrip {
     headsign: string;
 }
 
+export interface TimesheetCell {
+    time: Date;
+    /** minutes behind the schedule */
+    delay: number;
+}
+
 export interface TimesheetStop {
     stopId: string;
     name: string;
     /** one per trip, null where it does not stop */
-    times: (Date | null)[];
+    times: (TimesheetCell | null)[];
 }
 
 export interface TimesheetPage {
@@ -126,16 +146,20 @@ export function mergeStopSequences(sequences: TransitousPlace[][]): TransitousPl
     return merged;
 }
 
-function placeTime(place: TransitousPlace) {
+function placeCell(place: TransitousPlace): TimesheetCell | null {
     const time = place.departure ?? place.arrival;
-    return time ? new Date(time) : null;
+    if (!time) {
+        return null;
+    }
+    const scheduled = place.scheduledDeparture ?? place.scheduledArrival ?? time;
+    return { time: new Date(time), delay: Math.round((Date.parse(time) - Date.parse(scheduled)) / 60000) };
 }
 
 /** The next trips of `line` going `directionId` from `time` on, with the time they reach each of their stops. */
 export async function getLineTimesheet(line: StopLine, directionId: number, time: Date): Promise<TimesheetPage> {
-    const lists = await Promise.all(line.stopIds.map((stopId) => transitousService.getStopTimes(stopId, { count: LINES_TIMES_COUNT, time })));
-    const departures = lists
-        .flat()
+    // one stop is enough: Transitous answers for the stops around it that carry the same name
+    const stopTimes = await transitousService.getStopTimes(line.stopIds[0], { count: TIMESHEET_TIMES_COUNT, time });
+    const departures = stopTimes
         .filter((stopTime) => stopTime.routeId === line.id && (stopTime.directionId ?? 0) === directionId && !stopTime.cancelled)
         .sort((first, second) => Date.parse(first.place.departure ?? first.place.arrival) - Date.parse(second.place.departure ?? second.place.arrival))
         .slice(0, TIMESHEET_TRIPS);
@@ -149,7 +173,7 @@ export async function getLineTimesheet(line: StopLine, directionId: number, time
         name: place.name,
         times: tripPlaces.map((places) => {
             const found = places.find((candidate) => candidate.stopId === place.stopId);
-            return found ? placeTime(found) : null;
+            return found ? placeCell(found) : null;
         })
     }));
     const last = departures[departures.length - 1];

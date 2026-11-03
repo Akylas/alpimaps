@@ -184,6 +184,11 @@ class TransitousService {
         return stopTimes;
     }
 
+    /** the next departures of the stops around `position`, in one request */
+    async getStopTimesAround(position: MapPos, { count = 30, radius = 100 }: { radius?: number; count?: number } = {}) {
+        const { stopTimes } = await this.get<{ stopTimes: TransitousStopTime[] }>('v6/stoptimes', { center: formatPosition(position), radius, n: count });
+        return stopTimes;
+    }
     /** several stops of one station (SNCF and the regional operators) merged, next one first */
     async getStationTimes(stops: TransitousStop[], { arrivals = false, count = 30 } = {}) {
         // arrivals can only be paged backwards: ask for the ones before a time in the future, then drop the gone ones

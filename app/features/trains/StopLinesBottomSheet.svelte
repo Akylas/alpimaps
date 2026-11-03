@@ -1,36 +1,52 @@
 <script lang="ts">
-    import type { MapPos } from '~/utils/geo';
-    import { CollectionView } from '@nativescript-community/ui-collectionview';
-    import { closeBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
-    import { onMount } from 'svelte';
-    import { Template } from '@nativescript-community/svelte-native/components';
-    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import { lc } from '~/helpers/locale';
-    import { onNetworkChanged } from '~/services/NetworkService';
-    import { type StopLine, getStopLines } from '~/features/trains/lines';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
+    import { closeBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
+    import { Template } from '@nativescript-community/svelte-native/components';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
-    import { fonts, windowInset } from '~/variables';
+    import dayjs from 'dayjs';
+    import { onDestroy, onMount } from 'svelte';
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import LineChip from '~/features/trains/LineChip.svelte';
+    import { type LineDeparture, type LineDirection, type StopLine, getStopLines } from '~/features/trains/lines';
+    import { lc } from '~/helpers/locale';
+    import { onNetworkChanged } from '~/services/NetworkService';
+    import type { MapPos } from '~/utils/geo';
+    import { openURL } from '~/utils/ui/index.common';
+    import { colors, fonts, windowInset } from '~/variables';
 
     export let position: MapPos;
     export let name: string;
 
+    // a board that is minutes old is wrong: keep it live while the sheet is open
+    const REFRESH_INTERVAL = 60 * 1000;
+    // the departures leaving within this many minutes read as a countdown
+    const COUNTDOWN_LIMIT = 60;
+
+    interface Row {
+        line: StopLine;
+        direction: LineDirection;
+        directionIndex: number;
+    }
+
     $: ({ bottom: windowInsetBottom } = $windowInset);
+    let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
+
     let loading = false;
-    let collectionView: NativeViewElementNode<CollectionView>;
-    let linesItems: StopLine[] = null;
+    let rows: Row[] = null;
     let noNetworkAndNoData = false;
+    let refreshTimer: ReturnType<typeof setInterval>;
 
     async function refresh() {
         try {
             loading = true;
-            linesItems = await getStopLines(position);
+            const lines = await getStopLines(position);
+            rows = lines.flatMap((line) => line.directions.map((direction, directionIndex) => ({ line, direction, directionIndex })));
             noNetworkAndNoData = false;
         } catch (error) {
-            if (error instanceof NoNetworkError && !linesItems) {
+            if (error instanceof NoNetworkError && !rows) {
                 noNetworkAndNoData = true;
             }
             showError(error);
@@ -43,60 +59,87 @@
             refresh();
         }
     });
-    async function showTimesheet(item: StopLine) {
+    onMount(() => {
+        refresh();
+        refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+    });
+    onDestroy(() => clearInterval(refreshTimer));
+
+    async function showTimesheet({ directionIndex, line }: Row) {
         try {
             closeBottomSheet();
             const component = (await import('~/features/trains/LineTimesheet.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    line: item
-                }
-            });
+            navigate({ page: component, props: { line, directionIndex } });
         } catch (error) {
             showError(error);
         }
     }
-
-    async function showDetails(item: StopLine) {
+    async function showDetails({ directionIndex, line }: Row) {
         try {
             closeBottomSheet();
             const component = (await import('~/features/trains/LineDetails.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    line: item,
-                    position
-                }
-            });
+            navigate({ page: component, props: { line, directionIndex, position } });
         } catch (error) {
             showError(error);
         }
     }
 
-    onMount(() => {
-        refresh();
-    });
+    function minutesUntil(departure: LineDeparture) {
+        return Math.round((departure.time.getTime() - Date.now()) / 60000);
+    }
+    function delayMinutes(departure: LineDeparture) {
+        return Math.round((departure.time.getTime() - departure.scheduled.getTime()) / 60000);
+    }
+    // soon: how long to wait, later: the time itself
+    function nextLabel(departure: LineDeparture) {
+        const minutes = minutesUntil(departure);
+        if (minutes <= 0) {
+            return lc('now');
+        }
+        return minutes < COUNTDOWN_LIMIT ? `${minutes} min` : dayjs(departure.time).format('HH:mm');
+    }
+    function laterTimes(direction: LineDirection) {
+        return direction.departures
+            .slice(1)
+            .map((departure) => dayjs(departure.time).format('HH:mm'))
+            .join(' · ');
+    }
+    $: anyRealTime = !!rows?.some((row) => row.direction.departures.some((departure) => departure.realTime));
 </script>
 
-<gesturerootview class="bottomsheet" height={300} rows="auto,*">
-    <PanelHeader icon="mdi-bus" title={name} />
-    <collectionview bind:this={collectionView} id="scrollView" itemIdGenerator={(item, i) => i} items={linesItems} row={1} android:marginBottom={windowInsetBottom} rowHeight={70}>
+<gesturerootview class="bottomsheet" rows="auto,*,auto">
+    <PanelHeader icon="mdi-bus" title={name}>
+        <IconButton text="mdi-refresh" on:tap={refresh} />
+    </PanelHeader>
+    <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={rows} row={1} rowHeight={72}>
         <Template let:item>
-            <gridlayout columns="auto,*,auto,auto" padding={10} rippleColor={item.color} on:tap={() => showTimesheet(item)}>
-                <label class="transitIconLabel" autoFontSize={true} backgroundColor={item.color} borderRadius={4} color={item.textColor} maxFontSize={30} text={item.shortName || item.longName} />
-                <label
-                    autoFontSize={true}
-                    col={1}
-                    fontSize={17}
-                    lineBreak="end"
-                    maxFontSize={17}
-                    maxLines={3}
-                    paddingLeft={10}
-                    text={item.longName || item.directions.map((direction) => direction.headsign).join(' / ')}
-                    verticalTextAlignment="center" />
-                <IconButton col={2} text="mdi-routes" on:tap={() => showDetails(item)} />
-                <IconButton col={3} text="mdi-routes-clock" on:tap={() => showTimesheet(item)} />
+            <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="72,*,auto,auto" padding="0 8 0 16" rippleColor={colorPrimary} on:tap={() => showTimesheet(item)}>
+                <LineChip name={item.line.shortName || item.line.longName} color={item.line.color} mode={item.line.mode} textColor={item.line.textColor} />
+                <stacklayout col={1} paddingLeft={8} verticalAlignment="middle">
+                    <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={1} text={item.direction.headsign} />
+                    <label
+                        color={colorOnSurfaceVariant}
+                        fontSize={12}
+                        lineBreak="end"
+                        maxLines={1}
+                        text={laterTimes(item.direction)}
+                        visibility={item.direction.departures.length > 1 ? 'visible' : 'collapse'} />
+                </stacklayout>
+                <stacklayout col={2} horizontalAlignment="right" paddingRight={4} verticalAlignment="middle">
+                    <label
+                        color={item.direction.departures[0].realTime ? colorPrimary : colorOnSurface}
+                        fontSize={17}
+                        fontWeight="bold"
+                        horizontalAlignment="right"
+                        text={nextLabel(item.direction.departures[0])} />
+                    <label
+                        color={delayMinutes(item.direction.departures[0]) > 0 ? colorError : colorOnSurfaceVariant}
+                        fontSize={12}
+                        horizontalAlignment="right"
+                        text={delayMinutes(item.direction.departures[0]) > 0 ? `+${delayMinutes(item.direction.departures[0])} min` : item.direction.departures[0].realTime ? lc('live') : null}
+                        visibility={delayMinutes(item.direction.departures[0]) > 0 || item.direction.departures[0].realTime ? 'visible' : 'collapse'} />
+                </stacklayout>
+                <IconButton col={3} text="mdi-routes" on:tap={() => showDetails(item)} />
             </gridlayout>
         </Template>
     </collectionview>
@@ -107,6 +150,16 @@
                 <cspan fontSize={20} text={'\n' + lc('no_network')} />
             </cgroup>
         </canvaslabel>
+    {:else if rows && !rows.length}
+        <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={1} text={lc('no_departures_found')} verticalAlignment="middle" />
     {/if}
-    <activityindicator busy={true} horizontalAlignment="right" verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+    <label
+        color={colorOnSurfaceVariant}
+        fontSize={11}
+        marginBottom={windowInsetBottom}
+        padding="4 16"
+        row={2}
+        text={(rows?.length && !anyRealTime ? lc('scheduled_times_only') + ' · ' : '') + lc('transitous_attribution')}
+        on:tap={() => openURL('https://transitous.org')} />
+    <activityindicator busy={true} horizontalAlignment="right" row={1} verticalAlignment="middle" visibility={loading && !rows ? 'visible' : 'hidden'} />
 </gesturerootview>

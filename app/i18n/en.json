@@ -496,6 +496,8 @@
     "motorcycle": "motorcycle",
     "no_itinerary_found": "no itinerary found",
     "no_trains_found": "no trains found",
+    "no_departures_found": "no departures found",
+    "live": "live",
     "off_network": "off network",
     "offline": "offline",
     "osm_check_hours": "check hours",

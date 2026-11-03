@@ -2,7 +2,8 @@
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifMap, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
-    import { ObservableArray, Page } from '@nativescript/core';
+    import { Color, ObservableArray, Page } from '@nativescript/core';
+    import dayjs from 'dayjs';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import CActionBar from '@shared/components/CActionBar.svelte';
@@ -11,7 +12,8 @@
     import { cloneLayerSpec, createTileDecoder, getMapContext } from '~/mapModules/MapModule';
     import { decompress, onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { type StopLine } from '~/features/trains/lines';
+    import LineChip from '~/features/trains/LineChip.svelte';
+    import type { StopLine } from '~/features/trains/lines';
     import { transitousService } from '~/features/trains/TransitousService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
@@ -23,14 +25,18 @@
     import type { MapPos } from '~/utils/geo';
     import { getDistanceSimple } from '~/helpers/geolib';
     $: ({ bottom: windowInsetBottom } = $windowInset);
-    let { colorBackground, colorOnBackground, colorPrimary } = $colors;
-    $: ({ colorBackground, colorOnBackground, colorPrimary } = $colors);
+    let { colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
     interface Item {
         id: string;
         name: string;
         lat: number;
         lon: number;
         selected: boolean;
+        /** when the next trip is at the stop, `HH:mm` */
+        time: string | null;
+        /** minutes behind the schedule */
+        delay: number;
         color: string;
         first: boolean;
         last: boolean;
@@ -39,14 +45,14 @@
     let collectionView: NativeViewElementNode<CollectionView>;
     export let line: StopLine;
     export let position: MapPos = null;
-    export let selectedStop = line.stopIds?.[0];
+    /** the direction to show, an index of `line.directions` */
+    export let directionIndex = 0;
 
     let massifMap: MassifMap;
     let lineDataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
-    let directionIndex = 0;
     let selectedIndex = -1;
+    $: lineColor = line.color ?? colorPrimary;
 
-    DEV_LOG && console.log('line', selectedStop, JSON.stringify(line));
     let loading = false;
     let dataItems: ObservableArray<Item> = null;
     let noNetworkAndNoData = false;
@@ -68,26 +74,28 @@
                     if (selected && selectedIndex === -1) {
                         selectedIndex = index;
                     }
-                    return { id: place.stopId, name: place.name, lat: place.lat, lon: place.lon, color: line.color, first: index === 0, last: index === array.length - 1, selected };
+                    const time = place.departure ?? place.arrival;
+                    const delay = time ? Math.round((Date.parse(time) - Date.parse(place.scheduledDeparture ?? place.scheduledArrival ?? time)) / 60000) : 0;
+                    return {
+                        id: place.stopId,
+                        name: place.name,
+                        lat: place.lat,
+                        lon: place.lon,
+                        time: time ? dayjs(time).format('HH:mm') : null,
+                        delay,
+                        color: lineColor,
+                        first: index === 0,
+                        last: index === array.length - 1,
+                        selected
+                    };
                 })
             );
 
+            // no name or ref: the style would draw a shield on the line, the page's header says which line it is
             const path: Feature = {
                 type: 'Feature',
                 geometry: { type: 'LineString', coordinates: decompress(leg.legGeometry.points, leg.legGeometry.precision ?? 6).map(({ lat, lon }) => [lon, lat]) },
-                properties: {
-                    route_id: line.id,
-                    route_mode: line.mode,
-                    route_short_name: line.shortName,
-                    route_long_name: line.longName,
-                    shortName: line.shortName,
-                    longName: line.longName,
-                    name: line.longName,
-                    route_color: line.color,
-                    route_text_color: line.textColor,
-                    color: line.color,
-                    textColor: line.textColor
-                }
+                properties: { route_id: line.id, route_color: lineColor, color: lineColor }
             };
             const lineGeoJSON: FeatureCollection = { type: 'FeatureCollection', features: [path] };
             dataItems.forEach((i) => {
@@ -157,12 +165,7 @@
     async function showTimesheet() {
         try {
             const component = (await import('~/features/trains/LineTimesheet.svelte')).default;
-            navigate({
-                page: component,
-                props: {
-                    line
-                }
-            });
+            navigate({ page: component, props: { line, directionIndex } });
         } catch (error) {
             showError(error);
         }
@@ -218,36 +221,49 @@
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridlayout rows="auto,auto,4*,6*">
-        <label
-            autoFontSize={true}
-            fontSize={20}
-            fontWeight="bold"
-            maxFontSize={20}
-            maxLines={3}
-            padding="0 10 5 10"
-            row={1}
-            text={(line.longName || line.directions[directionIndex].headsign)?.replace(' / ', '\n')}
-            textAlignment="center"
-            verticalTextAlignment="center"
-            visibility={line.longName || line.directions[directionIndex]?.headsign ? 'visible' : 'collapse'} />
+        <CActionBar>
+            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={15} height={30} mode={line.mode} textColor={line.textColor} />
+            <IconButton text="mdi-swap-vertical" visibility={line.directions.length > 1 ? 'visible' : 'collapse'} on:tap={reverseDirection} />
+            <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
+        </CActionBar>
+        <stacklayout padding="8 16 10 16" row={1}>
+            <label color={colorOnBackground} fontSize={20} fontWeight="bold" lineBreak="end" maxLines={2} text={`→ ${line.directions[directionIndex].headsign}`} />
+            <label color={colorOnSurfaceVariant} fontSize={13} lineBreak="end" maxLines={2} text={line.longName} visibility={line.longName ? 'visible' : 'collapse'} />
+        </stacklayout>
         <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={3} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
+        <collectionview bind:this={collectionView} items={dataItems} row={3} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
-                <canvasview columns="*,auto" on:tap={() => selectStop(item)}>
-                    <line horizontalAlignment="left" startX={30} startY={0} stopX={30} stopY="50%" strokeColor={item.color} strokeWidth={4} visibility={item.first ? 'hidden' : 'visible'} />
-                    <line horizontalAlignment="left" startX={30} startY="50%" stopX={30} stopY="100%" strokeColor={item.color} strokeWidth={4} visibility={item.last ? 'hidden' : 'visible'} />
+                <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
+                    <line horizontalAlignment="left" startX={32} startY={0} stopX={32} stopY="50%" strokeColor={item.color} strokeWidth={5} visibility={item.first ? 'hidden' : 'visible'} />
+                    <line horizontalAlignment="left" startX={32} startY="50%" stopX={32} stopY="100%" strokeColor={item.color} strokeWidth={5} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
                         antiAlias={true}
-                        fillColor={item.first || item.last ? item.color : colorBackground}
+                        fillColor={item.first || item.last || item.selected ? item.color : colorBackground}
                         horizontalAlignment="left"
-                        paddingLeft={30}
-                        radius={item.selected ? 14 : 12}
+                        paddingLeft={32}
+                        radius={item.selected ? 11 : 8}
                         strokeColor={item.color}
-                        strokeWidth={3}
+                        strokeWidth={4}
                         verticalAlignment="middle"
                         width={0} />
-                    <label color={item.selected ? colorPrimary : colorOnBackground} fontSize={16} marginLeft={60} text={item.name} verticalTextAlignment="middle" />
-                    <IconButton col={2} rowSpan={2} text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
+                    <label
+                        color={item.selected ? colorPrimary : colorOnBackground}
+                        fontSize={16}
+                        fontWeight={item.selected ? 'bold' : 'normal'}
+                        lineBreak="end"
+                        marginLeft={64}
+                        maxLines={2}
+                        text={item.name}
+                        verticalTextAlignment="middle" />
+                    <label
+                        col={1}
+                        color={item.delay > 0 ? colorError : colorOnSurfaceVariant}
+                        fontSize={14}
+                        horizontalAlignment="right"
+                        text={item.time}
+                        verticalTextAlignment="middle"
+                        visibility={item.time ? 'visible' : 'collapse'} />
+                    <IconButton col={2} horizontalAlignment="right" text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
                 </canvasview>
             </Template>
         </collectionview>
@@ -260,19 +276,5 @@
                 </cgroup>
             </canvaslabel>
         {/if}
-        <CActionBar backgroundColor="transparent" buttonsDefaultVisualState="transparent" labelsDefaultVisualState="transparent">
-            <label
-                slot="center"
-                class="transitIconLabel"
-                autoFontSize={true}
-                backgroundColor={line.color}
-                colSpan={3}
-                color={line.textColor}
-                horizontalAlignment="center"
-                text={line.shortName || line.longName} />
-
-            <IconButton text="mdi-swap-vertical" visibility={line.directions.length > 1 ? 'visible' : 'collapse'} on:tap={reverseDirection} />
-            <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
-        </CActionBar>
     </gridlayout>
 </page>

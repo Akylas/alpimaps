@@ -469,6 +469,8 @@
     "no_route": "pas d'itinéraire",
     "no_timesheet_data": "pas de données de feuille de temps",
     "no_trains_found": "aucun train trouvé",
+    "no_departures_found": "aucun départ trouvé",
+    "live": "en direct",
     "no_web_search_app": "pas d'application de recherche sur le web",
     "non_network_penalty": "facteur appliqué aux routes hors réseau cyclable (pénalité)",
     "non_valid_email": "adresse e-mail invalide",

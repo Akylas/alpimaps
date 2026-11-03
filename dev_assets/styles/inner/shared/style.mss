@@ -81,6 +81,13 @@
 @directions_line_width: [class=auto] ? linear([view::zoom], (10, 5), (16, 11), (18, 15)) : linear([view::zoom], (10, 4), (16, 9), (18, 12));
 @directions_arrow_size: linear([view::zoom], (14, 5), (18, 9));
 
+// the stops of a transit line (the line details page): the line's own colour inside a dark outline, the selected
+// one white and bigger. The eink theme turns them into black and white rings, a colour means nothing there
+@transit_stop_fill: [color] ? [color] : [param::default_transit_color];
+@transit_stop_selected_fill: #ffffff;
+@transit_stop_border_color: #1c1b1f;
+@transit_stop_border_width: 2;
+
 // the navigation layer, ie the route actually being followed. Same widths as a computed route, so
 // entering navigation does not resize the line under the user, but its own colours and dashes
 // white outline and arrows: the followed route has to stand out of any map, imagery included
