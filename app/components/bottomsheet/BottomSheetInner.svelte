@@ -14,7 +14,7 @@
     import { Application, ApplicationSettings, Color, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
-    import { type ComponentType, onDestroy, onMount, tick } from 'svelte';
+    import { onDestroy, onMount, tick } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
@@ -72,7 +72,7 @@
     } from '~/utils/constants';
     import dayjs from 'dayjs';
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
-    import { type RouteSheetCardLayout, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
+    import { type RouteSheetCardLayout, lazyComponents, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
     import { screenWidthDips } from '~/variables';
 
     $: ({ colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPanel, colorPrimary } = $colors);
@@ -149,8 +149,7 @@
     const cardRefs: Record<string, any> = {};
     let positionCardShown = false;
     // the components load the first time a card has a height
-    const cardComponents: Record<string, ComponentType> = {};
-    const loadingCards = new Set<string>();
+    const cardComponents = lazyComponents();
     let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
     let swipemenu: NativeViewElementNode<SwipeMenu>;
@@ -518,7 +517,7 @@
             return;
         }
         cards = routeSheetCards($routeFeatures, { item }, CARD_GAP);
-        cards.forEach(loadCard);
+        cards.forEach(({ card, height, id }) => height > 0 && cardComponents.load(id, card.component));
         positionCardShown = cards.some((layout) => layout.height > 0 && layout.card.followsPosition);
         // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and
         // gets stuck if it is missing
@@ -543,19 +542,6 @@
         // }
         if (compareArrays(steps, result) === false) {
             steps = result;
-        }
-    }
-    async function loadCard({ card, height, id }: RouteSheetCardLayout) {
-        if (height === 0 || cardComponents[id] || loadingCards.has(id)) {
-            return;
-        }
-        loadingCards.add(id);
-        try {
-            cardComponents[id] = (await card.component()).default;
-        } catch (error) {
-            console.error('loadCard', id, error);
-        } finally {
-            loadingCards.delete(id);
         }
     }
     /** The step that ends on the card, -1 when it is not shown. Steps start at 0, the header and the actions. */
@@ -1182,9 +1168,9 @@
                 </stacklayout>
             </gridlayout>
             {#each cards as layout, index (layout.id)}
-                {#if cardComponents[layout.id]}
+                {#if $cardComponents[layout.id]}
                     <svelte:component
-                        this={cardComponents[layout.id]}
+                        this={$cardComponents[layout.id]}
                         bind:this={cardRefs[layout.id]}
                         class="panel"
                         borderRadius={CARD_RADIUS}

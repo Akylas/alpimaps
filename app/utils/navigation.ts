@@ -3,6 +3,7 @@ import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, form
 import { getRhumbLineBearing } from '~/helpers/geolib';
 import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, type MapPos, TO_DEG, TO_RAD, computeDistanceBetween, distanceToEnd, isLocationOnPath } from '~/utils/geo';
+import type { RouteNavSectionLayout } from '~/routeFeatures/registry';
 import type { ValhallaProfile } from '~/utils/routing';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
@@ -35,21 +36,23 @@ export const NAVRAIL_BUTTON_SIZE = 44;
 /** full elevation chart and route stats, same heights the item sheet gives them */
 export const ROUTE_PROFILE_HEIGHT = 155;
 export const ROUTE_STATS_HEIGHT = 180;
+/** the row of widgets above the actions, before the navigation scale */
+export const NAVIGATION_AHEAD_HEIGHT = 80;
 
 /**
  * The sheet, top first: the bar (always), then one step per section. A section with nothing to show
- * is 0 and has no step. Lives here, not in the component, so the map can size the sheet without
- * bundling the navigation ui; both read it, so a step always ends where its section does.
+ * is 0 and has no step. The features contribute the ahead row and the details cards. Lives here, not
+ * in the component, so the map can size the sheet without bundling the navigation ui; both read it,
+ * so a step always ends where its section does.
  */
-export function navigationSections(scale: number, { hasAhead, hasProfile, hasStats }: { hasAhead: boolean; hasProfile: boolean; hasStats: boolean }) {
+export function navigationSections(scale: number, contributed: RouteNavSectionLayout[]) {
     return {
         bar: Math.round(112 * scale),
         trip: Math.round(72 * scale),
-        ahead: hasAhead ? Math.round(80 * scale) : 0,
+        ahead: Math.max(0, ...contributed.filter((layout) => layout.section.slot === 'ahead').map((layout) => layout.height)),
         // always there (astronomy), so the profile and stats can be fetched before they are shown
         actions: Math.round((NAVBUTTON_SIZE + 8) * scale),
-        profile: hasProfile ? ROUTE_PROFILE_HEIGHT + 8 : 0,
-        stats: hasStats ? ROUTE_STATS_HEIGHT + 8 : 0
+        details: contributed.filter((layout) => layout.section.slot === 'details').map((layout) => layout.height)
     };
 }
 
@@ -57,7 +60,7 @@ export function navigationSections(scale: number, { hasAhead, hasProfile, hasSta
 export function navigationSheetSteps(sections: ReturnType<typeof navigationSections>) {
     const steps = [0];
     let total = 0;
-    [sections.bar, sections.trip, sections.ahead, sections.actions, sections.profile, sections.stats].forEach((height) => {
+    [sections.bar, sections.trip, sections.ahead, sections.actions, ...sections.details].forEach((height) => {
         if (height > 0) {
             total += height;
             steps.push(total);

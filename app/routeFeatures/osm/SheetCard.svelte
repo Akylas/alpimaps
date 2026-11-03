@@ -25,12 +25,12 @@
         osmFacts
     } from '~/routeFeatures/osm/layout';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { Item } from '~/models/Item';
+    import type { IItem } from '~/models/Item';
     import Pill from '~/components/common/Pill.svelte';
     import OpenStateChip from '~/components/items/OpenStateChip.svelte';
     import OpeningHoursTable from '~/components/items/OpeningHoursTable.svelte';
 
-    export let item: Item;
+    export let item: IItem;
 
     $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
 

@@ -1,10 +1,10 @@
 import type { ComponentType } from 'svelte';
 import { type Readable, type Writable, derived, writable } from 'svelte/store';
-import type { Item } from '~/models/Item';
+import type { IItem } from '~/models/Item';
 
 /** What every contribution is asked about. */
 export interface RouteCtx {
-    item: Item;
+    item: IItem;
 }
 
 /** A compact stat of the sheet's header. */
@@ -41,6 +41,28 @@ export interface RouteSheetCardLayout {
 }
 
 /**
+ * A block of the navigation sheet. Its component gets the card props the view passes: `item`, the
+ * background and border for a `details` card, `height` and `marginRight` for an `ahead` widget.
+ */
+export interface RouteNavSection {
+    id: string;
+    /** `ahead`: a widget of the one row above the actions; `details`: a card of its own under them. */
+    slot: 'ahead' | 'details';
+    /** Loaded the first time the section has a height, the navigation ui is not part of the startup graph. */
+    component: () => Promise<{ default: ComponentType }>;
+    /** dp at the navigation scale. 0: nothing to show, so no row. */
+    height: (scale: number, ctx: RouteCtx) => number;
+    /** The share of the ahead row's width. */
+    weight?: number;
+}
+
+export interface RouteNavSectionLayout {
+    id: string;
+    section: RouteNavSection;
+    height: number;
+}
+
+/**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
  */
@@ -58,6 +80,8 @@ export interface RouteFeature {
     tiles?: (ctx: RouteCtx) => RouteTile[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
+    /** Blocks of the navigation sheet. */
+    navSections?: RouteNavSection[];
 }
 
 const registered = writable<RouteFeature[]>([]);
@@ -114,4 +138,34 @@ export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[]
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */
 export function routeSheetCards(features: RouteFeature[], ctx: RouteCtx, gap: number): RouteSheetCardLayout[] {
     return features.filter((feature) => feature.sheetCard).map((feature) => ({ id: feature.id, card: feature.sheetCard, height: feature.sheetCard.height(ctx, gap) }));
+}
+
+/** The navigation sections that have something to show, in feature order. */
+export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale: number): RouteNavSectionLayout[] {
+    return features
+        .flatMap((feature) => feature.navSections ?? [])
+        .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
+        .filter((layout) => layout.height > 0);
+}
+
+/** Lazy components, loaded once and kept. A store, so the view renders a component when it arrives. */
+export function lazyComponents() {
+    const { subscribe, update } = writable<Record<string, ComponentType>>({});
+    const requested = new Set<string>();
+    return {
+        subscribe,
+        async load(id: string, loader: () => Promise<{ default: ComponentType }>) {
+            if (requested.has(id)) {
+                return;
+            }
+            requested.add(id);
+            try {
+                const component = (await loader()).default;
+                update((components) => ({ ...components, [id]: component }));
+            } catch (error) {
+                requested.delete(id);
+                console.error('lazyComponents', id, error);
+            }
+        }
+    };
 }

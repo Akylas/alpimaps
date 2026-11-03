@@ -69,7 +69,8 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, navigationHasPreviewWidgets, navigationItem, navigationScale } from '~/stores/navigationStore';
+    import { isNavigating, navigationItem, navigationScale } from '~/stores/navigationStore';
+    import { routeFeatureChanges, routeFeatures, routeNavSections } from '~/routeFeatures/registry';
     import { MANEUVER_VIEW_HEIGHT, navigationSections, navigationSheetSteps } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
@@ -167,13 +168,7 @@
     let routeSimulatorPanelComponent = null;
     let navigationStepIndex = 0;
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed
-    $: navigationSteps = navigationSheetSteps(
-        navigationSections($navigationScale, {
-            hasAhead: $navigationHasPreviewWidgets,
-            hasProfile: !!$navigationItem?.profile?.data?.length,
-            hasStats: !!$navigationItem?.stats
-        })
-    );
+    $: navigationSteps = navigationSheetSteps(navigationSections($navigationScale, $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : []));
 
     async function loadNavigationViews() {
         if (navigationViewComponent) {

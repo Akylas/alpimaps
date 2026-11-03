@@ -2,7 +2,7 @@ import { derived, get } from 'svelte/store';
 import { OSM_DETAILS_FRESH_DURATION, canLookupOSMDetails, networkOnline, osmDetailsStates, osmItemKey } from '~/helpers/osmDetails';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
-import type { Item } from '~/models/Item';
+import type { IItem } from '~/models/Item';
 import { osmCardHeight, osmCardLayout, osmFacts } from '~/routeFeatures/osm/layout';
 import { registerRouteFeature } from '~/routeFeatures/registry';
 import { osmItemDetails } from '~/stores/mapStore';
@@ -14,7 +14,7 @@ let lookupKey: string = null;
 let savedKey: string = null;
 
 // what the places we looked up before already tell: the hours show right away, offline too
-async function loadSavedDetails(selected: Item, enabled: boolean) {
+async function loadSavedDetails(selected: IItem, enabled: boolean) {
     if (!enabled) {
         savedKey = null;
         return;
@@ -35,7 +35,7 @@ async function loadSavedDetails(selected: Item, enabled: boolean) {
 }
 
 // once per selection, when the card is on show: a lookup less than a day old is left alone
-async function startLookup(selected: Item) {
+async function startLookup(selected: IItem) {
     const key = osmItemKey(selected);
     if (key === lookupKey) {
         return;

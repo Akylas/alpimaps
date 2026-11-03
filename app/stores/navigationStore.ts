@@ -171,13 +171,6 @@ export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITI
 // system font scale times the user's navigation scale: one store so bar rows and sheet steps agree
 export const navigationScale = derived([fontScaleMaxed, navigationUiScale], ([fontScale, uiScale]) => fontScale * (uiScale > 0 ? uiScale : 1));
 
-// the navigation view and the sheet step must agree on whether the preview row exists,
-// else the sheet reserves an empty row above the map
-export const navigationHasPreviewWidgets = derived([navigationItem, navigationShowElevationChart, navigationShowSurface], ([item, showChart, showSurface]) => {
-    const stats = item?.stats;
-    return (showChart && !!item?.profile?.data?.length) || (showSurface && (!!stats?.surfaceSegments?.length || !!stats?.surfaces?.length));
-});
-
 /** the settings screen groups the parameters under these, in this order */
 export enum NavigationSection {
     Camera = 'camera',
