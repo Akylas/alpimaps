@@ -140,6 +140,9 @@ export function weatherCoverage(startAt: number, totalSec: number): { from: numb
     return { from: Math.floor(start / day) * day, to: Math.ceil(end / day) * day };
 }
 
+/** A run in flight, or why the last one failed: what the pipeline reports for a layer. */
+export type LayerRun = { state: 'queued' | 'running'; progress?: number } | { state: 'failed'; reason: LayerReason };
+
 export interface FreshnessContext {
     now: number;
     inputs: AnalysisInputs;
@@ -151,7 +154,7 @@ export interface FreshnessContext {
     /** What each layer was last hashed with, see `layerInputsHash` */
     extras?: Partial<Record<LayerId, LayerExtra>>;
     /** A run in flight, or the reason the last one failed */
-    runs?: Partial<Record<LayerId, { state: 'queued' | 'running'; progress?: number } | { state: 'failed'; reason: LayerReason }>>;
+    runs?: Partial<Record<LayerId, LayerRun>>;
 }
 
 function statusOf(state: LayerState, extra: Partial<LayerStatus> = {}): LayerStatus {

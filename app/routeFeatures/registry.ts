@@ -3,6 +3,7 @@ import type { ComponentType } from 'svelte';
 import { type Readable, derived, writable } from 'svelte/store';
 import type { SettingsStore } from '~/stores/settingsStore';
 import type { IItem } from '~/models/Item';
+import type { AnalysisStage } from '~/utils/routeAnalysis/pipeline';
 
 /** What every contribution is asked about. */
 export interface RouteCtx {
@@ -96,6 +97,8 @@ export interface RouteFeature {
     navSections?: RouteNavSection[];
     /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
     mapFeatures?: (ctx: RouteCtx & { navigating: boolean }) => Feature[];
+    /** How the feature computes its layer of the route analysis. Run by the pipeline, see `utils/routeAnalysis/pipeline`. */
+    compute?: AnalysisStage;
 }
 
 const registered = writable<RouteFeature[]>([]);
@@ -187,4 +190,9 @@ export function lazyComponents() {
 /** What the enabled features add to the route's layer. */
 export function routeMapFeatures(features: RouteFeature[], ctx: RouteCtx & { navigating: boolean }): Feature[] {
     return features.flatMap((feature) => feature.mapFeatures?.(ctx) ?? []);
+}
+
+/** The stages the enabled features contribute to the route analysis pipeline. */
+export function routeStages(features: RouteFeature[]): AnalysisStage[] {
+    return features.flatMap((feature) => (feature.compute ? [feature.compute] : []));
 }
