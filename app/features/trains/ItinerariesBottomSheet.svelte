@@ -16,11 +16,12 @@
     import { itineraryFollowId } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
     import { openURL, showPopoverMenu } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
 
     export let from: { name: string; position: MapPos };
     export let to: { name: string; position: MapPos };
@@ -42,7 +43,6 @@
     const DASHED = '8 8 0';
     const SOLID = '1000 0 0';
 
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -447,11 +447,11 @@
     {:else if itineraries && !itineraries.length}
         <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={1} text={lc('no_itinerary_found')} verticalAlignment="middle" />
     {/if}
-    <stacklayout marginBottom={windowInsetBottom} row={2}>
+    <stacklayout row={2}>
         {#if selected && selectedTicketUrl}
             <Pill horizontalAlignment="stretch" icon="mdi-ticket-outline" label={lc('get_tickets')} margin="4 16" primary={true} on:tap={() => openTicket(selected)} />
         {/if}
-        <label color={colorOnSurfaceVariant} fontSize={11} padding="4 16" text={lc('transitous_attribution')} on:tap={() => openURL('https://transitous.org')} />
+        <TransitousAttribution />
     </stacklayout>
     <activityindicator busy={true} horizontalAlignment="right" row={1} verticalAlignment="middle" visibility={loading && !itineraries ? 'visible' : 'hidden'} />
 </gesturerootview>

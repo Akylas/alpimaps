@@ -13,6 +13,7 @@
     import { onNetworkChanged } from '~/services/NetworkService';
     import DirectionHeader from '~/features/trains/DirectionHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
     import { showStopLines } from '~/features/trains/stop';
     import { modeIcon } from '~/features/trains/TransitousService';
     import { type StopLine, TIMESHEET_TRIPS, type TimesheetPage, type TimesheetStop, getLineTimesheet } from '~/features/trains/lines';
@@ -31,7 +32,6 @@
 
 <script lang="ts">
     $: ({ colorError, colorOnBackground, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
-    $: ({ bottom: windowInsetBottom } = $windowInset);
 
     export let line: StopLine;
     /** the direction to show, an index of `line.directions` */
@@ -198,7 +198,7 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true}>
-    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,auto,*">
+    <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,auto,*,auto">
         <CActionBar>
             <LineChip
                 name={line.shortName || line.longName}
@@ -226,7 +226,7 @@
             <IconButton col={4} text="mdi-chevron-right" on:tap={nextDates} />
         </gridlayout>
 
-        <collectionview bind:this={collectionView} items={timelineItems} row={3} android:marginBottom={windowInsetBottom} rowHeight={56} on:swipe={onSwipe}>
+        <collectionview bind:this={collectionView} items={timelineItems} row={3} rowHeight={56} on:swipe={onSwipe}>
             <Template let:item>
                 <gridlayout
                     backgroundColor={isCurrentStop(item) ? new Color(colorPrimary).setAlpha(24).hex : null}
@@ -263,5 +263,6 @@
                 </cgroup>
             </canvaslabel>
         {/if}
+        <TransitousAttribution row={4} />
     </gridlayout>
 </page>

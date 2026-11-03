@@ -9,12 +9,12 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
     import { type LineDeparture, type LineDirection, type StopLine, getStopLines } from '~/features/trains/lines';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
     import type { MapPos } from '~/utils/geo';
-    import { openURL } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts } from '~/variables';
 
     export let position: MapPos;
     export let name: string;
@@ -30,7 +30,6 @@
         directionIndex: number;
     }
 
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -157,13 +156,6 @@
     {:else if rows && !rows.length}
         <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={1} text={lc('no_departures_found')} verticalAlignment="middle" />
     {/if}
-    <label
-        color={colorOnSurfaceVariant}
-        fontSize={11}
-        marginBottom={windowInsetBottom}
-        padding="4 16"
-        row={2}
-        text={(rows?.length && !anyRealTime ? lc('scheduled_times_only') + ' · ' : '') + lc('transitous_attribution')}
-        on:tap={() => openURL('https://transitous.org')} />
+    <TransitousAttribution note={rows?.length && !anyRealTime ? lc('scheduled_times_only') : null} row={2} />
     <activityindicator busy={true} horizontalAlignment="right" row={1} verticalAlignment="middle" visibility={loading && !rows ? 'visible' : 'hidden'} />
 </gesturerootview>

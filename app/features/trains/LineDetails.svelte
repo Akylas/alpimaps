@@ -19,6 +19,7 @@
     import { packageService } from '~/services/PackageService';
     import DirectionHeader from '~/features/trains/DirectionHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
     import { showStopLines } from '~/features/trains/stop';
     import type { StopLine } from '~/features/trains/lines';
     import { type TransitousLeg, type TransitousPlace, modeIcon, transitousService } from '~/features/trains/TransitousService';
@@ -33,7 +34,6 @@
     import type { Feature, FeatureCollection } from 'geojson';
     import type { MapPos } from '~/utils/geo';
     import { getDistanceSimple } from '~/helpers/geolib';
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorBackground, colorError, colorOnBackground, colorOnSurfaceVariant, colorPrimary } = $colors);
     interface Item {
@@ -270,7 +270,7 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridlayout rows="auto,auto,auto,4*,6*">
+    <gridlayout rows="auto,auto,auto,4*,6*,auto">
         <CActionBar>
             <LineChip
                 name={line.shortName || line.longName}
@@ -300,7 +300,7 @@
             {/each}
         </wraplayout>
         <massifmap row={3} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={4} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
+        <collectionview bind:this={collectionView} items={dataItems} row={4} rowHeight={56} android:paddingBottom={$windowInset.keyboard}>
             <Template let:item>
                 <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={32} startY={0} stopX={32} stopY="50%" strokeColor={item.color} strokeWidth={5} visibility={item.first ? 'hidden' : 'visible'} />
@@ -348,5 +348,6 @@
                 </cgroup>
             </canvaslabel>
         {/if}
+        <TransitousAttribution row={5} />
     </gridlayout>
 </page>

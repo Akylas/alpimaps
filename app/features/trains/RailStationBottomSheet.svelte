@@ -12,12 +12,12 @@
     import type { MapPos } from '~/utils/geo';
     import { followIdOf } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
-    import { openURL } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
 
     export let position: MapPos;
     export let name: string;
@@ -25,7 +25,6 @@
     // a board that is minutes old is wrong: keep it live while the sheet is open
     const REFRESH_INTERVAL = 60 * 1000;
 
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -98,9 +97,6 @@
         const { number, product } = splitTrainName(stopTime.displayName || stopTime.routeShortName);
         return { product: product || stopTime.mode, number: stopTime.tripShortName || number };
     }
-    function trainDetails(stopTime: TransitousStopTime) {
-        return stopTime.cancelled ? lc('cancelled') : [trainParts(stopTime).number, stopTime.agencyName].filter(Boolean).join(' · ');
-    }
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
     }
@@ -149,8 +145,23 @@
                         textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
                 </stacklayout>
                 <stacklayout col={1} verticalAlignment="middle">
-                    <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} text={otherEnd(item)} />
-                    <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={trainDetails(item)} />
+                    <label color={colorOnSurface} fontSize={17} lineBreak="end" maxLines={2} text={otherEnd(item)} />
+                    <stacklayout orientation="horizontal">
+                        <label
+                            color={item.cancelled ? colorError : colorOnSurface}
+                            fontSize={14}
+                            fontWeight="bold"
+                            text={item.cancelled ? lc('cancelled') : trainParts(item).number}
+                            visibility={item.cancelled || trainParts(item).number ? 'visible' : 'collapse'} />
+                        <label
+                            color={colorOnSurfaceVariant}
+                            fontSize={11}
+                            lineBreak="end"
+                            maxLines={1}
+                            paddingLeft={item.cancelled || trainParts(item).number ? 6 : 0}
+                            text={item.agencyName}
+                            verticalAlignment="middle" />
+                    </stacklayout>
                 </stacklayout>
                 <stacklayout col={2} horizontalAlignment="right" verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={15} fontWeight="bold" horizontalAlignment="right" text={item.place.track} visibility={item.place.track ? 'visible' : 'collapse'} />
@@ -177,13 +188,6 @@
     {:else if times && !times.length}
         <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={2} text={lc('no_trains_found')} verticalAlignment="middle" />
     {/if}
-    <label
-        color={colorOnSurfaceVariant}
-        fontSize={11}
-        marginBottom={windowInsetBottom}
-        padding="4 16"
-        row={3}
-        text={(times?.length && !anyRealTime ? lc('scheduled_times_only') + ' · ' : '') + lc('transitous_attribution')}
-        on:tap={() => openURL('https://transitous.org')} />
+    <TransitousAttribution note={times?.length && !anyRealTime ? lc('scheduled_times_only') : null} row={3} />
     <activityindicator busy={true} horizontalAlignment="right" row={2} verticalAlignment="middle" visibility={loading && !times ? 'visible' : 'hidden'} />
 </gesturerootview>
