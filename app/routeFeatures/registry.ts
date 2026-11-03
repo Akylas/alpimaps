@@ -6,6 +6,17 @@ export interface RouteCtx {
     item: IItem;
 }
 
+/** A compact stat of the sheet's header. */
+export interface RouteTile {
+    key: string;
+    icon: string;
+    /** Spoken by the long press tooltip. */
+    label: string;
+    value: string;
+    /** A smaller line under the value; a selected point's remaining figure takes its place. */
+    sub?: { icon: string; text: string };
+}
+
 /**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
@@ -20,6 +31,8 @@ export interface RouteFeature {
     setting?: { title: string; store: Writable<boolean> };
     /** Fires when a contribution depends on something other than the item (a setting, the network...). */
     changes?: Readable<unknown>;
+    /** The header's tiles, in the feature's order. */
+    tiles?: (ctx: RouteCtx) => RouteTile[];
 }
 
 const registered = writable<RouteFeature[]>([]);
@@ -68,3 +81,7 @@ export const routeFeatureChanges: Readable<number> = derived(
     },
     0
 );
+
+export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[] {
+    return features.flatMap((feature) => feature.tiles?.(ctx) ?? []);
+}

@@ -56,6 +56,7 @@
     import '~/mapModules/features/immersive';
     import '~/mapModules/features/styleToggles';
     import '~/mapModules/features/legend';
+    import '~/routeFeatures';
     import { offerGesturesTutorial } from '~/mapModules/features/gestures';
     import MapLegend from './MapLegend.svelte';
     import '~/mapModules/features/terrain3d';

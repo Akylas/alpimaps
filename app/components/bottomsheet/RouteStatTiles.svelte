@@ -4,10 +4,10 @@
     import { View } from '@nativescript/core';
     import { onDestroy } from 'svelte';
     import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
-    import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem as Item } from '~/models/Item';
+    import { routeFeatures, routeTiles } from '~/routeFeatures/registry';
     import { showToolTip } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
 
@@ -16,7 +16,7 @@
     let { colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
     $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
 
-    let remaining: { distance?: string; time?: string; ascent?: string; descent?: string } = null;
+    let remaining: { distance?: string; time?: string; ascent?: string } = null;
 
     // the same event the elevation chart feeds, from a tap on it or a location on the route
     function onRouteData(event) {
@@ -28,8 +28,7 @@
         remaining = {
             distance: formatDistance(event.remainingDistance),
             time: !isNaN(event.remainingTime) ? convertDurationSeconds(event.remainingTime) : null,
-            ascent: data && !isNaN(data.dp) && event.dplus - data.dp > 0 ? convertElevation(event.dplus - data.dp) : null,
-            descent: data && !isNaN(data.dm) && Math.abs(event.dmin - data.dm) > 0 ? convertElevation(-(event.dmin - data.dm)) : null
+            ascent: data && !isNaN(data.dp) && event.dplus - data.dp > 0 ? convertElevation(event.dplus - data.dp) : null
         };
     }
     const itemsModule = getMapContext().mapModule('items');
@@ -39,29 +38,13 @@
         remaining = null;
     }
 
-    function tilesFor(it: Item) {
-        const route = it?.route;
-        if (!route) {
-            return [];
-        }
-        const properties = it.properties;
-        const profile = it.profile;
-        const hasProfile = !!profile?.max;
-        const distance = route.totalDistance || (properties?.distance ? properties.distance * 1000 : 0);
-        const ascent = hasProfile ? profile.dplus : properties?.ascent;
-        const descent = hasProfile ? -profile.dmin : properties?.descent;
-        return [
-            distance > 0 && { key: 'distance', icon: 'mdi-arrow-left-right', label: lc('distance'), value: formatDistance(distance) },
-            route.totalTime > 0 && { key: 'time', icon: 'mdi-timer-outline', label: lc('duration'), value: convertDurationSeconds(route.totalTime) },
-            ascent > 0 && { key: 'ascent', icon: 'mdi-arrow-top-right', label: lc('ascent'), value: convertElevation(ascent) },
-            descent > 0 && { key: 'descent', icon: 'mdi-arrow-bottom-right', label: lc('descent'), value: convertElevation(descent) }
-        ].filter(Boolean);
-    }
-    $: tiles = tilesFor(item);
+    $: tiles = routeTiles($routeFeatures, { item });
 </script>
 
 <gridlayout columns={tiles.map(() => '*').join(',') || '*'} height={40} padding="0 7" {...$$restProps}>
     {#each tiles as tile, index}
+        <!-- the second line: what is left to the end for the selected point, else the tile's own -->
+        {@const second = remaining?.[tile.key] ? { icon: 'mdi-flag-checkered', text: remaining[tile.key], remaining: true } : tile.sub && { ...tile.sub, remaining: false }}
         <gridlayout
             backgroundColor={colorSurfaceFill}
             borderColor={colorHairline}
@@ -73,14 +56,15 @@
             rows="*,auto"
             verticalAlignment="stretch"
             on:longPress={(event) => event.object instanceof View && showToolTip(tile.label, event.object)}>
-            <canvaslabel fontSize={14} height={18} rowSpan={remaining?.[tile.key] ? 1 : 2} verticalAlignment={remaining?.[tile.key] ? 'bottom' : 'middle'}>
+            <canvaslabel fontSize={14} height={18} rowSpan={second ? 1 : 2} verticalAlignment={second ? 'bottom' : 'middle'}>
                 <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={tile.icon} verticalAlignment="middle" />
                 <cspan color={colorOnSurface} fontWeight="bold" paddingLeft={17} text={tile.value} verticalAlignment="middle" />
             </canvaslabel>
-            {#if remaining?.[tile.key]}
+            {#if second}
+                {@const color = second.remaining ? (isEInk ? colorOnSurface : colorPrimary) : colorOnSurfaceVariant}
                 <canvaslabel fontSize={11} height={15} row={1} verticalAlignment="top">
-                    <cspan color={isEInk ? colorOnSurface : colorPrimary} fontFamily={$fonts.mdi} fontSize={11} text="mdi-flag-checkered" verticalAlignment="middle" />
-                    <cspan color={isEInk ? colorOnSurface : colorPrimary} fontWeight="bold" paddingLeft={14} text={remaining[tile.key]} verticalAlignment="middle" />
+                    <cspan {color} fontFamily={$fonts.mdi} fontSize={11} text={second.icon} verticalAlignment="middle" />
+                    <cspan {color} fontWeight={second.remaining ? 'bold' : 'normal'} paddingLeft={14} text={second.text} verticalAlignment="middle" />
                 </canvaslabel>
             {/if}
         </gridlayout>
