@@ -133,6 +133,11 @@ export function itineraryTicketUrl(itinerary: TransitousItinerary) {
     );
 }
 
+/** "TER 96601" is the product "TER" and the train number "96601", "TGV INOUI 6902" "TGV INOUI" and "6902"; "K21" has no number */
+export function splitTrainName(displayName?: string): { product?: string; number?: string } {
+    const match = displayName?.match(/^(.*?)\s+([A-Za-z]{0,2}\d+)$/);
+    return match ? { product: match[1], number: match[2] } : { product: displayName };
+}
 export function isRailMode(mode: string) {
     return RAIL_MODES.includes(mode);
 }

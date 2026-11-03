@@ -7,7 +7,7 @@
     import { lc } from '~/helpers/locale';
     import { showRailTrip } from '~/features/trains/rail';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { type TransitousStop, type TransitousStopTime, transitousService } from '~/features/trains/TransitousService';
+    import { type TransitousStop, type TransitousStopTime, splitTrainName, transitousService } from '~/features/trains/TransitousService';
     import { trainFollowService, trainFollowSupported } from '~/features/trains/TrainFollowService';
     import type { MapPos } from '~/utils/geo';
     import { followIdOf } from '~/features/trains/trainFollow';
@@ -93,8 +93,13 @@
     function delayMinutes(stopTime: TransitousStopTime) {
         return Math.round((Date.parse(actualTime(stopTime)) - Date.parse(scheduledTime(stopTime))) / 60000);
     }
-    function trainName(stopTime: TransitousStopTime) {
-        return stopTime.routeShortName || stopTime.displayName || stopTime.mode;
+    // the chip says what kind of train it is, the number goes with the operator under the destination
+    function trainParts(stopTime: TransitousStopTime) {
+        const { number, product } = splitTrainName(stopTime.displayName || stopTime.routeShortName);
+        return { product: product || stopTime.mode, number: stopTime.tripShortName || number };
+    }
+    function trainDetails(stopTime: TransitousStopTime) {
+        return stopTime.cancelled ? lc('cancelled') : [trainParts(stopTime).number, stopTime.agencyName].filter(Boolean).join(' · ');
     }
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
@@ -110,30 +115,44 @@
         <Pill icon="mdi-arrow-top-right" label={lc('departures')} selected={!arrivals} on:tap={() => selectBoard(false)} />
         <Pill icon="mdi-arrow-bottom-left" label={lc('arrivals')} marginLeft={8} selected={arrivals} on:tap={() => selectBoard(true)} />
     </stacklayout>
-    <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={times} row={2} rowHeight={64}>
+    <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={times} row={2} rowHeight={78}>
         <Template let:item>
             <gridlayout
                 borderBottomColor={colorOutlineVariant}
                 borderBottomWidth={1}
-                columns={showBell ? '56,auto,*,auto,auto' : '56,auto,*,auto'}
+                columns={showBell ? '104,*,auto,auto' : '104,*,auto'}
                 padding="0 16"
                 rippleColor={colorPrimary}
                 on:tap={() => showRailTrip(item)}>
                 <stacklayout verticalAlignment="middle">
-                    <label
-                        color={item.cancelled ? colorError : colorOnSurface}
-                        fontSize={17}
-                        fontWeight="bold"
-                        text={dayjs(actualTime(item)).format('HH:mm')}
-                        textDecoration={item.cancelled ? 'line-through' : 'none'} />
-                    <label color={colorError} fontSize={12} text={delayMinutes(item) > 0 ? `+${delayMinutes(item)} min` : null} visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
+                    <stacklayout orientation="horizontal">
+                        <label
+                            color={item.cancelled ? colorError : colorOnSurface}
+                            fontSize={17}
+                            fontWeight="bold"
+                            text={dayjs(actualTime(item)).format('HH:mm')}
+                            textDecoration={item.cancelled ? 'line-through' : 'none'} />
+                        <label
+                            color={colorError}
+                            fontSize={12}
+                            paddingLeft={6}
+                            text={delayMinutes(item) > 0 ? `+${delayMinutes(item)}` : null}
+                            verticalAlignment="middle"
+                            visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
+                    </stacklayout>
+                    <LineChip
+                        name={trainParts(item).product}
+                        color={item.routeColor ? `#${item.routeColor}` : null}
+                        fontSize={12}
+                        height={22}
+                        marginTop={4}
+                        textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
                 </stacklayout>
-                <LineChip name={trainName(item)} col={1} color={item.routeColor ? `#${item.routeColor}` : null} textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
-                <stacklayout col={2} paddingLeft={10} verticalAlignment="middle">
-                    <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={1} text={otherEnd(item)} />
-                    <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={item.cancelled ? lc('cancelled') : item.agencyName} />
+                <stacklayout col={1} verticalAlignment="middle">
+                    <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={2} text={otherEnd(item)} />
+                    <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={trainDetails(item)} />
                 </stacklayout>
-                <stacklayout col={3} horizontalAlignment="right" verticalAlignment="middle">
+                <stacklayout col={2} horizontalAlignment="right" verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={15} fontWeight="bold" horizontalAlignment="right" text={item.place.track} visibility={item.place.track ? 'visible' : 'collapse'} />
                     <label
                         color={item.realTime ? colorPrimary : colorOnSurfaceVariant}
@@ -143,7 +162,7 @@
                         text={item.realTime ? 'mdi-access-point' : 'mdi-clock-outline'} />
                 </stacklayout>
                 {#if showBell}
-                    <IconButton col={4} text={$followedIds.includes(followIdOf(item)) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'} on:tap={() => toggleFollow(item)} />
+                    <IconButton col={3} text={$followedIds.includes(followIdOf(item)) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'} on:tap={() => toggleFollow(item)} />
                 {/if}
             </gridlayout>
         </Template>
