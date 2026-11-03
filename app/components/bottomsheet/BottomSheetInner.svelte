@@ -734,6 +734,9 @@
                 options.unshift({ name: lc('address'), data: 'address' });
             }
             if (itemIsRoute) {
+                if (item.analysis) {
+                    options.push({ name: lc('share_geoson_data'), data: 'share_geojson_data' });
+                }
                 options.push({ name: lc('share_gpx'), data: 'share_gpx' }, { name: lc('export_gpx'), data: 'export_gpx' });
             } else {
                 options.push({ name: lc('position'), data: 'position' });
@@ -787,6 +790,10 @@
                             case 'share_geojson':
                                 showLoading();
                                 await mapContext.mapModule('items').shareItemsAsGeoJSON([item], filename);
+                                break;
+                            case 'share_geojson_data':
+                                showLoading();
+                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], filename, true);
                                 break;
                             case 'share_gpx':
                                 showLoading();

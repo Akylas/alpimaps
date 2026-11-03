@@ -19,6 +19,7 @@ import { getBoundsOfDistance, getDistanceSimple, getMetersPerPixel } from '~/hel
 import { GroupRepository, IItem, Item, ItemRepository, Route, RouteInstruction, RouteProfile, RouteStats } from '~/models/Item';
 import { maxAgeMonth, networkService } from '~/services/NetworkService';
 import { JSONtoXML, importGPXToGeojson } from '~/utils/gpx';
+import { parseAnalysis } from '~/utils/routeAnalysis/storage';
 import { showSnack } from '~/utils/ui';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
@@ -727,6 +728,8 @@ export default class ItemsModule extends MapModule {
             const item = items[index];
             if (item.route) {
                 item.image_path = this.getItemImagePath();
+                // its route.type is whatever the GPX said: the analysis asks for the activity when it needs it
+                item.properties.imported = true;
             }
             const dbItem = await this.saveItem(item);
             await this.itemRepository.setItemGroup(dbItem, dbItem.groups?.[0] || 'gpx');
@@ -760,6 +763,10 @@ export default class ItemsModule extends MapModule {
             if (props.route) {
                 item.route = props.route;
             }
+            if (props.analysis) {
+                item.analysis = parseAnalysis(JSON.stringify(props.analysis));
+                delete props.analysis;
+            }
             if (props.mapFontFamily) {
                 const filtered = pick(props, 'mapFontFamily', 'fontFamily', 'iconSize', 'iconDx', 'icon', 'color');
                 // old style we need to clear it
@@ -791,7 +798,7 @@ export default class ItemsModule extends MapModule {
             mapContext.selectItem({ item: dbItem, isFeatureInteresting: true, peek: true, preventZoom: false, forceZoomOut: true, zoomDuration: 0 });
         }
     }
-    async itemsAsGeoJSON(items: IItem[]) {
+    async itemsAsGeoJSON(items: IItem[], { withAnalysis = false } = {}) {
         const features = [];
         for (let index = 0; index < items.length; index++) {
             const item = items[index];
@@ -807,7 +814,8 @@ export default class ItemsModule extends MapModule {
                     instructions: item.instructions,
                     groups: item.groups,
                     route: item.route,
-                    profile: item.profile
+                    profile: item.profile,
+                    analysis: withAnalysis ? item.analysis : undefined
                 },
                 geometry: item.geometry
             };
@@ -906,8 +914,8 @@ export default class ItemsModule extends MapModule {
         return gpx;
     }
 
-    async shareItemsAsGeoJSON(items: IItem[], name = 'items') {
-        return shareFile(JSON.stringify(await this.itemsAsGeoJSON(items)), name + '.geojson', {
+    async shareItemsAsGeoJSON(items: IItem[], name = 'items', withAnalysis = false) {
+        return shareFile(JSON.stringify(await this.itemsAsGeoJSON(items, { withAnalysis })), name + '.geojson', {
             // type: 'text/json'
         });
     }
