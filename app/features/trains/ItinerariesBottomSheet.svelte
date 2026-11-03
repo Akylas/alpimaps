@@ -16,10 +16,12 @@
     import { itineraryFollowId } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
     import { openURL, showPopoverMenu } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
+    import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
 
     export let from: { name: string; position: MapPos };
     export let to: { name: string; position: MapPos };
@@ -41,7 +43,6 @@
     const DASHED = '8 8 0';
     const SOLID = '1000 0 0';
 
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -72,10 +73,11 @@
         }
     }
 
-    async function refresh() {
+    // `fresh`: the refresh button asks again, whatever is cached
+    async function refresh(fresh = false) {
         try {
             loading = true;
-            itineraries = (await transitousService.plan({ from: from.position, to: to.position, time: time ?? undefined, arriveBy })).itineraries;
+            itineraries = (await transitousService.plan({ fresh, from: from.position, to: to.position, time: time ?? undefined, arriveBy })).itineraries;
             selected = null;
             remember();
             if (itineraries.length > 0) {
@@ -273,7 +275,7 @@
             text={selected && isFollowed(selected, $followedIds) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'}
             on:tap={() => toggleFollow(selected)} />
         <IconButton isVisible={!!selected} text="mdi-map-marker-path" on:tap={showSelectedOnMap} />
-        <IconButton text="mdi-refresh" on:tap={refresh} />
+        <IconButton text="mdi-refresh" on:tap={() => refresh(true)} />
     </PanelHeader>
     {#if selected}
         <scrollview id="scrollView" row={1}>
@@ -415,10 +417,14 @@
                         <label color={colorOnSurface} fontSize={17} fontWeight="bold" text={`${formatTime(item.startTime)} → ${formatTime(item.endTime)}`} />
                         <wraplayout marginTop={2}>
                             {#each summaryLegs(item) as leg}
-                                <stacklayout backgroundColor={legChipColor(leg)} borderRadius={4} height={CHIP_HEIGHT} marginRight={6} marginTop={4} orientation="horizontal" padding="0 6">
-                                    <label color={legTextColor(leg)} fontFamily={$fonts.mdi} fontSize={14} text={modeIcon(leg.mode)} verticalAlignment="middle" />
-                                    <label color={legTextColor(leg)} fontSize={13} lineBreak="end" maxLines={1} paddingLeft={3} text={legName(leg)} verticalAlignment="middle" />
-                                </stacklayout>
+                                <LineChip
+                                    name={legName(leg)}
+                                    color={leg.routeColor ? `#${leg.routeColor}` : null}
+                                    height={CHIP_HEIGHT}
+                                    marginRight={6}
+                                    marginTop={4}
+                                    mode={leg.mode}
+                                    textColor={leg.routeTextColor ? `#${leg.routeTextColor}` : null} />
                             {/each}
                         </wraplayout>
                     </stacklayout>
@@ -441,11 +447,11 @@
     {:else if itineraries && !itineraries.length}
         <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={1} text={lc('no_itinerary_found')} verticalAlignment="middle" />
     {/if}
-    <stacklayout marginBottom={windowInsetBottom} row={2}>
+    <stacklayout row={2}>
         {#if selected && selectedTicketUrl}
             <Pill horizontalAlignment="stretch" icon="mdi-ticket-outline" label={lc('get_tickets')} margin="4 16" primary={true} on:tap={() => openTicket(selected)} />
         {/if}
-        <label color={colorOnSurfaceVariant} fontSize={11} padding="4 16" text={lc('transitous_attribution')} on:tap={() => openURL('https://transitous.org')} />
+        <TransitousAttribution />
     </stacklayout>
     <activityindicator busy={true} horizontalAlignment="right" row={1} verticalAlignment="middle" visibility={loading && !itineraries ? 'visible' : 'hidden'} />
 </gesturerootview>

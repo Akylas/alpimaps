@@ -623,20 +623,5 @@ export class NetworkService extends Observable {
         }
         return `max-age=${maxAge}, max-stale=${stale}, stale-while-revalidate=${stale}`;
     }
-
-    async getMetroLines() {
-        return this.request<string>({
-            method: 'GET',
-            toJSON: false,
-            url: 'https://data.mobilites-m.fr/api/lines/json',
-            headers: {
-                'Cache-Control': getCacheControl(maxAgeMonth, maxAgeMonth - 1)
-            },
-            queryParams: {
-                types: 'ligne',
-                reseaux: 'SEM,C38'
-            }
-        });
-    }
 }
 export const networkService = new NetworkService();

@@ -13,7 +13,7 @@
 @transit_route_label_halo: #f2f5f8;
 @transit_line_priority: 100 - length([route_short_name]);
 
-@marker-size: linear([view::zoom], (12, 4), (13, 5.5), (19, 8.5)) + ([param::selected_id_str]=[id] ? 5: 0);
+@marker-size: linear([view::zoom], (12, 7), (13, 9), (19, 13)) + ([param::selected_id_str]=[id] ? 5: 0);
 
 #routes['mapnik::geometry_type'=2][route_type !=2][generated !=true][agency_id !='FLIXBUS-eu'] {
 
@@ -92,8 +92,9 @@
     marker-placement-priority: [param::selected_id_str]=[id] ? 10: 0;
     marker-placement: point;
     marker-type: ellipse;
-    marker-line-color: black;
-    marker-fill: #fff;
+    marker-line-color: @transit_stop_border_color;
+    marker-line-width: @transit_stop_border_width;
+    marker-fill: [param::selected_id_str]=[id] ? @transit_stop_selected_fill : @transit_stop_fill;
     marker-width: @marker-size;
     marker-height: @marker-size;
     marker-allow-overlap: true;

@@ -1,23 +1,23 @@
 <script lang="ts">
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { Template } from '@nativescript-community/svelte-native/components';
-    import { Color } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
     import { lc } from '~/helpers/locale';
     import { showRailTrip } from '~/features/trains/rail';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { type TransitousStop, type TransitousStopTime, transitousService } from '~/features/trains/TransitousService';
+    import { type TransitousStop, type TransitousStopTime, splitTrainName, transitousService } from '~/features/trains/TransitousService';
     import { trainFollowService, trainFollowSupported } from '~/features/trains/TrainFollowService';
     import type { MapPos } from '~/utils/geo';
     import { followIdOf } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
-    import { openURL } from '~/utils/ui/index.common';
-    import { colors, fonts, windowInset } from '~/variables';
+    import { colors, fonts } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import Pill from '~/components/common/Pill.svelte';
+    import LineChip from '~/features/trains/LineChip.svelte';
+    import TransitousAttribution from '~/features/trains/TransitousAttribution.svelte';
 
     export let position: MapPos;
     export let name: string;
@@ -25,7 +25,6 @@
     // a board that is minutes old is wrong: keep it live while the sheet is open
     const REFRESH_INTERVAL = 60 * 1000;
 
-    $: ({ bottom: windowInsetBottom } = $windowInset);
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
@@ -39,11 +38,12 @@
     // the widget follows an arrival, so departures have nothing to follow
     $: showBell = arrivals && trainFollowSupported;
 
-    async function refresh() {
+    // `fresh`: the refresh button asks again, the timer takes what was fetched less than 30 seconds ago
+    async function refresh(fresh = false) {
         try {
             loading = true;
             stops ??= await transitousService.findRailStops(position);
-            times = stops.length ? await transitousService.getStationTimes(stops, { arrivals }) : [];
+            times = stops.length ? await transitousService.getStationTimes(stops, { arrivals, fresh }) : [];
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !times) {
@@ -79,7 +79,7 @@
     });
     onMount(() => {
         refresh();
-        refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+        refreshTimer = setInterval(() => refresh(), REFRESH_INTERVAL);
     });
     onDestroy(() => clearInterval(refreshTimer));
 
@@ -92,63 +92,72 @@
     function delayMinutes(stopTime: TransitousStopTime) {
         return Math.round((Date.parse(actualTime(stopTime)) - Date.parse(scheduledTime(stopTime))) / 60000);
     }
-    function trainName(stopTime: TransitousStopTime) {
-        return stopTime.routeShortName || stopTime.displayName || stopTime.mode;
+    // the chip says what kind of train it is, the number goes with the operator under the destination
+    // "TER 96601" is a product and a number; a coach also has its line (K21): a chip for each, the feed's colour is the line's
+    function trainParts(stopTime: TransitousStopTime) {
+        const { number, product } = splitTrainName(stopTime.displayName || stopTime.routeShortName);
+        const line = stopTime.routeShortName;
+        const lineChip = {
+            name: line || product || stopTime.mode,
+            color: stopTime.routeColor ? `#${stopTime.routeColor}` : null,
+            textColor: stopTime.routeTextColor ? `#${stopTime.routeTextColor}` : null
+        };
+        const chips = line && product && product !== line ? [{ name: product, color: null, textColor: null }, lineChip] : [lineChip];
+        return { chips, number: stopTime.tripShortName || number };
     }
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
-    }
-    function trainColor(stopTime: TransitousStopTime) {
-        return stopTime.routeColor ? `#${stopTime.routeColor}` : new Color(colorPrimary).setAlpha(36).hex;
-    }
-    function trainTextColor(stopTime: TransitousStopTime) {
-        return stopTime.routeTextColor ? `#${stopTime.routeTextColor}` : colorOnSurface;
     }
     $: anyRealTime = !!times?.some((stopTime) => stopTime.realTime);
 </script>
 
 <gesturerootview class="bottomsheet" rows="auto,auto,*,auto">
     <PanelHeader icon="mdi-train" title={name}>
-        <IconButton text="mdi-refresh" on:tap={refresh} />
+        <IconButton text="mdi-refresh" on:tap={() => refresh(true)} />
     </PanelHeader>
     <stacklayout marginBottom={6} orientation="horizontal" paddingLeft={16} row={1}>
         <Pill icon="mdi-arrow-top-right" label={lc('departures')} selected={!arrivals} on:tap={() => selectBoard(false)} />
         <Pill icon="mdi-arrow-bottom-left" label={lc('arrivals')} marginLeft={8} selected={arrivals} on:tap={() => selectBoard(true)} />
     </stacklayout>
-    <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={times} row={2} rowHeight={64}>
+    <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={times} row={2} rowHeight={78}>
         <Template let:item>
             <gridlayout
                 borderBottomColor={colorOutlineVariant}
                 borderBottomWidth={1}
-                columns={showBell ? '56,auto,*,auto,auto' : '56,auto,*,auto'}
+                columns={showBell ? '104,*,auto,auto' : '104,*,auto'}
                 padding="0 16"
                 rippleColor={colorPrimary}
                 on:tap={() => showRailTrip(item)}>
                 <stacklayout verticalAlignment="middle">
-                    <label
-                        color={item.cancelled ? colorError : colorOnSurface}
-                        fontSize={17}
-                        fontWeight="bold"
-                        text={dayjs(actualTime(item)).format('HH:mm')}
-                        textDecoration={item.cancelled ? 'line-through' : 'none'} />
-                    <label color={colorError} fontSize={12} text={delayMinutes(item) > 0 ? `+${delayMinutes(item)} min` : null} visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
+                    <stacklayout orientation="horizontal">
+                        <label
+                            color={item.cancelled ? colorError : colorOnSurface}
+                            fontSize={17}
+                            fontWeight="bold"
+                            text={dayjs(actualTime(item)).format('HH:mm')}
+                            textDecoration={item.cancelled ? 'line-through' : 'none'} />
+                        <label
+                            color={colorError}
+                            fontSize={12}
+                            paddingLeft={6}
+                            text={delayMinutes(item) > 0 ? `+${delayMinutes(item)}` : null}
+                            verticalAlignment="middle"
+                            visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
+                    </stacklayout>
+                    <stacklayout marginTop={4} orientation="horizontal">
+                        {#each trainParts(item).chips as chip}
+                            <LineChip name={chip.name} color={chip.color} fontSize={12} height={22} marginRight={4} textColor={chip.textColor} />
+                        {/each}
+                    </stacklayout>
                 </stacklayout>
-                <label
-                    backgroundColor={trainColor(item)}
-                    borderRadius={4}
-                    col={1}
-                    color={trainTextColor(item)}
-                    fontSize={13}
-                    fontWeight="bold"
-                    maxLines={1}
-                    padding="2 6"
-                    text={trainName(item)}
-                    verticalAlignment="middle" />
-                <stacklayout col={2} paddingLeft={10} verticalAlignment="middle">
-                    <label color={colorOnSurface} fontSize={15} lineBreak="end" maxLines={1} text={otherEnd(item)} />
-                    <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={item.cancelled ? lc('cancelled') : item.agencyName} />
-                </stacklayout>
-                <stacklayout col={3} horizontalAlignment="right" verticalAlignment="middle">
+                <canvaslabel col={1} paddingLeft={10}>
+                    <cgroup lineBreak="end" verticalAlignment="middle">
+                        <cspan color={colorOnSurface} fontSize={17} text={otherEnd(item)} />
+                        <cspan color={item.cancelled ? colorError : colorOnSurface} fontSize={14} text={'\n' + (item.cancelled ? lc('cancelled') : (trainParts(item).number ?? ''))} />
+                        <cspan color={colorOnSurfaceVariant} fontSize={11} text={(item.cancelled || trainParts(item).number ? ' ' : '') + (item.agencyName ?? '')} />
+                    </cgroup>
+                </canvaslabel>
+                <stacklayout col={2} horizontalAlignment="right" verticalAlignment="middle">
                     <label color={colorOnSurface} fontSize={15} fontWeight="bold" horizontalAlignment="right" text={item.place.track} visibility={item.place.track ? 'visible' : 'collapse'} />
                     <label
                         color={item.realTime ? colorPrimary : colorOnSurfaceVariant}
@@ -158,7 +167,7 @@
                         text={item.realTime ? 'mdi-access-point' : 'mdi-clock-outline'} />
                 </stacklayout>
                 {#if showBell}
-                    <IconButton col={4} text={$followedIds.includes(followIdOf(item)) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'} on:tap={() => toggleFollow(item)} />
+                    <IconButton col={3} text={$followedIds.includes(followIdOf(item)) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'} on:tap={() => toggleFollow(item)} />
                 {/if}
             </gridlayout>
         </Template>
@@ -173,13 +182,6 @@
     {:else if times && !times.length}
         <label color={colorOnSurfaceVariant} fontSize={16} horizontalAlignment="center" row={2} text={lc('no_trains_found')} verticalAlignment="middle" />
     {/if}
-    <label
-        color={colorOnSurfaceVariant}
-        fontSize={11}
-        marginBottom={windowInsetBottom}
-        padding="4 16"
-        row={3}
-        text={(times?.length && !anyRealTime ? lc('scheduled_times_only') + ' · ' : '') + lc('transitous_attribution')}
-        on:tap={() => openURL('https://transitous.org')} />
+    <TransitousAttribution note={times?.length && !anyRealTime ? lc('scheduled_times_only') : null} row={3} />
     <activityindicator busy={true} horizontalAlignment="right" row={2} verticalAlignment="middle" visibility={loading && !times ? 'visible' : 'hidden'} />
 </gesturerootview>
