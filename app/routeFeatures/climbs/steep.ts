@@ -235,3 +235,16 @@ export function findClimbs(data: ProfilePoint[], { dipTolerance, minAvgGrade, mi
     }
     return climbs;
 }
+
+const CATEGORY_RANK: (ClimbCategory | undefined)[] = ['hc', 1, 2, 3, 4, undefined];
+
+/** The hardest category, then the biggest gain. */
+export function bestClimb(climbs: Climb[]): Climb | undefined {
+    return climbs.reduce<Climb | undefined>((best, climb) => {
+        if (!best) {
+            return climb;
+        }
+        const rank = CATEGORY_RANK.indexOf(climb.category) - CATEGORY_RANK.indexOf(best.category);
+        return rank < 0 || (rank === 0 && climb.gain > best.gain) ? climb : best;
+    }, undefined);
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Activity } from '~/utils/routeAnalysis/types';
-import { DEFAULT_CLIMB_OPTIONS, type ProfilePoint, STEEP_PRESETS, type SteepPreset, climbCategory, findClimbs, findSteepSections, presetForActivity } from './steep';
+import { type Climb, DEFAULT_CLIMB_OPTIONS, type ProfilePoint, STEEP_PRESETS, type SteepPreset, bestClimb, climbCategory, findClimbs, findSteepSections, presetForActivity } from './steep';
 
 const STEP = 10;
 
@@ -132,5 +132,36 @@ describe('presetForActivity', () => {
     ];
     it.each(cases)('%j is %s', (activity, preset) => {
         expect(presetForActivity(activity && { kind: 'hike', ...activity, origin: 'route' })).toBe(preset);
+    });
+});
+
+describe('bestClimb', () => {
+    const climb = (gain: number, category?: Climb['category']): Climb => ({
+        startIndex: 0,
+        endIndex: 1,
+        startDistance: 0,
+        endDistance: 1000,
+        length: 1000,
+        gain,
+        avgGrade: gain / 10,
+        maxGrade: 0,
+        category
+    });
+
+    it('has none without climbs', () => {
+        expect(bestClimb([])).toBeUndefined();
+    });
+
+    it('takes the hardest category over the biggest gain', () => {
+        const hard = climb(100, 1);
+        expect(bestClimb([climb(500, 3), hard, climb(900)])).toBe(hard);
+        expect(bestClimb([climb(100, 4), climb(100, 'hc')])?.category).toBe('hc');
+    });
+
+    it('takes the biggest gain within a category, ranked or not', () => {
+        const big = climb(300, 2);
+        expect(bestClimb([climb(200, 2), big, climb(250, 2)])).toBe(big);
+        const bigUnranked = climb(80);
+        expect(bestClimb([climb(50), bigUnranked])).toBe(bigUnranked);
     });
 });

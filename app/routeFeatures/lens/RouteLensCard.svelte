@@ -12,7 +12,7 @@
     import LensInsight from '~/routeFeatures/lens/LensInsight.svelte';
     import { clearCursor, setCursor } from '~/routeFeatures/lens/routeFocusStore';
     import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import { type LensId, resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { type LensId, type ProfileBracket, resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { showAscents, showGradeColors } from '~/stores/mapStore';
     import { geometryKey } from '~/utils/routeAnalysis/geometryKey';
 
@@ -56,6 +56,9 @@
     $: active = resolveLens($routeLensStore, lenses);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
     $: headline = lenses.find((lens) => lens.id === active)?.headline({ item });
+    // one array for the lens' whole stay, so the chart is not rebuilt for nothing
+    const NO_BRACKETS: ProfileBracket[] = [];
+    $: brackets = lenses.find((lens) => lens.id === active)?.profile?.({ item }).brackets ?? NO_BRACKETS;
 
     function onSelect({ id }: { id: LensId }) {
         selectLens(id);
@@ -77,6 +80,7 @@
     <LensInsight {headline} {readout} row={1} on:clearReadout={() => chart?.clearHighlight()} />
     <ElevationChart
         bind:this={chart}
+        {brackets}
         inCard={true}
         {item}
         padding="0 6 4 6"

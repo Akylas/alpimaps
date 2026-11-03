@@ -63,6 +63,18 @@ export interface LensHeadline {
     action?: { label: string; run: () => void };
 }
 
+/** A span of the profile marked above the curve, eg a climb with its category. Meters from the start. */
+export interface ProfileBracket {
+    from: number;
+    to: number;
+    label?: string;
+}
+
+/** What a lens asks of the profile chart. */
+export interface LensProfile {
+    brackets?: ProfileBracket[];
+}
+
 /** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
 export interface RouteLens {
     id: LensId;
@@ -72,6 +84,7 @@ export interface RouteLens {
     available: (ctx: RouteCtx) => boolean;
     chip: (ctx: RouteCtx) => LensChip;
     headline: (ctx: RouteCtx) => LensHeadline;
+    profile?: (ctx: RouteCtx) => LensProfile;
 }
 
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */

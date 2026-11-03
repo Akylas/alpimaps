@@ -1345,5 +1345,10 @@
     "route_analysis": "route analysis",
     "route_analysis_settings": "choose what is shown for a route",
     "route_features": "features",
-    "lens_overview": "overview"
+    "lens_overview": "overview",
+    "lens_climbs": "climbs",
+    "climbs_count": "%s climbs",
+    "climbs_none": "no climbs on this route",
+    "climbs_max_grade": "max %s",
+    "climb_category": "cat %s"
 }

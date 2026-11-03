@@ -1,7 +1,7 @@
 <script lang="ts">
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
@@ -10,6 +10,7 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
+    import type { Transformer } from '@nativescript-community/ui-chart/utils/Transformer';
     import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
@@ -19,6 +20,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
+    import type { ProfileBracket } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
@@ -95,6 +97,39 @@
         lines.forEach((line, index) => c.drawText(line, left, top - metrics.ascent + index * lineHeight, paint));
         paint.setTextAlign(align);
     }
+    // a bracket is a line with an end tick on each side, its label on a plate over the middle
+    const bracketPaint = new Paint();
+    bracketPaint.setStyle(Style.STROKE);
+    bracketPaint.setStrokeWidth(1.5);
+    const bracketTextPaint = new Paint();
+    bracketTextPaint.setFontWeight('bold');
+    bracketTextPaint.setTextAlign(Align.LEFT);
+    const BRACKET_TOP = 4;
+    const BRACKET_HEIGHT = 8;
+    /** of the elevation range, kept free above the curve for the brackets */
+    const BRACKET_HEADROOM = 0.2;
+    function drawBrackets(c: Canvas, trans: Transformer, left: number, right: number, top: number) {
+        const color = isEInk ? colorOnSurface : colorPrimary;
+        bracketPaint.color = color;
+        bracketTextPaint.color = color;
+        bracketTextPaint.setTextSize(9 * $fontScale);
+        const y = top + BRACKET_TOP + BRACKET_HEIGHT / 2;
+        for (const { from, label, to } of brackets) {
+            const start = Math.max(left, trans.getPixelForValues(from, 0).x);
+            const end = Math.min(right, trans.getPixelForValues(to, 0).x);
+            if (end <= start) {
+                continue;
+            }
+            c.drawLine(start, y, end, y, bracketPaint);
+            c.drawLine(start, y - BRACKET_HEIGHT / 2, start, y + BRACKET_HEIGHT / 2, bracketPaint);
+            c.drawLine(end, y - BRACKET_HEIGHT / 2, end, y + BRACKET_HEIGHT / 2, bracketPaint);
+            if (label) {
+                const metrics = bracketTextPaint.getFontMetrics();
+                const width = bracketTextPaint.measureText(label);
+                drawPlatedLabel(c, [label], (start + end - width) / 2, y - (metrics.descent - metrics.ascent) / 2, bracketTextPaint, false);
+            }
+        }
+    }
     /** An elevation line whose label the axis custom renderer draws on a plate, above or below it. */
     class PlateLimitLine extends LimitLine {
         constructor(
@@ -119,6 +154,8 @@
     export let range: { fromIndex: number; toIndex: number } = null;
     /** the lens card's chart: its cursor's figures leave through the `cursor` event instead of being drawn over it */
     export let inCard = false;
+    /** spans marked above the curve, eg the climbs of the lens in use */
+    export let brackets: ProfileBracket[] = [];
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
@@ -170,7 +207,7 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined)) {
+    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || brackets !== undefined)) {
         updateChartData(item);
     }
     let onChartDataUpdateCallbacks = [];
@@ -538,11 +575,19 @@
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
                         c.drawText(formatDistance(h.entry['d']), x + 6, 23, highlightPaint);
+                    },
+                    drawFill(c: Canvas, set: LineDataSet, spline: Path, trans: Transformer, min: number, max: number, superMethod: () => void) {
+                        superMethod();
+                        if (brackets.length && !mini) {
+                            const { contentLeft, contentRight, contentTop } = chartView.viewPortHandler;
+                            drawBrackets(c, trans, contentLeft, contentRight, contentTop);
+                        }
                     }
                 };
             } else {
                 chartView.highlightValues(null);
                 chartView.resetZoom();
+                dispatch('cursor', null);
             }
             const deltaA = profile.max[1] - profile.min[1];
             const spaceMin = 100;
@@ -552,6 +597,9 @@
                 //   const space = (chartElevationMinRange - deltaA) / 2;
                 //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
+            }
+            if (brackets.length) {
+                spaceMax += Math.max(chartElevationMinRange, deltaA) * BRACKET_HEADROOM;
             }
             const labelCount = inCard ? 3 : 5;
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;

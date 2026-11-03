@@ -1112,5 +1112,10 @@
     "route_analysis": "analyse d'itinéraire",
     "route_analysis_settings": "choisir ce qui est affiché pour un itinéraire",
     "route_features": "fonctionnalités",
-    "lens_overview": "aperçu"
+    "lens_overview": "aperçu",
+    "lens_climbs": "montées",
+    "climbs_count": "%s montées",
+    "climbs_none": "aucune montée sur cet itinéraire",
+    "climbs_max_grade": "max %s",
+    "climb_category": "cat. %s"
 }
