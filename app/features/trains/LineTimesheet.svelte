@@ -14,6 +14,7 @@
     import DirectionHeader from '~/features/trains/DirectionHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
     import { showStopLines } from '~/features/trains/stop';
+    import { modeIcon } from '~/features/trains/TransitousService';
     import { type StopLine, TIMESHEET_TRIPS, type TimesheetPage, type TimesheetStop, getLineTimesheet } from '~/features/trains/lines';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
@@ -72,6 +73,9 @@
         } finally {
             loading = false;
         }
+    }
+    function otherModeIcons(stop: TimesheetStop) {
+        return [...new Set(stop.modes.filter((mode) => mode !== line.mode).map(modeIcon))].slice(0, 3);
     }
     function isCurrentStop(stop: TimesheetStop) {
         return line.stopIds.includes(stop.stopId);
@@ -232,15 +236,20 @@
                     padding="0 10 0 16"
                     rippleColor={colorPrimary}
                     on:tap={() => showStopLines(item.name, { lat: item.lat, lon: item.lon })}>
-                    <label
-                        color={isCurrentStop(item) ? colorPrimary : colorOnBackground}
-                        fontSize={14}
-                        fontWeight={isCurrentStop(item) ? 'bold' : 'normal'}
-                        lineBreak="end"
-                        maxLines={3}
-                        padding="4 10 4 0"
-                        text={item.name}
-                        verticalTextAlignment="center" />
+                    <stacklayout padding="4 10 4 0" verticalAlignment="middle">
+                        <label
+                            color={isCurrentStop(item) ? colorPrimary : colorOnBackground}
+                            fontSize={14}
+                            fontWeight={isCurrentStop(item) ? 'bold' : 'normal'}
+                            lineBreak="end"
+                            maxLines={2}
+                            text={item.name} />
+                        <stacklayout orientation="horizontal" visibility={otherModeIcons(item).length ? 'visible' : 'collapse'}>
+                            {#each otherModeIcons(item) as icon}
+                                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={13} marginRight={4} text={icon} />
+                            {/each}
+                        </stacklayout>
+                    </stacklayout>
                     <canvasview id="canvas" col={1} on:draw={(e) => drawTripTime(item, e)} />
                 </gridlayout>
             </Template>

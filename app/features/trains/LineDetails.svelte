@@ -21,7 +21,9 @@
     import LineChip from '~/features/trains/LineChip.svelte';
     import { showStopLines } from '~/features/trains/stop';
     import type { StopLine } from '~/features/trains/lines';
-    import { transitousService } from '~/features/trains/TransitousService';
+    import { type TransitousLeg, type TransitousPlace, modeIcon, transitousService } from '~/features/trains/TransitousService';
+    import { formatDuration } from '~/helpers/formatter';
+    import { openURL } from '~/utils/ui/index.common';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
@@ -47,6 +49,18 @@
         color: string;
         first: boolean;
         last: boolean;
+        /** the other kinds of transport that serve the stop */
+        icons: string[];
+        /** what makes this stop special for this trip */
+        note: string | null;
+        skipped: boolean;
+    }
+    /** a line of facts about the trip, under the header */
+    interface Fact {
+        icon: string;
+        text: string;
+        tone?: 'error' | 'primary';
+        url?: string;
     }
     let page: NativeViewElementNode<Page>;
     let collectionView: NativeViewElementNode<CollectionView>;
@@ -62,11 +76,58 @@
 
     let loading = false;
     let dataItems: ObservableArray<Item> = null;
+    let facts: Fact[] = [];
     let noNetworkAndNoData = false;
     const instanceId = instances++;
     export let decoder = createTileDecoder('inner');
     const mapContext = getMapContext();
 
+    function factColor(fact: Fact) {
+        return fact.tone === 'error' ? colorError : fact.tone === 'primary' ? colorPrimary : colorOnSurfaceVariant;
+    }
+    function otherModeIcons(place: TransitousPlace) {
+        return [...new Set((place.modes ?? []).filter((mode) => mode !== line.mode).map(modeIcon))].slice(0, 3);
+    }
+    // a stop the trip does not serve: cancelled today, or not a stop of the schedule
+    function isSkipped(place: TransitousPlace) {
+        return !!place.cancelled || (place.pickupType === 'NOT_ALLOWED' && place.dropoffType === 'NOT_ALLOWED');
+    }
+    function stopNote(place: TransitousPlace, index: number, count: number) {
+        if (isSkipped(place)) {
+            return lc('stop_not_served');
+        }
+        if (place.pickupType === 'NOT_ALLOWED' && index < count - 1) {
+            return lc('no_boarding');
+        }
+        return place.dropoffType === 'NOT_ALLOWED' && index > 0 ? lc('no_alighting') : null;
+    }
+    function buildFacts(leg: TransitousLeg, stopsCount: number) {
+        const result: Fact[] = [];
+        if (leg.cancelled) {
+            result.push({ icon: 'mdi-cancel', text: lc('cancelled'), tone: 'error' });
+        } else if (leg.realTime) {
+            result.push({ icon: 'mdi-access-point', text: lc('live'), tone: 'primary' });
+        }
+        result.push({ icon: 'mdi-timer-outline', text: `${formatDuration(leg.duration)} · ${lc('stops_count', stopsCount)}` });
+        if (leg.wheelchairAccessible === 'ACCESSIBLE') {
+            result.push({ icon: 'mdi-wheelchair-accessibility', text: lc('wheelchair_accessible') });
+        } else if (leg.wheelchairAccessible === 'NOT_ACCESSIBLE') {
+            result.push({ icon: 'mdi-wheelchair-accessibility', text: lc('wheelchair_not_accessible'), tone: 'error' });
+        }
+        if (leg.bikesAllowed) {
+            result.push({ icon: 'mdi-bicycle', text: lc('bikes_allowed') });
+        }
+        if (leg.reservation === 'COMPULSORY') {
+            result.push({ icon: 'mdi-calendar-alert', text: lc('reservation_required'), tone: 'error' });
+        }
+        if (leg.agencyName) {
+            result.push({ icon: 'mdi-domain', text: leg.agencyName, url: leg.agencyUrl || undefined });
+        }
+        if (leg.agencyFareUrl) {
+            result.push({ icon: 'mdi-ticket-outline', text: lc('get_tickets'), url: leg.agencyFareUrl });
+        }
+        return result;
+    }
     async function refresh() {
         try {
             if (!massifMap) {
@@ -75,6 +136,7 @@
             loading = true;
             const leg = await transitousService.getTrip(line.directions[directionIndex].tripId);
             const places = [leg.from, ...(leg.intermediateStops ?? []), leg.to];
+            facts = buildFacts(leg, places.length);
             selectedIndex = -1;
             dataItems = new ObservableArray(
                 places.map((place, index, array) => {
@@ -94,7 +156,10 @@
                         color: lineColor,
                         first: index === 0,
                         last: index === array.length - 1,
-                        selected
+                        selected,
+                        icons: otherModeIcons(place),
+                        note: stopNote(place, index, array.length),
+                        skipped: isSkipped(place)
                     };
                 })
             );
@@ -205,7 +270,7 @@
 </script>
 
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
-    <gridlayout rows="auto,auto,4*,6*">
+    <gridlayout rows="auto,auto,auto,4*,6*">
         <CActionBar>
             <LineChip
                 name={line.shortName || line.longName}
@@ -226,8 +291,16 @@
             swappable={line.directions.length > 1}
             to={dataItems?.getItem(dataItems.length - 1)?.name}
             on:tap={reverseDirection} />
-        <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
-        <collectionview bind:this={collectionView} items={dataItems} row={3} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
+        <wraplayout padding="0 16 8 16" row={2} visibility={facts.length ? 'visible' : 'collapse'}>
+            {#each facts as fact}
+                <stacklayout marginRight={16} orientation="horizontal" padding="2 0" rippleColor={colorPrimary} on:tap={() => fact.url && openURL(fact.url)}>
+                    <label color={factColor(fact)} fontFamily={$fonts.mdi} fontSize={15} text={fact.icon} verticalAlignment="middle" />
+                    <label color={factColor(fact)} fontSize={13} paddingLeft={4} text={fact.text} textDecoration={fact.url ? 'underline' : 'none'} verticalAlignment="middle" />
+                </stacklayout>
+            {/each}
+        </wraplayout>
+        <massifmap row={3} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
+        <collectionview bind:this={collectionView} items={dataItems} row={4} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
                 <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={32} startY={0} stopX={32} stopY="50%" strokeColor={item.color} strokeWidth={5} visibility={item.first ? 'hidden' : 'visible'} />
@@ -242,31 +315,33 @@
                         strokeWidth={4}
                         verticalAlignment="middle"
                         width={0} />
-                    <label
-                        color={item.selected ? colorPrimary : colorOnBackground}
-                        fontSize={16}
-                        fontWeight={item.selected ? 'bold' : 'normal'}
-                        lineBreak="end"
-                        marginLeft={64}
-                        maxLines={2}
-                        text={item.name}
-                        verticalTextAlignment="middle" />
-                    <label
-                        col={1}
-                        color={item.delay > 0 ? colorError : colorOnSurfaceVariant}
-                        fontSize={14}
-                        horizontalAlignment="right"
-                        marginRight={8}
-                        text={item.time}
-                        verticalTextAlignment="middle"
-                        visibility={item.time ? 'visible' : 'collapse'} />
+                    <stacklayout marginLeft={64} verticalAlignment="middle">
+                        <label
+                            color={item.selected ? colorPrimary : item.skipped ? colorOnSurfaceVariant : colorOnBackground}
+                            fontSize={16}
+                            fontWeight={item.selected ? 'bold' : 'normal'}
+                            lineBreak="end"
+                            maxLines={2}
+                            text={item.name}
+                            textDecoration={item.skipped ? 'line-through' : 'none'} />
+                        <stacklayout orientation="horizontal" visibility={item.icons.length || item.note ? 'visible' : 'collapse'}>
+                            {#each item.icons as icon}
+                                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} marginRight={4} text={icon} verticalAlignment="middle" />
+                            {/each}
+                            <label color={colorOnSurfaceVariant} fontSize={12} text={item.note} verticalAlignment="middle" visibility={item.note ? 'visible' : 'collapse'} />
+                        </stacklayout>
+                    </stacklayout>
+                    <stacklayout col={1} horizontalAlignment="right" marginRight={8} verticalAlignment="middle" visibility={item.time ? 'visible' : 'collapse'}>
+                        <label color={item.delay > 0 ? colorError : colorOnSurfaceVariant} fontSize={14} horizontalAlignment="right" text={item.time} />
+                        <label color={colorError} fontSize={11} horizontalAlignment="right" text={`+${item.delay} min`} visibility={item.delay > 0 ? 'visible' : 'collapse'} />
+                    </stacklayout>
                     <IconButton col={2} text="mdi-bus-clock" verticalAlignment="middle" on:tap={() => showStopLines(item.name, { lat: item.lat, lon: item.lon })} />
                 </canvasview>
             </Template>
         </collectionview>
-        <activityindicator busy={loading} row={3} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
+        <activityindicator busy={loading} row={4} verticalAlignment="middle" visibility={loading ? 'visible' : 'hidden'} />
         {#if noNetworkAndNoData}
-            <canvaslabel row={3}>
+            <canvaslabel row={4}>
                 <cgroup textAlignment="center" verticalAlignment="middle">
                     <cspan fontFamily={$fonts.mdi} fontSize={50} text="mdi-alert-circle-outline" />
                     <cspan fontSize={20} text={'\n' + lc('no_network')} />
