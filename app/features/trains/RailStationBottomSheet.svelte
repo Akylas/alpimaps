@@ -93,10 +93,17 @@
         return Math.round((Date.parse(actualTime(stopTime)) - Date.parse(scheduledTime(stopTime))) / 60000);
     }
     // the chip says what kind of train it is, the number goes with the operator under the destination
-    // a coach's line (K21) is its short name, a train's "TER 96601" is a product and a number
+    // "TER 96601" is a product and a number; a coach also has its line (K21): a chip for each, the feed's colour is the line's
     function trainParts(stopTime: TransitousStopTime) {
         const { number, product } = splitTrainName(stopTime.displayName || stopTime.routeShortName);
-        return { product: stopTime.routeShortName || product || stopTime.mode, number: stopTime.tripShortName || number };
+        const line = stopTime.routeShortName;
+        const lineChip = {
+            name: line || product || stopTime.mode,
+            color: stopTime.routeColor ? `#${stopTime.routeColor}` : null,
+            textColor: stopTime.routeTextColor ? `#${stopTime.routeTextColor}` : null
+        };
+        const chips = line && product && product !== line ? [{ name: product, color: null, textColor: null }, lineChip] : [lineChip];
+        return { chips, number: stopTime.tripShortName || number };
     }
     function otherEnd(stopTime: TransitousStopTime) {
         return (arrivals ? stopTime.tripFrom?.name : stopTime.headsign || stopTime.tripTo?.name) || '';
@@ -137,13 +144,11 @@
                             verticalAlignment="middle"
                             visibility={delayMinutes(item) > 0 ? 'visible' : 'collapse'} />
                     </stacklayout>
-                    <LineChip
-                        name={trainParts(item).product}
-                        color={item.routeColor ? `#${item.routeColor}` : null}
-                        fontSize={12}
-                        height={22}
-                        marginTop={4}
-                        textColor={item.routeTextColor ? `#${item.routeTextColor}` : null} />
+                    <stacklayout marginTop={4} orientation="horizontal">
+                        {#each trainParts(item).chips as chip}
+                            <LineChip name={chip.name} color={chip.color} fontSize={12} height={22} marginRight={4} textColor={chip.textColor} />
+                        {/each}
+                    </stacklayout>
                 </stacklayout>
                 <canvaslabel col={1} paddingLeft={10}>
                     <cgroup lineBreak="end" verticalAlignment="middle">
