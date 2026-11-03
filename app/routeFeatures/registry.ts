@@ -70,9 +70,17 @@ export interface ProfileBracket {
     label?: string;
 }
 
+/** A colour the profile fill takes from this data index on. */
+export interface ProfileFillStop {
+    d: number;
+    color: string;
+}
+
 /** What a lens asks of the profile chart. */
 export interface LensProfile {
     brackets?: ProfileBracket[];
+    /** The fill's colours, when they are not the grade's. */
+    fill?: ProfileFillStop[];
 }
 
 /** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */

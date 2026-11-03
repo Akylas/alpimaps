@@ -1350,5 +1350,6 @@
     "climbs_count": "%s climbs",
     "climbs_none": "no climbs on this route",
     "climbs_max_grade": "max %s",
-    "climb_category": "cat %s"
+    "climb_category": "cat %s",
+    "lens_surface": "surface"
 }

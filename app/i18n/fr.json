@@ -1117,5 +1117,6 @@
     "climbs_count": "%s montées",
     "climbs_none": "aucune montée sur cet itinéraire",
     "climbs_max_grade": "max %s",
-    "climb_category": "cat. %s"
+    "climb_category": "cat. %s",
+    "lens_surface": "surface"
 }

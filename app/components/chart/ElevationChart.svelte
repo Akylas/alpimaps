@@ -20,7 +20,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { ProfileBracket } from '~/routeFeatures/registry';
+    import type { ProfileBracket, ProfileFillStop } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
@@ -156,6 +156,8 @@
     export let inCard = false;
     /** spans marked above the curve, eg the climbs of the lens in use */
     export let brackets: ProfileBracket[] = [];
+    /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
+    export let fill: ProfileFillStop[] = null;
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
@@ -207,7 +209,7 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || brackets !== undefined)) {
+    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || brackets !== undefined || fill !== undefined)) {
         updateChartData(item);
     }
     let onChartDataUpdateCallbacks = [];
@@ -623,9 +625,10 @@
             // at a glance on a card the height of a line of text
             const lineWidth = mini ? 2 : 1;
             function updateSetColors() {
-                if (showProfileGrades && profile.colors && profile.colors.length > 1) {
+                const stops = fill ?? (showProfileGrades ? profile.colors : null);
+                if (stops && stops.length > 1) {
                     set.lineWidth = lineWidth;
-                    set.colors = profile.colors as any;
+                    set.colors = stops as any;
                     // the grade buckets only mean something if they can be told apart, and the chart's
                     // default fill alpha washes them out. Eink keeps that default: there the fill is a
                     // grey wedge behind the curve, and darkening it buries the line in it

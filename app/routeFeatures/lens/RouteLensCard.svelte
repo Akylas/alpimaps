@@ -56,9 +56,11 @@
     $: active = resolveLens($routeLensStore, lenses);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
     $: headline = lenses.find((lens) => lens.id === active)?.headline({ item });
-    // one array for the lens' whole stay, so the chart is not rebuilt for nothing
+    // the same arrays for the lens' whole stay, so the chart is not rebuilt for nothing
     const NO_BRACKETS: ProfileBracket[] = [];
-    $: brackets = lenses.find((lens) => lens.id === active)?.profile?.({ item }).brackets ?? NO_BRACKETS;
+    $: profileOptions = lenses.find((lens) => lens.id === active)?.profile?.({ item });
+    $: brackets = profileOptions?.brackets ?? NO_BRACKETS;
+    $: fill = profileOptions?.fill ?? null;
 
     function onSelect({ id }: { id: LensId }) {
         selectLens(id);
@@ -81,6 +83,7 @@
     <ElevationChart
         bind:this={chart}
         {brackets}
+        {fill}
         inCard={true}
         {item}
         padding="0 6 4 6"
