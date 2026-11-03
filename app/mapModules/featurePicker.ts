@@ -13,6 +13,11 @@ export function isPickerPending(id: string) {
     return pendingPickers.has(id);
 }
 
+/** A picker other than the map's own `routes` one is collecting or showing its chooser: the tap is its. */
+export function isOverlayPickerPending() {
+    return [...pendingPickers].some((id) => id !== 'routes');
+}
+
 let ignoreNextMapClick = false;
 
 /** Consumed on read: a feature tap must not also count as an empty-map tap, which would drop the selection. */

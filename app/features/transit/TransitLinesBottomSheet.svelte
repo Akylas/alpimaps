@@ -7,13 +7,13 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { TransitRoute, transitService } from '~/services/TransitService';
+    import { TransitRoute, transitService } from '~/features/transit/TransitService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { fonts, windowInset } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
-    import PanelHeader from '../common/PanelHeader.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
 
     export let position: MapPos;
     export let name: string;
@@ -65,7 +65,7 @@
     async function showTimesheet(item: TransitRoute) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
+            const component = (await import('~/features/transit/TransitTimesheet.svelte')).default;
             navigate({
                 page: component,
                 props: {
@@ -80,7 +80,7 @@
     async function showDetails(item: TransitRoute) {
         try {
             closeBottomSheet();
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/features/transit/TransitLineDetails.svelte')).default;
             navigate({
                 page: component,
                 props: {

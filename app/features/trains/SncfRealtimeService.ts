@@ -1,6 +1,6 @@
 import * as https from '@nativescript-community/https';
-import { type GtfsTripUpdate, parseTripUpdates } from '~/utils/gtfsRealtime';
-import type { TransitousStopTime } from './TransitousService';
+import { type GtfsTripUpdate, parseTripUpdates } from '~/features/trains/gtfsRealtime';
+import type { TransitousStopTime } from '~/features/trains/TransitousService';
 
 // SNCF TGV, Intercités and TER, for the trains of the next hour. Transitous does not read it: its trips
 // never match the SIRI feed it uses, so SNCF rows come back without delays.

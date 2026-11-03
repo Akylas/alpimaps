@@ -1,16 +1,22 @@
 import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { closeBottomSheet, showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
-import { ApplicationSettings } from '@nativescript/core';
+import { ApplicationSettings, ObservableArray } from '@nativescript/core';
+import dayjs from 'dayjs';
+import { get, writable } from 'svelte/store';
 import { showError } from '@shared/utils/showError';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
-import { registerMapFeature } from '~/mapModules/mapFeatures';
-import { decompress } from '~/services/NetworkService';
-import type { TransitousItinerary, TransitousLeg } from '~/services/TransitousService';
+import { photonSearch } from '~/helpers/photonSearch';
+import { type DirectionsPlace, registerMapFeature } from '~/mapModules/mapFeatures';
+import type { IItem } from '~/models/Item';
+import { decompress, networkService } from '~/services/NetworkService';
+import type { TransitousItinerary, TransitousLeg } from '~/features/trains/TransitousService';
+import { type TransitHistoryEntry, transitHistory } from '~/features/trains/history';
 import type { MapPos } from '~/utils/geo';
 import { geoJSONBounds } from '~/utils/geo';
-import { TRANSIT_SHEET_DETENTS, TRANSIT_SHEET_PEEK_HEIGHT } from '~/utils/ui/transitSheet';
+import { TRANSIT_SHEET_DETENTS, TRANSIT_SHEET_PEEK_HEIGHT } from '~/features/trains/transitSheet';
 
+const PHOTON_STATION_TAGS = ['railway:station', 'railway:halt'];
 const WALK_COLOR = '#808080';
 const DEFAULT_COLOR = '#3F51B5';
 /**
@@ -131,7 +137,7 @@ export async function reopenItineraries() {
     }
     try {
         getMapContext().unselectItem();
-        const ItinerariesBottomSheet = (await import('~/components/transit/ItinerariesBottomSheet.svelte')).default;
+        const ItinerariesBottomSheet = (await import('~/features/trains/ItinerariesBottomSheet.svelte')).default;
         await showBottomSheet({
             parent: getMapContext().getMainPage(),
             trackingScrollView: 'scrollView',
@@ -164,8 +170,99 @@ export function clearItineraryFromMap() {
     clearItineraryLayer();
 }
 
+/** The journey's time, `null` for now. The options pills edit them, the request reads them. */
+export const journeyTime = writable<Date | null>(null);
+export const journeyArriveBy = writable(false);
+
+async function computeJourney({ from, to }: { from: DirectionsPlace; to: DirectionsPlace }) {
+    clearItineraryFromMap();
+    const ItinerariesBottomSheet = (await import('~/features/trains/ItinerariesBottomSheet.svelte')).default;
+    showBottomSheet({
+        parent: getMapContext().getMainPage(),
+        trackingScrollView: 'scrollView',
+        detents: TRANSIT_SHEET_DETENTS,
+        initialDetentIndex: 0,
+        view: ItinerariesBottomSheet,
+        props: { from, to, time: get(journeyTime), arriveBy: get(journeyArriveBy) }
+    });
+}
+
+function historySubtitle({ arriveBy, time }: TransitHistoryEntry) {
+    return time ? `${lc(arriveBy ? 'arrive_by' : 'depart_at')} ${dayjs(time).format('ddd D MMM HH:mm')}` : lc('now');
+}
+
+function restoreJourney({ arriveBy, from, time, to }: TransitHistoryEntry) {
+    const departure = time ? new Date(time) : null;
+    getMapContext().mapModules.directionsPanel.setPlaces([from, to], 'journey');
+    journeyTime.set(departure);
+    journeyArriveBy.set(arriveBy);
+    // a trip in the past would only give back what has already left
+    if (!departure || departure.getTime() > Date.now()) {
+        getMapContext().mapModules.directionsPanel.computeMode();
+    }
+}
+
+async function showJourneyHistory() {
+    try {
+        const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
+        const options = new ObservableArray(
+            get(transitHistory).map((entry) => ({
+                title: `${entry.from.name} → ${entry.to.name}`,
+                subtitle: historySubtitle(entry),
+                rightIcon: 'mdi-close',
+                data: entry
+            }))
+        );
+        const results = await showBottomSheet({
+            parent: null,
+            view: OptionSelect,
+            skipCollapsedState: true,
+            props: {
+                height: Math.min(460, 80 + 64 * options.length),
+                title: lc('transit_history'),
+                titleIcon: 'mdi-history',
+                rowHeight: 64,
+                options,
+                onRightIconTap: (item) => {
+                    transitHistory.remove(item.data);
+                    options.splice(options.indexOf(item), 1);
+                }
+            }
+        });
+        const entry: TransitHistoryEntry = (Array.isArray(results) ? results[0] : results)?.data;
+        if (entry) {
+            restoreJourney(entry);
+            // closing the sheet hands the focus back to the search field
+            getMapContext().unFocusSearch();
+        }
+    } catch (error) {
+        showError(error);
+    }
+}
+
+const isItinerary = (item: IItem) => !!session && !!item?.properties?.itinerary;
+
 registerMapFeature({
     id: 'itinerary',
-    itemActions: (item) =>
-        session && item?.properties?.itinerary ? [{ id: 'itineraries', text: 'mdi-transit-connection-variant', tooltip: lc('itineraries'), order: 5, onTap: reopenItineraries }] : []
+    claimsItem: (item) => !!item?.properties?.itinerary,
+    leadingActions: (item) => (isItinerary(item) ? ['itineraries'] : []),
+    itemActions: (item) => (isItinerary(item) ? [{ id: 'itineraries', text: 'mdi-transit-connection-variant', tooltip: lc('itineraries'), order: 5, main: true, onTap: reopenItineraries }] : []),
+    searchSources: [
+        {
+            id: 'stations',
+            mode: 'journey',
+            // far stations are not in a general query's 40 results: ask for them alone
+            search: async (options) => (networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true) ? photonSearch(options, PHOTON_STATION_TAGS) : [])
+        }
+    ],
+    directionsModes: [
+        {
+            id: 'journey',
+            icon: 'mdi-train',
+            options: () => import('~/features/trains/JourneyOptions.svelte'),
+            history: { items: transitHistory, show: showJourneyHistory },
+            compute: computeJourney,
+            clear: clearItineraryFromMap
+        }
+    ]
 });

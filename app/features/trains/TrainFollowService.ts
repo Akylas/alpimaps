@@ -1,8 +1,8 @@
 import { request } from '@nativescript-community/perms';
 import { Utils } from '@nativescript/core';
 import { writable } from 'svelte/store';
-import { addSncfRealtime } from './SncfRealtimeService';
-import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, type TransitousStopTime, transitousService } from './TransitousService';
+import { addSncfRealtime } from '~/features/trains/SncfRealtimeService';
+import { type TransitousItinerary, type TransitousLeg, type TransitousPlace, type TransitousStopTime, transitousService } from '~/features/trains/TransitousService';
 import {
     type ArrivalFollow,
     type ItineraryFollow,
@@ -24,7 +24,7 @@ import {
     nextItineraryRefreshAt,
     nextRefreshAt,
     shouldFetch
-} from '~/utils/trainFollow';
+} from '~/features/trains/trainFollow';
 
 export type FollowResult = 'added' | 'exists' | 'full' | 'unavailable';
 

@@ -49,8 +49,8 @@
     } from '~/mapModules/MapModule';
     import { registerMapModule } from '~/mapModules/registry';
     import { installMacMouse } from './macMouse';
-    import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
-    import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
+    import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick, isOverlayPickerPending } from '~/mapModules/featurePicker';
+    import { featureMenuItems, featureShowsItemButtons, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
@@ -62,7 +62,7 @@
     import '~/mapModules/features/terrain3d';
     import { exitPeakFinder, onArCameraOpen } from '~/mapModules/features/peakFinder';
     import type { PreviewGeometrySource } from '~/utils/cameraFov';
-    import { addTransitLayerIfPending, isTransitPickerPending } from '~/mapModules/features/transit';
+    import '~/features';
     import { startWebServerIfWanted, stopWebServer } from '~/mapModules/features/tileServer';
     import { keepScreenAwake, keepScreenAwakeFullBrightness } from '~/mapModules/features/screenAwake';
     import UserLocationModule, { getUserBitmapUrl } from '~/mapModules/UserLocationModule';
@@ -75,7 +75,6 @@
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { transitService } from '~/services/TransitService';
     import { innerNutiProps, itemLock, layerProps, nutiProps, preloading, projectionModeSpherical, rotateEnabled, showItemsLayer, styleParameterKeys, styleParameterValues } from '~/stores/mapStore';
     import { legendVersion, showLegend } from '~/stores/legendStore';
     import {
@@ -644,7 +643,6 @@
 
             tryCatch(async () => {
                 packageService.start();
-                transitService.start();
                 if (!ApplicationSettings.hasKey('mapStyle')) {
                     ApplicationSettings.setString('mapStyleVariant.' + DEFAULT_STYLE, DEFAULT_VARIANT);
                 }
@@ -652,8 +650,6 @@
                 onColorsChange();
                 // setMapStyle('mobile-sdk-styles~voyager', true);
             });
-            // the overlay may have been switched on before the map existed to add it to
-            addTransitLayerIfPending();
             // setTimeout(() => {
             mapContext.runOnModules('onMapReady', massifMap);
 
@@ -1214,7 +1210,7 @@
     // `undefined` unboxes to null, crashing the UI thread (`runOnModules` returns `unknown`).
     function onVectorTileClicked(data: FeatureClickData): boolean {
         DEV_LOG && console.log('onVectorTileClicked', data);
-        if (isTransitPickerPending()) {
+        if (isOverlayPickerPending()) {
             return false;
         }
         const { clickType, featureData, featureGeometry, featureId, featureLayerName, featurePosition, layer, position } = data;
@@ -1283,7 +1279,7 @@
                 selectItem({
                     item: result,
                     isFeatureInteresting,
-                    showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop',
+                    showButtons: featureShowsItemButtons(result),
                     setMapSelected: /park|water_name|waterway/.test(featureLayerName)
                 });
             }
@@ -2045,7 +2041,7 @@
             hideLoading
         )
     };
-    $: hasOverflowMenu = (WITH_BUS_SUPPORT && customLayersModule?.devMode) || $mapCapabilities.hasLocalData;
+    $: hasOverflowMenu = $featureMenuItemsStore.length > 0 || $mapCapabilities.hasLocalData;
     // features slot themselves in by order rather than the bar knowing where each one belongs
     $: sideButtons = [...$featureSideButtonsStore, ...(hasOverflowMenu ? [overflowButton] : [])].sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
 

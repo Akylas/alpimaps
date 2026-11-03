@@ -1,15 +1,18 @@
 import type { MassifLayer, MassifSource } from '@nativescript-community/ui-massifmaps/api';
 import { Color } from '@nativescript/core';
+import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
 import { showError } from '@shared/utils/showError';
 import { navigate } from '@shared/utils/svelte/ui';
 import { closePopover } from '@nativescript-community/ui-popover/svelte';
 import { derived, get, writable } from 'svelte/store';
 import { lc } from '~/helpers/locale';
 import { type FeatureClickData, getMapContext } from '~/mapModules/MapModule';
+import { transitService } from '~/features/transit/TransitService';
+import { formatter } from '~/mapModules/ItemFormatter';
 import { FeaturePicker, isPickerPending } from '~/mapModules/featurePicker';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
+import { registerMapModule } from '~/mapModules/registry';
 import type { IItem } from '~/models/Item';
-import { transitService } from '~/services/TransitService';
 import { preloading } from '~/stores/mapStore';
 import { colors } from '~/variables';
 
@@ -35,11 +38,6 @@ const transitPicker = new FeaturePicker({
     },
     closeOpenSheet: true
 });
-
-/** True while a transit tap is being resolved, so the map leaves the click alone. */
-export function isTransitPickerPending() {
-    return isPickerPending('transit');
-}
 
 function onTransitTileClicked({ featureData, featureGeometry, featureId, featureLayerName }: FeatureClickData) {
     // a tap on a road that also carries transit belongs to the road
@@ -72,7 +70,7 @@ function onTransitTileClicked({ featureData, featureGeometry, featureId, feature
 }
 
 // from the map's `vectorTileDecoderChanged` hook, not a decoder event: the decoder is destroyed by the change
-export function updateTransitLayer() {
+function updateTransitLayer() {
     const oldLayer = transitLayer;
     if (!oldLayer) {
         return;
@@ -142,7 +140,7 @@ showingTransitLines.subscribe((showing) => {
 });
 
 // the overlay can be switched on before the map is ready: the layer then exists but was never added
-export function addTransitLayerIfPending() {
+function addTransitLayerIfPending() {
     if (transitLayer) {
         getMapContext().addLayer(transitLayer, 'transit');
     }
@@ -151,16 +149,57 @@ export function addTransitLayerIfPending() {
 const showTransitLinesPage = async () => {
     try {
         closePopover();
-        const component = (await import('~/components/transit/TransitLines.svelte')).default;
+        const component = (await import('~/features/transit/TransitLines.svelte')).default;
         navigate({ page: component });
     } catch (error) {
         showError(error);
     }
 };
 
+/** Vector tiles say class/subclass; a line carries class `bus` too. */
+function itemIsBusStop(item: IItem) {
+    return item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop';
+}
+
+/** A stop's lines; a line has its own details page. */
+async function showItemTransit(item: IItem) {
+    try {
+        if (item.route) {
+            const component = (await import('~/features/transit/TransitLineDetails.svelte')).default;
+            navigate({ page: component, props: { line: { geometry: item.geometry, ...item.properties } as any } });
+        } else if (item.geometry.type === 'Point') {
+            const TransitLinesBottomSheet = (await import('~/features/transit/TransitLinesBottomSheet.svelte')).default;
+            const [lon, lat, altitude] = item.geometry.coordinates;
+            await showBottomSheet({
+                parent: getMapContext().getMainPage(),
+                trackingScrollView: 'scrollView',
+                view: TransitLinesBottomSheet,
+                props: { name: formatter.getItemName(item), position: { lat, lon, altitude } }
+            });
+        }
+    } catch (error) {
+        showError(error);
+    }
+}
+
+if (WITH_BUS_SUPPORT) {
+    registerMapModule('transit', {
+        onMapReady() {
+            transitService.start();
+            addTransitLayerIfPending();
+        },
+        vectorTileDecoderChanged() {
+            updateTransitLayer();
+        }
+    });
+}
+
 registerMapFeature({
     id: 'transit',
     enabled: () => WITH_BUS_SUPPORT,
+    showsItemButtons: itemIsBusStop,
+    leadingActions: (item) => (itemIsBusStop(item) ? ['transit', 'save'] : []),
+    itemActions: (item) => (itemIsBusStop(item) ? [{ id: 'transit', text: 'mdi-bus', tooltip: lc('bus_stop_infos'), order: 100, leavesSearch: false, onTap: () => showItemTransit(item) }] : []),
     menuItems: derived([showingTransitLines, colors], ([$showingTransitLines, $colors]) =>
         // dev-only: the transit data is not shipped
         getMapContext().mapModule('customLayers')?.devMode

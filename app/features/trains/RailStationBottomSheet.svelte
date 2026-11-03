@@ -6,18 +6,18 @@
     import dayjs from 'dayjs';
     import { onDestroy, onMount } from 'svelte';
     import { lc } from '~/helpers/locale';
-    import { showRailTrip } from '~/mapModules/itemActions';
+    import { showRailTrip } from '~/features/trains/rail';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { type TransitousStop, type TransitousStopTime, transitousService } from '~/services/TransitousService';
-    import { trainFollowService, trainFollowSupported } from '~/services/TrainFollowService';
+    import { type TransitousStop, type TransitousStopTime, transitousService } from '~/features/trains/TransitousService';
+    import { trainFollowService, trainFollowSupported } from '~/features/trains/TrainFollowService';
     import type { MapPos } from '~/utils/geo';
-    import { followIdOf } from '~/utils/trainFollow';
+    import { followIdOf } from '~/features/trains/trainFollow';
     import { showSnack } from '~/utils/ui';
     import { openURL } from '~/utils/ui/index.common';
     import { colors, fonts, windowInset } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
-    import PanelHeader from '../common/PanelHeader.svelte';
-    import Pill from '../common/Pill.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
+    import PanelHeader from '~/components/common/PanelHeader.svelte';
+    import Pill from '~/components/common/Pill.svelte';
 
     export let position: MapPos;
     export let name: string;

@@ -14,6 +14,8 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { type SearchRankMode, searchMatchTier, searchRank } from '~/utils/searchRank';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { featureSearchSources } from '~/mapModules/mapFeatures';
+    import { photonSearch } from '~/helpers/photonSearch';
     import type { IItem as Item } from '~/models/Item';
     import type { Photon } from '~/photon';
     import { networkService, regionToOSMString } from '~/services/NetworkService';
@@ -46,12 +48,6 @@
     // export function getFilteredDataItems() {
     //     return filteredDataItems;
     // }
-    const PHOTON_SUPPORTED_LANGUAGES = ['en', 'de', 'fr'];
-    const PHOTON_STATION_TAGS = ['railway:station', 'railway:halt'];
-    // what Photon returns that nobody searches for: area outlines, land use, building parts, rail points and bus shelters.
-    // Station and stop results stay, they have their own tags (railway=station, highway=bus_stop…)
-    const PHOTON_EXCLUDED_TAGS = ['!boundary', '!landuse', '!building', '!railway:stop', '!railway:platform', '!highway:platform', '!information', '!amenity:shelter', '!amenity:bench'];
-
     const providerColors = {
         here: 'blue',
         carto: 'orange',
@@ -183,49 +179,6 @@
             });
         }
         return [];
-    }
-    async function photonSearch(
-        enabled: boolean,
-        options: { query: string; language?: string; location?: MapPos; locationRadius?: number; bounds?: MapBounds },
-        // only these, or all but the excluded ones
-        onlyTags?: string[]
-    ) {
-        if (!enabled) {
-            return [];
-        }
-        let actualLang = (options.language || 'en').split('-')[0];
-        if (PHOTON_SUPPORTED_LANGUAGES.indexOf(actualLang) === -1) {
-            actualLang = 'en';
-        }
-        const results = await networkService.request<Photon>({
-            url: `https://photon.komoot.io/api?${(onlyTags ?? PHOTON_EXCLUDED_TAGS).map((tag) => 'osm_tag=' + encodeURIComponent(tag)).join('&')}`,
-            tag: onlyTags ? 'photon-only' : 'photon',
-            method: 'GET',
-            queryParams: {
-                q: options.query,
-                lat: options.location && options.location.lat,
-                lon: options.location && options.location.lon,
-                lang: actualLang,
-                limit: onlyTags ? 10 : 40
-                // bbox: options.bounds ? regionToOSMString(options.bounds) : undefined
-            }
-        });
-        return arraySortOn(
-            results.features
-                // relations are routes and outlines, except the main result for a city: Paris, Grenoble, Lyon are relations
-                .filter((r) => r.properties.osm_type !== 'R' || r.properties.osm_key === 'place')
-                .map((f) => {
-                    const r = new PhotonFeature(f);
-                    if (options.location) {
-                        r['distance'] = computeDistanceBetween(options.location, {
-                            lat: r.geometry.coordinates[1],
-                            lon: r.geometry.coordinates[0]
-                        });
-                    }
-                    return r;
-                }),
-            'distance'
-        );
     }
     export async function instantSearch(_query, position?: MapPos, item?: Item) {
         try {
@@ -361,13 +314,16 @@
                     herePlaceSearch(searchUsingHere, options)
                         .then((r) => prepareItems(r, addItems))
                         .catch((err) => console.error('herePlaceSearch', err, err.stack)),
-                    photonSearch(searchUsingPhoton, options as any)
+                    Promise.resolve(searchUsingPhoton ? photonSearch(options) : [])
                         .then((r) => prepareItems(r, addItems))
                         .catch((err) => console.error('photonSearch', err, err.stack)),
-                    // far stations are not in a general query's 40 results: ask for them alone
-                    photonSearch(searchUsingPhoton && rankMode === 'journey', options as any, PHOTON_STATION_TAGS)
-                        .then((r) => prepareItems(r, addItems))
-                        .catch((err) => console.error('photonSearch stations', err, err.stack))
+                    // what the features look for on top, for this kind of search
+                    ...featureSearchSources(rankMode).map((source) =>
+                        source
+                            .search(options)
+                            .then((r) => prepareItems(r, addItems))
+                            .catch((err) => console.error('search source', source.id, err, err.stack))
+                    )
                 ]);
             }
             if (newDataItems.length === 0) {

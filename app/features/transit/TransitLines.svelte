@@ -7,7 +7,7 @@
     import CActionBar from '@shared/components/CActionBar.svelte';
     import { lc } from '~/helpers/locale';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { MetroRoute, transitService } from '~/services/TransitService';
+    import { MetroRoute, transitService } from '~/features/transit/TransitService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
@@ -108,7 +108,7 @@
         }
         const line = item.items[index];
         try {
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/features/transit/TransitLineDetails.svelte')).default;
             navigate({ page: component, props: { line } });
         } catch (error) {
             showError(error);

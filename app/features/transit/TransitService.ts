@@ -1,7 +1,7 @@
 import Observable from '@nativescript-community/observable';
 import type { MapPos } from '~/utils/geo';
 import { Color } from '@nativescript/core';
-import { getCacheControl, maxAgeMonth, networkService } from './NetworkService';
+import { getCacheControl, maxAgeMonth, networkService } from '~/services/NetworkService';
 
 import { createAndWaitForWorkerMessage } from '@akylas/nativescript-app-utils/worker';
 import type { SQLiteDatabase } from '@nativescript-community/sqlite-core';
@@ -108,10 +108,10 @@ class TransitService extends Observable {
             }
         });
 
-        // const workerHandler = new BaseWorkerHandler(()=>new Worker('~/workers/TransitLinesWorker'))
-        // const worker = prepareWorker(new Worker('~/workers/TransitLinesWorker'));
+        // const workerHandler = new BaseWorkerHandler(()=>new Worker('~/features/transit/TransitLinesWorker'))
+        // const worker = prepareWorker(new Worker('~/features/transit/TransitLinesWorker'));
         DEV_LOG && console.log('starting TransitLinesWorker');
-        const result = await createAndWaitForWorkerMessage(() => new Worker('~/workers/TransitLinesWorker'), 'getTransitLines', { transitLines, metroData: JSON.stringify(data) });
+        const result = await createAndWaitForWorkerMessage(() => new Worker('~/features/transit/TransitLinesWorker'), 'getTransitLines', { transitLines, metroData: JSON.stringify(data) });
         // DEV_LOG && console.log(' TransitLinesWorker result', result);
         // const result = await worker.sendMessageToWorker(, Date.now());
         return result;
