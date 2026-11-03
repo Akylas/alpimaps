@@ -37,6 +37,8 @@
         valhallaSettingColor,
         valhallaSettingIcon
     } from '~/utils/routing';
+    import { activityFromRoute } from '~/utils/routeAnalysis/activity';
+    import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
     import type { ValhallaProfile } from '~/utils/routing';
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
     import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
@@ -697,26 +699,10 @@
         return hide();
     }
     function walkingSpeed() {
-        switch (pedestrian_type) {
-            case 'running':
-                return 12;
-            default:
-                return 4;
-        }
+        return flatSpeedKmh(activityFromRoute({ type: 'pedestrian', subtype: pedestrian_type }));
     }
     function getBicycleSpeed() {
-        switch (bicycle_type) {
-            case 'enduro':
-                return 10;
-            case 'mountain':
-                return 12;
-            case 'gravel':
-                return 18;
-            case 'road':
-                return 20;
-            default:
-                return 15;
-        }
+        return flatSpeedKmh(activityFromRoute({ type: 'bicycle', subtype: bicycle_type }));
     }
     function getBicycleUseHills() {
         switch (bicycle_type) {

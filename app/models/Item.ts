@@ -9,6 +9,8 @@ import CrudRepository from 'kiss-orm/dist/Repositories/CrudRepository';
 // const extend = require('just-extend');
 import extend from 'just-extend';
 import type { GradeSection } from '~/utils/grade';
+import { parseAnalysis, reconcileAnalysis } from '~/utils/routeAnalysis/storage';
+import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 const sql = SqlQuery.createFromTemplateString;
 
 export function toJSONStringified(item: Partial<Item>) {
@@ -198,12 +200,29 @@ export class Item<T extends Geometry = Geometry> {
     public _instructions?: string;
     stats?: RouteStats;
     public _stats?: string;
+    analysis?: RouteAnalysis | null;
+    public _analysis?: string;
 
     public groups?: string[];
 }
 
 export interface IItem<T extends Geometry = Geometry> extends Partial<Item<T>> {
     layer?: MassifLayer;
+}
+
+/**
+ * The `analysis` column to save. An edited route drops its layers (see `reconcileAnalysis`), and the
+ * item then carries the reduced analysis. A stored value this build cannot read (another version) is left as it is.
+ */
+function analysisColumn(item: IItem): string | null {
+    const analysis = reconcileAnalysis(item.analysis, item.geometry);
+    if (!analysis) {
+        return item.analysis ? null : (item._analysis ?? null);
+    }
+    if (analysis !== item.analysis) {
+        item.analysis = analysis;
+    }
+    return JSON.stringify(analysis);
 }
 
 export class BaseRepository<T, U = T, V = any> extends CrudRepository<T, U, V> {
@@ -258,6 +277,9 @@ export class ItemRepository extends BaseRepository<Item> {
             model: Item
         });
     }
+    migrations = {
+        addAnalysis: sql`ALTER TABLE Items ADD COLUMN analysis TEXT`
+    };
 
     async createTables() {
         return Promise.all([
@@ -310,6 +332,7 @@ export class ItemRepository extends BaseRepository<Item> {
             route: item._route || (JSON.stringify(item.route) as any),
             profile: item._profile || (JSON.stringify(item.profile) as any),
             stats: item._stats || (JSON.stringify(item.stats) as any),
+            analysis: analysisColumn(item) as any,
             instructions: item._instructions || (JSON.stringify(item.instructions) as any),
             geometry: item._geometry || (JSON.stringify(item.geometry) as any)
         });
@@ -325,6 +348,7 @@ export class ItemRepository extends BaseRepository<Item> {
                 route: item._route || JSON.stringify(item.route),
                 profile: item._profile || JSON.stringify(item.profile),
                 stats: item._stats || JSON.stringify(item.stats),
+                analysis: analysisColumn(item),
                 instructions: item._instructions || JSON.stringify(item.instructions),
                 geometry: item._geometry || JSON.stringify(item.geometry)
             } as any;
@@ -334,6 +358,12 @@ export class ItemRepository extends BaseRepository<Item> {
         }
         const toSave: Partial<Item> = {};
         const toUpdate: any = {};
+        if (data.geometry && !('analysis' in data)) {
+            const reconciled = reconcileAnalysis(item.analysis, data.geometry);
+            if (reconciled !== (item.analysis ?? null)) {
+                data.analysis = reconciled;
+            }
+        }
         if (data.properties) {
             toSave.properties = extend(item.properties, data.properties);
             // console.log('toSave', item.id, JSON.stringify(data.properties), JSON.stringify(toSave.properties));
@@ -455,6 +485,17 @@ export class ItemRepository extends BaseRepository<Item> {
                     this._parsedStats = JSON.parse(this._stats);
                 }
                 return this._parsedStats;
+            },
+            _analysis: item.analysis,
+            get analysis() {
+                if (this._parsedAnalysis === undefined) {
+                    this._parsedAnalysis = parseAnalysis(this._analysis);
+                }
+                return this._parsedAnalysis;
+            },
+            set analysis(value) {
+                delete this._analysis;
+                this._parsedAnalysis = value;
             },
             toJSON() {
                 return {

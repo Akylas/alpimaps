@@ -940,6 +940,7 @@
     "share": "share",
     "share_application": "share application",
     "share_geoson": "share GeoJSON",
+    "share_geoson_data": "share GeoJSON with data",
     "share_gpx": "share GPX",
     "share_screenshot": "share screenshot",
     "shelter": "shelter",
