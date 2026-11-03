@@ -14,18 +14,15 @@
     import { Application, ApplicationSettings, Color, Utils, View } from '@nativescript/core';
     import { debounce } from '@nativescript/core/utils';
     import type { Point } from 'geojson';
-    import { onDestroy, onMount, tick } from 'svelte';
+    import { type ComponentType, onDestroy, onMount, tick } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import OSMDetailsCard, { osmCardHeight, osmCardLayout, osmFacts } from '~/components/bottomsheet/OSMDetailsCard.svelte';
-    import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
     import { langStore } from '~/helpers/locale';
-    import { OSM_DETAILS_FRESH_DURATION, canLookupOSMDetails, networkOnline, osmDetailsStates, osmItemKey } from '~/helpers/osmDetails';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import {
@@ -56,7 +53,6 @@
     import { surfaceColors } from '~/utils/routing';
     import { hideLoading, openURL, showActionsGrid, showLoading, showPopoverMenu, showSlidersPopover, showToolTip } from '~/utils/ui/index.common';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
-    import ElevationChart from '../chart/ElevationChart.svelte';
     import IconButton from '../common/IconButton.svelte';
     import { compareArrays } from '~/utils/utils';
     import {
@@ -75,13 +71,11 @@
         SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW
     } from '~/utils/constants';
     import dayjs from 'dayjs';
-    import { chartShowWaypoints, itemLock, osmItemDetails, showAscents, showGradeColors } from '~/stores/mapStore';
+    import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
+    import { type RouteSheetCardLayout, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
     import { screenWidthDips } from '~/variables';
 
     $: ({ colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPanel, colorPrimary } = $colors);
-    // the chart's height includes the band its selected point strip lives in
-    const PROFILE_HEIGHT = 215;
-    const STATS_HEIGHT = 164;
     const WEB_HEIGHT = 400;
     // the title block over a band for the stats and the open state chip
     const INFOVIEW_HEIGHT = 90;
@@ -149,10 +143,14 @@
 
     export let item: Item;
 
-    let graphAvailable = false;
-    let statsAvailable = false;
-    let statsView: RouteStatsView;
-    let elevationChart: ElevationChart;
+    // the cards the route features contribute, and the refs of the mounted ones: a card may take part in the
+    // sheet's reload and highlight, see RouteSheetCard
+    let cards: RouteSheetCardLayout[] = [];
+    const cardRefs: Record<string, any> = {};
+    let positionCardShown = false;
+    // the components load the first time a card has a height
+    const cardComponents: Record<string, ComponentType> = {};
+    const loadingCards = new Set<string>();
     let chartLoadHighlightData = null;
     let infoView: BottomSheetInfoView;
     let swipemenu: NativeViewElementNode<SwipeMenu>;
@@ -168,9 +166,6 @@
     let itemCanQueryProfile = false;
     let itemCanQueryStats = false;
     let currentLocation: MapPos = null;
-    let osmStepIndex = -1;
-    let osmLookupKey: string = null;
-    let osmSavedKey: string = null;
 
     onMount(() => {
         updateSteps();
@@ -225,28 +220,31 @@
     //     }
     // }
 
-    $: {
+    // a card still loading gets the highlight once it is bound
+    $: if (chartLoadHighlightData && Object.values(cardRefs).some((ref) => ref?.highlightPathIndex)) {
+        const { highlight, ...params } = chartLoadHighlightData;
+        chartLoadHighlightData = null;
         try {
-            if (elevationChart && chartLoadHighlightData) {
-                try {
-                    const { highlight, ...others } = chartLoadHighlightData;
-                    elevationChart.hilghlightPathIndex(others, highlight, false);
-                } catch (error) {
-                    console.error(error, error.stack);
-                } finally {
-                    chartLoadHighlightData = null;
-                }
-            }
+            highlightCards(params, highlight);
         } catch (error) {
             console.error(error, error.stack);
         }
     }
 
-    function updateGraphAvailable() {
-        graphAvailable = itemIsRoute && !!item.profile && !!item.profile.data && item.profile.data.length > 0;
+    function highlightCards(
+        params: { onPathIndex: number; remainingDistance: number; remainingDistanceToStep: number; remainingTime: number; dplus?: number; dmin?: number },
+        highlight?: Highlight<Entry>
+    ) {
+        const handlers = Object.values(cardRefs).filter((ref) => ref?.highlightPathIndex);
+        if (handlers.length) {
+            handlers.forEach((ref) => ref.highlightPathIndex(params, highlight, false));
+        } else {
+            // the card must be loading
+            chartLoadHighlightData = { ...params, highlight };
+        }
     }
-    function updateStatsAvailable() {
-        statsAvailable = itemIsRoute && !!item.stats;
+    function reloadCards() {
+        cards.forEach((layout) => layout.height > 0 && cardRefs[layout.id]?.reload?.());
     }
 
     function updateSelectedItem(item) {
@@ -262,13 +260,8 @@
                 itemIsRailStation = !!item && isRailStation(item);
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
-                updateGraphAvailable();
-                updateStatsAvailable();
-                if (elevationChart && graphAvailable) {
-                    // console.log('updateChartData1')
-                    elevationChart.updateChartData();
-                }
                 updateSteps();
+                reloadCards();
                 if (currentLocation) {
                     // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
                     updateRouteItemWithPosition(item, currentLocation);
@@ -283,19 +276,12 @@
             console.error('item changed', !!err, err, err.stack);
         }
     }
-    // the OpenStreetMap card: a place we can match, whatever the connection, or one with facts to show
-    $: osmLookupAllowed = $osmItemDetails && canLookupOSMDetails(item);
-    $: osmCardVisible = osmLookupAllowed || ($osmItemDetails && osmFacts(item).length > 0);
-    $: osmHeight = osmCardVisible ? osmCardHeight(osmCardLayout(item, $networkOnline, $osmDetailsStates[osmItemKey(item)]), $fontScaleMaxed, CARD_GAP) : 0;
-    $: updateSteps(osmHeight);
-    // the lookup waits for the card to be on show, the hours chip asks for it sooner
-    $: if (osmLookupAllowed && osmStepIndex >= 0 && stepIndex >= osmStepIndex) {
-        startOSMDetails(item);
-    } else if (!osmLookupAllowed) {
-        osmLookupKey = null;
-    }
-    $: loadSavedOSMDetails(item, osmLookupAllowed);
     $: updateSelectedItem(item);
+    // a feature switched, or one whose card height moved. After the item's own update: the statements run in order
+    $: if ($routeFeatures && $routeFeatureChanges >= 0) {
+        updateSteps();
+    }
+    $: cards.forEach((layout) => layout.card.watch?.({ item, shown: layout.height > 0 && stepIndex >= cardStepIndex(layout.id) }));
     // only a saved route: a computed one has to be added first
     $: itemCanBeNavigated = !$isNavigating && !!item?.id && navigationService.canNavigate(item);
     // a track we could navigate if it had maneuvers, ie an imported gpx
@@ -401,7 +387,7 @@
         }
     }
     // while navigating the elevation chart follows the service instead of walking the polyline a second time per fix
-    $: if ($isNavigating && $navigationProgress && graphAvailable) {
+    $: if ($isNavigating && $navigationProgress && positionCardShown) {
         highlightChartFromProgress($navigationProgress);
     }
 
@@ -416,7 +402,7 @@
                 const onPathIndex = isLocationOnRoute(location, positions);
                 const computeInstruction = !highlight && !!routeItem.instructions && updateNavigationInstruction;
                 let progress: RouteProgress = { onPathIndex };
-                if (onPathIndex !== -1 && (graphAvailable || highlight || (routeItem.instructions && updateNavigationInstruction && !graphAvailable))) {
+                if (onPathIndex !== -1 && (positionCardShown || highlight || (routeItem.instructions && updateNavigationInstruction))) {
                     progress = computeRouteProgress({
                         item: routeItem,
                         location,
@@ -440,14 +426,9 @@
                     navigationInstructions = null;
                 }
 
-                if (updateGraph && graphAvailable) {
+                if (updateGraph && positionCardShown) {
                     const { remainingDistance, remainingDistanceToStep, remainingTime } = progress;
-                    if (elevationChart) {
-                        elevationChart.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight, false);
-                    } else {
-                        // chart must be loading
-                        chartLoadHighlightData = { onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, highlight, dplus: profile?.dplus, dmin: profile?.dmin };
-                    }
+                    highlightCards({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight);
                 }
             } else if (updateNavigationInstruction) {
                 navigationInstructions = null;
@@ -467,11 +448,7 @@
             dplus: profile?.dplus,
             dmin: profile?.dmin
         };
-        if (elevationChart) {
-            elevationChart.hilghlightPathIndex(params, undefined, false);
-        } else {
-            chartLoadHighlightData = params;
-        }
+        highlightCards(params);
     }
 
     function onNewLocation(e: any) {
@@ -533,12 +510,16 @@
         }
     }
 
-    function updateSteps(osmCardRowHeight = osmHeight) {
+    function updateSteps() {
         if (!item) {
-            osmStepIndex = -1;
+            cards = [];
+            positionCardShown = false;
             steps = [0];
             return;
         }
+        cards = routeSheetCards($routeFeatures, { item }, CARD_GAP);
+        cards.forEach(loadCard);
+        positionCardShown = cards.some((layout) => layout.height > 0 && layout.card.followsPosition);
         // 0 always stays the first step: the sheet treats `steps[0] === 0` as its closed state and
         // gets stuck if it is missing
         const result = [0];
@@ -546,20 +527,12 @@
         result.push(total);
         total += ACTIONS_HEIGHT;
         result.push(total);
-        if (graphAvailable) {
-            total += PROFILE_HEIGHT;
-            result.push(total);
-        }
-        if (statsAvailable) {
-            total += STATS_HEIGHT;
-            result.push(total);
-        }
-        osmStepIndex = -1;
-        if (osmCardRowHeight) {
-            total += osmCardRowHeight;
-            result.push(total);
-            osmStepIndex = result.length - 1;
-        }
+        cards.forEach((layout) => {
+            if (layout.height > 0) {
+                total += layout.height;
+                result.push(total);
+            }
+        });
         // if (listViewAvailable) {
         //     total += WEB_HEIGHT;
         //     result.push(total);
@@ -572,61 +545,41 @@
             steps = result;
         }
     }
+    async function loadCard({ card, height, id }: RouteSheetCardLayout) {
+        if (height === 0 || cardComponents[id] || loadingCards.has(id)) {
+            return;
+        }
+        loadingCards.add(id);
+        try {
+            cardComponents[id] = (await card.component()).default;
+        } catch (error) {
+            console.error('loadCard', id, error);
+        } finally {
+            loadingCards.delete(id);
+        }
+    }
+    /** The step that ends on the card, -1 when it is not shown. Steps start at 0, the header and the actions. */
+    function cardStepIndex(id: string) {
+        let index = 2;
+        for (const layout of cards) {
+            if (layout.height > 0) {
+                index++;
+            }
+            if (layout.id === id) {
+                return layout.height > 0 ? index : -1;
+            }
+        }
+        return -1;
+    }
 
     let updatingItem = false;
 
-    // what the places we looked up before already tell: the hours show right away, offline too
-    async function loadSavedOSMDetails(selected: Item, enabled: boolean) {
-        if (!enabled) {
-            osmSavedKey = null;
-            return;
-        }
-        const key = osmItemKey(selected);
-        if (key === osmSavedKey) {
-            return;
-        }
-        osmSavedKey = key;
-        try {
-            const saved = await getItemsModule().getCachedOSMDetails(selected);
-            if (saved && !selected.properties.opening_hours) {
-                await getItemsModule().mergeSelectedItemProperties(selected, saved.properties);
-            }
-        } catch (error) {
-            DEV_LOG && console.error('loadSavedOSMDetails', error);
-        }
-    }
-    // once per selection, when the card is on show: a lookup less than a day old is left alone
-    async function startOSMDetails(selected: Item) {
-        const key = osmItemKey(selected);
-        if (key === osmLookupKey) {
-            return;
-        }
-        osmLookupKey = key;
-        if (!$networkOnline) {
-            return;
-        }
-        try {
-            const fetchedAt = $osmDetailsStates[key]?.fetchedAt;
-            if (fetchedAt === undefined || Date.now() - fetchedAt >= OSM_DETAILS_FRESH_DURATION) {
-                await getItemsModule().loadOSMDetails(selected, fetchedAt !== undefined);
-            }
-        } catch (error) {
-            DEV_LOG && console.error('startOSMDetails', error);
-        }
-    }
     // the hours chip: quiet when it fails, it just goes away
     async function fetchHours() {
         try {
             await getItemsModule().loadOSMDetails(item);
         } catch (error) {
             DEV_LOG && console.error('fetchHours', error);
-        }
-    }
-    async function refreshOSMDetails() {
-        try {
-            await getItemsModule().loadOSMDetails(item, true);
-        } catch (error) {
-            showError(error);
         }
     }
     async function getItemAddress() {
@@ -679,11 +632,8 @@
             item = await itemsModule.updateItem(item, undefined, true, false);
             mapContext.selectItem({ item, isFeatureInteresting: true, peek: true, preventZoom: false });
             if (needsChartUpdate) {
-                updateGraphAvailable();
                 updateSteps();
-                if (elevationChart && graphAvailable) {
-                    elevationChart.updateChartData();
-                }
+                reloadCards();
             }
 
             if (isRoute) {
@@ -710,13 +660,11 @@
                     item.profile = profile;
                     await saveItem(false);
                 }
-                updateGraphAvailable();
                 updateSteps();
-                if (elevationChart && graphAvailable) {
-                    elevationChart.updateChartData();
-                }
-                if (updateView) {
-                    mapContext.setBottomSheetStepIndex(3);
+                reloadCards();
+                const step = cardStepIndex('profile');
+                if (updateView && step >= 0) {
+                    mapContext.setBottomSheetStepIndex(step);
                 }
             }
         } catch (err) {
@@ -743,10 +691,10 @@
                     item.stats = stats;
                     await saveItem(false);
                 }
-                updateStatsAvailable();
                 updateSteps();
-                if (updateView) {
-                    mapContext.setBottomSheetStepIndex(graphAvailable ? 4 : 3);
+                const step = cardStepIndex('stats');
+                if (updateView && step >= 0) {
+                    mapContext.setBottomSheetStepIndex(step);
                 }
             }
         } catch (err) {
@@ -1119,11 +1067,7 @@
 
 <!-- one card per section, each with the sky panel's hairline: a half open sheet ends on a card edge -->
 <gridlayout {...$$restProps} id="bottomSheetInner" isPassThroughParentEnabled={true} width="100%">
-    <gridlayout
-        horizontalAlignment={innerHorizontalAlignment}
-        rows={`${headerHeight(item)},${ACTIONS_HEIGHT},${graphAvailable ? PROFILE_HEIGHT : 0},${statsAvailable ? STATS_HEIGHT : 0},auto`}
-        width={innerWidth}
-        on:tap={() => {}}>
+    <gridlayout horizontalAlignment={innerHorizontalAlignment} rows={[headerHeight(item), ACTIONS_HEIGHT, ...cards.map((layout) => layout.height)].join(',')} width={innerWidth} on:tap={() => {}}>
         {#if loaded}
             <swipemenu
                 bind:this={swipemenu}
@@ -1237,39 +1181,22 @@
                     {/each}
                 </stacklayout>
             </gridlayout>
-            <ElevationChart
-                bind:this={elevationChart}
-                class="panel"
-                borderRadius={CARD_RADIUS}
-                {chartShowWaypoints}
-                colSpan={2}
-                infoStrip={true}
-                {item}
-                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-                padding="0 6 4 6"
-                row={2}
-                showAscents={$showAscents}
-                showProfileGrades={$showGradeColors}
-                visibility={graphAvailable ? 'visible' : 'collapse'}
-                on:highlight={onChartHighlight} />
-            <RouteStatsView
-                bind:this={statsView}
-                class="panel"
-                borderRadius={CARD_RADIUS}
-                colSpan={2}
-                {item}
-                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-                row={3}
-                visibility={statsAvailable ? 'visible' : 'collapse'} />
-            <OSMDetailsCard
-                borderRadius={CARD_RADIUS}
-                colSpan={2}
-                height={osmHeight ? osmHeight - CARD_GAP : 0}
-                {item}
-                margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
-                row={4}
-                visibility={osmCardVisible ? 'visible' : 'collapse'}
-                on:refresh={refreshOSMDetails} />
+            {#each cards as layout, index (layout.id)}
+                {#if cardComponents[layout.id]}
+                    <svelte:component
+                        this={cardComponents[layout.id]}
+                        bind:this={cardRefs[layout.id]}
+                        class="panel"
+                        borderRadius={CARD_RADIUS}
+                        colSpan={2}
+                        height={layout.height > 0 ? layout.height - CARD_GAP : 0}
+                        {item}
+                        margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
+                        row={2 + index}
+                        visibility={layout.height > 0 ? 'visible' : 'collapse'}
+                        on:highlight={onChartHighlight} />
+                {/if}
+            {/each}
 
             <!-- <AWebView
             row={3}

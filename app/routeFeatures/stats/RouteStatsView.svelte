@@ -25,7 +25,7 @@
     import { surfaceColors } from '~/utils/routing';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
     import { colors } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
 
     export let item: IItem;
 

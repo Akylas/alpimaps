@@ -1,9 +1,10 @@
+import type { ComponentType } from 'svelte';
 import { type Readable, type Writable, derived, writable } from 'svelte/store';
-import type { IItem } from '~/models/Item';
+import type { Item } from '~/models/Item';
 
 /** What every contribution is asked about. */
 export interface RouteCtx {
-    item: IItem;
+    item: Item;
 }
 
 /** A compact stat of the sheet's header. */
@@ -18,6 +19,28 @@ export interface RouteTile {
 }
 
 /**
+ * A card of the item sheet. Its component gets the sheet's layout props and `item`. It may export
+ * `highlightPathIndex(params, highlight?, sendEvent?)` and `reload()` for the sheet to drive, and dispatch
+ * `highlight` with `{ lat, lon, highlight }` when a point of the route is picked in it.
+ */
+export interface RouteSheetCard {
+    /** Loaded the first time the card has a height, so its code stays out of the startup graph. */
+    component: () => Promise<{ default: ComponentType }>;
+    /** dp the card takes, the gap above it included. 0: nothing to show, so no step. */
+    height: (ctx: RouteCtx, gap: number) => number;
+    /** The sheet works out the user's progress along the route, for a card that shows it. */
+    followsPosition?: boolean;
+    /** Runs whenever the item, the layout or the sheet's step change; `shown`: the sheet has reached the card. */
+    watch?: (ctx: RouteCtx & { shown: boolean }) => void;
+}
+
+export interface RouteSheetCardLayout {
+    id: string;
+    card: RouteSheetCard;
+    height: number;
+}
+
+/**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
  */
@@ -28,11 +51,13 @@ export interface RouteFeature {
     /** Build-flag or platform gate. Checked once at registration. */
     enabled?: () => boolean;
     /** The user's switch, listed in Settings > Routing > Route analysis. A store, so existing settings are reused. */
-    setting?: { title: string; store: Writable<boolean> };
+    setting?: { title: () => string; store: Writable<boolean> };
     /** Fires when a contribution depends on something other than the item (a setting, the network...). */
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */
     tiles?: (ctx: RouteCtx) => RouteTile[];
+    /** A card under the sheet's actions. */
+    sheetCard?: RouteSheetCard;
 }
 
 const registered = writable<RouteFeature[]>([]);
@@ -84,4 +109,9 @@ export const routeFeatureChanges: Readable<number> = derived(
 
 export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[] {
     return features.flatMap((feature) => feature.tiles?.(ctx) ?? []);
+}
+
+/** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */
+export function routeSheetCards(features: RouteFeature[], ctx: RouteCtx, gap: number): RouteSheetCardLayout[] {
+    return features.filter((feature) => feature.sheetCard).map((feature) => ({ id: feature.id, card: feature.sheetCard, height: feature.sheetCard.height(ctx, gap) }));
 }

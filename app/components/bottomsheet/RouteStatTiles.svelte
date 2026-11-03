@@ -6,7 +6,7 @@
     import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem as Item } from '~/models/Item';
+    import type { Item } from '~/models/Item';
     import { routeFeatures, routeTiles } from '~/routeFeatures/registry';
     import { showToolTip } from '~/utils/ui';
     import { colors, fonts } from '~/variables';

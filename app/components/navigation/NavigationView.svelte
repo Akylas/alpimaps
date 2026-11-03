@@ -3,7 +3,7 @@
     import { DismissReasons } from '@nativescript-community/ui-snackbar';
     import type { EventData } from '@nativescript/core';
     import { onDestroy } from 'svelte';
-    import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
+    import RouteStatsView from '~/routeFeatures/stats/RouteStatsView.svelte';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import NavigationActions from '~/components/navigation/NavigationActions.svelte';
     import NavigationCard, { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
