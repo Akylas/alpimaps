@@ -90,19 +90,16 @@
     function delayMinutes(departure: LineDeparture) {
         return Math.round((departure.time.getTime() - departure.scheduled.getTime()) / 60000);
     }
-    // soon: how long to wait, later: the time itself
-    function nextLabel(departure: LineDeparture) {
+    function clock(departure: LineDeparture) {
+        return dayjs(departure.time).format('HH:mm');
+    }
+    // how long to wait, as words
+    function waitLabel(departure: LineDeparture) {
         const minutes = minutesUntil(departure);
-        if (minutes <= 0) {
-            return lc('now');
-        }
-        return minutes < COUNTDOWN_LIMIT ? `${minutes} min` : dayjs(departure.time).format('HH:mm');
+        return minutes <= 0 ? lc('now') : minutes < COUNTDOWN_LIMIT ? lc('in_minutes', minutes) : '';
     }
     function laterTimes(direction: LineDirection) {
-        return direction.departures
-            .slice(1)
-            .map((departure) => dayjs(departure.time).format('HH:mm'))
-            .join(' · ');
+        return direction.departures.length > 1 ? lc('departures_then', direction.departures.slice(1).map(clock).join(' · ')) : '';
     }
     $: anyRealTime = !!rows?.some((row) => row.direction.departures.some((departure) => departure.realTime));
 </script>
@@ -126,20 +123,26 @@
                         visibility={item.direction.departures.length > 1 ? 'visible' : 'collapse'} />
                 </stacklayout>
                 <stacklayout col={2} horizontalAlignment="right" paddingRight={4} verticalAlignment="middle">
-                    <label
-                        color={item.direction.departures[0].realTime ? colorPrimary : colorOnSurface}
-                        fontSize={17}
-                        fontWeight="bold"
-                        horizontalAlignment="right"
-                        text={nextLabel(item.direction.departures[0])} />
-                    <label
-                        color={delayMinutes(item.direction.departures[0]) > 0 ? colorError : colorOnSurfaceVariant}
-                        fontSize={12}
-                        horizontalAlignment="right"
-                        text={delayMinutes(item.direction.departures[0]) > 0 ? `+${delayMinutes(item.direction.departures[0])} min` : item.direction.departures[0].realTime ? lc('live') : null}
-                        visibility={delayMinutes(item.direction.departures[0]) > 0 || item.direction.departures[0].realTime ? 'visible' : 'collapse'} />
+                    <label color={colorOnSurface} fontSize={17} fontWeight="bold" horizontalAlignment="right" text={clock(item.direction.departures[0])} />
+                    <stacklayout horizontalAlignment="right" orientation="horizontal">
+                        <label
+                            color={colorPrimary}
+                            fontFamily={$fonts.mdi}
+                            fontSize={13}
+                            text="mdi-access-point"
+                            verticalAlignment="middle"
+                            visibility={item.direction.departures[0].realTime ? 'visible' : 'collapse'} />
+                        <label color={colorOnSurfaceVariant} fontSize={12} text={waitLabel(item.direction.departures[0])} verticalAlignment="middle" />
+                        <label
+                            color={colorError}
+                            fontSize={12}
+                            paddingLeft={4}
+                            text={`+${delayMinutes(item.direction.departures[0])}`}
+                            verticalAlignment="middle"
+                            visibility={delayMinutes(item.direction.departures[0]) > 0 ? 'visible' : 'collapse'} />
+                    </stacklayout>
                 </stacklayout>
-                <IconButton col={3} text="mdi-routes" on:tap={() => showDetails(item)} />
+                <IconButton col={3} text="mdi-map-marker-path" on:tap={() => showDetails(item)} />
             </gridlayout>
         </Template>
     </collectionview>

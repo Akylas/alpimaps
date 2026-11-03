@@ -117,6 +117,8 @@ export interface TimesheetCell {
 export interface TimesheetStop {
     stopId: string;
     name: string;
+    lat: number;
+    lon: number;
     /** one per trip, null where it does not stop */
     times: (TimesheetCell | null)[];
 }
@@ -171,6 +173,8 @@ export async function getLineTimesheet(line: StopLine, directionId: number, time
     const stops = mergeStopSequences(tripPlaces).map<TimesheetStop>((place) => ({
         stopId: place.stopId,
         name: place.name,
+        lat: place.lat,
+        lon: place.lon,
         times: tripPlaces.map((places) => {
             const found = places.find((candidate) => candidate.stopId === place.stopId);
             return found ? placeCell(found) : null;

@@ -11,7 +11,9 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
+    import DirectionHeader from '~/features/trains/DirectionHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import { showStopLines } from '~/features/trains/stop';
     import { type StopLine, TIMESHEET_TRIPS, type TimesheetPage, type TimesheetStop, getLineTimesheet } from '~/features/trains/lines';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
@@ -194,14 +196,15 @@
 <page bind:this={page} actionBarHidden={true}>
     <gridlayout paddingLeft={$windowInset.left} paddingRight={$windowInset.right} rows="auto,auto,auto,*">
         <CActionBar>
-            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={15} height={30} mode={line.mode} textColor={line.textColor} />
-            <IconButton text="mdi-swap-vertical" visibility={line.directions.length > 1 ? 'visible' : 'collapse'} on:tap={reverseTimesheet} />
-            <IconButton text="mdi-information-outline" on:tap={showDetails} />
+            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={20} height={38} horizontalAlignment="center" mode={line.mode} textColor={line.textColor} />
+            <IconButton text="mdi-map-marker-path" on:tap={showDetails} />
         </CActionBar>
-        <stacklayout padding="8 16 4 16" row={1}>
-            <label color={colorOnBackground} fontSize={20} fontWeight="bold" lineBreak="end" maxLines={2} text={`→ ${line.directions[directionIndex].headsign}`} />
-            <label color={colorOnSurfaceVariant} fontSize={13} lineBreak="end" maxLines={2} text={line.longName} visibility={line.longName ? 'visible' : 'collapse'} />
-        </stacklayout>
+        <DirectionHeader
+            from={timelineItems?.[0]?.name ?? line.directions[directionIndex].headsign}
+            row={1}
+            swappable={line.directions.length > 1}
+            to={timelineItems?.[timelineItems.length - 1]?.name}
+            on:tap={reverseTimesheet} />
         <gridlayout columns="auto,auto,*,auto,auto" padding="4 12 8 12" row={2} visibility={noNetworkAndNoData ? 'hidden' : 'visible'} on:swipe={onSwipe}>
             <Pill icon="mdi-calendar-today" label={currentTime.format('L')} on:tap={() => selectDate()} />
             <Pill col={1} icon="mdi-clock-outline" label={formatTime(currentTime)} marginLeft={8} on:tap={() => selectTime()} />
@@ -217,7 +220,8 @@
                     borderBottomWidth={1}
                     columns="*,200"
                     padding="0 10 0 16"
-                    rippleColor={colorPrimary}>
+                    rippleColor={colorPrimary}
+                    on:tap={() => showStopLines(item.name, { lat: item.lat, lon: item.lon })}>
                     <label
                         color={isCurrentStop(item) ? colorPrimary : colorOnBackground}
                         fontSize={14}

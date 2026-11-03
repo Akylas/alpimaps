@@ -496,6 +496,8 @@
     "motorcycle": "motorcycle",
     "no_itinerary_found": "no itinerary found",
     "no_trains_found": "no trains found",
+    "in_minutes": "in %s min",
+    "departures_then": "then %s",
     "no_departures_found": "no departures found",
     "live": "live",
     "off_network": "off network",

@@ -17,12 +17,14 @@
     import { cloneLayerSpec, createTileDecoder, getMapContext } from '~/mapModules/MapModule';
     import { decompress, onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
+    import DirectionHeader from '~/features/trains/DirectionHeader.svelte';
     import LineChip from '~/features/trains/LineChip.svelte';
+    import { showStopLines } from '~/features/trains/stop';
     import type { StopLine } from '~/features/trains/lines';
     import { transitousService } from '~/features/trains/TransitousService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
-    import { goBack, navigate } from '@shared/utils/svelte/ui';
+    import { navigate } from '@shared/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import { geoJSONBounds } from '~/utils/geo';
     import IconButton from '~/components/common/IconButton.svelte';
@@ -176,21 +178,6 @@
             showError(error);
         }
     }
-    async function backToMapOnPoint(item: Item) {
-        try {
-            mapContext.selectItem({
-                item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
-                isFeatureInteresting: true,
-                setSelected: false,
-                peek: false,
-                zoomDuration: 0
-            });
-            goBack({ to: mapContext.getMainPage() });
-        } catch (error) {
-            showError(error);
-        }
-    }
-
     function focusOnItem(item: Item, scrollToIndex = false) {
         // one move rather than a position animation racing a zoom animation
         massifMap.camera().moveTo({ lat: item.lat, lon: item.lon }, { zoom: 15, duration: 200 });
@@ -210,15 +197,8 @@
             selectedIndex = dataItems.indexOf(item);
             item.selected = true;
             dataItems.setItem(selectedIndex, item);
-            // mapContext.selectItem({
-            //     item: { geometry: { type: 'Point', coordinates: [item.lon, item.lat] }, properties: { id: item.id, name: item.name, color: item.color } },
-            //     isFeatureInteresting: true,
-            //     setSelected: false,
-            //     peek: false,
-            //     zoom: 15,
-            //     zoomDuration: 0
-            // });
             focusOnItem(item);
+            showStopLines(item.name, { lat: item.lat, lon: item.lon });
         } catch (error) {
             showError(error);
         }
@@ -228,18 +208,19 @@
 <page bind:this={page} actionBarHidden={true} on:navigatingTo={onNavigatingTo}>
     <gridlayout rows="auto,auto,4*,6*">
         <CActionBar>
-            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={15} height={30} mode={line.mode} textColor={line.textColor} />
-            <IconButton text="mdi-swap-vertical" visibility={line.directions.length > 1 ? 'visible' : 'collapse'} on:tap={reverseDirection} />
+            <LineChip name={line.shortName || line.longName} slot="center" color={line.color} fontSize={20} height={38} horizontalAlignment="center" mode={line.mode} textColor={line.textColor} />
             <IconButton text="mdi-calendar-clock-outline" on:tap={() => showTimesheet()} />
         </CActionBar>
-        <stacklayout padding="8 16 10 16" row={1}>
-            <label color={colorOnBackground} fontSize={20} fontWeight="bold" lineBreak="end" maxLines={2} text={`→ ${line.directions[directionIndex].headsign}`} />
-            <label color={colorOnSurfaceVariant} fontSize={13} lineBreak="end" maxLines={2} text={line.longName} visibility={line.longName ? 'visible' : 'collapse'} />
-        </stacklayout>
+        <DirectionHeader
+            from={dataItems?.getItem(0)?.name ?? line.directions[directionIndex].headsign}
+            row={1}
+            swappable={line.directions.length > 1}
+            to={dataItems?.getItem(dataItems.length - 1)?.name}
+            on:tap={reverseDirection} />
         <massifmap row={2} useTextureView={false} zoom={16} on:mapReady={onMapReady} />
         <collectionview bind:this={collectionView} items={dataItems} row={3} rowHeight={56} android:paddingBottom={windowInsetBottom + $windowInset.keyboard}>
             <Template let:item>
-                <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
+                <canvasview backgroundColor={item.selected ? new Color(colorPrimary).setAlpha(24).hex : null} columns="*,auto" rippleColor={colorPrimary} on:tap={() => selectStop(item)}>
                     <line horizontalAlignment="left" startX={32} startY={0} stopX={32} stopY="50%" strokeColor={item.color} strokeWidth={5} visibility={item.first ? 'hidden' : 'visible'} />
                     <line horizontalAlignment="left" startX={32} startY="50%" stopX={32} stopY="100%" strokeColor={item.color} strokeWidth={5} visibility={item.last ? 'hidden' : 'visible'} />
                     <circle
@@ -269,7 +250,6 @@
                         text={item.time}
                         verticalTextAlignment="middle"
                         visibility={item.time ? 'visible' : 'collapse'} />
-                    <IconButton col={2} horizontalAlignment="right" text="mdi-map-marker-radius-outline" verticalAlignment="middle" on:tap={() => backToMapOnPoint(item)} />
                 </canvasview>
             </Template>
         </collectionview>

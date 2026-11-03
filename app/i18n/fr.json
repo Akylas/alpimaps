@@ -469,6 +469,8 @@
     "no_route": "pas d'itinéraire",
     "no_timesheet_data": "pas de données de feuille de temps",
     "no_trains_found": "aucun train trouvé",
+    "in_minutes": "dans %s min",
+    "departures_then": "puis %s",
     "no_departures_found": "aucun départ trouvé",
     "live": "en direct",
     "no_web_search_app": "pas d'application de recherche sur le web",
