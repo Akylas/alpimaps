@@ -27,10 +27,6 @@ export interface ItemMenuAction {
     run: () => void | Promise<void>;
 }
 
-export function itemIsBusStop(item: IItem) {
-    return item.properties?.class === 'bus' || item.properties?.subclass === 'tram_stop';
-}
-
 const RAIL_STATION_VALUES = ['station', 'halt'];
 
 /** vector tiles say class/subclass, the geocoders osm_key/osm_value */
@@ -162,24 +158,6 @@ export function openItemWeatherAlternate(item: Item) {
     }
 }
 
-/** A stop's lines. Routes go to their own details page, see the bottom sheet. */
-export async function showItemTransitLines(item: Item) {
-    try {
-        const TransitLinesBottomSheet = (await import('~/components/transit/TransitLinesBottomSheet.svelte')).default;
-        if (item.geometry.type === 'Point') {
-            const [lon, lat, altitude] = item.geometry.coordinates;
-            await showBottomSheet({
-                parent: getMapContext().getMainPage(),
-                trackingScrollView: 'scrollView',
-                view: TransitLinesBottomSheet,
-                props: { name: formatter.getItemName(item), position: { lat, lon, altitude } }
-            });
-        }
-    } catch (err) {
-        showError(err);
-    }
-}
-
 export async function showItemRailStation(item: Item) {
     try {
         const RailStationBottomSheet = (await import('~/components/transit/RailStationBottomSheet.svelte')).default;
@@ -232,10 +210,7 @@ export function shareItemPosition(item: Item) {
 }
 
 function itemKind(item: IItem): ItemKind {
-    if (!item) {
-        return 'default';
-    }
-    return itemIsRailStation(item) ? 'railStation' : itemIsBusStop(item) ? 'busStop' : 'default';
+    return item && itemIsRailStation(item) ? 'railStation' : 'default';
 }
 
 /** The ids that come first for this item: what its kind asks for, then what the features add. */
@@ -282,9 +257,6 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
         actions.push({ id: 'weather', icon: 'mdi-weather-partly-cloudy', name: lc('weather'), run: () => openItemWeather(item) });
     }
     actions.push({ id: 'astronomy', icon: 'mdi-weather-night', name: lc('astronomy'), run: () => showItemAstronomy(item) });
-    if (itemIsBusStop(item)) {
-        actions.push({ id: 'transit', icon: 'mdi-bus', name: lc('bus_stop_infos'), run: () => showItemTransitLines(item) });
-    }
     if (itemIsRailStation(item)) {
         actions.push({ id: 'rail', icon: 'mdi-train', name: lc('rail_station_infos'), run: () => showItemRailStation(item) });
     }

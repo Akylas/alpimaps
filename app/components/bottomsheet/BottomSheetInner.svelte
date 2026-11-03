@@ -26,7 +26,6 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import {
-        itemIsBusStop as isBusStop,
         itemIsRailStation as isRailStation,
         itemLeadingActions,
         openItemInOpenStreetMap,
@@ -37,8 +36,7 @@
         shareItemPosition,
         showItemAstronomy,
         showItemInformation,
-        showItemRailStation,
-        showItemTransitLines
+        showItemRailStation
     } from '~/mapModules/itemActions';
     import { sortItemActions } from '~/mapModules/itemActionOrder';
     import { type MapItemAction, featureClaimsItem, featureItemActions } from '~/mapModules/mapFeatures';
@@ -158,7 +156,6 @@
     let itemIsRoute = false;
     let itemIsEditingItem = false;
     let itemCanBeEdited = false;
-    let itemIsBusStop = false;
     let itemIsRailStation = false;
     let itemCanBeAdded = false;
     let itemCanQueryProfile = false;
@@ -254,7 +251,6 @@
                 itemIsEditingItem = !!item?.properties.editingId && item?.properties.editingId === mapContext.getEditingItem()?.id;
                 itemCanBeEdited = !!item && !!item.id && !itemIsEditingItem;
                 itemCanBeAdded = !!item && ((!item.id && !item.route?.osmid) || !!itemIsEditingItem);
-                itemIsBusStop = !!item && isBusStop(item);
                 itemIsRailStation = !!item && isRailStation(item);
                 itemCanQueryProfile = itemIsRoute && !!item?.id;
                 itemCanQueryStats = itemIsRoute && !!item?.id;
@@ -308,7 +304,6 @@
         weather: { tap: () => openItemWeather(item), long: () => openItemWeatherAlternate(item) },
         astronomy: { tap: () => showItemAstronomy(item) },
         compass: { tap: () => openCompass() },
-        transit: { tap: () => getTransitLines() },
         rail: { tap: () => showItemRailStation(item) },
         address: { tap: () => getItemAddress() },
         share: { tap: (event) => shareItem(event) }
@@ -336,7 +331,6 @@
         { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
         { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
         { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
-        { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
         { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
         { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
         { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
@@ -846,23 +840,6 @@
         }
     }
 
-    async function getTransitLines() {
-        try {
-            if (itemIsRoute) {
-                const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
-                navigate({
-                    page: component,
-                    props: {
-                        line: { geometry: item.geometry, ...item.properties } as any
-                    }
-                });
-            } else {
-                showItemTransitLines(item);
-            }
-        } catch (err) {
-            showError(err);
-        }
-    }
     // async function shareFile(content: string, fileName: string) {
     //     const file = knownFolders.temp().getFile(fileName);
     //     // iOS: using writeText was not adding the file. Surely because it was too soon or something

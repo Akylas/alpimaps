@@ -12,13 +12,13 @@
     import { cloneLayerSpec, createTileDecoder, getMapContext } from '~/mapModules/MapModule';
     import { onNetworkChanged } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
-    import { MetroLineStop, TransitRoute, transitService } from '~/services/TransitService';
+    import { MetroLineStop, TransitRoute, transitService } from '~/features/transit/TransitService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import { colors, fonts, windowInset } from '~/variables';
     import { geoJSONBounds } from '~/utils/geo';
-    import IconButton from '../common/IconButton.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
     import { FeatureCollection } from 'geojson';
     import type { MapPos } from '~/utils/geo';
     import { getDistanceSimple } from '~/helpers/geolib';
@@ -136,7 +136,7 @@
 
     async function showTimesheet() {
         try {
-            const component = (await import('~/components/transit/TransitTimesheet.svelte')).default;
+            const component = (await import('~/features/transit/TransitTimesheet.svelte')).default;
             navigate({
                 page: component,
                 props: {

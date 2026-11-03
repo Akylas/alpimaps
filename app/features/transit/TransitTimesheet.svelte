@@ -12,14 +12,14 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { onThemeChanged } from '~/helpers/theme';
     import { onNetworkChanged } from '~/services/NetworkService';
-    import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/services/TransitService';
+    import { MetroTimesheet, MetroTripStop, TransitRoute, transitService } from '~/features/transit/TransitService';
     import { NoNetworkError } from '@akylas/nativescript-app-utils/error';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '~/utils/ui';
     import { pickDate, pickTime } from '~/utils/utils';
     import { colors, fonts, windowInset } from '~/variables';
-    import IconButton from '../common/IconButton.svelte';
+    import IconButton from '~/components/common/IconButton.svelte';
 
     const timePaint = new Paint();
     timePaint.textSize = 12;
@@ -158,7 +158,7 @@
 
     async function showDetails() {
         try {
-            const component = (await import('~/components/transit/TransitLineDetails.svelte')).default;
+            const component = (await import('~/features/transit/TransitLineDetails.svelte')).default;
             navigate({
                 page: component,
                 props: {
