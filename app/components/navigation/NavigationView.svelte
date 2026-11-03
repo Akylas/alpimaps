@@ -3,30 +3,16 @@
     import { DismissReasons } from '@nativescript-community/ui-snackbar';
     import type { EventData } from '@nativescript/core';
     import { onDestroy } from 'svelte';
-    import RouteStatsView from '~/components/bottomsheet/RouteStatsView.svelte';
-    import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import NavigationActions from '~/components/navigation/NavigationActions.svelte';
     import NavigationCard, { CARD_BORDER_WIDTH, CARD_RADIUS } from '~/components/navigation/NavigationCard.svelte';
     import NavigationControls from '~/components/navigation/NavigationControls.svelte';
-    import NavigationElevationChart from '~/components/navigation/NavigationElevationChart.svelte';
     import NavigationInfo from '~/components/navigation/NavigationInfo.svelte';
-    import NavigationSurface from '~/components/navigation/NavigationSurface.svelte';
     import { formatDistance } from '~/helpers/formatter';
     import { formatTime } from '~/helpers/locale';
+    import { lazyComponents, routeFeatureChanges, routeFeatures, routeNavSections } from '~/routeFeatures/registry';
     import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
-    import { chartShowWaypoints, showAscents, showGradeColors } from '~/stores/mapStore';
-    import {
-        NavigationState,
-        navigationHasPreviewWidgets,
-        navigationItem,
-        navigationProgress,
-        navigationScale,
-        navigationShowElevationChart,
-        navigationShowSurface,
-        navigationState,
-        navigationStats
-    } from '~/stores/navigationStore';
-    import { type RouteProgress, formatNavigationDuration, getCurrentAscent, navigationSections, splitDistance, splitDuration, splitElevation, splitSpeed } from '~/utils/navigation';
+    import { NavigationState, navigationItem, navigationProgress, navigationScale, navigationState, navigationStats } from '~/stores/navigationStore';
+    import { formatNavigationDuration, getCurrentAscent, navigationSections, splitDistance, splitDuration, splitElevation, splitSpeed } from '~/utils/navigation';
     import { showSnack } from '~/utils/ui';
     import { colors } from '~/variables';
 
@@ -45,10 +31,15 @@
     onDestroy(() => navigationService.off(NavigationReroutedEvent, onRerouted));
 
     $: profile = $navigationItem?.profile;
-    $: profileAvailable = !!profile?.data?.length;
-    $: statsAvailable = !!$navigationItem?.stats;
     // the same sections the map builds the sheet steps from, so a step ends where its section does
-    $: sections = navigationSections($navigationScale, { hasAhead: $navigationHasPreviewWidgets, hasProfile: profileAvailable, hasStats: statsAvailable });
+    // the `>= 0` only makes the statement depend on the features' changes
+    $: contributed = $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : [];
+    $: sections = navigationSections($navigationScale, contributed);
+    $: aheadSections = contributed.filter((layout) => layout.section.slot === 'ahead');
+    $: detailSections = contributed.filter((layout) => layout.section.slot === 'details');
+    // the sections' components load the first time they have a height
+    const sectionComponents = lazyComponents();
+    $: contributed.forEach((layout) => sectionComponents.load(layout.id, layout.section.component));
 
     $: paused = $navigationState === NavigationState.PAUSED;
     $: offRoute = !!$navigationProgress?.offRoute;
@@ -83,28 +74,9 @@
     $: climbedParts = stats ? splitElevation(stats.altitudeGain || 0) : null;
     $: movingParts = stats ? splitDuration((stats.duration || 0) / 1000) : null;
     $: speedParts = stats ? splitSpeed(stats.averageSpeed || 0) : null;
-
-    let elevationChart: ElevationChart;
-    $: if ($navigationProgress && profileAvailable) {
-        highlightChart($navigationProgress);
-    }
-    function highlightChart(progress: RouteProgress) {
-        elevationChart?.hilghlightPathIndex(
-            {
-                onPathIndex: progress.onPathIndex,
-                remainingDistance: progress.remainingDistance,
-                remainingDistanceToStep: progress.remainingDistanceToStep,
-                remainingTime: progress.remainingTime,
-                dplus: profile?.dplus,
-                dmin: profile?.dmin
-            },
-            undefined,
-            false
-        );
-    }
 </script>
 
-<gridlayout rows={`${sections.bar},${sections.trip},${sections.ahead},${sections.actions},${sections.profile},${sections.stats}`} {...$$restProps}>
+<gridlayout rows={[sections.bar, sections.trip, sections.ahead, sections.actions, ...sections.details].join(',')} {...$$restProps}>
     <!-- the bar, the same in every state: the main figures and the primary button, then one live line -->
     <NavigationCard margin="0 8 8 8" padding="0 10 0 14" rows="auto,*,auto">
         <!-- the sheet drags from anywhere on the bar; the handle says it does -->
@@ -158,34 +130,28 @@
 
     {#if sections.ahead}
         <!-- what is ahead -->
-        <gridlayout columns={$navigationShowElevationChart && $navigationShowSurface ? '3*,2*' : '*'} margin="0 0 8 8" row={2}>
-            {#if $navigationShowElevationChart}
-                <NavigationElevationChart height={sections.ahead - 8} marginRight={8} />
-            {/if}
-            {#if $navigationShowSurface}
-                <NavigationSurface col={$navigationShowElevationChart ? 1 : 0} height={sections.ahead - 8} marginRight={8} />
-            {/if}
+        <gridlayout columns={aheadSections.map((layout) => `${layout.section.weight ?? 1}*`).join(',')} margin="0 0 8 8" row={2}>
+            {#each aheadSections as layout, index (layout.id)}
+                {#if $sectionComponents[layout.id]}
+                    <svelte:component this={$sectionComponents[layout.id]} col={index} height={sections.ahead - 8} marginRight={8} />
+                {/if}
+            {/each}
         </gridlayout>
     {/if}
 
     <NavigationActions margin="0 8 8 8" row={3} />
 
-    {#if profileAvailable}
-        <ElevationChart
-            bind:this={elevationChart}
-            backgroundColor={colorPanel}
-            borderColor={colorHairline}
-            borderRadius={CARD_RADIUS}
-            borderWidth={CARD_BORDER_WIDTH}
-            {chartShowWaypoints}
-            item={$navigationItem}
-            margin="0 8 8 8"
-            row={4}
-            showAscents={$showAscents}
-            showProfileGrades={$showGradeColors} />
-    {/if}
-
-    {#if statsAvailable}
-        <RouteStatsView backgroundColor={colorPanel} borderColor={colorHairline} borderRadius={CARD_RADIUS} borderWidth={CARD_BORDER_WIDTH} item={$navigationItem} margin="0 8 8 8" row={5} />
-    {/if}
+    {#each detailSections as layout, index (layout.id)}
+        {#if $sectionComponents[layout.id]}
+            <svelte:component
+                this={$sectionComponents[layout.id]}
+                backgroundColor={colorPanel}
+                borderColor={colorHairline}
+                borderRadius={CARD_RADIUS}
+                borderWidth={CARD_BORDER_WIDTH}
+                item={$navigationItem}
+                margin="0 8 8 8"
+                row={4 + index} />
+        {/if}
+    {/each}
 </gridlayout>

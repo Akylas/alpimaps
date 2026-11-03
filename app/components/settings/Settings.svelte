@@ -25,6 +25,7 @@
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
     import { showGesturesTutorial } from '~/mapModules/features/gestures';
+    import { allRouteFeatures, routeFeatures } from '~/routeFeatures/registry';
     import { getMapContext } from '~/mapModules/MapModule';
     import { onServiceLoaded } from '~/services/BgService.common';
     import { packageService } from '~/services/PackageService';
@@ -409,52 +410,19 @@
                     currentValue: () => ApplicationSettings.getNumber(setting.key, setting.default),
                     rightValue: () => formatDistance(ApplicationSettings.getNumber(setting.key, setting.default))
                 }));
-            case 'elevation_profile':
+            case 'route_analysis':
+                // `dynamic`: this page is rebuilt when a switch changes, a feature's settings row sits under it while on
                 return [
-                    {
-                        key: 'chart_max_filter',
-                        title: lc('chart_max_filter'),
-                        default: 50,
-                        min: 0,
-                        max: 500,
-                        step: 10
-                    },
-                    {
-                        key: 'chart_elevation_min_range',
-                        title: lc('chart_elevation_min_range'),
-                        default: 250,
-                        min: 50,
-                        max: 2000,
-                        step: 50,
-                        formatter: formatDistance
-                    },
-                    {
-                        key: 'elevation_profile_smooth_window',
-                        title: lc('elevation_profile_smooth_window'),
-                        default: 3,
-                        min: 0,
-                        max: 20,
-                        step: 1
-                    },
-                    {
-                        key: 'elevation_profile_filter_step',
-                        title: lc('elevation_profile_filter_step'),
-                        default: 10,
-                        min: 1,
-                        max: 50,
-                        step: 1
-                    }
-                ].map((setting) => ({
-                    ...setting,
-                    id: 'setting',
-                    type: 'slider',
-                    valueFormatter: setting.formatter,
-                    currentValue: () => ApplicationSettings.getNumber(setting.key, setting.default),
-                    rightValue: () => {
-                        const value = ApplicationSettings.getNumber(setting.key, setting.default);
-                        return setting.formatter ? setting.formatter(value) : value + '';
-                    }
-                }));
+                    { type: 'sectionheader', title: lc('route_features'), dynamic: 'route_analysis' },
+                    ...get(allRouteFeatures)
+                        .filter((feature) => feature.setting)
+                        .flatMap((feature) => [
+                            storeSwitch(feature.setting.store, feature.setting.title()),
+                            ...(feature.settings && get(feature.setting.store)
+                                ? [{ id: 'sub_settings', icon: 'mdi-tune', title: lc('settings'), options: () => feature.settings().map(sharedSettingItem) }]
+                                : [])
+                        ])
+                ];
             case 'terrain_3d':
                 return [{ ...storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), icon: 'mdi-terrain' }, ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
             case 'peak_finder':
@@ -724,10 +692,10 @@
                 .concat([
                     {
                         id: 'sub_settings',
-                        icon: 'mdi-chart-bar',
-                        title: lc('elevation_profile'),
-                        description: lc('elevation_profile_settings'),
-                        options: () => getSubSettings('elevation_profile')
+                        icon: 'mdi-chart-timeline-variant',
+                        title: lc('route_analysis'),
+                        description: lc('route_analysis_settings'),
+                        options: () => getSubSettings('route_analysis')
                     },
                     {
                         type: 'sectionheader',
@@ -1192,6 +1160,10 @@
 
     onMapLanguageChanged(() => refresh?.());
     $: refresh?.();
+    $: if ($routeFeatures && options?.[0]?.dynamic === 'route_analysis') {
+        options = getSubSettings('route_analysis');
+        refresh?.();
+    }
 </script>
 
 <BaseSettingsPage

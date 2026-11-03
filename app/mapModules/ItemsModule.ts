@@ -11,6 +11,7 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
+import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -203,7 +204,18 @@ export default class ItemsModule extends MapModule {
         //     mapContext.addLayer(this.localVectorLayer, 'items');
         // }
         this.initDb();
+        // a feature switched on or off changes what is drawn with the selected route
+        let first = true;
+        this.unsubscribeRouteFeatures?.();
+        this.unsubscribeRouteFeatures = routeFeatures.subscribe(() => {
+            const selected = mapContext.getSelectedItem();
+            if (!first && selected?.route) {
+                this.onItemSelected(selected);
+            }
+            first = false;
+        });
     }
+    private unsubscribeRouteFeatures: () => void;
     onDbInitListeners = [];
     onDbInit(callback) {
         if (this.dbInitialized) {
@@ -214,6 +226,8 @@ export default class ItemsModule extends MapModule {
     }
     onMapDestroyed() {
         super.onMapDestroyed();
+        this.unsubscribeRouteFeatures?.();
+        this.unsubscribeRouteFeatures = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {
@@ -603,6 +617,7 @@ export default class ItemsModule extends MapModule {
                     });
                 });
             }
+            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setGeoJSON(2, data);
@@ -920,7 +935,7 @@ export default class ItemsModule extends MapModule {
     }
     ignoredOSMKeys = ['source', 'building', 'wall', 'bench', 'shelter_type', 'amenity', 'check_date', 'note', 'comment', 'ele', 'tourism'];
 
-    async getOSMDetails(item: Item, mapZoom?: number, force = false) {
+    async getOSMDetails(item: IItem, mapZoom?: number, force = false) {
         const properties = item.properties;
         const coordinates = (item.geometry as GeometryPoint).coordinates;
         const distance = mapZoom ? Math.max(14 - mapZoom, 1) * 20 : properties.class === 'country' ? 500 : 40;
@@ -963,7 +978,7 @@ export default class ItemsModule extends MapModule {
     }
 
     /** getOSMDetails, with the lookup state for the views and the saved copy for offline */
-    async fetchOSMDetails(item: Item, mapZoom?: number, force = false): Promise<OSMItemDetails | undefined> {
+    async fetchOSMDetails(item: IItem, mapZoom?: number, force = false): Promise<OSMItemDetails | undefined> {
         const key = osmItemKey(item);
         updateOSMDetailsState(key, { loading: true });
         try {
@@ -1007,7 +1022,7 @@ export default class ItemsModule extends MapModule {
     }
 
     /** fetches the details of the selected item and merges them in it */
-    async loadOSMDetails(item: Item, force = false) {
+    async loadOSMDetails(item: IItem, force = false) {
         const details = await this.fetchOSMDetails(item, mapContext.getMap().camera().zoom(), force);
         if (details) {
             await this.mergeSelectedItemProperties(item, details.properties);
@@ -1015,7 +1030,7 @@ export default class ItemsModule extends MapModule {
         return details;
     }
 
-    private async fetchOSMElement(item: Item, coordinates: number[], distance: number, force: boolean, idStatement?: string) {
+    private async fetchOSMElement(item: IItem, coordinates: number[], distance: number, force: boolean, idStatement?: string) {
         if (idStatement) {
             const { elements } = await overpassRequest(`[out:json][timeout:10];${idStatement}`, force);
             const element = elements.find((e) => e.tags);
