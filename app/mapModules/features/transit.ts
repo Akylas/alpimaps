@@ -7,6 +7,7 @@ import { derived, get, writable } from 'svelte/store';
 import { lc } from '~/helpers/locale';
 import { type FeatureClickData, getMapContext } from '~/mapModules/MapModule';
 import { FeaturePicker, isPickerPending } from '~/mapModules/featurePicker';
+import { itemIsBusStop } from '~/mapModules/itemActions';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import type { IItem } from '~/models/Item';
 import { transitService } from '~/services/TransitService';
@@ -161,6 +162,7 @@ const showTransitLinesPage = async () => {
 registerMapFeature({
     id: 'transit',
     enabled: () => WITH_BUS_SUPPORT,
+    showsItemButtons: itemIsBusStop,
     menuItems: derived([showingTransitLines, colors], ([$showingTransitLines, $colors]) =>
         // dev-only: the transit data is not shipped
         getMapContext().mapModule('customLayers')?.devMode

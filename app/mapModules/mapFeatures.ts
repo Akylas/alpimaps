@@ -39,6 +39,10 @@ export interface MapItemAction {
     tooltip?: string;
     /** Lower sorts earlier; the sheet's own actions are spaced 10 apart from 0. */
     order?: number;
+    /** In the search result menu: the action needs the map, so search lets go of the screen. Defaults to true. */
+    leavesSearch?: boolean;
+    /** The sheet's filled button, when no built-in action claims it. */
+    main?: boolean;
     onTap: () => void | Promise<void>;
     onLongPress?: (event?) => void | Promise<void>;
 }
@@ -52,6 +56,12 @@ export interface MapFeature {
     menuItems?: Readable<MapMenuItem[]>;
     /** A function, not a store: the sheet already re-evaluates it on every selection. */
     itemActions?: (item: IItem) => MapItemAction[];
+    /** Ids of the actions that come first for this item, in this order, whatever their `order`. */
+    leadingActions?: (item: IItem) => string[];
+    /** The feature owns this item: the sheet's built-in actions do not apply to it, only the feature's own. */
+    claimsItem?: (item: IItem) => boolean;
+    /** A tap on a map feature that becomes this item opens the sheet with its buttons. */
+    showsItemButtons?: (item: IItem) => boolean;
 }
 
 const features: MapFeature[] = [];
@@ -97,6 +107,18 @@ export function featureSideButtons(): Readable<MapSideButton[]> {
 
 export function featureItemActions(item: IItem): MapItemAction[] {
     return features.flatMap((feature) => feature.itemActions?.(item) ?? []).sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+}
+
+export function featureLeadingActions(item: IItem): string[] {
+    return features.flatMap((feature) => feature.leadingActions?.(item) ?? []);
+}
+
+export function featureClaimsItem(item: IItem): boolean {
+    return features.some((feature) => feature.claimsItem?.(item));
+}
+
+export function featureShowsItemButtons(item: IItem): boolean {
+    return features.some((feature) => feature.showsItemButtons?.(item));
 }
 
 export function featureMenuItems(menu: 'main' | 'overflow' = 'main'): Readable<MapMenuItem[]> {

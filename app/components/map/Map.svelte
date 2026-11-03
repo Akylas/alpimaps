@@ -50,7 +50,7 @@
     import { registerMapModule } from '~/mapModules/registry';
     import { installMacMouse } from './macMouse';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick } from '~/mapModules/featurePicker';
-    import { featureMenuItems, featureSideButtons } from '~/mapModules/mapFeatures';
+    import { featureMenuItems, featureShowsItemButtons, featureSideButtons } from '~/mapModules/mapFeatures';
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
@@ -1283,7 +1283,7 @@
                 selectItem({
                     item: result,
                     isFeatureInteresting,
-                    showButtons: featureData.class === 'bus' || featureData.subclass === 'tram_stop',
+                    showButtons: featureShowsItemButtons(result),
                     setMapSelected: /park|water_name|waterway/.test(featureLayerName)
                 });
             }

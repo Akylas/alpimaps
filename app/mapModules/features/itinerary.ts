@@ -5,6 +5,7 @@ import { showError } from '@shared/utils/showError';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
+import type { IItem } from '~/models/Item';
 import { decompress } from '~/services/NetworkService';
 import type { TransitousItinerary, TransitousLeg } from '~/services/TransitousService';
 import type { MapPos } from '~/utils/geo';
@@ -164,8 +165,12 @@ export function clearItineraryFromMap() {
     clearItineraryLayer();
 }
 
+const isItinerary = (item: IItem) => !!session && !!item?.properties?.itinerary;
+
 registerMapFeature({
     id: 'itinerary',
+    claimsItem: (item) => !!item?.properties?.itinerary,
+    leadingActions: (item) => (isItinerary(item) ? ['itineraries'] : []),
     itemActions: (item) =>
-        session && item?.properties?.itinerary ? [{ id: 'itineraries', text: 'mdi-transit-connection-variant', tooltip: lc('itineraries'), order: 5, onTap: reopenItineraries }] : []
+        isItinerary(item) ? [{ id: 'itineraries', text: 'mdi-transit-connection-variant', tooltip: lc('itineraries'), order: 5, main: true, leavesSearch: false, onTap: reopenItineraries }] : []
 });

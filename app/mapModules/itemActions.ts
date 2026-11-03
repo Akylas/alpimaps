@@ -6,8 +6,8 @@ import { share } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
 import { formatter } from '~/mapModules/ItemFormatter';
 import { getMapContext, handleMapAction } from '~/mapModules/MapModule';
-import { type ItemKind, sortItemActions } from '~/mapModules/itemActionOrder';
-import { featureItemActions } from '~/mapModules/mapFeatures';
+import { ITEM_ACTION_FIRST, type ItemKind, sortItemActions } from '~/mapModules/itemActionOrder';
+import { featureItemActions, featureLeadingActions } from '~/mapModules/mapFeatures';
 import type { IItem, Item } from '~/models/Item';
 import { networkService } from '~/services/NetworkService';
 import { decompress } from '~/services/NetworkService';
@@ -231,14 +231,16 @@ export function shareItemPosition(item: Item) {
     return share({ message: formatter.getItemPositionToString(item) }, { dialogTitle: lc('share') });
 }
 
-export function itemKind(item: IItem): ItemKind {
+function itemKind(item: IItem): ItemKind {
     if (!item) {
         return 'default';
     }
-    if (item.properties?.itinerary) {
-        return 'itinerary';
-    }
     return itemIsRailStation(item) ? 'railStation' : itemIsBusStop(item) ? 'busStop' : 'default';
+}
+
+/** The ids that come first for this item: what its kind asks for, then what the features add. */
+export function itemLeadingActions(item: IItem): string[] {
+    return item ? [...ITEM_ACTION_FIRST[itemKind(item)], ...featureLeadingActions(item)] : [];
 }
 
 /** The menu behind a search result: the actions of the selected-item sheet that only need the item itself. */
@@ -268,9 +270,9 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
     if (!item.id && !item.route?.osmid) {
         actions.push({ id: 'save', icon: 'mdi-map-plus', name: lc('add'), leavesSearch: true, run: () => mapContext.saveItem(item) });
     }
-    const kind = itemKind(item);
+    const leading = itemLeadingActions(item);
     if (item.route) {
-        return sortItemActions(actions, kind);
+        return sortItemActions(actions, leading);
     }
     if (item.properties?.name) {
         actions.push({ id: 'wikipedia', icon: 'mdi-wikipedia', name: lc('wikipedia'), run: () => openItemWikipedia(item) });
@@ -287,7 +289,7 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
         actions.push({ id: 'rail', icon: 'mdi-train', name: lc('rail_station_infos'), run: () => showItemRailStation(item) });
     }
     for (const featureAction of featureItemActions(item)) {
-        actions.push({ id: featureAction.id, icon: featureAction.text, name: featureAction.tooltip, leavesSearch: true, run: () => featureAction.onTap() });
+        actions.push({ id: featureAction.id, icon: featureAction.text, name: featureAction.tooltip, leavesSearch: featureAction.leavesSearch ?? true, run: () => featureAction.onTap() });
     }
     actions.push({
         id: 'share',
@@ -297,5 +299,5 @@ export function getItemMenuActions(item: Item): ItemMenuAction[] {
             await shareItemPosition(item);
         }
     });
-    return sortItemActions(actions, kind);
+    return sortItemActions(actions, leading);
 }

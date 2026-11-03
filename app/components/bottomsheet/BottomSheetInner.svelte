@@ -28,7 +28,7 @@
     import {
         itemIsBusStop as isBusStop,
         itemIsRailStation as isRailStation,
-        itemKind,
+        itemLeadingActions,
         openItemInOpenStreetMap,
         openItemWeather,
         openItemWeatherAlternate,
@@ -41,7 +41,7 @@
         showItemTransitLines
     } from '~/mapModules/itemActions';
     import { sortItemActions } from '~/mapModules/itemActionOrder';
-    import { featureItemActions } from '~/mapModules/mapFeatures';
+    import { type MapItemAction, featureClaimsItem, featureItemActions } from '~/mapModules/mapFeatures';
     import type { Item, RouteInstruction } from '~/models/Item';
     import { networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -285,6 +285,13 @@
     // a track we could navigate if it had maneuvers, ie an imported gpx
     $: itemNeedsInstructions = !$isNavigating && !!item && isNavigableRoute(item) && !item.instructions?.length;
 
+    // the built-in actions run through `actionHandlers`, a feature's own through its `onTap`
+    interface SheetAction extends Partial<MapItemAction> {
+        id: string;
+        text: string;
+        when: boolean;
+        label?: string;
+    }
     // kept out of the reactive statement below: referencing them there makes the linter trace into
     // functions that assign `item`, which would be a loop
     const actionHandlers: Record<string, { tap: (event?) => void; long?: (event?) => void }> = {
@@ -307,40 +314,41 @@
         share: { tap: (event) => shareItem(event) }
     };
 
+    $: featureActions = featureItemActions(item);
+    let builtInActions: SheetAction[];
+    $: builtInActions = [
+        { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
+        {
+            id: 'save',
+            when: itemCanBeAdded,
+            text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus',
+            label: itemIsEditingItem ? lc('save') : lc('add'),
+            tooltip: itemIsEditingItem ? lc('save') : lc('add')
+        },
+        { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
+        { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
+        { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
+        { id: 'stats', when: itemIsRoute && itemCanQueryStats, text: 'mdi-chart-bar-stacked', tooltip: lc('road_stats') },
+        { id: 'hide', when: !!item?.id && itemIsRoute, text: 'mdi-eye-off', tooltip: lc('hide') },
+        { id: 'edit', when: itemCanBeEdited, text: 'mdi-pencil', tooltip: lc('edit') },
+        { id: 'web', when: !!item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false)), text: 'mdi-web', tooltip: lc('search_web') },
+        { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
+        { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
+        { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
+        { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
+        { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
+        { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
+        { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
+        { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
+    ];
+    // an item a feature claims (a journey drawn from the itineraries sheet is not a place): only the feature's actions apply
     $: itemActions = sortItemActions(
-        [
-            { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
-            {
-                id: 'save',
-                when: itemCanBeAdded,
-                text: itemIsEditingItem ? 'mdi-content-save-outline' : 'mdi-map-plus',
-                label: itemIsEditingItem ? lc('save') : lc('add'),
-                tooltip: itemIsEditingItem ? lc('save') : lc('add')
-            },
-            { id: 'navigate', when: itemCanBeNavigated, text: 'mdi-navigation', tooltip: lc('start_navigation') },
-            { id: 'instructions', when: itemNeedsInstructions, text: 'mdi-sign-direction', tooltip: lc('get_directions_for_track') },
-            { id: 'profile', when: itemIsRoute && itemCanQueryProfile, text: 'mdi-chart-areaspline', tooltip: lc('elevation_profile') },
-            { id: 'stats', when: itemIsRoute && itemCanQueryStats, text: 'mdi-chart-bar-stacked', tooltip: lc('road_stats') },
-            { id: 'hide', when: !!item?.id && itemIsRoute, text: 'mdi-eye-off', tooltip: lc('hide') },
-            { id: 'edit', when: itemCanBeEdited, text: 'mdi-pencil', tooltip: lc('edit') },
-            { id: 'web', when: !!item && (!itemIsRoute || (!!item.properties?.name && item.properties.hasRealName !== false)), text: 'mdi-web', tooltip: lc('search_web') },
-            { id: 'wikipedia', when: !itemIsRoute && !!item?.properties?.name, text: 'mdi-wikipedia', tooltip: lc('wikipedia') },
-            { id: 'weather', when: networkService.canCheckWeather && !itemIsRoute, text: 'mdi-weather-partly-cloudy', tooltip: lc('weather') },
-            { id: 'astronomy', when: !itemIsRoute, text: 'mdi-weather-night', tooltip: lc('astronomy') },
-            { id: 'compass', when: (itemIsRoute && !item?.id) || !!currentLocation, text: 'mdi-compass-outline', tooltip: lc('compass') },
-            { id: 'transit', when: itemIsBusStop, text: 'mdi-bus', tooltip: lc('bus_stop_infos') },
-            { id: 'rail', when: itemIsRailStation, text: 'mdi-train', tooltip: lc('rail_station_infos') },
-            { id: 'address', when: !!item && !itemIsRoute && !item.properties?.address, text: 'mdi-home-search-outline', label: lc('address'), tooltip: lc('get_address') },
-            { id: 'share', when: true, text: 'mdi-share-variant', tooltip: lc('share') }
-        ]
-            // a journey drawn from the itineraries sheet is not a place: only its own action (back to the sheet) applies
-            .filter((action) => action.when && !item?.properties?.itinerary)
-            .concat(featureItemActions(item) as any),
+        [...builtInActions.filter((action) => action.when && !featureClaimsItem(item)), ...featureActions.map((action) => ({ ...action, when: true }))],
         // the order is in itemActionOrder.ts
-        itemKind(item)
+        itemLeadingActions(item)
     );
     // what the filled button does for this item: save while editing, start a route, add a new place, else edit
-    $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : item?.properties?.itinerary ? 'itineraries' : null;
+    $: mainActionId = itemIsEditingItem ? 'save' : itemCanBeNavigated ? 'navigate' : itemCanBeAdded ? 'save' : itemCanBeEdited ? 'edit' : (featureActions.find((action) => action.main)?.id ?? null);
     $: labelScale = Math.min($fontScaleMaxed, 1.3);
     $: ({ labelled: labelledActions, overflow: overflowActions, round: roundActions } = layoutActions(itemActions, mainActionId, sheetWidth, labelScale));
     $: roundButtons = overflowActions.length ? [...roundActions, { id: OVERFLOW_ID, text: 'mdi-dots-horizontal', tooltip: lc('more') }] : roundActions;
@@ -1066,7 +1074,8 @@
                 margin={`0 ${CARD_MARGIN}`}
                 openAnimationDuration={100}
                 rightSwipeDistance={0}
-                translationFunction={drawerTranslationFunction}>
+                translationFunction={drawerTranslationFunction}
+            >
                 <gridlayout prop:mainContent backgroundColor={colorPanel} borderRadius={CARD_RADIUS} rows={`${itemIsRoute ? ROUTE_TITLE_HEIGHT : INFOVIEW_HEIGHT},*`}>
                     <BottomSheetInfoView
                         bind:this={infoView}
@@ -1078,7 +1087,8 @@
                         marginLeft={62}
                         propsBottom={30}
                         showStats={!itemIsRoute}
-                        on:fetch={fetchHours}>
+                        on:fetch={fetchHours}
+                    >
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
                     {#if itemIsRoute}
@@ -1094,7 +1104,8 @@
                     text="mdi-trash-can"
                     tooltip={lc('delete')}
                     width={60}
-                    on:tap={deleteItem} />
+                    on:tap={deleteItem}
+                />
 
                 <stacklayout id="rightactions" prop:rightDrawer orientation="horizontal">
                     <IconButton
@@ -1105,7 +1116,8 @@
                         shape="none"
                         text="mdi-crosshairs-gps"
                         width={60}
-                        on:tap={zoomToItem} />
+                        on:tap={zoomToItem}
+                    />
                     <IconButton
                         id="lock"
                         backgroundColor={isEInk ? 'white' : new Color(colorPrimary).setAlpha(180).hex}
@@ -1114,7 +1126,8 @@
                         shape="none"
                         text={$itemLock ? 'mdi-lock-off-outline' : 'mdi-lock-outline'}
                         width={60}
-                        on:tap={() => ($itemLock = !$itemLock)} />
+                        on:tap={() => ($itemLock = !$itemLock)}
+                    />
                 </stacklayout>
             </swipemenu>
 
@@ -1135,7 +1148,8 @@
                             rippleColor={filled ? colorOnPrimary : colorPrimary}
                             verticalAlignment="middle"
                             on:tap={(event) => runAction(action, event)}
-                            on:longPress={(event) => longPressAction(action, event)}>
+                            on:longPress={(event) => longPressAction(action, event)}
+                        >
                             <stacklayout horizontalAlignment="center" orientation="horizontal" padding={`0 ${ACTION_LABEL_PADDING}`} verticalAlignment="middle">
                                 <label color={contentColor} fontFamily={$fonts.mdi} fontSize={18} text={action.text} verticalAlignment="middle" />
                                 <label color={contentColor} fontSize={14 * labelScale} fontWeight="500" maxLines={1} paddingLeft={6} text={actionLabel(action)} verticalAlignment="middle" />
@@ -1154,14 +1168,16 @@
                             verticalAlignment="middle"
                             width={ACTION_BUTTON_HEIGHT}
                             on:tap={(event) => runAction(action, event)}
-                            on:longPress={(event) => longPressAction(action, event)}>
+                            on:longPress={(event) => longPressAction(action, event)}
+                        >
                             <label
                                 color={isEInk ? colorOnSurface : colorOnSurfaceVariant}
                                 fontFamily={$fonts.mdi}
                                 fontSize={20}
                                 horizontalAlignment="center"
                                 text={action.text}
-                                verticalAlignment="middle" />
+                                verticalAlignment="middle"
+                            />
                         </gridlayout>
                     {/each}
                 </stacklayout>
@@ -1179,7 +1195,8 @@
                         margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
                         row={2 + index}
                         visibility={layout.height > 0 ? 'visible' : 'collapse'}
-                        on:highlight={onChartHighlight} />
+                        on:highlight={onChartHighlight}
+                    />
                 {/if}
             {/each}
 
