@@ -20,12 +20,13 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
     if (route.totalTime > 0) {
         tiles.push({ key: 'time', icon: 'mdi-timer-outline', label: lc('duration'), value: convertDurationSeconds(route.totalTime) });
     }
-    if (ascent > 0) {
+    // a pure descent still gets its elevation tile
+    if (ascent > 0 || descent > 0) {
         tiles.push({
             key: 'ascent',
             icon: 'mdi-arrow-top-right',
             label: lc('ascent'),
-            value: convertElevation(ascent),
+            value: convertElevation(ascent > 0 ? ascent : 0),
             sub: descent > 0 ? { icon: 'mdi-arrow-bottom-right', text: convertElevation(descent) } : undefined
         });
     }

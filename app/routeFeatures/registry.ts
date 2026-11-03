@@ -21,9 +21,8 @@ export interface RouteTile {
 }
 
 /**
- * A card of the item sheet. Its component gets the sheet's layout props and `item`. It may export
- * `highlightPathIndex(params, highlight?, sendEvent?)` and `reload()` for the sheet to drive, and dispatch
- * `highlight` with `{ lat, lon, highlight }` when a point of the route is picked in it.
+ * A card of the item sheet, given its layout props and `item`. It may export `highlightPathIndex` and `reload`
+ * for the sheet to call, and dispatch `highlight` ({ lat, lon, highlight }) when a route point is picked.
  */
 export interface RouteSheetCard {
     /** Loaded the first time the card has a height, so its code stays out of the startup graph. */
@@ -42,10 +41,7 @@ export interface RouteSheetCardLayout {
     height: number;
 }
 
-/**
- * A block of the navigation sheet. Its component gets the card props the view passes: `item`, the
- * background and border for a `details` card, `height` and `marginRight` for an `ahead` widget.
- */
+/** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
 export interface RouteNavSection {
     id: string;
     /** `ahead`: a widget of the one row above the actions; `details`: a card of its own under them. */
@@ -98,10 +94,7 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
-    /**
-     * GeoJSON features drawn with the route: the selected one, or the one being navigated. Rebuilt when the item,
-     * the route or a feature switch changes, never per GPS fix, so keep it to what the route itself needs.
-     */
+    /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
     mapFeatures?: (ctx: RouteCtx & { navigating: boolean }) => Feature[];
 }
 
@@ -124,7 +117,7 @@ export function registerRouteFeature(feature: RouteFeature) {
 export const allRouteFeatures: Readable<RouteFeature[]> = registered;
 
 /** The registered features whose user switch is on. */
-export const routeFeatures: Readable<RouteFeature[]> = derived(
+export const routeFeatures: Readable<RouteFeature[]> = derived<typeof registered, RouteFeature[]>(
     registered,
     (features, set) => {
         const on = features.map(() => true);
@@ -138,7 +131,7 @@ export const routeFeatures: Readable<RouteFeature[]> = derived(
         emit();
         return () => unsubscribers.forEach((unsubscribe) => unsubscribe?.());
     },
-    [] as RouteFeature[]
+    []
 );
 
 /** Ticks whenever an enabled feature says its contributions changed. */

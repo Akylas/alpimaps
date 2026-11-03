@@ -32,6 +32,7 @@
 
     $: profile = $navigationItem?.profile;
     // the same sections the map builds the sheet steps from, so a step ends where its section does
+    // the `>= 0` only makes the statement depend on the features' changes
     $: contributed = $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : [];
     $: sections = navigationSections($navigationScale, contributed);
     $: aheadSections = contributed.filter((layout) => layout.section.slot === 'ahead');

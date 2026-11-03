@@ -168,6 +168,7 @@
     let routeSimulatorPanelComponent = null;
     let navigationStepIndex = 0;
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed
+    // the `>= 0` only makes the statement depend on the features' changes
     $: navigationSteps = navigationSheetSteps(navigationSections($navigationScale, $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : []));
 
     async function loadNavigationViews() {

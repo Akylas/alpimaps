@@ -66,7 +66,7 @@
         SETTINGS_ELEVATION_PROFILE_ASCENTS_DIP_TOLERANCE,
         SETTINGS_ELEVATION_PROFILE_ASCENTS_MIN_GAIN,
         SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE,
-        SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION,
+        SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION
     } from '~/utils/constants';
     import dayjs from 'dayjs';
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';

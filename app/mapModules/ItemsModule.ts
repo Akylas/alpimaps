@@ -206,6 +206,7 @@ export default class ItemsModule extends MapModule {
         this.initDb();
         // a feature switched on or off changes what is drawn with the selected route
         let first = true;
+        this.unsubscribeRouteFeatures?.();
         this.unsubscribeRouteFeatures = routeFeatures.subscribe(() => {
             const selected = mapContext.getSelectedItem();
             if (!first && selected?.route) {
