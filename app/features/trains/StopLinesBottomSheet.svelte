@@ -39,10 +39,11 @@
     let noNetworkAndNoData = false;
     let refreshTimer: ReturnType<typeof setInterval>;
 
-    async function refresh() {
+    // `fresh`: the refresh button asks again, the timer takes what was fetched less than a minute ago
+    async function refresh(fresh = false) {
         try {
             loading = true;
-            const lines = await getStopLines(position);
+            const lines = await getStopLines(position, { fresh });
             rows = lines.flatMap((line) => line.directions.map((direction, directionIndex) => ({ line, direction, directionIndex })));
             noNetworkAndNoData = false;
         } catch (error) {
@@ -61,7 +62,7 @@
     });
     onMount(() => {
         refresh();
-        refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+        refreshTimer = setInterval(() => refresh(), REFRESH_INTERVAL);
     });
     onDestroy(() => clearInterval(refreshTimer));
 
@@ -106,7 +107,7 @@
 
 <gesturerootview class="bottomsheet" rows="auto,*,auto">
     <PanelHeader icon="mdi-bus" title={name}>
-        <IconButton text="mdi-refresh" on:tap={refresh} />
+        <IconButton text="mdi-refresh" on:tap={() => refresh(true)} />
     </PanelHeader>
     <collectionview id="scrollView" itemIdGenerator={(item, index) => index} items={rows} row={1} rowHeight={72}>
         <Template let:item>

@@ -73,10 +73,11 @@
         }
     }
 
-    async function refresh() {
+    // `fresh`: the refresh button asks again, whatever is cached
+    async function refresh(fresh = false) {
         try {
             loading = true;
-            itineraries = (await transitousService.plan({ from: from.position, to: to.position, time: time ?? undefined, arriveBy })).itineraries;
+            itineraries = (await transitousService.plan({ fresh, from: from.position, to: to.position, time: time ?? undefined, arriveBy })).itineraries;
             selected = null;
             remember();
             if (itineraries.length > 0) {
@@ -274,7 +275,7 @@
             text={selected && isFollowed(selected, $followedIds) ? 'mdi-bell-ring' : 'mdi-bell-plus-outline'}
             on:tap={() => toggleFollow(selected)} />
         <IconButton isVisible={!!selected} text="mdi-map-marker-path" on:tap={showSelectedOnMap} />
-        <IconButton text="mdi-refresh" on:tap={refresh} />
+        <IconButton text="mdi-refresh" on:tap={() => refresh(true)} />
     </PanelHeader>
     {#if selected}
         <scrollview id="scrollView" row={1}>

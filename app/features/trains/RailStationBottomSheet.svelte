@@ -39,11 +39,12 @@
     // the widget follows an arrival, so departures have nothing to follow
     $: showBell = arrivals && trainFollowSupported;
 
-    async function refresh() {
+    // `fresh`: the refresh button asks again, the timer takes what was fetched less than 30 seconds ago
+    async function refresh(fresh = false) {
         try {
             loading = true;
             stops ??= await transitousService.findRailStops(position);
-            times = stops.length ? await transitousService.getStationTimes(stops, { arrivals }) : [];
+            times = stops.length ? await transitousService.getStationTimes(stops, { arrivals, fresh }) : [];
             noNetworkAndNoData = false;
         } catch (error) {
             if (error instanceof NoNetworkError && !times) {
@@ -79,7 +80,7 @@
     });
     onMount(() => {
         refresh();
-        refreshTimer = setInterval(refresh, REFRESH_INTERVAL);
+        refreshTimer = setInterval(() => refresh(), REFRESH_INTERVAL);
     });
     onDestroy(() => clearInterval(refreshTimer));
 
@@ -103,7 +104,7 @@
 
 <gesturerootview class="bottomsheet" rows="auto,auto,*,auto">
     <PanelHeader icon="mdi-train" title={name}>
-        <IconButton text="mdi-refresh" on:tap={refresh} />
+        <IconButton text="mdi-refresh" on:tap={() => refresh(true)} />
     </PanelHeader>
     <stacklayout marginBottom={6} orientation="horizontal" paddingLeft={16} row={1}>
         <Pill icon="mdi-arrow-top-right" label={lc('departures')} selected={!arrivals} on:tap={() => selectBoard(false)} />

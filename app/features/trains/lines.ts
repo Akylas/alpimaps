@@ -98,8 +98,8 @@ export function groupStopLines(stopTimes: TransitousStopTime[]): StopLine[] {
 }
 
 /** The lines leaving the stops around `position`, with their next departures: one request. */
-export async function getStopLines(position: MapPos) {
-    return groupStopLines(await transitousService.getStopTimesAround(position, { radius: STOP_RADIUS, count: STOP_TIMES_COUNT }));
+export async function getStopLines(position: MapPos, { fresh = false } = {}) {
+    return groupStopLines(await transitousService.getStopTimesAround(position, { fresh, radius: STOP_RADIUS, count: STOP_TIMES_COUNT }));
 }
 
 export interface TimesheetTrip {
@@ -119,6 +119,8 @@ export interface TimesheetStop {
     name: string;
     lat: number;
     lon: number;
+    /** the other kinds of transport that serve the stop */
+    modes: string[];
     /** one per trip, null where it does not stop */
     times: (TimesheetCell | null)[];
 }
@@ -175,6 +177,7 @@ export async function getLineTimesheet(line: StopLine, directionId: number, time
         name: place.name,
         lat: place.lat,
         lon: place.lon,
+        modes: place.modes ?? [],
         times: tripPlaces.map((places) => {
             const found = places.find((candidate) => candidate.stopId === place.stopId);
             return found ? placeCell(found) : null;
