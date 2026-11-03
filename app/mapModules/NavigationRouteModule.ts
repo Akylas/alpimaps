@@ -5,6 +5,7 @@ import type { GeoLocation } from '~/handlers/GeoHandler';
 import { getMetersPerPixel } from '~/helpers/geolib';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { registerMapModule } from '~/mapModules/registry';
+import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
 import { type NavigationDetour, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationProgress, navigationRejoinTarget } from '~/stores/navigationStore';
@@ -100,6 +101,8 @@ export default class NavigationRouteModule extends MapModule {
                 this.rejoinTarget = target;
                 this.drawHint();
             }),
+            // a feature switched on or off changes what is drawn with the route
+            routeFeatures.subscribe(() => this.draw()),
             navigationLocation.subscribe((location) => {
                 this.location = location;
                 // only matters while there is a target: the connector starts at the user
@@ -300,6 +303,7 @@ export default class NavigationRouteModule extends MapModule {
             if (this.detour) {
                 features.push(...detourFeatures(this.detour));
             }
+            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: true }));
         }
         if (!features.length && !this.layer) {
             // nothing to draw and nothing drawn: do not create a layer just to empty it

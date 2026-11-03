@@ -1,3 +1,4 @@
+import type { Feature } from 'geojson';
 import type { ComponentType } from 'svelte';
 import { type Readable, type Writable, derived, writable } from 'svelte/store';
 import type { IItem } from '~/models/Item';
@@ -82,6 +83,11 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
+    /**
+     * GeoJSON features drawn with the route: the selected one, or the one being navigated. Rebuilt when the item,
+     * the route or a feature switch changes, never per GPS fix, so keep it to what the route itself needs.
+     */
+    mapFeatures?: (ctx: RouteCtx & { navigating: boolean }) => Feature[];
 }
 
 const registered = writable<RouteFeature[]>([]);
@@ -168,4 +174,9 @@ export function lazyComponents() {
             }
         }
     };
+}
+
+/** What the enabled features add to the route's layer. */
+export function routeMapFeatures(features: RouteFeature[], ctx: RouteCtx & { navigating: boolean }): Feature[] {
+    return features.flatMap((feature) => feature.mapFeatures?.(ctx) ?? []);
 }

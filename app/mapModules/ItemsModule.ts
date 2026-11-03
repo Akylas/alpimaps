@@ -11,6 +11,7 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
+import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -203,7 +204,17 @@ export default class ItemsModule extends MapModule {
         //     mapContext.addLayer(this.localVectorLayer, 'items');
         // }
         this.initDb();
+        // a feature switched on or off changes what is drawn with the selected route
+        let first = true;
+        this.unsubscribeRouteFeatures = routeFeatures.subscribe(() => {
+            const selected = mapContext.getSelectedItem();
+            if (!first && selected?.route) {
+                this.onItemSelected(selected);
+            }
+            first = false;
+        });
     }
+    private unsubscribeRouteFeatures: () => void;
     onDbInitListeners = [];
     onDbInit(callback) {
         if (this.dbInitialized) {
@@ -214,6 +225,8 @@ export default class ItemsModule extends MapModule {
     }
     onMapDestroyed() {
         super.onMapDestroyed();
+        this.unsubscribeRouteFeatures?.();
+        this.unsubscribeRouteFeatures = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {
@@ -603,6 +616,7 @@ export default class ItemsModule extends MapModule {
                     });
                 });
             }
+            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setGeoJSON(2, data);
