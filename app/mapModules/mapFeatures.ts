@@ -1,7 +1,9 @@
 import type { ComponentType } from 'svelte';
 import { type Readable, derived, readable } from 'svelte/store';
 import type { IItem } from '~/models/Item';
-import type { MapPos } from '~/utils/geo';
+import type { GeoResult } from '~/services/PackageService';
+import type { MapBounds, MapPos } from '~/utils/geo';
+import type { SearchRankMode } from '~/utils/searchRank';
 
 /** Matches what `ButtonBar` consumes. */
 export interface MapSideButton {
@@ -75,6 +77,23 @@ export interface DirectionsMode {
     clear?: () => void;
 }
 
+/** What a search asks its sources, the same for all of them. */
+export interface SearchSourceOptions {
+    query: string;
+    language?: string;
+    location?: MapPos;
+    locationRadius?: number;
+    bounds?: MapBounds;
+}
+
+/** A query the search runs on top of its own, its results are ranked and listed with the others. */
+export interface SearchSource {
+    id: string;
+    /** Only for this kind of search, see `SearchRankMode`. Every search when missing. */
+    mode?: SearchRankMode;
+    search: (options: SearchSourceOptions) => Promise<GeoResult[]>;
+}
+
 /** `sideButtons`/`menuItems` are stores: their content depends on state that changes long after startup. */
 export interface MapFeature {
     id: string;
@@ -91,6 +110,7 @@ export interface MapFeature {
     /** A tap on a map feature that becomes this item opens the sheet with its buttons. */
     showsItemButtons?: (item: IItem) => boolean;
     directionsModes?: DirectionsMode[];
+    searchSources?: SearchSource[];
 }
 
 const features: MapFeature[] = [];
@@ -152,6 +172,10 @@ export function featureShowsItemButtons(item: IItem): boolean {
 
 export function featureDirectionsModes(): DirectionsMode[] {
     return features.flatMap((feature) => feature.directionsModes ?? []).sort((first, second) => (first.order ?? 0) - (second.order ?? 0));
+}
+
+export function featureSearchSources(mode: SearchRankMode): SearchSource[] {
+    return features.flatMap((feature) => feature.searchSources ?? []).filter((source) => !source.mode || source.mode === mode);
 }
 
 export function featureMenuItems(menu: 'main' | 'overflow' = 'main'): Readable<MapMenuItem[]> {

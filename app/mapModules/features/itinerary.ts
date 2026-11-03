@@ -6,15 +6,17 @@ import { get, writable } from 'svelte/store';
 import { showError } from '@shared/utils/showError';
 import { lc } from '~/helpers/locale';
 import { getMapContext } from '~/mapModules/MapModule';
+import { photonSearch } from '~/helpers/photonSearch';
 import { type DirectionsPlace, registerMapFeature } from '~/mapModules/mapFeatures';
 import type { IItem } from '~/models/Item';
-import { decompress } from '~/services/NetworkService';
+import { decompress, networkService } from '~/services/NetworkService';
 import type { TransitousItinerary, TransitousLeg } from '~/services/TransitousService';
 import { type TransitHistoryEntry, transitHistory } from '~/stores/historyStore';
 import type { MapPos } from '~/utils/geo';
 import { geoJSONBounds } from '~/utils/geo';
 import { TRANSIT_SHEET_DETENTS, TRANSIT_SHEET_PEEK_HEIGHT } from '~/utils/ui/transitSheet';
 
+const PHOTON_STATION_TAGS = ['railway:station', 'railway:halt'];
 const WALK_COLOR = '#808080';
 const DEFAULT_COLOR = '#3F51B5';
 /**
@@ -245,6 +247,14 @@ registerMapFeature({
     claimsItem: (item) => !!item?.properties?.itinerary,
     leadingActions: (item) => (isItinerary(item) ? ['itineraries'] : []),
     itemActions: (item) => (isItinerary(item) ? [{ id: 'itineraries', text: 'mdi-transit-connection-variant', tooltip: lc('itineraries'), order: 5, main: true, onTap: reopenItineraries }] : []),
+    searchSources: [
+        {
+            id: 'stations',
+            mode: 'journey',
+            // far stations are not in a general query's 40 results: ask for them alone
+            search: async (options) => (networkService.connected && ApplicationSettings.getBoolean('searchUsingPhoton', true) ? photonSearch(options, PHOTON_STATION_TAGS) : [])
+        }
+    ],
     directionsModes: [
         {
             id: 'journey',
