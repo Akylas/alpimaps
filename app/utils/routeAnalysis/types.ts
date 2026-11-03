@@ -26,7 +26,7 @@ export interface Pace {
     /** 0.8 .. 1.3, above 1 is slower */
     multiplier: number;
     stopsMinPerHour: number;
-    model: 'proportional' | 'gradeAware' | 'recorded';
+    model: 'proportional' | 'valhalla' | 'gradeAware' | 'recorded';
 }
 
 export interface AnalysisInputs {
