@@ -1357,5 +1357,20 @@
     "cursor_route_left": "to the finish",
     "climbs_steep_sections": "steep sections",
     "climbs_steep": "steep %s",
-    "climbs_steep_descent": "steep descent %s"
+    "climbs_steep_descent": "steep descent %s",
+    "climbs_settings_preset": "steepness preset",
+    "climbs_settings_preset_desc": "what counts as steep. The route's activity picks one unless you do",
+    "climbs_preset_auto": "from the route",
+    "climbs_preset_road": "road",
+    "climbs_preset_gravel": "gravel",
+    "climbs_preset_mtb": "mountain bike",
+    "climbs_preset_hiking": "hiking",
+    "climbs_categories": "climb categories",
+    "climbs_categories_desc": "rank climbs from cat 4 to HC, by their length and grade",
+    "climbs_steep_up": "steep ascent from",
+    "climbs_very_steep_up": "very steep ascent from",
+    "climbs_steep_down": "steep descent from",
+    "climbs_very_steep_down": "very steep descent from",
+    "climbs_threshold_preset": "preset",
+    "climbs_min_length": "shortest steep section"
 }

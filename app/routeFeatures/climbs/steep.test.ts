@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { Activity } from '~/utils/routeAnalysis/types';
-import { type Climb, DEFAULT_CLIMB_OPTIONS, type ProfilePoint, STEEP_PRESETS, type SteepPreset, bestClimb, climbCategory, findClimbs, findSteepSections, presetForActivity } from './steep';
+import {
+    type Climb,
+    DEFAULT_CLIMB_OPTIONS,
+    type ProfilePoint,
+    STEEP_PRESETS,
+    type SteepPreset,
+    bestClimb,
+    climbCategory,
+    findClimbs,
+    findSteepSections,
+    isSteepPreset,
+    presetForActivity,
+    resolveThresholds
+} from './steep';
 
 const STEP = 10;
 
@@ -163,5 +176,29 @@ describe('bestClimb', () => {
         expect(bestClimb([climb(200, 2), big, climb(250, 2)])).toBe(big);
         const bigUnranked = climb(80);
         expect(bestClimb([climb(50), bigUnranked])).toBe(bigUnranked);
+    });
+});
+
+describe('resolveThresholds', () => {
+    it('is the preset when nothing is set', () => {
+        expect(resolveThresholds('road', {})).toEqual(STEEP_PRESETS.road);
+        expect(resolveThresholds('mtb', { steepUp: 0, veryUp: 0, steepDown: 0, veryDown: 0 })).toEqual(STEEP_PRESETS.mtb);
+    });
+
+    it('takes the values that are set over the preset, one by one', () => {
+        expect(resolveThresholds('road', { steepUp: 10, veryDown: 18 })).toEqual({ ...STEEP_PRESETS.road, steepUp: 10, veryDown: 18 });
+    });
+
+    it('never lets very steep fall under steep', () => {
+        expect(resolveThresholds('road', { steepUp: 15 })).toMatchObject({ steepUp: 15, veryUp: 15 });
+        expect(resolveThresholds('road', { steepDown: 20 })).toMatchObject({ steepDown: 20, veryDown: 20 });
+    });
+});
+
+describe('isSteepPreset', () => {
+    it('knows the presets and nothing else', () => {
+        expect(isSteepPreset('mtb')).toBe(true);
+        expect(isSteepPreset('auto')).toBe(false);
+        expect(isSteepPreset('toString')).toBe(false);
     });
 });

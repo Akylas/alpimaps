@@ -170,7 +170,7 @@ export interface RouteNavSectionLayout {
 
 /** A row of a feature's settings, drawn by the settings screen. Backed by a store, which owns the persistence. */
 export interface RouteSettingRow {
-    type: 'sectionheader' | 'switch' | 'slider';
+    type: 'sectionheader' | 'switch' | 'slider' | 'segment';
     title: string;
     description?: string;
     store?: SettingsStore<any>;
@@ -178,6 +178,8 @@ export interface RouteSettingRow {
     max?: number;
     step?: number;
     format?: (value: number) => string;
+    /** The choices of a `segment`, the store holding the value of the one picked. */
+    options?: { value: string; title: string }[];
 }
 
 /**

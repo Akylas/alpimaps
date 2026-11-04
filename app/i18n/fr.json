@@ -1124,5 +1124,20 @@
     "cursor_route_left": "jusqu'à l'arrivée",
     "climbs_steep_sections": "passages raides",
     "climbs_steep": "raide %s",
-    "climbs_steep_descent": "descente raide %s"
+    "climbs_steep_descent": "descente raide %s",
+    "climbs_settings_preset": "profil de raideur",
+    "climbs_settings_preset_desc": "ce qui compte comme raide. L'activité de l'itinéraire en choisit un sauf si vous le faites",
+    "climbs_preset_auto": "selon l'itinéraire",
+    "climbs_preset_road": "route",
+    "climbs_preset_gravel": "gravel",
+    "climbs_preset_mtb": "VTT",
+    "climbs_preset_hiking": "randonnée",
+    "climbs_categories": "catégories de montées",
+    "climbs_categories_desc": "classe les montées de cat. 4 à HC, selon leur longueur et leur pente",
+    "climbs_steep_up": "montée raide à partir de",
+    "climbs_very_steep_up": "montée très raide à partir de",
+    "climbs_steep_down": "descente raide à partir de",
+    "climbs_very_steep_down": "descente très raide à partir de",
+    "climbs_threshold_preset": "profil",
+    "climbs_min_length": "plus courte section raide"
 }

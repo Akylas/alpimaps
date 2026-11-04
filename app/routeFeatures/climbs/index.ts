@@ -1,7 +1,19 @@
 import { showError } from '@shared/utils/showError';
+import { derived } from 'svelte/store';
 import { convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
+import {
+    climbsCategories,
+    climbsMinLength,
+    climbsPreset,
+    climbsSettingRows,
+    climbsSteepDown,
+    climbsSteepUp,
+    climbsVerySteepDown,
+    climbsVerySteepUp,
+    routeFeatureClimbs
+} from '~/routeFeatures/climbs/settings';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { type LensFact, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
@@ -61,4 +73,15 @@ const climbsLens: RouteLens = {
     slices: ({ item }) => readClimbs(item)?.slices ?? []
 };
 
-registerRouteFeature({ id: 'climbs', order: 12, lenses: [climbsLens], attention: ({ item }) => readClimbs(item)?.marks ?? [] });
+// what the climbs are read with: they are read again, and the card and the map with them
+const settingsChanged = derived([climbsPreset, climbsSteepUp, climbsVerySteepUp, climbsSteepDown, climbsVerySteepDown, climbsMinLength, climbsCategories], (values) => values.join());
+
+registerRouteFeature({
+    id: 'climbs',
+    order: 12,
+    setting: { title: () => lc('lens_climbs'), store: routeFeatureClimbs },
+    settings: climbsSettingRows,
+    changes: settingsChanged,
+    lenses: [climbsLens],
+    attention: ({ item }) => readClimbs(item)?.marks ?? []
+});

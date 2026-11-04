@@ -1,18 +1,9 @@
+import { get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
-import {
-    type Climb,
-    type ClimbCategory,
-    DEFAULT_STEEP_MIN_LENGTH,
-    STEEP_PRESETS,
-    type SteepPreset,
-    type SteepSection,
-    bestClimb,
-    findClimbs,
-    findSteepSections,
-    presetForActivity
-} from '~/routeFeatures/climbs/steep';
+import { climbsCategories, climbsMinLength, climbsPreset, climbsSteepDown, climbsSteepUp, climbsVerySteepDown, climbsVerySteepUp } from '~/routeFeatures/climbs/settings';
+import { type Climb, type ClimbCategory, type SteepSection, bestClimb, findClimbs, findSteepSections, isSteepPreset, presetForActivity, resolveThresholds } from '~/routeFeatures/climbs/steep';
 import type { AttentionMark, LensSection, LensSlice, ProfileBracket } from '~/routeFeatures/registry';
 import { gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
@@ -33,8 +24,8 @@ export function categoryLabel(category: ClimbCategory) {
     return category === 'hc' ? 'HC' : lc('climb_category', category);
 }
 
-// the profile is replaced, never edited, so it keys what was read off it
-const reads = new WeakMap<object, { preset: SteepPreset; read: ClimbsRead | null }>();
+// the profile is replaced, never edited, so it keys what was read off it, along with the settings it was read with
+const reads = new WeakMap<object, { key: string; read: ClimbsRead | null }>();
 
 /** The climbs and steep sections of the route, `null` when its profile has no grades. Derived on read, never stored. */
 export function readClimbs(item: IItem): ClimbsRead | null {
@@ -42,15 +33,27 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     if (!data?.length) {
         return null;
     }
-    const preset = presetForActivity(activityOf(item, item.analysis));
+    const chosen = get(climbsPreset);
+    const preset = isSteepPreset(chosen) ? chosen : presetForActivity(activityOf(item, item.analysis));
+    const thresholds = resolveThresholds(preset, {
+        steepUp: get(climbsSteepUp),
+        veryUp: get(climbsVerySteepUp),
+        steepDown: get(climbsSteepDown),
+        veryDown: get(climbsVerySteepDown)
+    });
+    const minLength = get(climbsMinLength);
+    const categories = get(climbsCategories);
+    const key = [thresholds.steepUp, thresholds.veryUp, thresholds.steepDown, thresholds.veryDown, minLength, categories].join();
     const cached = reads.get(data);
-    if (cached?.preset === preset) {
+    if (cached?.key === key) {
         return cached.read;
     }
     let read: ClimbsRead | null = null;
     if (data.some((point) => point.g !== undefined)) {
-        const climbs = findClimbs(data);
-        const steep = findSteepSections(data, { thresholds: STEEP_PRESETS[preset], minLength: DEFAULT_STEEP_MIN_LENGTH });
+        const found = findClimbs(data);
+        // a ranking switched off takes the plates with it
+        const climbs = categories ? found : found.map((climb) => ({ ...climb, category: undefined }));
+        const steep = findSteepSections(data, { thresholds, minLength });
         read = {
             climbs,
             steep,
@@ -76,6 +79,6 @@ export function readClimbs(item: IItem): ClimbsRead | null {
             })
         };
     }
-    reads.set(data, { preset, read });
+    reads.set(data, { key, read });
     return read;
 }

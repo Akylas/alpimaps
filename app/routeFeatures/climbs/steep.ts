@@ -75,6 +75,20 @@ export const STEEP_PRESETS: Record<SteepPreset, SteepThresholds> = {
     hiking: { steepUp: 15, veryUp: 25, steepDown: 20, veryDown: 30 }
 };
 
+export function isSteepPreset(value: string): value is SteepPreset {
+    return Object.prototype.hasOwnProperty.call(STEEP_PRESETS, value);
+}
+
+/** The preset's thresholds, with the values the user set over them: a value that is not above 0 is not set. */
+export function resolveThresholds(preset: SteepPreset, overrides: Partial<SteepThresholds>): SteepThresholds {
+    const base = STEEP_PRESETS[preset];
+    const pick = (key: keyof SteepThresholds) => (overrides[key] > 0 ? overrides[key] : base[key]);
+    const steepUp = pick('steepUp');
+    const steepDown = pick('steepDown');
+    // a very steep section is steeper than a steep one, whatever was set
+    return { steepUp, veryUp: Math.max(pick('veryUp'), steepUp), steepDown, veryDown: Math.max(pick('veryDown'), steepDown) };
+}
+
 export const DEFAULT_STEEP_MIN_LENGTH = 100;
 
 /** % a run may fall under the threshold that started it and still go on: larger absorbs the flanks of a wall */
