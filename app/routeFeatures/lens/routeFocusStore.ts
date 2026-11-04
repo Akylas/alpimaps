@@ -1,16 +1,35 @@
 /** What the user points at on the route: a cursor, a focused section. Pure: nothing here may import NativeScript. */
 import { writable } from 'svelte/store';
-import type { LensId } from '~/routeFeatures/registry';
+import type { IItem } from '~/models/Item';
+import type { LensId, LensSection } from '~/routeFeatures/registry';
+import { geometryKey } from '~/utils/routeAnalysis/geometryKey';
 
 export interface RouteFocus {
     itemKey: string;
     /** Scrubbing the profile, or the position on the route. `index` is into the profile data. */
     cursor?: { index: number; distance: number };
-    /** A section of the active lens, `i0`..`i1` being profile data indexes. */
-    section?: { lens: LensId; id: number; i0: number; i1: number };
+    /** A section of the lens, `i0`..`i1` being profile data indexes. */
+    section?: LensSection & { lens: LensId };
 }
 
 export const routeFocus = writable<RouteFocus | null>(null);
+
+// an unsaved route has no id: its shape tells it from another
+const shapeKeys = new WeakMap<object, string>();
+
+/** What `RouteFocus.itemKey` is for a route. */
+export function focusKeyOf(item: IItem): string {
+    if (item?.id !== undefined) {
+        return String(item.id);
+    }
+    if (!item?.geometry) {
+        return '';
+    }
+    if (!shapeKeys.has(item.geometry)) {
+        shapeKeys.set(item.geometry, geometryKey(item.geometry));
+    }
+    return shapeKeys.get(item.geometry);
+}
 
 type Cursor = RouteFocus['cursor'];
 type Section = RouteFocus['section'];

@@ -1,6 +1,6 @@
 import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
-import { type LensHeadline, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensFact, type LensHeadline, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
     const route = item?.route;
@@ -36,7 +36,14 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
 function overviewHeadline({ item }: RouteCtx): LensHeadline {
     const distance = item?.route?.totalDistance || (item?.properties?.distance ? item.properties.distance * 1000 : 0);
     const time = item?.route?.totalTime;
-    return { text: [distance > 0 && formatDistance(distance), time > 0 && convertDurationSeconds(time)].filter(Boolean).join(' · ') };
+    const facts: LensFact[] = [];
+    if (distance > 0) {
+        facts.push({ icon: 'mdi-arrow-left-right', text: formatDistance(distance) });
+    }
+    if (time > 0) {
+        facts.push({ icon: 'mdi-timer-outline', text: convertDurationSeconds(time) });
+    }
+    return { facts };
 }
 
 const overview: RouteLens = { id: 'overview', icon: 'mdi-routes', label: () => lc('lens_overview'), available: () => true, chip: () => ({}), headline: overviewHeadline };

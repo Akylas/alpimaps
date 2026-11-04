@@ -1,7 +1,7 @@
 <script lang="ts">
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
@@ -10,7 +10,6 @@
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
     import { LineDataSet, Mode } from '@nativescript-community/ui-chart/data/LineDataSet';
     import { Highlight } from '@nativescript-community/ui-chart/highlight/Highlight';
-    import type { Transformer } from '@nativescript-community/ui-chart/utils/Transformer';
     import { LimitLine } from '@nativescript-community/ui-chart/components/LimitLine';
     import { ApplicationSettings, Color, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
@@ -20,7 +19,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { ProfileBracket, ProfileFillStop } from '~/routeFeatures/registry';
+    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeColor } from '~/utils/grade';
     import { colors, fontScale, fonts } from '~/variables';
@@ -45,6 +44,8 @@
     interface $$Events {
         highlight: { lat: number; lon: number; highlight: Highlight<Entry> };
         /** the cursor's point and, when the sheet knows them, the figures to the end of the route. `null`: no cursor */
+        /** a tap on an attention mark: its index in `marks` */
+        mark: { index: number };
         cursor: {
             index: number;
             entry: { d: number; a: number; g?: number };
@@ -59,10 +60,6 @@
 
     const cursorPaint = new Paint();
     cursorPaint.setStrokeWidth(1.5);
-    const cursorTextPaint = new Paint();
-    cursorTextPaint.setTextSize(11);
-    cursorTextPaint.setFontWeight('bold');
-    cursorTextPaint.setTextAlign(Align.CENTER);
     const highlightPaint = new Paint();
     highlightPaint.setColor('#aaa');
     highlightPaint.setStrokeWidth(1);
@@ -97,39 +94,227 @@
         lines.forEach((line, index) => c.drawText(line, left, top - metrics.ascent + index * lineHeight, paint));
         paint.setTextAlign(align);
     }
-    // a bracket is a line with an end tick on each side, its label on a plate over the middle
-    const bracketPaint = new Paint();
-    bracketPaint.setStyle(Style.STROKE);
-    bracketPaint.setStrokeWidth(1.5);
-    const bracketTextPaint = new Paint();
-    bracketTextPaint.setFontWeight('bold');
-    bracketTextPaint.setTextAlign(Align.LEFT);
-    const BRACKET_TOP = 4;
-    const BRACKET_HEIGHT = 8;
-    /** of the elevation range, kept free above the curve for the brackets */
-    const BRACKET_HEADROOM = 0.2;
-    function drawBrackets(c: Canvas, trans: Transformer, left: number, right: number, top: number) {
-        const color = isEInk ? colorOnSurface : colorPrimary;
-        bracketPaint.color = color;
-        bracketTextPaint.color = color;
-        bracketTextPaint.setTextSize(9 * $fontScale);
-        const y = top + BRACKET_TOP + BRACKET_HEIGHT / 2;
-        for (const { from, label, to } of brackets) {
-            const start = Math.max(left, trans.getPixelForValues(from, 0).x);
-            const end = Math.min(right, trans.getPixelForValues(to, 0).x);
+    // what the lens lays over the profile: climb brackets over the curve, attention marks in a band under the plot
+    const overlayPaint = new Paint();
+    overlayPaint.setStyle(Style.STROKE);
+    overlayPaint.setStrokeWidth(1.5);
+    const overlayFillPaint = new Paint();
+    overlayFillPaint.setStyle(Style.FILL);
+    const overlayTextPaint = new Paint();
+    overlayTextPaint.setFontWeight('bold');
+    overlayTextPaint.setTextAlign(Align.LEFT);
+    /** how far over the summit a bracket stands, and how tall its ends are */
+    const BRACKET_LIFT = 8;
+    const BRACKET_END = 5;
+    const BRACKET_PLATE_GAP = 3;
+    const PLATE_PADDING = 4;
+    // the marks lie in the room the axis labels leave under the plot
+    const MARK_GAP = 1;
+    const MARK_HEIGHT = 5;
+    const MARK_MIN_WIDTH = 4;
+    /** the room over the plot for the plate of the highest bracket */
+    const BRACKET_ROOM = 24;
+    /** of the plot's height, the bottom part of it, and what is under it, a tap counts as on the marks */
+    const MARK_HIT_HEIGHT = 0.1;
+    const MARK_COLORS: Record<AttentionKind, string> = { steep: '#9E1B18' };
+    /**
+     * A limit line that is none: the axis draws its limit lines last, over the data, the plates and the axis, so
+     * this is the way to the top layer. It is added after the plates.
+     */
+    class OverlayLimitLine extends LimitLine {
+        constructor(limit: number) {
+            super(limit, '');
+        }
+    }
+    function drawOverlay(c: Canvas) {
+        const chartView = chart?.nativeView;
+        if (!chartView || mini) {
+            return;
+        }
+        const { contentBottom, contentLeft, contentRight, contentTop } = chartView.viewPortHandler;
+        const { max, min } = chartView.xAxisRenderer.getCurrentMinMax();
+        const { axisMaximum, axisMinimum } = chartView.leftAxis;
+        if (!(max > min) || !(axisMaximum > axisMinimum)) {
+            return;
+        }
+        const pixelX = (distance: number) => contentLeft + ((distance - min) / (max - min)) * (contentRight - contentLeft);
+        const pixelY = (elevation: number) => contentBottom - ((elevation - axisMinimum) / (axisMaximum - axisMinimum)) * (contentBottom - contentTop);
+        const ink = isEInk ? '#000000' : colorOnSurface;
+        overlayPaint.color = ink;
+        overlayTextPaint.color = isEInk ? '#ffffff' : colorBackground;
+        overlayTextPaint.setTextSize(9 * $fontScale);
+        const metrics = overlayTextPaint.getFontMetrics();
+        const textHeight = metrics.descent - metrics.ascent;
+        for (const { from, label, to, top } of brackets) {
+            const start = Math.max(contentLeft, pixelX(from));
+            const end = Math.min(contentRight, pixelX(to));
             if (end <= start) {
                 continue;
             }
-            c.drawLine(start, y, end, y, bracketPaint);
-            c.drawLine(start, y - BRACKET_HEIGHT / 2, start, y + BRACKET_HEIGHT / 2, bracketPaint);
-            c.drawLine(end, y - BRACKET_HEIGHT / 2, end, y + BRACKET_HEIGHT / 2, bracketPaint);
+            const y = pixelY(top) - BRACKET_LIFT;
+            c.drawLine(start, y, end, y, overlayPaint);
+            c.drawLine(start, y, start, y + BRACKET_END, overlayPaint);
+            c.drawLine(end, y, end, y + BRACKET_END, overlayPaint);
             if (label) {
-                const metrics = bracketTextPaint.getFontMetrics();
-                const width = bracketTextPaint.measureText(label);
-                drawPlatedLabel(c, [label], (start + end - width) / 2, y - (metrics.descent - metrics.ascent) / 2, bracketTextPaint, false);
+                // over the bracket, never on it: its width stays readable, a short climb at the edge keeps its label whole
+                const width = overlayTextPaint.measureText(label) + PLATE_PADDING * 2;
+                const left = Math.min(Math.max((start + end - width) / 2, contentLeft), contentRight - width);
+                const bottom = y - BRACKET_PLATE_GAP;
+                overlayFillPaint.color = ink;
+                c.drawRoundRect(left, bottom - textHeight - 2, left + width, bottom, 4, 4, overlayFillPaint);
+                c.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
+        for (const { from, kind, to } of marks) {
+            const start = Math.max(contentLeft, pixelX(from));
+            const end = Math.min(contentRight, pixelX(to));
+            if (end < contentLeft || start > contentRight) {
+                continue;
+            }
+            overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
+            const top = contentBottom + MARK_GAP;
+            c.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
+        }
+        if (popover) {
+            drawPopover(c);
+        }
     }
+    /** The attention mark a tap on the bottom edge of the plot, or under it, is on, -1 for none. */
+    function markAt(highlight: Highlight<Entry>) {
+        const chartView = chart?.nativeView;
+        if (!marks.length || !chartView || highlight.yTouchPx === undefined) {
+            return -1;
+        }
+        const { contentBottom, contentTop } = chartView.viewPortHandler;
+        if (highlight.yTouchPx < contentBottom - (contentBottom - contentTop) * MARK_HIT_HEIGHT) {
+            return -1;
+        }
+        return marks.findIndex(({ from, to }) => highlight.x >= from && highlight.x <= to);
+    }
+
+    // the cursor's card, in the manner of a weather chart's, laid out once when the cursor moves. Blocks apart by a
+    // hairline: what is here, what is left of the ascent it is on, what is left of the route
+    const POPOVER_WIDTH = 176;
+    const POPOVER_PADDING = 7;
+    const POPOVER_BLOCK_GAP = 5;
+    const POPOVER_GAP = 10;
+    const popoverPaint = new Paint();
+    const popoverBackPaint = new Paint();
+    popoverBackPaint.setStyle(Style.FILL);
+    const popoverBorderPaint = new Paint();
+    popoverBorderPaint.setStyle(Style.STROKE);
+    popoverBorderPaint.setStrokeWidth(1);
+    // the hairline between the blocks stays well under the card's own border
+    const popoverLinePaint = new Paint();
+    popoverLinePaint.setStyle(Style.STROKE);
+    popoverLinePaint.setStrokeWidth(0.5);
+    let popover: StaticLayout[] = null;
+    /** where the last draw put the cursor, which the card is beside */
+    let cursorX = 0;
+    let popoverRect: { left: number; top: number; right: number; bottom: number } = null;
+    interface PopoverSpan {
+        text: string;
+        fontFamily?: string;
+        fontSize?: number;
+        fontWeight?: string;
+        color?: string;
+    }
+    /** A row of figures side by side, an icon in front of each. */
+    function figuresRow(figures: { icon: string; color?: string; text: string }[], accent: string): PopoverSpan[] {
+        return figures.flatMap(({ color, icon, text }, position) => [
+            { text: position ? '     ' : '', fontSize: 11 },
+            { text: icon, fontFamily: $fonts.mdi, fontSize: 12, color: color ?? accent },
+            { text: '  ' + text, fontSize: 11, fontWeight: 'bold', color: colorOnSurface }
+        ]);
+    }
+    function buildPopover(
+        index: number,
+        entry: { d: number; a: number; g?: number; dp?: number; dm?: number },
+        params: { remainingDistance: number; remainingTime: number; dplus?: number; dmin?: number }
+    ) {
+        const accent = isEInk ? colorOnSurface : colorPrimary;
+        const caption = (text: string): PopoverSpan[] => [{ text: text + '\n', fontSize: 9, color: colorOnSurfaceVariant }];
+        const blocks: PopoverSpan[][] = [];
+        // the point: where it is, and what the lens says of it
+        const lensNote = note?.(index);
+        blocks.push([{ text: formatDistance(entry.d), fontSize: 13, fontWeight: 'bold', color: colorOnSurface }, ...(lensNote ? [{ text: '\n' + lensNote, fontSize: 10, color: accent }] : [])]);
+        // what the ground is like right here
+        const grade = entry.g || 0;
+        blocks.push(
+            figuresRow(
+                [
+                    { icon: 'mdi-triangle-outline', text: convertElevation(entry.a || 0) },
+                    { icon: 'mdi-angle-acute', color: gradeColor(grade), text: grade.toFixed(1) + ' %' }
+                ],
+                accent
+            )
+        );
+        // what is left of the ascent the point is on, up to its top
+        const ascent = item.profile?.ascents?.find((candidate) => index >= candidate.startIndex && index <= candidate.highestPointIndex);
+        const summit = ascent && item.profile.data[ascent.highestPointIndex];
+        if (summit && summit.d > entry.d) {
+            blocks.push([
+                ...caption(lc('cursor_ascent_left')),
+                ...figuresRow(
+                    [
+                        { icon: 'mdi-arrow-top-right', text: convertElevation(ascent.highestElevation - (entry.a || 0)) },
+                        { icon: 'mdi-arrow-expand-right', text: formatDistance(summit.d - entry.d) }
+                    ],
+                    accent
+                )
+            ]);
+        }
+        // what is left of the whole route
+        const total: { icon: string; text: string }[][] = [];
+        if (!isNaN(params.remainingDistance)) {
+            total.push([{ icon: 'mdi-flag-checkered', text: formatDistance(params.remainingDistance) + (!isNaN(params.remainingTime) ? ' · ' + convertDurationSeconds(params.remainingTime) : '') }]);
+        }
+        const climbed: { icon: string; text: string }[] = [];
+        if (!isNaN(entry.dp) && params.dplus - entry.dp > 0) {
+            climbed.push({ icon: 'mdi-arrow-top-right', text: convertElevation(params.dplus - entry.dp) });
+        }
+        if (!isNaN(entry.dm) && Math.abs(params.dmin - entry.dm) > 0) {
+            climbed.push({ icon: 'mdi-arrow-bottom-right', text: convertElevation(-(params.dmin - entry.dm)) });
+        }
+        if (climbed.length) {
+            total.push(climbed);
+        }
+        if (total.length) {
+            blocks.push([...caption(lc('cursor_route_left')), ...total.flatMap((row, position) => [...(position ? [{ text: '\n', fontSize: 11 }] : []), ...figuresRow(row, accent)])]);
+        }
+        popoverPaint.setTextSize(11 * $fontScale);
+        popover = blocks.map((spans) => new StaticLayout(createNativeAttributedString({ spans }), popoverPaint, POPOVER_WIDTH - POPOVER_PADDING * 2, LayoutAlignment.ALIGN_NORMAL, 1, 0, true));
+    }
+    function drawPopover(c: Canvas) {
+        const x = cursorX;
+        const { contentLeft, contentRight } = chart.nativeView.viewPortHandler;
+        const height = popover.reduce((total, layout) => total + layout.getHeight(), 0) + POPOVER_BLOCK_GAP * (popover.length - 1) + POPOVER_PADDING * 2;
+        // beside the cursor, on the side that has room
+        const left = x + POPOVER_GAP + POPOVER_WIDTH <= contentRight ? x + POPOVER_GAP : Math.max(contentLeft, x - POPOVER_GAP - POPOVER_WIDTH);
+        // at the very top of the chart's canvas, over the brackets: not in the plot, where the data's layers would lie over it
+        const top = 2;
+        popoverBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(240).hex;
+        popoverBorderPaint.color = isEInk ? colorOnSurface : colorOutline;
+        popoverLinePaint.color = new Color(isEInk ? colorOnSurface : colorOutlineVariant).setAlpha(isEInk ? 120 : 70).hex;
+        c.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBackPaint);
+        c.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBorderPaint);
+        let y = top + POPOVER_PADDING;
+        popover.forEach((layout, position) => {
+            if (position > 0) {
+                // the hairline between two blocks
+                const line = y - POPOVER_BLOCK_GAP / 2;
+                c.drawLine(left + POPOVER_PADDING, line, left + POPOVER_WIDTH - POPOVER_PADDING, line, popoverLinePaint);
+            }
+            c.save();
+            c.translate(left + POPOVER_PADDING, y);
+            layout.draw(c);
+            c.restore();
+            y += layout.getHeight() + POPOVER_BLOCK_GAP;
+        });
+        popoverRect = { left, top, right: left + POPOVER_WIDTH, bottom: top + height };
+    }
+    /** An elevation the way the axis writes it: no unit. */
+    const axisNumber = (meters: number) => Math.round(meters).toLocaleString();
     /** An elevation line whose label the axis custom renderer draws on a plate, above or below it. */
     class PlateLimitLine extends LimitLine {
         constructor(
@@ -156,11 +341,17 @@
     export let inCard = false;
     /** spans marked above the curve, eg the climbs of the lens in use */
     export let brackets: ProfileBracket[] = [];
+    /** what the lens in use says of the point under the cursor, for the card that follows it */
+    export let note: (index: number) => string | undefined = null;
+    /** what needs attention along the route, drawn under the profile and tapped to focus */
+    export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
+        popover = null;
+        popoverRect = null;
         dispatch('cursor', null);
     }
 
@@ -209,8 +400,12 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || brackets !== undefined || fill !== undefined)) {
+    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || fill !== undefined)) {
         updateChartData(item);
+    }
+    // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
+    $: if (chart?.nativeView && (brackets || marks)) {
+        chart.nativeView.invalidate();
     }
     let onChartDataUpdateCallbacks = [];
 
@@ -245,6 +440,19 @@
     async function onChartHighlight(event: HighlightEventData) {
         // DEV_LOG && console.log('onChartHighlight', event.highlight);
         if (!item) {
+            return;
+        }
+        const { xTouchPx, yTouchPx } = event.highlight;
+        if (popoverRect && xTouchPx >= popoverRect.left && xTouchPx <= popoverRect.right && yTouchPx >= popoverRect.top && yTouchPx <= popoverRect.bottom) {
+            // a tap on the card puts it away
+            clearHighlight();
+            return;
+        }
+        const markIndex = markAt(event.highlight);
+        if (markIndex >= 0) {
+            // a tap on a mark picks the mark, not a point of the route
+            clearHighlight();
+            dispatch('mark', { index: markIndex });
             return;
         }
         const shouldSelectItem = event.highlight.hasOwnProperty('xPx');
@@ -332,6 +540,8 @@
         // DEV_LOG && console.log('hilghlightPathIndex', !!item, JSON.stringify(params), JSON.stringify(highlight), nChart);
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
+            popover = null;
+            popoverRect = null;
             dispatch('cursor', null);
             if (nChart) {
                 nChart.highlight(null);
@@ -364,9 +574,9 @@
                         text: (itemData.a || 0).toFixed() + 'm' + '  '
                     },
                     {
-                        fontFamily: $fonts.app,
+                        fontFamily: $fonts.mdi,
                         color: colorPrimary,
-                        text: 'alpimaps-angle'
+                        text: 'mdi-angle-acute'
                     },
                     {
                         // one decimal, and the section colour, so this agrees with the fill under it
@@ -413,6 +623,9 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
+                if (inCard) {
+                    buildPopover(onPathIndex, { d: itemData.d, a: itemData.a, g: itemData.g, dp: itemData.dp, dm: itemData.dm }, params);
+                }
                 dispatch('cursor', { index: onPathIndex, entry: { d: itemData.d, a: itemData.a, g: itemData.g }, ...params });
                 !mini &&
                     mapContext.mapModule('items').notify({
@@ -493,7 +706,7 @@
                 // the mini chart is drawn under the widget's own labels — the summit elevation sits in
                 // its top right corner — so the curve needs headroom rather than the whole card
                 // with the readout above, the highlight needs no room of its own
-                chartView.setExtraOffsets(0, mini ? 14 : inCard ? 6 : 24, mini ? 4 : 10, mini ? 2 : inCard ? 16 : 10);
+                chartView.setExtraOffsets(0, mini ? 14 : inCard ? BRACKET_ROOM : 24, mini ? 4 : 10, mini ? 2 : inCard ? 0 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -512,18 +725,26 @@
                 }
                 leftAxis.ensureLastLabel = true;
                 leftAxis.drawLimitLinesBehindData = false;
+                // the plates lie on the plot's edges: they would be cut at them
+                leftAxis.clipLimitLinesToContent = false;
                 // under the highlight, so its distance badge covers the axis labels, not the reverse
                 leftAxis.drawLabelsBehindData = true;
                 leftAxis.customRenderer = {
                     drawLimitLine(c: Canvas, axis, limitLine, rect, y: number, paint: Paint) {
+                        if (limitLine instanceof OverlayLimitLine) {
+                            drawOverlay(c);
+                            return;
+                        }
                         c.drawLine(rect.left, y, rect.right, y, paint);
                         if (limitLine instanceof PlateLimitLine) {
                             plateLabelPaint.textSize = 9 * $fontScale;
                             plateLabelPaint.color = colorOnSurface;
                             const metrics = plateLabelPaint.getFontMetrics();
                             const height = metrics.descent - metrics.ascent;
-                            const top = limitLine.plateBelow ? y + 2 : Math.max(rect.top, y - 2 - height);
-                            drawPlatedLabel(c, [limitLine.plateLabel], rect.right - 3, top, plateLabelPaint, true);
+                            // over the axis labels, on the line: its value matters more than a round number of the axis, and
+                            // nothing of the data's is here to lie under
+                            const top = y - height / 2;
+                            drawPlatedLabel(c, [limitLine.plateLabel], rect.left - 2, top, plateLabelPaint, true);
                         }
                     }
                 };
@@ -557,8 +778,8 @@
                             c.restore();
                         }
                         if (inCard) {
-                            // the readout's accent, so the cursor reads as its point: a line from the
-                            // readout down, a ringed dot on the curve and the distance on the axis
+                            // a line down to the plot's foot and a ringed dot on the curve, the card beside it says the rest
+                            cursorX = x;
                             const bottom = chartView.viewPortHandler.contentBottom;
                             cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
                             c.drawLine(x, 0, x, bottom, cursorPaint);
@@ -566,24 +787,11 @@
                             c.drawCircle(x, h.drawY, 7, cursorPaint);
                             cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
                             c.drawCircle(x, h.drawY, 5, cursorPaint);
-                            const text = formatDistance(h.entry['d']);
-                            const halfWidth = cursorTextPaint.measureText(text) / 2 + 6;
-                            const left = Math.max(0, Math.min(c.getWidth() - halfWidth * 2, x - halfWidth));
-                            c.drawRoundRect(left, bottom + 1, left + halfWidth * 2, bottom + 17, 8, 8, cursorPaint);
-                            cursorTextPaint.color = isEInk ? 'white' : colorOnPrimary;
-                            c.drawText(text, left + halfWidth, bottom + 13, cursorTextPaint);
                             return;
                         }
                         c.drawLine(x, 20, x, c.getHeight(), highlightPaint);
                         c.drawCircle(x, 20, 4, highlightPaint);
                         c.drawText(formatDistance(h.entry['d']), x + 6, 23, highlightPaint);
-                    },
-                    drawFill(c: Canvas, set: LineDataSet, spline: Path, trans: Transformer, min: number, max: number, superMethod: () => void) {
-                        superMethod();
-                        if (brackets.length && !mini) {
-                            const { contentLeft, contentRight, contentTop } = chartView.viewPortHandler;
-                            drawBrackets(c, trans, contentLeft, contentRight, contentTop);
-                        }
                     }
                 };
             } else {
@@ -599,9 +807,6 @@
                 //   const space = (chartElevationMinRange - deltaA) / 2;
                 //    spaceMin += space;
                 spaceMax += chartElevationMinRange - deltaA;
-            }
-            if (brackets.length) {
-                spaceMax += Math.max(chartElevationMinRange, deltaA) * BRACKET_HEADROOM;
             }
             const labelCount = inCard ? 3 : 5;
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
@@ -686,22 +891,23 @@
             }
 
             leftAxis.removeAllLimitLines();
-            let limitLine: LimitLine = new PlateLimitLine(profile.min[1], convertElevation(profile.min[1]), true);
+            let limitLine: LimitLine = new PlateLimitLine(profile.min[1], axisNumber(profile.min[1]), true);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             leftAxis.addLimitLine(limitLine);
 
-            limitLine = new PlateLimitLine(profile.max[1], convertElevation(profile.max[1]), false);
+            limitLine = new PlateLimitLine(profile.max[1], axisNumber(profile.max[1]), false);
             limitLine.lineColor = colorOutline;
             limitLine.enableDashedLine(4, 3, 0);
             limitLine.lineWidth = 0.5;
             leftAxis.addLimitLine(limitLine);
+            leftAxis.addLimitLine(new OverlayLimitLine(profile.max[1]));
 
             xAxis.removeAllLimitLines();
             if (showAscents && profile.ascents) {
                 profile.ascents.forEach((ascent: AscentSegment) => {
-                    const text = convertElevation(ascent.highestElevation) + '\n+' + convertElevation(ascent.gain);
+                    const text = convertElevation(ascent.highestElevation);
                     limitLine = new LimitLine(profileData[ascent.highestPointIndex].d, text);
                     limitLine.lineColor = colorOutline;
                     limitLine.enableDashedLine(6, 3, 0);

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { clearCursor, clearFocus, clearSection, focusSection, routeFocus, setCursor } from './routeFocusStore';
 
 const cursor = { index: 12, distance: 120 };
-const section = { lens: 'climbs' as const, id: 1, i0: 10, i1: 40 };
+const section = { lens: 'climbs' as const, id: 1, i0: 10, i1: 40, title: 'cat 2' };
 
 describe('routeFocus', () => {
     beforeEach(clearFocus);

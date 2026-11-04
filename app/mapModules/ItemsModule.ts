@@ -11,7 +11,7 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
-import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -215,8 +215,19 @@ export default class ItemsModule extends MapModule {
             }
             first = false;
         });
+        // and so does a change one of them announces: another lens, a section focused
+        let firstChange = true;
+        this.unsubscribeRouteFeatureChanges?.();
+        this.unsubscribeRouteFeatureChanges = routeFeatureChanges.subscribe(() => {
+            const selected = mapContext.getSelectedItem();
+            if (!firstChange && selected?.route) {
+                this.onItemSelected(selected);
+            }
+            firstChange = false;
+        });
     }
     private unsubscribeRouteFeatures: () => void;
+    private unsubscribeRouteFeatureChanges: () => void;
     onDbInitListeners = [];
     onDbInit(callback) {
         if (this.dbInitialized) {
@@ -229,6 +240,8 @@ export default class ItemsModule extends MapModule {
         super.onMapDestroyed();
         this.unsubscribeRouteFeatures?.();
         this.unsubscribeRouteFeatures = null;
+        this.unsubscribeRouteFeatureChanges?.();
+        this.unsubscribeRouteFeatureChanges = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {

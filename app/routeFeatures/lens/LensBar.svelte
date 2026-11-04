@@ -63,26 +63,24 @@
                 verticalAlignment="middle"
                 on:tap={() => dispatch('select', { id })}>
                 <stacklayout orientation="horizontal" padding="0 10" verticalAlignment="middle">
+                    <!-- always the same spans: a formatted string whose children come and go breaks the update -->
                     <label color={contentColor} fontSize={13} maxLines={1} verticalAlignment="middle">
-                        <span fontFamily={$fonts.mdi} fontSize={16} text={icon} />
+                        <span color={chip.alert && !isEInk ? colorError : contentColor} fontFamily={$fonts.mdi} fontSize={16} text={icon} />
                         <span fontWeight={active && isEInk ? 'bold' : 'normal'} text={'  ' + label} />
-                        {#if missing}
-                            <span color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} text="  mdi-plus" />
-                        {:else if chip.value}
-                            <span fontWeight="bold" text={'  ' + chip.value} />
-                        {/if}
-                        {#if outdated}
-                            <span color={OUTDATED_COLOR} fontFamily={$fonts.mdi} fontSize={14} text="  mdi-refresh" />
-                        {:else if chip.state === 'offline'}
-                            <span color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text="  mdi-cloud-off-outline" />
-                        {/if}
+                        <span fontWeight="bold" text={!missing && chip.value ? '  ' + chip.value : ''} />
+                        <span color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} text={missing ? '  mdi-plus' : ''} />
+                        <span
+                            color={outdated ? OUTDATED_COLOR : colorOnSurfaceVariant}
+                            fontFamily={$fonts.mdi}
+                            fontSize={14}
+                            text={outdated ? '  mdi-refresh' : chip.state === 'offline' ? '  mdi-cloud-off-outline' : ''} />
                     </label>
                     {#if chip.state === 'running'}
                         <activityindicator busy={true} height={14} marginLeft={6} verticalAlignment="middle" width={14} />
                     {/if}
                 </stacklayout>
-                {#if chip.alert}
-                    <gridlayout backgroundColor={isEInk ? colorOnSurface : colorError} borderRadius={3} height={6} horizontalAlignment="right" margin="4 6 0 0" verticalAlignment="top" width={6} />
+                {#if chip.alert && isEInk}
+                    <gridlayout backgroundColor={colorOnSurface} borderRadius={3} height={6} horizontalAlignment="right" margin="4 6 0 0" verticalAlignment="top" width={6} />
                 {/if}
             </gridlayout>
         {/each}

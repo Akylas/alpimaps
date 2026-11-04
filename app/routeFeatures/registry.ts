@@ -57,17 +57,63 @@ export interface LensChip {
     state?: 'missing' | 'running' | 'outdated' | 'offline';
 }
 
-/** The sentence under the lens bar, with the button that goes with it when it asks for something. */
-export interface LensHeadline {
+/** One figure of a lens' headline: an icon and what it says. */
+export interface LensFact {
+    icon?: string;
     text: string;
+    /** The icon's colour, eg the surface it stands for. */
+    color?: string;
+    /** The figure is a warning: the icon takes the error colour. */
+    alert?: boolean;
+}
+
+/** The line under the lens bar: a few facts, with the button that goes with them when it asks for something. */
+export interface LensHeadline {
+    facts: LensFact[];
     action?: { label: string; run: () => void };
+}
+
+/** What needs attention along the route, whatever the lens: marked under the profile. */
+export type AttentionKind = 'steep';
+
+export interface AttentionMark {
+    kind: AttentionKind;
+    /** The lens and section a tap on the mark goes to. */
+    lens: LensId;
+    section: LensSection;
+}
+
+/** An attention mark on the chart, meters from the start. */
+export interface ProfileMark {
+    from: number;
+    to: number;
+    kind: AttentionKind;
 }
 
 /** A span of the profile marked above the curve, eg a climb with its category. Meters from the start. */
 export interface ProfileBracket {
     from: number;
     to: number;
+    /** The elevation it stands over, m. */
+    top: number;
     label?: string;
+}
+
+/** A stretch of the route a lens speaks of, eg a climb: it can be focused. `i0`..`i1` are profile data indexes. */
+export interface LensSection {
+    id: number;
+    i0: number;
+    i1: number;
+    /** What the insight row says while it is focused. */
+    title: string;
+}
+
+/** A stretch of the route drawn in the lens' look: `k` picks the look, `s` how serious it is, 0 to 3. */
+export interface LensSlice {
+    i0: number;
+    i1: number;
+    k: number | string;
+    s: 0 | 1 | 2 | 3;
 }
 
 /** A colour the profile fill takes from this data index on. */
@@ -92,7 +138,13 @@ export interface RouteLens {
     available: (ctx: RouteCtx) => boolean;
     chip: (ctx: RouteCtx) => LensChip;
     headline: (ctx: RouteCtx) => LensHeadline;
+    /** What the lens says of the route vertex under the cursor, next to the figures every lens shows. */
+    readout?: (ctx: RouteCtx & { index: number }) => string | undefined;
     profile?: (ctx: RouteCtx) => LensProfile;
+    /** The stretches to focus, in route order. */
+    sections?: (ctx: RouteCtx) => LensSection[];
+    /** What the map line is cut into. None: the line keeps the item's look. */
+    slices?: (ctx: RouteCtx) => LensSlice[];
 }
 
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
@@ -146,6 +198,8 @@ export interface RouteFeature {
     tiles?: (ctx: RouteCtx) => RouteTile[];
     /** The ways of reading the route this feature adds to the lens bar. */
     lenses?: RouteLens[];
+    /** What needs attention along the route, marked under the profile whatever the lens. */
+    attention?: (ctx: RouteCtx) => AttentionMark[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
@@ -258,6 +312,11 @@ export function routeLenses(features: RouteFeature[], ctx: RouteCtx): RouteLens[
         .flatMap((feature) => feature.lenses ?? [])
         .filter((lens) => lens.available(ctx))
         .sort((first, second) => LENS_ORDER.indexOf(first.id) - LENS_ORDER.indexOf(second.id));
+}
+
+/** What the enabled features want looked at. */
+export function routeAttention(features: RouteFeature[], ctx: RouteCtx): AttentionMark[] {
+    return features.flatMap((feature) => feature.attention?.(ctx) ?? []);
 }
 
 /** The lens to show: the one asked for, or the overview when this route cannot show it. */

@@ -21,7 +21,7 @@ describe('routeStages', () => {
 });
 
 describe('lenses', () => {
-    const lens = (id: LensId, available = true): RouteLens => ({ id, icon: '', label: () => id, available: () => available, chip: () => ({}), headline: () => ({ text: id }) });
+    const lens = (id: LensId, available = true): RouteLens => ({ id, icon: '', label: () => id, available: () => available, chip: () => ({}), headline: () => ({ facts: [{ text: id }] }) });
     const ctx = { item: null };
 
     it('lists the available lenses in the bar order, not the registration order', () => {
