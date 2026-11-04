@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearCursor, clearFocus, clearSection, focusSection, routeFocus, setCursor } from './routeFocusStore';
+import { clearCursor, clearFocus, clearSection, focusKeyOf, focusSection, routeFocus, setCursor } from './routeFocusStore';
 
 const cursor = { index: 12, distance: 120 };
 const section = { lens: 'climbs' as const, id: 1, i0: 10, i1: 40, title: 'cat 2' };
@@ -42,5 +42,53 @@ describe('routeFocus', () => {
         clearCursor();
         clearSection();
         expect(get(routeFocus)).toBeNull();
+    });
+});
+
+describe('routeFocus notifications', () => {
+    beforeEach(clearFocus);
+
+    it('says nothing when there is nothing to clear', () => {
+        setCursor('a', cursor);
+        let notified = 0;
+        const unsubscribe = routeFocus.subscribe(() => notified++);
+        notified = 0;
+        clearSection();
+        clearFocus();
+        unsubscribe();
+        // only the last one, which has something to clear
+        expect(notified).toBe(1);
+        clearCursor();
+        clearSection();
+    });
+
+    it('says nothing when the cursor is cleared twice', () => {
+        setCursor('a', cursor);
+        clearCursor();
+        let notified = 0;
+        const unsubscribe = routeFocus.subscribe(() => notified++);
+        notified = 0;
+        clearCursor();
+        unsubscribe();
+        expect(notified).toBe(0);
+    });
+});
+
+describe('focusKeyOf', () => {
+    it('keys a saved route by its id, whatever it is', () => {
+        expect(focusKeyOf({ id: 7 } as never)).toBe('7');
+        expect(focusKeyOf({ id: 0 } as never)).toBe('0');
+    });
+
+    it('keys a route with no id, or a null one, by its shape', () => {
+        const geometry = {
+            type: 'LineString' as const,
+            coordinates: [
+                [6, 45],
+                [6.1, 45.1]
+            ]
+        };
+        expect(focusKeyOf({ geometry } as never)).toBe(focusKeyOf({ id: null, geometry } as never));
+        expect(focusKeyOf({ geometry } as never)).not.toBe('null');
     });
 });

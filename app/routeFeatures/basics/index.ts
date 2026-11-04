@@ -20,7 +20,13 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
     }
     if (route.totalTime > 0) {
         // when it ends, if it leaves at a time that is known
-        const arrival = arrivalOf(item, Date.now());
+        let arrival: ReturnType<typeof arrivalOf>;
+        try {
+            arrival = arrivalOf(item, Date.now());
+        } catch (error) {
+            // the tile only loses its second line: the sheet's header does not depend on it
+            DEV_LOG && console.error('arrival', error);
+        }
         tiles.push({
             key: 'time',
             icon: 'mdi-timer-outline',

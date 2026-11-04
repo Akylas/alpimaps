@@ -1,19 +1,8 @@
 import { showError } from '@shared/utils/showError';
-import { derived } from 'svelte/store';
 import { convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
-import {
-    climbsCategories,
-    climbsMinLength,
-    climbsPreset,
-    climbsSettingRows,
-    climbsSteepDown,
-    climbsSteepUp,
-    climbsVerySteepDown,
-    climbsVerySteepUp,
-    routeFeatureClimbs
-} from '~/routeFeatures/climbs/settings';
+import { climbsSettingRows, climbsSettingsKey, routeFeatureClimbs } from '~/routeFeatures/climbs/settings';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { type LensFact, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
@@ -54,7 +43,7 @@ const climbsLens: RouteLens = {
             return { facts: [{ text: lc('climbs_none') }] };
         }
         const { best } = read;
-        const facts: LensFact[] = [{ icon: 'mdi-slope-uphill', text: lc('climbs_count', read.climbs.length) }];
+        const facts: LensFact[] = [{ icon: 'mdi-slope-uphill', text: read.climbs.length === 1 ? lc('climbs_count_one') : lc('climbs_count', read.climbs.length) }];
         if (best.category) {
             facts.push({ icon: 'mdi-triangle-outline', text: lc('climb_summit_at', categoryLabel(best.category), formatDistance(best.endDistance)) });
         }
@@ -73,15 +62,12 @@ const climbsLens: RouteLens = {
     slices: ({ item }) => readClimbs(item)?.slices ?? []
 };
 
-// what the climbs are read with: they are read again, and the card and the map with them
-const settingsChanged = derived([climbsPreset, climbsSteepUp, climbsVerySteepUp, climbsSteepDown, climbsVerySteepDown, climbsMinLength, climbsCategories], (values) => values.join());
-
 registerRouteFeature({
     id: 'climbs',
     order: 12,
     setting: { title: () => lc('lens_climbs'), store: routeFeatureClimbs },
     settings: climbsSettingRows,
-    changes: settingsChanged,
+    changes: climbsSettingsKey,
     lenses: [climbsLens],
     attention: ({ item }) => readClimbs(item)?.marks ?? []
 });

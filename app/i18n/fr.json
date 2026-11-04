@@ -1059,7 +1059,7 @@
     "gesture_layer_swipe_title": "Retirer une couche",
     "gesture_layer_swipe_desc": "Dans la liste des couches, balayez une couche ajoutée sur le côté pour révéler son bouton de retrait.",
     "gesture_chart_title": "Explorer le profil",
-    "gesture_chart_desc": "Glissez le long du graphique d'élévation pour lire un point de l'itinéraire dans la carte au-dessus du graphique : touchez-la pour la ranger. Touchez une marque rouge sous le graphique pour voir ce passage très raide. Pincez pour zoomer, la carte suit la partie de l'itinéraire affichée.",
+    "gesture_chart_desc": "Glissez le long du graphique d'élévation pour lire un point de l'itinéraire dans la fiche sur le graphique : touchez-la pour la ranger. Touchez une marque rouge sous le graphique pour voir ce passage très raide. Pincez pour zoomer, la carte suit la partie de l'itinéraire affichée.",
     "gesture_place_swipe_title": "Raccourcis de l'en-tête d'un lieu",
     "gesture_place_swipe_desc": "Balayez l'en-tête d'un lieu sélectionné sur le côté : d'un côté, zoomer dessus ou le verrouiller pour que d'autres touches ne le remplacent pas, de l'autre, supprimer un élément enregistré.",
     "gesture_contact_copy_title": "Copier un téléphone ou un site",
@@ -1145,5 +1145,6 @@
     "gesture_elevation_tile_title": "Lire les montées",
     "gesture_elevation_tile_desc": "Touchez la tuile de dénivelé pour lire l'itinéraire par ses montées : la fiche monte jusqu'au profil, avec les montées marquées dessus.",
     "gesture_lens_more_title": "Lister ce qu'une vue a trouvé",
-    "gesture_lens_more_desc": "Quand la ligne sous la barre des vues finit par une flèche, touchez-la pour lister ce que la vue a trouvé : pour les montées, chaque montée et les passages raides. Touchez une ligne pour la voir sur l'itinéraire."
+    "gesture_lens_more_desc": "Quand la ligne sous la barre des vues finit par une flèche, touchez-la pour lister ce que la vue a trouvé : pour les montées, chaque montée et les passages raides. Touchez une ligne pour la voir sur l'itinéraire.",
+    "climbs_count_one": "1 montée"
 }

@@ -1,3 +1,4 @@
+import { derived } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { DEFAULT_STEEP_MIN_LENGTH } from '~/routeFeatures/climbs/steep';
@@ -19,6 +20,9 @@ export const climbsVerySteepDown = settingsStore('climbs_very_steep_down', 0);
 /** meters */
 export const climbsMinLength = settingsStore('climbs_min_length', DEFAULT_STEEP_MIN_LENGTH);
 export const climbsCategories = settingsStore('climbs_categories', true);
+
+/** Changes with any of what the climbs are read with: they are read again, and the card and the map with them. */
+export const climbsSettingsKey = derived([climbsPreset, climbsSteepUp, climbsVerySteepUp, climbsSteepDown, climbsVerySteepDown, climbsMinLength, climbsCategories], (values) => values.join());
 
 const percent = (value: number) => (value > 0 ? value + ' %' : lc('climbs_threshold_preset'));
 

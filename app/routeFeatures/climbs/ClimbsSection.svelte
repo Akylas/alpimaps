@@ -97,14 +97,6 @@
         // the map is behind the sheet, and that is where the section is shown
         closeBottomSheet();
     }
-    function climbSection(climb: Climb, id: number): LensSection {
-        return {
-            id,
-            i0: climb.startIndex,
-            i1: climb.endIndex,
-            title: [climb.category && categoryLabel(climb.category), formatDistance(climb.length), climb.avgGrade.toFixed(1) + ' %'].filter(Boolean).join(' · ')
-        };
-    }
     function steepSection(section: SteepSection, id: number): LensSection {
         const label = section.direction === 'down' ? 'climbs_steep_descent' : section.level === 2 ? 'climbs_very_steep' : 'climbs_steep';
         return { id, i0: section.startIndex, i1: section.endIndex, title: [lc(label, formatDistance(section.length)), Math.abs(section.avgGrade).toFixed(0) + ' %'].join(' · ') };
@@ -124,7 +116,7 @@
                 height={64}
                 padding="0 16"
                 rippleColor={colorPrimary}
-                on:tap={() => focus(climbSection(item.climb, item.id))}>
+                on:tap={() => focus(read.sections[item.id])}>
                 <!-- the category on a plate, the way the profile's brackets carry it -->
                 <gridlayout backgroundColor={isEInk ? '#000000' : colorOnSurface} borderRadius={6} height={24} horizontalAlignment="left" padding="0 7" verticalAlignment="middle">
                     <label

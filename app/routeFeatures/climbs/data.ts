@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
-import { climbsCategories, climbsMinLength, climbsPreset, climbsSteepDown, climbsSteepUp, climbsVerySteepDown, climbsVerySteepUp } from '~/routeFeatures/climbs/settings';
+import { climbsCategories, climbsMinLength, climbsPreset, climbsSettingsKey, climbsSteepDown, climbsSteepUp, climbsVerySteepDown, climbsVerySteepUp } from '~/routeFeatures/climbs/settings';
 import { type Climb, type ClimbCategory, type SteepSection, bestClimb, findClimbs, findSteepSections, isSteepPreset, presetForActivity, resolveThresholds } from '~/routeFeatures/climbs/steep';
 import type { AttentionMark, LensSection, LensSlice, ProfileBracket } from '~/routeFeatures/registry';
 import { gradeBucketIndex } from '~/utils/grade';
@@ -25,6 +25,8 @@ export function categoryLabel(category: ClimbCategory) {
 }
 
 // the profile is replaced, never edited, so it keys what was read off it, along with the settings it was read with
+let settingsKey = '';
+climbsSettingsKey.subscribe((key) => (settingsKey = key));
 const reads = new WeakMap<object, { key: string; read: ClimbsRead | null }>();
 
 /** The climbs and steep sections of the route, `null` when its profile has no grades. Derived on read, never stored. */
@@ -33,8 +35,14 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     if (!data?.length) {
         return null;
     }
+    // the settings are read once they have changed, not on each of the calls a render makes
     const chosen = get(climbsPreset);
     const preset = isSteepPreset(chosen) ? chosen : presetForActivity(activityOf(item, item.analysis));
+    const key = `${settingsKey}|${preset}`;
+    const cached = reads.get(data);
+    if (cached?.key === key) {
+        return cached.read;
+    }
     const thresholds = resolveThresholds(preset, {
         steepUp: get(climbsSteepUp),
         veryUp: get(climbsVerySteepUp),
@@ -43,11 +51,6 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     });
     const minLength = get(climbsMinLength);
     const categories = get(climbsCategories);
-    const key = [thresholds.steepUp, thresholds.veryUp, thresholds.steepDown, thresholds.veryDown, minLength, categories].join();
-    const cached = reads.get(data);
-    if (cached?.key === key) {
-        return cached.read;
-    }
     let read: ClimbsRead | null = null;
     if (data.some((point) => point.g !== undefined)) {
         const found = findClimbs(data);

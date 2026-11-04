@@ -30,11 +30,12 @@
     }
 
     $: itemKey = focusKeyOf(item);
-    // a point picked on another route means nothing here
+    // a point picked, a section focused on another route mean nothing here
     let shownKey: string;
     $: if (itemKey !== shownKey) {
         shownKey = itemKey;
         clearCursor();
+        clearSection();
     }
 
     $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item }) : [];
@@ -67,14 +68,16 @@
     // a section of the lens in use, focused on this route
     $: sections = activeLens?.sections?.({ item }) ?? NO_SECTIONS;
     $: focused = $routeFocus?.itemKey === itemKey && $routeFocus.section?.lens === active ? $routeFocus.section : null;
-    $: range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
-    // the map follows the section once, not on every update of the route
+    // the chart zooms to the section and the map follows it once: not on every update of the route, nor of the cursor, which also
+    // replaces `focused` and would give the chart a new range each time
     let fittedKey = '';
+    let range: { fromIndex: number; toIndex: number } = null;
     $: sectionKey = focused ? `${focused.lens}:${focused.i0}:${focused.i1}` : '';
     $: if (sectionKey !== fittedKey) {
         fittedKey = sectionKey;
         // the cursor was for the route as it was: a section focused or left starts from none
         chart?.clearHighlight();
+        range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
         if (focused) {
             fitSection(focused);
         }

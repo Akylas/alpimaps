@@ -28,8 +28,8 @@
     import { colors, fontScale, fonts } from '~/variables';
     import { lc } from '~/helpers/locale';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
-    let { colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorAccentContainer, colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorBackground, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorOutlineVariant, colorPrimary } = $colors);
 
     /** what ui-chart fills a line set with by default, out of 255 */
     const DEFAULT_FILL_ALPHA = 85;
@@ -85,6 +85,7 @@
     // chart labels sit on a semi opaque rounded plate, so they read over the grade fill and gridlines
     const plateLabelPaint = new Paint();
     const plateBackPaint = new Paint();
+    // TODO(cleanup): the older drawing helpers of this file (this one, the limit line renderers) still name the canvas `c`
     function drawPlatedLabel(c: Canvas, lines: string[], x: number, top: number, paint: Paint, alignRight: boolean) {
         const metrics = paint.getFontMetrics();
         const lineHeight = metrics.descent - metrics.ascent;
@@ -129,7 +130,7 @@
             super(limit, '');
         }
     }
-    function drawOverlay(c: Canvas) {
+    function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
         if (!chartView || mini) {
             return;
@@ -157,17 +158,17 @@
                 continue;
             }
             const y = pixelY(top) - BRACKET_LIFT;
-            c.drawLine(start, y, end, y, overlayPaint);
-            c.drawLine(start, y, start, y + BRACKET_END, overlayPaint);
-            c.drawLine(end, y, end, y + BRACKET_END, overlayPaint);
+            canvas.drawLine(start, y, end, y, overlayPaint);
+            canvas.drawLine(start, y, start, y + BRACKET_END, overlayPaint);
+            canvas.drawLine(end, y, end, y + BRACKET_END, overlayPaint);
             if (label) {
                 // over the bracket, never on it: its width stays readable, a short climb at the edge keeps its label whole
                 const width = overlayTextPaint.measureText(label) + PLATE_PADDING * 2;
                 const left = Math.min(Math.max((start + end - width) / 2, contentLeft), contentRight - width);
                 const bottom = y - BRACKET_PLATE_GAP;
                 overlayFillPaint.color = ink;
-                c.drawRoundRect(left, bottom - textHeight - 2, left + width, bottom, 4, 4, overlayFillPaint);
-                c.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
+                canvas.drawRoundRect(left, bottom - textHeight - 2, left + width, bottom, 4, 4, overlayFillPaint);
+                canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
         for (const { from, kind, to } of marks) {
@@ -178,10 +179,10 @@
             }
             overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
             const top = contentBottom + MARK_GAP;
-            c.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
+            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
         }
         if (popover && cursorShown) {
-            drawPopover(c);
+            drawPopover(canvas);
         }
         cursorShown = false;
     }
@@ -213,6 +214,9 @@
     popoverBorderPaint.setStyle(Style.STROKE);
     popoverBorderPaint.setStrokeWidth(1);
     // the hairline between the blocks stays well under the card's own border
+    const popoverCrossPaint = new Paint();
+    popoverCrossPaint.setStyle(Style.STROKE);
+    popoverCrossPaint.setStrokeWidth(1);
     const popoverLinePaint = new Paint();
     popoverLinePaint.setStyle(Style.STROKE);
     popoverLinePaint.setStrokeWidth(0.5);
@@ -294,6 +298,10 @@
         if (total.length) {
             blocks.push([...caption(lc('cursor_route_left')), ...total.flatMap((row, position) => [...(position ? [{ text: '\n', fontSize: 11 }] : []), ...figuresRow(row, accent)])]);
         }
+        popoverBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(240).hex;
+        popoverBorderPaint.color = isEInk ? colorOnSurface : colorOutline;
+        popoverLinePaint.color = new Color(isEInk ? colorOnSurface : colorOutlineVariant).setAlpha(isEInk ? 120 : 70).hex;
+        popoverCrossPaint.color = isEInk ? colorOnSurface : colorOnSurfaceVariant;
         popoverPaint.setTextSize(11 * $fontScale);
         popover = blocks.map((spans) => new StaticLayout(createNativeAttributedString({ spans }), popoverPaint, POPOVER_WIDTH - POPOVER_PADDING * 2, LayoutAlignment.ALIGN_NORMAL, 1, 0, true));
     }
@@ -305,7 +313,7 @@
             chart?.nativeView?.invalidate();
         }
     }
-    function drawPopover(c: Canvas) {
+    function drawPopover(canvas: Canvas) {
         const { contentLeft, contentRight } = chart.nativeView.viewPortHandler;
         const middle = (contentLeft + contentRight) / 2;
         // a card that followed the cursor would flip under a finger crossing the middle: it stays on one side until the cursor is well on the other
@@ -318,30 +326,26 @@
         const left = popoverSide === 'left' ? contentLeft + POPOVER_EDGE : contentRight - POPOVER_WIDTH - POPOVER_EDGE;
         // at the very top of the chart's canvas, over the brackets: not in the plot, where the data's layers would lie over it
         const top = 2;
-        popoverBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(240).hex;
-        popoverBorderPaint.color = isEInk ? colorOnSurface : colorOutline;
-        popoverLinePaint.color = new Color(isEInk ? colorOnSurface : colorOutlineVariant).setAlpha(isEInk ? 120 : 70).hex;
-        c.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBackPaint);
-        c.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBorderPaint);
+        canvas.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBackPaint);
+        canvas.drawRoundRect(left, top, left + POPOVER_WIDTH, top + height, 8, 8, popoverBorderPaint);
         let y = top + POPOVER_PADDING;
         popover.forEach((layout, position) => {
             if (position > 0) {
                 // the hairline between two blocks
                 const line = y - POPOVER_BLOCK_GAP / 2;
-                c.drawLine(left + POPOVER_PADDING, line, left + POPOVER_WIDTH - POPOVER_PADDING, line, popoverLinePaint);
+                canvas.drawLine(left + POPOVER_PADDING, line, left + POPOVER_WIDTH - POPOVER_PADDING, line, popoverLinePaint);
             }
-            c.save();
-            c.translate(left + POPOVER_PADDING, y);
-            layout.draw(c);
-            c.restore();
+            canvas.save();
+            canvas.translate(left + POPOVER_PADDING, y);
+            layout.draw(canvas);
+            canvas.restore();
             y += layout.getHeight() + POPOVER_BLOCK_GAP;
         });
         // a cross in its corner says the card can be put away
         const crossX = left + POPOVER_WIDTH - POPOVER_PADDING - 3;
         const crossY = top + POPOVER_PADDING + 5;
-        popoverBorderPaint.color = isEInk ? colorOnSurface : colorOnSurfaceVariant;
-        c.drawLine(crossX - 3, crossY - 3, crossX + 3, crossY + 3, popoverBorderPaint);
-        c.drawLine(crossX - 3, crossY + 3, crossX + 3, crossY - 3, popoverBorderPaint);
+        canvas.drawLine(crossX - 3, crossY - 3, crossX + 3, crossY + 3, popoverCrossPaint);
+        canvas.drawLine(crossX - 3, crossY + 3, crossX + 3, crossY - 3, popoverCrossPaint);
         popoverBounds = { left, top, right: left + POPOVER_WIDTH, bottom: top + height };
     }
     /** An elevation the way the axis writes it: no unit. */
@@ -513,16 +517,25 @@
             showError(err);
         }
     }
-    $: if (chart?.nativeView?.data && (showProfileGrades !== undefined || showAscents !== undefined || fill !== undefined)) {
+    // a prop that is an array counts as changed whenever its parent updates: the chart is rebuilt for what really differs
+    let builtFill = fill;
+    let builtGrades = showProfileGrades;
+    let builtAscents = showAscents;
+    $: if (chart?.nativeView?.data && (fill !== builtFill || showProfileGrades !== builtGrades || showAscents !== builtAscents)) {
+        builtFill = fill;
+        builtGrades = showProfileGrades;
+        builtAscents = showAscents;
         updateChartData(item);
     }
-    // the stops the fill was last coloured with, which e-ink draws as shades and hatching instead
+    // the stops the fill was last coloured with, which e-ink draws as shades and hatching instead, and the shade of each: from the grade
+    // of its stretch, the chart having the colours it may turn into something else
     let fillStops: ProfileFillStop[] = null;
+    let fillShades: string[] = [];
     /**
      * On e-ink the fill is not coloured: the colours of the grades are greys that look alike. A grade is a shade of black, the more the
      * steeper, and a surface is a hatching. Clipped to the area under the curve.
      */
-    function drawEInkFill(c: Canvas, set: LineDataSet, spline: Path, trans: Transformer, min: number, max: number, superMethod: () => void) {
+    function drawEInkFill(canvas: Canvas, set: LineDataSet, spline: Path, trans: Transformer, min: number, max: number, superMethod: () => void) {
         const data = item?.profile?.data;
         if (!fillStops?.length || !data?.length) {
             superMethod();
@@ -538,8 +551,8 @@
         area.lineTo(min, fillMin);
         area.close();
         trans.pathValueToPixel(area);
-        c.save();
-        c.clipPath(area);
+        canvas.save();
+        canvas.clipPath(area);
         fillStops.forEach((stop, index) => {
             const left = Math.max(contentLeft, trans.getPixelForValues(data[stop.d].d, 0).x);
             const right = Math.min(contentRight, trans.getPixelForValues(data[fillStops[index + 1]?.d ?? data.length - 1].d, 0).x);
@@ -547,22 +560,15 @@
                 return;
             }
             if (stop.pattern) {
-                drawSurfaceBand(c, { id: '', pattern: stop.pattern, left, right, top: contentTop, bottom: contentBottom, fillColor: '#ffffff', patternColor: '#000000' });
+                drawSurfaceBand(canvas, { id: '', pattern: stop.pattern, left, right, top: contentTop, bottom: contentBottom, fillColor: '#ffffff', patternColor: '#000000' });
                 return;
             }
-            // from the grade of the stretch: the chart may have turned the stop's colour into something else
-            const end = fillStops[index + 1]?.d ?? data.length - 1;
-            let grades = 0;
-            for (let point = stop.d; point <= end; point++) {
-                grades += data[point].g ?? 0;
-            }
-            const shade = gradeShades[gradeBucketIndex(grades / (end - stop.d + 1))] ?? 0;
-            if (shade > 0) {
-                overlayFillPaint.color = new Color('#000000').setAlpha(shade).hex;
-                c.drawRect(left, contentTop, right, contentBottom, overlayFillPaint);
+            if (fillShades[index]) {
+                overlayFillPaint.color = fillShades[index];
+                canvas.drawRect(left, contentTop, right, contentBottom, overlayFillPaint);
             }
         });
-        c.restore();
+        canvas.restore();
     }
     // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
     $: if (chart?.nativeView && (brackets || marks)) {
@@ -607,18 +613,29 @@
             console.error(error, error.stack);
         }
     }
+    // a highlight that follows another this closely is a finger being dragged along the chart, not a tap
+    const SCRUB_GAP = 150;
+    let lastHighlightAt = 0;
+    // the route whose card was put away: its position updates do not bring the card back
+    let dismissedFor: Item = null;
     async function onChartHighlight(event: HighlightEventData) {
         // DEV_LOG && console.log('onChartHighlight', event.highlight);
         if (!item) {
             return;
         }
+        const now = Date.now();
+        const scrubbing = now - lastHighlightAt < SCRUB_GAP;
+        lastHighlightAt = now;
         const { xTouchPx, yTouchPx } = event.highlight;
-        if (popoverBounds && xTouchPx >= popoverBounds.left && xTouchPx <= popoverBounds.right && yTouchPx >= popoverBounds.top && yTouchPx <= popoverBounds.bottom) {
+        if (!scrubbing && popoverBounds && xTouchPx >= popoverBounds.left && xTouchPx <= popoverBounds.right && yTouchPx >= popoverBounds.top && yTouchPx <= popoverBounds.bottom) {
             // a tap on the card puts it away, the cursor with it: it sits on the side the cursor is not on
+            dismissedFor = item;
             clearHighlight();
             return;
         }
-        const markIndex = markAt(event.highlight);
+        // a tap, or a finger, on the chart is the user's own: the card is theirs to open again
+        dismissedFor = null;
+        const markIndex = scrubbing ? -1 : markAt(event.highlight);
         if (markIndex >= 0) {
             // a tap on a mark picks the mark, not a point of the route
             clearHighlight();
@@ -795,7 +812,7 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
-                if (inCard && card) {
+                if (inCard && card && dismissedFor !== item) {
                     buildPopover(onPathIndex, { d: itemData.d, a: itemData.a, g: itemData.g, dp: itemData.dp, dm: itemData.dm }, params);
                 } else {
                     popover = null;
@@ -1025,8 +1042,18 @@
             function updateSetColors() {
                 const stops = fill ?? (showProfileGrades ? profile.colors : null);
                 fillStops = stops;
+                fillShades = (stops ?? []).map((stop, index) => {
+                    const end = stops[index + 1]?.d ?? profileData.length - 1;
+                    let grades = 0;
+                    for (let point = stop.d; point <= end; point++) {
+                        grades += profileData[point].g ?? 0;
+                    }
+                    const shade = gradeShades[gradeBucketIndex(grades / (end - stop.d + 1))] ?? 0;
+                    return shade > 0 ? new Color('#000000').setAlpha(shade).hex : '';
+                });
                 if (stops && stops.length > 1) {
                     set.lineWidth = lineWidth;
+                    // TODO(cleanup): the cast is carried over; type the stops for the colors setter instead
                     set.colors = stops as any;
                     // the grade buckets only mean something if they can be told apart, and the chart's
                     // default fill alpha washes them out. Eink keeps that default: there the fill is a
@@ -1065,7 +1092,7 @@
                 const lineData = new LineData(sets);
                 chartView.data = lineData;
             } else {
-                chartView.highlightValues(null);
+                clearHighlight();
                 set = chartData.getDataSetByIndex(0);
                 updateSetColors();
                 set.values = profileData;

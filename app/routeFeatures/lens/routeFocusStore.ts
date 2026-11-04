@@ -1,5 +1,5 @@
 /** What the user points at on the route: a cursor, a focused section. Pure: nothing here may import NativeScript. */
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import type { IItem } from '~/models/Item';
 import type { LensId, LensSection } from '~/routeFeatures/registry';
 import { geometryKey } from '~/utils/routeAnalysis/geometryKey';
@@ -19,7 +19,7 @@ const shapeKeys = new WeakMap<object, string>();
 
 /** What `RouteFocus.itemKey` is for a route. */
 export function focusKeyOf(item: IItem): string {
-    if (item?.id !== undefined) {
+    if (item?.id !== undefined && item.id !== null) {
         return String(item.id);
     }
     if (!item?.geometry) {
@@ -47,24 +47,21 @@ export function focusSection(itemKey: string, section: Section) {
     routeFocus.update((current) => ({ ...forItem(current, itemKey), section }));
 }
 
+// an update with an object always notifies: nothing to clear is not an update
 export function clearCursor() {
-    routeFocus.update((current) => {
-        if (!current) {
-            return current;
-        }
+    const current = get(routeFocus);
+    if (current && 'cursor' in current) {
         const { cursor: _cursor, ...rest } = current;
-        return rest;
-    });
+        routeFocus.set(rest);
+    }
 }
 
 export function clearSection() {
-    routeFocus.update((current) => {
-        if (!current) {
-            return current;
-        }
+    const current = get(routeFocus);
+    if (current && 'section' in current) {
         const { section: _section, ...rest } = current;
-        return rest;
-    });
+        routeFocus.set(rest);
+    }
 }
 
 export function clearFocus() {

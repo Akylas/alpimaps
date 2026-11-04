@@ -27,18 +27,24 @@
     let scroller: NativeViewElementNode<ScrollView>;
     const chips: Record<string, NativeViewElementNode<GridLayout>> = {};
 
-    // the chip of the lens in use is brought to the middle of the row
-    async function revealSelected() {
+    // the chip of the lens in use is brought to the middle of the row; a row not laid out yet is tried again
+    const REVEAL_RETRIES = 5;
+    async function revealSelected(retries = REVEAL_RETRIES) {
         await tick();
         const scrollView = scroller?.nativeView;
         const chip = chips[selected]?.nativeView;
-        if (!scrollView?.content || !chip || !chip.isLayoutValid) {
+        if (!scrollView?.content || !chip) {
+            return;
+        }
+        if (!chip.isLayoutValid) {
+            retries > 0 && setTimeout(() => revealSelected(retries - 1), 50);
             return;
         }
         const middle = chip.getLocationRelativeTo(scrollView.content).x + chip.getActualSize().width / 2;
         scrollView.scrollToHorizontalOffset(Math.max(0, middle - scrollView.getActualSize().width / 2), false);
     }
-    $: if (selected && scroller) {
+    // a lens that comes or goes moves the chips too
+    $: if (selected && scroller && entries) {
         revealSelected();
     }
 </script>

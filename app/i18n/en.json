@@ -1297,7 +1297,7 @@
     "gesture_layer_swipe_title": "Remove a layer",
     "gesture_layer_swipe_desc": "In the layers list, swipe a layer you added sideways to reveal its remove button.",
     "gesture_chart_title": "Explore the profile",
-    "gesture_chart_desc": "Drag along the elevation chart to read a point of the route in the card above the chart: tap it to put it away. Tap a red mark under the chart to see that very steep part. Pinch to zoom in, the map follows the part of the route you're looking at.",
+    "gesture_chart_desc": "Drag along the elevation chart to read a point of the route in the card over the chart: tap it to put it away. Tap a red mark under the chart to see that very steep part. Pinch to zoom in, the map follows the part of the route you're looking at.",
     "gesture_place_swipe_title": "Place header shortcuts",
     "gesture_place_swipe_desc": "Swipe the header of a selected place sideways: one way zooms to it or locks it so other taps don't replace it, the other deletes a saved item.",
     "gesture_contact_copy_title": "Copy a phone or website",
@@ -1378,5 +1378,6 @@
     "gesture_elevation_tile_title": "Read the climbs",
     "gesture_elevation_tile_desc": "Tap the elevation tile to read the route by its climbs: the sheet rises to the profile, with the climbs marked on it.",
     "gesture_lens_more_title": "List what a lens found",
-    "gesture_lens_more_desc": "When the line under the lens bar ends with an arrow, tap it to list what the lens found: for the climbs, each climb and the steep sections. Tap a row to see it on the route."
+    "gesture_lens_more_desc": "When the line under the lens bar ends with an arrow, tap it to list what the lens found: for the climbs, each climb and the steep sections. Tap a row to see it on the route.",
+    "climbs_count_one": "1 climb"
 }
