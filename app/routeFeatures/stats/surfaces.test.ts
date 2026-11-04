@@ -35,19 +35,20 @@ describe('topSurfaces', () => {
 
 describe('surfaceStops', () => {
     const colors = { gravel: '#a', path: '#b' };
+    const patterns = { gravel: 'coarse_dots', path: 'cross' };
 
-    it('starts a stop at each segment, in order, with its colour', () => {
+    it('starts a stop at each segment, in order, with its colour and hatch', () => {
         const segments = [
             { id: 'path', start: 40, end: 99 },
             { id: 'gravel', start: 0, end: 39 }
         ];
-        expect(surfaceStops(segments, colors, '#z')).toEqual([
-            { d: 0, color: '#a' },
-            { d: 40, color: '#b' }
+        expect(surfaceStops(segments, colors, patterns, '#z', 'solid')).toEqual([
+            { d: 0, color: '#a', pattern: 'coarse_dots' },
+            { d: 40, color: '#b', pattern: 'cross' }
         ]);
     });
 
-    it('falls back for a surface without a colour', () => {
-        expect(surfaceStops([{ id: 'steps', start: 0, end: 9 }], colors, '#z')).toEqual([{ d: 0, color: '#z' }]);
+    it('falls back for a surface without a colour or a hatch', () => {
+        expect(surfaceStops([{ id: 'steps', start: 0, end: 9 }], colors, patterns, '#z', 'solid')).toEqual([{ d: 0, color: '#z', pattern: 'solid' }]);
     });
 });

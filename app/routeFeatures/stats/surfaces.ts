@@ -28,7 +28,13 @@ export function topSurfaces(surfaces: SurfaceShare[], count: number): SurfaceSha
         .slice(0, count);
 }
 
-/** Gradient stops for the profile fill, one per segment, as indices into the profile data. */
-export function surfaceStops(segments: SurfaceSegment[], colors: Record<string, string>, fallback: string): { d: number; color: string }[] {
-    return segments.map(({ id, start }) => ({ d: start, color: colors[id] ?? fallback })).sort((first, second) => first.d - second.d);
+/** Gradient stops for the profile fill, one per segment, as indices into the profile data; the hatch is for where colour is not enough. */
+export function surfaceStops<Pattern extends string>(
+    segments: SurfaceSegment[],
+    colors: Record<string, string>,
+    patterns: Record<string, Pattern>,
+    fallbackColor: string,
+    fallbackPattern: Pattern
+): { d: number; color: string; pattern: Pattern }[] {
+    return segments.map(({ id, start }) => ({ d: start, color: colors[id] ?? fallbackColor, pattern: patterns[id] ?? fallbackPattern })).sort((first, second) => first.d - second.d);
 }

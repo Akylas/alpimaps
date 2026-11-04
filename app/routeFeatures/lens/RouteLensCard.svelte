@@ -6,7 +6,6 @@
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import GradeLegend from '~/components/chart/GradeLegend.svelte';
-    import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { IItem } from '~/models/Item';
     import LensBar from '~/routeFeatures/lens/LensBar.svelte';
@@ -74,6 +73,8 @@
     $: sectionKey = focused ? `${focused.lens}:${focused.i0}:${focused.i1}` : '';
     $: if (sectionKey !== fittedKey) {
         fittedKey = sectionKey;
+        // the cursor was for the route as it was: a section focused or left starts from none
+        chart?.clearHighlight();
         if (focused) {
             fitSection(focused);
         }
@@ -146,7 +147,7 @@
         on:cursor={onCursor}
         on:mark={onMark}
         on:highlight={(payload) => dispatch('highlight', payload)} />
-    {#if $showGradeColors && !isEInk && (active === 'overview' || active === 'climbs')}
+    {#if $showGradeColors && (active === 'overview' || active === 'climbs')}
         <GradeLegend row={3} />
     {/if}
 </gridlayout>

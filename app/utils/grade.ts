@@ -55,6 +55,12 @@ export const gradeBuckets: { from: number; color: string }[] = [
     { from: 12, color: '#9E1B18' }
 ];
 
+/**
+ * How black each bucket is on e-ink, out of 255, where its colour is a grey like the others: the steeper the darker, whichever way, the
+ * flat clear and the steepest climb never solid.
+ */
+export const gradeShades = [105, 70, 35, 0, 35, 70, 105, 140];
+
 export function gradeBucketIndex(grade: number) {
     for (let index = gradeBuckets.length - 1; index > 0; index--) {
         if (grade >= gradeBuckets[index].from) {

@@ -17,7 +17,7 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import type { LensSection } from '~/routeFeatures/registry';
-    import { gradeColor } from '~/utils/grade';
+    import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { colors, fonts, windowInset } from '~/variables';
 
     export let item: IItem;
@@ -76,14 +76,15 @@
             }
             const previous = points[position - 1];
             line.lineTo(point.x, point.y);
-            // a slice under each stretch of the line, in the colour of its grade; e-ink has the shape alone
+            // a slice under each stretch of the line, in the colour of its grade
             quad.reset();
             quad.moveTo(previous.x, previous.y);
             quad.lineTo(point.x, point.y);
             quad.lineTo(point.x, height);
             quad.lineTo(previous.x, height);
             quad.close();
-            fillPaint.color = new Color(isEInk ? colorOnSurface : gradeColor(point.grade)).setAlpha(isEInk ? 40 : GRADE_FILL_ALPHA).hex;
+            // the grade's colour, and on e-ink its shade of black, as under the chart
+            fillPaint.color = isEInk ? new Color('#000000').setAlpha(gradeShades[gradeBucketIndex(point.grade)]).hex : new Color(gradeColor(point.grade)).setAlpha(GRADE_FILL_ALPHA).hex;
             canvas.drawPath(quad, fillPaint);
         });
         strokePaint.color = isEInk ? colorOnSurface : colorOnSurfaceVariant;

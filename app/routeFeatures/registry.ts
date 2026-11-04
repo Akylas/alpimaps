@@ -2,6 +2,7 @@ import type { Feature } from 'geojson';
 import type { ComponentType } from 'svelte';
 import { type Readable, derived, writable } from 'svelte/store';
 import type { SettingsStore } from '~/stores/settingsStore';
+import type { SurfacePattern } from '~/utils/surfacePattern';
 import type { IItem } from '~/models/Item';
 import type { AnalysisStage } from '~/utils/routeAnalysis/pipeline';
 
@@ -124,6 +125,8 @@ export interface LensSlice {
 export interface ProfileFillStop {
     d: number;
     color: string;
+    /** The hatch that says it where colour cannot, on e-ink. The grade's own when missing. */
+    pattern?: SurfacePattern;
 }
 
 /** What a lens asks of the profile chart. */

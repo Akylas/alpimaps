@@ -6,6 +6,7 @@ import { pavedShare, surfaceStops, topSurfaces } from '~/routeFeatures/stats/sur
 import { ROUTE_STATS_HEIGHT } from '~/utils/navigation';
 import type { IItem } from '~/models/Item';
 import { surfaceColors } from '~/utils/routing';
+import { surfacePatterns } from '~/utils/surfacePattern';
 
 const STATS_HEIGHT = 164;
 // a surface the palette does not know
@@ -60,7 +61,7 @@ const surfaceLens: RouteLens = {
             return {};
         }
         if (!fills.has(segments)) {
-            fills.set(segments, { fill: surfaceStops(segments, surfaceColors, UNKNOWN_SURFACE_COLOR) });
+            fills.set(segments, { fill: surfaceStops(segments, surfaceColors, surfacePatterns, UNKNOWN_SURFACE_COLOR, 'cross') });
         }
         return fills.get(segments);
     },
