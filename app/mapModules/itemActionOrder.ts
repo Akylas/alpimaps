@@ -5,6 +5,7 @@
 /** Lower comes first. Spaced by 10 so an action can slot between two others. */
 export const ITEM_ACTION_ORDER: Record<string, number> = {
     information: 0,
+    plan: 5,
     save: 10,
     navigate: 20,
     directions: 30,

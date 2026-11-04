@@ -114,7 +114,8 @@
     const PLATE_PADDING = 4;
     // the marks lie in the room the axis labels leave under the plot
     const MARK_GAP = 1;
-    const MARK_HEIGHT = 5;
+    const MARK_HEIGHT = 3;
+    const MARK_TIER_STEP = 2;
     const MARK_MIN_WIDTH = 4;
     /** the room over the plot for the plate of the highest bracket */
     const BRACKET_ROOM = 24;
@@ -171,7 +172,7 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
-        for (const { from, kind, to } of marks) {
+        for (const { from, kind, tier, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
             if (end < contentLeft || start > contentRight) {
@@ -179,7 +180,9 @@
             }
             overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
             const top = contentBottom + MARK_GAP;
-            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
+            // the harder, the thicker: it reads without colour, on e-ink too
+            const height = MARK_HEIGHT + ((tier ?? 1) - 1) * MARK_TIER_STEP;
+            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + height, height / 2, height / 2, overlayFillPaint);
         }
         if (popover && cursorShown) {
             drawPopover(canvas);
@@ -382,7 +385,9 @@
     export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
-    if (inCard) {
+    /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
+    export let besideMap = true;
+    if (inCard && besideMap) {
         mapContext.onItemSheetMoved(hideCard);
     }
 
@@ -391,6 +396,8 @@
         popover = null;
         popoverBounds = null;
         dispatch('cursor', null);
+        // the tiles show what is left from the point: no point, nothing left to show
+        !mini && mapContext.mapModule('items').notify({ eventName: 'user_onroute_data', item });
     }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
@@ -654,7 +661,7 @@
             if (event.highlight) {
                 dispatch('highlight', { lat: position[1], lon: position[0], highlight: event.highlight });
             }
-            if (shouldSelectItem) {
+            if (shouldSelectItem && besideMap) {
                 mapContext.selectItem({
                     item: { geometry: { type: 'Point', coordinates: position } },
                     isFeatureInteresting: true,
@@ -739,7 +746,8 @@
             // item sheet's own live data
             !mini &&
                 mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data'
+                    eventName: 'user_onroute_data',
+                    item
                 });
         } else {
             const itemData = highlight?.entry || item?.profile?.data?.[onPathIndex];
@@ -821,6 +829,7 @@
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
+                        item,
                         itemData,
                         ...params
                     });
@@ -828,10 +837,13 @@
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
+                        item,
                         ...params
                     });
             }
             if (highlight) {
+                // the card built above is drawn now, whether or not the chart has already drawn this highlight
+                nChart?.invalidate();
                 return;
             }
             function highlightFunc() {

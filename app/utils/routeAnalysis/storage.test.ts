@@ -2,7 +2,7 @@ import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
-import { createAnalysis, parseAnalysis, reconcileAnalysis, withActivity } from './storage';
+import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace } from './storage';
 import type { Layer } from './types';
 
 function line(vertexCount: number): LineString {
@@ -145,5 +145,53 @@ describe('statsProfile', () => {
     it('ignores an activity that only came from the route', () => {
         const fromRoute = createAnalysis(line(10), { kind: 'bike', origin: 'route' });
         expect(statsProfile({ properties: { route: { type: 'pedestrian' } } }, fromRoute)).toBe('pedestrian');
+    });
+});
+
+describe('withDeparture', () => {
+    const geometry = line(20);
+
+    it('creates the analysis a route has not got yet', () => {
+        const analysis = withDeparture(null, geometry, { mode: 'planned', at: 1000 });
+        expect(analysis.inputs.departure).toEqual({ mode: 'planned', at: 1000 });
+        expect(analysis.inputs.geometryKey).toBe(geometryKey(geometry));
+        expect(analysis.inputs.pace).toEqual(DEFAULT_PACE);
+    });
+
+    it('keeps the activity, the pace and the layers', () => {
+        const base = {
+            ...withPace(withActivity(null, geometry, { kind: 'bike', subtype: 'road', origin: 'user' }), geometry, { multiplier: 1.2, stopsMinPerHour: 5 }),
+            layers: { weather: weatherLayer }
+        };
+        const analysis = withDeparture(base, geometry, { mode: 'now' });
+        expect(analysis.inputs.activity).toEqual({ kind: 'bike', subtype: 'road', origin: 'user' });
+        expect(analysis.inputs.pace).toMatchObject({ multiplier: 1.2, stopsMinPerHour: 5 });
+        expect(analysis.layers.weather).toBe(weatherLayer);
+    });
+
+    it('keeps the route zone it already knows', () => {
+        const base = withDeparture(null, geometry, { mode: 'planned', at: 1000, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: false });
+        expect(withDeparture(base, geometry, { mode: 'planned', at: 2000 }).inputs.departure).toEqual({ mode: 'planned', at: 2000, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: false });
+    });
+
+    it('starts over on an edited route, the departure kept', () => {
+        const base = { ...withDeparture(null, line(10), { mode: 'planned', at: 1000 }), layers: { weather: weatherLayer } };
+        const analysis = withDeparture(base, geometry, { mode: 'planned', at: 3000 });
+        expect(analysis.layers).toEqual({});
+        expect(analysis.inputs.geometryKey).toBe(geometryKey(geometry));
+    });
+});
+
+describe('withPace', () => {
+    const geometry = line(20);
+
+    it('changes only what is given, the model kept', () => {
+        const analysis = withPace(withPace(null, geometry, { multiplier: 1.3 }), geometry, { stopsMinPerHour: 10 });
+        expect(analysis.inputs.pace).toEqual({ ...DEFAULT_PACE, multiplier: 1.3, stopsMinPerHour: 10 });
+    });
+
+    it('keeps the departure', () => {
+        const base = withDeparture(null, geometry, { mode: 'planned', at: 1000 });
+        expect(withPace(base, geometry, { multiplier: 0.9 }).inputs.departure).toEqual({ mode: 'planned', at: 1000 });
     });
 });

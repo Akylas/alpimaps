@@ -1,0 +1,84 @@
+import { describe, expect, it } from 'vitest';
+import type { RoutePageSection } from '~/routeFeatures/registry';
+import { isSectionOpen, pageRows, toggledSections } from './rows';
+
+function section(id: string, rowCount: number, lens?: RoutePageSection['lens']): RoutePageSection {
+    return {
+        id,
+        icon: 'mdi-' + id,
+        title: () => id,
+        summary: () => `${rowCount} rows`,
+        lens,
+        rows: () => Array.from({ length: rowCount }, (_, index) => ({ key: String(index), data: index })),
+        component: async () => ({ default: null })
+    };
+}
+
+const ctx = { item: { id: 1 } };
+// a section of a lens: being that lens' does not open it
+const climbs = section('climbs', 1, 'climbs');
+
+describe('isSectionOpen', () => {
+    it('keeps every section closed by default, the one of its lens too', () => {
+        expect(isSectionOpen(climbs, {})).toBe(false);
+        expect(isSectionOpen(climbs, {})).toBe(false);
+        expect(isSectionOpen({ id: 'osm' }, {})).toBe(false);
+    });
+
+    it('keeps what the user chose over the default', () => {
+        expect(isSectionOpen(climbs, { climbs: true })).toBe(true);
+        expect(isSectionOpen({ id: 'osm' }, { osm: true })).toBe(true);
+    });
+});
+
+describe('pageRows', () => {
+    const sections = [section('climbs', 2, 'climbs'), section('stats', 1, 'surface'), section('osm', 0)];
+
+    it('starts with the tiles and the profile, ends with the footer', () => {
+        const rows = pageRows({ sections, ctx, stored: {}, hasProfile: true });
+        expect(rows[0].type).toBe('tiles');
+        expect(rows[1].type).toBe('profile');
+        expect(rows[rows.length - 1].type).toBe('footer');
+    });
+
+    it('has no profile row without a profile', () => {
+        const rows = pageRows({ sections, ctx, stored: {}, hasProfile: false });
+        expect(rows.map((row) => row.type)).not.toContain('profile');
+    });
+
+    it('drops a section that has no rows', () => {
+        const rows = pageRows({ sections, ctx, stored: {}, hasProfile: true });
+        expect(rows.filter((row) => row.type === 'section').map((row) => row.key)).toEqual(['section:climbs', 'section:stats']);
+    });
+
+    it('lists the body of an open section under its header, and only its header when closed', () => {
+        const rows = pageRows({ sections, ctx, stored: { climbs: true }, hasProfile: true });
+        expect(rows.map((row) => row.key)).toEqual(['tiles', 'profile', 'section:climbs', 'climbs:0', 'climbs:1', 'section:stats', 'footer']);
+        const closed = pageRows({ sections, ctx, stored: {}, hasProfile: true });
+        expect(closed.map((row) => row.key)).toEqual(['tiles', 'profile', 'section:climbs', 'section:stats', 'footer']);
+    });
+
+    it('gives the header its summary and whether it is open', () => {
+        const rows = pageRows({ sections, ctx, stored: { stats: true }, hasProfile: true });
+        const headers = rows.filter((row) => row.type === 'section');
+        expect(headers.map((row) => row.type === 'section' && [row.open, row.summary])).toEqual([
+            [false, '2 rows'],
+            [true, '1 rows']
+        ]);
+    });
+
+    it('hands each body row to its section', () => {
+        const rows = pageRows({ sections, ctx, stored: { climbs: true }, hasProfile: true });
+        const body = rows.find((row) => row.key === 'climbs:1');
+        expect(body).toEqual({ type: 'body', key: 'climbs:1', section: 'climbs', row: { key: '1', data: 1 }, last: true });
+        expect(rows.find((row) => row.key === 'climbs:0')).toMatchObject({ last: false });
+    });
+});
+
+describe('toggledSections', () => {
+    it('stores the opposite of what the section shows now', () => {
+        expect(toggledSections({}, climbs)).toEqual({ climbs: true });
+        expect(toggledSections({ climbs: true }, climbs)).toEqual({ climbs: false });
+        expect(toggledSections({ climbs: false }, { id: 'osm' })).toEqual({ climbs: false, osm: true });
+    });
+});

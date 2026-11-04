@@ -74,6 +74,17 @@ registerRouteFeature({
     order: 20,
     setting: { title: () => lc('road_stats'), store: routeFeatureStats },
     lenses: [surfaceLens],
+    pageSections: [
+        {
+            id: 'stats',
+            icon: 'mdi-chart-bar-stacked',
+            title: () => lc('road_stats'),
+            lens: 'surface',
+            summary: ({ item }) => (item.stats?.surfaces?.length ? `${percent(pavedShare(item.stats.surfaces))} ${lc('paved')}` : undefined),
+            rows: ({ item }) => (item?.route && item.stats ? [{ key: 'stats', height: STATS_HEIGHT }] : []),
+            component: () => import('~/routeFeatures/stats/RouteStatsView.svelte')
+        }
+    ],
     sheetCard: {
         component: () => import('~/routeFeatures/stats/RouteStatsView.svelte'),
         height: ({ item }) => (item?.route && item.stats ? STATS_HEIGHT : 0)

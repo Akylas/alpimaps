@@ -2,19 +2,33 @@ import { get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
-import { climbsCategories, climbsMinLength, climbsPreset, climbsSettingsKey, climbsSteepDown, climbsSteepUp, climbsVerySteepDown, climbsVerySteepUp } from '~/routeFeatures/climbs/settings';
-import { type Climb, type ClimbCategory, type SteepSection, bestClimb, findClimbs, findSteepSections, isSteepPreset, presetForActivity, resolveThresholds } from '~/routeFeatures/climbs/steep';
+import { climbsCategories, climbsMinLength, climbsPreset, climbsSettingsKey, climbsSteepDown, climbsSteepUp } from '~/routeFeatures/climbs/settings';
+import {
+    type Climb,
+    type ClimbCategory,
+    type SteepSection,
+    type SteepThresholds,
+    bestClimb,
+    findClimbs,
+    findSteepSections,
+    isSteepPreset,
+    presetForActivity,
+    resolveThresholds,
+    sortByDifficulty
+} from '~/routeFeatures/climbs/steep';
 import type { AttentionMark, LensSection, LensSlice, ProfileBracket } from '~/routeFeatures/registry';
 import { gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 
 export interface ClimbsRead {
     climbs: Climb[];
+    /** in route order */
     steep: SteepSection[];
+    thresholds: SteepThresholds;
     best?: Climb;
     brackets: ProfileBracket[];
     sections: LensSection[];
-    /** the ways up past the very steep threshold */
+    /** every steep way up, the very list the steep sections show */
     marks: AttentionMark[];
     /** the profile's grade sections, by grade bucket */
     slices: LensSlice[];
@@ -43,12 +57,7 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     if (cached?.key === key) {
         return cached.read;
     }
-    const thresholds = resolveThresholds(preset, {
-        steepUp: get(climbsSteepUp),
-        veryUp: get(climbsVerySteepUp),
-        steepDown: get(climbsSteepDown),
-        veryDown: get(climbsVerySteepDown)
-    });
+    const thresholds = resolveThresholds(preset, { steepUp: get(climbsSteepUp), steepDown: get(climbsSteepDown) });
     const minLength = get(climbsMinLength);
     const categories = get(climbsCategories);
     let read: ClimbsRead | null = null;
@@ -60,6 +69,7 @@ export function readClimbs(item: IItem): ClimbsRead | null {
         read = {
             climbs,
             steep,
+            thresholds,
             best: bestClimb(climbs),
             brackets: climbs.map((climb) => ({ from: climb.startDistance, to: climb.endDistance, top: data[climb.endIndex].a, label: climb.category && categoryLabel(climb.category) })),
             sections: climbs.map((climb, id) => ({
@@ -69,11 +79,12 @@ export function readClimbs(item: IItem): ClimbsRead | null {
                 title: [climb.category && categoryLabel(climb.category), formatDistance(climb.length), climb.avgGrade.toFixed(1) + ' %'].filter(Boolean).join(' · ')
             })),
             marks: steep
-                .filter((section) => section.direction === 'up' && section.level === 2)
+                .filter((section) => section.direction === 'up')
                 .map((section, id) => ({
                     kind: 'steep' as const,
                     lens: 'climbs' as const,
-                    section: { id, i0: section.startIndex, i1: section.endIndex, title: [lc('climbs_very_steep', formatDistance(section.length)), section.avgGrade.toFixed(0) + ' %'].join(' · ') }
+                    tier: section.tier,
+                    section: { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) }
                 })),
             slices: (item.profile.sections ?? []).map(({ endIndex, grade, startIndex }) => {
                 const bucket = gradeBucketIndex(grade);
@@ -84,4 +95,42 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     }
     reads.set(data, { key, read });
     return read;
+}
+
+/** What a focused steep section says, on the profile's mark and in the list. */
+export function steepTitle(section: SteepSection) {
+    return [lc(section.direction === 'down' ? 'climbs_steep_descent' : 'climbs_steep', formatDistance(section.length)), Math.abs(section.avgGrade).toFixed(0) + ' %'].join(' · ');
+}
+
+/** The longest and the biggest gain of the steep sections: every row's ramp is drawn to this one scale. */
+export interface SteepScale {
+    length: number;
+    gain: number;
+}
+
+/** A row of the climbs list: a climb, the steep sections' header, a steep section. */
+export type ClimbsRowData =
+    | { type: 'climb'; climb: Climb; id: number }
+    | { type: 'header'; count: number }
+    | { type: 'steep'; section: SteepSection; id: number; scale: SteepScale; chevrons: 1 | 2 | 3 };
+
+/** 4 % over the threshold per chevron: how far past steep the section is, whatever the activity. */
+const CHEVRON_STEP = 4;
+
+/** The climbs, then the steep sections, hardest first, under their header, listed only while open. */
+export function climbsRows(read: ClimbsRead | null, steepOpen: boolean): ClimbsRowData[] {
+    const steep = read?.steep ?? [];
+    const scale: SteepScale = {
+        length: Math.max(1, ...steep.map((section) => section.length)),
+        gain: Math.max(1, ...steep.map((section) => Math.abs(section.gain)))
+    };
+    const chevrons = (section: SteepSection): 1 | 2 | 3 => {
+        const over = Math.abs(section.avgGrade) - (section.direction === 'up' ? read.thresholds.steepUp : read.thresholds.steepDown);
+        return over >= CHEVRON_STEP * 2 ? 3 : over >= CHEVRON_STEP ? 2 : 1;
+    };
+    return [
+        ...(read?.climbs ?? []).map((climb, id): ClimbsRowData => ({ type: 'climb', climb, id })),
+        ...(steep.length ? [{ type: 'header' as const, count: steep.length }] : []),
+        ...(steepOpen ? sortByDifficulty(steep).map((section): ClimbsRowData => ({ type: 'steep', section, id: steep.indexOf(section), scale, chevrons: chevrons(section) })) : [])
+    ];
 }

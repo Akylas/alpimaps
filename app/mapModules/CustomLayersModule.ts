@@ -1187,7 +1187,7 @@ export default class CustomLayersModule extends MapModule {
         }
         this.attachedSource = target ? this.terrainSource : null;
         if (target) {
-            this.terrainAttachedTo = this.attachTerrain(target);
+            this.terrainAttachedTo = this.attachTerrain(target, true);
         }
     }
     // compared by IDENTITY: `layer.source()` registers a new handle every call
@@ -1200,7 +1200,9 @@ export default class CustomLayersModule extends MapModule {
 
     // Public: a cloned composite on a second map needs its own slots. The contour source wraps the DEM
     // (traced, shared across maps). Both slots always attach; toggled-off ones are hidden, not detached.
-    attachTerrain(layer: MassifLayer): MassifObject<'massif::CompositeVectorTileLayer'> | null {
+    // `owner`: the main map's own composite, whose hillshade child the layer menu and its options drive. A second
+    // map's only gets the same settings: taking that role would leave the main map's hillshade to the clone's child
+    attachTerrain(layer: MassifLayer, owner = false): MassifObject<'massif::CompositeVectorTileLayer'> | null {
         if (!this.terrainSource || !layer?.is('massif::CompositeVectorTileLayer')) {
             return null;
         }
@@ -1221,7 +1223,12 @@ export default class CustomLayersModule extends MapModule {
             return null;
         }
         // the children are brand new: reapply the user's choices
-        this.setHillshadeChild(composite);
+        if (owner) {
+            this.setHillshadeChild(composite);
+        } else if (this.slotItem) {
+            const name = this.slotItem.name;
+            this.withExternalChild(composite, HILLSHADE_SLOT, (result) => this.applyHillshadeSettings(api.wrapLayer(result.handle, 'massif::HillshadeRasterTileLayer'), name, true));
+        }
         this.withExternalChild(composite, CONTOUR_SLOT, (child) => child.set('visible', this.mapOption('contours')));
         this.applySlopeMode(composite);
         DEV_LOG && this.logSlotStatus(composite);

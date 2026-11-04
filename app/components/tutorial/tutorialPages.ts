@@ -184,6 +184,30 @@ export const tutorialPages: TutorialPage[] = [
         zones: [zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_more', 'tap', 10, 270, 280, 34)]
     },
     {
+        id: 'route_page',
+        parts: [
+            icon(10, 12, 'mdi-arrow-left', 24),
+            text(42, 14, 120, 'routes', { key: true, bold: true }),
+            pill(170, 8, 100, 30, { icon: 'mdi-clock-outline', selected: true }),
+            icon(274, 12, 'mdi-dots-vertical', 22),
+            card(0, 46, 300, 130, 0),
+            icon(140, 100, 'mdi-map-marker-path', 28),
+            card(12, 186, 84, 34, 10),
+            icon(18, 194, 'mdi-arrow-left-right', 16),
+            text(36, 192, 60, () => formatDistance(27100), { bold: true, size: 11 }),
+            card(102, 186, 84, 34, 10),
+            icon(108, 194, 'mdi-timer-outline', 16),
+            text(126, 192, 60, () => formatDuration(8460), { bold: true, size: 11 }),
+            card(192, 186, 96, 34, 10),
+            icon(198, 194, 'mdi-arrow-top-right', 16),
+            text(216, 192, 70, () => convertElevation(1180), { bold: true, size: 11 }),
+            card(12, 230, 276, 110),
+            ...[0, 1, 2, 3, 4, 5, 6].map((index): TutorialPart => card(20 + index * 38, 242, 34, 50, 8)),
+            { kind: 'bars', x: 24, y: 304, width: 252, height: 28, values: [10, 10, 10, 20, 40, 70, 90] }
+        ],
+        zones: [zone('when_now', 'longPress', 166, 4, 108, 38)]
+    },
+    {
         id: 'routes',
         parts: [
             ...mapBackground,

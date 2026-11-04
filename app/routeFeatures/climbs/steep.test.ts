@@ -8,11 +8,14 @@ import {
     type SteepPreset,
     bestClimb,
     climbCategory,
+    difficultyTier,
     findClimbs,
     findSteepSections,
     isSteepPreset,
     presetForActivity,
-    resolveThresholds
+    resolveThresholds,
+    sortByDifficulty,
+    steepDifficulty
 } from './steep';
 
 const STEP = 10;
@@ -37,23 +40,24 @@ describe('findSteepSections', () => {
     });
 
     it('finds a steep climb between flat parts, with its figures', () => {
-        const sections = findSteepSections(profile([500, 0], [300, 10], [500, 0]), options);
+        const sections = findSteepSections(profile([500, 0], [300, 14], [500, 0]), options);
         expect(sections).toHaveLength(1);
         const [section] = sections;
         expect(section.direction).toBe('up');
-        expect(section.level).toBe(1);
         // a point carries the grade of the leg that ends on it, so the first steep point is 10 m in
         expect(section.startDistance).toBe(510);
         expect(section.endDistance).toBe(800);
         expect(section.length).toBe(290);
-        expect(section.avgGrade).toBeCloseTo(10, 5);
-        expect(section.maxGrade).toBe(10);
-        expect(section.gain).toBeCloseTo(29, 5);
+        expect(section.avgGrade).toBeCloseTo(14, 5);
+        expect(section.maxGrade).toBe(14);
+        expect(section.gain).toBeCloseTo(40.6, 5);
+        expect(section.difficulty).toBeCloseTo(steepDifficulty(290, 40.6), 5);
+        expect(section.tier).toBe(difficultyTier(section.difficulty));
     });
 
-    it('calls a section very steep when its average passes the very steep threshold', () => {
-        const [section] = findSteepSections(profile([500, 0], [200, 14], [500, 0]), options);
-        expect(section.level).toBe(2);
+    it('leaves out a climb that is not steep for a road bike', () => {
+        // 9 % is a hard road climb, not a steep section
+        expect(findSteepSections(profile([500, 0], [300, 9], [500, 0]), options)).toEqual([]);
     });
 
     it('reports a steep descent with negative figures', () => {
@@ -65,28 +69,76 @@ describe('findSteepSections', () => {
     });
 
     it('ignores a run shorter than the minimum length', () => {
-        expect(findSteepSections(profile([500, 0], [50, 15], [500, 0]), options)).toEqual([]);
-        expect(findSteepSections(profile([500, 0], [50, 15], [500, 0]), { ...options, minLength: 30 })).toHaveLength(1);
+        expect(findSteepSections(profile([500, 0], [50, 16], [500, 0]), options)).toEqual([]);
+        expect(findSteepSections(profile([500, 0], [50, 16], [500, 0]), { ...options, minLength: 30 })).toHaveLength(1);
     });
 
     it('keeps one section across a short easing', () => {
-        // 40 m at 6 % between two 10 % legs: the mean of the gap stays within 3 % of the threshold
-        const sections = findSteepSections(profile([500, 0], [200, 10], [40, 6], [200, 10], [500, 0]), options);
+        // 40 m at 10 % between two 14 % legs: the mean of the gap stays within 3 % of the threshold
+        const sections = findSteepSections(profile([500, 0], [200, 14], [40, 10], [200, 14], [500, 0]), options);
         expect(sections).toHaveLength(1);
     });
 
     it('splits two sections apart by a real break', () => {
-        expect(findSteepSections(profile([500, 0], [200, 10], [300, 0], [200, 10], [500, 0]), options)).toHaveLength(2);
+        expect(findSteepSections(profile([500, 0], [200, 14], [300, 0], [200, 14], [500, 0]), options)).toHaveLength(2);
     });
 
     it('uses the thresholds it is given', () => {
-        const data = profile([500, 0], [300, 10], [500, 0]);
+        const data = profile([500, 0], [300, 14], [500, 0]);
         expect(findSteepSections(data, { ...options, thresholds: STEEP_PRESETS.mtb })).toEqual([]);
     });
 
     it('skips points without a grade', () => {
-        const data = profile([500, 0], [300, 10], [500, 0]).map(({ a, d }) => ({ d, a }));
+        const data = profile([500, 0], [300, 14], [500, 0]).map(({ a, d }) => ({ d, a }));
         expect(findSteepSections(data, options)).toEqual([]);
+    });
+});
+
+describe('presets', () => {
+    it('starts steep where it is really steep for the activity', () => {
+        expect([STEEP_PRESETS.road.steepUp, STEEP_PRESETS.gravel.steepUp, STEEP_PRESETS.mtb.steepUp, STEEP_PRESETS.hiking.steepUp]).toEqual([12, 13, 16, 20]);
+    });
+});
+
+describe('steep difficulty', () => {
+    it('rates a long section harder than a short steeper one', () => {
+        const long = steepDifficulty(800, 112);
+        const short = steepDifficulty(150, 24);
+        expect(long).toBeGreaterThan(short);
+        expect(difficultyTier(long)).toBe(3);
+        expect(difficultyTier(short)).toBe(1);
+    });
+
+    it('weighs the grade more than the length', () => {
+        // the same gain over half the length is harder
+        expect(steepDifficulty(200, 30)).toBeGreaterThan(steepDifficulty(400, 30));
+    });
+
+    it('cuts the score into three tiers', () => {
+        expect([0.2, 0.5, 1.19, 1.2, 4].map(difficultyTier)).toEqual([1, 2, 2, 3, 3]);
+    });
+
+    it('rates a descent by its drop', () => {
+        expect(steepDifficulty(300, -45)).toBeCloseTo(steepDifficulty(300, 45), 5);
+    });
+});
+
+describe('sortByDifficulty', () => {
+    it('lists the ways up hardest first, then the descents hardest first', () => {
+        const sections = findSteepSections(profile([300, 0], [150, 16], [300, 0], [300, -14], [300, 0], [800, 14], [300, 0], [500, -12], [300, 0]), options);
+        const sorted = sortByDifficulty(sections);
+        expect(sorted.map(({ avgGrade, direction }) => [direction, Math.round(avgGrade)])).toEqual([
+            ['up', 14],
+            ['up', 16],
+            ['down', -12],
+            ['down', -14]
+        ]);
+    });
+
+    it('leaves the sections it is given in route order', () => {
+        const sections = findSteepSections(profile([300, 0], [150, 16], [300, 0], [800, 14], [300, 0]), options);
+        sortByDifficulty(sections);
+        expect(sections[0].startIndex).toBeLessThan(sections[1].startIndex);
     });
 });
 
@@ -182,16 +234,12 @@ describe('bestClimb', () => {
 describe('resolveThresholds', () => {
     it('is the preset when nothing is set', () => {
         expect(resolveThresholds('road', {})).toEqual(STEEP_PRESETS.road);
-        expect(resolveThresholds('mtb', { steepUp: 0, veryUp: 0, steepDown: 0, veryDown: 0 })).toEqual(STEEP_PRESETS.mtb);
+        expect(resolveThresholds('mtb', { steepUp: 0, steepDown: 0 })).toEqual(STEEP_PRESETS.mtb);
     });
 
     it('takes the values that are set over the preset, one by one', () => {
-        expect(resolveThresholds('road', { steepUp: 10, veryDown: 18 })).toEqual({ ...STEEP_PRESETS.road, steepUp: 10, veryDown: 18 });
-    });
-
-    it('never lets very steep fall under steep', () => {
-        expect(resolveThresholds('road', { steepUp: 15 })).toMatchObject({ steepUp: 15, veryUp: 15 });
-        expect(resolveThresholds('road', { steepDown: 20 })).toMatchObject({ steepDown: 20, veryDown: 20 });
+        expect(resolveThresholds('road', { steepUp: 10 })).toEqual({ ...STEEP_PRESETS.road, steepUp: 10 });
+        expect(resolveThresholds('road', { steepDown: 18 })).toEqual({ ...STEEP_PRESETS.road, steepDown: 18 });
     });
 });
 

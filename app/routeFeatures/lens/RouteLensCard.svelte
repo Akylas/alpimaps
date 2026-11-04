@@ -17,6 +17,10 @@
     import { showAscents, showGradeColors } from '~/stores/mapStore';
 
     export let item: IItem;
+    /** false on the route page: the main map is behind it, a focused section is not framed there */
+    export let besideMap = true;
+    /** what the insight line's `›` does for a lens, when not the lens' own (the route page opens its section) */
+    export let moreFor: (lens: LensId) => (() => void | Promise<void>) | undefined = null;
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
@@ -43,7 +47,7 @@
     $: activeLens = lenses.find((lens) => lens.id === active);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
     $: headline = activeLens?.headline({ item });
-    $: openSection = activeLens?.openSection?.({ item });
+    $: openSection = moreFor ? moreFor(active) : activeLens?.openSection?.({ item });
     // the same arrays for the lens' whole stay, so the chart is not rebuilt for nothing
     const NO_BRACKETS: ProfileBracket[] = [];
     const NO_SECTIONS: LensSection[] = [];
@@ -57,11 +61,11 @@
     let marks = NO_MARKS;
     let marksKey = '';
     $: {
-        const key = attention.map(({ kind, section }) => `${kind}:${section.i0}:${section.i1}`).join();
+        const key = attention.map(({ kind, section, tier }) => `${kind}:${section.i0}:${section.i1}:${tier}`).join();
         if (key !== marksKey) {
             marksKey = key;
             const data = item?.profile?.data;
-            marks = data && attention.length ? attention.map(({ kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind })) : NO_MARKS;
+            marks = data && attention.length ? attention.map(({ kind, section, tier }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, tier })) : NO_MARKS;
         }
     }
 
@@ -78,7 +82,7 @@
         // the cursor was for the route as it was: a section focused or left starts from none
         chart?.clearHighlight();
         range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
-        if (focused) {
+        if (focused && besideMap) {
             fitSection(focused);
         }
     }
@@ -98,7 +102,10 @@
             focusOn(sectionAt(sections, nearestIndex(routeCoordinates(item.geometry), position.lat, position.lon)));
         }
     });
-    onDestroy(clearFocus);
+    // the page's card leaves the focus to the main map it goes back to
+    if (besideMap) {
+        onDestroy(clearFocus);
+    }
 
     function onMark({ index }: { index: number }) {
         const mark = attention[index];
@@ -136,6 +143,7 @@
         on:previous={() => focusOn(stepSection(sections, focused, -1))} />
     <ElevationChart
         bind:this={chart}
+        {besideMap}
         {brackets}
         {fill}
         inCard={true}

@@ -1,4 +1,6 @@
 <script context="module" lang="ts">
+    import { onDestroy } from 'svelte';
+    import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Align, Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout } from '@nativescript-community/ui-canvas';
     import { ApplicationSettings, Utils } from '@nativescript/core';
@@ -29,6 +31,8 @@
     export let item: Item;
     export let symbolSize = 34;
     export let subtitleEnabled = true;
+    /** what is left from a point picked on the route's profile: the sheet's, not a list row's. Read once */
+    export let liveData = true;
     export let selectable = true;
     export let marginLeft = 40;
     export let marginTop = null;
@@ -75,7 +79,11 @@
     onThemeChanged(redrawIcon);
 
     const itemsModule = getMapContext().mapModule('items');
-    itemsModule.on('user_onroute_data', (event: any) => {
+    function onRouteData(event: any) {
+        // another route's profile: nothing to do with this one
+        if (focusKeyOf(event.item) !== focusKeyOf(item)) {
+            return;
+        }
         if (!item || !ApplicationSettings.getBoolean('draw_onroute_live_data', true)) {
             nString3 = null;
             return;
@@ -144,7 +152,12 @@
             nString3 = null;
         }
         canvas?.nativeView.invalidate();
-    });
+    }
+    // a list row never shows it, so it does not listen at all
+    if (liveData) {
+        itemsModule.on('user_onroute_data', onRouteData);
+        onDestroy(() => itemsModule.off('user_onroute_data', onRouteData));
+    }
 
     function currentAscentSpans(currentAscent: CurrentAscent) {
         if (!currentAscent || currentAscent.remainingGain <= 0) {
