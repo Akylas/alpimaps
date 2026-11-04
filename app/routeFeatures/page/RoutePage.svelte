@@ -8,7 +8,14 @@
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import { lc } from '~/helpers/locale';
+    import Pill from '~/components/common/Pill.svelte';
+    import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
+    import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
+    import { withDeparture } from '~/utils/routeAnalysis/storage';
+    import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
+    import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
+    import { onDestroy } from 'svelte';
+    import { formatTime, lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
@@ -24,9 +31,11 @@
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
 
     export let item: Item;
+    /** opened from the Time tile: the When panel shows */
+    export let openWhen = false;
 
-    let { colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface, colorSurfaceFill } = $colors;
-    $: ({ colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface, colorSurfaceFill } = $colors);
+    let { colorCanvas, colorCard, colorErrorContainer, colorOnErrorContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceFill } = $colors;
+    $: ({ colorCanvas, colorCard, colorErrorContainer, colorOnErrorContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceFill } = $colors);
 
     // the lens bar, its insight line, the chart and the grade legend under it
     const PROFILE_HEIGHT = 44 + 40 + 150 + 24;
@@ -72,9 +81,54 @@
     // what the user opened, for this visit only: the page always opens on its tiles and profile
     let stored: StoredSections = {};
     $: rows = $routeFeatureChanges >= 0 ? pageRows({ sections, ctx: { item }, stored, hasProfile: !!item?.profile?.data?.length }) : [];
-    type ListRow = PageRow | { type: 'hero'; key: 'hero' };
+    type ListRow = PageRow | { type: 'hero'; key: 'hero' } | { type: 'passed'; key: 'passed' } | { type: 'when'; key: 'when' };
     let listRows: ListRow[];
-    $: listRows = heroFailed ? rows : [{ type: 'hero', key: 'hero' }, ...rows];
+    $: listRows = [
+        ...(heroFailed ? [] : [{ type: 'hero' as const, key: 'hero' as const }]),
+        ...(departureGone ? [{ type: 'passed' as const, key: 'passed' as const }] : []),
+        ...rows.flatMap((row): ListRow[] => (row.type === 'tiles' && whenOpen ? [row, { type: 'when', key: 'when' }] : [row]))
+    ];
+
+    // the departure: the When pill says it, the panel under the tiles sets it
+    let whenOpen = openWhen;
+    let now = Date.now();
+    const clockTimer = setInterval(() => (now = Date.now()), 60000);
+    onDestroy(() => clearInterval(clockTimer));
+    $: analysis = analysisVersion >= 0 ? item?.analysis : null;
+    $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
+    $: startAt = resolveStart(departure, now);
+    $: timeline = analysis ? buildTimeline(timelineSource(item), analysis.inputs, now) : null;
+    $: arrivalAt = timeline?.t.length ? timeline.at(timeline.t.length - 1) : item?.route?.totalTime ? startAt + item.route.totalTime * 1000 : NaN;
+    $: passed = departurePassed(departure, now);
+    // the banner offers to move a plan that has gone by; "keep" puts it away for this visit
+    let keepPassed = false;
+    $: departureGone = passed && !keepPassed;
+    $: zone = routeTimeZone(departure);
+    function clock(at: number) {
+        return formatTime(at, 'LT', zone.offset);
+    }
+    $: whenLabel = `${departure.mode === 'planned' ? clock(departure.at) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
+
+    // the times change in place: only what shows them follows. The activity changes what the whole page reads
+    let analysisVersion = 0;
+    async function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
+        try {
+            item.analysis = analysis;
+            if (full) {
+                item = item;
+            } else {
+                analysisVersion++;
+            }
+            if (item.id !== undefined) {
+                await mapContext.mapModule('items').updateItem(item, { analysis }, false, false);
+            }
+        } catch (error) {
+            showError(error);
+        }
+    }
+    function departNow() {
+        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { mode: 'now' }) });
+    }
     $: rows.forEach((row) => row.type === 'section' && row.open && sectionComponents.load(row.section.id, row.section.component));
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
@@ -164,6 +218,15 @@
                 <label color={colorOnSurface} fontSize={15.5} fontWeight="bold" lineBreak="end" maxLines={1} text={title || ''} />
                 <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
             </stacklayout>
+            <!-- a long press leaves now -->
+            <Pill
+                backgroundColor={passed ? colorErrorContainer : departure.mode === 'planned' ? colorPrimaryContainer : null}
+                height={34}
+                icon="mdi-clock-outline"
+                label={whenLabel}
+                verticalAlignment="middle"
+                on:tap={() => (whenOpen = !whenOpen)}
+                on:longPress={departNow} />
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
         {#if !heroFailed}
@@ -192,10 +255,31 @@
                     </stacklayout>
                 </gridlayout>
             </Template>
+            <Template key="passed">
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout backgroundColor={colorErrorContainer} borderRadius={CARD_RADIUS} columns="*,auto,auto" padding="8 12">
+                        <label
+                            color={colorOnErrorContainer}
+                            fontSize={13}
+                            text={lc('when_departure_passed', departure.mode === 'planned' ? clock(departure.at) : '')}
+                            textWrap={true}
+                            verticalAlignment="middle" />
+                        <mdbutton col={1} text={lc('when_use_now')} variant="text" verticalAlignment="middle" on:tap={departNow} />
+                        <mdbutton col={2} text={lc('when_keep')} variant="text" verticalAlignment="middle" on:tap={() => (keepPassed = true)} />
+                    </gridlayout>
+                </gridlayout>
+            </Template>
+            <Template key="when">
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
+                        <WhenPanel {item} version={analysisVersion} on:change={onAnalysisChange} />
+                    </gridlayout>
+                </gridlayout>
+            </Template>
             <Template key="tiles">
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
-                    <RouteStatTiles {item} sheetWidth={screenWidthDips} />
+                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={analysisVersion} on:when={() => (whenOpen = !whenOpen)} />
                 </gridlayout>
             </Template>
             <Template key="profile">

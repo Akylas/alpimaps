@@ -1146,5 +1146,19 @@
     "climbs_count_one": "1 montée",
     "show_on_map": "afficher sur la carte",
     "plan": "planifier",
-    "route_page_attribution": "Données de carte, d’itinéraire et d’altitude © contributeurs OpenStreetMap"
+    "route_page_attribution": "Données de carte, d’itinéraire et d’altitude © contributeurs OpenStreetMap",
+    "now": "maintenant",
+    "when_darkness_only": "Classé sur la nuit seulement pour l’instant : la météo viendra ensuite.",
+    "when_pace": "allure",
+    "when_stops": "pauses",
+    "when_stops_value": "%s min/h",
+    "when_arrive": "arrivée %s",
+    "when_sunset": "coucher %s",
+    "when_dark": "%s min de nuit",
+    "when_departure_passed": "Départ prévu passé (%s)",
+    "when_use_now": "partir maintenant",
+    "when_keep": "garder",
+    "tutorial_page_route_page": "Page d’itinéraire",
+    "gesture_when_now_title": "Partir maintenant",
+    "gesture_when_now_desc": "Appui long sur la pastille de départ en haut de la page d’itinéraire pour partir maintenant : les heures et l’arrivée suivent de nouveau l’horloge. Un appui ouvre le panneau Quand pour planifier un départ."
 }

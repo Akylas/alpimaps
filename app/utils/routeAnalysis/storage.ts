@@ -1,6 +1,6 @@
 import type { Geometry } from 'geojson';
 import { geometryKey } from './geometryKey';
-import type { Activity, AnalysisInputs, RouteAnalysis } from './types';
+import type { Activity, AnalysisInputs, Departure, Pace, RouteAnalysis } from './types';
 
 export const ANALYSIS_VERSION = 1;
 
@@ -58,4 +58,18 @@ export function reconcileAnalysis(analysis: RouteAnalysis | null | undefined, ge
 export function withActivity(analysis: RouteAnalysis | null | undefined, geometry: Geometry, activity: Activity): RouteAnalysis {
     const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
     return { ...base, inputs: { ...base.inputs, activity } };
+}
+
+/** The ride's start as the user set it. The route's zone, once known, stays: it is the route's, not the plan's. */
+export function withDeparture(analysis: RouteAnalysis | null | undefined, geometry: Geometry, departure: Departure): RouteAnalysis {
+    const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
+    const { tz, tzFromPhone, utcOffset } = base.inputs.departure;
+    const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
+    return { ...base, inputs: { ...base.inputs, departure: { ...zone, ...departure } } };
+}
+
+/** The user's pace: what is given changes, the rest stays. */
+export function withPace(analysis: RouteAnalysis | null | undefined, geometry: Geometry, pace: Partial<Pick<Pace, 'multiplier' | 'stopsMinPerHour'>>): RouteAnalysis {
+    const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
+    return { ...base, inputs: { ...base.inputs, pace: { ...base.inputs.pace, ...pace } } };
 }

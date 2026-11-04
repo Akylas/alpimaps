@@ -17,6 +17,8 @@
     export let item: Item;
     /** the sheet's width: a narrow one has no room for the icon of the first tiles */
     export let sheetWidth: number;
+    /** bumped when the item's analysis changed in place: the arrival under the time follows */
+    export let version = 0;
 
     // no payload: the listener gets `undefined`
     interface $$Events {
@@ -55,7 +57,7 @@
         remaining = null;
     }
 
-    $: tiles = routeTiles($routeFeatures, { item });
+    $: tiles = version >= 0 ? routeTiles($routeFeatures, { item }) : [];
     $: narrow = sheetWidth < NARROW_WIDTH;
 
     // a tile with a lens reads the route in it, and the sheet shows the card that has it

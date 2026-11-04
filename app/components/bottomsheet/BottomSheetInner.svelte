@@ -1088,7 +1088,7 @@
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
                     {#if itemIsRoute}
-                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} on:when={() => showRoutePage(item)} />
+                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} on:when={() => showRoutePage(item, { when: true })} />
                     {/if}
                 </gridlayout>
                 <IconButton
