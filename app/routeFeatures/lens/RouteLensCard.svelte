@@ -17,6 +17,8 @@
     import { showAscents, showGradeColors } from '~/stores/mapStore';
 
     export let item: IItem;
+    /** false on the route page: the main map is behind it, a focused section is not framed there */
+    export let besideMap = true;
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
@@ -78,7 +80,7 @@
         // the cursor was for the route as it was: a section focused or left starts from none
         chart?.clearHighlight();
         range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
-        if (focused) {
+        if (focused && besideMap) {
             fitSection(focused);
         }
     }
@@ -136,6 +138,7 @@
         on:previous={() => focusOn(stepSection(sections, focused, -1))} />
     <ElevationChart
         bind:this={chart}
+        {besideMap}
         {brackets}
         {fill}
         inCard={true}

@@ -85,3 +85,15 @@ export function readClimbs(item: IItem): ClimbsRead | null {
     reads.set(data, { key, read });
     return read;
 }
+
+/** A row of the climbs list: a climb, the steep sections' header, a steep section. */
+export type ClimbsRowData = { type: 'climb'; climb: Climb; id: number } | { type: 'header'; count: number } | { type: 'steep'; section: SteepSection; id: number };
+
+/** The climbs, then the steep sections under their header, listed only while open. */
+export function climbsRows(read: ClimbsRead | null, steepOpen: boolean): ClimbsRowData[] {
+    return [
+        ...(read?.climbs ?? []).map((climb, id): ClimbsRowData => ({ type: 'climb', climb, id })),
+        ...(read?.steep.length ? [{ type: 'header' as const, count: read.steep.length }] : []),
+        ...(steepOpen ? (read?.steep ?? []).map((section, id): ClimbsRowData => ({ type: 'steep', section, id })) : [])
+    ];
+}

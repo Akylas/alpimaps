@@ -1146,5 +1146,8 @@
     "gesture_elevation_tile_desc": "Touchez la tuile de dénivelé pour lire l'itinéraire par ses montées : la fiche monte jusqu'au profil, avec les montées marquées dessus.",
     "gesture_lens_more_title": "Lister ce qu'une vue a trouvé",
     "gesture_lens_more_desc": "Quand la ligne sous la barre des vues finit par une flèche, touchez-la pour lister ce que la vue a trouvé : pour les montées, chaque montée et les passages raides. Touchez une ligne pour la voir sur l'itinéraire.",
-    "climbs_count_one": "1 montée"
+    "climbs_count_one": "1 montée",
+    "show_on_map": "afficher sur la carte",
+    "plan": "planifier",
+    "route_page_attribution": "Données de carte, d’itinéraire et d’altitude © contributeurs OpenStreetMap"
 }

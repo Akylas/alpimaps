@@ -24,6 +24,8 @@ export interface RouteTile {
     weight?: number;
     /** A tap on the tile reads the route in this lens, when the route has it. */
     lens?: LensId;
+    /** A tap on the tile opens the route page on its When panel. */
+    opensWhen?: boolean;
 }
 
 /**
@@ -175,6 +177,34 @@ export interface RouteNavSectionLayout {
     height: number;
 }
 
+/** A row of a page section's body. */
+export interface RoutePageRow {
+    /** Unique in the section. */
+    key: string;
+    /** Handed to the component as `data`. */
+    data?: unknown;
+    /** dp, for a component that does not size itself. */
+    height?: number;
+}
+
+/**
+ * A card of the route page: a header the page draws, and body rows the feature's component draws with `item` and
+ * the row's `data`. The component may dispatch `focus` with a `LensSection` of the section's lens.
+ */
+export interface RoutePageSection {
+    id: string;
+    icon: string;
+    title: () => string;
+    /** One line under the title. */
+    summary?: (ctx: RouteCtx) => string | undefined;
+    /** The lens a row focused from this section is read in. */
+    lens?: LensId;
+    /** No rows: nothing to show, so no card. */
+    rows: (ctx: RouteCtx) => RoutePageRow[];
+    /** Loaded the first time the section has rows. */
+    component: () => Promise<{ default: ComponentType }>;
+}
+
 /** A row of a feature's settings, drawn by the settings screen. Backed by a store, which owns the persistence. */
 export interface RouteSettingRow {
     type: 'sectionheader' | 'switch' | 'slider' | 'segment';
@@ -215,6 +245,8 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
+    /** Cards of the route page, in the feature's order. */
+    pageSections?: RoutePageSection[];
     /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
     mapFeatures?: (ctx: RouteCtx & { navigating: boolean }) => Feature[];
     /** How the feature computes its layer of the route analysis. Run by the pipeline, see `utils/routeAnalysis/pipeline`. */
@@ -333,4 +365,9 @@ export function routeAttention(features: RouteFeature[], ctx: RouteCtx): Attenti
 /** The lens to show: the one asked for, or the overview when this route cannot show it. */
 export function resolveLens(requested: LensId, lenses: RouteLens[]): LensId {
     return lenses.some((lens) => lens.id === requested) ? requested : 'overview';
+}
+
+/** The cards the enabled features add to the route page, in feature order. */
+export function routePageSections(features: RouteFeature[]): RoutePageSection[] {
+    return features.flatMap((feature) => feature.pageSections ?? []);
 }

@@ -1,11 +1,12 @@
 import { showError } from '@shared/utils/showError';
 import { convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
-import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
-import { climbsSettingRows, climbsSettingsKey, routeFeatureClimbs } from '~/routeFeatures/climbs/settings';
+import { derived, get } from 'svelte/store';
+import { categoryLabel, climbsRows, readClimbs } from '~/routeFeatures/climbs/data';
+import { climbsSettingRows, climbsSettingsKey, climbsSteepOpen, routeFeatureClimbs } from '~/routeFeatures/climbs/settings';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
-import { type LensFact, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensFact, type RouteLens, type RoutePageSection, registerRouteFeature } from '~/routeFeatures/registry';
 
 // loaded when asked for: the sheet and its component are not part of the startup graph
 async function showClimbsSection(item: IItem) {
@@ -62,12 +63,31 @@ const climbsLens: RouteLens = {
     slices: ({ item }) => readClimbs(item)?.slices ?? []
 };
 
+const climbsPageSection: RoutePageSection = {
+    id: 'climbs',
+    icon: 'mdi-slope-uphill',
+    title: () => lc('lens_climbs'),
+    lens: 'climbs',
+    summary: ({ item }) => {
+        const read = readClimbs(item);
+        if (!read?.climbs.length) {
+            return lc('climbs_none');
+        }
+        const ascent = item.profile?.dplus;
+        return [read.climbs.length === 1 ? lc('climbs_count_one') : lc('climbs_count', read.climbs.length), ascent > 0 && '+' + convertElevation(ascent)].filter(Boolean).join(' · ');
+    },
+    rows: ({ item }) => climbsRows(readClimbs(item), get(climbsSteepOpen)).map((row) => ({ key: row.type === 'header' ? 'header' : `${row.type}${row.id}`, data: row })),
+    component: () => import('~/routeFeatures/climbs/ClimbsRow.svelte')
+};
+
 registerRouteFeature({
     id: 'climbs',
     order: 12,
     setting: { title: () => lc('lens_climbs'), store: routeFeatureClimbs },
     settings: climbsSettingRows,
-    changes: climbsSettingsKey,
+    // the steep list folding changes the page's rows
+    changes: derived([climbsSettingsKey, climbsSteepOpen], (values) => values),
     lenses: [climbsLens],
+    pageSections: [climbsPageSection],
     attention: ({ item }) => readClimbs(item)?.marks ?? []
 });

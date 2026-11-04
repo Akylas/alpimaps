@@ -1379,5 +1379,7 @@
     "gesture_elevation_tile_desc": "Tap the elevation tile to read the route by its climbs: the sheet rises to the profile, with the climbs marked on it.",
     "gesture_lens_more_title": "List what a lens found",
     "gesture_lens_more_desc": "When the line under the lens bar ends with an arrow, tap it to list what the lens found: for the climbs, each climb and the steep sections. Tap a row to see it on the route.",
-    "climbs_count_one": "1 climb"
+    "climbs_count_one": "1 climb",
+    "plan": "plan",
+    "route_page_attribution": "Map, routing and elevation data © OpenStreetMap contributors"
 }

@@ -29,6 +29,7 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
         }
         tiles.push({
             key: 'time',
+            opensWhen: true,
             icon: 'mdi-timer-outline',
             label: lc('duration'),
             value: convertDurationSeconds(route.totalTime),

@@ -382,7 +382,9 @@
     export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
-    if (inCard) {
+    /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
+    export let besideMap = true;
+    if (inCard && besideMap) {
         mapContext.onItemSheetMoved(hideCard);
     }
 
@@ -391,6 +393,8 @@
         popover = null;
         popoverBounds = null;
         dispatch('cursor', null);
+        // the tiles show what is left from the point: no point, nothing left to show
+        !mini && mapContext.mapModule('items').notify({ eventName: 'user_onroute_data', item });
     }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
@@ -654,7 +658,7 @@
             if (event.highlight) {
                 dispatch('highlight', { lat: position[1], lon: position[0], highlight: event.highlight });
             }
-            if (shouldSelectItem) {
+            if (shouldSelectItem && besideMap) {
                 mapContext.selectItem({
                     item: { geometry: { type: 'Point', coordinates: position } },
                     isFeatureInteresting: true,
@@ -739,7 +743,8 @@
             // item sheet's own live data
             !mini &&
                 mapContext.mapModule('items').notify({
-                    eventName: 'user_onroute_data'
+                    eventName: 'user_onroute_data',
+                    item
                 });
         } else {
             const itemData = highlight?.entry || item?.profile?.data?.[onPathIndex];
@@ -821,6 +826,7 @@
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
+                        item,
                         itemData,
                         ...params
                     });
@@ -828,10 +834,13 @@
                 !mini &&
                     mapContext.mapModule('items').notify({
                         eventName: 'user_onroute_data',
+                        item,
                         ...params
                     });
             }
             if (highlight) {
+                // the card built above is drawn now, whether or not the chart has already drawn this highlight
+                nChart?.invalidate();
                 return;
             }
             function highlightFunc() {

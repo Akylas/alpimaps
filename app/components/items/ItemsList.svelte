@@ -10,6 +10,7 @@
     import SqlQuery from 'kiss-orm/dist/Queries/SqlQuery';
     import { onDestroy, onMount } from 'svelte';
     import { Template } from '@nativescript-community/svelte-native/components';
+    import { showRoutePage } from '~/routeFeatures/page/index';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { OptionType } from '@shared/components/OptionSelect.svelte';
     import { UNITS, convertElevation, convertValueToUnit, formatDistance, osmicon } from '~/helpers/formatter';
@@ -556,6 +557,8 @@ LEFT JOIN  (
                 onItemLongPress(item);
             } else if (item.type === 'group') {
                 switchGroupCollapsed(item as CollectionGroup, event);
+            } else if ((item as CollectionItem).route) {
+                showRoutePage(item as CollectionItem);
             } else {
                 showDetails(item as CollectionItem);
             }
@@ -925,6 +928,7 @@ LEFT JOIN  (
                     borderWidth={item.selected ? 2 : 1}
                     height={88}
                     {item}
+                    liveData={false}
                     margin="4 12 4 12"
                     marginBottom={34}
                     marginLeft={76}
@@ -970,6 +974,7 @@ LEFT JOIN  (
                     iconLeft={30}
                     iconTile={true}
                     {item}
+                    liveData={false}
                     margin="4 12 4 12"
                     marginBottom={24}
                     marginLeft={62}

@@ -19,6 +19,7 @@
     import { Writable, get } from 'svelte/store';
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
+    import { showRoutePage } from '~/routeFeatures/page/index';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
@@ -92,6 +93,7 @@
     // the words of the labelled buttons; the others fall back on their own label, then their tooltip
     const ACTION_LABELS: Record<string, () => string> = {
         information: () => lc('information'),
+        plan: () => lc('plan'),
         navigate: () => lc('start'),
         edit: () => lc('edit')
     };
@@ -104,7 +106,8 @@
     }
     function layoutActions(actions: typeof itemActions, mainId: string, width: number, scale: number) {
         const main = actions.find((action) => action.id === mainId);
-        let tonal = actions.find((action) => action.id === 'address') ?? actions.find((action) => action.id === 'information');
+        // a route's is its page, a place's its address or information
+        let tonal = actions.find((action) => action.id === 'plan') ?? actions.find((action) => action.id === 'address') ?? actions.find((action) => action.id === 'information');
         // every button takes its gap, so the row is one gap wider than its room
         const room = width - CARD_MARGIN * 2 - ACTION_ROW_PADDING * 2 + ACTION_BUTTON_GAP;
         const slot = ACTION_BUTTON_HEIGHT + ACTION_BUTTON_GAP;
@@ -294,6 +297,7 @@
     // functions that assign `item`, which would be a loop
     const actionHandlers: Record<string, { tap: (event?) => void; long?: (event?) => void }> = {
         information: { tap: () => showItemInformation(item), long: () => openItemInOpenStreetMap(item) },
+        plan: { tap: () => showRoutePage(item) },
         save: { tap: () => saveItem() },
         navigate: { tap: () => startNavigation() },
         instructions: { tap: () => getTrackInstructions() },
@@ -314,6 +318,7 @@
     let builtInActions: SheetAction[];
     $: builtInActions = [
         { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
+        { id: 'plan', when: itemIsRoute, text: 'mdi-calendar-clock', tooltip: lc('plan') },
         {
             id: 'save',
             when: itemCanBeAdded,
@@ -1083,7 +1088,7 @@
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
                     {#if itemIsRoute}
-                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} />
+                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} on:when={() => showRoutePage(item)} />
                     {/if}
                 </gridlayout>
                 <IconButton
