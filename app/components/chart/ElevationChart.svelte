@@ -5,6 +5,7 @@
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
+    import { AxisDependency } from '@nativescript-community/ui-chart/components/YAxis';
     import { Rounding } from '@nativescript-community/ui-chart/data/DataSet';
     import type { Entry } from '@nativescript-community/ui-chart/data/Entry';
     import { LineData } from '@nativescript-community/ui-chart/data/LineData';
@@ -34,7 +35,7 @@
     const GRADE_FILL_ALPHA = 225;
 
     /** km between x labels: whatever gives about four of them */
-    const xintervals = [0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
+    const xintervals = [0.1, 0.2, 0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
     const X_LABEL_COUNT = 4;
     function closestUpper(arr: number[], target: number): number | undefined {
         return arr.filter((x) => x >= target).sort((a, b) => a - b)[0];
@@ -133,7 +134,9 @@
         }
         const { contentBottom, contentLeft, contentRight, contentTop } = chartView.viewPortHandler;
         const { max, min } = chartView.xAxisRenderer.getCurrentMinMax();
-        const { axisMaximum, axisMinimum } = chartView.leftAxis;
+        // the elevations at the plot's foot and top, which a zoom moves
+        const axisMinimum = chartView.transformer.getValuesByTouchPoint(contentLeft, contentBottom).y;
+        const axisMaximum = chartView.transformer.getValuesByTouchPoint(contentLeft, contentTop).y;
         if (!(max > min) || !(axisMaximum > axisMinimum)) {
             return;
         }
@@ -175,9 +178,10 @@
             const top = contentBottom + MARK_GAP;
             c.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
         }
-        if (popover) {
+        if (popover && cursorShown) {
             drawPopover(c);
         }
+        cursorShown = false;
     }
     /** The attention mark a tap on the bottom edge of the plot, or under it, is on, -1 for none. */
     function markAt(highlight: Highlight<Entry>) {
@@ -194,10 +198,13 @@
 
     // the cursor's card, in the manner of a weather chart's, laid out once when the cursor moves. Blocks apart by a
     // hairline: what is here, what is left of the ascent it is on, what is left of the route
-    const POPOVER_WIDTH = 176;
+    const POPOVER_WIDTH = 132;
     const POPOVER_PADDING = 7;
     const POPOVER_BLOCK_GAP = 5;
-    const POPOVER_GAP = 10;
+    /** how far from the middle the cursor has to go for the card to change side */
+    const POPOVER_SIDE_MARGIN = 12;
+    const POPOVER_EDGE = 4;
+    const POPOVER_CLOSE = 28;
     const popoverPaint = new Paint();
     const popoverBackPaint = new Paint();
     popoverBackPaint.setStyle(Style.FILL);
@@ -211,7 +218,11 @@
     let popover: StaticLayout[] = null;
     /** where the last draw put the cursor, which the card is beside */
     let cursorX = 0;
-    let popoverRect: { left: number; top: number; right: number; bottom: number } = null;
+    /** the cursor was drawn in this frame: its card is only drawn with it */
+    let cursorShown = false;
+    let popoverClose: { left: number; top: number; right: number; bottom: number } = null;
+    /** the card is on the side the cursor is not, so a finger on the cursor never lands on it */
+    let popoverSide: 'left' | 'right' = 'right';
     interface PopoverSpan {
         text: string;
         fontFamily?: string;
@@ -222,7 +233,7 @@
     /** A row of figures side by side, an icon in front of each. */
     function figuresRow(figures: { icon: string; color?: string; text: string }[], accent: string): PopoverSpan[] {
         return figures.flatMap(({ color, icon, text }, position) => [
-            { text: position ? '     ' : '', fontSize: 11 },
+            { text: position ? '   ' : '', fontSize: 11 },
             { text: icon, fontFamily: $fonts.mdi, fontSize: 12, color: color ?? accent },
             { text: '  ' + text, fontSize: 11, fontWeight: 'bold', color: colorOnSurface }
         ]);
@@ -285,12 +296,25 @@
         popoverPaint.setTextSize(11 * $fontScale);
         popover = blocks.map((spans) => new StaticLayout(createNativeAttributedString({ spans }), popoverPaint, POPOVER_WIDTH - POPOVER_PADDING * 2, LayoutAlignment.ALIGN_NORMAL, 1, 0, true));
     }
+    /** The card goes when what it is beside moves: the chart is zoomed or panned, the sheet it is in dragged. */
+    function hideCard() {
+        if (popover) {
+            popover = null;
+            popoverClose = null;
+            chart?.nativeView?.invalidate();
+        }
+    }
     function drawPopover(c: Canvas) {
-        const x = cursorX;
         const { contentLeft, contentRight } = chart.nativeView.viewPortHandler;
+        const middle = (contentLeft + contentRight) / 2;
+        // a card that followed the cursor would flip under a finger crossing the middle: it stays on one side until the cursor is well on the other
+        if (cursorX > middle + POPOVER_SIDE_MARGIN) {
+            popoverSide = 'left';
+        } else if (cursorX < middle - POPOVER_SIDE_MARGIN) {
+            popoverSide = 'right';
+        }
         const height = popover.reduce((total, layout) => total + layout.getHeight(), 0) + POPOVER_BLOCK_GAP * (popover.length - 1) + POPOVER_PADDING * 2;
-        // beside the cursor, on the side that has room
-        const left = x + POPOVER_GAP + POPOVER_WIDTH <= contentRight ? x + POPOVER_GAP : Math.max(contentLeft, x - POPOVER_GAP - POPOVER_WIDTH);
+        const left = popoverSide === 'left' ? contentLeft + POPOVER_EDGE : contentRight - POPOVER_WIDTH - POPOVER_EDGE;
         // at the very top of the chart's canvas, over the brackets: not in the plot, where the data's layers would lie over it
         const top = 2;
         popoverBackPaint.color = new Color(isEInk ? '#ffffff' : colorBackground).setAlpha(240).hex;
@@ -311,7 +335,13 @@
             c.restore();
             y += layout.getHeight() + POPOVER_BLOCK_GAP;
         });
-        popoverRect = { left, top, right: left + POPOVER_WIDTH, bottom: top + height };
+        // the way to put the card away: the cross of its corner
+        const crossX = left + POPOVER_WIDTH - POPOVER_PADDING - 3;
+        const crossY = top + POPOVER_PADDING + 5;
+        popoverBorderPaint.color = isEInk ? colorOnSurface : colorOnSurfaceVariant;
+        c.drawLine(crossX - 3, crossY - 3, crossX + 3, crossY + 3, popoverBorderPaint);
+        c.drawLine(crossX - 3, crossY + 3, crossX + 3, crossY - 3, popoverBorderPaint);
+        popoverClose = { left: left + POPOVER_WIDTH - POPOVER_CLOSE, top, right: left + POPOVER_WIDTH, bottom: top + POPOVER_CLOSE };
     }
     /** An elevation the way the axis writes it: no unit. */
     const axisNumber = (meters: number) => Math.round(meters).toLocaleString();
@@ -347,18 +377,35 @@
     export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
+    if (inCard) {
+        mapContext.onItemSheetMoved(hideCard);
+    }
 
     export function clearHighlight() {
         chart?.nativeView?.highlightValues(null);
         popover = null;
-        popoverRect = null;
+        popoverClose = null;
         dispatch('cursor', null);
     }
 
     $: if (chart?.nativeView?.data && range !== undefined) {
-        applyRange(range);
+        // the widget cuts its axes, the card zooms
+        (mini ? applyRange : zoomToRange)(range);
     }
 
+    /** The two elevations the axis marks with a plate, and the overlay over them. */
+    function setElevationLimitLines(leftAxis: LineChart['leftAxis'], min: number, max: number) {
+        leftAxis.removeAllLimitLines();
+        [new PlateLimitLine(min, axisNumber(min), true), new PlateLimitLine(max, axisNumber(max), false)].forEach((limitLine) => {
+            limitLine.lineColor = colorOutline;
+            limitLine.enableDashedLine(4, 3, 0);
+            limitLine.lineWidth = 0.5;
+            leftAxis.addLimitLine(limitLine);
+        });
+        leftAxis.addLimitLine(new OverlayLimitLine(max));
+    }
+
+    /** The widget's stretch: the axes are cut to it. */
     function applyRange(range: { fromIndex: number; toIndex: number }) {
         const chartView = chart?.nativeView;
         const data = item?.profile?.data;
@@ -390,6 +437,69 @@
         chartView.invalidate();
     }
 
+    // the whole route's label interval, which a stretch of it replaces while it is in view
+    let wholeInterval = 0;
+    /** The card's height range is that of the stretch in view, `from` to `to` being profile indexes. */
+    function setHeight(from: number, to: number) {
+        const chartView = chart?.nativeView;
+        const data = item?.profile?.data;
+        if (!chartView || !data?.length) {
+            return;
+        }
+        let min = Infinity;
+        let max = -Infinity;
+        for (let index = Math.max(from, 0); index <= Math.min(to, data.length - 1); index++) {
+            min = Math.min(min, data[index].a);
+            max = Math.max(max, data[index].a);
+        }
+        if (min > max) {
+            return;
+        }
+        const leftAxis = chartView.leftAxis;
+        const padding = Math.max(10, (max - min) * 0.1);
+        leftAxis.axisMinimum = min - padding;
+        leftAxis.axisMaximum = max + padding;
+        leftAxis.forcedInterval = Math.max(10, Math.round((max - min) / leftAxis.labelCount / 10) * 10);
+        // the mapping of the elevations to the screen is made from the axis' range, and only when the offsets are
+        chartView.calculateOffsets();
+        chartView.invalidate();
+    }
+    /** The whole route's height range again. */
+    function resetHeight() {
+        const leftAxis = chart?.nativeView?.leftAxis;
+        if (leftAxis) {
+            leftAxis.resetAxisMinimum();
+            leftAxis.resetAxisMaximum();
+            leftAxis.forcedInterval = wholeInterval;
+            // releasing the limits leaves the stretch's values in the axis until it is calculated again, which this does
+            chart.nativeView.notifyDataSetChanged();
+            chart.nativeView.invalidate();
+        }
+    }
+
+    /**
+     * The card's stretch: the chart is zoomed to it, along the distance, and `null` is the whole route again. The height range is
+     * the stretch's: a climb is read by its shape.
+     */
+    function zoomToRange(range: { fromIndex: number; toIndex: number }) {
+        const chartView = chart?.nativeView;
+        const data = item?.profile?.data;
+        if (!chartView || !data?.length) {
+            return;
+        }
+        chartView.fitScreen();
+        if (!range) {
+            resetHeight();
+            return;
+        }
+        const from = Math.max(Math.min(range.fromIndex, data.length - 1), 0);
+        const to = Math.max(Math.min(range.toIndex, data.length - 1), from);
+        const stretch = data[to].d - data[from].d;
+        const scaleX = stretch > 0 ? (data[data.length - 1].d - data[0].d) / stretch : 1;
+        chartView.zoomAndCenter(Math.max(1, scaleX), 1, (data[from].d + data[to].d) / 2, 0, AxisDependency.LEFT);
+        setHeight(from, to);
+    }
+
     $: {
         try {
             if (chart) {
@@ -411,6 +521,7 @@
 
     let highlightNString;
     function onChartPanOrZoom(event) {
+        hideCard();
         try {
             const chart = event.object as LineChart;
             const xAxisRender = chart.xAxisRenderer;
@@ -420,6 +531,14 @@
             const minX = dataSet.getEntryIndexForXValue(min, NaN, Rounding.CLOSEST);
             const maxX = dataSet.getEntryIndexForXValue(max, NaN, Rounding.CLOSEST);
             dataSet.ignoreFiltered = false;
+            if (inCard) {
+                // the height follows the stretch in view, the whole route's once it is whole again
+                if (chart.isFullyZoomedOut()) {
+                    resetHeight();
+                } else {
+                    setHeight(minX, maxX);
+                }
+            }
             const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
             const region = getBounds(positions);
             // `[min, max]`, which is what the facade's bounds are everywhere
@@ -443,8 +562,8 @@
             return;
         }
         const { xTouchPx, yTouchPx } = event.highlight;
-        if (popoverRect && xTouchPx >= popoverRect.left && xTouchPx <= popoverRect.right && yTouchPx >= popoverRect.top && yTouchPx <= popoverRect.bottom) {
-            // a tap on the card puts it away
+        if (popoverClose && xTouchPx >= popoverClose.left && xTouchPx <= popoverClose.right && yTouchPx >= popoverClose.top && yTouchPx <= popoverClose.bottom) {
+            // a tap on the cross puts the card away; anywhere else moves the cursor, the card included
             clearHighlight();
             return;
         }
@@ -525,14 +644,16 @@
     export function hilghlightPathIndex(
         params: { onPathIndex: number; remainingDistance: number; remainingDistanceToStep: number; remainingTime: number; dplus?: number; dmin?: number },
         highlight?: Highlight<Entry>,
-        sendEvent = true
+        sendEvent = true,
+        // false: the cursor moves, its card does not open (a route just selected)
+        card = true
     ) {
         if (!chart) {
             return;
         }
         if (!item) {
             onChartDataUpdateCallbacks.push(() => {
-                hilghlightPathIndex(params, highlight, sendEvent);
+                hilghlightPathIndex(params, highlight, sendEvent, card);
             });
             return;
         }
@@ -541,7 +662,7 @@
         const onPathIndex = params.onPathIndex;
         if (onPathIndex === -1) {
             popover = null;
-            popoverRect = null;
+            popoverClose = null;
             dispatch('cursor', null);
             if (nChart) {
                 nChart.highlight(null);
@@ -623,8 +744,10 @@
                 highlightNString = createNativeAttributedString({
                     spans
                 });
-                if (inCard) {
+                if (inCard && card) {
                     buildPopover(onPathIndex, { d: itemData.d, a: itemData.a, g: itemData.g, dp: itemData.dp, dm: itemData.dm }, params);
+                } else {
+                    popover = null;
                 }
                 dispatch('cursor', { index: onPathIndex, entry: { d: itemData.d, a: itemData.a, g: itemData.g }, ...params });
                 !mini &&
@@ -696,10 +819,14 @@
                 chartView.highlightPerDragEnabled = !mini;
                 chartView.highlightPerTapEnabled = !mini;
                 chartView.scaleXEnabled = !mini;
+                // the card's chart is zoomed along the distance only: its height follows the stretch in view, see `fitHeight`.
+                // The chart pans only if both axes can drag, but with no zoom of its own on the height there is nothing to drag on it
+                chartView.scaleYEnabled = !mini && !inCard;
                 chartView.doubleTapToZoomEnabled = !mini;
                 chartView.dragEnabled = !mini;
                 chartView.clipHighlightToContent = false;
-                chartView.zoomedPanWith2Pointers = !mini;
+                // the card's chart is zoomed to a stretch: a finger pans it there, and scrubs it when it is whole
+                chartView.zoomedPanWith2Pointers = !mini && !inCard;
                 chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
@@ -733,6 +860,10 @@
                     drawLimitLine(c: Canvas, axis, limitLine, rect, y: number, paint: Paint) {
                         if (limitLine instanceof OverlayLimitLine) {
                             drawOverlay(c);
+                            return;
+                        }
+                        // a zoomed chart shows a stretch of the route: its extremes may be out of view, where the plates would hang
+                        if (limitLine instanceof PlateLimitLine && (y < rect.top - 1 || y > rect.bottom + 1)) {
                             return;
                         }
                         c.drawLine(rect.left, y, rect.right, y, paint);
@@ -780,6 +911,7 @@
                         if (inCard) {
                             // a line down to the plot's foot and a ringed dot on the curve, the card beside it says the rest
                             cursorX = x;
+                            cursorShown = true;
                             const bottom = chartView.viewPortHandler.contentBottom;
                             cursorPaint.color = isEInk ? colorOnSurface : colorPrimary;
                             c.drawLine(x, 0, x, bottom, cursorPaint);
@@ -812,6 +944,7 @@
             const step = Math.max(chartElevationMinRange, deltaA) / labelCount < 100 ? 50 : 100;
             const interval = Math.round(Math.max(chartElevationMinRange, deltaA) / labelCount / step) * step;
             leftAxis.forcedInterval = interval;
+            wholeInterval = interval;
             leftAxis.labelCount = labelCount;
             leftAxis.spaceMin = spaceMin;
             leftAxis.spaceMax = spaceMax;
@@ -890,19 +1023,8 @@
                 return;
             }
 
-            leftAxis.removeAllLimitLines();
-            let limitLine: LimitLine = new PlateLimitLine(profile.min[1], axisNumber(profile.min[1]), true);
-            limitLine.lineColor = colorOutline;
-            limitLine.enableDashedLine(4, 3, 0);
-            limitLine.lineWidth = 0.5;
-            leftAxis.addLimitLine(limitLine);
-
-            limitLine = new PlateLimitLine(profile.max[1], axisNumber(profile.max[1]), false);
-            limitLine.lineColor = colorOutline;
-            limitLine.enableDashedLine(4, 3, 0);
-            limitLine.lineWidth = 0.5;
-            leftAxis.addLimitLine(limitLine);
-            leftAxis.addLimitLine(new OverlayLimitLine(profile.max[1]));
+            setElevationLimitLines(leftAxis, profile.min[1], profile.max[1]);
+            let limitLine: LimitLine;
 
             xAxis.removeAllLimitLines();
             if (showAscents && profile.ascents) {
@@ -944,6 +1066,12 @@
                 });
             }
 
+            // a rebuilt chart is the whole route again: its stretch is zoomed to over it
+            if (range) {
+                zoomToRange(range);
+            } else if (inCard) {
+                resetHeight();
+            }
             onChartDataUpdateCallbacks.forEach((c) => c());
             onChartDataUpdateCallbacks = [];
         }
