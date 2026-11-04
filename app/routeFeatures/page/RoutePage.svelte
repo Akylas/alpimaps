@@ -1,6 +1,7 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
+    import type { TouchGestureEventData } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import CActionBar from '@shared/components/CActionBar.svelte';
@@ -12,6 +13,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
+    import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type PageRow, type StoredSections, pageRows, toggledSections } from '~/routeFeatures/page/rows';
@@ -23,15 +25,44 @@
 
     export let item: Item;
 
-    let { colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
-    $: ({ colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
+    let { colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface, colorSurfaceFill } = $colors;
+    $: ({ colorCanvas, colorCard, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface, colorSurfaceFill } = $colors);
 
     // the lens bar, its insight line, the chart and the grade legend under it
     const PROFILE_HEIGHT = 44 + 40 + 150 + 24;
     const SECTION_HEADER_HEIGHT = 56;
     const CARD_RADIUS = 16;
 
+    // the hero map lies behind the list, whose first row is see-through: the cards slide over the map as the page scrolls
+    const HERO_HEIGHT = 240;
+
     const mapContext = getMapContext();
+    let heroFailed = false;
+    let heroMap: RouteHeroMap;
+    // the list catches every touch, over its see-through row too: the row hands them on to the map behind it.
+    // A drag that starts on the map moves the map, not the page. Android: on iOS the list lets nothing through either
+    function forwardToHero(args: TouchGestureEventData) {
+        if (!__ANDROID__) {
+            return;
+        }
+        const target: android.view.View = heroMap?.touchTarget();
+        const row: android.view.View = args.view?.nativeViewProtected;
+        const event: android.view.MotionEvent = args.android;
+        if (!target || !row || !event) {
+            return;
+        }
+        if (event.getActionMasked() === android.view.MotionEvent.ACTION_DOWN) {
+            row.getParent()?.requestDisallowInterceptTouchEvent(true);
+        }
+        const rowOrigin = Array.create('int', 2);
+        const targetOrigin = Array.create('int', 2);
+        row.getLocationOnScreen(rowOrigin);
+        target.getLocationOnScreen(targetOrigin);
+        const copy = android.view.MotionEvent.obtain(event);
+        copy.offsetLocation(rowOrigin[0] - targetOrigin[0], rowOrigin[1] - targetOrigin[1]);
+        target.dispatchTouchEvent(copy);
+        copy.recycle();
+    }
     const sectionComponents = lazyComponents();
 
     $: title = formatter.getItemTitle(item);
@@ -41,10 +72,13 @@
     // what the user opened, for this visit only: the page always opens on its tiles and profile
     let stored: StoredSections = {};
     $: rows = $routeFeatureChanges >= 0 ? pageRows({ sections, ctx: { item }, stored, hasProfile: !!item?.profile?.data?.length }) : [];
+    type ListRow = PageRow | { type: 'hero'; key: 'hero' };
+    let listRows: ListRow[];
+    $: listRows = heroFailed ? rows : [{ type: 'hero', key: 'hero' }, ...rows];
     $: rows.forEach((row) => row.type === 'section' && row.open && sectionComponents.load(row.section.id, row.section.component));
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
-    function itemTemplateSelector(row: PageRow) {
+    function itemTemplateSelector(row: ListRow) {
         return row.type;
     }
 
@@ -116,13 +150,14 @@
         }
     }
 
+    // the main map, wherever the page was opened from: the items list may be between them
     function showOnMap() {
-        goBack();
+        goBack({ to: mapContext.getMainPage() });
         mapContext.selectItem({ item, isFeatureInteresting: true });
     }
 </script>
 
-<page actionBarHidden={true}>
+<page actionBarHidden={true} on:navigatingFrom={(event) => event.isBackNavigation && heroMap?.dispose()}>
     <gridlayout backgroundColor={colorCanvas} rows="auto,*">
         <CActionBar canGoBack title={null}>
             <stacklayout slot="center" col={1} verticalAlignment="middle">
@@ -131,60 +166,85 @@
             </stacklayout>
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
-        <collectionview {itemTemplateSelector} items={rows} paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2}>
+        {#if !heroFailed}
+            <RouteHeroMap bind:this={heroMap} height={HERO_HEIGHT} {item} row={1} verticalAlignment="top" on:failed={() => (heroFailed = true)} />
+        {/if}
+        <!-- see-through over the hero map, every other row opaque -->
+        <collectionview
+            backgroundColor="transparent"
+            {itemTemplateSelector}
+            items={listRows}
+            paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)}
+            row={1}
+            ios:contentInsetAdjustmentBehavior={2}>
+            <Template key="hero">
+                <gridlayout height={HERO_HEIGHT} on:touch={forwardToHero}>
+                    <stacklayout horizontalAlignment="right" padding={8} verticalAlignment="top">
+                        <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} text="mdi-arrow-expand" on:tap={showOnMap} />
+                        <!-- the whole route again, after a section or a point was looked at -->
+                        <mdbutton
+                            class="small-floating-btn"
+                            backgroundColor={colorSurface}
+                            color={colorOnSurface}
+                            marginTop={8}
+                            text="mdi-fit-to-screen-outline"
+                            on:tap={() => heroMap?.showWholeRoute()} />
+                    </stacklayout>
+                </gridlayout>
+            </Template>
             <Template key="tiles">
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
-                <gridlayout height={48} paddingTop={8}>
+                <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
                     <RouteStatTiles {item} sheetWidth={screenWidthDips} />
                 </gridlayout>
             </Template>
             <Template key="profile">
-                <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={PROFILE_HEIGHT} margin="8 6 0 6">
-                    <RouteLensCard bind:this={lensCard} besideMap={false} {item} on:highlight={onChartHighlight} />
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={PROFILE_HEIGHT}>
+                        <RouteLensCard bind:this={lensCard} besideMap={false} {item} on:highlight={onChartHighlight} />
+                    </gridlayout>
                 </gridlayout>
             </Template>
             <Template key="section" let:item={row}>
-                <gridlayout
-                    backgroundColor={colorCard}
-                    borderRadius={row.open ? `${CARD_RADIUS} ${CARD_RADIUS} 0 0` : CARD_RADIUS}
-                    columns="36,*,auto"
-                    height={SECTION_HEADER_HEIGHT}
-                    margin="8 6 0 6"
-                    padding="0 12"
-                    rippleColor={colorPrimary}
-                    on:tap={() => toggleSection(row.section)}>
-                    <label
-                        backgroundColor={colorSurfaceFill}
-                        borderRadius={10}
-                        color={colorOnSurfaceVariant}
-                        fontFamily={$fonts.mdi}
-                        fontSize={20}
-                        height={36}
-                        text={row.section.icon}
-                        textAlignment="center"
-                        verticalTextAlignment="middle"
-                        width={36} />
-                    <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
-                        <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
-                        <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
-                    </stacklayout>
-                    <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout
+                        backgroundColor={colorCard}
+                        borderRadius={row.open ? `${CARD_RADIUS} ${CARD_RADIUS} 0 0` : CARD_RADIUS}
+                        columns="36,*,auto"
+                        height={SECTION_HEADER_HEIGHT}
+                        padding="0 12"
+                        rippleColor={colorPrimary}
+                        on:tap={() => toggleSection(row.section)}>
+                        <label
+                            backgroundColor={colorSurfaceFill}
+                            borderRadius={10}
+                            color={colorOnSurfaceVariant}
+                            fontFamily={$fonts.mdi}
+                            fontSize={20}
+                            height={36}
+                            text={row.section.icon}
+                            textAlignment="center"
+                            verticalTextAlignment="middle"
+                            width={36} />
+                        <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
+                            <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
+                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
+                        </stacklayout>
+                        <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
+                    </gridlayout>
                 </gridlayout>
             </Template>
             <Template key="body" let:item={row}>
-                <gridlayout
-                    backgroundColor={colorCard}
-                    borderRadius={row.last ? `0 0 ${CARD_RADIUS} ${CARD_RADIUS}` : 0}
-                    height={row.row.height ?? 'auto'}
-                    margin="0 6"
-                    paddingBottom={row.last ? 8 : 0}>
-                    {#if $sectionComponents[row.section]}
-                        <svelte:component this={$sectionComponents[row.section]} {item} {...bodyProps(row)} on:focus={(section) => focusOn(row.section, section)} />
-                    {/if}
+                <gridlayout backgroundColor={colorCanvas} padding="0 6">
+                    <gridlayout backgroundColor={colorCard} borderRadius={row.last ? `0 0 ${CARD_RADIUS} ${CARD_RADIUS}` : 0} height={row.row.height ?? 'auto'} paddingBottom={row.last ? 8 : 0}>
+                        {#if $sectionComponents[row.section]}
+                            <svelte:component this={$sectionComponents[row.section]} {item} {...bodyProps(row)} on:focus={(section) => focusOn(row.section, section)} />
+                        {/if}
+                    </gridlayout>
                 </gridlayout>
             </Template>
             <Template key="footer">
-                <label color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
+                <label backgroundColor={colorCanvas} color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
             </Template>
         </collectionview>
     </gridlayout>

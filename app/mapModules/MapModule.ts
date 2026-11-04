@@ -159,11 +159,13 @@ export function elementClickData(e: MassifEventData<'massif::VectorLayer', 'vect
 // spec for a SECOND map view, sharing `layer`'s source handle and decoder rather than reopening files
 export type ClonedLayerSpec = api.SpecArg<'layer', 'composite-vector'> | api.SpecArg<'layer', 'vector'> | api.SpecArg<'layer', 'hillshade'> | api.SpecArg<'layer', 'raster'>;
 
-export function cloneLayerSpec(layer: MassifLayer): ClonedLayerSpec | null {
+/** `owned` gets the datasource handle the spec points at, for a caller that releases what it made. */
+export function cloneLayerSpec(layer: MassifLayer, owned?: MassifObject[]): ClonedLayerSpec | null {
     const source = layer?.child('dataSource');
     if (!source) {
         return null;
     }
+    owned?.push(source);
     // before VectorTileLayer: a composite IS one, and as plain vector would lose its terrain slots
     // (the caller wires the clone's own with customLayers.attachTerrain)
     if (layer.is('massif::CompositeVectorTileLayer')) {

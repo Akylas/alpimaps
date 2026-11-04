@@ -100,7 +100,10 @@
             focusOn(sectionAt(sections, nearestIndex(routeCoordinates(item.geometry), position.lat, position.lon)));
         }
     });
-    onDestroy(clearFocus);
+    // the page's card leaves the focus to the main map it goes back to
+    if (besideMap) {
+        onDestroy(clearFocus);
+    }
 
     function onMark({ index }: { index: number }) {
         const mark = attention[index];

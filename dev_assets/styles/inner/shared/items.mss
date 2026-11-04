@@ -4,7 +4,7 @@
 
 #items['mapnik::geometry_type'=2] {
     ['param::hide_unselected'=0] {
-        when ([param::selected_id] !=[id]) {
+        when (!([param::selected_id]=[id] || [selected]=1)) {
             back/line-color: white;
             back/line-width: @bicycle_line_width + linear([view::zoom], (16, 2), (18, 4));
             back/line-join: round;
@@ -24,7 +24,7 @@
 
         // while navigating, the route being followed is drawn by the navigation layer on top, so the
         // item under it goes back to the plain look instead of fighting it with the selected one
-        when ([param::selected_id]=[id])['param::navigating'=1]::navigating {
+        when ([param::selected_id]=[id] || [selected]=1)['param::navigating'=1]::navigating {
             // white backing folded into the line as its border: 1px per side, which is the
             // +2 the separate `back/` line used to add across both
             line-border-color: white;
@@ -42,7 +42,8 @@
 
     }
 
-    when ([param::selected_id]=[id])['param::navigating'=0]::selected {
+    // `selected`: a feature that is selected on its own, on a map with nothing else (the route page's hero)
+    when ([param::selected_id]=[id] || [selected]=1)['param::navigating'=0]::selected {
         // white backing folded into the line as its border: the + 5 backing against a + 2 line is
         // 1.5 per side. The border shares the fill's geometry. Round: a miter spikes at a sharp turn.
         line-border-color: white;
@@ -94,7 +95,7 @@
         text-dx:[style.iconDx] ?? @default_icon_dx;
         text-dy:[style.iconDy] ?? 0;
         text-placement-priority: 27;
-        when ([param::selected_id]=[id]) {
+        when ([param::selected_id]=[id] || [selected]=1) {
             text-size: ([style.iconSize] ?? @default_icon_size) + 10;
         }
 
