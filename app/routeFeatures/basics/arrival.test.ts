@@ -1,19 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { Departure, RouteAnalysis } from '~/utils/routeAnalysis/types';
-import { arrivalOf, zoneOffsetMinutes } from './arrival';
+import { arrivalOf } from './arrival';
 
 const NOW = Date.UTC(2026, 5, 1, 12, 0, 0);
 const HOUR = 3600;
-
-describe('zoneOffsetMinutes', () => {
-    it('follows the zone and its summer time', () => {
-        expect(zoneOffsetMinutes('UTC', NOW)).toBe(0);
-        expect(zoneOffsetMinutes('Europe/Paris', Date.UTC(2026, 0, 15, 12))).toBe(60);
-        expect(zoneOffsetMinutes('Europe/Paris', Date.UTC(2026, 6, 15, 12))).toBe(120);
-        expect(zoneOffsetMinutes('America/New_York', Date.UTC(2026, 0, 15, 12))).toBe(-300);
-    });
-});
 
 describe('arrivalOf', () => {
     // a straight 10 km line east, routed in an hour
@@ -46,7 +37,7 @@ describe('arrivalOf', () => {
 
     it('is in the route zone when it is known, the phone zone else', () => {
         const at = Date.UTC(2026, 6, 15, 8);
-        expect(arrivalOf(item({ mode: 'planned', at, tz: 'Europe/Paris', tzFromPhone: false }), NOW)?.offset).toBe(120);
+        expect(arrivalOf(item({ mode: 'planned', at, tz: 'Europe/Paris', utcOffset: 120, tzFromPhone: false }), NOW)?.offset).toBe(120);
         expect(arrivalOf(item({ mode: 'planned', at, tzFromPhone: true }), NOW)?.offset).toBeUndefined();
     });
 });

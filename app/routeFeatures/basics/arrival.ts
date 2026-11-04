@@ -10,23 +10,6 @@ export interface Arrival {
     offset?: number;
 }
 
-/** How far a zone is from UTC at an instant, in minutes. */
-export function zoneOffsetMinutes(zone: string, epochMs: number): number {
-    const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: zone,
-        hourCycle: 'h23',
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric'
-    }).formatToParts(new Date(epochMs));
-    const field = (type: string) => Number(parts.find((part) => part.type === type)?.value);
-    const wallClockAsUtc = Date.UTC(field('year'), field('month') - 1, field('day'), field('hour'), field('minute'), field('second'));
-    return Math.round((wallClockAsUtc - Math.floor(epochMs / 1000) * 1000) / 60000);
-}
-
 /** The arrival of a route whose departure is planned or recorded: one that leaves "now" has none to tell. */
 export function arrivalOf(item: Parameters<typeof timelineSource>[0] & { analysis?: RouteAnalysis | null }, now: number): Arrival | undefined {
     const inputs = item.analysis?.inputs;
@@ -38,6 +21,5 @@ export function arrivalOf(item: Parameters<typeof timelineSource>[0] & { analysi
         return undefined;
     }
     const at = timeline.at(timeline.t.length - 1);
-    const { fromPhone, tz } = routeTimeZone(inputs.departure);
-    return { at, offset: fromPhone ? undefined : zoneOffsetMinutes(tz, at) };
+    return { at, offset: routeTimeZone(inputs.departure).offset };
 }

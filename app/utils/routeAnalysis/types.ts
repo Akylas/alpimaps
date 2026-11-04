@@ -19,6 +19,8 @@ export interface Departure {
     days?: { startAt: number; maxHours?: number }[];
     /** IANA zone of the route start. From the first weather response, else the phone zone, flagged */
     tz?: string;
+    /** minutes east of UTC in that zone, from the same response: the runtime has no zone database (no `Intl`) */
+    utcOffset?: number;
     tzFromPhone?: boolean;
 }
 

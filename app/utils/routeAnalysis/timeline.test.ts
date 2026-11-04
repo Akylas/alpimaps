@@ -30,11 +30,15 @@ describe('departure', () => {
         expect(departurePassed({ mode: 'recorded', at: NOW - 1 }, NOW)).toBe(false);
         expect(departurePassed({ mode: 'now' }, NOW)).toBe(false);
     });
-    it('uses the route zone, else the phone zone flagged', () => {
-        expect(routeTimeZone({ mode: 'now' }, 'Europe/Paris')).toEqual({ tz: 'Europe/Paris', fromPhone: true });
-        const known = withRouteTimeZone({ mode: 'now', tzFromPhone: true }, 'America/Denver');
+    it('uses the route zone and its offset, else the phone clock flagged', () => {
+        expect(routeTimeZone({ mode: 'now' })).toEqual({ fromPhone: true });
+        const known = withRouteTimeZone({ mode: 'now', tzFromPhone: true }, 'America/Denver', -420);
         expect(known.tzFromPhone).toBe(false);
-        expect(routeTimeZone(known, 'Europe/Paris')).toEqual({ tz: 'America/Denver', fromPhone: false });
+        expect(routeTimeZone(known)).toEqual({ tz: 'America/Denver', offset: -420, fromPhone: false });
+    });
+
+    it('stays on the phone clock while the route has a zone name but no offset', () => {
+        expect(routeTimeZone({ mode: 'now', tz: 'America/Denver', tzFromPhone: false })).toEqual({ fromPhone: true });
     });
 });
 
