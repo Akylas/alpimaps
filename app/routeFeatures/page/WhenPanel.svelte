@@ -63,16 +63,24 @@
     $: cells = departureStrip({ chosenAt, now, source: timelineSource(item), inputs, lat, lon });
     $: chosen = cells.find((cell) => cell.chosen);
     // the sunset of the day the ride leaves
-    $: sunset = chosen ? getTimes(new Date(chosen.at), lat, lon).sunset.getTime() : NaN;
+    $: sunset = chosen ? nextSunset(chosen.at) : NaN;
+    // the sunset the ride rides towards: a late departure is past today's
+    function nextSunset(at: number) {
+        const today = getTimes(new Date(at), lat, lon).sunset.getTime();
+        return today >= at ? today : getTimes(new Date(at + 24 * 3600 * 1000), lat, lon).sunset.getTime();
+    }
 
     // the chosen departure in the middle of the strip, the earlier ones left of it
     let strip: NativeViewElementNode<CollectionView>;
     let shownAt: number;
+    let scrollTimer: ReturnType<typeof setTimeout>;
+    onDestroy(() => clearTimeout(scrollTimer));
     function showChosen() {
         if (strip?.nativeView && shownAt !== chosenAt) {
             shownAt = chosenAt;
             // once the cells are laid out: the list gets its items after it is bound, and before that there is nothing to scroll to
-            setTimeout(() => strip?.nativeView?.scrollToIndex(Math.max(0, cells.findIndex((cell) => cell.chosen) - 3), false), STRIP_SCROLL_DELAY);
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => strip?.nativeView?.scrollToIndex(Math.max(0, cells.findIndex((cell) => cell.chosen) - 3), false), STRIP_SCROLL_DELAY);
         }
     }
     $: if (strip && chosenAt !== shownAt) {
@@ -111,13 +119,24 @@
     let stops: number;
     $: multiplier = inputs.pace.multiplier;
     $: stops = inputs.pace.stopsMinPerHour;
+    let pendingPace: { multiplier?: number; stopsMinPerHour?: number } = null;
+    function savePace() {
+        clearTimeout(paceTimer);
+        if (pendingPace) {
+            const pace = pendingPace;
+            pendingPace = null;
+            dispatch('change', { analysis: withPace(analysis, item.geometry, pace) });
+        }
+    }
     function setPace(pace: { multiplier?: number; stopsMinPerHour?: number }) {
         multiplier = pace.multiplier ?? multiplier;
         stops = pace.stopsMinPerHour ?? stops;
+        pendingPace = { ...pendingPace, ...pace };
         clearTimeout(paceTimer);
-        paceTimer = setTimeout(() => dispatch('change', { analysis: withPace(analysis, item.geometry, pace) }), SLIDER_SAVE_DELAY);
+        paceTimer = setTimeout(savePace, SLIDER_SAVE_DELAY);
     }
-    onDestroy(() => clearTimeout(paceTimer));
+    // a change still waiting when the panel closes is saved, not lost
+    onDestroy(savePace);
 
     const LEVEL_COLORS = { good: '#1D9E75', fair: '#EF9F27', poor: '#E24B4A' };
     // e-ink: empty, grey, black

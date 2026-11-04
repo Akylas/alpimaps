@@ -1148,7 +1148,7 @@
     "plan": "planifier",
     "route_page_attribution": "Données de carte, d’itinéraire et d’altitude © contributeurs OpenStreetMap",
     "now": "maintenant",
-    "when_darkness_only": "Classé sur la nuit seulement pour l’instant : la météo viendra ensuite.",
+    "when_darkness_only": "Classé sur la nuit seulement.",
     "when_pace": "allure",
     "when_stops": "pauses",
     "when_stops_value": "%s min/h",

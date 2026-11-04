@@ -19,6 +19,8 @@
     export let item: IItem;
     /** false on the route page: the main map is behind it, a focused section is not framed there */
     export let besideMap = true;
+    /** what the insight line's `›` does for a lens, when not the lens' own (the route page opens its section) */
+    export let moreFor: (lens: LensId) => (() => void | Promise<void>) | undefined = null;
 
     const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
@@ -45,7 +47,7 @@
     $: activeLens = lenses.find((lens) => lens.id === active);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
     $: headline = activeLens?.headline({ item });
-    $: openSection = activeLens?.openSection?.({ item });
+    $: openSection = moreFor ? moreFor(active) : activeLens?.openSection?.({ item });
     // the same arrays for the lens' whole stay, so the chart is not rebuilt for nothing
     const NO_BRACKETS: ProfileBracket[] = [];
     const NO_SECTIONS: LensSection[] = [];

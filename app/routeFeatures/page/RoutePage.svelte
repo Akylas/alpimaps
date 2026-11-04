@@ -8,13 +8,14 @@
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
-    import Pill from '~/components/common/Pill.svelte';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
     import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
-    import { onDestroy } from 'svelte';
+    import { onDestroy, tick } from 'svelte';
+    import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
+    import type { CollectionView } from '@nativescript-community/ui-collectionview';
     import { formatTime, lc } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -24,7 +25,7 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type PageRow, type StoredSections, pageRows, toggledSections } from '~/routeFeatures/page/rows';
-    import { type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
     import { packageService } from '~/services/PackageService';
     import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -34,8 +35,32 @@
     /** opened from the Time tile: the When panel shows */
     export let openWhen = false;
 
-    let { colorCanvas, colorCard, colorErrorContainer, colorOnErrorContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceFill } = $colors;
-    $: ({ colorCanvas, colorCard, colorErrorContainer, colorOnErrorContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorPrimaryContainer, colorSurface, colorSurfaceFill } = $colors);
+    let {
+        colorCanvas,
+        colorCard,
+        colorErrorContainer,
+        colorOnErrorContainer,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorOutlineVariant,
+        colorPrimary,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceFill
+    } = $colors;
+    $: ({
+        colorCanvas,
+        colorCard,
+        colorErrorContainer,
+        colorOnErrorContainer,
+        colorOnSurface,
+        colorOnSurfaceVariant,
+        colorOutlineVariant,
+        colorPrimary,
+        colorPrimaryContainer,
+        colorSurface,
+        colorSurfaceFill
+    } = $colors);
 
     // the lens bar, its insight line, the chart and the grade legend under it
     const PROFILE_HEIGHT = 44 + 40 + 150 + 24;
@@ -102,6 +127,14 @@
     $: passed = departurePassed(departure, now);
     // the banner offers to move a plan that has gone by; "keep" puts it away for this visit
     let keepPassed = false;
+    let keptAt: number;
+    $: if (departure.mode === 'planned' && departure.at !== keptAt) {
+        keepPassed = false;
+    }
+    function keepDeparture() {
+        keepPassed = true;
+        keptAt = departure.mode === 'planned' ? departure.at : undefined;
+    }
     $: departureGone = passed && !keepPassed;
     $: zone = routeTimeZone(departure);
     function clock(at: number) {
@@ -111,20 +144,21 @@
 
     // the times change in place: only what shows them follows. The activity changes what the whole page reads
     let analysisVersion = 0;
-    async function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
-        try {
-            item.analysis = analysis;
-            if (full) {
-                item = item;
-            } else {
-                analysisVersion++;
-            }
-            if (item.id !== undefined) {
-                await mapContext.mapModule('items').updateItem(item, { analysis }, false, false);
-            }
-        } catch (error) {
-            showError(error);
+    // one save after the other: a slow one must not land after, and over, a newer one
+    let saving: Promise<unknown> = Promise.resolve();
+    function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
+        item.analysis = analysis;
+        analysisVersion++;
+        if (full) {
+            item = item;
         }
+        if (isSaved(item)) {
+            saving = saving.then(() => mapContext.mapModule('items').updateItem(item, { analysis }, false, false)).catch(showError);
+        }
+    }
+    // an unsaved route keeps its analysis on the item until it is saved with it
+    function isSaved(route: Item) {
+        return route?.id !== undefined && route.id !== null;
     }
     function departNow() {
         onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { mode: 'now' }) });
@@ -138,6 +172,23 @@
 
     function toggleSection(section: RoutePageSection) {
         stored = toggledSections(stored, section);
+    }
+
+    // the insight line's `›` on this page: the lens' own section, opened and brought into view
+    let listView: NativeViewElementNode<CollectionView>;
+    function sectionOf(lens: LensId) {
+        const section = sections.find((candidate) => candidate.lens === lens);
+        if (!section || !rows.some((row) => row.key === 'section:' + section.id)) {
+            return undefined;
+        }
+        return async () => {
+            stored = { ...stored, [section.id]: true };
+            await tick();
+            const index = listRows.findIndex((row) => row.key === 'section:' + section.id);
+            if (index >= 0) {
+                listView?.nativeView?.scrollToIndex(index, true);
+            }
+        };
     }
 
     // a row of a section asks to focus a stretch of the route: it is read in the section's lens
@@ -176,7 +227,7 @@
             const options = [
                 { id: 'show_on_map', icon: 'mdi-map-outline', name: lc('show_on_map') },
                 { id: 'share', icon: 'mdi-share-variant', name: lc('share') },
-                ...(item.id !== undefined ? [{ id: 'edit', icon: 'mdi-pencil', name: lc('edit') }] : [])
+                ...(isSaved(item) ? [{ id: 'edit', icon: 'mdi-pencil', name: lc('edit') }] : [])
             ];
             await showPopoverMenu({
                 options,
@@ -215,18 +266,26 @@
     <gridlayout backgroundColor={colorCanvas} rows="auto,*">
         <CActionBar canGoBack title={null}>
             <stacklayout slot="center" col={1} verticalAlignment="middle">
-                <label color={colorOnSurface} fontSize={15.5} fontWeight="bold" lineBreak="end" maxLines={1} text={title || ''} />
+                <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
                 <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
             </stacklayout>
             <!-- a long press leaves now -->
-            <Pill
+            <gridlayout
                 backgroundColor={passed ? colorErrorContainer : departure.mode === 'planned' ? colorPrimaryContainer : null}
-                height={34}
-                icon="mdi-clock-outline"
-                label={whenLabel}
+                borderColor={colorOutlineVariant}
+                borderRadius={14}
+                borderWidth={1}
+                height={28}
+                padding="0 8"
+                rippleColor={colorPrimary}
                 verticalAlignment="middle"
                 on:tap={() => (whenOpen = !whenOpen)}
-                on:longPress={departNow} />
+                on:longPress={departNow}>
+                <stacklayout orientation="horizontal" verticalAlignment="middle">
+                    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={14} text="mdi-clock-outline" verticalAlignment="middle" />
+                    <label color={colorOnSurface} fontSize={12} paddingLeft={4} text={whenLabel} verticalAlignment="middle" />
+                </stacklayout>
+            </gridlayout>
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
         {#if !heroFailed}
@@ -234,6 +293,7 @@
         {/if}
         <!-- see-through over the hero map, every other row opaque -->
         <collectionview
+            bind:this={listView}
             backgroundColor="transparent"
             {itemTemplateSelector}
             items={listRows}
@@ -265,7 +325,7 @@
                             textWrap={true}
                             verticalAlignment="middle" />
                         <mdbutton col={1} text={lc('when_use_now')} variant="text" verticalAlignment="middle" on:tap={departNow} />
-                        <mdbutton col={2} text={lc('when_keep')} variant="text" verticalAlignment="middle" on:tap={() => (keepPassed = true)} />
+                        <mdbutton col={2} text={lc('when_keep')} variant="text" verticalAlignment="middle" on:tap={keepDeparture} />
                     </gridlayout>
                 </gridlayout>
             </Template>
@@ -285,7 +345,7 @@
             <Template key="profile">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={PROFILE_HEIGHT}>
-                        <RouteLensCard bind:this={lensCard} besideMap={false} {item} on:highlight={onChartHighlight} />
+                        <RouteLensCard bind:this={lensCard} besideMap={false} {item} moreFor={sectionOf} on:highlight={onChartHighlight} />
                     </gridlayout>
                 </gridlayout>
             </Template>

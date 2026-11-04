@@ -119,7 +119,7 @@
         canvas.drawPath(rampPath, fillPaint);
         outlinePaint.color = isEInk ? '#000000' : colorOnSurfaceVariant;
         canvas.drawPath(rampPath, outlinePaint);
-        const strong = isEInk ? '#000000' : gradeColor(section.direction === 'up' ? section.avgGrade : -section.avgGrade);
+        const strong = isEInk ? '#000000' : gradeColor(section.avgGrade);
         for (let bar = 0; bar < 3; bar++) {
             const left = RAMP_WIDTH + 10 + bar * (BAR_WIDTH + BAR_GAP);
             const barTop = bottom - (bottom - top) * ((bar + 1) / 3);

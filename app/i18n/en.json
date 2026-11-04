@@ -1379,7 +1379,7 @@
     "climbs_count_one": "1 climb",
     "plan": "plan",
     "route_page_attribution": "Map, routing and elevation data © OpenStreetMap contributors",
-    "when_darkness_only": "Scored on darkness only for now: the weather comes later.",
+    "when_darkness_only": "Scored on darkness only.",
     "when_pace": "pace",
     "when_stops": "stops",
     "when_stops_value": "%s min/h",

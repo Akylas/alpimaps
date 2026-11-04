@@ -35,7 +35,7 @@ const climbsLens: RouteLens = {
     available: ({ item }) => !!item?.route && !!readClimbs(item),
     chip: ({ item }) => {
         const read = readClimbs(item);
-        // a very steep way up turns the icon red; the profile marks where
+        // a steep way up puts a dot on the chip; the profile marks where
         return read ? { value: String(read.climbs.length), alert: read.marks.length > 0 } : {};
     },
     headline: ({ item }) => {

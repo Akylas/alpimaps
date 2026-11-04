@@ -156,7 +156,10 @@
         const screen = { min: { x: margin, y: margin }, max: { x: width - margin, y: height - margin } };
         const coordinates = routeCoordinates(item.geometry);
         const geometry = section && !whole ? { type: 'LineString' as const, coordinates: coordinates.slice(section.i0, section.i1 + 1) } : item.geometry;
-        massifMap.camera().fitBounds(toBounds(geometryBounds(geometry)), { screen, resetRotation: true, duration: isEInk ? 0 : 200 });
+        const bounds = geometryBounds(geometry);
+        if (bounds) {
+            massifMap.camera().fitBounds(toBounds(bounds), { screen, resetRotation: true, duration: isEInk ? 0 : 200 });
+        }
     }
     let sectionKey = '';
     $: {
