@@ -1,5 +1,6 @@
 import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
-import { lc } from '~/helpers/locale';
+import { formatTime, lc } from '~/helpers/locale';
+import { arrivalOf } from '~/routeFeatures/basics/arrival';
 import { type LensFact, type LensHeadline, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
@@ -18,12 +19,22 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
         tiles.push({ key: 'distance', icon: 'mdi-arrow-left-right', label: lc('distance'), value: formatDistance(distance) });
     }
     if (route.totalTime > 0) {
-        tiles.push({ key: 'time', icon: 'mdi-timer-outline', label: lc('duration'), value: convertDurationSeconds(route.totalTime) });
+        // when it ends, if it leaves at a time that is known
+        const arrival = arrivalOf(item, Date.now());
+        tiles.push({
+            key: 'time',
+            icon: 'mdi-timer-outline',
+            label: lc('duration'),
+            value: convertDurationSeconds(route.totalTime),
+            sub: arrival ? { icon: 'mdi-arrow-right', text: formatTime(arrival.at, 'LT', arrival.offset) } : undefined
+        });
     }
     // a pure descent still gets its elevation tile
     if (ascent > 0 || descent > 0) {
         tiles.push({
             key: 'ascent',
+            weight: 1.15,
+            lens: 'climbs',
             icon: 'mdi-arrow-top-right',
             label: lc('ascent'),
             value: convertElevation(ascent > 0 ? ascent : 0),

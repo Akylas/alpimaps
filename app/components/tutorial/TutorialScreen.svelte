@@ -15,6 +15,7 @@
     export let onZone: (zone: TutorialZone, view: View) => void;
 
     const GESTURE_ICONS: Record<GestureKind, string> = {
+        tap: 'mdi-gesture-tap',
         longPress: 'mdi-gesture-tap-hold',
         swipe: 'mdi-gesture-swipe-horizontal',
         drag: 'mdi-cursor-move'

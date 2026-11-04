@@ -19,6 +19,10 @@ export interface RouteTile {
     value: string;
     /** A smaller line under the value; a selected point's remaining figure takes its place. */
     sub?: { icon: string; text: string };
+    /** The share of the row's width, 1 when missing. */
+    weight?: number;
+    /** A tap on the tile reads the route in this lens, when the route has it. */
+    lens?: LensId;
 }
 
 /**

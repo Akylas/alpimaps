@@ -1372,5 +1372,11 @@
     "climbs_steep_down": "steep descent from",
     "climbs_very_steep_down": "very steep descent from",
     "climbs_threshold_preset": "preset",
-    "climbs_min_length": "shortest steep section"
+    "climbs_min_length": "shortest steep section",
+    "gesture_tap": "tap",
+    "tutorial_page_route_sheet": "Route sheet",
+    "gesture_elevation_tile_title": "Read the climbs",
+    "gesture_elevation_tile_desc": "Tap the elevation tile to read the route by its climbs: the sheet rises to the profile, with the climbs marked on it.",
+    "gesture_lens_more_title": "List what a lens found",
+    "gesture_lens_more_desc": "When the line under the lens bar ends with an arrow, tap it to list what the lens found: for the climbs, each climb and the steep sections. Tap a row to see it on the route."
 }

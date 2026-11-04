@@ -545,6 +545,13 @@
             steps = result;
         }
     }
+    // a tile of the header asked for a lens: the sheet rises to the card that shows it
+    function showLensCard() {
+        const index = cardStepIndex('profile');
+        if (index > stepIndex) {
+            mapContext.setBottomSheetStepIndex(index);
+        }
+    }
     /** The step that ends on the card, -1 when it is not shown. Steps start at 0, the header and the actions. */
     function cardStepIndex(id: string) {
         let index = 2;
@@ -1076,7 +1083,7 @@
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
                     {#if itemIsRoute}
-                        <RouteStatTiles {item} row={1} verticalAlignment="top" />
+                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} />
                     {/if}
                 </gridlayout>
                 <IconButton
