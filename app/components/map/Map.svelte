@@ -17,6 +17,7 @@
     import { SDK_VERSION, debounce } from '@nativescript/core/utils';
     import { Sentry, isSentryEnabled } from '@shared/utils/sentry';
     import { showError } from '@shared/utils/showError';
+    import { globalObservable } from '@shared/utils/svelte/ui';
     import { tryCatch, tryCatchFunction } from '@shared/utils/ui';
     import type { Point as GeoJSONPoint } from 'geojson';
     import { onDestroy, onMount, tick } from 'svelte';
@@ -1716,6 +1717,7 @@
     }
 
     function bottomSheetTranslationFunction(translation, maxTranslation, progress) {
+        globalObservable.notify({ eventName: 'onItemSheetMoved', data: translation });
         if (!$isNavigating) {
             scrollingWidgetsOpacity = getWidgetsOpacity(translation);
             // mapTranslation = translation - (__IOS__ && translation !== 0 ? $navigationBarHeight : 0);

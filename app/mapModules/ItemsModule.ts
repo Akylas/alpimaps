@@ -11,7 +11,7 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
-import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -35,6 +35,8 @@ function ring(corners: [number, number][]): GeoJSON.Polygon {
 }
 
 const TAG = '[ItemsModule]';
+/** ms of calm after a route feature's change before the selected route is drawn again */
+const ROUTE_FEATURE_REFRESH_DELAY = 120;
 
 // tried in order: the next one starts when the previous failed or is still silent after the hedge delay
 const overpassEndpoints = ['https://overpass-api.de/api/interpreter', 'https://overpass.private.coffee/api/interpreter', 'https://overpass.openstreetmap.fr/api/interpreter'];
@@ -215,8 +217,31 @@ export default class ItemsModule extends MapModule {
             }
             first = false;
         });
+        // and so does a change one of them announces: another lens, a section focused
+        let firstChange = true;
+        let pendingRefresh: ReturnType<typeof setTimeout>;
+        this.unsubscribeRouteFeatureChanges?.();
+        const unsubscribe = routeFeatureChanges.subscribe(() => {
+            if (firstChange) {
+                firstChange = false;
+                return;
+            }
+            // a slider dragged announces a change at each step: the route is drawn once the changes stop
+            clearTimeout(pendingRefresh);
+            pendingRefresh = setTimeout(() => {
+                const selected = mapContext.getSelectedItem();
+                if (selected?.route) {
+                    this.onItemSelected(selected);
+                }
+            }, ROUTE_FEATURE_REFRESH_DELAY);
+        });
+        this.unsubscribeRouteFeatureChanges = () => {
+            clearTimeout(pendingRefresh);
+            unsubscribe();
+        };
     }
     private unsubscribeRouteFeatures: () => void;
+    private unsubscribeRouteFeatureChanges: () => void;
     onDbInitListeners = [];
     onDbInit(callback) {
         if (this.dbInitialized) {
@@ -229,6 +254,8 @@ export default class ItemsModule extends MapModule {
         super.onMapDestroyed();
         this.unsubscribeRouteFeatures?.();
         this.unsubscribeRouteFeatures = null;
+        this.unsubscribeRouteFeatureChanges?.();
+        this.unsubscribeRouteFeatureChanges = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {

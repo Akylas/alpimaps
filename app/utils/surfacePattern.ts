@@ -42,6 +42,8 @@ const shaderCache: { [key: string]: BitmapShader } = {};
 
 export interface SurfaceBandOptions {
     id: string;
+    /** The hatch itself, for what is not a surface. */
+    pattern?: SurfacePattern;
     left: number;
     right: number;
     top: number;
@@ -50,10 +52,10 @@ export interface SurfaceBandOptions {
     patternColor: Color | string | number;
 }
 
-export function drawSurfaceBand(canvas: Canvas, { bottom, fillColor, id, left, patternColor, right, top }: SurfaceBandOptions) {
+export function drawSurfaceBand(canvas: Canvas, { bottom, fillColor, id, left, pattern: given, patternColor, right, top }: SurfaceBandOptions) {
     fillPaint.setColor(fillColor);
     canvas.drawRect(left, top, right, bottom, fillPaint);
-    const pattern = surfacePatterns[id] || 'cross';
+    const pattern = given ?? surfacePatterns[id] ?? 'cross';
     if (pattern === 'solid' || right - left <= 0) {
         return;
     }

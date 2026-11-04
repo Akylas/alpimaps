@@ -5,8 +5,8 @@ import { registerRouteFeature } from '~/routeFeatures/registry';
 import { navigationShowElevationChart } from '~/stores/navigationStore';
 import { NAVIGATION_AHEAD_HEIGHT, ROUTE_PROFILE_HEIGHT } from '~/utils/navigation';
 
-// the chart's height includes the band its selected point strip lives in
-const PROFILE_HEIGHT = 215;
+// the lens card: lens bar 44, insight 40, the chart and its axis, the gap above it
+const PROFILE_HEIGHT = 246;
 
 registerRouteFeature({
     id: 'profile',
@@ -16,7 +16,7 @@ registerRouteFeature({
     // the navigation setting for the chart widget
     changes: navigationShowElevationChart,
     sheetCard: {
-        component: () => import('~/routeFeatures/profile/SheetCard.svelte'),
+        component: () => import('~/routeFeatures/lens/RouteLensCard.svelte'),
         height: ({ item }) => (item?.route && item.profile?.data?.length > 0 ? PROFILE_HEIGHT : 0),
         followsPosition: true
     },

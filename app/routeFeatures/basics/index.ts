@@ -1,6 +1,7 @@
 import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
-import { lc } from '~/helpers/locale';
-import { type RouteCtx, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
+import { formatTime, lc } from '~/helpers/locale';
+import { arrivalOf } from '~/routeFeatures/basics/arrival';
+import { type LensFact, type LensHeadline, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
     const route = item?.route;
@@ -18,12 +19,28 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
         tiles.push({ key: 'distance', icon: 'mdi-arrow-left-right', label: lc('distance'), value: formatDistance(distance) });
     }
     if (route.totalTime > 0) {
-        tiles.push({ key: 'time', icon: 'mdi-timer-outline', label: lc('duration'), value: convertDurationSeconds(route.totalTime) });
+        // when it ends, if it leaves at a time that is known
+        let arrival: ReturnType<typeof arrivalOf>;
+        try {
+            arrival = arrivalOf(item, Date.now());
+        } catch (error) {
+            // the tile only loses its second line: the sheet's header does not depend on it
+            DEV_LOG && console.error('arrival', error);
+        }
+        tiles.push({
+            key: 'time',
+            icon: 'mdi-timer-outline',
+            label: lc('duration'),
+            value: convertDurationSeconds(route.totalTime),
+            sub: arrival ? { icon: 'mdi-arrow-right', text: formatTime(arrival.at, 'LT', arrival.offset) } : undefined
+        });
     }
     // a pure descent still gets its elevation tile
     if (ascent > 0 || descent > 0) {
         tiles.push({
             key: 'ascent',
+            weight: 1.15,
+            lens: 'climbs',
             icon: 'mdi-arrow-top-right',
             label: lc('ascent'),
             value: convertElevation(ascent > 0 ? ascent : 0),
@@ -33,4 +50,19 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
     return tiles;
 }
 
-registerRouteFeature({ id: 'basics', order: 0, tiles: basicsTiles });
+function overviewHeadline({ item }: RouteCtx): LensHeadline {
+    const distance = item?.route?.totalDistance || (item?.properties?.distance ? item.properties.distance * 1000 : 0);
+    const time = item?.route?.totalTime;
+    const facts: LensFact[] = [];
+    if (distance > 0) {
+        facts.push({ icon: 'mdi-arrow-left-right', text: formatDistance(distance) });
+    }
+    if (time > 0) {
+        facts.push({ icon: 'mdi-timer-outline', text: convertDurationSeconds(time) });
+    }
+    return { facts };
+}
+
+const overview: RouteLens = { id: 'overview', icon: 'mdi-routes', label: () => lc('lens_overview'), available: () => true, chip: () => ({}), headline: overviewHeadline };
+
+registerRouteFeature({ id: 'basics', order: 0, tiles: basicsTiles, lenses: [overview] });

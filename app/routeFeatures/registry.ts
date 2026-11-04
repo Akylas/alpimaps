@@ -2,6 +2,7 @@ import type { Feature } from 'geojson';
 import type { ComponentType } from 'svelte';
 import { type Readable, derived, writable } from 'svelte/store';
 import type { SettingsStore } from '~/stores/settingsStore';
+import type { SurfacePattern } from '~/utils/surfacePattern';
 import type { IItem } from '~/models/Item';
 import type { AnalysisStage } from '~/utils/routeAnalysis/pipeline';
 
@@ -19,6 +20,10 @@ export interface RouteTile {
     value: string;
     /** A smaller line under the value; a selected point's remaining figure takes its place. */
     sub?: { icon: string; text: string };
+    /** The share of the row's width, 1 when missing. */
+    weight?: number;
+    /** A tap on the tile reads the route in this lens, when the route has it. */
+    lens?: LensId;
 }
 
 /**
@@ -42,6 +47,115 @@ export interface RouteSheetCardLayout {
     height: number;
 }
 
+export type LensId = 'overview' | 'climbs' | 'road' | 'weather' | 'sun' | 'surface';
+
+/** The lens bar's fixed order, whatever the order the features register in. */
+export const LENS_ORDER: LensId[] = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface'];
+
+/** What a lens shows on its chip, next to its label. */
+export interface LensChip {
+    /** The lens' headline figure; none for a lens that has none. */
+    value?: string;
+    /** The lens has something serious to look at: a dot on the chip. */
+    alert?: boolean;
+    /** Absent: the data is there and fresh. */
+    state?: 'missing' | 'running' | 'outdated' | 'offline';
+}
+
+/** One figure of a lens' headline: an icon and what it says. */
+export interface LensFact {
+    icon?: string;
+    text: string;
+    /** The icon's colour, eg the surface it stands for. */
+    color?: string;
+    /** The figure is a warning: the icon takes the error colour. */
+    alert?: boolean;
+}
+
+/** The line under the lens bar: a few facts, with the button that goes with them when it asks for something. */
+export interface LensHeadline {
+    facts: LensFact[];
+    action?: { label: string; run: () => void };
+}
+
+/** What needs attention along the route, whatever the lens: marked under the profile. */
+export type AttentionKind = 'steep';
+
+export interface AttentionMark {
+    kind: AttentionKind;
+    /** The lens and section a tap on the mark goes to. */
+    lens: LensId;
+    section: LensSection;
+}
+
+/** An attention mark on the chart, meters from the start. */
+export interface ProfileMark {
+    from: number;
+    to: number;
+    kind: AttentionKind;
+}
+
+/** A span of the profile marked above the curve, eg a climb with its category. Meters from the start. */
+export interface ProfileBracket {
+    from: number;
+    to: number;
+    /** The elevation it stands over, m. */
+    top: number;
+    label?: string;
+}
+
+/** A stretch of the route a lens speaks of, eg a climb: it can be focused. `i0`..`i1` are profile data indexes. */
+export interface LensSection {
+    id: number;
+    i0: number;
+    i1: number;
+    /** What the insight row says while it is focused. */
+    title: string;
+}
+
+/** A stretch of the route drawn in the lens' look: `k` picks the look, `s` how serious it is, 0 to 3. */
+export interface LensSlice {
+    i0: number;
+    i1: number;
+    k: number | string;
+    s: 0 | 1 | 2 | 3;
+}
+
+/** A colour the profile fill takes from this data index on. */
+export interface ProfileFillStop {
+    d: number;
+    color: string;
+    /** The hatch that says it where colour cannot, on e-ink. The grade's own when missing. */
+    pattern?: SurfacePattern;
+}
+
+/** What a lens asks of the profile chart. */
+export interface LensProfile {
+    brackets?: ProfileBracket[];
+    /** The fill's colours, when they are not the grade's. */
+    fill?: ProfileFillStop[];
+}
+
+/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
+export interface RouteLens {
+    id: LensId;
+    icon: string;
+    label: () => string;
+    /** A lens a route cannot show is not in the bar. */
+    available: (ctx: RouteCtx) => boolean;
+    chip: (ctx: RouteCtx) => LensChip;
+    headline: (ctx: RouteCtx) => LensHeadline;
+    /** What the lens says of the route vertex under the cursor, next to the figures every lens shows. */
+    readout?: (ctx: RouteCtx & { index: number }) => string | undefined;
+    profile?: (ctx: RouteCtx) => LensProfile;
+    /** The stretches to focus, in route order. */
+    sections?: (ctx: RouteCtx) => LensSection[];
+    /** Opens the lens' own section, when there is one for this route: the insight row's `›` runs it. */
+    openSection?: (ctx: RouteCtx) => (() => void | Promise<void>) | undefined;
+    /** What the map line is cut into. None: the line keeps the item's look. */
+    slices?: (ctx: RouteCtx) => LensSlice[];
+}
+
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
 export interface RouteNavSection {
     id: string;
@@ -63,7 +177,7 @@ export interface RouteNavSectionLayout {
 
 /** A row of a feature's settings, drawn by the settings screen. Backed by a store, which owns the persistence. */
 export interface RouteSettingRow {
-    type: 'sectionheader' | 'switch' | 'slider';
+    type: 'sectionheader' | 'switch' | 'slider' | 'segment';
     title: string;
     description?: string;
     store?: SettingsStore<any>;
@@ -71,6 +185,8 @@ export interface RouteSettingRow {
     max?: number;
     step?: number;
     format?: (value: number) => string;
+    /** The choices of a `segment`, the store holding the value of the one picked. */
+    options?: { value: string; title: string }[];
 }
 
 /**
@@ -91,6 +207,10 @@ export interface RouteFeature {
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */
     tiles?: (ctx: RouteCtx) => RouteTile[];
+    /** The ways of reading the route this feature adds to the lens bar. */
+    lenses?: RouteLens[];
+    /** What needs attention along the route, marked under the profile whatever the lens. */
+    attention?: (ctx: RouteCtx) => AttentionMark[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
@@ -195,4 +315,22 @@ export function routeMapFeatures(features: RouteFeature[], ctx: RouteCtx & { nav
 /** The stages the enabled features contribute to the route analysis pipeline. */
 export function routeStages(features: RouteFeature[]): AnalysisStage[] {
     return features.flatMap((feature) => (feature.compute ? [feature.compute] : []));
+}
+
+/** The lenses the enabled features offer this route, in the bar's order. */
+export function routeLenses(features: RouteFeature[], ctx: RouteCtx): RouteLens[] {
+    return features
+        .flatMap((feature) => feature.lenses ?? [])
+        .filter((lens) => lens.available(ctx))
+        .sort((first, second) => LENS_ORDER.indexOf(first.id) - LENS_ORDER.indexOf(second.id));
+}
+
+/** What the enabled features want looked at. */
+export function routeAttention(features: RouteFeature[], ctx: RouteCtx): AttentionMark[] {
+    return features.flatMap((feature) => feature.attention?.(ctx) ?? []);
+}
+
+/** The lens to show: the one asked for, or the overview when this route cannot show it. */
+export function resolveLens(requested: LensId, lenses: RouteLens[]): LensId {
+    return lenses.some((lens) => lens.id === requested) ? requested : 'overview';
 }

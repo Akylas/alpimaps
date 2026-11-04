@@ -1,6 +1,6 @@
 import { convertElevation, formatDistance, formatDuration } from '~/helpers/formatter';
 
-export type GestureKind = 'longPress' | 'swipe' | 'drag';
+export type GestureKind = 'tap' | 'longPress' | 'swipe' | 'drag';
 
 interface Box {
     x: number;
@@ -120,7 +120,12 @@ export const tutorialPages: TutorialPage[] = [
             { kind: 'meter', x: 50, y: 326, width: 130, height: 6, value: 0.4 },
             icon(250, 304, 'mdi-tune-variant', 24)
         ],
-        zones: [zone('map_options', 'longPress', 10, 148, 278, 36), zone('reorder', 'drag', 12, 206, 40, 52, () => __ANDROID__), zone('layer_options', 'longPress', 244, 212, 44, 44), zone('layer_swipe', 'swipe', 10, 278, 280, 72)]
+        zones: [
+            zone('map_options', 'longPress', 10, 148, 278, 36),
+            zone('reorder', 'drag', 12, 206, 40, 52, () => __ANDROID__),
+            zone('layer_options', 'longPress', 244, 212, 44, 44),
+            zone('layer_swipe', 'swipe', 10, 278, 280, 72)
+        ]
     },
     {
         id: 'place',
@@ -151,6 +156,32 @@ export const tutorialPages: TutorialPage[] = [
             zone('chart', 'drag', 10, 290, 280, 90),
             zone('contact_copy', 'longPress', 18, 388, 180, 32)
         ]
+    },
+    {
+        id: 'route_sheet',
+        parts: [
+            ...mapBackground,
+            card(4, 150, 292, 276, 20),
+            text(24, 160, 200, 'routes', { key: true, bold: true }),
+            card(12, 192, 84, 34, 10),
+            icon(18, 200, 'mdi-arrow-left-right', 16),
+            text(36, 198, 60, () => formatDistance(27100), { bold: true, size: 11 }),
+            card(102, 192, 84, 34, 10),
+            icon(108, 200, 'mdi-timer-outline', 16),
+            text(126, 198, 60, () => formatDuration(8460), { bold: true, size: 11 }),
+            card(192, 192, 96, 34, 10),
+            icon(198, 200, 'mdi-arrow-top-right', 16),
+            text(216, 198, 70, () => convertElevation(1180), { bold: true, size: 11 }),
+            pill(12, 236, 84, 28, { icon: 'mdi-routes', labelKey: 'lens_overview' }),
+            pill(102, 236, 84, 28, { icon: 'mdi-slope-uphill', labelKey: 'lens_climbs', selected: true }),
+            pill(192, 236, 84, 28, { icon: 'mdi-road-variant', labelKey: 'lens_surface' }),
+            card(14, 274, 90, 26, 13),
+            icon(20, 277, 'mdi-slope-uphill', 18),
+            icon(260, 274, 'mdi-chevron-right', 24),
+            card(12, 308, 276, 110),
+            { kind: 'bars', x: 24, y: 320, width: 252, height: 86, values: [20, 26, 34, 44, 56, 70, 86, 96, 80, 62, 48, 40, 52, 66, 60, 44, 32, 28, 36, 30] }
+        ],
+        zones: [zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_more', 'tap', 10, 270, 280, 34)]
     },
     {
         id: 'routes',

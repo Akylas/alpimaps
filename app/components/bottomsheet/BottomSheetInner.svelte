@@ -183,10 +183,14 @@
         }
     });
 
+    // the route the position was last put on: a route just selected gets the cursor, not its card
+    let positionedItem: Item = null;
     $: {
         // during navigation the service already computed all of this, see highlightChartFromProgress
         if (itemIsRoute && currentLocation && !$isNavigating) {
-            updateRouteItemWithPosition(item, currentLocation);
+            const fresh = item !== positionedItem;
+            positionedItem = item;
+            updateRouteItemWithPosition(item, currentLocation, true, true, undefined, !fresh);
         }
     }
     // $: {
@@ -213,10 +217,10 @@
 
     // a card still loading gets the highlight once it is bound
     $: if (chartLoadHighlightData && Object.values(cardRefs).some((ref) => ref?.highlightPathIndex)) {
-        const { highlight, ...params } = chartLoadHighlightData;
+        const { card, highlight, ...params } = chartLoadHighlightData;
         chartLoadHighlightData = null;
         try {
-            highlightCards(params, highlight);
+            highlightCards(params, highlight, card);
         } catch (error) {
             console.error(error, error.stack);
         }
@@ -224,14 +228,15 @@
 
     function highlightCards(
         params: { onPathIndex: number; remainingDistance: number; remainingDistanceToStep: number; remainingTime: number; dplus?: number; dmin?: number },
-        highlight?: Highlight<Entry>
+        highlight?: Highlight<Entry>,
+        card = true
     ) {
         const handlers = Object.values(cardRefs).filter((ref) => ref?.highlightPathIndex);
         if (handlers.length) {
-            handlers.forEach((ref) => ref.highlightPathIndex(params, highlight, false));
+            handlers.forEach((ref) => ref.highlightPathIndex(params, highlight, false, card));
         } else {
             // the card must be loading
-            chartLoadHighlightData = { ...params, highlight };
+            chartLoadHighlightData = { ...params, highlight, card };
         }
     }
     function reloadCards() {
@@ -253,13 +258,15 @@
                 reloadCards();
                 if (currentLocation) {
                     // DEV_LOG && console.log('currentLocation', 'updateRouteItemWithPosition');
-                    updateRouteItemWithPosition(item, currentLocation);
+                    // a route just selected: the cursor, not its card
+                    updateRouteItemWithPosition(item, currentLocation, true, true, undefined, false);
                 } else if (dataToUpdateOnItemSelect && item && dataToUpdateOnItemSelect.id === item.id) {
-                    updateRouteItemWithPosition(item, dataToUpdateOnItemSelect.position, false);
+                    updateRouteItemWithPosition(item, dataToUpdateOnItemSelect.position, false, true, undefined, false);
                 }
                 dataToUpdateOnItemSelect = null;
             } else {
                 navigationInstructions = null;
+                positionedItem = null;
             }
         } catch (err) {
             console.error('item changed', !!err, err, err.stack);
@@ -384,7 +391,7 @@
         highlightChartFromProgress($navigationProgress);
     }
 
-    function updateRouteItemWithPosition(routeItem: Item, location: MapPos, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>) {
+    function updateRouteItemWithPosition(routeItem: Item, location: MapPos, updateNavigationInstruction = true, updateGraph = true, highlight?: Highlight<Entry>, card = true) {
         // DEV_LOG && console.log('updateRouteItemWithPosition', !!routeItem?.route, JSON.stringify(location), updateNavigationInstruction, updateGraph, !JSON.stringify(!highlight));
         try {
             // ignore routes from osm
@@ -421,7 +428,7 @@
 
                 if (updateGraph && positionCardShown) {
                     const { remainingDistance, remainingDistanceToStep, remainingTime } = progress;
-                    highlightCards({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight);
+                    highlightCards({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: profile?.dplus, dmin: profile?.dmin }, highlight, card);
                 }
             } else if (updateNavigationInstruction) {
                 navigationInstructions = null;
@@ -536,6 +543,13 @@
         // }
         if (compareArrays(steps, result) === false) {
             steps = result;
+        }
+    }
+    // a tile of the header asked for a lens: the sheet rises to the card that shows it
+    function showLensCard() {
+        const index = cardStepIndex('profile');
+        if (index > stepIndex) {
+            mapContext.setBottomSheetStepIndex(index);
         }
     }
     /** The step that ends on the card, -1 when it is not shown. Steps start at 0, the header and the actions. */
@@ -1069,7 +1083,7 @@
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
                     {#if itemIsRoute}
-                        <RouteStatTiles {item} row={1} verticalAlignment="top" />
+                        <RouteStatTiles {item} {sheetWidth} row={1} verticalAlignment="top" on:lens={showLensCard} />
                     {/if}
                 </gridlayout>
                 <IconButton

@@ -203,6 +203,8 @@ export interface MapContext {
     onVectorElementClicked(callback: ContextCallback<ElementClickData>, once?: boolean);
     onVectorTileClicked(callback: ContextCallback<FeatureClickData>, once?: boolean);
     onVectorTileElementClicked(callback: ContextCallback<FeatureClickData>, once?: boolean);
+    /** The item sheet is being dragged or is settling; the value is its translation. */
+    onItemSheetMoved(callback: ContextCallback<number>, once?: boolean);
     getMainPage: () => NativeViewElementNode<Page>;
     getMap: () => MassifMap;
     // the real view: `getMap().view` is the narrow `MapViewLike`, without the object-API-only
@@ -327,6 +329,7 @@ const mapContext: MapContext = {
     onVectorElementClicked: createGlobalEventListener<ElementClickData>('onVectorElementClicked'),
     onVectorTileClicked: createGlobalEventListener<FeatureClickData>('onVectorTileClicked'),
     onVectorTileElementClicked: createGlobalEventListener<FeatureClickData>('onVectorTileElementClicked'),
+    onItemSheetMoved: createGlobalEventListener<number>('onItemSheetMoved'),
     mapModule: getMapModule,
     runOnModulesOnMainThread,
     runOnModules,
