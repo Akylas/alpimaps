@@ -8,7 +8,7 @@
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
-    import { type ClimbsRowData, categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
+    import { type ClimbsRowData, type SteepScale, categoryLabel, readClimbs, steepTitle } from '~/routeFeatures/climbs/data';
     import { climbsSteepOpen } from '~/routeFeatures/climbs/settings';
     import type { Climb, SteepSection } from '~/routeFeatures/climbs/steep';
     import type { LensSection } from '~/routeFeatures/registry';
@@ -23,8 +23,8 @@
     }
     const dispatch = createEventDispatcher<$$Events>();
 
-    let { colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorBackground, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
+    $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
     const SPARKLINE_POINTS = 40;
     // the profile's own look: the fill is the grade's colour, as it is under the chart, and a thin line draws the shape
@@ -81,9 +81,58 @@
     }
 
     function steepSection(section: SteepSection, id: number): LensSection {
-        const label = section.direction === 'down' ? 'climbs_steep_descent' : section.level === 2 ? 'climbs_very_steep' : 'climbs_steep';
-        return { id, i0: section.startIndex, i1: section.endIndex, title: [lc(label, formatDistance(section.length)), Math.abs(section.avgGrade).toFixed(0) + ' %'].join(' · ') };
+        return { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) };
     }
+
+    const RAMP_WIDTH = 56;
+    const BAR_WIDTH = 5;
+    const BAR_GAP = 3;
+    const rampPath = new Path();
+    const outlinePaint = new Paint();
+    outlinePaint.setStyle(Style.STROKE);
+    outlinePaint.setStrokeWidth(1);
+    // the section's ramp, its width the length and its height the gain, on the scale every row shares; then how hard it
+    // is, as three bars. Neither needs colour: on e-ink the ramp is solid, grey or outlined by how hard it is
+    function drawSteep({ canvas }: { canvas: Canvas }, section: SteepSection, scale: SteepScale) {
+        const height = canvas.getHeight();
+        const top = 4;
+        const bottom = height - 4;
+        const rampHeight = Math.max(2, ((bottom - top) * Math.abs(section.gain)) / scale.gain);
+        const rampWidth = Math.max(4, (RAMP_WIDTH * section.length) / scale.length);
+        const right = RAMP_WIDTH;
+        rampPath.reset();
+        if (section.direction === 'up') {
+            rampPath.moveTo(right - rampWidth, bottom);
+            rampPath.lineTo(right, bottom);
+            rampPath.lineTo(right, bottom - rampHeight);
+        } else {
+            rampPath.moveTo(right - rampWidth, bottom - rampHeight);
+            rampPath.lineTo(right - rampWidth, bottom);
+            rampPath.lineTo(right, bottom);
+        }
+        rampPath.close();
+        if (isEInk) {
+            fillPaint.color = new Color('#000000').setAlpha(section.tier === 3 ? 255 : section.tier === 2 ? 110 : 0).hex;
+        } else {
+            fillPaint.color = gradeColor(section.avgGrade);
+        }
+        canvas.drawPath(rampPath, fillPaint);
+        outlinePaint.color = isEInk ? '#000000' : colorOnSurfaceVariant;
+        canvas.drawPath(rampPath, outlinePaint);
+        const strong = isEInk ? '#000000' : gradeColor(section.direction === 'up' ? section.avgGrade : -section.avgGrade);
+        for (let bar = 0; bar < 3; bar++) {
+            const left = RAMP_WIDTH + 10 + bar * (BAR_WIDTH + BAR_GAP);
+            const barTop = bottom - (bottom - top) * ((bar + 1) / 3);
+            if (bar < section.tier) {
+                fillPaint.color = strong;
+                canvas.drawRect(left, barTop, left + BAR_WIDTH, bottom, fillPaint);
+            } else {
+                outlinePaint.color = isEInk ? '#000000' : colorOutlineVariant;
+                canvas.drawRect(left, barTop, left + BAR_WIDTH, bottom, outlinePaint);
+            }
+        }
+    }
+    const chevronText = (count: number) => '›'.repeat(count);
     const grade = (value: number) => Math.abs(value).toFixed(1) + ' %';
 </script>
 
@@ -116,17 +165,30 @@
         <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={String(data.count)} verticalAlignment="middle" />
     </gridlayout>
 {:else}
-    <gridlayout columns="40,*,auto" height={52} padding="0 16" rippleColor={colorPrimary} on:tap={() => data.type === 'steep' && dispatch('focus', steepSection(data.section, data.id))}>
-        <label
-            color={data.section.direction === 'up' && data.section.level === 2 && !isEInk ? colorError : colorOnSurfaceVariant}
-            fontFamily={$fonts.mdi}
-            fontSize={20}
-            text={data.section.direction === 'up' ? 'mdi-arrow-top-right' : 'mdi-arrow-bottom-right'}
-            verticalAlignment="middle" />
+    {@const section = data.section}
+    {@const solid = !isEInk || data.chevrons > 1}
+    <gridlayout columns="72,*,90" height={56} padding="0 16" rippleColor={colorPrimary} on:tap={() => data.type === 'steep' && dispatch('focus', steepSection(data.section, data.id))}>
+        <!-- the average grade, and how far past steep it is in chevrons -->
+        <gridlayout
+            backgroundColor={isEInk ? (solid ? '#000000' : '#ffffff') : gradeColor(section.avgGrade)}
+            borderColor="#000000"
+            borderRadius={6}
+            borderWidth={isEInk ? 1.5 : 0}
+            height={24}
+            horizontalAlignment="left"
+            padding="0 6"
+            verticalAlignment="middle">
+            <label
+                color={isEInk && !solid ? '#000000' : '#ffffff'}
+                fontSize={12}
+                fontWeight="bold"
+                text={`${section.direction === 'down' ? '↘ ' : ''}${Math.abs(section.avgGrade).toFixed(0)} % ${chevronText(data.chevrons)}`}
+                verticalAlignment="middle" />
+        </gridlayout>
         <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(data.section.startDistance)} → ${formatDistance(data.section.endDistance)}`} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={`${formatDistance(data.section.length)} · ${grade(data.section.avgGrade)} · max ${grade(data.section.maxGrade)}`} />
+            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(section.length)} · ${section.gain > 0 ? '+' : '−'}${convertElevation(Math.abs(section.gain))}`} />
+            <label color={colorOnSurfaceVariant} fontSize={12} text={`${formatDistance(section.startDistance)} → ${formatDistance(section.endDistance)} · max ${grade(section.maxGrade)}`} />
         </stacklayout>
-        <label col={2} color={colorOnSurfaceVariant} fontSize={12} text={`${data.section.gain > 0 ? '+' : '−'}${convertElevation(Math.abs(data.section.gain))}`} verticalAlignment="middle" />
+        <canvasview col={2} height={32} verticalAlignment="middle" on:draw={(event) => data.type === 'steep' && drawSteep(event, data.section, data.scale)} />
     </gridlayout>
 {/if}

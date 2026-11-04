@@ -114,7 +114,8 @@
     const PLATE_PADDING = 4;
     // the marks lie in the room the axis labels leave under the plot
     const MARK_GAP = 1;
-    const MARK_HEIGHT = 5;
+    const MARK_HEIGHT = 3;
+    const MARK_TIER_STEP = 2;
     const MARK_MIN_WIDTH = 4;
     /** the room over the plot for the plate of the highest bracket */
     const BRACKET_ROOM = 24;
@@ -171,7 +172,7 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
-        for (const { from, kind, to } of marks) {
+        for (const { from, kind, tier, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
             if (end < contentLeft || start > contentRight) {
@@ -179,7 +180,9 @@
             }
             overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
             const top = contentBottom + MARK_GAP;
-            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
+            // the harder, the thicker: it reads without colour, on e-ink too
+            const height = MARK_HEIGHT + ((tier ?? 1) - 1) * MARK_TIER_STEP;
+            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + height, height / 2, height / 2, overlayFillPaint);
         }
         if (popover && cursorShown) {
             drawPopover(canvas);

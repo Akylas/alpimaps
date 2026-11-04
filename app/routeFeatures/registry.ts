@@ -85,6 +85,8 @@ export type AttentionKind = 'steep';
 
 export interface AttentionMark {
     kind: AttentionKind;
+    /** How hard it is, 1 to 3: the mark is thicker the harder. */
+    tier?: 1 | 2 | 3;
     /** The lens and section a tap on the mark goes to. */
     lens: LensId;
     section: LensSection;
@@ -95,6 +97,7 @@ export interface ProfileMark {
     from: number;
     to: number;
     kind: AttentionKind;
+    tier?: 1 | 2 | 3;
 }
 
 /** A span of the profile marked above the curve, eg a climb with its category. Meters from the start. */

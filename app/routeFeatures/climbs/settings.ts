@@ -14,15 +14,13 @@ export const climbsSteepOpen = settingsStore('climbs_steep_open', false);
 export const climbsPreset = settingsStore<string>('climbs_preset', 'auto');
 /** The thresholds in %, over the preset's: 0 leaves the preset's value. */
 export const climbsSteepUp = settingsStore('climbs_steep_up', 0);
-export const climbsVerySteepUp = settingsStore('climbs_very_steep_up', 0);
 export const climbsSteepDown = settingsStore('climbs_steep_down', 0);
-export const climbsVerySteepDown = settingsStore('climbs_very_steep_down', 0);
 /** meters */
 export const climbsMinLength = settingsStore('climbs_min_length', DEFAULT_STEEP_MIN_LENGTH);
 export const climbsCategories = settingsStore('climbs_categories', true);
 
 /** Changes with any of what the climbs are read with: they are read again, and the card and the map with them. */
-export const climbsSettingsKey = derived([climbsPreset, climbsSteepUp, climbsVerySteepUp, climbsSteepDown, climbsVerySteepDown, climbsMinLength, climbsCategories], (values) => values.join());
+export const climbsSettingsKey = derived([climbsPreset, climbsSteepUp, climbsSteepDown, climbsMinLength, climbsCategories], (values) => values.join());
 
 const percent = (value: number) => (value > 0 ? value + ' %' : lc('climbs_threshold_preset'));
 
@@ -44,9 +42,7 @@ export function climbsSettingRows(): RouteSettingRow[] {
         { type: 'switch', store: climbsCategories, title: lc('climbs_categories'), description: lc('climbs_categories_desc') },
         { type: 'sectionheader', title: lc('climbs_steep_sections') },
         { type: 'slider', store: climbsSteepUp, title: lc('climbs_steep_up'), min: 0, max: 30, step: 1, format: percent },
-        { type: 'slider', store: climbsVerySteepUp, title: lc('climbs_very_steep_up'), min: 0, max: 40, step: 1, format: percent },
         { type: 'slider', store: climbsSteepDown, title: lc('climbs_steep_down'), min: 0, max: 40, step: 1, format: percent },
-        { type: 'slider', store: climbsVerySteepDown, title: lc('climbs_very_steep_down'), min: 0, max: 50, step: 1, format: percent },
         { type: 'slider', store: climbsMinLength, title: lc('climbs_min_length'), min: 50, max: 500, step: 25, format: formatDistance }
     ];
 }

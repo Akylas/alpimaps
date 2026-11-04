@@ -6,9 +6,7 @@ export type SteepPreset = 'road' | 'gravel' | 'mtb' | 'hiking';
 /** Grades in %, positive numbers: a descent is steep from `steepDown` downhill. */
 export interface SteepThresholds {
     steepUp: number;
-    veryUp: number;
     steepDown: number;
-    veryDown: number;
 }
 
 export interface SteepOptions {
@@ -34,8 +32,9 @@ export interface SteepSection {
     endDistance: number;
     length: number;
     direction: 'up' | 'down';
-    /** 2: past the very steep threshold on average */
-    level: 1 | 2;
+    /** how hard it is, grade and length together, see `steepDifficulty` */
+    difficulty: number;
+    tier: DifficultyTier;
     /** signed %, negative on a descent */
     avgGrade: number;
     /** signed %, the steepest point */
@@ -68,11 +67,14 @@ export interface Climb {
     category?: ClimbCategory;
 }
 
+/** 1 moderate, 3 hard */
+export type DifficultyTier = 1 | 2 | 3;
+
 export const STEEP_PRESETS: Record<SteepPreset, SteepThresholds> = {
-    road: { steepUp: 8, veryUp: 12, steepDown: 10, veryDown: 14 },
-    gravel: { steepUp: 9, veryUp: 13, steepDown: 11, veryDown: 15 },
-    mtb: { steepUp: 12, veryUp: 18, steepDown: 14, veryDown: 20 },
-    hiking: { steepUp: 15, veryUp: 25, steepDown: 20, veryDown: 30 }
+    road: { steepUp: 12, steepDown: 10 },
+    gravel: { steepUp: 13, steepDown: 11 },
+    mtb: { steepUp: 16, steepDown: 14 },
+    hiking: { steepUp: 20, steepDown: 20 }
 };
 
 export function isSteepPreset(value: string): value is SteepPreset {
@@ -83,10 +85,30 @@ export function isSteepPreset(value: string): value is SteepPreset {
 export function resolveThresholds(preset: SteepPreset, overrides: Partial<SteepThresholds>): SteepThresholds {
     const base = STEEP_PRESETS[preset];
     const pick = (key: keyof SteepThresholds) => (overrides[key] > 0 ? overrides[key] : base[key]);
-    const steepUp = pick('steepUp');
-    const steepDown = pick('steepDown');
-    // a very steep section is steeper than a steep one, whatever was set
-    return { steepUp, veryUp: Math.max(pick('veryUp'), steepUp), steepDown, veryDown: Math.max(pick('veryDown'), steepDown) };
+    return { steepUp: pick('steepUp'), steepDown: pick('steepDown') };
+}
+
+/** score from which a section is hard, then moderate; under that it is the easy end of steep */
+const TIER_SCORES: [number, DifficultyTier][] = [
+    [1.2, 3],
+    [0.5, 2]
+];
+
+/**
+ * The FIETS climb index without its altitude term: gain² / (length × 10), meters. The grade counts twice and
+ * the length once, so 800 m at 14 % (1.57) is harder than 150 m at 16 % (0.38).
+ */
+export function steepDifficulty(length: number, gain: number): number {
+    return length > 0 ? (gain * gain) / (length * 10) : 0;
+}
+
+export function difficultyTier(difficulty: number): DifficultyTier {
+    return TIER_SCORES.find(([minimum]) => difficulty >= minimum)?.[1] ?? 1;
+}
+
+/** The ways up hardest first, then the descents hardest first. A new array: the sections stay in route order. */
+export function sortByDifficulty(sections: SteepSection[]): SteepSection[] {
+    return [...sections].sort((first, second) => (first.direction === second.direction ? second.difficulty - first.difficulty : first.direction === 'up' ? -1 : 1));
 }
 
 export const DEFAULT_STEEP_MIN_LENGTH = 100;
@@ -167,7 +189,7 @@ function mergeRuns(data: ProfilePoint[], runs: Run[], sign: number, threshold: n
     return merged;
 }
 
-function sectionOf(data: ProfilePoint[], { end, start }: Run, direction: SteepSection['direction'], veryThreshold: number): SteepSection {
+function sectionOf(data: ProfilePoint[], { end, start }: Run, direction: SteepSection['direction']): SteepSection {
     const sign = direction === 'up' ? 1 : -1;
     let gain = 0;
     let steepest = 0;
@@ -179,6 +201,7 @@ function sectionOf(data: ProfilePoint[], { end, start }: Run, direction: SteepSe
     }
     const length = data[end].d - data[start].d;
     const avgGrade = (gain / length) * 100;
+    const difficulty = steepDifficulty(length, gain);
     return {
         startIndex: start,
         endIndex: end,
@@ -186,7 +209,8 @@ function sectionOf(data: ProfilePoint[], { end, start }: Run, direction: SteepSe
         endDistance: data[end].d,
         length,
         direction,
-        level: sign * avgGrade >= veryThreshold ? 2 : 1,
+        difficulty,
+        tier: difficultyTier(difficulty),
         avgGrade,
         maxGrade: sign * steepest,
         gain
@@ -196,14 +220,14 @@ function sectionOf(data: ProfilePoint[], { end, start }: Run, direction: SteepSe
 /** Linear in the number of points; derived on read from the stored grade, never persisted. */
 export function findSteepSections(data: ProfilePoint[], { minLength, thresholds }: SteepOptions): SteepSection[] {
     const sections: SteepSection[] = [];
-    for (const [direction, sign, steep, very] of [
-        ['up', 1, thresholds.steepUp, thresholds.veryUp],
-        ['down', -1, thresholds.steepDown, thresholds.veryDown]
+    for (const [direction, sign, steep] of [
+        ['up', 1, thresholds.steepUp],
+        ['down', -1, thresholds.steepDown]
     ] as const) {
         for (const run of mergeRuns(data, steepRuns(data, sign, steep), sign, steep)) {
             const length = data[run.end].d - data[run.start].d;
             if (length > 0 && length >= minLength) {
-                sections.push(sectionOf(data, run, direction, very));
+                sections.push(sectionOf(data, run, direction));
             }
         }
     }
