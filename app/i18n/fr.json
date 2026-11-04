@@ -1059,7 +1059,7 @@
     "gesture_layer_swipe_title": "Retirer une couche",
     "gesture_layer_swipe_desc": "Dans la liste des couches, balayez une couche ajoutée sur le côté pour révéler son bouton de retrait.",
     "gesture_chart_title": "Explorer le profil",
-    "gesture_chart_desc": "Glissez le long du graphique d'élévation pour lire un point de l'itinéraire dans la carte à côté du curseur : touchez cette carte pour la ranger. Touchez une marque rouge sous le graphique pour voir ce passage très raide. Pincez pour zoomer, la carte suit la partie de l'itinéraire affichée.",
+    "gesture_chart_desc": "Glissez le long du graphique d'élévation pour lire un point de l'itinéraire dans la carte au-dessus du graphique : touchez sa croix pour la ranger. Touchez une marque rouge sous le graphique pour voir ce passage très raide. Pincez pour zoomer, la carte suit la partie de l'itinéraire affichée.",
     "gesture_place_swipe_title": "Raccourcis de l'en-tête d'un lieu",
     "gesture_place_swipe_desc": "Balayez l'en-tête d'un lieu sélectionné sur le côté : d'un côté, zoomer dessus ou le verrouiller pour que d'autres touches ne le remplacent pas, de l'autre, supprimer un élément enregistré.",
     "gesture_contact_copy_title": "Copier un téléphone ou un site",
@@ -1121,5 +1121,8 @@
     "climb_summit_at": "%s à %s",
     "climbs_very_steep": "très raide %s",
     "cursor_ascent_left": "reste de cette montée",
-    "cursor_route_left": "jusqu'à l'arrivée"
+    "cursor_route_left": "jusqu'à l'arrivée",
+    "climbs_steep_sections": "passages raides",
+    "climbs_steep": "raide %s",
+    "climbs_steep_descent": "descente raide %s"
 }

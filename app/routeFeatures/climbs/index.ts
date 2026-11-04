@@ -1,7 +1,30 @@
+import { showError } from '@shared/utils/showError';
 import { convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
+import { getMapContext } from '~/mapModules/MapModule';
+import type { IItem } from '~/models/Item';
 import { type LensFact, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
+
+// loaded when asked for: the sheet and its component are not part of the startup graph
+async function showClimbsSection(item: IItem) {
+    try {
+        const { showBottomSheet } = await import('@nativescript-community/ui-bottomsheet/svelte');
+        const ClimbsSection = (await import('~/routeFeatures/climbs/ClimbsSection.svelte')).default;
+        await showBottomSheet({
+            parent: getMapContext().getMainPage(),
+            trackingScrollView: 'scrollView',
+            detents: [SECTION_SHEET_HEIGHT, 'large'],
+            initialDetentIndex: 0,
+            view: ClimbsSection,
+            props: { item }
+        });
+    } catch (error) {
+        showError(error);
+    }
+}
+
+const SECTION_SHEET_HEIGHT = 380;
 
 const climbsLens: RouteLens = {
     id: 'climbs',
@@ -28,6 +51,10 @@ const climbsLens: RouteLens = {
             facts.push({ icon: 'mdi-arrow-top-right', text: convertElevation(ascent) });
         }
         return { facts };
+    },
+    openSection: ({ item }) => {
+        const read = readClimbs(item);
+        return read?.climbs.length || read?.steep.length ? () => showClimbsSection(item) : undefined;
     },
     profile: ({ item }) => ({ brackets: readClimbs(item)?.brackets }),
     sections: ({ item }) => readClimbs(item)?.sections ?? [],

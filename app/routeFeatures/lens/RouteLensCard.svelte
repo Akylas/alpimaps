@@ -43,6 +43,7 @@
     $: activeLens = lenses.find((lens) => lens.id === active);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
     $: headline = activeLens?.headline({ item });
+    $: openSection = activeLens?.openSection?.({ item });
     // the same arrays for the lens' whole stay, so the chart is not rebuilt for nothing
     const NO_BRACKETS: ProfileBracket[] = [];
     const NO_SECTIONS: LensSection[] = [];
@@ -59,7 +60,7 @@
         const key = attention.map(({ kind, section }) => `${kind}:${section.i0}:${section.i1}`).join();
         if (key !== marksKey) {
             marksKey = key;
-            const data = item.profile?.data;
+            const data = item?.profile?.data;
             marks = data && attention.length ? attention.map(({ kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind })) : NO_MARKS;
         }
     }
@@ -67,7 +68,7 @@
     // a section of the lens in use, focused on this route
     $: sections = activeLens?.sections?.({ item }) ?? NO_SECTIONS;
     $: focused = $routeFocus?.itemKey === itemKey && $routeFocus.section?.lens === active ? $routeFocus.section : null;
-    $: range = focused ? paddedRange(focused, item.profile?.data?.length ?? 0) : null;
+    $: range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
     // the map follows the section once, not on every update of the route
     let fittedKey = '';
     $: sectionKey = focused ? `${focused.lens}:${focused.i0}:${focused.i1}` : '';
@@ -123,8 +124,10 @@
     <LensInsight
         focus={focused && { text: focused.title }}
         {headline}
+        more={!!openSection}
         row={1}
         on:clearFocus={clearSection}
+        on:more={() => openSection?.()}
         on:next={() => focusOn(stepSection(sections, focused, 1))}
         on:previous={() => focusOn(stepSection(sections, focused, -1))} />
     <ElevationChart

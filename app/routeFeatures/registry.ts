@@ -143,6 +143,8 @@ export interface RouteLens {
     profile?: (ctx: RouteCtx) => LensProfile;
     /** The stretches to focus, in route order. */
     sections?: (ctx: RouteCtx) => LensSection[];
+    /** Opens the lens' own section, when there is one for this route: the insight row's `›` runs it. */
+    openSection?: (ctx: RouteCtx) => (() => void | Promise<void>) | undefined;
     /** What the map line is cut into. None: the line keeps the item's look. */
     slices?: (ctx: RouteCtx) => LensSlice[];
 }
