@@ -11,7 +11,7 @@
     import type { LensSection } from '~/routeFeatures/registry';
     import { routeTimeZone } from '~/utils/routeAnalysis/departure';
     import type { WeatherRowData } from './pageRows';
-    import { rainColor, tempColor } from './pageRows';
+    import { rainColor, tempColor, windLabel } from './pageRows';
     import { wxGlyph } from './read';
     import { weatherDetailsOpen, weatherGust } from './settings';
     import { colors, fonts } from '~/variables';
@@ -39,6 +39,10 @@
     const percent = (share: number) => Math.round(share * 100) + ' %';
     const mm = (value: number) => `${value < 10 ? value.toFixed(1) : Math.round(value)} mm`;
     const degrees = (value: number) => Math.round(value) + '°';
+
+    // where a wind blows to, the ride going up
+    const WIND_ARROWS = { head: 'mdi-arrow-down', tail: 'mdi-arrow-up', cross_left: 'mdi-arrow-left', cross_right: 'mdi-arrow-right', calm: '' };
+    const kilometers = (meters: number) => (meters >= 10000 ? String(Math.round(meters / 1000)) : (meters / 1000).toFixed(1));
 
     // e-ink has no colour to give a figure
     const tone = (color: string | undefined) => (isEInk || !color ? colorOnSurface : color);
@@ -116,37 +120,44 @@
         <label class="sectionHeader" col={1} padding="0" text={lc('weather_details')} verticalAlignment="middle" />
         <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={String(data.count)} verticalAlignment="middle" />
     </gridlayout>
+{:else if data.type === 'columns'}
+    <gridlayout columns="44,52,64,48,*" height={26} padding="0 16">
+        <label color={colorOnSurfaceVariant} fontSize={11} text={lc('weather_col_km')} verticalAlignment="middle" />
+        <label col={1} color={colorOnSurfaceVariant} fontSize={11} text={lc('weather_col_at')} verticalAlignment="middle" />
+        <label col={2} color={colorOnSurfaceVariant} fontSize={11} text="°C" verticalAlignment="middle" />
+        <label col={3} color={colorOnSurfaceVariant} fontSize={11} text={lc('weather_col_rain')} verticalAlignment="middle" />
+        <label col={4} color={colorOnSurfaceVariant} fontSize={11} text={lc('weather_col_wind')} verticalAlignment="middle" />
+    </gridlayout>
 {:else if data.type === 'ride'}
     {@const row = data.row}
-    <gridlayout borderBottomColor={colorOutlineVariant} borderBottomWidth={1} columns="64,30,*,auto" height={62} padding="0 16" rippleColor={colorPrimary} on:tap={() => focusRow(row)}>
-        <stacklayout verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={13} fontWeight="bold" text={formatDistance(row.distance)} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={clock(row.at)} />
-        </stacklayout>
-        <label col={1} color={tone(rainColor(row.precip))} fontFamily={$fonts.mdi} fontSize={22} text={wxGlyph(row.code, row.cloud)} verticalAlignment="middle" />
-        <stacklayout col={2} verticalAlignment="middle">
-            <label color={tone(row.temp === undefined ? undefined : tempColor(row.temp))} fontSize={15} fontWeight="bold" text={row.temp === undefined ? '–' : degrees(row.temp)} />
-            <label
-                color={row.precip >= 0.1 ? tone(rainColor(row.precip)) : colorOnSurfaceVariant}
+    {@const wind = windLabel(row.wind, row.head, row.cross)}
+    <gridlayout borderTopColor={colorOutlineVariant} borderTopWidth={1} columns="44,52,64,48,*" height={36} padding="0 16" rippleColor={colorPrimary} on:tap={() => focusRow(row)}>
+        <label color={colorOnSurface} fontSize={13} fontWeight="bold" text={kilometers(row.distance)} verticalAlignment="middle" />
+        <label col={1} color={colorOnSurface} fontSize={12} text={clock(row.at)} verticalAlignment="middle" />
+        <!-- the sky, in the colour of the rain, and the temperature -->
+        <label col={2} color={colorOnSurface} fontSize={13} verticalAlignment="middle">
+            <span color={tone(rainColor(row.precip))} fontFamily={$fonts.mdi} fontSize={16} text={wxGlyph(row.code, row.cloud)} />
+            <span color={tone(row.temp === undefined ? undefined : tempColor(row.temp))} fontWeight="bold" text={' ' + (row.temp === undefined ? '–' : degrees(row.temp))} />
+        </label>
+        <label
+            col={3}
+            color={row.precip >= 0.1 ? tone(rainColor(row.precip)) : colorOnSurfaceVariant}
+            fontSize={12}
+            text={row.precip >= 0.1 ? row.precip.toFixed(1) : '–'}
+            verticalAlignment="middle"
+        />
+        <!-- the wind as the rider has it: an arrow of where it blows to, the ride going up, in a word and how much of it, then all of it -->
+        <label col={4} color={colorOnSurface} fontSize={12} verticalAlignment="middle">
+            <span color={windColor(row.head)} fontFamily={$fonts.mdi} fontSize={14} text={wind ? WIND_ARROWS[wind.kind === 'cross' ? `cross_${wind.side}` : wind.kind] : ''} />
+            <span color={windColor(row.head)} fontWeight="bold" text={wind ? ' ' + (wind.kind === 'calm' ? lc('weather_wind_calm') : `${lc('weather_wind_' + wind.kind)} ${wind.value}`) : ''} />
+            <span color={colorOnSurfaceVariant} fontSize={11} text={row.wind !== undefined && wind?.kind !== 'calm' ? ` (${Math.round(row.wind)})` : ''} />
+            <span
+                color={isEInk ? colorOnSurface : HEAD_COLOR}
+                fontFamily={$fonts.mdi}
                 fontSize={12}
-                text={row.precip >= 0.1 ? lc('weather_rain_rate', row.precip.toFixed(1)) : lc('weather_dry')}
+                text={row.gust !== undefined && row.gust >= $weatherGust ? ` mdi-weather-windy-variant ${Math.round(row.gust)}` : ''}
             />
-            {#if row.cloud !== undefined}
-                <label color={colorOnSurfaceVariant} fontSize={12} text={`${Math.round(row.cloud)} % ${lc('weather_stat_cloud')}`} />
-            {/if}
-        </stacklayout>
-        <stacklayout col={3} horizontalAlignment="right" verticalAlignment="middle">
-            <label color={windColor(row.head)} fontSize={14} fontWeight="bold" horizontalAlignment="right" text={row.wind === undefined ? '' : `${Math.round(row.wind)} km/h`} />
-            <label
-                color={windColor(row.head)}
-                fontSize={12}
-                horizontalAlignment="right"
-                text={row.head !== undefined && Math.abs(row.head) >= WIND_NOTICEABLE ? lc(row.head > 0 ? 'weather_head' : 'weather_tail', Math.round(Math.abs(row.head)) + ' km/h') : ''}
-            />
-            {#if row.gust !== undefined && row.gust >= $weatherGust}
-                <label color={isEInk ? colorOnSurface : HEAD_COLOR} fontFamily={$fonts.mdi} fontSize={12} horizontalAlignment="right" text={`mdi-weather-windy-variant ${Math.round(row.gust)}`} />
-            {/if}
-        </stacklayout>
+        </label>
     </gridlayout>
 {:else if data.type === 'footer'}
     <stacklayout padding="12 16 14 16">

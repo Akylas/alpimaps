@@ -142,6 +142,8 @@ export interface RideRow {
     wind?: number;
     gust?: number;
     head?: number;
+    /** km/h, the part of the wind across the ride: above 0 from the right */
+    cross?: number;
     rain: 0 | 1 | 2 | 3;
 }
 
@@ -317,7 +319,7 @@ export function readWeather(
         return plates;
     });
 
-    const rows: RideRow[] = ride.map(({ at, head, reading, sample }, index) => ({
+    const rows: RideRow[] = ride.map(({ at, cross, head, reading, sample }, index) => ({
         index,
         i: sample.i,
         i0: stretches[index].lo,
@@ -331,6 +333,7 @@ export function readWeather(
         wind: reading?.wind,
         gust: reading?.gust,
         head,
+        cross,
         rain: rainClass(reading?.precip ?? 0)
     }));
 

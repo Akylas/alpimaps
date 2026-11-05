@@ -226,6 +226,13 @@ describe('rows', () => {
         expect(read?.rows[1].wind).toBe(20);
         expect(read?.rows[1].gust).toBe(35);
         expect(read?.rows[1].head).toBeCloseTo(20, 1);
+        expect(read?.rows[1].cross).toBeCloseTo(0, 1);
+    });
+
+    it('says the wind across the ride too: above 0 from the right', () => {
+        // the route goes north: a west wind comes from the left
+        const read = readWeather(item(layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(270) }, {}])), NOW);
+        expect(read?.rows[1].cross).toBeCloseTo(-20, 1);
     });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RideRow } from './read';
-import { rainColor, tempColor, weatherRows } from './pageRows';
+import { rainColor, tempColor, weatherRows, windLabel } from './pageRows';
 
 const attribution = { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' };
 const footer = { provider: 'Open-Meteo', attribution, updatedAt: 1, decimals: 2, outdated: false, canUpdate: true };
@@ -20,13 +20,13 @@ describe('weatherRows', () => {
     });
 
     it('lists a row for each sample in the order of the ride under the header when it is open', () => {
-        expect(weatherRows({ read, footer, fetch, detailsOpen: true }).map(({ key }) => key)).toEqual(['summary', 'details', 'ride0', 'ride1', 'footer']);
+        expect(weatherRows({ read, footer, fetch, detailsOpen: true }).map(({ key }) => key)).toEqual(['summary', 'details', 'columns', 'ride0', 'ride1', 'footer']);
     });
 
     it('gives each row its own data', () => {
         const rows = weatherRows({ read, footer, fetch, detailsOpen: true });
-        expect(rows[2].data).toEqual({ type: 'ride', row: read.rows[0] });
-        expect(rows[4].data).toMatchObject({ type: 'footer', provider: 'Open-Meteo', decimals: 2 });
+        expect(rows[3].data).toEqual({ type: 'ride', row: read.rows[0] });
+        expect(rows[5].data).toMatchObject({ type: 'footer', provider: 'Open-Meteo', decimals: 2 });
     });
 });
 
@@ -52,5 +52,31 @@ describe('rainColor', () => {
         expect(rainColor(0)).toBeUndefined();
         expect(rainColor(0.5)).toBe('#4A90D9');
         expect(rainColor(5)).not.toBe(rainColor(0.5));
+    });
+});
+
+describe('windLabel', () => {
+    it('says a headwind with how much of the wind is against the ride', () => {
+        expect(windLabel(25, 18, 5)).toEqual({ kind: 'head', value: 18 });
+    });
+
+    it('says a tailwind with how much is behind', () => {
+        expect(windLabel(25, -18, 5)).toEqual({ kind: 'tail', value: 18 });
+    });
+
+    it('says a crosswind when more of the wind is across than along', () => {
+        expect(windLabel(25, 5, -20)).toMatchObject({ kind: 'cross', value: 20 });
+        expect(windLabel(25, 5, 20)).toMatchObject({ kind: 'cross', value: 20 });
+    });
+
+    it('says calm for a wind of less than 3 km/h, and nothing without a wind', () => {
+        expect(windLabel(2, 2, 0)).toEqual({ kind: 'calm', value: 0 });
+        expect(windLabel(undefined, undefined, undefined)).toBeUndefined();
+    });
+
+    it('says which side a crosswind blows to: it comes from the right when across is above 0', () => {
+        expect(windLabel(25, 0, 20)?.side).toBe('left');
+        expect(windLabel(25, 0, -20)?.side).toBe('right');
+        expect(windLabel(25, 20, 0)?.side).toBeUndefined();
     });
 });

@@ -6,6 +6,8 @@ export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }
     /** the header of the samples, which are listed only while it is open */
     | { type: 'details'; open: boolean; count: number }
+    /** the titles of the columns of the samples */
+    | { type: 'columns' }
     | { type: 'ride'; row: RideRow }
     | { type: 'footer'; provider: string; attribution: WeatherAttribution; updatedAt: number; decimals: number; outdated: boolean; canUpdate: boolean }
     /** nothing fetched: what the first fetch sends, or why it cannot be asked */
@@ -26,6 +28,7 @@ export function weatherRows({ detailsOpen, fetch, footer, read }: WeatherRowsInp
     return [
         { key: 'summary', data: { type: 'summary', summary: read.summary } },
         { key: 'details', data: { type: 'details', open: detailsOpen, count: read.rows.length } },
+        ...(detailsOpen ? [{ key: 'columns', data: { type: 'columns' as const } }] : []),
         ...(detailsOpen ? read.rows.map((row) => ({ key: `ride${row.index}`, data: { type: 'ride' as const, row } })) : []),
         { key: 'footer', data: { type: 'footer', ...footer } }
     ];
@@ -45,4 +48,32 @@ export function rainColor(mmPerHour: number): string | undefined {
 /** Only the cold (freezing or under) and the heat (from 25 degrees) have a colour: the rest is neutral. */
 export function tempColor(celsius: number): string | undefined {
     return celsius <= 0 ? COLD : celsius >= 33 ? HOT : celsius >= 25 ? WARM : undefined;
+}
+
+/** km/h under which there is no wind to speak of */
+const CALM = 3;
+
+export interface WindLabel {
+    kind: 'head' | 'tail' | 'cross' | 'calm';
+    /** km/h of the part of the wind the label is about */
+    value: number;
+    /** a crosswind: the side it blows to, the way the ride goes */
+    side?: 'left' | 'right';
+}
+
+/**
+ * What the wind is to the rider, in a word and a figure: against, behind or across, whichever is most of it. `head` is the part along the
+ * ride, above 0 against, `cross` the part across it, above 0 from the right.
+ */
+export function windLabel(speed: number | undefined, head: number | undefined, cross: number | undefined): WindLabel | undefined {
+    if (speed === undefined || head === undefined || cross === undefined) {
+        return undefined;
+    }
+    if (speed < CALM) {
+        return { kind: 'calm', value: 0 };
+    }
+    if (Math.abs(cross) > Math.abs(head)) {
+        return { kind: 'cross', value: Math.round(Math.abs(cross)), side: cross > 0 ? 'left' : 'right' };
+    }
+    return { kind: head > 0 ? 'head' : 'tail', value: Math.round(Math.abs(head)) };
 }
