@@ -37,3 +37,15 @@
 @transit_stop_selected_fill: #000000;
 @transit_stop_border_color: #000000;
 @transit_stop_border_width: 3;
+
+
+// the route lenses (shared/routelens.mss): nothing can be told apart by colour, so a slice is a black
+// core a little wider than usual and its severity is ticks along it (eink/routelens.mss). A section out
+// of focus is thinner and has no ticks, not translucent: translucency dithers into noise here
+@lens_core_extra: 2;
+@lens_dim_opacity: 1;
+@lens_dim_shrink: 2;
+@lens_halo_color: #000000;
+@lens_halo_opacity: 1;
+@lens_halo_dash: 1, 5;
+@lens_alert_dash: 3, 3;

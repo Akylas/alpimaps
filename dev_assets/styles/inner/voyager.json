@@ -17,6 +17,7 @@
         "shared/transit.mss",
         "shared/items.mss",
         "shared/directions.mss",
+        "shared/routelens.mss",
         "shared/navigation.mss",
         "shared/search.mss"
     ],
@@ -32,7 +33,18 @@
         "default_transit_color": "red",
         "main_color": "#60A5F4",
         "main_darker_color": "#287bda",
-        "selected_osmid": -1
+        "selected_osmid": -1,
+        "lens_pal": {
+            "default": {
+                "g0": "#1B4E9B", "g1": "#3B7DD8", "g2": "#7FB2E8", "g3": "#7BC96F", "g4": "#F2D14B", "g5": "#F0902B", "g6": "#E34A33", "g7": "#9E1B18",
+                "r0": "#8D96A3", "r2": "#F29D38", "r3": "#D7263D",
+                "w0": "#8D96A3", "w1": "#B39DDB", "w2": "#7E57C2", "w3": "#4527A0",
+                "s0": "#7C93B0", "s1": "#F5B82E", "s2": "#B0B7BF", "s3": "#243049",
+                "sign": "#D7263D", "plate": "#2B2F33", "plate_text": "#ffffff"
+            }
+        },
+        "lens_case": "#ffffff",
+        "route_focus": 0
     },
     "name": "voyager"
 }

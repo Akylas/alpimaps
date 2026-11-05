@@ -30,8 +30,10 @@ describe('lensPalette', () => {
         expect(lensPalette('dark', surfaceColors).r0).not.toBe(lensPalette('light', surfaceColors).r0);
     });
 
-    it('is black on e-ink, where a colour means nothing', () => {
-        Object.values(lensPalette('eink', surfaceColors)).forEach((color) => expect(color).toBe('#000000'));
+    it('is black on e-ink, where a colour means nothing, and writes white on a black plate', () => {
+        const { plate_text: plateText, ...colours } = lensPalette('eink', surfaceColors);
+        Object.values(colours).forEach((color) => expect(color).toBe('#000000'));
+        expect(plateText).toBe('#ffffff');
     });
 });
 

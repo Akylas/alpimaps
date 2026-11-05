@@ -27,7 +27,9 @@ const LIGHT = {
     s2: '#B0B7BF',
     s3: '#243049',
     sign: '#D7263D',
-    plate: '#2B2F33'
+    plate: '#2B2F33',
+    // the text on a plate
+    plate_text: '#ffffff'
 };
 
 // every step lifted: the light ones read as a hole on a dark map
@@ -44,12 +46,14 @@ const DARK = {
     s2: '#8E969F',
     s3: '#8FA3D9',
     sign: '#EF4A5E',
-    plate: '#E8EAED'
+    plate: '#E8EAED',
+    plate_text: '#1B1C1D'
 };
 
 const DARK_GRADES = ['#4F7FD0', '#5C98E8', '#93C1F0', '#8CD680', '#F5DA63', '#F4A24A', '#EE6A52', '#D9453F'];
 
 const BLACK = '#000000';
+const WHITE = '#ffffff';
 
 /**
  * Every key the style reads, for a theme. `surfaceColors` is the app's surface table, one `f_<id>` per
@@ -59,8 +63,8 @@ export function lensPalette(variant: LensPaletteVariant, surfaceColors: Record<s
     const grades = gradeBuckets.map(({ color }, bucket) => [gradeKey(bucket), variant === 'dark' ? DARK_GRADES[bucket] : color]);
     const surfaces = Object.entries(surfaceColors).map(([id, color]) => [surfaceKey(id), color]);
     const palette = Object.fromEntries([...grades, ...Object.entries(variant === 'dark' ? DARK : LIGHT), ...surfaces]);
-    // nothing can be told apart by colour on e-ink: the style separates slices by ticks
-    return variant === 'eink' ? Object.fromEntries(Object.keys(palette).map((key) => [key, BLACK])) : palette;
+    // nothing can be told apart by colour on e-ink: the style separates slices by ticks. White on a black plate.
+    return variant === 'eink' ? Object.fromEntries(Object.keys(palette).map((key) => [key, key === 'plate_text' ? WHITE : BLACK])) : palette;
 }
 
 /** The outline of a slice: dark on a dark map, where a white one glares. */
