@@ -23,6 +23,7 @@
     import type { Item } from '~/models/Item';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
+    import { analysisChanged } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
@@ -195,6 +196,7 @@
     function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
         item.analysis = analysis;
         analysisVersion++;
+        analysisChanged();
         if (full) {
             item = item;
         }

@@ -21,6 +21,9 @@ const changes = writable(0);
 export const routeAnalysisChanges = { subscribe: changes.subscribe };
 const notify = () => changes.update((count) => count + 1);
 
+/** The route's inputs changed in place (a new departure, a new pace): what is read from its layers reads them again. */
+export const analysisChanged = notify;
+
 function isSaved(item: IItem) {
     return item?.id !== undefined && item.id !== null;
 }
