@@ -11,6 +11,7 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
+import { applyRouteFocus, setRouteFocus } from '~/routeFeatures/lens/lensStyle';
 import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 
 import { lc } from '@nativescript-community/l';
@@ -23,7 +24,7 @@ import { parseAnalysis } from '~/utils/routeAnalysis/storage';
 import { showSnack } from '~/utils/ui';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
-import MapModule, { getMapContext } from './MapModule';
+import MapModule, { type MapDecoder, getMapContext } from './MapModule';
 import { type MapPos, fromBounds, fromPosition, toPosition } from '~/utils/geo';
 const mapContext = getMapContext();
 
@@ -646,12 +647,23 @@ export default class ItemsModule extends MapModule {
                 });
             }
             features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
+            setRouteFocus(
+                mapContext.mapDecoder,
+                features.some((feature) => feature.properties?.class === 'lens')
+            );
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setGeoJSON(2, data);
             // DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
+            setRouteFocus(mapContext.mapDecoder, false);
             this.getLocalVectorDataSource().setGeoJSON(2, { type: 'FeatureCollection', features: [] });
+        }
+    }
+    vectorTileDecoderChanged(_oldDecoder: MapDecoder, newDecoder: MapDecoder) {
+        // the inner decoder changes through here too
+        if (newDecoder === mapContext.mapDecoder) {
+            applyRouteFocus(newDecoder);
         }
     }
     async hideItem(item: IItem) {

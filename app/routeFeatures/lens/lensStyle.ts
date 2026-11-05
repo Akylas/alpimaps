@@ -1,0 +1,37 @@
+/** The style parameters the route lenses read: the palette in the inner style, the focus in the base map's. */
+import { lensCase, lensPalette } from '~/routeFeatures/lens/lensPalette';
+import { surfaceColors } from '~/utils/routing';
+
+interface StyleDecoder {
+    call(method: string, ...args: unknown[]): unknown;
+}
+
+// whether the routes network is dimmed, kept to give a decoder made later its value
+let routeFocus = false;
+
+/**
+ * What an inner decoder needs when it is made. The palette is by inner style: e-ink is black, the rest
+ * the light one. A dark one is in `lensPalette` for the day the base map has a dark look.
+ */
+export function lensStyleParameters(innerStyle: string): Record<string, string> {
+    const variant = innerStyle === 'eink' ? 'eink' : 'light';
+    return { lens_pal: JSON.stringify(lensPalette(variant, surfaceColors)), lens_case: lensCase(variant) };
+}
+
+/**
+ * The hiking and biking network of the base map steps back while a lens colours the route: its reds and
+ * purples fight the lens'. `decoder` is the base map's.
+ */
+export function setRouteFocus(decoder: StyleDecoder | undefined, focused: boolean) {
+    if (focused !== routeFocus) {
+        routeFocus = focused;
+        decoder?.call('setStyleParameter', 'route_focus', focused ? '1' : '0');
+    }
+}
+
+/** A base map decoder made while the focus is on starts at its default: this gives it the value. */
+export function applyRouteFocus(decoder: StyleDecoder | undefined) {
+    if (routeFocus) {
+        decoder?.call('setStyleParameter', 'route_focus', '1');
+    }
+}

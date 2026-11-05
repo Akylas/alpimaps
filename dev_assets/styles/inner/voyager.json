@@ -43,8 +43,7 @@
                 "sign": "#D7263D", "plate": "#2B2F33", "plate_text": "#ffffff"
             }
         },
-        "lens_case": "#ffffff",
-        "route_focus": 0
+        "lens_case": "#ffffff"
     },
     "name": "voyager"
 }
