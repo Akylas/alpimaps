@@ -1,20 +1,9 @@
-// The route lenses: the slices a lens cuts the route into, the halo of a focused section, the alerts
-// drawn while following a route and the plates on them. One definition for every lens, so a feature
-// only has to say which slice is which (see app/routeFeatures/lens/sections.ts):
-//
-//   lens       a slice of the route: `k` its colour in `lens_pal`, `s` how serious it is (0-3),
-//              `f` 0 when another section is focused, `lens` the lens it belongs to
-//   lensfocus  the focused section, drawn under its slices
-//   navalert   a stretch to watch while following the route, whatever the lens: `kind` fast | steep
-//   lsym       a plate on a point: `sym` speed | grade | climb | wx | wind
-//
-// The colours are a table the app writes per theme (`lens_pal`, app/routeFeatures/lens/lensPalette.ts),
-// so a theme change never touches this file. The e-ink look differs by width, ticks and dashes and
-// comes from the variables below, see eink/style.mss and eink/routelens.mss.
-//
-// The planning slices live in the items `poi` layer, those of a route being followed in the
-// `navigation` layer, under the maneuver arrows. A feature is drawn after the ones before it in the
-// layer: the app sends the focus halo and the alert casing first.
+// The route lenses: slices, the halo of a focused section, the alerts while following a route, their plates.
+// What the app sends is in app/routeFeatures/lens/sections.ts: `lens` (`k` its colour in the `lens_pal`
+// table, `s` 0-3 how serious, `f` 0 out of focus), `lensfocus`, `navalert` (`kind` fast | steep), `lsym`.
+// Planning draws in the items `poi` layer, following a route in `navigation`, under the maneuver arrows.
+// A feature is drawn after the ones before it: the app sends the focus halo and the fast casing first.
+// E-ink separates by width, ticks and dashes: the variables below, overridden in eink/.
 
 @lens_w: @bicycle_line_width + 3 + @lens_core_extra;
 @lens_case_w: linear([view::zoom], (10, 1), (16, 1.5), (18, 2));
@@ -28,7 +17,8 @@
 @lens_halo_dash: none;
 @lens_alert_dash: none;
 
-#poi['mapnik::geometry_type'=2][class='lensfocus'] {
+#poi['mapnik::geometry_type'=2][class='lensfocus'],
+#navigation['mapnik::geometry_type'=2][class='lensfocus'] {
 	line-color: @lens_halo_color;
 	line-opacity: @lens_halo_opacity;
 	line-width: @lens_w + 10;
@@ -58,7 +48,6 @@
 }
 
 // an outer casing: it comes before the route in the layer, so it shows on both sides of it
-#poi['mapnik::geometry_type'=2][class='navalert'][kind='fast'],
 #navigation['mapnik::geometry_type'=2][class='navalert'][kind='fast'] {
 	line-color: get([param::lens_pal], 'r3', #D7263D);
 	line-width: @directions_line_width + 2 * @nav_border_width + 5;
@@ -69,7 +58,6 @@
 
 // the slice is oriented along the route: the chevrons point the way
 #navigation['mapnik::geometry_type'=2][class='navalert'][kind='steep'][zoom>=13]::chev,
-#poi['mapnik::geometry_type'=2][class='navalert'][kind='steep'][zoom>=13]::chev,
 #poi['mapnik::geometry_type'=2][class='lens'][lens='climbs'][s>=2][zoom>=13]::chev {
 	marker-placement: line;
 	marker-type: arrow;
@@ -82,7 +70,8 @@
 }
 
 // a speed sign: a white disc in a red ring, bigger once zoomed in
-#poi[class='lsym'][sym='speed'][zoom>=12] {
+#poi[class='lsym'][sym='speed'][zoom>=12],
+#navigation[class='lsym'][sym='speed'][zoom>=12] {
 	text-name: [t];
 	text-face-name: @mont_bd;
 	text-size: 10;
@@ -105,7 +94,7 @@
 }
 
 // the grade at the start of a steep run, '11 %'
-#poi[class='lsym'][sym='grade'][zoom>=14] {
+#navigation[class='lsym'][sym='grade'][zoom>=14] {
 	text-name: [t];
 	text-face-name: @mont_bd;
 	text-size: 10;
@@ -120,7 +109,8 @@
 }
 
 // a climb's category on its summit, its name or figure in small under it
-#poi[class='lsym'][sym='climb'][zoom>=11] {
+#poi[class='lsym'][sym='climb'][zoom>=11],
+#navigation[class='lsym'][sym='climb'][zoom>=11] {
 	text-name: [t];
 	text-secondary-name: [t2];
 	text-secondary-scale: 0.8;
@@ -139,7 +129,8 @@
 }
 
 // the weather at a point of the route; faded when the forecast is out of date
-#poi[class='lsym'][sym='wx'][zoom>=9] {
+#poi[class='lsym'][sym='wx'][zoom>=9],
+#navigation[class='lsym'][sym='wx'][zoom>=9] {
 	shield-icon-name: [icon];
 	shield-icon-face-name: [style.mapFontFamily] ?? @osm;
 	shield-icon-size: 14;
@@ -160,7 +151,8 @@
 }
 
 // the wind, an arrow turned relative to the way the route goes
-#poi[class='lsym'][sym='wind'][zoom>=11] {
+#poi[class='lsym'][sym='wind'][zoom>=11],
+#navigation[class='lsym'][sym='wind'][zoom>=11] {
 	text-name: '↑';
 	text-orientation: [rot];
 	text-size: 14;

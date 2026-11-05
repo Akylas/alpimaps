@@ -6,6 +6,7 @@ import { categoryLabel, climbsRows, readClimbs } from '~/routeFeatures/climbs/da
 import { climbsSettingRows, climbsSettingsKey, climbsSteepOpen, routeFeatureClimbs } from '~/routeFeatures/climbs/settings';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
+import { alertFeatures, routeCoordinates, symbolFeatures } from '~/routeFeatures/lens/sections';
 import { type LensFact, type RouteLens, type RoutePageSection, registerRouteFeature } from '~/routeFeatures/registry';
 
 // loaded when asked for: the sheet and its component are not part of the startup graph
@@ -60,7 +61,8 @@ const climbsLens: RouteLens = {
     },
     profile: ({ item }) => ({ brackets: readClimbs(item)?.brackets }),
     sections: ({ item }) => readClimbs(item)?.sections ?? [],
-    slices: ({ item }) => readClimbs(item)?.slices ?? []
+    slices: ({ item }) => readClimbs(item)?.slices ?? [],
+    symbols: ({ item }) => readClimbs(item)?.symbols ?? []
 };
 
 const climbsPageSection: RoutePageSection = {
@@ -89,5 +91,14 @@ registerRouteFeature({
     changes: derived([climbsSettingsKey, climbsSteepOpen], (values) => values),
     lenses: [climbsLens],
     pageSections: [climbsPageSection],
-    attention: ({ item }) => readClimbs(item)?.marks ?? []
+    attention: ({ item }) => readClimbs(item)?.marks ?? [],
+    // while following the route, whatever the lens: the steep ways, to be ready for them
+    mapFeatures: ({ item, navigating }) => {
+        const read = navigating ? readClimbs(item) : null;
+        if (!read?.alerts.length) {
+            return [];
+        }
+        const coordinates = routeCoordinates(item.geometry);
+        return [...alertFeatures(coordinates, read.alerts), ...symbolFeatures(coordinates, read.gradePlates)];
+    }
 });

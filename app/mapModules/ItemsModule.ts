@@ -13,6 +13,7 @@ import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, 
 import { formatter } from '~/mapModules/ItemFormatter';
 import { applyRouteFocus, setRouteFocus } from '~/routeFeatures/lens/lensStyle';
 import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { navigationItem } from '~/stores/navigationStore';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -240,7 +241,18 @@ export default class ItemsModule extends MapModule {
             clearTimeout(pendingRefresh);
             unsubscribe();
         };
+        // following a route moves what is drawn with it to the navigation layer, and back
+        let firstNavigation = true;
+        this.unsubscribeNavigation?.();
+        this.unsubscribeNavigation = navigationItem.subscribe(() => {
+            // with nothing selected too: the route focus the navigation set goes when it stops
+            if (!firstNavigation) {
+                this.onItemSelected(mapContext.getSelectedItem());
+            }
+            firstNavigation = false;
+        });
     }
+    private unsubscribeNavigation: () => void;
     private unsubscribeRouteFeatures: () => void;
     private unsubscribeRouteFeatureChanges: () => void;
     onDbInitListeners = [];
@@ -257,6 +269,8 @@ export default class ItemsModule extends MapModule {
         this.unsubscribeRouteFeatures = null;
         this.unsubscribeRouteFeatureChanges?.();
         this.unsubscribeRouteFeatureChanges = null;
+        this.unsubscribeNavigation?.();
+        this.unsubscribeNavigation = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {
@@ -646,17 +660,23 @@ export default class ItemsModule extends MapModule {
                     });
                 });
             }
-            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
-            setRouteFocus(
-                mapContext.mapDecoder,
-                features.some((feature) => feature.properties?.class === 'lens')
-            );
+            // while it is followed the navigation layer draws these, over the maneuver arrows
+            if (!get(navigationItem)) {
+                features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
+                setRouteFocus(
+                    mapContext.mapDecoder,
+                    features.some((feature) => feature.properties?.class === 'lens')
+                );
+            }
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setGeoJSON(2, data);
             // DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
-            setRouteFocus(mapContext.mapDecoder, false);
+            // while a route is followed the navigation layer owns the focus
+            if (!get(navigationItem)) {
+                setRouteFocus(mapContext.mapDecoder, false);
+            }
             this.getLocalVectorDataSource().setGeoJSON(2, { type: 'FeatureCollection', features: [] });
         }
     }

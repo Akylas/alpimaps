@@ -6,8 +6,10 @@ import {
     type ProfilePoint,
     STEEP_PRESETS,
     type SteepPreset,
+    type SteepSection,
     bestClimb,
     climbCategory,
+    climbPlates,
     difficultyTier,
     findClimbs,
     findSteepSections,
@@ -15,6 +17,7 @@ import {
     presetForActivity,
     resolveThresholds,
     sortByDifficulty,
+    steepAlerts,
     steepDifficulty
 } from './steep';
 
@@ -248,5 +251,45 @@ describe('isSteepPreset', () => {
         expect(isSteepPreset('mtb')).toBe(true);
         expect(isSteepPreset('auto')).toBe(false);
         expect(isSteepPreset('toString')).toBe(false);
+    });
+});
+
+function steepSection(overrides: Partial<SteepSection>): SteepSection {
+    return { startIndex: 0, endIndex: 1, startDistance: 0, endDistance: 10, length: 10, direction: 'up', difficulty: 1, tier: 1, avgGrade: 10, maxGrade: 10, gain: 1, ...overrides };
+}
+
+function climbAt(overrides: Partial<Climb>): Climb {
+    return { startIndex: 0, endIndex: 1, startDistance: 0, endDistance: 10, length: 10, gain: 1, avgGrade: 5, maxGrade: 5, ...overrides };
+}
+
+describe('steepAlerts', () => {
+    const steep = [steepSection({ startIndex: 10, endIndex: 20, avgGrade: 11.4, tier: 2 }), steepSection({ startIndex: 40, endIndex: 55, avgGrade: -14.2, tier: 3, direction: 'down' })];
+
+    it('marks each steep section, the hardest tier as very steep', () => {
+        expect(steepAlerts(steep).alerts).toEqual([
+            { kind: 'steep', i0: 10, i1: 20, s: 2 },
+            { kind: 'steep', i0: 40, i1: 55, s: 3 }
+        ]);
+    });
+
+    it('puts the grade on a plate at the start of the section, whichever the way it goes', () => {
+        const { plates } = steepAlerts(steep);
+        expect(plates).toMatchObject([
+            { sym: 'grade', i: 10, t: '11 %', s: 2 },
+            { sym: 'grade', i: 40, t: '14 %', s: 3 }
+        ]);
+    });
+});
+
+describe('climbPlates', () => {
+    const climbs = [climbAt({ endIndex: 30, category: 1 }), climbAt({ endIndex: 60 }), climbAt({ endIndex: 90, category: 'hc' })];
+
+    it('puts a plate on the summit of each ranked climb, the harder ranking first', () => {
+        const plates = climbPlates(climbs, (climb) => ({ t: String(climb.category), t2: 'top' }));
+        expect(plates).toMatchObject([
+            { sym: 'climb', i: 30, t: '1', t2: 'top' },
+            { sym: 'climb', i: 90, t: 'hc', t2: 'top' }
+        ]);
+        expect(plates[1].p).toBeGreaterThan(plates[0].p);
     });
 });

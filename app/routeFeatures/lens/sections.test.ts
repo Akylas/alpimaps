@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LensSection } from '~/routeFeatures/registry';
-import { lensFeatures, nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection } from './sections';
+import { alertFeatures, lensFeatures, nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection, symbolFeatures } from './sections';
 
 const coordinates = Array.from({ length: 10 }, (_, index) => [6 + index * 0.01, 45]);
 
@@ -23,6 +23,11 @@ describe('lensFeatures', () => {
         expect(features.filter((feature) => feature.properties.class === 'lens').map((feature) => feature.properties.f)).toEqual([0, 1, 0]);
         const focus = features.find((feature) => feature.properties.class === 'lensfocus');
         expect(focus.geometry).toEqual({ type: 'LineString', coordinates: coordinates.slice(4, 6) });
+    });
+
+    it('draws the focus halo first: a feature is drawn after the ones before it, and the halo goes under the slices', () => {
+        const features = lensFeatures(coordinates, 'climbs', slices, { i0: 4, i1: 5 });
+        expect(features[0].properties.class).toBe('lensfocus');
     });
 
     it('keeps a slice that touches the focus by its end', () => {
@@ -120,5 +125,31 @@ describe('routeCoordinates', () => {
     it('is empty for anything else', () => {
         expect(routeCoordinates({ type: 'Point', coordinates: [0, 0] })).toEqual([]);
         expect(routeCoordinates(undefined)).toEqual([]);
+    });
+});
+
+describe('symbolFeatures', () => {
+    it('puts a plate on the vertex it stands at, with what the style reads', () => {
+        const features = symbolFeatures(coordinates, [{ sym: 'climb', i: 4, t: 'Cat 1', t2: '1180 m', s: 2, p: 90 }]);
+        expect(features).toHaveLength(1);
+        expect(features[0].geometry).toEqual({ type: 'Point', coordinates: coordinates[4] });
+        expect(features[0].properties).toEqual({ class: 'lsym', sym: 'climb', t: 'Cat 1', t2: '1180 m', s: 2, p: 90 });
+    });
+
+    it('leaves out a plate whose vertex is not on the route', () => {
+        expect(symbolFeatures(coordinates, [{ sym: 'speed', i: 99, t: '80', s: 3, p: 1 }])).toEqual([]);
+    });
+});
+
+describe('alertFeatures', () => {
+    it('cuts the stretch out of the route, vertices included at both ends', () => {
+        const features = alertFeatures(coordinates, [{ kind: 'fast', i0: 2, i1: 5, s: 3 }]);
+        expect(features).toHaveLength(1);
+        expect(features[0].geometry).toEqual({ type: 'LineString', coordinates: coordinates.slice(2, 6) });
+        expect(features[0].properties).toEqual({ class: 'navalert', kind: 'fast', s: 3 });
+    });
+
+    it('leaves out a stretch of one vertex', () => {
+        expect(alertFeatures(coordinates, [{ kind: 'steep', i0: 4, i1: 4, s: 2 }])).toEqual([]);
     });
 });

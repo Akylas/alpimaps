@@ -5,7 +5,8 @@ import type { GeoLocation } from '~/handlers/GeoHandler';
 import { getMetersPerPixel } from '~/helpers/geolib';
 import MapModule, { getMapContext } from '~/mapModules/MapModule';
 import { registerMapModule } from '~/mapModules/registry';
-import { routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { setRouteFocus } from '~/routeFeatures/lens/lensStyle';
+import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
 import { type NavigationDetour, positionsToGeoJSONLine } from '~/services/navigation/NavigationRoute';
 import { navigationDetour, navigationItem, navigationLocation, navigationOriginalItem, navigationProgress, navigationRejoinTarget } from '~/stores/navigationStore';
@@ -14,6 +15,7 @@ import type { RouteProgress } from '~/utils/navigation';
 import type { RejoinTarget } from '~/utils/navigation';
 
 const TAG = '[NavigationRouteModule]';
+const LENS_REDRAW_DELAY = 120;
 
 const mapContext = getMapContext();
 
@@ -60,6 +62,7 @@ export default class NavigationRouteModule extends MapModule {
     dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
     layer: MassifLayer<'massif::VectorTileLayer'>;
     private readonly subscriptions: Unsubscriber[] = [];
+    private lensRedrawTimer: ReturnType<typeof setTimeout>;
     private item: IItem = null;
     private originalItem: IItem = null;
     private detour: NavigationDetour = null;
@@ -111,6 +114,15 @@ export default class NavigationRouteModule extends MapModule {
                 }
             })
         );
+        // another lens, a section focused: a slider dragged announces a change at each step, so once they stop
+        const stopFeatureChanges = routeFeatureChanges.subscribe(() => {
+            clearTimeout(this.lensRedrawTimer);
+            this.lensRedrawTimer = setTimeout(() => this.draw(), LENS_REDRAW_DELAY);
+        });
+        this.subscriptions.push(() => {
+            clearTimeout(this.lensRedrawTimer);
+            stopFeatureChanges();
+        });
     }
 
     onMapDestroyed() {
@@ -303,7 +315,15 @@ export default class NavigationRouteModule extends MapModule {
             if (this.detour) {
                 features.push(...detourFeatures(this.detour));
             }
-            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: true }));
+            const lensFeatures = routeMapFeatures(get(routeFeatures), { item, navigating: true });
+            // a feature is drawn after the ones before it: the fast alert casing goes under the route, the steep chevrons over it
+            const isCasing = (feature: Feature) => feature.properties?.class === 'navalert' && feature.properties.kind === 'fast';
+            features.unshift(...lensFeatures.filter(isCasing));
+            features.push(...lensFeatures.filter((feature) => !isCasing(feature)));
+            setRouteFocus(
+                mapContext.mapDecoder,
+                lensFeatures.some((feature) => feature.properties?.class === 'lens')
+            );
         }
         if (!features.length && !this.layer) {
             // nothing to draw and nothing drawn: do not create a layer just to empty it
