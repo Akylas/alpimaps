@@ -41,6 +41,30 @@ const METERS_PER_DEGREE = 111320;
 const MIN_SPEED_FACTOR = 0.7;
 const MAX_SPEED_FACTOR = 1.5;
 
+/** Epoch ms the ride is at a distance from the start, in meters: between the two vertexes it falls between, by the distance. */
+export function timeAtDistance(distances: ArrayLike<number>, timeline: Pick<RouteTimeline, 'at'>, meters: number): number {
+    const last = distances.length - 1;
+    if (last < 1 || meters <= distances[0]) {
+        return timeline.at(0);
+    }
+    if (meters >= distances[last]) {
+        return timeline.at(last);
+    }
+    let low = 1;
+    let high = last;
+    while (low < high) {
+        const middle = (low + high) >> 1;
+        if (distances[middle] >= meters) {
+            high = middle;
+        } else {
+            low = middle + 1;
+        }
+    }
+    const span = distances[low] - distances[low - 1];
+    const share = span > 0 ? (meters - distances[low - 1]) / span : 0;
+    return timeline.at(low - 1) + share * (timeline.at(low) - timeline.at(low - 1));
+}
+
 export function cumulativeDistances(coordinates: number[][]): Float64Array {
     const distances = new Float64Array(coordinates.length);
     for (let index = 1; index < coordinates.length; index++) {

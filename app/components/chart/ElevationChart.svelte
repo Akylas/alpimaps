@@ -281,6 +281,62 @@
             }
         });
     }
+    // under the axis: the clock time under each distance the axis labels, the ones there is room for, then the end of the way, its distance
+    // and time right aligned
+    /** room between two times */
+    const CLOCK_GAP = 6;
+    const clockPaint = new Paint();
+    clockPaint.setFontWeight('bold');
+    const endPaint = new Paint();
+    function drawAxisEnd(canvas: Canvas, { contentBottom, contentLeft, contentRight }: { contentBottom: number; contentLeft: number; contentRight: number }, min: number, max: number, pixelX: (distance: number) => number) {
+        const interval = axisInterval;
+        if (!(interval > 0)) {
+            return;
+        }
+        const fontSize = 9 * $fontScale;
+        const color = isEInk ? '#000000' : colorOnSurface;
+        clockPaint.setTextSize(fontSize);
+        clockPaint.color = color;
+        endPaint.setTextSize(fontSize);
+        endPaint.color = color;
+        // the axis writes its labels from the top of its row, which starts a few points under the plot; the clock is a line under them
+        const distanceBaseline = contentBottom + 4 + fontSize * 0.9;
+        const clockBaseline = distanceBaseline + fontSize + 3;
+        const endText = formatDistance(max);
+        const endWidth = endPaint.measureText(endText);
+        const ticks: number[] = [];
+        for (let distance = Math.ceil(min / interval) * interval; distance <= max; distance += interval) {
+            ticks.push(distance);
+        }
+        // the last label of the axis is the end of what is shown, unless a label of the axis is already there
+        const lastTick = ticks[ticks.length - 1];
+        const showEnd = max > min && (lastTick === undefined || pixelX(lastTick) + endPaint.measureText(formatDistance(lastTick)) / 2 + CLOCK_GAP * $fontScale < contentRight - endWidth);
+        let lastRight = -Infinity;
+        clockPaint.setTextAlign(Align.CENTER);
+        if (clockAt) {
+            ticks.forEach((distance) => {
+                const text = clockAt(distance);
+                const width = clockPaint.measureText(text);
+                const center = Math.min(Math.max(pixelX(distance), contentLeft + width / 2), contentRight - width / 2);
+                if (center - width / 2 - lastRight >= CLOCK_GAP * $fontScale) {
+                    lastRight = center + width / 2;
+                    canvas.drawText(text, center, clockBaseline, clockPaint);
+                }
+            });
+        }
+        if (showEnd) {
+            endPaint.setTextAlign(Align.RIGHT);
+            canvas.drawText(endText, contentRight, distanceBaseline, endPaint);
+            if (clockAt) {
+                const text = clockAt(max);
+                clockPaint.setTextAlign(Align.RIGHT);
+                // a time of the axis the end would cover is left out for it
+                if (contentRight - clockPaint.measureText(text) - lastRight >= CLOCK_GAP * $fontScale) {
+                    canvas.drawText(text, contentRight, clockBaseline, clockPaint);
+                }
+            }
+        }
+    }
     function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
         if (!chartView || mini) {
@@ -325,6 +381,7 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
+        drawAxisEnd(canvas, { contentBottom, contentLeft, contentRight }, min, max, pixelX);
         for (const { from, kind, tier, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
@@ -542,6 +599,8 @@
     export let fade = false;
     /** rain bars from the foot of the plot and a temperature line over it */
     export let weather: ProfileWeather = null;
+    /** the clock time the ride is at a distance from the start, meters: said under the distance on the axis. None when the route has no time */
+    export let clockAt: ((meters: number) => string) | null = null;
     /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
     export let besideMap = true;
     if (inCard && besideMap) {
@@ -608,6 +667,8 @@
 
     // the whole route's label interval, which a stretch of it replaces while it is in view
     let wholeInterval = 0;
+    /** meters between the labels of the x axis, as the last chart was built */
+    let axisInterval = 0;
     /** The card's height range is that of the stretch in view, `from` to `to` being profile indexes. */
     function setHeight(from: number, to: number) {
         const chartView = chart?.nativeView;
@@ -736,8 +797,15 @@
         });
         canvas.restore();
     }
+    // the room under the axis for the clock times, which are drawn with the overlay
+    const CLOCK_ROOM = 13;
+    $: if (chart?.nativeView && inCard && !mini) {
+        chart.nativeView.setExtraOffsets(0, BRACKET_ROOM, 10, clockAt ? CLOCK_ROOM * $fontScale : 0);
+        chart.nativeView.calculateOffsets(true);
+        chart.nativeView.invalidate();
+    }
     // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
-    $: if (chart?.nativeView && (brackets || marks || weather)) {
+    $: if (chart?.nativeView && (brackets || marks || weather || clockAt)) {
         chart.nativeView.invalidate();
     }
     let onChartDataUpdateCallbacks = [];
@@ -1203,6 +1271,7 @@
             const totalDistance = it.route.totalDistance;
             const xLabelCount = inCard ? X_LABEL_COUNT : 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
+            axisInterval = xinterval;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             xAxis.textSize = 9 * $fontScale;
