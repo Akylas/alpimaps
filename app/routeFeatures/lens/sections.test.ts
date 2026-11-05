@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { LensSection } from '~/routeFeatures/registry';
-import { alertFeatures, lensFeatures, nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection, symbolFeatures } from './sections';
+import { alertFeatures, isLensFeature, lensFeatures, nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection, symbolFeatures, tappedVertex } from './sections';
 
 const coordinates = Array.from({ length: 10 }, (_, index) => [6 + index * 0.01, 45]);
 
@@ -133,7 +133,8 @@ describe('symbolFeatures', () => {
         const features = symbolFeatures(coordinates, [{ sym: 'climb', i: 4, t: 'Cat 1', t2: '1180 m', s: 2, p: 90 }]);
         expect(features).toHaveLength(1);
         expect(features[0].geometry).toEqual({ type: 'Point', coordinates: coordinates[4] });
-        expect(features[0].properties).toEqual({ class: 'lsym', sym: 'climb', t: 'Cat 1', t2: '1180 m', s: 2, p: 90 });
+        // `at`: the vertex it stands at, for a tap on it to find its section
+        expect(features[0].properties).toEqual({ class: 'lsym', sym: 'climb', t: 'Cat 1', t2: '1180 m', s: 2, p: 90, at: 4 });
     });
 
     it('leaves out a plate whose vertex is not on the route', () => {
@@ -151,5 +152,25 @@ describe('alertFeatures', () => {
 
     it('leaves out a stretch of one vertex', () => {
         expect(alertFeatures(coordinates, [{ kind: 'steep', i0: 4, i1: 4, s: 2 }])).toEqual([]);
+    });
+});
+
+describe('tappedVertex', () => {
+    it('is the vertex a plate stands at, wherever on the plate the tap landed', () => {
+        expect(tappedVertex({ class: 'lsym', at: 6 }, coordinates, { lat: 45, lon: 6 })).toBe(6);
+    });
+
+    it('is the vertex nearest the tap for the route line or a slice of it', () => {
+        expect(tappedVertex({ class: 'lens' }, coordinates, { lat: 45, lon: 6.0301 })).toBe(3);
+        expect(tappedVertex({ route: true }, coordinates, { lat: 45, lon: 6.0701 })).toBe(7);
+    });
+});
+
+describe('isLensFeature', () => {
+    it('knows what the lens drew from an item', () => {
+        ['lens', 'lensfocus', 'lsym', 'navalert'].forEach((featureClass) => expect(isLensFeature({ class: featureClass })).toBe(true));
+        expect(isLensFeature({ class: 'waypoint' })).toBe(false);
+        expect(isLensFeature({})).toBe(false);
+        expect(isLensFeature(undefined)).toBe(false);
     });
 });
