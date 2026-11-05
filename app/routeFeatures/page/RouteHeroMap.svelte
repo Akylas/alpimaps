@@ -2,7 +2,7 @@
     // the route page's own small map: the main map's base, the route in the inner style and a cursor, nothing else
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
-    import { Color, Utils } from '@nativescript/core';
+    import { Color, type TouchGestureEventData, Utils } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
@@ -177,9 +177,31 @@
     }
 
     let mapView: NativeViewElementNode<MassifMapView>;
-    /** The native map view, for the page to hand it the touches its list catches over the map. */
-    export function touchTarget() {
-        return mapView?.nativeView?.nativeViewProtected;
+    /**
+     * The list over the map catches every touch, over its see-through row too: that row hands them on here. A drag that
+     * starts on the map moves the map, not the page. Android only: on iOS the list lets nothing through either.
+     */
+    export function forwardTouch(args: TouchGestureEventData) {
+        if (!__ANDROID__) {
+            return;
+        }
+        const target: android.view.View = mapView?.nativeView?.nativeViewProtected;
+        const row: android.view.View = args.view?.nativeViewProtected;
+        const event: android.view.MotionEvent = args.android;
+        if (!target || !row || !event) {
+            return;
+        }
+        if (event.getActionMasked() === android.view.MotionEvent.ACTION_DOWN) {
+            row.getParent()?.requestDisallowInterceptTouchEvent(true);
+        }
+        const rowOrigin = Array.create('int', 2);
+        const targetOrigin = Array.create('int', 2);
+        row.getLocationOnScreen(rowOrigin);
+        target.getLocationOnScreen(targetOrigin);
+        const copy = android.view.MotionEvent.obtain(event);
+        copy.offsetLocation(rowOrigin[0] - targetOrigin[0], rowOrigin[1] - targetOrigin[1]);
+        target.dispatchTouchEvent(copy);
+        copy.recycle();
     }
 
     function release(what: string, run: () => void) {

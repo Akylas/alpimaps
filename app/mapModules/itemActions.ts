@@ -1,6 +1,11 @@
 import { lc } from '@nativescript-community/l';
 import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
-import { Application } from '@nativescript/core';
+import addressFormatter from '@akylas/address-formatter';
+import { VerticalPosition } from '@nativescript-community/ui-popover';
+import { Application, type View } from '@nativescript/core';
+import dayjs from 'dayjs';
+import { get } from 'svelte/store';
+import { langStore } from '~/helpers/locale';
 import { openUrl } from '@nativescript/core/utils';
 import { share } from '@akylas/nativescript-app-utils/share';
 import { showError } from '@shared/utils/showError';
@@ -10,7 +15,7 @@ import { sortItemActions } from '~/mapModules/itemActionOrder';
 import { featureItemActions, featureLeadingActions } from '~/mapModules/mapFeatures';
 import type { IItem, Item } from '~/models/Item';
 import { networkService } from '~/services/NetworkService';
-import { openURL } from '~/utils/ui/index.common';
+import { hideLoading, openURL, showLoading, showPopoverMenu } from '~/utils/ui/index.common';
 
 const Intent = __ANDROID__ ? android.content.Intent : undefined;
 
@@ -144,6 +149,80 @@ export function openItemWeatherAlternate(item: Item) {
         } catch (err) {
             showError(err);
         }
+    }
+}
+
+/** The ways to share an item, in a menu at `anchor`: its file as GeoJSON or GPX, saved or sent, its address or position. */
+export async function shareItem(item: Item, anchor: View, vertPos = VerticalPosition.ABOVE) {
+    try {
+        const options = [
+            { name: lc('share_geoson'), data: 'share_geojson' },
+            { name: lc('export_geoson'), data: 'export_geojson' }
+        ];
+        if (item.properties?.address) {
+            options.unshift({ name: lc('address'), data: 'address' });
+        }
+        if (item.route) {
+            if (item.analysis) {
+                options.push({ name: lc('share_geoson_data'), data: 'share_geojson_data' });
+            }
+            options.push({ name: lc('share_gpx'), data: 'share_gpx' }, { name: lc('export_gpx'), data: 'export_gpx' });
+        } else {
+            options.push({ name: lc('position'), data: 'position' });
+        }
+        await showPopoverMenu({
+            options,
+            anchor,
+            vertPos,
+            onClose: async (result) => {
+                if (!result) {
+                    return;
+                }
+                const filename = dayjs().format('YYYY-MM-DDTHH-mm-ss');
+                const itemsModule = getMapContext().mapModule('items');
+                try {
+                    switch (result.data) {
+                        case 'address': {
+                            const address = { ...item.properties.address };
+                            if (!address.name) {
+                                address.name = item.properties.name;
+                            }
+                            share({ message: addressFormatter.format(address, { fallbackCountryCode: get(langStore) }) }, { dialogTitle: lc('share') });
+                            break;
+                        }
+                        case 'position':
+                            shareItemPosition(item);
+                            break;
+                        case 'export_geojson':
+                            showLoading();
+                            await itemsModule.exportItemsAsGeoJSON([item], filename);
+                            break;
+                        case 'export_gpx':
+                            showLoading();
+                            await itemsModule.exportItemsAsGPX([item], filename);
+                            break;
+                        case 'share_geojson':
+                            showLoading();
+                            await itemsModule.shareItemsAsGeoJSON([item], filename);
+                            break;
+                        case 'share_geojson_data':
+                            showLoading();
+                            await itemsModule.shareItemsAsGeoJSON([item], filename, true);
+                            break;
+                        case 'share_gpx':
+                            showLoading();
+                            await itemsModule.shareItemsAsGPX([item], filename);
+                            break;
+                    }
+                } catch (error) {
+                    showError(error);
+                } finally {
+                    hideLoading();
+                }
+            }
+        });
+    } catch (error) {
+        showError(error);
     }
 }
 

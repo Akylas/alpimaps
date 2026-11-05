@@ -53,6 +53,7 @@
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
 
+    // `version >= 0` is always true: it reruns this when the page changed the analysis in place
     $: analysis = version >= 0 ? (item?.analysis ?? null) : null;
     // an imported track has no routing profile to tell what it is: the user says. A computed route is what it was routed for
     $: imported = !!item?.properties?.imported;
@@ -159,7 +160,7 @@
         <Pill
             height={32}
             icon="mdi-calendar-clock"
-            label={inputs.departure.mode === 'planned' ? `${formatTime(chosenAt, 'ddd D MMM')} ${clock(chosenAt)}` : lc('now')}
+            label={inputs.departure.mode === 'planned' ? `${formatTime(chosenAt, 'ddd D MMM', zone.offset)} ${clock(chosenAt)}` : lc('now')}
             marginRight={6}
             selected={inputs.departure.mode === 'planned'}
             on:tap={pickDeparture} />

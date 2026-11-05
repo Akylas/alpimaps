@@ -1,7 +1,6 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
-    import type { TouchGestureEventData } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import CActionBar from '@shared/components/CActionBar.svelte';
@@ -25,9 +24,9 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type PageRow, type StoredSections, pageRows, toggledSections } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
-    import { packageService } from '~/services/PackageService';
-    import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
+    import { type LensId, type LensSection, type RouteFeature, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
+    import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
 
@@ -63,7 +62,6 @@
     } = $colors);
 
     // the lens bar, its insight line, the chart and the grade legend under it
-    const PROFILE_HEIGHT = 44 + 40 + 150 + 24;
     const SECTION_HEADER_HEIGHT = 56;
     const CARD_RADIUS = 16;
 
@@ -73,39 +71,21 @@
     const mapContext = getMapContext();
     let heroFailed = false;
     let heroMap: RouteHeroMap;
-    // the list catches every touch, over its see-through row too: the row hands them on to the map behind it.
-    // A drag that starts on the map moves the map, not the page. Android: on iOS the list lets nothing through either
-    function forwardToHero(args: TouchGestureEventData) {
-        if (!__ANDROID__) {
-            return;
-        }
-        const target: android.view.View = heroMap?.touchTarget();
-        const row: android.view.View = args.view?.nativeViewProtected;
-        const event: android.view.MotionEvent = args.android;
-        if (!target || !row || !event) {
-            return;
-        }
-        if (event.getActionMasked() === android.view.MotionEvent.ACTION_DOWN) {
-            row.getParent()?.requestDisallowInterceptTouchEvent(true);
-        }
-        const rowOrigin = Array.create('int', 2);
-        const targetOrigin = Array.create('int', 2);
-        row.getLocationOnScreen(rowOrigin);
-        target.getLocationOnScreen(targetOrigin);
-        const copy = android.view.MotionEvent.obtain(event);
-        copy.offsetLocation(rowOrigin[0] - targetOrigin[0], rowOrigin[1] - targetOrigin[1]);
-        target.dispatchTouchEvent(copy);
-        copy.recycle();
-    }
     const sectionComponents = lazyComponents();
 
     $: title = formatter.getItemTitle(item);
-    $: subtitle = formatter.getItemSubtitle(item, title);
+    // the name, not the title: an unnamed route's title is its address, which the subtitle would repeat
+    $: subtitle = formatter.getItemSubtitle(item, formatter.getItemName(item));
 
-    $: sections = $routeFeatureChanges >= 0 ? routePageSections($routeFeatures) : [];
+    $: sections = routePageSections($routeFeatures);
     // what the user opened, for this visit only: the page always opens on its tiles and profile
     let stored: StoredSections = {};
-    $: rows = $routeFeatureChanges >= 0 ? pageRows({ sections, ctx: { item }, stored, hasProfile: !!item?.profile?.data?.length }) : [];
+    // `$routeFeatureChanges >= 0` is always true: it reruns this when a feature's contributions change
+    $: rows = $routeFeatureChanges >= 0 ? pageRows({ sections, ctx: { item }, stored, hasProfile: hasProfileCard($routeFeatures) && !!item?.profile?.data?.length }) : [];
+    // the card is the profile feature's, which the user can switch off
+    function hasProfileCard(features: RouteFeature[]) {
+        return features.some((feature) => feature.id === 'profile');
+    }
     type ListRow = PageRow | { type: 'hero'; key: 'hero' } | { type: 'passed'; key: 'passed' } | { type: 'when'; key: 'when' };
     let listRows: ListRow[];
     $: listRows = [
@@ -119,6 +99,7 @@
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
+    // always true: it reruns this when the analysis changed in place
     $: analysis = analysisVersion >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
     $: startAt = resolveStart(departure, now);
@@ -201,23 +182,6 @@
         focusSection(focusKeyOf(item), { ...section, lens });
     }
 
-    let lensCard: RouteLensCard;
-    // the chart opens its point card once told what is left from there, as the sheet does. The event is typed
-    // as a CustomEvent but the shared dispatcher hands the payload itself, hence the `any` the sheet uses too
-    function onChartHighlight({ highlight, lat, lon }: any) {
-        if (!isNavigableRoute(item)) {
-            return;
-        }
-        const location = { lat, lon };
-        const positions = packageService.getRouteItemPoses(item);
-        const onPathIndex = isLocationOnRoute(location, positions);
-        if (onPathIndex === -1) {
-            return;
-        }
-        const { remainingDistance, remainingDistanceToStep, remainingTime } = computeRouteProgress({ item, location, positions, onPathIndex, computeRemaining: true, computeInstruction: false });
-        lensCard?.highlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: item.profile?.dplus, dmin: item.profile?.dmin }, highlight, false, true);
-    }
-
     function bodyProps(row: PageRow) {
         return row.type === 'body' && row.row.data !== undefined ? { data: row.row.data } : {};
     }
@@ -239,7 +203,7 @@
                             showOnMap();
                             break;
                         case 'share':
-                            await mapContext.mapModule('items').shareItemsAsGeoJSON([item]);
+                            await shareItem(item, event.object, VerticalPosition.BELOW);
                             break;
                         case 'edit': {
                             // the item's own form: its name, colour and style
@@ -301,7 +265,7 @@
             row={1}
             ios:contentInsetAdjustmentBehavior={2}>
             <Template key="hero">
-                <gridlayout height={HERO_HEIGHT} on:touch={forwardToHero}>
+                <gridlayout height={HERO_HEIGHT} on:touch={(args) => heroMap?.forwardTouch(args)}>
                     <stacklayout horizontalAlignment="right" padding={8} verticalAlignment="top">
                         <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} text="mdi-arrow-expand" on:tap={showOnMap} />
                         <!-- the whole route again, after a section or a point was looked at -->
@@ -344,8 +308,8 @@
             </Template>
             <Template key="profile">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
-                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={PROFILE_HEIGHT}>
-                        <RouteLensCard bind:this={lensCard} besideMap={false} {item} moreFor={sectionOf} on:highlight={onChartHighlight} />
+                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={ROUTE_LENS_CARD_HEIGHT}>
+                        <RouteLensCard besideMap={false} {item} moreFor={sectionOf} />
                     </gridlayout>
                 </gridlayout>
             </Template>

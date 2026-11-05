@@ -35,6 +35,8 @@ export const NAVRAIL_BUTTON_SIZE = 44;
 
 /** full elevation chart and route stats, same heights the item sheet gives them */
 export const ROUTE_PROFILE_HEIGHT = 155;
+/** the lens card, in the sheet and on the route page: lens bar 44, insight 40, the chart with its grade legend */
+export const ROUTE_LENS_CARD_HEIGHT = 242;
 export const ROUTE_STATS_HEIGHT = 180;
 /** the row of widgets above the actions, before the navigation scale */
 export const NAVIGATION_AHEAD_HEIGHT = 80;
