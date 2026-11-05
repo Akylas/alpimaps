@@ -67,6 +67,14 @@ describe('pageRows', () => {
         ]);
     });
 
+    it('gives the header the facts of a section that has them', () => {
+        const withFacts = { ...sections[0], facts: () => [{ icon: 'mdi-thermometer', text: '5 °C' }] };
+        const header = pageRows({ sections: [withFacts], ctx, stored: {}, hasProfile: true }).find((row) => row.type === 'section');
+        expect(header?.type === 'section' && header.facts).toEqual([{ icon: 'mdi-thermometer', text: '5 °C' }]);
+        const plain = pageRows({ sections, ctx, stored: {}, hasProfile: true }).find((row) => row.type === 'section');
+        expect(plain?.type === 'section' && plain.facts).toBeUndefined();
+    });
+
     it('hands each body row to its section', () => {
         const rows = pageRows({ sections, ctx, stored: { climbs: true }, hasProfile: true });
         const body = rows.find((row) => row.key === 'climbs:1');

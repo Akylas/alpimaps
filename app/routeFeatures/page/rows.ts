@@ -1,10 +1,10 @@
 /** The route page's rows, flat for its one collectionview. Pure: nothing here may import NativeScript. */
-import type { RouteCtx, RoutePageRow, RoutePageSection } from '~/routeFeatures/registry';
+import type { LensFact, RouteCtx, RoutePageRow, RoutePageSection } from '~/routeFeatures/registry';
 
 export type PageRow =
     | { type: 'tiles'; key: 'tiles' }
     | { type: 'profile'; key: 'profile' }
-    | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string }
+    | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string; facts?: LensFact[] }
     | { type: 'body'; key: string; section: string; row: RoutePageRow; /** The card's last row, which rounds its bottom. */ last: boolean }
     | { type: 'footer'; key: 'footer' };
 
@@ -32,7 +32,7 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
             return;
         }
         const open = isSectionOpen(section, stored);
-        rows.push({ type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx) });
+        rows.push({ type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx), facts: section.facts?.(ctx) });
         if (open) {
             rows.push(...bodyRows(section.id, body));
         }

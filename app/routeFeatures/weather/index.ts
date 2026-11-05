@@ -4,7 +4,17 @@ import { lc } from '~/helpers/locale';
 import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import { networkService } from '~/services/NetworkService';
-import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RouteSettingRow, registerRouteFeature } from '~/routeFeatures/registry';
+import {
+    type LensChip,
+    type LensFact,
+    type LensHeadline,
+    type LensProfile,
+    type RouteCtx,
+    type RouteLens,
+    type RoutePageSection,
+    type RouteSettingRow,
+    registerRouteFeature
+} from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
 import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
@@ -12,10 +22,12 @@ import { activityOf } from '~/utils/routeAnalysis/activity';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/utils/routeAnalysis/weatherProvider';
 import { sampleRoute } from '~/utils/routeAnalysis/weatherSamples';
+import { rainColor, tempColor, weatherRows } from './pageRows';
 import { type WeatherRead, readWeather } from './read';
 import {
     routeFeatureWeather,
     weatherDecimals,
+    weatherDetailsOpen,
     weatherGust,
     weatherPlateWind,
     weatherPrecision,
@@ -213,13 +225,86 @@ function weatherSettingRows(): RouteSettingRow[] {
     return rows;
 }
 
+function updatedAt(item: IItem) {
+    return item.analysis?.layers.weather?.prov.computedAt ?? 0;
+}
+
+const weatherPageSection: RoutePageSection = {
+    id: 'weather',
+    icon: 'mdi-weather-partly-cloudy',
+    title: () => lc('lens_weather'),
+    lens: 'weather',
+    summary: ({ item }) => {
+        const read = readOf(item, statusOf(item));
+        if (!read) {
+            return undefined;
+        }
+        const { headShare, rainTotal, tempMax, tempMin } = read.summary;
+        return [
+            tempMin === undefined ? '' : Math.round(tempMin) === Math.round(tempMax) ? degrees(tempMin) : `${Math.round(tempMin)}–${degrees(tempMax)}`,
+            formatRain(rainTotal),
+            headShare >= 0.1 ? lc('weather_headwind', Math.round(headShare * 100) + ' %') : ''
+        ]
+            .filter(Boolean)
+            .join(' · ');
+    },
+    facts: ({ item }) => {
+        const read = readOf(item, statusOf(item));
+        if (!read) {
+            return [];
+        }
+        const { cloud, headShare, rainPeak, rainTotal, tempMax, tempMin, thunder } = read.summary;
+        const facts: LensFact[] = [];
+        if (tempMin !== undefined) {
+            facts.push({
+                icon: 'mdi-thermometer',
+                text: Math.round(tempMin) === Math.round(tempMax) ? degrees(tempMin) : `${Math.round(tempMin)}–${degrees(tempMax)}`,
+                color: tempColor(tempMin <= 0 ? tempMin : tempMax)
+            });
+        }
+        facts.push(rainPeak ? { icon: 'mdi-weather-rainy', text: formatRain(rainTotal), color: rainColor(rainPeak.mmPerHour) } : { icon: 'mdi-weather-sunny', text: lc('weather_dry') });
+        if (cloud !== undefined) {
+            facts.push({ icon: 'mdi-cloud-outline', text: Math.round(cloud) + ' %' });
+        }
+        if (headShare >= 0.1) {
+            facts.push({ icon: 'mdi-weather-windy', text: Math.round(headShare * 100) + ' %', alert: headShare >= 0.3 });
+        }
+        if (thunder) {
+            facts.push({ icon: 'mdi-weather-lightning', text: lc('weather_thunder'), alert: true });
+        }
+        return facts;
+    },
+    rows: ({ item }) => {
+        const status = statusOf(item);
+        const provider = getWeatherProvider(get(weatherProviderId));
+        const busy = status.state === 'running' || status.state === 'queued';
+        const state = busy ? 'running' : status.state === 'failed' ? 'failed' : networkService.connected ? 'absent' : 'offline';
+        const layer = item.analysis?.layers.weather;
+        return weatherRows({
+            detailsOpen: get(weatherDetailsOpen),
+            read: readOf(item, status),
+            footer: {
+                provider: provider?.name ?? '',
+                attribution: provider?.attribution ?? { text: '', url: '', license: '' },
+                updatedAt: updatedAt(item),
+                decimals: layer?.data.request.decimals ?? weatherDecimals(),
+                outdated: isOutdated(status),
+                canUpdate: networkService.connected && !busy
+            },
+            fetch: { state, points: pointsToSend(item), decimals: weatherDecimals(), provider: provider?.name ?? '' }
+        });
+    },
+    component: () => import('~/routeFeatures/weather/WeatherRow.svelte')
+};
+
 registerRouteFeature({
     id: 'weather',
     order: 14,
     setting: { title: () => lc('lens_weather'), store: routeFeatureWeather },
     settings: weatherSettingRows,
     // a layer finishing or failing, a new departure read from the same hours, and the settings it is asked with
-    changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey], (values) => values.join()),
+    changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey, weatherDetailsOpen], (values) => values.join()),
     lenses: [weatherLens],
+    pageSections: [weatherPageSection],
     compute: weatherStage
 });

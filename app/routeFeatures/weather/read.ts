@@ -22,7 +22,6 @@ const MDI_BURST = glyph(0xf059e);
 const MDI_ARROW_LEFT = glyph(0xf004d);
 const MDI_ARROW_RIGHT = glyph(0xf0054);
 
-/** The sky of a WMO weather code, as a glyph of the icon font. */
 /** km/h: the settings' say on what is worth showing of the wind. */
 export interface WeatherThresholds {
     /** a wind worth a mark on the profile */
@@ -35,7 +34,14 @@ export interface WeatherThresholds {
 
 export const DEFAULT_THRESHOLDS: WeatherThresholds = { profileWind: 15, plateWind: 30, gust: 50 };
 
-export function wxGlyph(code: number | undefined): string {
+/**
+ * The sky, as a glyph of the icon font. The clear and cloudy codes (0 to 3) only say it roughly: the cloud cover, when there is
+ * one, says how much (under 20 %: sun, up to 60 %: sun and cloud, more: cloud). A code of fog, rain, snow or a storm says it.
+ */
+export function wxGlyph(code: number | undefined, cloud?: number): string {
+    if (cloud !== undefined && (code === undefined || (code >= 0 && code <= 3))) {
+        return cloud < CLOUD_CLEAR ? MDI_SUNNY : cloud <= CLOUD_PARTLY ? MDI_PARTLY_CLOUDY : MDI_CLOUDY;
+    }
     switch (code) {
         case 0:
             return MDI_SUNNY;
@@ -77,6 +83,9 @@ export function wxGlyph(code: number | undefined): string {
     }
 }
 
+/** % of cloud cover under which the sky is clear, and up to which it is partly cloudy */
+const CLOUD_CLEAR = 20;
+const CLOUD_PARTLY = 60;
 const THUNDER_CODE = 95;
 /** km/h: a wind worth an arrow, and against which a ride is said to be in a headwind */
 const WIND_MIN = 10;
@@ -102,13 +111,43 @@ export interface WeatherSummary {
     rainTotal: number;
     /** the heaviest rain: mm/h, and meters from the start */
     rainPeak?: { mmPerHour: number; distance: number };
+    /** %, over the way ridden */
+    cloud?: number;
     /** 0..1, the share of the distance ridden against a wind over 10 km/h */
     headShare: number;
+    /** 0..1, the share ridden with a wind of over 10 km/h behind */
+    tailShare: number;
     thunder: boolean;
+}
+
+/** What a sample says, for a row of the page: the time the ride is there and the stretch it speaks for. */
+export interface RideRow {
+    /** the sample's place in the layer */
+    index: number;
+    /** its vertex, and the vertexes of the stretch it speaks for */
+    i: number;
+    i0: number;
+    i1: number;
+    /** meters from the start */
+    distance: number;
+    /** epoch ms */
+    at: number;
+    temp?: number;
+    /** mm/h */
+    precip: number;
+    code?: number;
+    /** % */
+    cloud?: number;
+    /** km/h, a gust, and the part of the wind against (above 0) or behind (below 0) the ride */
+    wind?: number;
+    gust?: number;
+    head?: number;
+    rain: 0 | 1 | 2 | 3;
 }
 
 export interface WeatherRead {
     ride: RideReading[];
+    rows: RideRow[];
     slices: LensSlice[];
     spans: RainSpan[];
     summary: WeatherSummary;
@@ -234,9 +273,19 @@ export function readWeather(
         }
     });
     let headDistance = 0;
+    let cloudSum = 0;
+    let cloudSpan = 0;
+    let tailDistance = 0;
     stretches.forEach(({ entry, hi, lo }) => {
+        if (entry.reading?.cloud !== undefined) {
+            cloudSum += entry.reading.cloud * (distances[hi] - distances[lo]);
+            cloudSpan += distances[hi] - distances[lo];
+        }
         if ((entry.head ?? 0) > WIND_MIN) {
             headDistance += distances[hi] - distances[lo];
+        }
+        if ((entry.head ?? 0) < -WIND_MIN) {
+            tailDistance += distances[hi] - distances[lo];
         }
     });
 
@@ -253,7 +302,7 @@ export function readWeather(
                 i: sample.i,
                 t: Math.round(reading.temp) + '°',
                 t2: (reading.precip ?? 0) >= RAIN_MIN ? reading.precip.toFixed(1) + ' mm' : undefined,
-                icon: wxGlyph(reading.code),
+                icon: wxGlyph(reading.code, reading.cloud),
                 ...(line ? { t3: line } : {}),
                 s: rain,
                 p: 20 + rain * 5,
@@ -263,14 +312,32 @@ export function readWeather(
         return plates;
     });
 
+    const rows: RideRow[] = ride.map(({ at, head, reading, sample }, index) => ({
+        index,
+        i: sample.i,
+        i0: stretches[index].lo,
+        i1: stretches[index].hi,
+        distance: sample.d,
+        at,
+        temp: reading?.temp,
+        precip: reading?.precip ?? 0,
+        code: reading?.code,
+        cloud: reading?.cloud,
+        wind: reading?.wind,
+        gust: reading?.gust,
+        head,
+        rain: rainClass(reading?.precip ?? 0)
+    }));
+
     return {
         ride,
+        rows,
         slices,
         spans,
         symbols,
         profile: {
             rain: chunks.flatMap(({ hi, lo, precip, probability }) => (precip >= RAIN_MIN ? [{ from: distances[lo], to: distances[hi], mmPerHour: precip, probability }] : [])),
-            temp: ride.flatMap(({ reading, sample }) => (reading?.temp === undefined ? [] : [{ d: sample.d, value: reading.temp, glyph: wxGlyph(reading.code) }])),
+            temp: ride.flatMap(({ reading, sample }) => (reading?.temp === undefined ? [] : [{ d: sample.d, value: reading.temp, glyph: wxGlyph(reading.code, reading.cloud) }])),
             wind: ride.flatMap(({ cross, head, reading, sample }) =>
                 reading?.wind !== undefined && (reading.wind >= thresholds.profileWind || (reading.gust ?? 0) >= thresholds.gust)
                     ? [{ d: sample.d, speed: reading.wind, gust: reading.gust ?? 0, head: head ?? 0, angle: (Math.atan2(-(cross ?? 0), -(head ?? 0)) * 180) / Math.PI }]
@@ -283,7 +350,9 @@ export function readWeather(
             tempMax: temps.length ? Math.max(...temps) : undefined,
             rainTotal,
             rainPeak,
+            cloud: cloudSpan > 0 ? cloudSum / cloudSpan : undefined,
             headShare: total > 0 ? headDistance / total : 0,
+            tailShare: total > 0 ? tailDistance / total : 0,
             thunder: ride.some(({ reading }) => (reading?.code ?? 0) >= THUNDER_CODE)
         },
         at(index) {

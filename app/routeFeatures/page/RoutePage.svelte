@@ -27,11 +27,17 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type LensFact, type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
+    import { isEInk } from '~/helpers/theme';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
+
+    // e-ink has no colour to give a figure
+    function factColor(fact: LensFact) {
+        return isEInk ? colorOnSurface : fact.alert ? colorError : (fact.color ?? colorOnSurfaceVariant);
+    }
 
     export let item: Item;
     /** opened from the Time tile: the When panel shows */
@@ -40,6 +46,7 @@
     let {
         colorCanvas,
         colorCard,
+        colorError,
         colorErrorContainer,
         colorOnErrorContainer,
         colorOnSurface,
@@ -53,6 +60,7 @@
     $: ({
         colorCanvas,
         colorCard,
+        colorError,
         colorErrorContainer,
         colorOnErrorContainer,
         colorOnSurface,
@@ -106,8 +114,9 @@
         stored = { ...stored, [section.id]: open };
         const current = listItems.getItem(header);
         const summary = section.summary?.({ item });
-        if (current.type !== 'section' || current.open !== open || current.summary !== summary) {
-            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary });
+        const facts = section.facts?.({ item });
+        if (current.type !== 'section' || current.open !== open || current.summary !== summary || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
+            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts });
         }
         if (open) {
             sectionComponents.load(section.id, section.component);
@@ -163,6 +172,8 @@
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
+    // a departure looked at and not taken is not the route's
+    onDestroy(() => revertLook());
     // always true: it reruns this when the analysis changed in place
     $: analysis = analysisVersion >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
@@ -193,15 +204,33 @@
     let analysisVersion = 0;
     // one save after the other: a slow one must not land after, and over, a newer one
     let saving: Promise<unknown> = Promise.resolve();
-    function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
+    // a departure looked at in the When panel: the page shows the route as it would be, the analysis the item had before is kept to give
+    // back, and nothing is saved until the departure is taken
+    let looking: { analysis: RouteAnalysis | null } | null = null;
+    function onAnalysisChange({ analysis, full, preview }: { analysis: RouteAnalysis; full?: boolean; preview?: boolean }) {
+        if (preview) {
+            looking ??= { analysis: item.analysis ?? null };
+        } else {
+            looking = null;
+        }
         item.analysis = analysis;
         analysisVersion++;
         analysisChanged();
         if (full) {
             item = item;
         }
-        if (isSaved(item)) {
+        if (!preview && isSaved(item)) {
             saving = saving.then(() => mapContext.mapModule('items').updateItem(item, { analysis }, false, false)).catch(showError);
+        }
+    }
+    function revertLook() {
+        if (looking) {
+            // what was fetched while it was looked at is kept
+            const fetched = item.analysis?.layers;
+            item.analysis = looking.analysis && fetched ? { ...looking.analysis, layers: { ...looking.analysis.layers, ...fetched } } : looking.analysis;
+            looking = null;
+            analysisVersion++;
+            analysisChanged();
         }
     }
     // an unsaved route keeps its analysis on the item until it is saved with it
@@ -344,7 +373,7 @@
             <Template key="when">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel {item} version={analysisVersion} on:change={onAnalysisChange} />
+                        <WhenPanel {item} committed={looking ? looking.analysis : undefined} version={analysisVersion} on:change={onAnalysisChange} on:revert={revertLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
@@ -384,7 +413,19 @@
                             width={36} />
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
-                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
+                            {#if row.facts?.length}
+                                <!-- the summary as icons with their figures, in their colours -->
+                                <stacklayout orientation="horizontal">
+                                    {#each row.facts as fact}
+                                        <label color={colorOnSurfaceVariant} fontSize={12} marginRight={10} maxLines={1}>
+                                            <span color={factColor(fact)} fontFamily={$fonts.mdi} fontSize={14} text={fact.icon ?? ''} />
+                                            <span color={factColor(fact)} fontWeight="bold" text={(fact.icon ? ' ' : '') + fact.text} />
+                                        </label>
+                                    {/each}
+                                </stacklayout>
+                            {:else}
+                                <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
+                            {/if}
                         </stacklayout>
                         <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
                     </gridlayout>

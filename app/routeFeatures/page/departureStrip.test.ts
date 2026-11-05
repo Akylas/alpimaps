@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import { buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
-import { darkMinutes, departureStrip } from './departureStrip';
+import { type WeatherFactors, darkMinutes, departureStrip } from './departureStrip';
+
+type WeatherFactorsInput = WeatherFactors;
 
 // Grenoble, a November day
 const LAT = 45.19;
@@ -96,5 +98,145 @@ describe('departureStrip', () => {
         expect(cells[0].level).toBe('good');
         expect(cells[12].level).toBe('poor');
         expect(cells.some(({ level }) => level === 'fair')).toBe(true);
+    });
+
+    describe('anchored', () => {
+        it('keeps the window where it was when another departure is chosen: the chosen one moves, not the strip', () => {
+            const cells = departureStrip({ anchorAt: DAY, chosenAt: DAY + HOUR, now: DAY - 24 * HOUR, source, inputs, lat: LAT, lon: LON });
+            expect(cells[6].at).toBe(DAY);
+            expect(cells.findIndex(({ chosen }) => chosen)).toBe(8);
+            expect(cells.filter(({ chosen }) => chosen)).toHaveLength(1);
+            // the offsets are from the chosen departure
+            expect(cells[6].offset).toBe(-60);
+            expect(cells[8].offset).toBe(0);
+        });
+    });
+
+    describe('with the forecast', () => {
+        const noon = DAY;
+        // the rain comes at noon: every ride leaving from then on gets 2 mm
+        const rainy = (at: number) => ({ rainMm: at >= noon ? 2 : 0, headShare: 0, covered: true });
+        const cellsWith = (weather: Parameters<typeof departureStrip>[0]['weather'], chosenAt = noon) =>
+            departureStrip({ chosenAt, now: chosenAt - 24 * HOUR, source, inputs, lat: LAT, lon: LON, weather });
+
+        it('adds 3 points for each mm of rain', () => {
+            const without = cellsWith(undefined);
+            const cells = cellsWith(rainy);
+            expect(cells[2].score).toBeCloseTo(without[2].score, 5);
+            expect(cells[8].score).toBeCloseTo(without[8].score + 6, 5);
+        });
+
+        it('adds 2 points for the whole way against the wind', () => {
+            const cells = cellsWith(() => ({ rainMm: 0, headShare: 0.5, covered: true }));
+            expect(cells[3].score).toBeCloseTo(cellsWith(undefined)[3].score + 1, 5);
+        });
+
+        it('stars a dry departure rather than one that gets the rain', () => {
+            const best = cellsWith(rainy).find(({ best: starred }) => starred);
+            expect(best?.at).toBeLessThan(noon);
+        });
+
+        it('rates the rainy departures poor and the dry ones good', () => {
+            const cells = cellsWith(rainy);
+            expect(cells[2].level).toBe('good');
+            expect(cells[10].level).toBe('poor');
+        });
+
+        it('says what weighs most on a departure: the rain, the wind, the dark', () => {
+            expect(cellsWith(rainy)[9].worst).toBe('rain');
+            expect(cellsWith(() => ({ rainMm: 0, headShare: 1, covered: true }))[3].worst).toBe('wind');
+            const dark = departureStrip({ chosenAt: sunset.getTime() - HOUR, now: DAY - 24 * HOUR, source, inputs, lat: LAT, lon: LON, weather: () => ({ rainMm: 0, headShare: 0, covered: true }) });
+            expect(dark[12].worst).toBe('dark');
+            expect(cellsWith(() => ({ rainMm: 0, headShare: 0, covered: true }))[3].worst).toBeUndefined();
+        });
+
+        it('weighs the rain, the wind and the dark against each other', () => {
+            // 0.5 mm is 1.5, half the way against the wind is 1, 30 dark minutes are 2
+            const dark = departureStrip({
+                chosenAt: sunset.getTime() - 150 * MINUTE,
+                now: DAY - 24 * HOUR,
+                source,
+                inputs,
+                lat: LAT,
+                lon: LON,
+                weather: () => ({ rainMm: 0.5, headShare: 0.5, covered: true })
+            });
+            const cell = dark.find(({ darkMinutes }) => darkMinutes > 20 && darkMinutes < 40);
+            expect(cell?.worst).toBe('dark');
+        });
+
+        it('keeps the rain and the wind of each ride, for the panel to say them', () => {
+            const cells = cellsWith(() => ({ rainMm: 1.5, headShare: 0.25, covered: true }));
+            expect(cells[4]).toMatchObject({ rainMm: 1.5, headShare: 0.25 });
+            expect(cellsWith(undefined)[4].rainMm).toBeUndefined();
+        });
+
+        describe('indicators', () => {
+            const at = (factors: Partial<WeatherFactorsInput>) => cellsWith(() => ({ rainMm: 0, headShare: 0, covered: true, ...factors }))[3];
+
+            it('says rain from a tenth of a millimeter', () => {
+                expect(at({ rainMm: 0.1 }).indicators).toContain('rain');
+                expect(at({ rainMm: 0.09 }).indicators).not.toContain('rain');
+            });
+
+            it('says wind when a quarter of the way is against it', () => {
+                expect(at({ headShare: 0.25 }).indicators).toContain('wind');
+                expect(at({ headShare: 0.24 }).indicators).not.toContain('wind');
+            });
+
+            it('says sun for a dry ride under a clear sky: under 40 % of cloud', () => {
+                expect(at({ cloud: 39 }).indicators).toContain('sun');
+                expect(at({ cloud: 40 }).indicators).not.toContain('sun');
+                expect(at({ cloud: 10, rainMm: 1 }).indicators).not.toContain('sun');
+                expect(at({}).indicators).not.toContain('sun');
+            });
+
+            it('says dark when the ride goes into it', () => {
+                const dark = departureStrip({
+                    chosenAt: sunset.getTime() - HOUR,
+                    now: DAY - 24 * HOUR,
+                    source,
+                    inputs,
+                    lat: LAT,
+                    lon: LON,
+                    weather: () => ({ rainMm: 0, headShare: 0, covered: true })
+                });
+                expect(dark[12].indicators).toContain('dark');
+                expect(dark[0].indicators).not.toContain('dark');
+            });
+
+            it('says the forecast does not reach a ride, and nothing of its weather', () => {
+                const cell = cellsWith(() => ({ rainMm: 5, headShare: 1, covered: false }))[3];
+                expect(cell.indicators).toContain('unknown');
+                expect(cell.indicators).not.toContain('rain');
+                expect(cell.indicators).not.toContain('wind');
+            });
+
+            it('keeps the order: rain, wind, sun, dark', () => {
+                const dark = departureStrip({
+                    chosenAt: sunset.getTime() - HOUR,
+                    now: DAY - 24 * HOUR,
+                    source,
+                    inputs,
+                    lat: LAT,
+                    lon: LON,
+                    weather: () => ({ rainMm: 1, headShare: 0.5, covered: true })
+                });
+                expect(dark[12].indicators).toEqual(['rain', 'wind', 'dark']);
+            });
+
+            it('has none without a forecast, but the dark', () => {
+                expect(cellsWith(undefined)[3].indicators).toEqual([]);
+            });
+        });
+
+        it('leaves a departure the forecast does not cover to its darkness, and says so', () => {
+            const cells = cellsWith((at) => ({ rainMm: 5, headShare: 1, covered: at < noon + HOUR }));
+            const without = cellsWith(undefined);
+            expect(cells[9].uncovered).toBe(true);
+            expect(cells[9].score).toBeCloseTo(without[9].score, 5);
+            expect(cells[7].uncovered).toBe(false);
+            expect(cellsWith(undefined)[8].uncovered).toBeUndefined();
+        });
     });
 });

@@ -6,6 +6,9 @@ import { DEFAULT_THRESHOLDS, type WeatherThresholds } from './read';
 export const routeFeatureWeather = settingsStore('route_feature_weather', true);
 
 /** The provider the forecast is asked of. */
+/** The samples of the route page's weather card are listed under a header, closed until asked for: the summary comes first. */
+export const weatherDetailsOpen = settingsStore('weather_details_open', false);
+
 export const weatherProviderId = settingsStore<string>('weather_provider', DEFAULT_WEATHER_PROVIDER);
 
 /** How many decimals the points sent to the provider are rounded to, `'2'` (about 1 km) or `'1'` (about 11 km). A segment holds strings. */

@@ -31,7 +31,7 @@ function layer(bySample: Series[]): WeatherData {
             wind: column('wind', 0),
             gust: column('gust', 0),
             dir: column('dir', 0),
-            cloud: column('cloud', 0),
+            cloud: column('cloud', null),
             code: column('code', 0),
             fl: column('fl', 2500),
             dni: column('dni', 0)
@@ -188,6 +188,47 @@ describe('symbols', () => {
     });
 });
 
+describe('cloud', () => {
+    it('is on each row, and in the sky of the plates and of the profile', () => {
+        const read = readWeather(item(layer([{ cloud: Array(HOURS).fill(5) }, { cloud: Array(HOURS).fill(50) }, { cloud: Array(HOURS).fill(95) }])), NOW);
+        expect(read?.rows.map(({ cloud }) => cloud)).toEqual([5, 50, 95]);
+        expect(read?.profile.temp.map(({ glyph }) => glyph.codePointAt(0))).toEqual([0xf0599, 0xf0595, 0xf0590]);
+        expect(read?.symbols.map(({ icon }) => icon?.codePointAt(0))).toEqual([0xf0599, 0xf0595, 0xf0590]);
+    });
+
+    it('is averaged over the way ridden in the summary', () => {
+        // stretches of a quarter, a half and a quarter of the route
+        const read = readWeather(item(layer([{ cloud: Array(HOURS).fill(20) }, { cloud: Array(HOURS).fill(60) }, { cloud: Array(HOURS).fill(100) }])), NOW);
+        expect(read?.summary.cloud).toBeCloseTo(60, 0);
+    });
+});
+
+describe('rows', () => {
+    it('has a row for each sample: where, when, and what it says at the time the ride is there', () => {
+        const read = readWeather(item(layer([{ temp: Array(HOURS).fill(4) }, { precip: rainAt(3, 7, 8), code: Array(HOURS).fill(61) }, {}])), NOW);
+        expect(read?.rows.map(({ i }) => i)).toEqual([0, 50, 100]);
+        expect(read?.rows[1]).toMatchObject({ index: 1, at: DEPART + HOUR * 1000, precip: 3, code: 61, rain: 2 });
+        expect(read?.rows[0].temp).toBe(4);
+        expect(read?.rows[1].distance).toBeCloseTo(5000, 0);
+    });
+
+    it('says the stretch of the route each speaks for, to be focused', () => {
+        const read = readWeather(item(rainMiddle), NOW);
+        expect(read?.rows.map(({ i0, i1 }) => [i0, i1])).toEqual([
+            [0, 25],
+            [25, 75],
+            [75, 100]
+        ]);
+    });
+
+    it('says the wind against the ride at each', () => {
+        const read = readWeather(item(layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(0), gust: Array(HOURS).fill(35) }, {}])), NOW);
+        expect(read?.rows[1].wind).toBe(20);
+        expect(read?.rows[1].gust).toBe(35);
+        expect(read?.rows[1].head).toBeCloseTo(20, 1);
+    });
+});
+
 describe('summary', () => {
     it('gives the range of temperatures', () => {
         const read = readWeather(item(layer([{ temp: Array(HOURS).fill(4) }, {}, { temp: Array(HOURS).fill(17) }])), NOW);
@@ -213,6 +254,13 @@ describe('summary', () => {
         expect(readWeather(item(headwind), NOW)?.summary.headShare).toBeCloseTo(0.5, 2);
         const tailwind = layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(180) }, {}]);
         expect(readWeather(item(tailwind), NOW)?.summary.headShare).toBe(0);
+    });
+
+    it('is the share of the way ridden with a wind of over 10 km/h behind', () => {
+        const tailwind = layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(180) }, {}]);
+        expect(readWeather(item(tailwind), NOW)?.summary.tailShare).toBeCloseTo(0.5, 2);
+        const headwind = layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(0) }, {}]);
+        expect(readWeather(item(headwind), NOW)?.summary.tailShare).toBe(0);
     });
 
     it('knows a thunderstorm by its code', () => {
@@ -319,6 +367,28 @@ describe('wxGlyph', () => {
         expect(glyph(73)).toBe(0xf0598);
         expect(glyph(86)).toBe(0xf0598);
         expect(glyph(96)).toBe(0xf067e);
+    });
+
+    it('reads the cloud cover for the clear and cloudy codes, which only say it roughly', () => {
+        const glyph = (code: number, cloud: number) => wxGlyph(code, cloud).codePointAt(0);
+        expect(glyph(3, 10)).toBe(0xf0599);
+        expect(glyph(3, 40)).toBe(0xf0595);
+        expect(glyph(0, 90)).toBe(0xf0590);
+        expect(glyph(1, 19)).toBe(0xf0599);
+        expect(glyph(2, 20)).toBe(0xf0595);
+        expect(glyph(2, 60)).toBe(0xf0595);
+        expect(glyph(2, 61)).toBe(0xf0590);
+    });
+
+    it('keeps the sky of the other codes, whatever the cloud', () => {
+        expect(wxGlyph(61, 5).codePointAt(0)).toBe(0xf0597);
+        expect(wxGlyph(95, 5).codePointAt(0)).toBe(0xf067e);
+        expect(wxGlyph(45, 5).codePointAt(0)).toBe(0xf0591);
+    });
+
+    it('goes by the cloud alone when there is no code', () => {
+        expect(wxGlyph(undefined, 5).codePointAt(0)).toBe(0xf0599);
+        expect(wxGlyph(undefined, 95).codePointAt(0)).toBe(0xf0590);
     });
 
     it('is cloudy when the code is not known', () => {

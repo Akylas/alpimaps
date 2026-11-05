@@ -242,6 +242,8 @@ export interface RoutePageSection {
     title: () => string;
     /** One line under the title. */
     summary?: (ctx: RouteCtx) => string | undefined;
+    /** What the line holds, as icons with their figures and colours: drawn in its place when there are any. */
+    facts?: (ctx: RouteCtx) => LensFact[];
     /** The lens a row focused from this section is read in. */
     lens?: LensId;
     /** No rows: nothing to show, so no card. */
