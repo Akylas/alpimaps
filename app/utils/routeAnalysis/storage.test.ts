@@ -114,11 +114,12 @@ describe('activity', () => {
         expect(activityOf(imported, picked)).toEqual({ kind: 'hike', subtype: 'walk', origin: 'user' });
         expect(needsActivity(imported, picked)).toBe(false);
     });
-    it('prefers the user pick over the route on a computed route', () => {
+    it('keeps a computed route to what it was routed for, whatever was picked', () => {
         const computed = { properties: { route: { type: 'bicycle', subtype: 'road' } } };
         expect(activityOf(computed)?.subtype).toBe('road');
-        const picked = withActivity(createAnalysis(line(10)), line(10), { kind: 'bike', subtype: 'mountain', origin: 'user' });
-        expect(activityOf(computed, picked)?.subtype).toBe('mountain');
+        // a pick saved before the panel stopped offering it on a computed route
+        const picked = withActivity(createAnalysis(line(10)), line(10), { kind: 'hike', subtype: 'walk', origin: 'user' });
+        expect(activityOf(computed, picked)).toEqual({ kind: 'bike', subtype: 'road', origin: 'route' });
     });
 });
 
@@ -135,11 +136,11 @@ describe('statsProfile', () => {
     it('does not trust the type of an imported track', () => {
         expect(statsProfile({ properties: { imported: true, route: { type: 'bicycle' } } })).toBe('pedestrian');
     });
-    it('follows the activity the user picked, even over the route', () => {
+    it('follows the activity the user picked for an imported track, never over a computed route', () => {
         const bike = withActivity(null, line(10), { kind: 'bike', subtype: 'road', origin: 'user' });
         const motor = withActivity(null, line(10), { kind: 'motor', origin: 'user' });
         expect(statsProfile({ properties: { imported: true } }, bike)).toBe('bicycle');
-        expect(statsProfile({ properties: { route: { type: 'pedestrian' } } }, bike)).toBe('bicycle');
+        expect(statsProfile({ properties: { route: { type: 'pedestrian' } } }, bike)).toBe('pedestrian');
         expect(statsProfile({ properties: { imported: true } }, motor)).toBe('auto');
     });
     it('ignores an activity that only came from the route', () => {
