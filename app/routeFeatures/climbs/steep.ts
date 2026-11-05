@@ -297,10 +297,25 @@ export function steepAlerts(steep: SteepSection[]): { alerts: NavAlert[]; plates
     };
 }
 
-// a plate of a harder ranking wins the place
+// Material Design Icons `menu-down`, a triangle: the app's icon font is the one the map labels have for sure
+const MDI_MENU_DOWN = String.fromCodePoint(0xf035d);
+
+// a plate of a harder ranking wins the place; high, so a label next to it does not take it
 const CATEGORY_PRIORITY: Record<ClimbCategory, number> = { hc: 100, 1: 90, 2: 80, 3: 70, 4: 60 };
 
-/** A plate on the summit of each ranked climb; `describe` words it. */
+/**
+ * A plate in the middle of each ranked climb, `describe` wording it, with a tip under it pointing at the route:
+ * the plate is a label and has no tail of its own.
+ */
 export function climbPlates(climbs: Climb[], describe: (climb: Climb) => { t: string; t2?: string }): LensSymbol[] {
-    return climbs.filter((climb) => climb.category !== undefined).map((climb) => ({ sym: 'climb' as const, i: climb.endIndex, ...describe(climb), s: 0, p: CATEGORY_PRIORITY[climb.category] }));
+    return climbs
+        .filter((climb) => climb.category !== undefined)
+        .flatMap((climb) => {
+            const vertex = Math.round((climb.startIndex + climb.endIndex) / 2);
+            const priority = CATEGORY_PRIORITY[climb.category];
+            return [
+                { sym: 'climb' as const, i: vertex, ...describe(climb), s: 0 as const, p: priority },
+                { sym: 'climbtip' as const, i: vertex, t: MDI_MENU_DOWN, s: 0 as const, p: priority }
+            ];
+        });
 }
