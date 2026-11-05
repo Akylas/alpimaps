@@ -196,6 +196,42 @@ describe('pipeline', () => {
     });
 
     describe('replacing and cancelling', () => {
+        it('tells a stage it was aborted, for it to cancel its native call: there is no AbortController', async () => {
+            const weather = openStage('weather');
+            const { pipeline, request } = setup(weather.stage);
+            pipeline.run(request('a', ['weather']));
+            await settle();
+            const cancelled = vi.fn();
+            weather.started[0].signal.onAbort(cancelled);
+            expect(cancelled).not.toHaveBeenCalled();
+            pipeline.run(request('a', ['weather']));
+            await settle();
+            expect(cancelled).toHaveBeenCalledTimes(1);
+            pipeline.cancel('a');
+            expect(cancelled).toHaveBeenCalledTimes(1);
+        });
+        it('calls at once a callback given after the abort', async () => {
+            const weather = openStage('weather');
+            const { pipeline, request } = setup(weather.stage);
+            pipeline.run(request('a', ['weather']));
+            await settle();
+            pipeline.cancel('a');
+            const late = vi.fn();
+            weather.started[0].signal.onAbort(late);
+            expect(late).toHaveBeenCalledTimes(1);
+        });
+        it('does not call it for a run that finished', async () => {
+            const weather = openStage('weather');
+            const { pipeline, request } = setup(weather.stage);
+            const done = pipeline.run(request('a', ['weather']));
+            await settle();
+            const cancelled = vi.fn();
+            weather.started[0].signal.onAbort(cancelled);
+            weather.gates[0].resolve(layerValue('w'));
+            await done;
+            pipeline.cancel('a');
+            expect(cancelled).not.toHaveBeenCalled();
+        });
         it('aborts the run a new one replaces, and drops its late result', async () => {
             const weather = openStage('weather');
             const { committed, pipeline, request } = setup(weather.stage);

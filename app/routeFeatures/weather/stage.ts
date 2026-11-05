@@ -9,7 +9,7 @@ import { weatherDecimals, weatherProviderId } from './settings';
 export const weatherStage: AnalysisStage = {
     layer: 'weather',
     extra: () => weatherExtras(get(weatherProviderId), weatherDecimals()),
-    async run({ analysis, inputs, item }) {
+    async run({ analysis, inputs, item, signal }) {
         try {
             return await computeWeatherLayer({
                 item,
@@ -17,7 +17,7 @@ export const weatherStage: AnalysisStage = {
                 now: Date.now(),
                 decimals: weatherDecimals(),
                 // there is a layer already: the user wants the provider's word, not the http cache's
-                fetch: (query) => weatherService.fetch(query, { providerId: get(weatherProviderId), fresh: !!analysis.layers.weather })
+                fetch: (query) => weatherService.fetch(query, { providerId: get(weatherProviderId), fresh: !!analysis.layers.weather, signal })
             });
         } catch (error) {
             throw error instanceof WeatherProviderError ? new StageError(error.reason, error.message) : error;

@@ -6,13 +6,49 @@ import { type AnalysisInputs, LAYER_IDS, type Layer, type LayerId, type RouteAna
 /** The route a layer is computed for: its geometry and what the sheet loaded of it. */
 export type StageItem = Parameters<typeof timelineSource>[0];
 
+/** What a stage is told when its run is abandoned. */
+export interface CancelSignal {
+    readonly aborted: boolean;
+    /** Runs `callback` once, when the run is aborted: at once if it already was. */
+    onAbort(callback: () => void): void;
+}
+
+function createAbort() {
+    let aborted = false;
+    const callbacks: (() => void)[] = [];
+    const signal: CancelSignal = {
+        get aborted() {
+            return aborted;
+        },
+        onAbort(callback) {
+            if (aborted) {
+                callback();
+            } else {
+                callbacks.push(callback);
+            }
+        }
+    };
+    return {
+        signal,
+        abort() {
+            if (!aborted) {
+                aborted = true;
+                callbacks.splice(0).forEach((callback) => callback());
+            }
+        }
+    };
+}
+
 export interface StageContext {
     itemKey: string;
     item: StageItem;
     analysis: RouteAnalysis;
     inputs: AnalysisInputs;
-    /** Aborted when the layer's inputs changed or the run was replaced. Native calls cannot be aborted: their result is dropped. */
-    signal: AbortSignal;
+    /**
+     * Aborted when the layer's inputs changed or the run was replaced. A native call is cancelled by the stage, from
+     * `onAbort` (the runtime has no AbortController, the network layer cancels by request tag); what it still answers is dropped.
+     */
+    signal: CancelSignal;
     progress(value: number): void;
 }
 
@@ -51,7 +87,7 @@ export interface RunRequest {
 
 interface ActiveRun {
     id: number;
-    controller: AbortController;
+    cancellation: ReturnType<typeof createAbort>;
     done: Promise<void>;
 }
 
@@ -91,7 +127,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
     function abort(itemKey: string, layer: LayerId) {
         const run = active.get(runKey(itemKey, layer));
         if (run) {
-            run.controller.abort();
+            run.cancellation.abort();
             active.delete(runKey(itemKey, layer));
             setRun(itemKey, layer, undefined);
         }
@@ -102,7 +138,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
         const key = runKey(itemKey, stage.layer);
         abort(itemKey, stage.layer);
         const id = ++nextId;
-        const controller = new AbortController();
+        const cancellation = createAbort();
         const current = () => active.get(key)?.id === id;
         // the layers it waits for are those of the same item still running now
         const waitsFor = (stage.after ?? []).map((layer) => active.get(runKey(itemKey, layer))?.done).filter(Boolean);
@@ -130,7 +166,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
                     item,
                     analysis,
                     inputs: analysis.inputs,
-                    signal: controller.signal,
+                    signal: cancellation.signal,
                     progress: (value) => {
                         if (current()) {
                             setRun(itemKey, stage.layer, { state: 'running', progress: value });
@@ -156,7 +192,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
                 release?.();
             }
         })();
-        active.set(key, { id, controller, done });
+        active.set(key, { id, cancellation, done });
         return done;
     }
 
