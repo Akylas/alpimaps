@@ -73,7 +73,7 @@ export interface StripCell {
     /** there is a forecast, but not for the hours of this ride: it counts for its darkness only */
     uncovered?: boolean;
     /** thirds of the scores' range; when they are all alike, good without dark minutes, poor with */
-    level: 'good' | 'fair' | 'poor';
+    level: 'good' | 'fair' | 'poor' | 'unknown';
     /** already gone */
     past: boolean;
     chosen: boolean;
@@ -142,15 +142,24 @@ export function departureStrip({
             ...(counted ? { rainMm: counted.rainMm, headShare: counted.headShare } : {})
         });
     }
-    const coming = cells.filter(({ past }) => !past);
+    // a ride the forecast does not reach is scored on its darkness alone: against rides that know the rain it would win for knowing nothing,
+    // so it takes no part in the range and cannot be the best
+    const coming = cells.filter(({ past, uncovered }) => !past && !uncovered);
+    cells.forEach((cell) => {
+        if (cell.uncovered) {
+            cell.level = 'unknown';
+        }
+    });
     if (coming.length) {
         const low = Math.min(...coming.map(({ score }) => score));
         const high = Math.max(...coming.map(({ score }) => score));
-        cells.forEach((cell) => {
-            // all alike: the darkness itself says it, a ride all in daylight good and one in the dark poor
-            const share = high > low ? (cell.score - low) / (high - low) : cell.score > 0 ? 1 : 0;
-            cell.level = share < 1 / 3 ? 'good' : share < 2 / 3 ? 'fair' : 'poor';
-        });
+        cells
+            .filter(({ uncovered }) => !uncovered)
+            .forEach((cell) => {
+                // all alike: the darkness itself says it, a ride all in daylight good and one in the dark poor
+                const share = high > low ? (cell.score - low) / (high - low) : cell.score > 0 ? 1 : 0;
+                cell.level = share < 1 / 3 ? 'good' : share < 2 / 3 ? 'fair' : 'poor';
+            });
         const best = coming.reduce((current, cell) => (cell.score < current.score || (cell.score === current.score && Math.abs(cell.offset) < Math.abs(current.offset)) ? cell : current));
         best.best = true;
     }

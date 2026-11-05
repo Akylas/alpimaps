@@ -74,11 +74,12 @@
     const STRIP_STEP = 30 * 60000;
     const STRIP_SPAN = 3 * 3600000;
     let anchorAt: number = null;
-    $: if (anchorAt === null || Math.abs(chosenAt - anchorAt) > STRIP_SPAN || (chosenAt - anchorAt) % STRIP_STEP !== 0) {
+    // (never while one is looked at: the strip it is looked at in must stay)
+    $: if (previewAt === null && (anchorAt === null || Math.abs(chosenAt - anchorAt) > STRIP_SPAN || (chosenAt - anchorAt) % STRIP_STEP !== 0)) {
         anchorAt = chosenAt;
     }
     // what the forecast fetched says of the ride leaving at a time: the same hours read for another departure
-    $: weatherLayer = analysis?.layers.weather;
+    $: weatherLayer = $routeFeatureWeather ? analysis?.layers.weather : undefined;
     function weatherAt(at: number): WeatherFactors | undefined {
         const shifted = { geometry: item.geometry, profile: item.profile, route: item.route, instructions: item.instructions, analysis: { ...analysis, inputs: { ...inputs, departure: { ...inputs.departure, mode: 'planned' as const, at } } } };
         const read = readWeather(shifted, Math.min(now, at));
@@ -88,7 +89,16 @@
     $: uncovered = cells.some((cell) => cell.uncovered);
     // a departure looked at in the strip is not the ride's until it is taken: tapping one shows its figures, the button leaves then
     let previewAt: number = null;
-    $: if (previewAt !== null && (previewAt === chosenAt || !cells.some((cell) => cell.at === previewAt))) {
+    // given up when the page took it, or had it given back for a fetch: nothing to revert then. Only once the page has said it is looking:
+    // it says so a flush after the tap
+    let sawLook = false;
+    $: if (committed !== undefined) {
+        sawLook = true;
+    } else if (sawLook) {
+        sawLook = false;
+        previewAt = null;
+    }
+    $: if (previewAt !== null && previewAt === chosenAt) {
         previewAt = null;
     }
     $: selectedAt = previewAt ?? chosenAt;
@@ -192,6 +202,7 @@
     }
 
     function setActivity(entry: (typeof ACTIVITIES)[number]) {
+        previewAt = null;
         dispatch('change', { analysis: withActivity(analysis, item.geometry, { ...entry.activity, origin: 'user' }), full: true });
     }
     function setDeparture(at: number | null) {
@@ -222,6 +233,7 @@
         if (pendingPace) {
             const pace = pendingPace;
             pendingPace = null;
+            previewAt = null;
             dispatch('change', { analysis: withPace(analysis, item.geometry, pace) });
         }
     }
@@ -237,9 +249,9 @@
 
     const INDICATOR_ICONS = { rain: 'mdi-weather-rainy', wind: 'mdi-weather-windy', sun: 'mdi-weather-sunny', dark: 'mdi-weather-night', unknown: 'mdi-cloud-sync-outline' };
     const INDICATOR_COLORS: Record<string, string> = { rain: '#4A90D9', wind: '#F29D38', sun: '#F2B72E' };
-    const LEVEL_COLORS = { good: '#1D9E75', fair: '#EF9F27', poor: '#E24B4A' };
+    const LEVEL_COLORS = { good: '#1D9E75', fair: '#EF9F27', poor: '#E24B4A', unknown: '#9AA0A6' };
     // e-ink: empty, grey, black
-    const LEVEL_SHADES = { good: 0, fair: 110, poor: 255 };
+    const LEVEL_SHADES = { good: 0, fair: 110, poor: 255, unknown: 60 };
     function levelColor(cell: StripCell) {
         return isEInk ? new Color('#000000').setAlpha(LEVEL_SHADES[cell.level]).hex : LEVEL_COLORS[cell.level];
     }

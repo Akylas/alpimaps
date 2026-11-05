@@ -230,6 +230,27 @@ describe('departureStrip', () => {
             });
         });
 
+        it('never stars a departure the forecast does not reach, which would score better for knowing nothing', () => {
+            // 3 points of rain before noon, none known after
+            const cells = cellsWith((at) => ({ rainMm: 1, headShare: 0, covered: at < noon }));
+            const best = cells.find(({ best: starred }) => starred);
+            expect(best?.uncovered).toBe(false);
+            expect(best?.at).toBeLessThan(noon);
+        });
+
+        it('rates a departure the forecast does not reach unknown, whatever its darkness says', () => {
+            const cells = cellsWith((at) => ({ rainMm: 1, headShare: 0, covered: at < noon }));
+            expect(cells.filter(({ uncovered }) => uncovered).every(({ level }) => level === 'unknown')).toBe(true);
+            expect(cells.filter(({ uncovered }) => uncovered === false).every(({ level }) => level !== 'unknown')).toBe(true);
+        });
+
+        it('rates the others by their own range, the ones not known left out of it', () => {
+            const cells = cellsWith((at) => ({ rainMm: at < noon - HOUR ? 0 : 2, headShare: 0, covered: at < noon + HOUR }));
+            const covered = cells.filter(({ uncovered }) => uncovered === false);
+            expect(covered.some(({ level }) => level === 'good')).toBe(true);
+            expect(covered.some(({ level }) => level === 'poor')).toBe(true);
+        });
+
         it('leaves a departure the forecast does not cover to its darkness, and says so', () => {
             const cells = cellsWith((at) => ({ rainMm: 5, headShare: 1, covered: at < noon + HOUR }));
             const without = cellsWith(undefined);

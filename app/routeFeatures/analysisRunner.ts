@@ -35,32 +35,79 @@ function reportedZone(data: unknown): { tz: string; utcOffset: number } | undefi
         : undefined;
 }
 
-// one save after the other: a slow one must not land after, and over, a newer one
+// one save after the other, from wherever they come: a slow one must not land after, and over, a newer one
 let saving: Promise<void> = Promise.resolve();
 
-function commit(item: IItem, layer: LayerId, value: Layer<unknown>) {
-    const current = item.analysis;
-    const zone = reportedZone(value.data);
-    const analysis: RouteAnalysis = {
-        ...current,
-        inputs: zone ? { ...current.inputs, departure: withRouteTimeZone(current.inputs.departure, zone.tz, zone.utcOffset) } : current.inputs,
-        layers: { ...current.layers, [layer]: value }
-    };
+/** Saves the route's analysis when the route is saved; an unsaved route keeps its analysis on the item until it is saved with it. */
+export function saveAnalysis(item: IItem, analysis: RouteAnalysis): Promise<void> {
+    if (!isSaved(item)) {
+        return Promise.resolve();
+    }
+    saving = saving.then(() => getMapContext().mapModule('items').updateItem(item, { analysis }, false, false)).then(() => undefined, showError);
+    return saving;
+}
+
+// A departure looked at (the When panel's strip): the item carries the analysis as it would be, so the whole page shows it, and what it
+// had before is kept here to give back. Only that one is ever saved.
+const looks = new Map<string, { base: RouteAnalysis | null }>();
+
+/** What the route had before it was looked at in another way, or `undefined` when it is not. */
+export function lookingBase(item: IItem): { analysis: RouteAnalysis | null } | undefined {
+    const look = looks.get(focusKeyOf(item));
+    return look ? { analysis: look.base } : undefined;
+}
+
+export function lookAt(item: IItem, analysis: RouteAnalysis) {
+    const key = focusKeyOf(item);
+    if (!looks.has(key)) {
+        looks.set(key, { base: item.analysis ?? null });
+    }
     item.analysis = analysis;
     notify();
-    // an unsaved route keeps its analysis on the item until it is saved with it
-    if (isSaved(item)) {
-        saving = saving.then(() => getMapContext().mapModule('items').updateItem(item, { analysis }, false, false)).then(() => undefined, showError);
-        return saving;
+}
+
+/** Gives back what the route had. */
+export function revertLook(item: IItem) {
+    const look = looks.get(focusKeyOf(item));
+    if (look) {
+        looks.delete(focusKeyOf(item));
+        item.analysis = look.base;
+        notify();
     }
+}
+
+/** What was looked at is now the route's: the change that says so replaces what was kept. */
+export function keepLook(item: IItem) {
+    looks.delete(focusKeyOf(item));
+}
+
+function withLayer(analysis: RouteAnalysis, layer: LayerId, value: Layer<unknown>): RouteAnalysis {
+    const zone = reportedZone(value.data);
+    return {
+        ...analysis,
+        inputs: zone ? { ...analysis.inputs, departure: withRouteTimeZone(analysis.inputs.departure, zone.tz, zone.utcOffset) } : analysis.inputs,
+        layers: { ...analysis.layers, [layer]: value }
+    };
+}
+
+function commit(item: IItem, layer: LayerId, value: Layer<unknown>) {
+    item.analysis = withLayer(item.analysis, layer, value);
+    // a layer that lands while a departure is looked at belongs to the route as it is, which is what is saved
+    const look = looks.get(focusKeyOf(item));
+    if (look) {
+        look.base = withLayer(look.base ?? createAnalysis(item.geometry, activityOf(item, null)), layer, value);
+    }
+    notify();
+    return saveAnalysis(item, look ? look.base : item.analysis);
 }
 
 /**
  * Computes layers of a route and keeps them on it, saved when the route is. Resolves once each has finished or failed;
- * what failed is in `layerStatuses`.
+ * what failed is in `layerStatuses`. A departure being looked at is given back first: what is fetched is the route's.
  */
 export async function computeLayers(item: IItem, layers: LayerId[]) {
     const itemKey = focusKeyOf(item);
+    revertLook(item);
     item.analysis = reconcileAnalysis(item.analysis, item.geometry) ?? createAnalysis(item.geometry, activityOf(item, null));
     const unsubscribe = pipeline.runs(itemKey).subscribe(notify);
     try {

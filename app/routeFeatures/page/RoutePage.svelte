@@ -23,7 +23,7 @@
     import type { Item } from '~/models/Item';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
-    import { analysisChanged } from '~/routeFeatures/analysisRunner';
+    import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
@@ -173,7 +173,7 @@
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
     // a departure looked at and not taken is not the route's
-    onDestroy(() => revertLook());
+    onDestroy(giveBackLook);
     // always true: it reruns this when the analysis changed in place
     $: analysis = analysisVersion >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
@@ -202,36 +202,26 @@
 
     // the times change in place: only what shows them follows. The activity changes what the whole page reads
     let analysisVersion = 0;
-    // one save after the other: a slow one must not land after, and over, a newer one
-    let saving: Promise<unknown> = Promise.resolve();
-    // a departure looked at in the When panel: the page shows the route as it would be, the analysis the item had before is kept to give
-    // back, and nothing is saved until the departure is taken
-    let looking: { analysis: RouteAnalysis | null } | null = null;
+    // a departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
+    // back. Nothing of it is saved until the departure is taken
+    $: committed = analysisVersion >= 0 && $routeAnalysisChanges >= 0 ? lookingBase(item) : undefined;
     function onAnalysisChange({ analysis, full, preview }: { analysis: RouteAnalysis; full?: boolean; preview?: boolean }) {
         if (preview) {
-            looking ??= { analysis: item.analysis ?? null };
+            lookAt(item, analysis);
         } else {
-            looking = null;
+            keepLook(item);
+            item.analysis = analysis;
+            saveAnalysis(item, analysis);
         }
-        item.analysis = analysis;
         analysisVersion++;
         analysisChanged();
         if (full) {
             item = item;
         }
-        if (!preview && isSaved(item)) {
-            saving = saving.then(() => mapContext.mapModule('items').updateItem(item, { analysis }, false, false)).catch(showError);
-        }
     }
-    function revertLook() {
-        if (looking) {
-            // what was fetched while it was looked at is kept
-            const fetched = item.analysis?.layers;
-            item.analysis = looking.analysis && fetched ? { ...looking.analysis, layers: { ...looking.analysis.layers, ...fetched } } : looking.analysis;
-            looking = null;
-            analysisVersion++;
-            analysisChanged();
-        }
+    function giveBackLook() {
+        revertLook(item);
+        analysisVersion++;
     }
     // an unsaved route keeps its analysis on the item until it is saved with it
     function isSaved(route: Item) {
@@ -373,7 +363,7 @@
             <Template key="when">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel {item} committed={looking ? looking.analysis : undefined} version={analysisVersion} on:change={onAnalysisChange} on:revert={revertLook} />
+                        <WhenPanel {item} committed={committed ? committed.analysis : undefined} version={analysisVersion} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>

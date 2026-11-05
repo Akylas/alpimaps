@@ -68,7 +68,7 @@
                     text={summary.tempMin === undefined
                         ? '–'
                         : Math.round(summary.tempMin) === Math.round(summary.tempMax)
-                          ? `${degrees(summary.tempMin)}C`
+                          ? `${Math.round(summary.tempMin)} °C`
                           : `${Math.round(summary.tempMin)}–${Math.round(summary.tempMax)} °C`}
                 />
                 <label color={colorOnSurfaceVariant} fontSize={12} text={lc('weather_stat_temp')} />

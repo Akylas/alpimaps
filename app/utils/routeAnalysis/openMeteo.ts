@@ -44,12 +44,27 @@ export function openMeteoUrl({ from, points, to }: WeatherQuery): string {
     return `${FORECAST_URL}?${params.join('&')}`;
 }
 
+interface OpenMeteoLocation {
+    hourly: { time: number[] } & Record<string, (number | null)[]>;
+    timezone?: string;
+    utc_offset_seconds?: number;
+}
+
+function isLocation(value: unknown): value is OpenMeteoLocation {
+    if (!value || typeof value !== 'object' || !('hourly' in value)) {
+        return false;
+    }
+    const { hourly } = value;
+    return !!hourly && typeof hourly === 'object' && 'time' in hourly && Array.isArray(hourly.time);
+}
+
 /** One object for one point, a list for several. */
 export function parseOpenMeteo(json: unknown, { from, points, to }: WeatherQuery): WeatherResponse {
-    const locations = (Array.isArray(json) ? json : [json]) as { hourly?: Record<string, (number | null)[]>; timezone?: string; utc_offset_seconds?: number }[];
-    if (locations.length !== points.length || locations.some((location) => !Array.isArray(location?.hourly?.time))) {
+    const answers: unknown[] = Array.isArray(json) ? json : [json];
+    if (answers.length !== points.length || !answers.every(isLocation)) {
         throw new WeatherProviderError('error', 'Open-Meteo answered for other points than asked');
     }
+    const locations = answers.filter(isLocation);
     const time = locations[0].hourly.time;
     const first = time.findIndex((hour) => hour >= from);
     const last = time.findLastIndex((hour) => hour <= to);
@@ -77,6 +92,15 @@ export function parseOpenMeteo(json: unknown, { from, points, to }: WeatherQuery
     };
 }
 
+function statusOf(error: unknown): number | undefined {
+    return error && typeof error === 'object' && 'statusCode' in error && typeof error.statusCode === 'number' ? error.statusCode : undefined;
+}
+
+/** What it forecasts: about two weeks ahead, three months back. */
+const FORECAST_DAYS = 15;
+const PAST_DAYS = 90;
+const DAY_MS = DAY * 1000;
+
 export const openMeteoProvider: WeatherProvider = {
     id: 'open-meteo',
     name: 'Open-Meteo',
@@ -88,15 +112,17 @@ export const openMeteoProvider: WeatherProvider = {
         try {
             json = await http(openMeteoUrl(query));
         } catch (error) {
-            // the free quota is shared by everyone behind the same address; 400: the dates are further than it forecasts
-            switch ((error as { statusCode?: number })?.statusCode) {
-                case 429:
-                    throw new WeatherProviderError('rate-limited', (error as Error).message);
-                case 400:
-                    throw new WeatherProviderError('out-of-coverage', (error as Error).message);
-                default:
-                    throw error;
+            const message = error instanceof Error ? error.message : undefined;
+            // the free quota is shared by everyone behind the same address. A 400 is the dates further than it forecasts, only when they are:
+            // the body, which says why, does not reach us, and a 400 for anything else is a mistake of ours to see as it is
+            const beyond = query.to * 1000 > Date.now() + FORECAST_DAYS * DAY_MS || query.from * 1000 < Date.now() - PAST_DAYS * DAY_MS;
+            if (statusOf(error) === 429) {
+                throw new WeatherProviderError('rate-limited', message);
             }
+            if (statusOf(error) === 400 && beyond) {
+                throw new WeatherProviderError('out-of-coverage', message);
+            }
+            throw error;
         }
         return parseOpenMeteo(json, query);
     }

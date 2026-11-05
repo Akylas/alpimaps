@@ -178,9 +178,9 @@
         }
         return head >= WIND_HARD ? '#D7263D' : head >= WIND_NOTICEABLE ? '#F29D38' : head <= -WIND_NOTICEABLE ? '#2E9E5B' : colorOnSurface;
     }
-    function drawText(canvas: Canvas, text: string, x: number, y: number) {
-        canvas.drawText(text, x, y, weatherHaloPaint);
-        canvas.drawText(text, x, y, weatherTextPaint);
+    function drawText(canvas: Canvas, text: string, pointX: number, pointY: number) {
+        canvas.drawText(text, pointX, pointY, weatherHaloPaint);
+        canvas.drawText(text, pointX, pointY, weatherTextPaint);
     }
     function drawWeather(canvas: Canvas, { contentBottom, contentLeft, contentRight, contentTop }: { contentBottom: number; contentLeft: number; contentRight: number; contentTop: number }, pixelX: (distance: number) => number) {
         const plotHeight = contentBottom - contentTop;
@@ -203,24 +203,24 @@
         weatherGlyphPaint.fontFamily = $fonts.mdi;
         // a row of the sky then a row of the wind at each sample while there is room for it
         let lastSky = -Infinity;
-        weather.temp.forEach(({ d, glyph }) => {
-            const x = pixelX(d);
-            if (x >= contentLeft && x <= contentRight && x - lastSky >= SAMPLE_LABEL_GAP * $fontScale) {
-                lastSky = x;
+        weather.temp.forEach(({ d: distance, glyph }) => {
+            const pointX = pixelX(distance);
+            if (pointX >= contentLeft && pointX <= contentRight && pointX - lastSky >= SAMPLE_LABEL_GAP * $fontScale) {
+                lastSky = pointX;
                 weatherGlyphPaint.setTextSize(15 * $fontScale);
                 weatherGlyphPaint.color = ink;
-                canvas.drawText(glyph, Math.min(Math.max(x, contentLeft + 8), contentRight - 8), contentTop + SKY_ROW * $fontScale, weatherGlyphPaint);
+                canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + SKY_ROW * $fontScale, weatherGlyphPaint);
             }
         });
         let lastWind = -Infinity;
-        weather.wind.forEach(({ angle, d, gust, head, speed }) => {
-            const x = pixelX(d);
-            if (x < contentLeft || x > contentRight || x - lastWind < SAMPLE_LABEL_GAP * $fontScale) {
+        weather.wind.forEach(({ angle, d: distance, gust, head, speed }) => {
+            const pointX = pixelX(distance);
+            if (pointX < contentLeft || pointX > contentRight || pointX - lastWind < SAMPLE_LABEL_GAP * $fontScale) {
                 return;
             }
-            lastWind = x;
+            lastWind = pointX;
             const color = windColor(head);
-            const centerX = Math.min(Math.max(x, contentLeft + 8), contentRight - 8);
+            const centerX = Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8);
             const centerY = contentTop + WIND_ARROW_ROW * $fontScale;
             const arrowSize = 14 * $fontScale;
             // an arrow of the way the wind pushes, the ride going to the right: right is with it, left against it, down to the rider's right
@@ -254,30 +254,30 @@
         const range = Math.max(TEMP_MIN_RANGE, Math.max(...values) - lowest);
         const bandTop = contentTop + plotHeight * TEMP_BAND_TOP;
         const bandBottom = contentTop + plotHeight * TEMP_BAND_BOTTOM;
-        const points = weather.temp.map(({ d, value }) => ({ x: pixelX(d), y: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
+        const points = weather.temp.map(({ d: distance, value }) => ({ pointX: pixelX(distance), pointY: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
         weatherLinePaint.color = isEInk ? '#000000' : TEMP_COLOR;
         for (let index = 1; index < points.length; index++) {
-            canvas.drawLine(points[index - 1].x, points[index - 1].y, points[index].x, points[index].y, weatherLinePaint);
+            canvas.drawLine(points[index - 1].pointX, points[index - 1].pointY, points[index].pointX, points[index].pointY, weatherLinePaint);
         }
         let lastLabel = -Infinity;
         let lastFigure = NaN;
-        points.forEach(({ value, x, y }, index) => {
-            if (x < contentLeft || x > contentRight) {
+        points.forEach(({ value, pointX, pointY }, index) => {
+            if (pointX < contentLeft || pointX > contentRight) {
                 return;
             }
             overlayFillPaint.color = '#ffffff';
-            canvas.drawCircle(x, y, 5, overlayFillPaint);
+            canvas.drawCircle(pointX, pointY, 5, overlayFillPaint);
             overlayFillPaint.color = isEInk ? '#000000' : TEMP_COLOR;
-            canvas.drawCircle(x, y, 3.5, overlayFillPaint);
+            canvas.drawCircle(pointX, pointY, 3.5, overlayFillPaint);
             // only what changes is said: a figure that is the one before is left out, the dot says it
             const figure = Math.round(value);
-            if (figure !== lastFigure && x - lastLabel >= SAMPLE_LABEL_GAP * $fontScale) {
-                lastLabel = x;
+            if (figure !== lastFigure && pointX - lastLabel >= SAMPLE_LABEL_GAP * $fontScale) {
+                lastLabel = pointX;
                 lastFigure = figure;
                 // above a peak, below a dip
                 const dip = index > 0 && index < points.length - 1 && value < points[index - 1].value && value < points[index + 1].value;
                 weatherTextPaint.color = ink;
-                drawText(canvas, figure + '°', Math.min(Math.max(x, contentLeft + 12), contentRight - 12), dip ? y + 8 + fontSize : y - 8);
+                drawText(canvas, figure + '°', Math.min(Math.max(pointX, contentLeft + 12), contentRight - 12), dip ? pointY + 8 + fontSize : pointY - 8);
             }
         });
     }

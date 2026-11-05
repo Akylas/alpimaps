@@ -179,6 +179,25 @@ describe('openMeteoProvider', () => {
         await expect(openMeteoProvider.fetch(query, http)).rejects.toMatchObject({ reason: 'out-of-coverage' });
     });
 
+    it('lets a 400 through as the failure it is when the dates are ones it forecasts: that is a mistake of ours', async () => {
+        const today = Math.floor(Date.now() / 1000 / DAY) * DAY;
+        const near = { ...query, from: today, to: today + DAY };
+        const failure = Object.assign(new Error('Parameter hourly is wrong'), { statusCode: 400 });
+        await expect(
+            openMeteoProvider.fetch(near, async () => {
+                throw failure;
+            })
+        ).rejects.toBe(failure);
+    });
+
+    it('says the dates are out of its range for a 400 on a day too far behind', async () => {
+        const old = Math.floor(Date.now() / 1000 / DAY) * DAY - 200 * DAY;
+        const http = async () => {
+            throw Object.assign(new Error('out of range'), { statusCode: 400 });
+        };
+        await expect(openMeteoProvider.fetch({ ...query, from: old, to: old + DAY }, http)).rejects.toMatchObject({ reason: 'out-of-coverage' });
+    });
+
     it('lets any other failure through as it is', async () => {
         const failure = new Error('socket closed');
         await expect(
