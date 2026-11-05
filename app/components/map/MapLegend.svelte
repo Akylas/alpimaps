@@ -1,10 +1,17 @@
 <script lang="ts">
     import { Align, Canvas, DashPathEffect, Paint, Rect, Style } from '@nativescript-community/ui-canvas';
-    import { File, ImageSource, knownFolders, path } from '@nativescript/core';
+    import { ApplicationSettings, File, ImageSource, knownFolders, path } from '@nativescript/core';
+    import { get } from 'svelte/store';
     import { lang, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
+    import { lensLegend } from '~/routeFeatures/lens/lensLegend';
+    import { lensPalette } from '~/routeFeatures/lens/lensPalette';
+    import { lensVariant } from '~/routeFeatures/lens/lensStyle';
+    import { routeLensStore } from '~/routeFeatures/lens/routeLensStore';
+    import { resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { legendVersion, showLegend } from '~/stores/legendStore';
     import { massifIconFont, massifIconFontFamily } from '~/utils/massif';
+    import { surfaceColors } from '~/utils/routing';
     import { colors } from '~/variables';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
 
@@ -45,16 +52,30 @@
     const HEADER_H = 36;
 
     let legend: Legend = null;
-    $: $legendVersion, $showLegend && readLegend();
+    $: $legendVersion, $routeLensStore, $routeFeatureChanges, $showLegend && readLegend();
     // one small canvas per swatch: a single canvas the legend's height outgrew the GPU's texture size and drew nothing
     $: rows = (legend ? legend.sections.flatMap((section) => [{ section }, ...section.items.map((item) => ({ item }))]) : []) as { section?: Legend['sections'][number]; item?: LegendItem }[];
     $: height = legend ? legend.sections.reduce((acc, section) => acc + SECTION_H + section.items.length * ROW_H, 0) + 8 : 0;
+
+    // what the lens colouring the selected route means, ahead of the map's own
+    function readLensSection() {
+        const item = getMapContext().getSelectedItem();
+        if (!item?.route) {
+            return null;
+        }
+        const lenses = routeLenses(get(routeFeatures), { item });
+        const variant = lensVariant(ApplicationSettings.getString('innerStyle'));
+        const surfaces = [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))];
+        return lensLegend(resolveLens(get(routeLensStore), lenses), variant, lensPalette(variant, surfaceColors), lc, surfaces);
+    }
 
     function readLegend() {
         try {
             // not in the plugin's typed method list yet; the SDK has it
             const result = (getMapContext().mapDecoder as any)?.call('getLegend');
-            legend = typeof result === 'string' ? JSON.parse(result) : result;
+            const mapLegend: Legend = typeof result === 'string' ? JSON.parse(result) : result;
+            const lensSection = readLensSection();
+            legend = mapLegend || lensSection ? { sections: [...(lensSection ? [lensSection] : []), ...(mapLegend?.sections ?? [])] } : null;
         } catch (error) {
             console.error('getLegend', error);
             legend = null;

@@ -13,6 +13,7 @@ import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, 
 import { formatter } from '~/mapModules/ItemFormatter';
 import { applyRouteFocus, setRouteFocus } from '~/routeFeatures/lens/lensStyle';
 import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { legendVersion } from '~/stores/legendStore';
 import { navigationItem } from '~/stores/navigationStore';
 
 import { lc } from '@nativescript-community/l';
@@ -605,6 +606,8 @@ export default class ItemsModule extends MapModule {
     }
     onItemSelected(item: IItem) {
         const startTime = Date.now();
+        // the legend explains the lens of the selected route
+        legendVersion.update((version) => version + 1);
         if (item?.route) {
             const features = [];
             if (item.route.waypoints?.length > 0) {

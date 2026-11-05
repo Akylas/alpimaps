@@ -1,5 +1,5 @@
 /** The style parameters the route lenses read: the palette in the inner style, the focus in the base map's. */
-import { lensCase, lensPalette } from '~/routeFeatures/lens/lensPalette';
+import { type LensPaletteVariant, lensCase, lensPalette } from '~/routeFeatures/lens/lensPalette';
 import { surfaceColors } from '~/utils/routing';
 
 interface StyleDecoder {
@@ -9,12 +9,14 @@ interface StyleDecoder {
 // whether the routes network is dimmed, kept to give a decoder made later its value
 let routeFocus = false;
 
-/**
- * What an inner decoder needs when it is made. The palette is by inner style: e-ink is black, the rest
- * the light one. A dark one is in `lensPalette` for the day the base map has a dark look.
- */
+/** The palette is by inner style: e-ink is black, the rest the light one. A dark one is in `lensPalette` for the day the base map has a dark look. */
+export function lensVariant(innerStyle: string): LensPaletteVariant {
+    return innerStyle === 'eink' ? 'eink' : 'light';
+}
+
+/** What an inner decoder needs when it is made. */
 export function lensStyleParameters(innerStyle: string): Record<string, string> {
-    const variant = innerStyle === 'eink' ? 'eink' : 'light';
+    const variant = lensVariant(innerStyle);
     return { lens_pal: JSON.stringify(lensPalette(variant, surfaceColors)), lens_case: lensCase(variant) };
 }
 
