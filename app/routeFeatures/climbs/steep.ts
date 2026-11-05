@@ -1,4 +1,5 @@
 /** Steep sections and climbs, read off a route profile. Pure: nothing here may import NativeScript. */
+import type { LensSymbol, NavAlert } from '~/routeFeatures/registry';
 import type { Activity } from '~/utils/routeAnalysis/types';
 
 export type SteepPreset = 'road' | 'gravel' | 'mtb' | 'hiking';
@@ -285,4 +286,21 @@ export function bestClimb(climbs: Climb[]): Climb | undefined {
         const rank = CATEGORY_RANK.indexOf(climb.category) - CATEGORY_RANK.indexOf(best.category);
         return rank < 0 || (rank === 0 && climb.gain > best.gain) ? climb : best;
     }, undefined);
+}
+
+/** What the map shows of the steep sections while following the route: chevrons on them and their grade at the start. */
+export function steepAlerts(steep: SteepSection[]): { alerts: NavAlert[]; plates: LensSymbol[] } {
+    const severity = (section: SteepSection) => (section.tier === 3 ? 3 : 2);
+    return {
+        alerts: steep.map((section) => ({ kind: 'steep' as const, i0: section.startIndex, i1: section.endIndex, s: severity(section) })),
+        plates: steep.map((section) => ({ sym: 'grade' as const, i: section.startIndex, t: Math.abs(section.avgGrade).toFixed(0) + ' %', s: severity(section), p: 50 }))
+    };
+}
+
+// a plate of a harder ranking wins the place
+const CATEGORY_PRIORITY: Record<ClimbCategory, number> = { hc: 100, 1: 90, 2: 80, 3: 70, 4: 60 };
+
+/** A plate on the summit of each ranked climb; `describe` words it. */
+export function climbPlates(climbs: Climb[], describe: (climb: Climb) => { t: string; t2?: string }): LensSymbol[] {
+    return climbs.filter((climb) => climb.category !== undefined).map((climb) => ({ sym: 'climb' as const, i: climb.endIndex, ...describe(climb), s: 0, p: CATEGORY_PRIORITY[climb.category] }));
 }

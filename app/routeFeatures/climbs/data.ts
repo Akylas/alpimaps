@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { formatDistance } from '~/helpers/formatter';
+import { convertElevation, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import { climbsCategories, climbsMinLength, climbsPreset, climbsSettingsKey, climbsSteepDown, climbsSteepUp } from '~/routeFeatures/climbs/settings';
@@ -9,14 +9,17 @@ import {
     type SteepSection,
     type SteepThresholds,
     bestClimb,
+    climbPlates,
     findClimbs,
     findSteepSections,
     isSteepPreset,
     presetForActivity,
     resolveThresholds,
-    sortByDifficulty
+    sortByDifficulty,
+    steepAlerts
 } from '~/routeFeatures/climbs/steep';
-import type { AttentionMark, LensSection, LensSlice, ProfileBracket } from '~/routeFeatures/registry';
+import { gradeKey } from '~/routeFeatures/lens/lensPalette';
+import type { AttentionMark, LensSection, LensSlice, LensSymbol, NavAlert, ProfileBracket } from '~/routeFeatures/registry';
 import { gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 
@@ -32,6 +35,11 @@ export interface ClimbsRead {
     marks: AttentionMark[];
     /** the profile's grade sections, by grade bucket */
     slices: LensSlice[];
+    /** the category of each ranked climb, on its summit */
+    symbols: LensSymbol[];
+    /** while following the route: the steep sections, with their grade at the start */
+    alerts: NavAlert[];
+    gradePlates: LensSymbol[];
 }
 
 export function categoryLabel(category: ClimbCategory) {
@@ -66,6 +74,7 @@ export function readClimbs(item: IItem): ClimbsRead | null {
         // a ranking switched off takes the plates with it
         const climbs = categories ? found : found.map((climb) => ({ ...climb, category: undefined }));
         const steep = findSteepSections(data, { thresholds, minLength });
+        const steepFollowing = steepAlerts(steep);
         read = {
             climbs,
             steep,
@@ -86,10 +95,13 @@ export function readClimbs(item: IItem): ClimbsRead | null {
                     tier: section.tier,
                     section: { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) }
                 })),
+            symbols: climbPlates(climbs, (climb) => ({ t: categoryLabel(climb.category), t2: convertElevation(data[climb.endIndex].a) })),
+            alerts: steepFollowing.alerts,
+            gradePlates: steepFollowing.plates,
             slices: (item.profile.sections ?? []).map(({ endIndex, grade, startIndex }) => {
                 const bucket = gradeBucketIndex(grade);
                 // from 9 % it is steep, from 12 % very steep
-                return { i0: startIndex, i1: endIndex, k: bucket, s: bucket >= 7 ? 3 : bucket === 6 ? 2 : 0 };
+                return { i0: startIndex, i1: endIndex, k: gradeKey(bucket), s: bucket >= 7 ? 3 : bucket === 6 ? 2 : 0 };
             })
         };
     }

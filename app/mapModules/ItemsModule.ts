@@ -11,7 +11,10 @@ import { get } from 'svelte/store';
 import { osmicon } from '~/helpers/formatter';
 import { getCachedOSMElement, osmElementTypes, osmItemKey, setCachedOSMElement, updateOSMDetailsState } from '~/helpers/osmDetails';
 import { formatter } from '~/mapModules/ItemFormatter';
+import { applyRouteFocus, setRouteFocus } from '~/routeFeatures/lens/lensStyle';
 import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+import { legendVersion } from '~/stores/legendStore';
+import { navigationItem } from '~/stores/navigationStore';
 
 import { lc } from '@nativescript-community/l';
 import NSQLDatabase from '@shared/db/NSQLDatabase';
@@ -23,7 +26,7 @@ import { parseAnalysis } from '~/utils/routeAnalysis/storage';
 import { showSnack } from '~/utils/ui';
 import { clearTimeout, getItemsDataFolder, pick, setTimeout } from '~/utils/utils';
 import { fonts } from '~/variables';
-import MapModule, { getMapContext } from './MapModule';
+import MapModule, { type MapDecoder, getMapContext } from './MapModule';
 import { type MapPos, fromBounds, fromPosition, toPosition } from '~/utils/geo';
 const mapContext = getMapContext();
 
@@ -239,7 +242,18 @@ export default class ItemsModule extends MapModule {
             clearTimeout(pendingRefresh);
             unsubscribe();
         };
+        // following a route moves what is drawn with it to the navigation layer, and back
+        let firstNavigation = true;
+        this.unsubscribeNavigation?.();
+        this.unsubscribeNavigation = navigationItem.subscribe(() => {
+            // with nothing selected too: the route focus the navigation set goes when it stops
+            if (!firstNavigation) {
+                this.onItemSelected(mapContext.getSelectedItem());
+            }
+            firstNavigation = false;
+        });
     }
+    private unsubscribeNavigation: () => void;
     private unsubscribeRouteFeatures: () => void;
     private unsubscribeRouteFeatureChanges: () => void;
     onDbInitListeners = [];
@@ -256,6 +270,8 @@ export default class ItemsModule extends MapModule {
         this.unsubscribeRouteFeatures = null;
         this.unsubscribeRouteFeatureChanges?.();
         this.unsubscribeRouteFeatureChanges = null;
+        this.unsubscribeNavigation?.();
+        this.unsubscribeNavigation = null;
         this.db && this.db.disconnect();
 
         if (this.localVectorDataSource) {
@@ -590,6 +606,8 @@ export default class ItemsModule extends MapModule {
     }
     onItemSelected(item: IItem) {
         const startTime = Date.now();
+        // the legend explains the lens of the selected route
+        legendVersion.update((version) => version + 1);
         if (item?.route) {
             const features = [];
             if (item.route.waypoints?.length > 0) {
@@ -645,13 +663,30 @@ export default class ItemsModule extends MapModule {
                     });
                 });
             }
-            features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
+            // while it is followed the navigation layer draws these, over the maneuver arrows
+            if (!get(navigationItem)) {
+                features.push(...routeMapFeatures(get(routeFeatures), { item, navigating: false }));
+                setRouteFocus(
+                    mapContext.mapDecoder,
+                    features.some((feature) => feature.properties?.class === 'lens')
+                );
+            }
             // DEV_LOG && console.log('updategeojson1', Date.now() - startTime, item.route.steps?.length);
             const data = { type: 'FeatureCollection', features };
             this.getLocalVectorDataSource().setGeoJSON(2, data);
             // DEV_LOG && console.log('updategeojson2', Date.now() - startTime, JSON.stringify(data));
         } else {
+            // while a route is followed the navigation layer owns the focus
+            if (!get(navigationItem)) {
+                setRouteFocus(mapContext.mapDecoder, false);
+            }
             this.getLocalVectorDataSource().setGeoJSON(2, { type: 'FeatureCollection', features: [] });
+        }
+    }
+    vectorTileDecoderChanged(_oldDecoder: MapDecoder, newDecoder: MapDecoder) {
+        // the inner decoder changes through here too
+        if (newDecoder === mapContext.mapDecoder) {
+            applyRouteFocus(newDecoder);
         }
     }
     async hideItem(item: IItem) {

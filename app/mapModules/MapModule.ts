@@ -26,6 +26,7 @@ import type { IItem } from '~/models/Item';
 import { getBGServiceInstance } from '~/services/BgService';
 //import { routesType } from '~/stores/mapStore';
 import { showError } from '@shared/utils/showError';
+import { lensStyleParameters } from '~/routeFeatures/lens/lensStyle';
 import { innerNutiProps } from '~/stores/mapStore';
 import { showSnack, showToast } from '~/utils/ui';
 import type { AddedLayer, LayerType } from '~/mapModules/layerStack';
@@ -358,10 +359,8 @@ const mapContext: MapContext = {
             }
             return acc;
         }, {});
-        if (Object.keys(nutiPropsToApply).length > 0) {
-            // one call for the whole set: each parameter re-runs the style's repaintability check
-            decoder.call('setStyleParameters', nutiPropsToApply);
-        }
+        // one call for the whole set: each parameter re-runs the style's repaintability check
+        decoder.call('setStyleParameters', { ...nutiPropsToApply, ...lensStyleParameters(style) });
         // every layer holding the old inner decoder rebuilds itself on this hook
         if (previous && previous !== decoder) {
             mapContext.runOnModules('vectorTileDecoderChanged', previous, decoder);

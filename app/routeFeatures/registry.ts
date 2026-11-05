@@ -126,6 +126,30 @@ export interface LensSlice {
     s: 0 | 1 | 2 | 3;
 }
 
+/** A plate on the route at vertex `i`: a speed sign, a climb's category. `p` is its placement priority, the higher wins. */
+export interface LensSymbol {
+    sym: 'speed' | 'grade' | 'climb' | 'wx' | 'wind' | 'sunset' | 'sunrise' | 'night';
+    i: number;
+    t: string;
+    /** A smaller line under `t`. */
+    t2?: string;
+    icon?: string;
+    /** Degrees, for an arrow. */
+    rot?: number;
+    s: 0 | 1 | 2 | 3;
+    /** The data it shows is out of date. */
+    stale?: 0 | 1;
+    p: number;
+}
+
+/** A stretch to watch while following the route, whatever the lens. `i0`..`i1` are route vertex indexes. */
+export interface NavAlert {
+    kind: 'fast' | 'steep';
+    i0: number;
+    i1: number;
+    s: 2 | 3;
+}
+
 /** A colour the profile fill takes from this data index on. */
 export interface ProfileFillStop {
     d: number;
@@ -159,6 +183,8 @@ export interface RouteLens {
     openSection?: (ctx: RouteCtx) => (() => void | Promise<void>) | undefined;
     /** What the map line is cut into. None: the line keeps the item's look. */
     slices?: (ctx: RouteCtx) => LensSlice[];
+    /** The plates on the map line, with the slices. */
+    symbols?: (ctx: RouteCtx) => LensSymbol[];
 }
 
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */

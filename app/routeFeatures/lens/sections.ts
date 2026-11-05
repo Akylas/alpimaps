@@ -1,13 +1,18 @@
 /** The sections of a lens, on the map and on the profile. Pure: nothing here may import NativeScript. */
 import type { Feature, Geometry } from 'geojson';
-import type { LensId, LensSection, LensSlice } from '~/routeFeatures/registry';
+import type { LensId, LensSection, LensSlice, LensSymbol, NavAlert } from '~/routeFeatures/registry';
 
 /**
- * The map's version of a lens: one `lens` line per slice, faded (`f` 0) when another section is focused,
- * and the focused section's own `lensfocus` line for a halo. The look is the style's, see `routelens.mss`.
+ * The map's version of a lens: the focused section's own `lensfocus` line for a halo, then one `lens` line per
+ * slice, faded (`f` 0) when another section is focused. The look is the style's, see `routelens.mss`.
  */
 export function lensFeatures(coordinates: number[][], lens: LensId, slices: LensSlice[], focus?: { i0: number; i1: number }): Feature[] {
     const features: Feature[] = [];
+    // first: a feature is drawn after the ones before it, and the halo goes under the slices
+    const halo = focus && coordinates.slice(focus.i0, focus.i1 + 1);
+    if (halo?.length > 1) {
+        features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: halo }, properties: { class: 'lensfocus', lens } });
+    }
     slices.forEach((slice, id) => {
         const line = coordinates.slice(slice.i0, slice.i1 + 1);
         if (line.length > 1) {
@@ -15,10 +20,25 @@ export function lensFeatures(coordinates: number[][], lens: LensId, slices: Lens
             features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: line }, properties: { class: 'lens', lens, k: slice.k, s: slice.s, f: focused ? 1 : 0, id } });
         }
     });
-    const halo = focus && coordinates.slice(focus.i0, focus.i1 + 1);
-    if (halo?.length > 1) {
-        features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: halo }, properties: { class: 'lensfocus', lens } });
-    }
+    return features;
+}
+
+/** The plates of a lens, one point each. */
+export function symbolFeatures(coordinates: number[][], symbols: LensSymbol[]): Feature[] {
+    return symbols
+        .filter((symbol) => coordinates[symbol.i])
+        .map(({ i: vertex, ...properties }) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coordinates[vertex] }, properties: { class: 'lsym', ...properties } }));
+}
+
+/** The stretches to watch while following the route, drawn whatever the lens. */
+export function alertFeatures(coordinates: number[][], alerts: NavAlert[]): Feature[] {
+    const features: Feature[] = [];
+    alerts.forEach(({ i0, i1, ...properties }) => {
+        const line = coordinates.slice(i0, i1 + 1);
+        if (line.length > 1) {
+            features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: line }, properties: { class: 'navalert', ...properties } });
+        }
+    });
     return features;
 }
 
