@@ -3,10 +3,7 @@ import { lc } from '~/helpers/locale';
 import { profileSettingRows, routeFeatureProfile } from '~/routeFeatures/profile/settings';
 import { registerRouteFeature } from '~/routeFeatures/registry';
 import { navigationShowElevationChart } from '~/stores/navigationStore';
-import { NAVIGATION_AHEAD_HEIGHT, ROUTE_PROFILE_HEIGHT } from '~/utils/navigation';
-
-// the lens card: lens bar 44, insight 40, the chart and its axis, the gap above it
-const PROFILE_HEIGHT = 246;
+import { NAVIGATION_AHEAD_HEIGHT, ROUTE_LENS_CARD_HEIGHT, ROUTE_PROFILE_HEIGHT } from '~/utils/navigation';
 
 registerRouteFeature({
     id: 'profile',
@@ -17,7 +14,7 @@ registerRouteFeature({
     changes: navigationShowElevationChart,
     sheetCard: {
         component: () => import('~/routeFeatures/lens/RouteLensCard.svelte'),
-        height: ({ item }) => (item?.route && item.profile?.data?.length > 0 ? PROFILE_HEIGHT : 0),
+        height: ({ item }, gap) => (item?.route && item.profile?.data?.length > 0 ? ROUTE_LENS_CARD_HEIGHT + gap : 0),
         followsPosition: true
     },
     navSections: [

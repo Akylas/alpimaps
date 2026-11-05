@@ -3,26 +3,26 @@
     // The sheet moves the chart's cursor along the route and reloads it
     import type { ComponentEvents } from 'svelte';
     import { onDestroy } from 'svelte';
-    import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import GradeLegend from '~/components/chart/GradeLegend.svelte';
     import { getMapContext } from '~/mapModules/MapModule';
-    import type { IItem } from '~/models/Item';
+    import type { Item } from '~/models/Item';
     import LensBar from '~/routeFeatures/lens/LensBar.svelte';
     import LensInsight from '~/routeFeatures/lens/LensInsight.svelte';
     import { clearCursor, clearFocus, clearSection, focusKeyOf, focusSection, routeFocus, setCursor } from '~/routeFeatures/lens/routeFocusStore';
     import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection } from '~/routeFeatures/lens/sections';
     import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { packageService } from '~/services/PackageService';
+    import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { showAscents, showGradeColors } from '~/stores/mapStore';
 
-    export let item: IItem;
+    export let item: Item;
     /** false on the route page: the main map is behind it, a focused section is not framed there */
     export let besideMap = true;
     /** what the insight line's `›` does for a lens, when not the lens' own (the route page opens its section) */
     export let moreFor: (lens: LensId) => (() => void | Promise<void>) | undefined = null;
 
-    const dispatch = createEventDispatcher();
     const mapContext = getMapContext();
     let chart: ElevationChart;
 
@@ -42,6 +42,7 @@
         clearSection();
     }
 
+    // `$routeFeatureChanges >= 0` is always true: it reruns these when a feature's contributions change
     $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item }) : [];
     $: active = resolveLens($routeLensStore, lenses);
     $: activeLens = lenses.find((lens) => lens.id === active);
@@ -124,6 +125,21 @@
             clearCursor();
         }
     }
+    // a point picked on the chart: its card tells what is left to the end from there. The shared dispatcher hands the
+    // payload itself, not the CustomEvent the typings say, hence the `any`
+    function onChartHighlight({ highlight, lat, lon }: any) {
+        if (!isNavigableRoute(item)) {
+            return;
+        }
+        const location = { lat, lon };
+        const positions = packageService.getRouteItemPoses(item);
+        const onPathIndex = isLocationOnRoute(location, positions);
+        if (onPathIndex === -1) {
+            return;
+        }
+        const { remainingDistance, remainingDistanceToStep, remainingTime } = computeRouteProgress({ item, location, positions, onPathIndex, computeRemaining: true, computeInstruction: false });
+        chart?.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: item.profile?.dplus, dmin: item.profile?.dmin }, highlight, false, true);
+    }
     // what the lens says of the point under the cursor, in the card that follows it
     function noteOf(index: number) {
         return activeLens?.readout?.({ item, index });
@@ -157,7 +173,7 @@
         showProfileGrades={$showGradeColors}
         on:cursor={onCursor}
         on:mark={onMark}
-        on:highlight={(payload) => dispatch('highlight', payload)} />
+        on:highlight={onChartHighlight} />
     {#if $showGradeColors && (active === 'overview' || active === 'climbs')}
         <GradeLegend row={3} />
     {/if}

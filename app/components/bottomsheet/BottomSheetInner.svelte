@@ -1,6 +1,5 @@
 <script lang="ts">
     import { isEInk } from '~/helpers/theme';
-    import addressFormatter from '@akylas/address-formatter';
     import { lc } from '@nativescript-community/l';
     import { createNativeAttributedString } from '@nativescript-community/text';
     import { Canvas, CanvasView, LayoutAlignment, Paint, StaticLayout, Style } from '@nativescript-community/ui-canvas';
@@ -23,7 +22,6 @@
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
-    import { langStore } from '~/helpers/locale';
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import {
@@ -32,6 +30,7 @@
         openItemWeatherAlternate,
         openItemWikipedia,
         searchItemOnWeb,
+        shareItem,
         shareItemPosition,
         showItemAstronomy,
         showItemInformation
@@ -43,7 +42,6 @@
     import { packageService } from '~/services/PackageService';
     import { showError } from '@shared/utils/showError';
     import { RouteProgress, computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
-    import { share } from '@akylas/nativescript-app-utils/share';
     import { navigate } from '@shared/utils/svelte/ui';
     import { showSnack } from '@shared/utils/ui';
     import { surfaceColors } from '~/utils/routing';
@@ -64,7 +62,6 @@
         SETTINGS_ELEVATION_PROFILE_GRADE_BASELINE,
         SETTINGS_ELEVATION_PROFILE_GRADE_MIN_SECTION
     } from '~/utils/constants';
-    import dayjs from 'dayjs';
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { elevationProfileFilterStep, elevationProfileSmoothWindow } from '~/routeFeatures/profile/settings';
     import { type RouteSheetCardLayout, lazyComponents, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
@@ -311,7 +308,7 @@
         astronomy: { tap: () => showItemAstronomy(item) },
         compass: { tap: () => openCompass() },
         address: { tap: () => getItemAddress() },
-        share: { tap: (event) => shareItem(event) }
+        share: { tap: (event) => shareItem(item, event.object) }
     };
 
     $: featureActions = featureItemActions(item);
@@ -673,11 +670,6 @@
         }
     }
 
-    function onChartHighlight({ highlight, lat, lon }: any) {
-        // DEV_LOG && console.log('BottomSheetInner onChartHighlight', lat, lon, highlight);
-        updateRouteItemWithPosition(item, { lat, lon }, false, true, highlight);
-    }
-
     async function getStats(updateView = true) {
         try {
             updatingItem = true;
@@ -734,102 +726,6 @@
     }
     function hideItem() {
         mapContext.mapModule('items').hideItem(mapContext.getSelectedItem());
-    }
-    async function shareItem(event) {
-        // if (item?.route) {
-        //     if (!item.profile && itemCanQueryProfile) {
-        //         await getProfile(false);
-        //     }
-        //     // const gpx = await toGPX();
-        //     // mapContext.mapModules.items.shareFile(gpx.string, `${gpx.name.replace(/[\s\t]/g, '_')}.gpx`);
-        // }
-        try {
-            const OptionSelect = (await import('~/components/common/OptionSelect.svelte')).default;
-            const options = [
-                { name: lc('share_geoson'), data: 'share_geojson' },
-                { name: lc('export_geoson'), data: 'export_geojson' }
-            ];
-            if (item.properties?.address) {
-                options.unshift({ name: lc('address'), data: 'address' });
-            }
-            if (itemIsRoute) {
-                if (item.analysis) {
-                    options.push({ name: lc('share_geoson_data'), data: 'share_geojson_data' });
-                }
-                options.push({ name: lc('share_gpx'), data: 'share_gpx' }, { name: lc('export_gpx'), data: 'export_gpx' });
-            } else {
-                options.push({ name: lc('position'), data: 'position' });
-            }
-            await showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.ABOVE,
-                onClose: async (result) => {
-                    if (result) {
-                        const filename = dayjs().format('YYYY-MM-DDTHH-mm-ss');
-                        switch (result.data) {
-                            case 'address':
-                                const address = { ...item.properties.address };
-                                if (!address.name) {
-                                    address.name = item.properties.name;
-                                }
-                                // console.log('item', JSON.stringify(item));
-                                // console.log('address', JSON.stringify(address));
-                                // console.log('test1', addressFormatter.format(address, {
-                                //     fallbackCountryCode:get(langStore)
-                                // }));
-                                // console.log('test2', formatter.getItemName(item) + ',' + formatter.getItemAddress(item));
-                                // clipboard.copy(
-                                // addressFormatter.format(address, {
-                                //     fallbackCountryCode: get(langStore)
-                                // })
-                                // );
-                                share(
-                                    {
-                                        message: addressFormatter.format(address, {
-                                            fallbackCountryCode: get(langStore)
-                                        })
-                                    },
-                                    {
-                                        dialogTitle: lc('share')
-                                    }
-                                );
-                                break;
-                            case 'position':
-                                shareItemPosition(item);
-                                break;
-                            case 'export_geojson':
-                                showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGeoJSON([item], filename);
-                                break;
-                            case 'export_gpx':
-                                showLoading();
-                                await mapContext.mapModule('items').exportItemsAsGPX([item], filename);
-                                break;
-                            case 'share_geojson':
-                                showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], filename);
-                                break;
-                            case 'share_geojson_data':
-                                showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGeoJSON([item], filename, true);
-                                break;
-                            case 'share_gpx':
-                                showLoading();
-                                await mapContext.mapModule('items').shareItemsAsGPX([item], filename);
-                                break;
-                            default:
-                                throw new Error('command not found');
-                        }
-                    }
-                }
-            });
-        } catch (error) {
-            showError(error);
-        } finally {
-            hideLoading();
-        }
-        // shareFile(JSON.stringify(itemToShare), 'sharedItem.json');
     }
     async function openCompass() {
         try {
@@ -1191,7 +1087,6 @@
                         margin={`${CARD_GAP} ${CARD_MARGIN} 0 ${CARD_MARGIN}`}
                         row={2 + index}
                         visibility={layout.height > 0 ? 'visible' : 'collapse'}
-                        on:highlight={onChartHighlight}
                     />
                 {/if}
             {/each}

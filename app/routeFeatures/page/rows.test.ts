@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RoutePageSection } from '~/routeFeatures/registry';
-import { isSectionOpen, pageRows, toggledSections } from './rows';
+import { isSectionOpen, pageRows } from './rows';
 
 function section(id: string, rowCount: number, lens?: RoutePageSection['lens']): RoutePageSection {
     return {
@@ -72,13 +72,5 @@ describe('pageRows', () => {
         const body = rows.find((row) => row.key === 'climbs:1');
         expect(body).toEqual({ type: 'body', key: 'climbs:1', section: 'climbs', row: { key: '1', data: 1 }, last: true });
         expect(rows.find((row) => row.key === 'climbs:0')).toMatchObject({ last: false });
-    });
-});
-
-describe('toggledSections', () => {
-    it('stores the opposite of what the section shows now', () => {
-        expect(toggledSections({}, climbs)).toEqual({ climbs: true });
-        expect(toggledSections({ climbs: true }, climbs)).toEqual({ climbs: false });
-        expect(toggledSections({ climbs: false }, { id: 'osm' })).toEqual({ climbs: false, osm: true });
     });
 });

@@ -30,7 +30,7 @@ export interface RouteTile {
 
 /**
  * A card of the item sheet, given its layout props and `item`. It may export `highlightPathIndex` and `reload`
- * for the sheet to call, and dispatch `highlight` ({ lat, lon, highlight }) when a route point is picked.
+ * for the sheet to call, with the user's position on the route.
  */
 export interface RouteSheetCard {
     /** Loaded the first time the card has a height, so its code stays out of the startup graph. */

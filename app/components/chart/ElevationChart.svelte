@@ -603,6 +603,10 @@
                     setHeight(minX, maxX);
                 }
             }
+            // the route page's chart has no main map to move: the hero follows the focus
+            if (!besideMap) {
+                return;
+            }
             const positions = (item.geometry?.['coordinates'] as any[]).slice(minX, maxX + 1);
             const region = getBounds(positions);
             // `[min, max]`, which is what the facade's bounds are everywhere

@@ -57,6 +57,7 @@
         remaining = null;
     }
 
+    // `version >= 0` is always true: it reruns this when the analysis changed in place
     $: tiles = version >= 0 ? routeTiles($routeFeatures, { item }) : [];
     $: narrow = sheetWidth < NARROW_WIDTH;
 
