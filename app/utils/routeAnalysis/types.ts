@@ -82,6 +82,9 @@ export interface WeatherData {
     /** quantised ints [sample][hour]: temp x10, precip x10 (mm), wind x10 (km/h), gust x10, dir deg, cloud %, code, freezing level (m), dni (W/m2) */
     v: Record<'temp' | 'precip' | 'precipProb' | 'wind' | 'gust' | 'dir' | 'cloud' | 'code' | 'fl' | 'dni', number[][]>;
     request: { decimals: 1 | 2; vars: string[]; models: string };
+    /** the zone of the route start and its offset then, in minutes east of UTC: the departure keeps them (`withRouteTimeZone`) */
+    tz?: string;
+    utcOffset?: number;
 }
 
 export interface SunData {

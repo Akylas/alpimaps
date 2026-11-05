@@ -1,9 +1,14 @@
 import { type Readable, type Writable, writable } from 'svelte/store';
-import { type LayerReason, type LayerRun, affectedLayers, changedInputs } from './freshness';
+import { type LayerExtra, type LayerReason, type LayerRun, affectedLayers, changedInputs } from './freshness';
+import type { timelineSource } from './timeline';
 import { type AnalysisInputs, LAYER_IDS, type Layer, type LayerId, type RouteAnalysis } from './types';
+
+/** The route a layer is computed for: its geometry and what the sheet loaded of it. */
+export type StageItem = Parameters<typeof timelineSource>[0];
 
 export interface StageContext {
     itemKey: string;
+    item: StageItem;
     analysis: RouteAnalysis;
     inputs: AnalysisInputs;
     /** Aborted when the layer's inputs changed or the run was replaced. Native calls cannot be aborted: their result is dropped. */
@@ -18,6 +23,8 @@ export interface AnalysisStage {
     after?: LayerId[];
     /** Stages sharing a resource run one at a time, whatever the item: the offline routing service is one singleton. */
     resource?: string;
+    /** What the layer is hashed with beyond the route (see `layerInputsHash`), now: it tells the layer is out of date when it changes. */
+    extra?(): LayerExtra;
     run(context: StageContext): Promise<Layer<unknown>>;
 }
 
@@ -35,6 +42,7 @@ export type PipelineRuns = Partial<Record<LayerId, LayerRun>>;
 
 export interface RunRequest {
     itemKey: string;
+    item: StageItem;
     analysis: RouteAnalysis;
     layers: LayerId[];
     /** Receives each finished layer, in the order they finish. The caller persists it. */
@@ -90,7 +98,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
     }
 
     function start(request: RunRequest, stage: AnalysisStage) {
-        const { analysis, itemKey } = request;
+        const { analysis, item, itemKey } = request;
         const key = runKey(itemKey, stage.layer);
         abort(itemKey, stage.layer);
         const id = ++nextId;
@@ -119,6 +127,7 @@ export function createPipeline(stages: () => AnalysisStage[]) {
                 setRun(itemKey, stage.layer, { state: 'running' });
                 const layer = await stage.run({
                     itemKey,
+                    item,
                     analysis,
                     inputs: analysis.inputs,
                     signal: controller.signal,

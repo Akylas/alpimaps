@@ -48,7 +48,7 @@ function openStage(layer: LayerId, extra: Partial<AnalysisStage> = {}) {
 function setup(...stages: AnalysisStage[]) {
     const pipeline = createPipeline(() => stages);
     const committed: [LayerId, unknown][] = [];
-    const request = (itemKey: string, layers: LayerId[]) => ({ itemKey, analysis, layers, commit: (layer: LayerId, value: Layer<unknown>) => void committed.push([layer, value.data]) });
+    const request = (itemKey: string, layers: LayerId[]) => ({ itemKey, item: {}, analysis, layers, commit: (layer: LayerId, value: Layer<unknown>) => void committed.push([layer, value.data]) });
     return { pipeline, committed, request };
 }
 
@@ -216,7 +216,7 @@ describe('pipeline', () => {
             const saving = deferred();
             const committed: unknown[] = [];
             const pipeline = createPipeline(() => [weather.stage]);
-            const request = { itemKey: 'a', analysis, layers: ['weather' as LayerId], commit: (_: LayerId, value: Layer<unknown>) => (committed.push(value.data), saving.promise) };
+            const request = { itemKey: 'a', item: {}, analysis, layers: ['weather' as LayerId], commit: (_: LayerId, value: Layer<unknown>) => (committed.push(value.data), saving.promise) };
             const first = pipeline.run(request);
             await settle();
             weather.gates[0].resolve(layerValue('old'));
@@ -307,7 +307,7 @@ describe('pipeline', () => {
         it('fails a layer whose result could not be saved', async () => {
             const stage: AnalysisStage = { layer: 'sun', run: () => Promise.resolve(layerValue('s')) };
             const pipeline = createPipeline(() => [stage]);
-            await pipeline.run({ itemKey: 'a', analysis, layers: ['sun'], commit: () => Promise.reject(new Error('disk full')) });
+            await pipeline.run({ itemKey: 'a', item: {}, analysis, layers: ['sun'], commit: () => Promise.reject(new Error('disk full')) });
             expect(get(pipeline.runs('a')).sun).toEqual({ state: 'failed', reason: 'error' });
         });
         it('does not report the failure of a run that was cancelled', async () => {

@@ -1118,6 +1118,7 @@
     "climbs_none": "aucune montée sur cet itinéraire",
     "climb_category": "cat. %s",
     "lens_surface": "surface",
+    "lens_weather": "météo",
     "climb_summit_at": "%s à %s",
     "legend_climb_plate": "catégorie de la montée",
     "legend_not_steep": "pas raide",

@@ -123,3 +123,20 @@ export function readRide(data: WeatherData, { at, coordinates, distances }: { at
         return result;
     });
 }
+
+/** The layer's series: [sample][hour] for each variable. A variable the source did not give is all missing. */
+export function quantiseSeries(series: Partial<Record<WeatherVar, (number | null)[]>>[], hours: number): WeatherData['v'] {
+    const column = (variable: WeatherVar) => series.map((sample) => quantise(variable, sample[variable] ?? Array(hours).fill(null)));
+    return {
+        temp: column('temp'),
+        precip: column('precip'),
+        precipProb: column('precipProb'),
+        wind: column('wind'),
+        gust: column('gust'),
+        dir: column('dir'),
+        cloud: column('cloud'),
+        code: column('code'),
+        fl: column('fl'),
+        dni: column('dni')
+    };
+}

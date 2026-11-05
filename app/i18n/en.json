@@ -1351,6 +1351,7 @@
     "climbs_none": "no climbs on this route",
     "climb_category": "cat %s",
     "lens_surface": "surface",
+    "lens_weather": "weather",
     "climb_summit_at": "%s at %s",
     "legend_climb_plate": "climb category",
     "legend_not_steep": "not steep",
