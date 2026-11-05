@@ -52,6 +52,7 @@
     import { installMacMouse } from './macMouse';
     import { FeaturePicker, clearIgnoreNextMapClick, consumeIgnoreNextMapClick, isOverlayPickerPending } from '~/mapModules/featurePicker';
     import { featureMenuItems, featureShowsItemButtons, featureSideButtons } from '~/mapModules/mapFeatures';
+    import { isLensFeature } from '~/routeFeatures/lens/sections';
     // registers the built-in map features; imported for side effect
     import '~/mapModules/features/admin';
     import '~/mapModules/features/immersive';
@@ -1334,6 +1335,11 @@
     function onVectorTileElementClicked(data: FeatureClickData): boolean {
         const { clickType, featureData, featurePosition, position } = data;
         DEV_LOG && console.log('onVectorTileElementClicked', clickType, position, featurePosition, featureData.id);
+        // a slice or a plate of the lens is not an item: the lens card of the selected route reads the tap
+        if (isLensFeature(featureData)) {
+            mapContext.runOnModules('onVectorTileElementClicked', data);
+            return true;
+        }
         const feature = itemModule.getFeature(featureData.id);
         if (!feature) {
             return false;

@@ -108,23 +108,44 @@
 	text-clip: false;
 }
 
-// a climb's category on its summit, its name or figure in small under it
+// a climb's plate in the middle of it: the category and what it gains, on two lines. Always shown:
+// a label of the map next to it must not take its place
 #poi[class='lsym'][sym='climb'][zoom>=11],
 #navigation[class='lsym'][sym='climb'][zoom>=11] {
 	text-name: [t];
-	text-secondary-name: [t2];
-	text-secondary-scale: 0.8;
 	text-face-name: @mont_bd;
 	text-size: 10;
+	text-line-spacing: 1;
+	text-horizontal-alignment: middle;
 	text-fill: get([param::lens_pal], 'plate_text', #ffffff);
 	text-background-fill: get([param::lens_pal], 'plate', #2B2F33);
-	text-background-radius: 4;
-	text-background-padding-x: 5;
-	text-background-padding-y: 2;
+	text-background-radius: 5;
+	text-background-padding-x: 6;
+	text-background-padding-y: 3;
 	text-vertical-alignment: bottom;
-	text-dy: -6;
+	text-dy: -9;
 	text-placement: billboard;
 	text-placement-priority: [p];
+	text-allow-overlap: true;
+	text-clip: false;
+}
+
+// the tip of the plate, a down triangle of the icon font under it: a label has no tail of its own
+#poi[class='lsym'][sym='climbtip'][zoom>=11],
+#navigation[class='lsym'][sym='climbtip'][zoom>=11] {
+	// the glyph's triangle is 0.42 em wide and sits mid-box (0.48 em up from the bottom): dy puts its top on the plate
+	text-name: [t];
+	text-face-name: 'Material Design Icons';
+	text-size: 24;
+	text-fill: get([param::lens_pal], 'plate', #2B2F33);
+	// measured on a device: the glyph sits 3 dp right of the plate's middle
+	text-dx: -3;
+	text-horizontal-alignment: middle;
+	text-vertical-alignment: bottom;
+	text-dy: 7.5;
+	text-placement: billboard;
+	text-placement-priority: [p];
+	text-allow-overlap: true;
 	text-clip: false;
 }
 

@@ -27,7 +27,7 @@ export function lensFeatures(coordinates: number[][], lens: LensId, slices: Lens
 export function symbolFeatures(coordinates: number[][], symbols: LensSymbol[]): Feature[] {
     return symbols
         .filter((symbol) => coordinates[symbol.i])
-        .map(({ i: vertex, ...properties }) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coordinates[vertex] }, properties: { class: 'lsym', ...properties } }));
+        .map(({ i: vertex, ...properties }) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: coordinates[vertex] }, properties: { class: 'lsym', ...properties, at: vertex } }));
 }
 
 /** The stretches to watch while following the route, drawn whatever the lens. */
@@ -63,6 +63,18 @@ export function sectionAt(sections: LensSection[], index: number): LensSection |
 export function paddedRange(section: { i0: number; i1: number }, count: number): { fromIndex: number; toIndex: number } {
     const padding = Math.max(1, Math.round((section.i1 - section.i0) / 10));
     return { fromIndex: Math.max(0, section.i0 - padding), toIndex: Math.min(count - 1, section.i1 + padding) };
+}
+
+const LENS_CLASSES = ['lens', 'lensfocus', 'lsym', 'navalert'];
+
+/** Whether a tapped feature is something the lens drew, not an item. */
+export function isLensFeature(featureData: Record<string, unknown> | undefined): boolean {
+    return typeof featureData?.class === 'string' && LENS_CLASSES.includes(featureData.class);
+}
+
+/** The route vertex a tap on the route, one of its slices or a plate means: a plate knows its own, the rest is where the tap landed. */
+export function tappedVertex(featureData: Record<string, unknown>, coordinates: number[][], position: { lat: number; lon: number }): number {
+    return featureData.class === 'lsym' && typeof featureData.at === 'number' ? featureData.at : nearestIndex(coordinates, position.lat, position.lon);
 }
 
 /** The vertex closest to a point, -1 on an empty route. */

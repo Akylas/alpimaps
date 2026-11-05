@@ -1,5 +1,6 @@
 {
     "layers": [
+        "poi",
         "routes",
         "lines",
         "items",
@@ -8,7 +9,6 @@
         "navigation_hint",
         "maneuver",
         "stops",
-        "poi",
         "search"
     ],
     "styles": [

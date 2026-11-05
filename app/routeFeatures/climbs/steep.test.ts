@@ -282,14 +282,17 @@ describe('steepAlerts', () => {
 });
 
 describe('climbPlates', () => {
-    const climbs = [climbAt({ endIndex: 30, category: 1 }), climbAt({ endIndex: 60 }), climbAt({ endIndex: 90, category: 'hc' })];
+    const climbs = [climbAt({ startIndex: 20, endIndex: 40, category: 1 }), climbAt({ startIndex: 50, endIndex: 70 }), climbAt({ startIndex: 80, endIndex: 100, category: 'hc' })];
 
-    it('puts a plate on the summit of each ranked climb, the harder ranking first', () => {
-        const plates = climbPlates(climbs, (climb) => ({ t: String(climb.category), t2: 'top' }));
+    it('puts a plate and its tip in the middle of each ranked climb, the harder ranking first', () => {
+        const plates = climbPlates(climbs, (climb) => ({ t: String(climb.category), t2: 'gain' }));
         expect(plates).toMatchObject([
-            { sym: 'climb', i: 30, t: '1', t2: 'top' },
-            { sym: 'climb', i: 90, t: 'hc', t2: 'top' }
+            { sym: 'climb', i: 30, t: '1', t2: 'gain' },
+            { sym: 'climbtip', i: 30, t: String.fromCodePoint(0xf035d) },
+            { sym: 'climb', i: 90, t: 'hc', t2: 'gain' },
+            { sym: 'climbtip', i: 90 }
         ]);
-        expect(plates[1].p).toBeGreaterThan(plates[0].p);
+        expect(plates[2].p).toBeGreaterThan(plates[0].p);
+        expect(plates[1].p).toBe(plates[0].p);
     });
 });

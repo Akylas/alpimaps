@@ -11,7 +11,7 @@
     import LensInsight from '~/routeFeatures/lens/LensInsight.svelte';
     import { clearCursor, clearFocus, clearSection, focusKeyOf, focusSection, routeFocus, setCursor } from '~/routeFeatures/lens/routeFocusStore';
     import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import { nearestIndex, paddedRange, routeCoordinates, sectionAt, stepSection } from '~/routeFeatures/lens/sections';
+    import { isLensFeature, paddedRange, routeCoordinates, sectionAt, stepSection, tappedVertex } from '~/routeFeatures/lens/sections';
     import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { packageService } from '~/services/PackageService';
     import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
@@ -97,10 +97,11 @@
             focusSection(itemKey, { ...section, lens: active });
         }
     }
-    // a tap on the route line focuses the section it is in
+    // a tap on the route line, one of its slices or a plate focuses the section it is in
     mapContext.onVectorTileElementClicked(({ featureData, position }) => {
-        if (item?.id !== undefined && featureData?.route && featureData.id === item.id && sections.length) {
-            focusOn(sectionAt(sections, nearestIndex(routeCoordinates(item.geometry), position.lat, position.lon)));
+        const onRoute = item?.id !== undefined && featureData?.route && featureData.id === item.id;
+        if ((onRoute || isLensFeature(featureData)) && sections.length) {
+            focusOn(sectionAt(sections, tappedVertex(featureData, routeCoordinates(item.geometry), position)));
         }
     });
     // the page's card leaves the focus to the main map it goes back to

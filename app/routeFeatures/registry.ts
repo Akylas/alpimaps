@@ -128,7 +128,7 @@ export interface LensSlice {
 
 /** A plate on the route at vertex `i`: a speed sign, a climb's category. `p` is its placement priority, the higher wins. */
 export interface LensSymbol {
-    sym: 'speed' | 'grade' | 'climb' | 'wx' | 'wind' | 'sunset' | 'sunrise' | 'night';
+    sym: 'speed' | 'grade' | 'climb' | 'climbtip' | 'wx' | 'wind' | 'sunset' | 'sunrise' | 'night';
     i: number;
     t: string;
     /** A smaller line under `t`. */

@@ -20,7 +20,7 @@ import {
 } from '~/routeFeatures/climbs/steep';
 import { gradeKey } from '~/routeFeatures/lens/lensPalette';
 import type { AttentionMark, LensSection, LensSlice, LensSymbol, NavAlert, ProfileBracket } from '~/routeFeatures/registry';
-import { gradeBucketIndex } from '~/utils/grade';
+import { buildGradeSections, gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 
 export interface ClimbsRead {
@@ -95,10 +95,18 @@ export function readClimbs(item: IItem): ClimbsRead | null {
                     tier: section.tier,
                     section: { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) }
                 })),
-            symbols: climbPlates(climbs, (climb) => ({ t: categoryLabel(climb.category), t2: convertElevation(data[climb.endIndex].a) })),
+            // two lines: the category and what the climb gains
+            symbols: climbPlates(climbs, (climb) => ({ t: `${categoryLabel(climb.category)}\n+${convertElevation(climb.gain)}` })),
             alerts: steepFollowing.alerts,
             gradePlates: steepFollowing.plates,
-            slices: (item.profile.sections ?? []).map(({ endIndex, grade, startIndex }) => {
+            // a profile saved before its grade sections were kept has none: cut it again from its grades
+            slices: (
+                item.profile.sections ??
+                buildGradeSections(
+                    data,
+                    data.map((point) => point.g ?? 0)
+                )
+            ).map(({ endIndex, grade, startIndex }) => {
                 const bucket = gradeBucketIndex(grade);
                 // from 9 % it is steep, from 12 % very steep
                 return { i0: startIndex, i1: endIndex, k: gradeKey(bucket), s: bucket >= 7 ? 3 : bucket === 6 ? 2 : 0 };
