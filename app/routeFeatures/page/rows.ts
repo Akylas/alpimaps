@@ -16,9 +16,9 @@ export function isSectionOpen(section: Pick<RoutePageSection, 'id'>, stored: Sto
     return stored[section.id] ?? false;
 }
 
-/** The stored choices once the user taps the section's header. */
-export function toggledSections(stored: StoredSections, section: Pick<RoutePageSection, 'id'>): StoredSections {
-    return { ...stored, [section.id]: !isSectionOpen(section, stored) };
+/** A section's body as list rows, its last one rounding the card. */
+export function bodyRows(sectionId: string, body: RoutePageRow[]): PageRow[] {
+    return body.map((row, index) => ({ type: 'body', key: `${sectionId}:${row.key}`, section: sectionId, row, last: index === body.length - 1 }));
 }
 
 export function pageRows({ ctx, hasProfile, sections, stored }: { sections: RoutePageSection[]; ctx: RouteCtx; stored: StoredSections; hasProfile: boolean }): PageRow[] {
@@ -34,9 +34,12 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
         const open = isSectionOpen(section, stored);
         rows.push({ type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx) });
         if (open) {
-            body.forEach((row, index) => rows.push({ type: 'body', key: `${section.id}:${row.key}`, section: section.id, row, last: index === body.length - 1 }));
+            rows.push(...bodyRows(section.id, body));
         }
     });
     rows.push({ type: 'footer', key: 'footer' });
     return rows;
 }
+
+/** What the page's list holds: the page rows and the page's own, around them. */
+export type ListRow = PageRow | { type: 'hero' | 'passed' | 'when'; key: string };

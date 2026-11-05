@@ -1,6 +1,7 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
+    import { ObservableArray } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import CActionBar from '@shared/components/CActionBar.svelte';
@@ -12,7 +13,8 @@
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
-    import { onDestroy, tick } from 'svelte';
+    import { onDestroy } from 'svelte';
+    import { get } from 'svelte/store';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { CollectionView } from '@nativescript-community/ui-collectionview';
     import { formatTime, lc } from '~/helpers/locale';
@@ -23,8 +25,8 @@
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import { type PageRow, type StoredSections, pageRows, toggledSections } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RouteFeature, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
+    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -65,11 +67,10 @@
     const SECTION_HEADER_HEIGHT = 56;
     const CARD_RADIUS = 16;
 
-    // the hero map lies behind the list, whose first row is see-through: the cards slide over the map as the page scrolls
+    // the hero map is the list's first row: it scrolls away with the page
     const HERO_HEIGHT = 240;
 
     const mapContext = getMapContext();
-    let heroFailed = false;
     let heroMap: RouteHeroMap;
     const sectionComponents = lazyComponents();
 
@@ -80,19 +81,81 @@
     $: sections = routePageSections($routeFeatures);
     // what the user opened, for this visit only: the page always opens on its tiles and profile
     let stored: StoredSections = {};
-    // `$routeFeatureChanges >= 0` is always true: it reruns this when a feature's contributions change
-    $: rows = $routeFeatureChanges >= 0 ? pageRows({ sections, ctx: { item }, stored, hasProfile: hasProfileCard($routeFeatures) && !!item?.profile?.data?.length }) : [];
     // the card is the profile feature's, which the user can switch off
-    function hasProfileCard(features: RouteFeature[]) {
-        return features.some((feature) => feature.id === 'profile');
+    const hasProfileCard = get(routeFeatures).some((feature) => feature.id === 'profile') && !!item?.profile?.data?.length;
+
+    // filled once, then changed where something changed: a new array would rebuild every row, the hero map with it
+    const listItems = new ObservableArray<ListRow>([
+        { type: 'hero', key: 'hero' },
+        ...pageRows({ sections: routePageSections(get(routeFeatures)), ctx: { item }, stored, hasProfile: hasProfileCard })
+    ]);
+    function indexOfKey(key: string) {
+        for (let index = 0; index < listItems.length; index++) {
+            if (listItems.getItem(index).key === key) {
+                return index;
+            }
+        }
+        return -1;
     }
-    type ListRow = PageRow | { type: 'hero'; key: 'hero' } | { type: 'passed'; key: 'passed' } | { type: 'when'; key: 'when' };
-    let listRows: ListRow[];
-    $: listRows = [
-        ...(heroFailed ? [] : [{ type: 'hero' as const, key: 'hero' as const }]),
-        ...(departureGone ? [{ type: 'passed' as const, key: 'passed' as const }] : []),
-        ...rows.flatMap((row): ListRow[] => (row.type === 'tiles' && whenOpen ? [row, { type: 'when', key: 'when' }] : [row]))
-    ];
+    function setSectionOpen(section: RoutePageSection, open: boolean) {
+        const header = indexOfKey('section:' + section.id);
+        if (header < 0) {
+            return;
+        }
+        stored = { ...stored, [section.id]: open };
+        const current = listItems.getItem(header);
+        const summary = section.summary?.({ item });
+        if (current.type !== 'section' || current.open !== open || current.summary !== summary) {
+            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary });
+        }
+        if (open) {
+            sectionComponents.load(section.id, section.component);
+        }
+        showBody(header, open ? bodyRows(section.id, section.rows({ item })) : []);
+    }
+    // the section's rows under its header: the ones still the same stay, only the rest is spliced
+    function showBody(header: number, body: PageRow[]) {
+        const sectionKey = listItems.getItem(header).key.slice('section:'.length) + ':';
+        let shown = 0;
+        while (header + 1 + shown < listItems.length && listItems.getItem(header + 1 + shown).key.startsWith(sectionKey)) {
+            shown++;
+        }
+        let kept = 0;
+        while (kept < shown && kept < body.length && sameBody(listItems.getItem(header + 1 + kept), body[kept])) {
+            kept++;
+        }
+        if (shown > kept) {
+            listItems.splice(header + 1 + kept, shown - kept);
+        }
+        if (body.length > kept) {
+            listItems.splice(header + 1 + kept, 0, ...body.slice(kept));
+        }
+        // the card's last row rounds its bottom: the last row kept may have become, or stopped being, the last one
+        const shownLast = listItems.getItem(header + kept);
+        const nextLast = body[kept - 1];
+        if (kept && shownLast.type === 'body' && nextLast.type === 'body' && shownLast.last !== nextLast.last) {
+            listItems.setItem(header + kept, nextLast);
+        }
+    }
+    function sameBody(shown: ListRow, next: PageRow) {
+        return shown.type === 'body' && next.type === 'body' && shown.key === next.key && JSON.stringify(shown.row.data) === JSON.stringify(next.row.data);
+    }
+    function toggleSection(section: RoutePageSection) {
+        setSectionOpen(section, !isSectionOpen(section, stored));
+    }
+    // a feature's rows changed (the steep list folded, a setting): every section shows them again, open or not
+    function refreshSections(..._changed: unknown[]) {
+        sections.forEach((section) => setSectionOpen(section, isSectionOpen(section, stored)));
+    }
+    $: refreshSections($routeFeatureChanges, item);
+    function setRow(row: ListRow, shown: boolean, after: string) {
+        const index = indexOfKey(row.key);
+        if (shown && index < 0) {
+            listItems.splice(indexOfKey(after) + 1, 0, row);
+        } else if (!shown && index >= 0) {
+            listItems.splice(index, 1);
+        }
+    }
 
     // the departure: the When pill says it, the panel under the tiles sets it
     let whenOpen = openWhen;
@@ -117,6 +180,8 @@
         keptAt = departure.mode === 'planned' ? departure.at : undefined;
     }
     $: departureGone = passed && !keepPassed;
+    $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
+    $: setRow({ type: 'when', key: 'when' }, whenOpen, 'tiles');
     $: zone = routeTimeZone(departure);
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
@@ -144,31 +209,22 @@
     function departNow() {
         onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { mode: 'now' }) });
     }
-    $: rows.forEach((row) => row.type === 'section' && row.open && sectionComponents.load(row.section.id, row.section.component));
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
     function itemTemplateSelector(row: ListRow) {
         return row.type;
     }
 
-    function toggleSection(section: RoutePageSection) {
-        stored = toggledSections(stored, section);
-    }
-
     // the insight line's `›` on this page: the lens' own section, opened and brought into view
     let listView: NativeViewElementNode<CollectionView>;
     function sectionOf(lens: LensId) {
         const section = sections.find((candidate) => candidate.lens === lens);
-        if (!section || !rows.some((row) => row.key === 'section:' + section.id)) {
+        if (!section || indexOfKey('section:' + section.id) < 0) {
             return undefined;
         }
-        return async () => {
-            stored = { ...stored, [section.id]: true };
-            await tick();
-            const index = listRows.findIndex((row) => row.key === 'section:' + section.id);
-            if (index >= 0) {
-                listView?.nativeView?.scrollToIndex(index, true);
-            }
+        return () => {
+            setSectionOpen(section, true);
+            listView?.nativeView?.scrollToIndex(indexOfKey('section:' + section.id), true);
         };
     }
 
@@ -252,20 +308,10 @@
             </gridlayout>
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
-        {#if !heroFailed}
-            <RouteHeroMap bind:this={heroMap} height={HERO_HEIGHT} {item} row={1} verticalAlignment="top" on:failed={() => (heroFailed = true)} />
-        {/if}
-        <!-- see-through over the hero map, every other row opaque -->
-        <collectionview
-            bind:this={listView}
-            backgroundColor="transparent"
-            {itemTemplateSelector}
-            items={listRows}
-            paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)}
-            row={1}
-            ios:contentInsetAdjustmentBehavior={2}>
+        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2}>
             <Template key="hero">
-                <gridlayout height={HERO_HEIGHT} on:touch={(args) => heroMap?.forwardTouch(args)}>
+                <gridlayout height={HERO_HEIGHT}>
+                    <RouteHeroMap bind:this={heroMap} {item} />
                     <stacklayout horizontalAlignment="right" padding={8} verticalAlignment="top">
                         <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} text="mdi-arrow-expand" on:tap={showOnMap} />
                         <!-- the whole route again, after a section or a point was looked at -->

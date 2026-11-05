@@ -3,7 +3,7 @@
     import * as api from '@nativescript-community/ui-massifmaps/api';
     import type { MassifMap, MassifObject, MassifSource } from '@nativescript-community/ui-massifmaps/api';
     import { Color, type TouchGestureEventData, Utils } from '@nativescript/core';
-    import { createEventDispatcher } from '@shared/utils/svelte/ui';
+    import { showError } from '@shared/utils/showError';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { MassifMap as MassifMapView } from '@nativescript-community/ui-massifmaps/ui';
     import { onDestroy } from 'svelte';
@@ -19,12 +19,6 @@
     import { colors } from '~/variables';
 
     export let item: IItem;
-
-    interface $$Events {
-        /** the map could not be made: the page goes on without it */
-        failed: undefined;
-    }
-    const dispatch = createEventDispatcher<$$Events>();
 
     const HERO_TILE_CACHE = 16 * 1024 * 1024;
     const FIT_MARGIN = 16;
@@ -42,9 +36,9 @@
     const owned: MassifObject[] = [];
 
     function onMapReady(event) {
+        massifMap = api.attach(event.object, { id: 'map.routeHero' });
+        mapContext.setMapDefaultOptions(massifMap);
         try {
-            massifMap = api.attach(event.object, { id: 'map.routeHero' });
-            mapContext.setMapDefaultOptions(massifMap);
             let layers = mapContext.getLayers('map');
             if (layers.length === 0) {
                 layers = mapContext.getLayers('customLayers');
@@ -72,22 +66,28 @@
                 layerBlendingSpeed: 0,
                 labelRenderOrder: 'VECTOR_TILE_RENDER_ORDER_LAST'
             });
+        } catch (error) {
+            showError(error);
+        }
+        try {
             drawRoute();
             drawLens();
             drawCursor(cursorIndex);
-            if (massifMap.size().width) {
-                frame();
-            }
         } catch (error) {
-            console.error('RouteHeroMap', error, error.stack);
-            dispatch('failed');
+            showError(error);
+        }
+        if (massifMap.size().width) {
+            frame();
         }
     }
 
+    // the route sent once per item: sending it again reloads the map's tiles for nothing
+    let drawnItem: IItem;
     function drawRoute() {
-        if (!source || !item?.geometry) {
+        if (!source || !item?.geometry || item === drawnItem) {
             return;
         }
+        drawnItem = item;
         // selected on its own: on this map there is nothing else to pick
         source.setGeoJSON(ROUTE_LAYER, { type: 'FeatureCollection', features: [{ type: 'Feature', id: item.id, properties: { ...item.properties, selected: 1 }, geometry: item.geometry }] });
     }
@@ -177,31 +177,13 @@
     }
 
     let mapView: NativeViewElementNode<MassifMapView>;
-    /**
-     * The list over the map catches every touch, over its see-through row too: that row hands them on here. A drag that
-     * starts on the map moves the map, not the page. Android only: on iOS the list lets nothing through either.
-     */
-    export function forwardTouch(args: TouchGestureEventData) {
-        if (!__ANDROID__) {
-            return;
+
+    // the map is a row of the page's list: a drag that starts on it moves the map, not the page
+    function claimTouch(args: TouchGestureEventData) {
+        if (__ANDROID__ && args.action === 'down') {
+            const view: android.view.View = args.view?.nativeViewProtected;
+            view?.getParent()?.requestDisallowInterceptTouchEvent(true);
         }
-        const target: android.view.View = mapView?.nativeView?.nativeViewProtected;
-        const row: android.view.View = args.view?.nativeViewProtected;
-        const event: android.view.MotionEvent = args.android;
-        if (!target || !row || !event) {
-            return;
-        }
-        if (event.getActionMasked() === android.view.MotionEvent.ACTION_DOWN) {
-            row.getParent()?.requestDisallowInterceptTouchEvent(true);
-        }
-        const rowOrigin = Array.create('int', 2);
-        const targetOrigin = Array.create('int', 2);
-        row.getLocationOnScreen(rowOrigin);
-        target.getLocationOnScreen(targetOrigin);
-        const copy = android.view.MotionEvent.obtain(event);
-        copy.offsetLocation(rowOrigin[0] - targetOrigin[0], rowOrigin[1] - targetOrigin[1]);
-        target.dispatchTouchEvent(copy);
-        copy.recycle();
     }
 
     function release(what: string, run: () => void) {
@@ -234,6 +216,6 @@
 </script>
 
 <gridlayout {...$$restProps}>
-    <!-- a TextureView: a surface view would draw over the list that slides over it -->
-    <massifmap bind:this={mapView} useTextureView={true} zoom={12} on:mapReady={onMapReady} on:layoutChanged={() => frame()} />
+    <!-- a TextureView: a surface view does not scroll cleanly with the list it is a row of -->
+    <massifmap bind:this={mapView} useTextureView={true} zoom={12} on:mapReady={onMapReady} on:touch={claimTouch} on:layoutChanged={() => frame()} />
 </gridlayout>
