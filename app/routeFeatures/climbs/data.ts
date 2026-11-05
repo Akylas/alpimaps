@@ -16,6 +16,7 @@ import {
     resolveThresholds,
     sortByDifficulty
 } from '~/routeFeatures/climbs/steep';
+import { gradeKey } from '~/routeFeatures/lens/lensPalette';
 import type { AttentionMark, LensSection, LensSlice, ProfileBracket } from '~/routeFeatures/registry';
 import { gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
@@ -89,7 +90,7 @@ export function readClimbs(item: IItem): ClimbsRead | null {
             slices: (item.profile.sections ?? []).map(({ endIndex, grade, startIndex }) => {
                 const bucket = gradeBucketIndex(grade);
                 // from 9 % it is steep, from 12 % very steep
-                return { i0: startIndex, i1: endIndex, k: bucket, s: bucket >= 7 ? 3 : bucket === 6 ? 2 : 0 };
+                return { i0: startIndex, i1: endIndex, k: gradeKey(bucket), s: bucket >= 7 ? 3 : bucket === 6 ? 2 : 0 };
             })
         };
     }

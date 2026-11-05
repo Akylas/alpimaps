@@ -1,5 +1,6 @@
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
+import { surfaceKey } from '~/routeFeatures/lens/lensPalette';
 import { type LensProfile, type LensSection, type LensSlice, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
 import { routeFeatureStats } from '~/routeFeatures/stats/settings';
 import { pavedShare, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
@@ -35,7 +36,7 @@ function readSegments(item: IItem) {
                 i1: end,
                 title: data?.[end] && data[start] ? `${lc(id)} · ${formatDistance(data[end].d - data[start].d)}` : lc(id)
             })),
-            slices: segments.map(({ end, id, start }) => ({ i0: start, i1: end, k: id, s: 0 }))
+            slices: segments.map(({ end, id, start }) => ({ i0: start, i1: end, k: surfaceKey(id), s: 0 }))
         });
     }
     return segmentReads.get(segments);
