@@ -149,38 +149,30 @@
 	text-clip: false;
 }
 
-// the weather at a point of the route; faded when the forecast is out of date
+// the weather at a point of the route, one label on a white plate: the sky as a glyph of the icon font (the main face of the list,
+// so it is the one a glyph is looked for in, the text font following for the digits), then, in a smaller type, the temperature
+// and the rain, then on a second line a strong wind and its burst. The rim takes the colour of the rain class (`s`, 0 dry .. 3
+// heavy); faded and grey-rimmed when the forecast is out of date. The newline of `t3` is the app's
+@wx_rim: [stale] = 1 ? #9aa0a6 : ([s] >= 3 ? get([param::lens_pal], 'w3', #1565C0) : ([s] = 2 ? get([param::lens_pal], 'w2', #42A5F5) : ([s] = 1 ? get([param::lens_pal], 'w1', #90CAF9) : #ffffff)));
 #poi[class='lsym'][sym='wx'][zoom>=9],
 #navigation[class='lsym'][sym='wx'][zoom>=9] {
-	shield-icon-name: [icon];
-	shield-icon-face-name: [style.mapFontFamily] ?? @osm;
-	shield-icon-size: 14;
-	shield-icon-fill: get([param::lens_pal], 'w3', #4527A0);
-	shield-name: [t];
-	shield-face-name: @mont_bd;
-	shield-size: 11;
-	shield-fill: #1b1c1d;
-	shield-background-fill: #ffffff;
-	shield-background-radius: 10;
-	shield-background-padding-x: 6;
-	shield-background-border-fill: [stale] = 1 ? #9aa0a6 : #ffffff;
-	shield-background-border-width: 1;
-	shield-placement: point;
-	shield-placement-priority: [p];
-	shield-text-opacity: [stale] = 1 ? 0.55 : 1;
-	shield-icon-opacity: [stale] = 1 ? 0.55 : 1;
-}
-
-// the wind, an arrow turned relative to the way the route goes
-#poi[class='lsym'][sym='wind'][zoom>=11],
-#navigation[class='lsym'][sym='wind'][zoom>=11] {
-	text-name: '↑';
-	text-orientation: [rot];
+	text-name: [icon];
+	text-face-name: 'Material Design Icons, ' + @mont_bd;
 	text-size: 14;
-	text-face-name: @mont_bd;
-	text-fill: #1b1c1d;
-	text-halo-fill: #ffffff;
-	text-halo-radius: 1.5;
-	text-dx: 18;
+	text-fill: [stale] = 1 ? #9aa0a6 : ([s] >= 1 ? get([param::lens_pal], 'w3', #1565C0) : #1b1c1d);
+	text-secondary-name: ' ' + [t] + ([t2] ? (' ' + [t2]) : '') + ([t3] ? [t3] : '');
+	text-secondary-scale: 0.6;
+	text-secondary-fill: [stale] = 1 ? #9aa0a6 : #1b1c1d;
+	text-background-fill: #ffffff;
+	text-background-radius: 7;
+	text-background-padding-x: 4;
+	text-background-padding-y: 2;
+	text-background-border-width: 1;
+	text-background-border-fill: @wx_rim;
+	text-opacity: [stale] = 1 ? 0.55 : 1;
+	text-secondary-opacity: [stale] = 1 ? 0.55 : 1;
+	text-background-opacity: [stale] = 1 ? 0.55 : 1;
+	text-placement: billboard;
+	text-placement-priority: [p];
 	text-clip: false;
 }

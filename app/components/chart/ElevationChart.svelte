@@ -1,7 +1,7 @@
 <script lang="ts">
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, Cap, DashPathEffect, Join, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
@@ -21,7 +21,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark } from '~/routeFeatures/registry';
+    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileWeather } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
@@ -35,6 +35,8 @@
     const DEFAULT_FILL_ALPHA = 85;
     /** grade sections are read by colour, so their fill has to actually carry one */
     const GRADE_FILL_ALPHA = 225;
+    /** a lens that lays its own drawing over the profile (the weather) leaves the grades this much of their fill */
+    const FADED_FILL_SHARE = 0.38;
 
     /** km between x labels: whatever gives about four of them */
     const xintervals = [0.1, 0.2, 0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
@@ -131,6 +133,154 @@
             super(limit, '');
         }
     }
+    // the weather over the profile, in the manner of a weather chart: rain as rounded bars from the foot, as high as the rain and as
+    // plain as the chance of it (a bar full height at 4 mm/h); the temperature as a line with a ringed dot at each sample and its
+    // figure above a peak, below a dip; over the plot, a row of the sky and a row of the wind: an arrow of the way it pushes, the ride
+    // going to the right, and its speed in km/h under it. Orange and red for a headwind, green for a tailwind
+    const RAIN_FULL_MM = 4;
+    const RAIN_BAR_SHARE = 0.25;
+    const RAIN_BAR_MIN = 3;
+    const RAIN_BAR_GAP = 1;
+    const RAIN_BAR_RADIUS = 2;
+    const RAIN_BAR_MIN_OPACITY = 0.25;
+    const RAIN_COLOR = '#4A90D9';
+    const TEMP_BAND_TOP = 0.5;
+    const TEMP_BAND_BOTTOM = 0.74;
+    const TEMP_MIN_RANGE = 6;
+    const TEMP_COLOR = '#B5D334';
+    const SAMPLE_LABEL_GAP = 34;
+    const SKY_ROW = 12;
+    const WIND_ARROW_ROW = 30;
+    const WIND_HARD = 20;
+    const WIND_NOTICEABLE = 10;
+    const MDI_ARROW_RIGHT = String.fromCodePoint(0xf0054);
+    const MDI_BURST = String.fromCodePoint(0xf059e);
+    const BURST_COLOR = '#D7263D';
+    const weatherTextPaint = new Paint();
+    weatherTextPaint.setFontWeight('bold');
+    weatherTextPaint.setTextAlign(Align.CENTER);
+    // the figures read over the fill and the bars: a halo of the background colour round them
+    const weatherHaloPaint = new Paint();
+    weatherHaloPaint.setFontWeight('bold');
+    weatherHaloPaint.setTextAlign(Align.CENTER);
+    weatherHaloPaint.setStyle(Style.STROKE);
+    weatherHaloPaint.setStrokeWidth(3);
+    const weatherGlyphPaint = new Paint();
+    weatherGlyphPaint.setTextAlign(Align.CENTER);
+    const weatherLinePaint = new Paint();
+    weatherLinePaint.setStyle(Style.STROKE);
+    weatherLinePaint.setStrokeWidth(2.5);
+    weatherLinePaint.setStrokeCap(Cap.ROUND);
+    weatherLinePaint.setStrokeJoin(Join.ROUND);
+    function windColor(head: number) {
+        if (isEInk) {
+            return '#000000';
+        }
+        return head >= WIND_HARD ? '#D7263D' : head >= WIND_NOTICEABLE ? '#F29D38' : head <= -WIND_NOTICEABLE ? '#2E9E5B' : colorOnSurface;
+    }
+    function drawText(canvas: Canvas, text: string, x: number, y: number) {
+        canvas.drawText(text, x, y, weatherHaloPaint);
+        canvas.drawText(text, x, y, weatherTextPaint);
+    }
+    function drawWeather(canvas: Canvas, { contentBottom, contentLeft, contentRight, contentTop }: { contentBottom: number; contentLeft: number; contentRight: number; contentTop: number }, pixelX: (distance: number) => number) {
+        const plotHeight = contentBottom - contentTop;
+        const ink = isEInk ? '#000000' : colorOnSurface;
+        for (const { from, mmPerHour, probability, to } of weather.rain) {
+            const left = Math.max(contentLeft, pixelX(from));
+            const right = Math.min(contentRight, pixelX(to));
+            if (right - RAIN_BAR_GAP <= left) {
+                continue;
+            }
+            const height = Math.max(RAIN_BAR_MIN, Math.min(1, mmPerHour / RAIN_FULL_MM) * plotHeight * RAIN_BAR_SHARE);
+            // the chance is the opacity; e-ink has no opacity to give: its bars are black
+            overlayFillPaint.color = isEInk ? '#000000' : new Color(RAIN_COLOR).setAlpha(Math.round(255 * Math.max(RAIN_BAR_MIN_OPACITY, probability))).hex;
+            canvas.drawRoundRect(left, contentBottom - height, right - RAIN_BAR_GAP, contentBottom, RAIN_BAR_RADIUS, RAIN_BAR_RADIUS, overlayFillPaint);
+        }
+        const fontSize = 10 * $fontScale;
+        weatherTextPaint.setTextSize(fontSize);
+        weatherHaloPaint.setTextSize(fontSize);
+        weatherHaloPaint.color = isEInk ? '#ffffff' : colorBackground;
+        weatherGlyphPaint.fontFamily = $fonts.mdi;
+        // a row of the sky then a row of the wind at each sample while there is room for it
+        let lastSky = -Infinity;
+        weather.temp.forEach(({ d, glyph }) => {
+            const x = pixelX(d);
+            if (x >= contentLeft && x <= contentRight && x - lastSky >= SAMPLE_LABEL_GAP * $fontScale) {
+                lastSky = x;
+                weatherGlyphPaint.setTextSize(15 * $fontScale);
+                weatherGlyphPaint.color = ink;
+                canvas.drawText(glyph, Math.min(Math.max(x, contentLeft + 8), contentRight - 8), contentTop + SKY_ROW * $fontScale, weatherGlyphPaint);
+            }
+        });
+        let lastWind = -Infinity;
+        weather.wind.forEach(({ angle, d, gust, head, speed }) => {
+            const x = pixelX(d);
+            if (x < contentLeft || x > contentRight || x - lastWind < SAMPLE_LABEL_GAP * $fontScale) {
+                return;
+            }
+            lastWind = x;
+            const color = windColor(head);
+            const centerX = Math.min(Math.max(x, contentLeft + 8), contentRight - 8);
+            const centerY = contentTop + WIND_ARROW_ROW * $fontScale;
+            const arrowSize = 14 * $fontScale;
+            // an arrow of the way the wind pushes, the ride going to the right: right is with it, left against it, down to the rider's right
+            canvas.save();
+            canvas.translate(centerX, centerY);
+            canvas.rotate(angle);
+            weatherGlyphPaint.setTextSize(arrowSize);
+            weatherGlyphPaint.color = color;
+            canvas.drawText(MDI_ARROW_RIGHT, 0, arrowSize * 0.35, weatherGlyphPaint);
+            canvas.restore();
+            weatherTextPaint.color = color;
+            const speedBaseline = centerY + 8 * $fontScale + fontSize;
+            drawText(canvas, String(Math.round(speed)), centerX, speedBaseline);
+            // a burst: its own line, the glyph and the gust, in red
+            if (gust >= weather.gustMin) {
+                const text = String(Math.round(gust));
+                const burstColor = isEInk ? '#000000' : BURST_COLOR;
+                weatherTextPaint.color = burstColor;
+                const width = weatherTextPaint.measureText(text);
+                drawText(canvas, text, centerX + 6 * $fontScale, speedBaseline + fontSize + 1);
+                weatherGlyphPaint.setTextSize(11 * $fontScale);
+                weatherGlyphPaint.color = burstColor;
+                canvas.drawText(MDI_BURST, centerX + 6 * $fontScale - width / 2 - 7 * $fontScale, speedBaseline + fontSize + 1, weatherGlyphPaint);
+            }
+        });
+        if (!weather.temp.length) {
+            return;
+        }
+        const values = weather.temp.map(({ value }) => value);
+        const lowest = Math.min(...values);
+        const range = Math.max(TEMP_MIN_RANGE, Math.max(...values) - lowest);
+        const bandTop = contentTop + plotHeight * TEMP_BAND_TOP;
+        const bandBottom = contentTop + plotHeight * TEMP_BAND_BOTTOM;
+        const points = weather.temp.map(({ d, value }) => ({ x: pixelX(d), y: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
+        weatherLinePaint.color = isEInk ? '#000000' : TEMP_COLOR;
+        for (let index = 1; index < points.length; index++) {
+            canvas.drawLine(points[index - 1].x, points[index - 1].y, points[index].x, points[index].y, weatherLinePaint);
+        }
+        let lastLabel = -Infinity;
+        let lastFigure = NaN;
+        points.forEach(({ value, x, y }, index) => {
+            if (x < contentLeft || x > contentRight) {
+                return;
+            }
+            overlayFillPaint.color = '#ffffff';
+            canvas.drawCircle(x, y, 5, overlayFillPaint);
+            overlayFillPaint.color = isEInk ? '#000000' : TEMP_COLOR;
+            canvas.drawCircle(x, y, 3.5, overlayFillPaint);
+            // only what changes is said: a figure that is the one before is left out, the dot says it
+            const figure = Math.round(value);
+            if (figure !== lastFigure && x - lastLabel >= SAMPLE_LABEL_GAP * $fontScale) {
+                lastLabel = x;
+                lastFigure = figure;
+                // above a peak, below a dip
+                const dip = index > 0 && index < points.length - 1 && value < points[index - 1].value && value < points[index + 1].value;
+                weatherTextPaint.color = ink;
+                drawText(canvas, figure + '°', Math.min(Math.max(x, contentLeft + 12), contentRight - 12), dip ? y + 8 + fontSize : y - 8);
+            }
+        });
+    }
     function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
         if (!chartView || mini) {
@@ -152,6 +302,9 @@
         overlayTextPaint.setTextSize(9 * $fontScale);
         const metrics = overlayTextPaint.getFontMetrics();
         const textHeight = metrics.descent - metrics.ascent;
+        if (weather) {
+            drawWeather(canvas, chartView.viewPortHandler, pixelX);
+        }
         for (const { from, label, to, top } of brackets) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
@@ -385,6 +538,10 @@
     export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
+    /** the grade fill steps back, for what the lens lays over it */
+    export let fade = false;
+    /** rain bars from the foot of the plot and a temperature line over it */
+    export let weather: ProfileWeather = null;
     /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
     export let besideMap = true;
     if (inCard && besideMap) {
@@ -528,7 +685,9 @@
     let builtFill = fill;
     let builtGrades = showProfileGrades;
     let builtAscents = showAscents;
-    $: if (chart?.nativeView?.data && (fill !== builtFill || showProfileGrades !== builtGrades || showAscents !== builtAscents)) {
+    let builtFade = fade;
+    $: if (chart?.nativeView?.data && (fill !== builtFill || showProfileGrades !== builtGrades || showAscents !== builtAscents || fade !== builtFade)) {
+        builtFade = fade;
         builtFill = fill;
         builtGrades = showProfileGrades;
         builtAscents = showAscents;
@@ -578,7 +737,7 @@
         canvas.restore();
     }
     // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
-    $: if (chart?.nativeView && (brackets || marks)) {
+    $: if (chart?.nativeView && (brackets || marks || weather)) {
         chart.nativeView.invalidate();
     }
     let onChartDataUpdateCallbacks = [];
@@ -1074,7 +1233,7 @@
                     // the grade buckets only mean something if they can be told apart, and the chart's
                     // default fill alpha washes them out. Eink keeps that default: there the fill is a
                     // grey wedge behind the curve, and darkening it buries the line in it
-                    set.fillAlpha = isEInk ? DEFAULT_FILL_ALPHA : GRADE_FILL_ALPHA;
+                    set.fillAlpha = isEInk ? DEFAULT_FILL_ALPHA : Math.round(GRADE_FILL_ALPHA * (fade ? FADED_FILL_SHARE : 1));
                 } else {
                     set.lineWidth = lineWidth;
                     set.resetColors();

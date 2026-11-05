@@ -10,7 +10,7 @@ export interface LensLegendItem {
     label: string;
     kind: 'line' | 'shield';
     lines?: { color: string; width: number; dasharray?: number[] }[];
-    plate?: { color: string; radius?: number };
+    plate?: { color: string; radius?: number; border?: string; borderWidth?: number };
     text?: { value: string; color: string };
 }
 
@@ -36,7 +36,7 @@ function gradeLabel(bucket: number) {
 }
 
 // the white ticks of eink/routelens.mss, by severity
-const TICKS: Record<'steep' | 'verySteep', number[]> = { steep: [2, 3], verySteep: [6, 2] };
+const TICKS: Record<'steep' | 'verySteep' | 'lightRain' | 'rain' | 'heavyRain', number[]> = { steep: [2, 3], verySteep: [6, 2], lightRain: [2, 7], rain: [2, 3], heavyRain: [6, 2] };
 
 /**
  * What the lens' slices mean. `translate` words a key, `surfaces` are the surfaces of the selected route:
@@ -67,6 +67,23 @@ export function lensLegend(lens: LensId, variant: LensPaletteVariant, palette: R
                   ]
                 : gradeBuckets.map((_, bucket) => line(gradeKey(bucket), gradeLabel(bucket), palette[gradeKey(bucket)]));
         return { id: 'route_lens', label: translate('lens_climbs'), items: [...items, plate] };
+    }
+    if (lens === 'weather') {
+        // on e-ink every colour is black: the ticks say how hard it rains, none for dry
+        const items = [
+            line('dry', translate('legend_dry'), palette.w0),
+            line('rain_light', translate('legend_rain_light'), palette.w1, variant === 'eink' ? TICKS.lightRain : undefined),
+            line('rain', translate('legend_rain'), palette.w2, variant === 'eink' ? TICKS.rain : undefined),
+            line('rain_heavy', translate('legend_rain_heavy'), palette.w3, variant === 'eink' ? TICKS.heavyRain : undefined)
+        ];
+        const plate: LensLegendItem = {
+            id: 'weather_plate',
+            label: translate('legend_weather_plate'),
+            kind: 'shield',
+            plate: { color: '#ffffff', border: palette.w3, borderWidth: 1.5, radius: 9 },
+            text: { value: '7°', color: '#1b1c1d' }
+        };
+        return { id: 'route_lens', label: translate('lens_weather'), items: [...items, plate] };
     }
     if (lens === 'surface' && surfaces.length) {
         return { id: 'route_lens', label: translate('lens_surface'), items: surfaces.map((id) => line(surfaceKey(id), translate(id), palette[surfaceKey(id)] ?? UNKNOWN_SURFACE)) };

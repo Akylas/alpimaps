@@ -4,7 +4,7 @@ import { lc } from '~/helpers/locale';
 import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import { networkService } from '~/services/NetworkService';
-import { type LensChip, type LensFact, type LensHeadline, type RouteCtx, type RouteLens, type RouteSettingRow, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RouteSettingRow, registerRouteFeature } from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
 import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
@@ -13,13 +13,24 @@ import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/utils/routeAnalysis/weatherProvider';
 import { sampleRoute } from '~/utils/routeAnalysis/weatherSamples';
 import { type WeatherRead, readWeather } from './read';
-import { routeFeatureWeather, weatherDecimals, weatherPrecision, weatherProviderId, weatherSettingsKey } from './settings';
+import {
+    routeFeatureWeather,
+    weatherDecimals,
+    weatherGust,
+    weatherPlateWind,
+    weatherPrecision,
+    weatherProfileWind,
+    weatherProviderId,
+    weatherSettingsKey,
+    weatherThresholds,
+    weatherWindKey
+} from './settings';
 import { weatherStage } from './stage';
 
 const MINUTE = 60000;
 
 // the lens asks for the same read several times a refresh (chip, line, plates...): one per route state and minute
-let memo: { item: IItem; analysis: unknown; minute: number; stale: boolean; read: WeatherRead | null };
+let memo: { item: IItem; analysis: unknown; minute: number; stale: boolean; wind: string; read: WeatherRead | null };
 
 function isOutdated(status: LayerStatus) {
     return tierOf(status.state) === 'outdated';
@@ -28,11 +39,14 @@ function isOutdated(status: LayerStatus) {
 function readOf(item: IItem, status: LayerStatus): WeatherRead | null {
     const stale = isOutdated(status);
     const minute = Math.floor(Date.now() / MINUTE);
-    if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.stale !== stale) {
-        memo = { item, analysis: item.analysis, minute, stale, read: readWeather(item, Date.now(), { stale }) };
+    const wind = get(weatherWindKey);
+    if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.stale !== stale || memo.wind !== wind) {
+        memo = { item, analysis: item.analysis, minute, stale, wind, read: readWeather(item, Date.now(), { stale, thresholds: weatherThresholds() }) };
     }
     return memo.read;
 }
+
+const profiles = new WeakMap<WeatherRead, LensProfile>();
 
 const statusOf = (item: IItem) => layerStatuses(item).weather;
 
@@ -136,8 +150,9 @@ const weatherLens: RouteLens = {
         if (status.state === 'failed') {
             return { facts: [{ icon: 'mdi-cloud-alert-outline', text: failure(status.reason), alert: true }, ...facts], action: { label: lc('weather_retry'), run: fetchWeather(item) } };
         }
-        const canUpdate = status.canRefresh && networkService.connected;
-        return { facts, action: canUpdate ? { label: lc('weather_update'), run: fetchWeather(item) } : undefined };
+        // asking again is always the user's to do, whatever the age of the forecast
+        const busy = status.state === 'running' || status.state === 'queued';
+        return { facts, action: networkService.connected && !busy ? { label: lc('weather_update'), run: fetchWeather(item) } : undefined };
     },
     readout: ({ index, item }) => {
         const at = readOf(item, statusOf(item))?.at(index);
@@ -153,11 +168,24 @@ const weatherLens: RouteLens = {
         }
         return parts.join(' · ');
     },
+    profile: ({ item }): LensProfile => {
+        const read = readOf(item, statusOf(item));
+        if (!read) {
+            return {};
+        }
+        // the same object while the read is: the chart redraws for a new one
+        if (!profiles.has(read)) {
+            profiles.set(read, { fade: true, weather: read.profile });
+        }
+        return profiles.get(read);
+    },
     sections: ({ item }) =>
         readOf(item, statusOf(item))?.spans.map((span, id) => ({ id, i0: span.i0, i1: span.i1, title: lc('weather_rain_span', formatDistance(span.from), formatDistance(span.to)) })) ?? [],
     slices: ({ item }) => readOf(item, statusOf(item))?.slices ?? [],
     symbols: ({ item }) => readOf(item, statusOf(item))?.symbols ?? []
 };
+
+const kmh = (value: number) => `${value} km/h`;
 
 function weatherSettingRows(): RouteSettingRow[] {
     const rows: RouteSettingRow[] = [
@@ -172,6 +200,12 @@ function weatherSettingRows(): RouteSettingRow[] {
             ]
         }
     ];
+    rows.push(
+        { type: 'sectionheader', title: lc('weather_wind') },
+        { type: 'slider', store: weatherProfileWind, title: lc('weather_wind_profile'), description: lc('weather_wind_profile_desc'), min: 5, max: 60, step: 5, format: kmh },
+        { type: 'slider', store: weatherPlateWind, title: lc('weather_wind_plate'), description: lc('weather_wind_plate_desc'), min: 10, max: 80, step: 5, format: kmh },
+        { type: 'slider', store: weatherGust, title: lc('weather_gust'), description: lc('weather_gust_desc'), min: 30, max: 100, step: 5, format: kmh }
+    );
     // a choice only once there is one to make
     if (weatherProviders().length > 1) {
         rows.push({ type: 'segment', store: weatherProviderId, title: lc('weather_provider'), options: weatherProviders().map((provider) => ({ value: provider.id, title: provider.name })) });
@@ -185,7 +219,7 @@ registerRouteFeature({
     setting: { title: () => lc('lens_weather'), store: routeFeatureWeather },
     settings: weatherSettingRows,
     // a layer finishing or failing, a new departure read from the same hours, and the settings it is asked with
-    changes: derived([routeAnalysisChanges, weatherSettingsKey], (values) => values.join()),
+    changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey], (values) => values.join()),
     lenses: [weatherLens],
     compute: weatherStage
 });

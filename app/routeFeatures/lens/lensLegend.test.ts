@@ -50,4 +50,22 @@ describe('lensLegend', () => {
             ['t:paved', '#D7D7D7']
         ]);
     });
+
+    it('lists the four rain classes of the weather lens in the colours the map draws them, then the weather plate', () => {
+        const section = lensLegend('weather', 'light', light, translate, []);
+        expect(section.label).toBe('t:lens_weather');
+        const lines = section.items.filter((item) => item.kind === 'line');
+        expect(lines.map(({ label, lines: swatch }) => [label, swatch[0].color])).toEqual([
+            ['t:legend_dry', light.w0],
+            ['t:legend_rain_light', light.w1],
+            ['t:legend_rain', light.w2],
+            ['t:legend_rain_heavy', light.w3]
+        ]);
+        expect(section.items[4]).toMatchObject({ kind: 'shield', label: 't:legend_weather_plate', plate: { color: '#ffffff', border: light.w3 } });
+    });
+
+    it('draws the rain of the weather lens as ticks on e-ink, none for dry', () => {
+        const lines = lensLegend('weather', 'eink', eink, translate, []).items.filter((item) => item.kind === 'line');
+        expect(lines.map((item) => item.lines[1]?.dasharray)).toEqual([undefined, [2, 7], [2, 3], [6, 2]]);
+    });
 });

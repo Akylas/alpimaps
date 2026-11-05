@@ -14,8 +14,11 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
+    import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
     import { type StripCell, departureStrip } from '~/routeFeatures/page/departureStrip';
+    import { routeFeatureWeather } from '~/routeFeatures/weather/settings';
+    import { networkService } from '~/services/NetworkService';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
@@ -92,6 +95,18 @@
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
     }
+
+    // the forecast is read again from the hours fetched when the departure moves, and fetched again only when asked
+    $: weather = $routeAnalysisChanges >= 0 && analysis ? layerStatuses(item).weather : null;
+    $: weatherBusy = weather?.state === 'running' || weather?.state === 'queued';
+    $: forecastText =
+        weather?.state === 'running' || weather?.state === 'queued'
+            ? lc('weather_fetching')
+            : weather?.reason === 'out-of-coverage'
+              ? lc('weather_out_of_coverage')
+              : analysis?.layers.weather
+                ? lc('weather_forecast_updated', clock(analysis.layers.weather.prov.computedAt))
+                : lc('weather_forecast_none');
     function isSelected(entry: (typeof ACTIVITIES)[number], activity: Activity | undefined) {
         return activity?.kind === entry.activity.kind && (entry.activity.kind === 'hike' || activity?.subtype === entry.activity.subtype);
     }
@@ -211,6 +226,14 @@
         <slider col={1} maxValue={STOPS_MAX} minValue={0} stepSize={1} value={inputs.pace.stopsMinPerHour} on:valueChange={(event) => setPace({ stopsMinPerHour: Math.round(event.value) })} />
         <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={lc('when_stops_value', stops)} verticalAlignment="middle" />
     </gridlayout>
+    {#if $routeFeatureWeather}
+        <gridlayout columns="*,auto" marginTop={8}>
+            <label color={colorOnSurfaceVariant} fontSize={12} text={forecastText} verticalAlignment="middle" />
+            {#if networkService.connected && !weatherBusy}
+                <Pill col={1} height={32} icon="mdi-cloud-refresh-outline" label={analysis?.layers.weather ? lc('weather_update') : lc('weather_fetch')} on:tap={() => computeLayers(item, ['weather'])} />
+            {/if}
+        </gridlayout>
+    {/if}
     {#if chosen}
         <label
             color={chosen.darkMinutes > 0 && !isEInk ? colorError : colorOnSurface}

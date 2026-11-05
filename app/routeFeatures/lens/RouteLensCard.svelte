@@ -55,6 +55,8 @@
     $: profileOptions = activeLens?.profile?.({ item });
     $: brackets = profileOptions?.brackets ?? NO_BRACKETS;
     $: fill = profileOptions?.fill ?? null;
+    $: fade = profileOptions?.fade ?? false;
+    $: weather = profileOptions?.weather ?? null;
 
     // what needs attention is marked whatever the lens. The same array until it changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
@@ -162,6 +164,7 @@
         bind:this={chart}
         {besideMap}
         {brackets}
+        {fade}
         {fill}
         inCard={true}
         {item}
@@ -172,6 +175,7 @@
         row={2}
         showAscents={$showAscents}
         showProfileGrades={$showGradeColors}
+        {weather}
         on:cursor={onCursor}
         on:mark={onMark}
         on:highlight={onChartHighlight} />

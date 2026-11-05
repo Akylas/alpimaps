@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { Departure, RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 import { type WeatherVar, quantise } from '~/utils/routeAnalysis/weatherSeries';
-import { readWeather, wxGlyph } from './read';
+import { type WeatherThresholds, readWeather, wxGlyph } from './read';
 
 const HOUR = 3600;
 const T0 = Date.UTC(2026, 5, 1) / 1000;
@@ -18,8 +18,8 @@ const samples = [0, 50, 100].map((index) => ({ i: index, d: index * 100, alt: 10
 type Series = Partial<Record<WeatherVar, number[]>>;
 /** Hourly values per sample, by variable. A variable left out is a constant: 10 °C, still air from the north, clear. */
 function layer(bySample: Series[]): WeatherData {
-    const hours = (variable: WeatherVar, sample: Series, fallback: number) => quantise(variable, sample[variable] ?? Array<number>(HOURS).fill(fallback));
-    const column = (variable: WeatherVar, fallback: number) => bySample.map((sample) => hours(variable, sample, fallback));
+    const hours = (variable: WeatherVar, sample: Series, fallback: number | null) => quantise(variable, sample[variable] ?? Array<number>(HOURS).fill(fallback));
+    const column = (variable: WeatherVar, fallback: number | null) => bySample.map((sample) => hours(variable, sample, fallback));
     return {
         samples,
         t0: T0,
@@ -27,7 +27,7 @@ function layer(bySample: Series[]): WeatherData {
         v: {
             temp: column('temp', 10),
             precip: column('precip', 0),
-            precipProb: column('precipProb', 0),
+            precipProb: column('precipProb', null),
             wind: column('wind', 0),
             gust: column('gust', 0),
             dir: column('dir', 0),
@@ -43,13 +43,13 @@ function layer(bySample: Series[]): WeatherData {
 /** `rain` mm/h stamped at hours `at`, 0 elsewhere. */
 const rainAt = (rain: number, ...at: number[]) => Array.from({ length: HOURS }, (_, hour) => (at.includes(hour) ? rain : 0));
 
-function item(data: WeatherData, departure: Departure = { mode: 'planned', at: DEPART }) {
+function item(data: WeatherData, departure: Departure = { mode: 'planned', at: DEPART }, totalTime = 2 * HOUR) {
     const analysis: RouteAnalysis = {
         v: 1,
         inputs: { departure, pace: { ...DEFAULT_PACE }, geometryKey: 'k' },
         layers: { weather: { prov: { computedAt: NOW, inputsHash: 'h', provider: 'open-meteo/forecast', quality: 'ok' }, data } }
     };
-    return { geometry, route: { totalTime: 2 * HOUR }, analysis };
+    return { geometry, route: { totalTime }, analysis };
 }
 
 const dry = layer([{}, {}, {}]);
@@ -118,13 +118,13 @@ describe('spans', () => {
 });
 
 describe('symbols', () => {
-    it('puts a plate at each sample: the temperature, the rain when there is, the glyph of the sky', () => {
+    it('puts a plate at each sample: the sky, the temperature, and the rain when there is', () => {
         const read = readWeather(item(layer([{ code: Array(HOURS).fill(3) }, { precip: rainAt(1.26, 7, 8), code: Array(HOURS).fill(61) }, {}])), NOW);
         const plates = read?.symbols.filter((symbol) => symbol.sym === 'wx');
         expect(plates?.map((plate) => plate.i)).toEqual([0, 50, 100]);
         expect(plates?.[0]).toMatchObject({ t: '10°', icon: wxGlyph(3), s: 0 });
         expect(plates?.[0].t2).toBeUndefined();
-        expect(plates?.[1]).toMatchObject({ t: '10°', t2: '1.3', icon: wxGlyph(61), s: 2 });
+        expect(plates?.[1]).toMatchObject({ t: '10°', t2: '1.3 mm', icon: wxGlyph(61), s: 2 });
     });
 
     it('ranks the rainy plates first for the room on the map', () => {
@@ -137,17 +137,54 @@ describe('symbols', () => {
         expect(readWeather(item(dry), NOW)?.symbols.every((symbol) => !symbol.stale)).toBe(true);
     });
 
-    it('draws the wind from 10 km/h, an arrow where it blows to, with its speed', () => {
-        // from the east at 24 km/h at the middle sample, calm elsewhere
-        const wind = layer([{}, { wind: Array(HOURS).fill(24), dir: Array(HOURS).fill(90) }, { wind: Array(HOURS).fill(9) }]);
-        const arrows = readWeather(item(wind), NOW)?.symbols.filter((symbol) => symbol.sym === 'wind');
-        expect(arrows).toHaveLength(1);
-        expect(arrows?.[0]).toMatchObject({ i: 50, t: '24', rot: 270 });
+    it('has no plate of its own for the wind', () => {
+        const wind = layer([{}, { wind: Array(HOURS).fill(40), dir: Array(HOURS).fill(0) }, {}]);
+        expect(readWeather(item(wind), NOW)?.symbols.every((symbol) => symbol.sym === 'wx')).toBe(true);
     });
 
-    it('marks a gust of 50 km/h or more', () => {
-        const gusty = layer([{}, { wind: Array(HOURS).fill(30), gust: Array(HOURS).fill(55) }, {}]);
-        expect(readWeather(item(gusty), NOW)?.symbols.find((symbol) => symbol.sym === 'wind')?.s).toBe(2);
+    // the route goes north: a north wind is a headwind, a south one a tailwind
+    const windLine = (speed: number, dir: number, gust?: number, thresholds?: Partial<WeatherThresholds>) =>
+        readWeather(item(layer([{}, { wind: Array(HOURS).fill(speed), dir: Array(HOURS).fill(dir), ...(gust ? { gust: Array(HOURS).fill(gust) } : {}) }, {}])), NOW, { thresholds })?.symbols.find(
+            (symbol) => symbol.i === 50
+        )?.t3;
+
+    it('puts a strong wind on a second line of the plate: 30 km/h, or 20 of it against the ride', () => {
+        expect(windLine(12, 0)).toBeUndefined();
+        expect(windLine(25, 90)).toBeUndefined();
+        expect(windLine(30, 90)).toContain('30');
+        expect(windLine(22, 0)).toContain('22');
+    });
+
+    it('takes the thresholds from the settings: a wind from 20 km/h earns its line, and 13 of headwind', () => {
+        expect(windLine(25, 90, undefined, { plateWind: 20 })).toContain('25');
+        expect(windLine(15, 90, undefined, { plateWind: 20 })).toBeUndefined();
+        expect(windLine(14, 0, undefined, { plateWind: 20 })).toContain('14');
+        expect(windLine(12, 0, undefined, { plateWind: 20 })).toBeUndefined();
+        expect(windLine(35, 90, undefined, { plateWind: 40 })).toBeUndefined();
+    });
+
+    it('takes the burst from the settings', () => {
+        expect(windLine(5, 90, 45, { gust: 40 })).toContain(String.fromCodePoint(0xf059e) + '45');
+        expect(windLine(5, 90, 45)).toBeUndefined();
+    });
+
+    it('starts the second line with a newline and the windy glyph', () => {
+        expect(windLine(35, 0)?.startsWith('\n' + String.fromCodePoint(0xf059d) + ' 35')).toBe(true);
+    });
+
+    it('says which way it is against: an arrow left for a headwind, right for a tailwind, with how much, from 10 km/h', () => {
+        const left = String.fromCodePoint(0xf004d);
+        const right = String.fromCodePoint(0xf0054);
+        expect(windLine(35, 0)).toContain(left + '35');
+        expect(windLine(35, 180)).toContain(right + '35');
+        expect(windLine(35, 90)).not.toContain(left);
+        expect(windLine(35, 90)).not.toContain(right);
+    });
+
+    it('marks a burst of 50 km/h or more, even in a light wind', () => {
+        const burst = String.fromCodePoint(0xf059e);
+        expect(windLine(12, 90, 55)).toContain(burst + '55');
+        expect(windLine(35, 90, 40)).not.toContain(burst);
     });
 });
 
@@ -190,6 +227,80 @@ describe('at', () => {
         // vertex 60 is reached at 7 h 12 min; the sample at 50 is nearest
         expect(read?.at(60)?.temp).toBeCloseTo(7.2, 1);
         expect(read?.at(60)?.head).toBeCloseTo(20, 1);
+    });
+});
+
+describe('profile', () => {
+    it('has a bar for a wet stretch, as high as the rain, over the meters of the stretch', () => {
+        const { rain } = readWeather(item(rainMiddle), NOW)?.profile ?? { rain: [] };
+        expect(rain).toHaveLength(1);
+        expect(rain[0].mmPerHour).toBe(3);
+        expect(rain[0].from).toBeCloseTo(2500, 0);
+        expect(rain[0].to).toBeCloseTo(7500, 0);
+    });
+
+    it('has no bar on a dry ride', () => {
+        expect(readWeather(item(dry), NOW)?.profile.rain).toEqual([]);
+    });
+
+    it('has a bar for each hour of a stretch that takes several, the rain read at each', () => {
+        // routed in 8 h: the middle stretch takes 4 h, from 8 h to 12 h. Each hour's rain is stamped at its end: 9 to 12 h say 1, 2, 3, 4 mm/h
+        const slow = layer([{}, { precip: Array.from({ length: HOURS }, (_, hour) => (hour >= 9 && hour <= 12 ? hour - 8 : 0)) }, {}]);
+        const { rain } = readWeather(item(slow, undefined, 8 * HOUR), NOW)?.profile ?? { rain: [] };
+        expect(rain.map(({ mmPerHour }) => mmPerHour)).toEqual([1, 2, 3, 4]);
+        rain.slice(1).forEach((bar, index) => expect(bar.from).toBeCloseTo(rain[index].to, 0));
+        expect(rain[0].from).toBeCloseTo(2500, 0);
+        expect(rain[3].to).toBeCloseTo(7500, 0);
+    });
+
+    it('says how likely the rain is, and takes it for sure when the forecast does not say', () => {
+        const unsure = layer([{}, { precip: rainAt(3, 7, 8), precipProb: Array(HOURS).fill(40) }, {}]);
+        expect(readWeather(item(unsure), NOW)?.profile.rain[0].probability).toBeCloseTo(0.4, 5);
+        expect(readWeather(item(rainMiddle), NOW)?.profile.rain[0].probability).toBe(1);
+    });
+
+    it('has a temperature point at each sample, with the sky there', () => {
+        const read = readWeather(item(layer([{ temp: Array(HOURS).fill(4), code: Array(HOURS).fill(61) }, {}, { temp: Array(HOURS).fill(17) }])), NOW);
+        expect(read?.profile.temp.map(({ value }) => value)).toEqual([4, 10, 17]);
+        expect(read?.profile.temp[0].glyph).toBe(wxGlyph(61));
+        expect(read?.profile.temp.map(({ d }) => d)).toEqual([0, 5000, 10000]);
+    });
+
+    it('has the wind where it is worth a mark: 15 km/h or more, or a burst of 50', () => {
+        const wind = layer([
+            { wind: Array(HOURS).fill(14) },
+            { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(180) },
+            { wind: Array(HOURS).fill(15), dir: Array(HOURS).fill(0), gust: Array(HOURS).fill(55) }
+        ]);
+        const points = readWeather(item(wind), NOW)?.profile.wind ?? [];
+        expect(points.map(({ d, gust, speed }) => [d, speed, gust])).toEqual([
+            [5000, 20, 0],
+            [10000, 15, 55]
+        ]);
+        expect(points[0].head).toBeCloseTo(-20, 1);
+        expect(points[1].head).toBeCloseTo(15, 1);
+        const burstOnly = layer([{ wind: Array(HOURS).fill(8), gust: Array(HOURS).fill(52) }, {}, {}]);
+        expect(readWeather(item(burstOnly), NOW)?.profile.wind).toHaveLength(1);
+    });
+
+    it('takes where the wind is worth a mark, and the burst, from the settings', () => {
+        const wind = layer([{ wind: Array(HOURS).fill(10) }, { wind: Array(HOURS).fill(25) }, { wind: Array(HOURS).fill(5), gust: Array(HOURS).fill(42) }]);
+        const read = readWeather(item(wind), NOW, { thresholds: { profileWind: 10, gust: 40 } });
+        expect(read?.profile.wind.map(({ d }) => d)).toEqual([0, 5000, 10000]);
+        expect(read?.profile.gustMin).toBe(40);
+        expect(readWeather(item(wind), NOW)?.profile.gustMin).toBe(50);
+        expect(readWeather(item(wind), NOW, { thresholds: { profileWind: 30 } })?.profile.wind).toEqual([]);
+    });
+
+    it("turns the wind to the way the ride goes: 0 degrees is behind, 180 against, 90 pushing to the rider's right, clockwise on the screen", () => {
+        // the route goes north
+        const angle = (dir: number) => readWeather(item(layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(dir) }, {}])), NOW)?.profile.wind[0].angle ?? NaN;
+        expect(angle(180)).toBeCloseTo(0, 0);
+        expect(Math.abs(angle(0))).toBeCloseTo(180, 0);
+        // from the west: pushes the rider to the east, their right; the screen's down
+        expect(angle(270)).toBeCloseTo(90, 0);
+        // from the east: pushes to the rider's left, the screen's up
+        expect(angle(90)).toBeCloseTo(-90, 0);
     });
 });
 

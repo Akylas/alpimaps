@@ -128,11 +128,13 @@ export interface LensSlice {
 
 /** A plate on the route at vertex `i`: a speed sign, a climb's category. `p` is its placement priority, the higher wins. */
 export interface LensSymbol {
-    sym: 'speed' | 'grade' | 'climb' | 'climbtip' | 'wx' | 'wind' | 'sunset' | 'sunrise' | 'night';
+    sym: 'speed' | 'grade' | 'climb' | 'climbtip' | 'wx' | 'sunset' | 'sunrise' | 'night';
     i: number;
     t: string;
     /** A smaller line under `t`. */
     t2?: string;
+    /** What is worth a second line, starting with a newline: a strong wind. */
+    t3?: string;
     icon?: string;
     /** Degrees, for an arrow. */
     rot?: number;
@@ -158,9 +160,23 @@ export interface ProfileFillStop {
     pattern?: SurfacePattern;
 }
 
+/** What the weather lays over the profile, meters from the start: rain as bars from the foot, the temperature as a line, the wind along the way. */
+export interface ProfileWeather {
+    /** A bar over a stretch: as high as the rain, as plain as the chance of it. */
+    rain: { from: number; to: number; mmPerHour: number; probability: number }[];
+    temp: { d: number; value: number; glyph: string }[];
+    /** Where it is worth a mark. km/h, the part of it against (above 0) or behind (below 0) the rider, and where it pushes to: degrees clockwise on the screen, 0 with the ride, 180 against it, 90 to the rider's right. */
+    wind: { d: number; speed: number; gust: number; head: number; angle: number }[];
+    /** km/h of a gust that is worth a line of its own. */
+    gustMin: number;
+}
+
 /** What a lens asks of the profile chart. */
 export interface LensProfile {
     brackets?: ProfileBracket[];
+    /** The grade fill steps back, for what the lens lays over it to read. */
+    fade?: boolean;
+    weather?: ProfileWeather;
     /** The fill's colours, when they are not the grade's. */
     fill?: ProfileFillStop[];
 }
