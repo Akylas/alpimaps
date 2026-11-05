@@ -154,6 +154,9 @@ export interface WeatherRead {
     symbols: LensSymbol[];
     /** What it lays over the profile. */
     profile: ProfileWeather;
+    /** epoch ms the ride is at a vertex, and meters from the start there */
+    timeAt(index: number): number;
+    distanceAt(index: number): number;
     /** What the layer says of a route vertex, at the time the ride is there. */
     at(index: number): (WeatherReading & { head?: number; cross?: number }) | undefined;
 }
@@ -199,7 +202,7 @@ interface Chunk {
 export function readWeather(
     item: StageItem & { analysis?: RouteAnalysis | null },
     now: number,
-    { stale = false, thresholds: custom }: { stale?: boolean; thresholds?: Partial<WeatherThresholds> } = {}
+    { ahead, stale = false, thresholds: custom }: { stale?: boolean; thresholds?: Partial<WeatherThresholds>; ahead?: { fromIndex: number; speedFactor?: number } } = {}
 ): WeatherRead | null {
     const layer = item.analysis?.layers.weather;
     if (!layer) {
@@ -209,7 +212,9 @@ export function readWeather(
     const thresholds = { ...DEFAULT_THRESHOLDS, ...custom };
     const coordinates = routeCoordinates(item.geometry);
     const { distances } = timelineSource(item);
-    const timeline = buildTimeline(timelineSource(item), item.analysis.inputs, now);
+    const planned = buildTimeline(timelineSource(item), item.analysis.inputs, now);
+    // following the route: the rider is at a vertex now, and the way left is timed from there
+    const timeline = ahead ? planned.reanchor(ahead.fromIndex, now, ahead.speedFactor) : planned;
     const ride = readRide(data, { at: timeline.at, coordinates, distances });
     const last = coordinates.length - 1;
 
@@ -355,6 +360,8 @@ export function readWeather(
             tailShare: total > 0 ? tailDistance / total : 0,
             thunder: ride.some(({ reading }) => (reading?.code ?? 0) >= THUNDER_CODE)
         },
+        timeAt: (index) => timeline.at(index),
+        distanceAt: (index) => distances[Math.max(0, Math.min(index, last))],
         at(index) {
             const nearest = ride.reduce((best, entry, position) => (Math.abs(entry.sample.i - index) < Math.abs(ride[best].sample.i - index) ? position : best), 0);
             const reading = readSample(data, nearest, timeline.at(index));
