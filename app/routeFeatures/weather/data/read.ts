@@ -93,6 +93,8 @@ const THUNDER_CODE = 95;
 const WIND_MIN = 10;
 /** of the plate's wind threshold, what a headwind has to be to earn the line alone */
 const HEAD_SHARE = 2 / 3;
+/** degrees of change from the plate before that earn a plate */
+const PLATE_TEMP_CHANGE = 2;
 /** mm/h under which it does not rain */
 const RAIN_MIN = 0.1;
 const HOUR_MS = 3600000;
@@ -314,7 +316,7 @@ export function readWeather(
         }
     });
 
-    const symbols: LensSymbol[] = ride.flatMap(({ reading, sample }, position) => {
+    const sampled: { plate: LensSymbol; temp: number }[] = ride.flatMap(({ reading, sample }, position) => {
         if (!reading || reading.temp === undefined) {
             return [];
         }
@@ -335,7 +337,7 @@ export function readWeather(
                 ...outdated
             }
         ];
-        return plates;
+        return plates.map((plate) => ({ plate, temp: reading.temp }));
     });
 
     const rows: RideRow[] = ride.map(({ at, cross, head, reading, sample }, index) => ({
@@ -355,6 +357,21 @@ export function readWeather(
         cross,
         rain: rainClass(reading?.precip ?? 0)
     }));
+
+    // the map is the route first: a plate is kept where the weather changes (the sky, the rain, a strong wind, 2 degrees), and at the two ends
+    const symbols: LensSymbol[] = [];
+    sampled.forEach(({ plate, temp }, position) => {
+        const previous = symbols.length ? sampled[sampled.findIndex((entry) => entry.plate === symbols[symbols.length - 1])] : undefined;
+        const changed =
+            !previous ||
+            previous.plate.glyph !== plate.glyph ||
+            previous.plate.severity !== plate.severity ||
+            !!previous.plate.note !== !!plate.note ||
+            Math.abs(previous.temp - temp) >= PLATE_TEMP_CHANGE;
+        if (changed || position === sampled.length - 1) {
+            symbols.push(plate);
+        }
+    });
 
     return {
         ride,

@@ -19,8 +19,6 @@ import {
 import type { IItem } from '~/models/Item';
 import { routeTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
-import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
-import { activityOf } from '~/utils/routeAnalysis/activity';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
@@ -102,7 +100,7 @@ function failure(reason: LayerReason | undefined) {
 /** What the first fetch sends, to say it before the user taps. */
 function pointsToSend(item: IItem) {
     const source = timelineSource(item);
-    return sampleRoute({ distances: source.distances, altitudes: source.altitudes, speedKmh: flatSpeedKmh(activityOf(item, item.analysis)) }).length;
+    return sampleRoute({ distances: source.distances, altitudes: source.altitudes }).length;
 }
 
 const fetchWeather = (item: IItem) => () => computeLayers(item, ['weather']);

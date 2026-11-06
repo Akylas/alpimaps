@@ -21,23 +21,18 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
+    import Chip from '~/components/common/Chip.svelte';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
     import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensFact, type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
-    import { isEInk } from '~/helpers/theme';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
-
-    // e-ink has no colour to give a figure
-    function factColor(fact: LensFact) {
-        return isEInk ? colorOnSurface : fact.alert ? colorError : (fact.color ?? colorOnSurfaceVariant);
-    }
 
     export let item: Item;
     /** opened from the Time tile: the When panel shows */
@@ -46,7 +41,6 @@
     let {
         colorCanvas,
         colorCard,
-        colorError,
         colorErrorContainer,
         colorOnErrorContainer,
         colorOnSurface,
@@ -60,7 +54,6 @@
     $: ({
         colorCanvas,
         colorCard,
-        colorError,
         colorErrorContainer,
         colorOnErrorContainer,
         colorOnSurface,
@@ -420,13 +413,10 @@
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
                             {#if row.facts?.length}
-                                <!-- the summary as icons with their figures, in their colours -->
+                                <!-- the summary as chips: an icon and its figure, in their colours -->
                                 <stacklayout orientation="horizontal">
                                     {#each row.facts as fact}
-                                        <label color={colorOnSurfaceVariant} fontSize={12} marginRight={10} maxLines={1}>
-                                            <span color={factColor(fact)} fontFamily={$fonts.mdi} fontSize={14} text={fact.icon ?? ''} />
-                                            <span color={factColor(fact)} fontWeight="bold" text={(fact.icon ? ' ' : '') + fact.text} />
-                                        </label>
+                                        <Chip alert={fact.alert} color={fact.color} height={20} icon={fact.icon} marginTop={2} text={fact.text} />
                                     {/each}
                                 </stacklayout>
                             {:else}

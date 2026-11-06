@@ -20,13 +20,13 @@ describe('weatherRows', () => {
     });
 
     it('lists a row for each sample in the order of the ride under the header when it is open', () => {
-        expect(weatherRows({ read, footer, fetch, detailsOpen: true }).map(({ key }) => key)).toEqual(['summary', 'details', 'columns', 'ride0', 'ride1', 'footer']);
+        expect(weatherRows({ read, footer, fetch, detailsOpen: true }).map(({ key }) => key)).toEqual(['summary', 'details', 'ride0', 'ride1', 'footer']);
     });
 
     it('gives each row its own data', () => {
         const rows = weatherRows({ read, footer, fetch, detailsOpen: true });
-        expect(rows[3].data).toEqual({ type: 'ride', row: read.rows[0] });
-        expect(rows[5].data).toMatchObject({ type: 'footer', provider: 'Open-Meteo', decimals: 2 });
+        expect(rows[2].data).toEqual({ type: 'ride', row: read.rows[0] });
+        expect(rows[4].data).toMatchObject({ type: 'footer', provider: 'Open-Meteo', decimals: 2 });
     });
 });
 

@@ -2,7 +2,6 @@
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import { type LayerExtra, layerInputsHash, weatherCoverage } from '~/utils/routeAnalysis/freshness';
 import { StageError, type StageItem } from '~/utils/routeAnalysis/pipeline';
-import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs, Layer, WeatherData } from '~/utils/routeAnalysis/types';
 import { type WeatherProvider, type WeatherQuery, type WeatherResponse, roundCoordinate } from '~/routeFeatures/weather/providers/provider';
@@ -42,7 +41,7 @@ export async function computeWeatherLayer({
     const source = timelineSource(item);
     const timeline = buildTimeline(source, inputs, now);
     const window = weatherCoverage(timeline.startAt, timeline.totalSec);
-    const samples = sampleRoute({ distances: source.distances, altitudes: source.altitudes, speedKmh: flatSpeedKmh(inputs.activity) });
+    const samples = sampleRoute({ distances: source.distances, altitudes: source.altitudes });
     const points = samples.map(({ alt, i: index }) => ({ lat: roundCoordinate(coordinates[index][1], decimals), lon: roundCoordinate(coordinates[index][0], decimals), alt }));
 
     const { provider, response } = await fetch({ points, from: window.from, to: window.to });

@@ -6,8 +6,6 @@ export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }
     /** the header of the samples, which are listed only while it is open */
     | { type: 'details'; open: boolean; count: number }
-    /** the titles of the columns of the samples */
-    | { type: 'columns' }
     | { type: 'ride'; row: RideRow }
     | { type: 'footer'; provider: string; attribution: WeatherAttribution; updatedAt: number; decimals: number; outdated: boolean; canUpdate: boolean }
     /** nothing fetched: what the first fetch sends, or why it cannot be asked */
@@ -28,7 +26,6 @@ export function weatherRows({ detailsOpen, fetch, footer, read }: WeatherRowsInp
     return [
         { key: 'summary', data: { type: 'summary', summary: read.summary } },
         { key: 'details', data: { type: 'details', open: detailsOpen, count: read.rows.length } },
-        ...(detailsOpen ? [{ key: 'columns', data: { type: 'columns' as const } }] : []),
         ...(detailsOpen ? read.rows.map((row) => ({ key: `ride${row.index}`, data: { type: 'ride' as const, row } })) : []),
         { key: 'footer', data: { type: 'footer', ...footer } }
     ];

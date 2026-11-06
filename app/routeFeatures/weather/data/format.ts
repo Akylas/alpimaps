@@ -14,6 +14,11 @@ export interface WeatherFormat {
     speed(kmh: number): string;
     /** The speed without its unit: `18` */
     speedNumber(kmh: number): string;
+    /** The value and the unit apart, for what draws the unit lighter: `['18', 'km/h']` */
+    speedParts(kmh: number): [string, string];
+    rainParts(mm: number): [string, string];
+    rainRateParts(mmPerHour: number): [string, string];
+    temperatureRangeParts(low: number, high: number): [string, string];
     /** The title of a column of temperatures: `°C` */
     temperatureUnit(): string;
 }
@@ -27,5 +32,9 @@ export const METRIC_FORMAT: WeatherFormat = {
     rainNumber: (mmPerHour) => mmPerHour.toFixed(1),
     speed: (kmh) => `${Math.round(kmh)} km/h`,
     speedNumber: (kmh) => String(Math.round(kmh)),
+    speedParts: (kmh) => [String(Math.round(kmh)), 'km/h'],
+    rainParts: (mm) => [mm < 10 ? mm.toFixed(1) : String(Math.round(mm)), 'mm'],
+    rainRateParts: (mmPerHour) => [mmPerHour.toFixed(1), 'mm/h'],
+    temperatureRangeParts: (low, high) => [Math.round(low) === Math.round(high) ? String(Math.round(low)) : `${Math.round(low)}–${Math.round(high)}`, '°C'],
     temperatureUnit: () => '°C'
 };

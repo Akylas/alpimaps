@@ -24,6 +24,23 @@ export const weatherFormat: WeatherFormat = {
     rainNumber: (mmPerHour) => String(convertFamilyValue(mmPerHour, PRECIPITATION_FAMILY, UNITS.MM)[0]),
     speed: (kmh) => formatFamilyValue(kmh, UNIT_FAMILIES.Speed, UNITS.SpeedKm),
     speedNumber: (kmh) => String(convertFamilyValue(kmh, UNIT_FAMILIES.Speed, UNITS.SpeedKm)[0]),
+    speedParts: (kmh) => {
+        const [value, unit] = convertFamilyValue(kmh, UNIT_FAMILIES.Speed, UNITS.SpeedKm);
+        return [String(value), unit];
+    },
+    rainParts: (mm) => {
+        const [value, unit] = convertFamilyValue(mm, PRECIPITATION_FAMILY, UNITS.MM);
+        return [String(value), unit];
+    },
+    rainRateParts: (mmPerHour) => {
+        const [value, unit] = convertFamilyValue(mmPerHour, PRECIPITATION_FAMILY, UNITS.MM);
+        return [String(value), `${unit}/h`];
+    },
+    temperatureRangeParts: (low, high) => {
+        const [lowValue, symbol] = convertFamilyValue(low, TEMPERATURE_FAMILY, UNITS.Celcius);
+        const highValue = temperatureNumber(high);
+        return [lowValue === highValue ? String(lowValue) : `${lowValue}–${highValue}`, symbol];
+    },
     temperatureUnit: () => (unitOfFamily(TEMPERATURE_FAMILY) === UNITS.Fahrenheit ? UNITS.Fahrenheit : UNITS.Celcius)
 };
 

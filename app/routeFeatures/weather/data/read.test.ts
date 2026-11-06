@@ -41,6 +41,8 @@ function layer(bySample: Series[]): WeatherData {
     };
 }
 
+const constant = (value: number) => Array<number>(HOURS).fill(value);
+
 /** `rain` mm/h stamped at hours `at`, 0 elsewhere. */
 const rainAt = (rain: number, ...at: number[]) => Array.from({ length: HOURS }, (_, hour) => (at.includes(hour) ? rain : 0));
 
@@ -126,6 +128,39 @@ describe('symbols', () => {
         expect(plates?.[0]).toMatchObject({ label: '10°', glyph: wxGlyph(3), severity: 0 });
         expect(plates?.[0].sublabel).toBeUndefined();
         expect(plates?.[1]).toMatchObject({ label: '10°', sublabel: '1.3 mm', glyph: wxGlyph(61), severity: 2 });
+    });
+
+    describe('keeps the map clear', () => {
+        const plates = (bySample: Series[]) =>
+            readWeather(item(layer(bySample)), NOW)
+                ?.symbols.filter((symbol) => symbol.shape === 'plate')
+                .map((plate) => plate.vertex);
+
+        it('keeps a plate at each end and none in between while the weather stays the same', () => {
+            expect(plates([{}, {}, {}])).toEqual([0, 100]);
+        });
+
+        it('keeps one where the rain starts', () => {
+            expect(plates([{}, { precip: rainAt(2, 7, 8) }, {}])).toEqual([0, 50, 100]);
+        });
+
+        it('keeps one where the sky changes', () => {
+            expect(plates([{}, { code: constant(3) }, { code: constant(3) }])).toEqual([0, 50, 100]);
+        });
+
+        it('keeps one where it turns 2 degrees warmer or colder than the plate before, not for 1', () => {
+            expect(plates([{}, { temp: constant(11) }, {}])).toEqual([0, 100]);
+            expect(plates([{}, { temp: constant(12) }, {}])).toEqual([0, 50, 100]);
+        });
+
+        it('keeps one where a strong wind comes', () => {
+            expect(plates([{}, { wind: constant(40), dir: constant(0) }, {}])).toEqual([0, 50, 100]);
+        });
+
+        it('compares with the plate kept, not with the one skipped', () => {
+            // 1 degree more at each sample: the 3rd is 2 degrees over the first, the second was skipped
+            expect(plates([{}, { temp: constant(11) }, { temp: constant(12) }])).toEqual([0, 100]);
+        });
     });
 
     it('ranks the rainy plates first for the room on the map', () => {

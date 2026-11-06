@@ -3,13 +3,16 @@ import type { WeatherData } from '~/utils/routeAnalysis/types';
 
 export type WeatherSample = WeatherData['samples'][number];
 
-/** Weather systems are 10-30 km wide and the finest model grid 1.5 km: closer than 3 km re-reads one cell, further than 15 km misses a front. */
-const MIN_STEP = 3000;
-const MAX_STEP = 15000;
+/**
+ * A weather system is 10 to 30 km wide: closer samples read the same weather over again, and the finest model grids (1.5 km) are no
+ * reason to ask for each of them. What changes the weather over a short way is the height: 400 m is 2.6 degrees (the lapse rate), a
+ * freezing level, a snow line.
+ */
+const REGULAR_STEP = 10000;
 const MAX_SAMPLES = 40;
 const STEP_GROWTH = 1.25;
-/** a pass or a valley floor this far above or below the sample before it is worth its own sample */
-const RELIEF = 400;
+/** meters of height from the sample before that earn a sample of their own */
+const ELEVATION_BAND = 400;
 const MERGE_DISTANCE = 2000;
 const MERGE_ALTITUDE = 150;
 
@@ -28,10 +31,10 @@ function firstAtOrAfter(distances: ArrayLike<number>, target: number) {
 }
 
 /**
- * About 30 min of travel between samples, a sample at every pass and valley floor the regular ones step over, the
- * start and the finish always, 40 at most. The altitude is NaN when the route has none.
+ * A sample every 10 km, the start and the finish always, and one each time the route has climbed or gone down 400 m since the sample
+ * before; 40 at most. The altitude is NaN when the route has none.
  */
-export function sampleRoute({ altitudes, distances, speedKmh }: { distances: ArrayLike<number>; altitudes?: ArrayLike<number>; speedKmh: number }): WeatherSample[] {
+export function sampleRoute({ altitudes, distances }: { distances: ArrayLike<number>; altitudes?: ArrayLike<number> }): WeatherSample[] {
     const count = distances.length;
     if (!count) {
         return [];
@@ -50,20 +53,12 @@ export function sampleRoute({ altitudes, distances, speedKmh }: { distances: Arr
         const samples = [...regular];
         if (altitudes) {
             regular.slice(1).forEach((next, position) => {
-                const previous = regular[position];
-                let highest = previous.i;
-                let lowest = previous.i;
-                for (let index = previous.i + 1; index < next.i; index++) {
-                    highest = altitudes[index] > altitudes[highest] ? index : highest;
-                    lowest = altitudes[index] < altitudes[lowest] ? index : lowest;
-                }
-                const summit = make(highest);
-                const floor = make(lowest);
-                if (highest > previous.i && summit.alt > Math.max(previous.alt, next.alt) && summit.alt - previous.alt >= RELIEF) {
-                    samples.push(summit);
-                }
-                if (lowest > previous.i && floor.alt < Math.min(previous.alt, next.alt) && previous.alt - floor.alt >= RELIEF) {
-                    samples.push(floor);
+                let reference = regular[position].alt;
+                for (let index = regular[position].i + 1; index < next.i; index++) {
+                    if (Math.abs(altitudes[index] - reference) >= ELEVATION_BAND) {
+                        samples.push(make(index));
+                        reference = Math.round(altitudes[index]);
+                    }
                 }
             });
         }
@@ -87,7 +82,7 @@ export function sampleRoute({ altitudes, distances, speedKmh }: { distances: Arr
         return merged;
     }
 
-    let step = Math.max(MIN_STEP, Math.min(MAX_STEP, speedKmh * 500));
+    let step = REGULAR_STEP;
     for (;;) {
         const samples = merge(build(step));
         if (samples.length <= MAX_SAMPLES || step >= total) {
