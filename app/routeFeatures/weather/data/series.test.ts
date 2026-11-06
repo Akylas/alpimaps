@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { WeatherData } from './types';
-import { MISSING, bearingAt, quantise, rainClass, readRide, readSample, windRelative } from './weatherSeries';
+import type { WeatherData } from '~/utils/routeAnalysis/types';
+import { MISSING, bearingAt, quantise, rainClass, readRide, readSample, windRelative } from '~/routeFeatures/weather/data/series';
 
 const HOUR = 3600;
 const T0 = 1_800_000_000 - (1_800_000_000 % HOUR);

@@ -1,7 +1,7 @@
 /** The hourly series of a weather layer, and what it says at a time and place. Pure: nothing here may import NativeScript. */
 import { bearingBetween } from '~/utils/geo';
-import type { WeatherData } from './types';
-import type { WeatherSample } from './weatherSamples';
+import type { WeatherData } from '~/utils/routeAnalysis/types';
+import type { WeatherSample } from '~/routeFeatures/weather/data/samples';
 
 export type WeatherVar = keyof WeatherData['v'];
 

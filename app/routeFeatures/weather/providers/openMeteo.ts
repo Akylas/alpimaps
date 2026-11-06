@@ -1,6 +1,6 @@
 /** Open-Meteo as a weather provider. Pure: nothing here may import NativeScript. */
-import { type WeatherHttp, type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse } from './weatherProvider';
-import type { WeatherVar } from './weatherSeries';
+import { type WeatherHttp, type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse } from '~/routeFeatures/weather/providers/provider';
+import type { WeatherVar } from '~/routeFeatures/weather/data/series';
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const DAY = 86400;

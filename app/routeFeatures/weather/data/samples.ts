@@ -1,5 +1,5 @@
 /** Where along a route the weather is asked for. Pure: nothing here may import NativeScript. */
-import type { WeatherData } from './types';
+import type { WeatherData } from '~/utils/routeAnalysis/types';
 
 export type WeatherSample = WeatherData['samples'][number];
 

@@ -1,7 +1,7 @@
 /** What the forecast says of the way left, while following a route. Pure: nothing here may import NativeScript. */
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
-import { readWeather } from './read';
+import { readWeather } from '~/routeFeatures/weather/data/read';
 
 const MINUTE_MS = 60000;
 /** km/h of headwind that counts, and the code from which it is a thunderstorm */

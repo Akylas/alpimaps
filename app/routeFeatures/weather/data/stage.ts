@@ -1,9 +1,9 @@
 import { get } from 'svelte/store';
-import { weatherService } from '~/services/WeatherService';
+import { weatherService } from '~/routeFeatures/weather/services/WeatherService';
 import { type AnalysisStage, StageError } from '~/utils/routeAnalysis/pipeline';
-import { WeatherProviderError } from '~/utils/routeAnalysis/weatherProvider';
-import { computeWeatherLayer, weatherExtras } from './layer';
-import { weatherDecimals, weatherProviderId } from './settings';
+import { WeatherProviderError } from '~/routeFeatures/weather/providers/provider';
+import { computeWeatherLayer, weatherExtras } from '~/routeFeatures/weather/data/layer';
+import { weatherDecimals, weatherProviderId } from '~/routeFeatures/weather/settings';
 
 /** Asks the forecast for the route. Only runs when the user asks: a first fetch, an update, a retry. */
 export const weatherStage: AnalysisStage = {

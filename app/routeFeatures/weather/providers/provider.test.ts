@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_WEATHER_PROVIDER, type WeatherProvider, getWeatherProvider, registerWeatherProvider, roundCoordinate, weatherProviders } from './weatherProvider';
+import { DEFAULT_WEATHER_PROVIDER, type WeatherProvider, getWeatherProvider, registerWeatherProvider, roundCoordinate, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 
 function provider(id: string): WeatherProvider {
     return { id, name: id, source: id, attribution: { text: id, url: '', license: '' }, maxPoints: 10, fetch: async () => ({ t0: 0, n: 0, series: [], vars: [], models: '' }) };

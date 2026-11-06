@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { RideRow } from './read';
-import { rainColor, tempColor, weatherRows, windLabel } from './pageRows';
+import type { RideRow } from '~/routeFeatures/weather/data/read';
+import { rainColor, tempColor, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
 
 const attribution = { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' };
 const footer = { provider: 'Open-Meteo', attribution, updatedAt: 1, decimals: 2, outdated: false, canUpdate: true };

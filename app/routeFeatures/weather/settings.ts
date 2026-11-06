@@ -1,7 +1,7 @@
 import { derived, get } from 'svelte/store';
 import { settingsStore } from '~/stores/settingsStore';
-import { DEFAULT_WEATHER_PROVIDER } from '~/utils/routeAnalysis/weatherProvider';
-import { DEFAULT_THRESHOLDS, type WeatherThresholds } from './read';
+import { DEFAULT_WEATHER_PROVIDER } from '~/routeFeatures/weather/providers/provider';
+import { DEFAULT_THRESHOLDS, type WeatherThresholds } from '~/routeFeatures/weather/data/read';
 
 export const routeFeatureWeather = settingsStore('route_feature_weather', true);
 

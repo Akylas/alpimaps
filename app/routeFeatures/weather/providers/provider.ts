@@ -1,6 +1,6 @@
 /** What the app asks of a weather source, so another can stand in for it. Pure: nothing here may import NativeScript. */
-import type { LayerReason } from './freshness';
-import type { WeatherVar } from './weatherSeries';
+import type { LayerReason } from '~/utils/routeAnalysis/freshness';
+import type { WeatherVar } from '~/routeFeatures/weather/data/series';
 
 export interface WeatherPoint {
     lat: number;

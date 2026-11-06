@@ -3,9 +3,9 @@ import { layerInputsHash, weatherCoverage } from '~/utils/routeAnalysis/freshnes
 import { StageError } from '~/utils/routeAnalysis/pipeline';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
-import type { WeatherQuery, WeatherResponse } from '~/utils/routeAnalysis/weatherProvider';
-import { MISSING } from '~/utils/routeAnalysis/weatherSeries';
-import { type WeatherFetcher, computeWeatherLayer, weatherExtras } from './layer';
+import type { WeatherQuery, WeatherResponse } from '~/routeFeatures/weather/providers/provider';
+import { MISSING } from '~/routeFeatures/weather/data/series';
+import { type WeatherFetcher, computeWeatherLayer, weatherExtras } from '~/routeFeatures/weather/data/layer';
 
 const HOUR = 3600;
 const DAY = 86400;

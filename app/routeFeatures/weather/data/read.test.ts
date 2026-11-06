@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { Departure, RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
-import { type WeatherVar, quantise } from '~/utils/routeAnalysis/weatherSeries';
-import { type WeatherThresholds, readWeather, wxGlyph } from './read';
+import { type WeatherVar, quantise } from '~/routeFeatures/weather/data/series';
+import { type WeatherThresholds, readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
 
 const HOUR = 3600;
 const T0 = Date.UTC(2026, 5, 1) / 1000;

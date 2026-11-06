@@ -10,10 +10,10 @@
     import { computeLayers } from '~/routeFeatures/analysisRunner';
     import type { LensSection } from '~/routeFeatures/registry';
     import { routeTimeZone } from '~/utils/routeAnalysis/departure';
-    import type { WeatherRowData } from './pageRows';
-    import { rainColor, tempColor, windLabel } from './pageRows';
-    import { wxGlyph } from './read';
-    import { weatherDetailsOpen, weatherGust } from './settings';
+    import type { WeatherRowData } from '~/routeFeatures/weather/ui/pageRows';
+    import { rainColor, tempColor, windLabel } from '~/routeFeatures/weather/ui/pageRows';
+    import { wxGlyph } from '~/routeFeatures/weather/data/read';
+    import { weatherDetailsOpen, weatherGust } from '~/routeFeatures/weather/settings';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;

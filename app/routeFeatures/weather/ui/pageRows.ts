@@ -1,6 +1,6 @@
 /** The rows of the weather card of the route page. Pure: nothing here may import NativeScript. */
-import type { WeatherAttribution } from '~/utils/routeAnalysis/weatherProvider';
-import type { RideRow, WeatherRead, WeatherSummary } from './read';
+import type { WeatherAttribution } from '~/routeFeatures/weather/providers/provider';
+import type { RideRow, WeatherRead, WeatherSummary } from '~/routeFeatures/weather/data/read';
 
 export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }

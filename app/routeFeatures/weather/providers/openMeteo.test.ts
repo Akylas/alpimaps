@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { openMeteoProvider, openMeteoUrl, parseOpenMeteo } from './openMeteo';
-import { WeatherProviderError, type WeatherQuery } from './weatherProvider';
+import { openMeteoProvider, openMeteoUrl, parseOpenMeteo } from '~/routeFeatures/weather/providers/openMeteo';
+import { WeatherProviderError, type WeatherQuery } from '~/routeFeatures/weather/providers/provider';
 
 const DAY = 86400;
 const HOUR = 3600;

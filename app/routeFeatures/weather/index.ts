@@ -20,10 +20,10 @@ import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysi
 import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
-import { getWeatherProvider, weatherProviders } from '~/utils/routeAnalysis/weatherProvider';
-import { sampleRoute } from '~/utils/routeAnalysis/weatherSamples';
-import { rainColor, tempColor, weatherRows } from './pageRows';
-import { type WeatherRead, readWeather } from './read';
+import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
+import { sampleRoute } from '~/routeFeatures/weather/data/samples';
+import { rainColor, tempColor, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
+import { type WeatherRead, readWeather } from '~/routeFeatures/weather/data/read';
 import {
     routeFeatureWeather,
     weatherDecimals,
@@ -36,8 +36,8 @@ import {
     weatherSettingsKey,
     weatherThresholds,
     weatherWindKey
-} from './settings';
-import { weatherStage } from './stage';
+} from '~/routeFeatures/weather/settings';
+import { weatherStage } from '~/routeFeatures/weather/data/stage';
 
 const MINUTE = 60000;
 
@@ -294,7 +294,7 @@ const weatherPageSection: RoutePageSection = {
             fetch: { state, points: pointsToSend(item), decimals: weatherDecimals(), provider: provider?.name ?? '' }
         });
     },
-    component: () => import('~/routeFeatures/weather/WeatherRow.svelte')
+    component: () => import('~/routeFeatures/weather/ui/WeatherRow.svelte')
 };
 
 registerRouteFeature({

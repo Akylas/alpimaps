@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sampleRoute } from './weatherSamples';
+import { sampleRoute } from '~/routeFeatures/weather/data/samples';
 
 /** A vertex every 100 m. */
 function route(km: number, altitudeAt: (meters: number) => number = () => 500) {

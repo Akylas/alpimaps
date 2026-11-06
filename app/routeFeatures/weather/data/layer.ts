@@ -5,9 +5,9 @@ import { StageError, type StageItem } from '~/utils/routeAnalysis/pipeline';
 import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs, Layer, WeatherData } from '~/utils/routeAnalysis/types';
-import { type WeatherProvider, type WeatherQuery, type WeatherResponse, roundCoordinate } from '~/utils/routeAnalysis/weatherProvider';
-import { sampleRoute } from '~/utils/routeAnalysis/weatherSamples';
-import { quantiseSeries } from '~/utils/routeAnalysis/weatherSeries';
+import { type WeatherProvider, type WeatherQuery, type WeatherResponse, roundCoordinate } from '~/routeFeatures/weather/providers/provider';
+import { sampleRoute } from '~/routeFeatures/weather/data/samples';
+import { quantiseSeries } from '~/routeFeatures/weather/data/series';
 
 const HOUR = 3600;
 

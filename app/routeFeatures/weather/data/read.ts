@@ -4,7 +4,7 @@ import type { LensSlice, LensSymbol, ProfileWeather } from '~/routeFeatures/regi
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
-import { type RideReading, type WeatherReading, bearingAt, rainClass, readRide, readSample, windRelative } from '~/utils/routeAnalysis/weatherSeries';
+import { type RideReading, type WeatherReading, bearingAt, rainClass, readRide, readSample, windRelative } from '~/routeFeatures/weather/data/series';
 
 /** Material Design Icons, which the map labels have for sure. */
 const glyph = (codePoint: number) => String.fromCodePoint(codePoint);

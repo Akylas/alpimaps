@@ -1,7 +1,7 @@
 import { networkService } from '~/services/NetworkService';
 import type { CancelSignal } from '~/utils/routeAnalysis/pipeline';
-import { openMeteoProvider } from '~/utils/routeAnalysis/openMeteo';
-import { type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse, getWeatherProvider, registerWeatherProvider } from '~/utils/routeAnalysis/weatherProvider';
+import { openMeteoProvider } from '~/routeFeatures/weather/providers/openMeteo';
+import { type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse, getWeatherProvider, registerWeatherProvider } from '~/routeFeatures/weather/providers/provider';
 
 registerWeatherProvider(openMeteoProvider);
 

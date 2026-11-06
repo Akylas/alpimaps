@@ -17,7 +17,7 @@
     import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
     import { type StripCell, type WeatherFactors, departureStrip } from '~/routeFeatures/page/departureStrip';
-    import { readWeather } from '~/routeFeatures/weather/read';
+    import { readWeather } from '~/routeFeatures/weather/data/read';
     import { routeFeatureWeather } from '~/routeFeatures/weather/settings';
     import { networkService } from '~/services/NetworkService';
     import { activityOf } from '~/utils/routeAnalysis/activity';
