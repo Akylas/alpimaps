@@ -4,6 +4,8 @@ import { lc } from '~/helpers/locale';
 import { derived, get } from 'svelte/store';
 import { categoryLabel, climbsRows, readClimbs } from '~/routeFeatures/climbs/data';
 import { climbsSettingRows, climbsSettingsKey, climbsSteepOpen, routeFeatureClimbs } from '~/routeFeatures/climbs/settings';
+import { climbsLegend } from '~/routeFeatures/climbs/legend';
+import { gradePalette } from '~/routeFeatures/climbs/palette';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { alertFeatures, routeCoordinates, symbolFeatures } from '~/routeFeatures/lens/sections';
@@ -62,7 +64,8 @@ const climbsLens: RouteLens = {
     profile: ({ item }) => ({ brackets: readClimbs(item)?.brackets }),
     sections: ({ item }) => readClimbs(item)?.sections ?? [],
     slices: ({ item }) => readClimbs(item)?.slices ?? [],
-    symbols: ({ item }) => readClimbs(item)?.symbols ?? []
+    symbols: ({ item }) => readClimbs(item)?.symbols ?? [],
+    legend: ({ palette, translate, variant }) => climbsLegend({ palette, translate, variant })
 };
 
 const climbsPageSection: RoutePageSection = {
@@ -89,6 +92,7 @@ registerRouteFeature({
     settings: climbsSettingRows,
     // the steep list folding changes the page's rows
     changes: derived([climbsSettingsKey, climbsSteepOpen], (values) => values),
+    lensPalette: gradePalette,
     lenses: [climbsLens],
     pageSections: [climbsPageSection],
     attention: ({ item }) => readClimbs(item)?.marks ?? [],

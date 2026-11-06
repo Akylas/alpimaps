@@ -5,6 +5,7 @@
     import { onDestroy } from 'svelte';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import GradeLegend from '~/components/chart/GradeLegend.svelte';
+    import { formatTime } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
     import LensBar from '~/routeFeatures/lens/LensBar.svelte';
@@ -14,6 +15,10 @@
     import { isLensFeature, paddedRange, routeCoordinates, sectionAt, stepSection, tappedVertex } from '~/routeFeatures/lens/sections';
     import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { packageService } from '~/services/PackageService';
+    import { activityOf } from '~/utils/routeAnalysis/activity';
+    import { routeTimeZone } from '~/utils/routeAnalysis/departure';
+    import { createAnalysis } from '~/utils/routeAnalysis/storage';
+    import { buildTimeline, timeAtDistance, timelineSource } from '~/utils/routeAnalysis/timeline';
     import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { showAscents, showGradeColors } from '~/stores/mapStore';
 
@@ -55,6 +60,20 @@
     $: profileOptions = activeLens?.profile?.({ item });
     $: brackets = profileOptions?.brackets ?? NO_BRACKETS;
     $: fill = profileOptions?.fill ?? null;
+    $: fade = profileOptions?.fade ?? false;
+    // the clock time of each distance of the axis, when the route has a time
+    $: clockAt = $routeFeatureChanges >= 0 ? clockFor(item) : null;
+    function clockFor(route: Item): ((meters: number) => string) | null {
+        const source = timelineSource(route);
+        if (source.distances.length < 2) {
+            return null;
+        }
+        const inputs = (route.analysis ?? createAnalysis(route.geometry, activityOf(route, null))).inputs;
+        const timeline = buildTimeline(source, inputs, Date.now());
+        const zone = routeTimeZone(inputs.departure);
+        return (meters) => formatTime(timeAtDistance(source.distances, timeline, meters), 'LT', zone.offset);
+    }
+    $: overlay = profileOptions?.overlay ?? null;
 
     // what needs attention is marked whatever the lens. The same array until it changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
@@ -162,6 +181,8 @@
         bind:this={chart}
         {besideMap}
         {brackets}
+        {clockAt}
+        {fade}
         {fill}
         inCard={true}
         {item}
@@ -172,6 +193,7 @@
         row={2}
         showAscents={$showAscents}
         showProfileGrades={$showGradeColors}
+        {overlay}
         on:cursor={onCursor}
         on:mark={onMark}
         on:highlight={onChartHighlight} />

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import { buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
-import { darkMinutes, departureStrip } from './departureStrip';
+import { type DepartureAssessor, darkMinutes, departureStrip } from './departureStrip';
 
 // Grenoble, a November day
 const LAT = 45.19;
@@ -96,5 +96,92 @@ describe('departureStrip', () => {
         expect(cells[0].level).toBe('good');
         expect(cells[12].level).toBe('poor');
         expect(cells.some(({ level }) => level === 'fair')).toBe(true);
+    });
+
+    describe('anchored', () => {
+        it('keeps the window where it was when another departure is chosen: the chosen one moves, not the strip', () => {
+            const cells = departureStrip({ anchorAt: DAY, chosenAt: DAY + HOUR, now: DAY - 24 * HOUR, source, inputs, lat: LAT, lon: LON });
+            expect(cells[6].at).toBe(DAY);
+            expect(cells.findIndex(({ chosen }) => chosen)).toBe(8);
+            expect(cells.filter(({ chosen }) => chosen)).toHaveLength(1);
+            // the offsets are from the chosen departure
+            expect(cells[6].offset).toBe(-60);
+            expect(cells[8].offset).toBe(0);
+        });
+    });
+
+    describe('with what the features say', () => {
+        const noon = DAY;
+        // the rain comes at noon: every ride leaving from then on gets 6 points; a feature of its own marks it
+        const rainy: DepartureAssessor = (at) => ({ points: { rain: at >= noon ? 6 : 0 }, indicators: at >= noon ? ['test.rain'] : [], covered: true, summary: at >= noon ? 'rain 2 mm' : undefined });
+        const cellsWith = (assessors: DepartureAssessor[] | undefined, chosenAt = noon) => departureStrip({ chosenAt, now: chosenAt - 24 * HOUR, source, inputs, lat: LAT, lon: LON, assessors });
+
+        it('adds their points to the darkness', () => {
+            const without = cellsWith(undefined);
+            const cells = cellsWith([rainy]);
+            expect(cells[2].score).toBeCloseTo(without[2].score, 5);
+            expect(cells[8].score).toBeCloseTo(without[8].score + 6, 5);
+        });
+
+        it('adds the points of every feature', () => {
+            const wind: DepartureAssessor = () => ({ points: { wind: 1 }, indicators: [], covered: true });
+            expect(cellsWith([rainy, wind])[8].score).toBeCloseTo(cellsWith(undefined)[8].score + 7, 5);
+        });
+
+        it('stars a departure that is good rather than one that gets the rain', () => {
+            expect(cellsWith([rainy]).find(({ best: starred }) => starred)?.at).toBeLessThan(noon);
+        });
+
+        it('rates the rainy departures poor and the dry ones good', () => {
+            const cells = cellsWith([rainy]);
+            expect(cells[2].level).toBe('good');
+            expect(cells[10].level).toBe('poor');
+        });
+
+        it('marks a departure with the ids they give, the darkness after them, in the order of the features', () => {
+            const windy: DepartureAssessor = () => ({ points: {}, indicators: ['test.wind'], covered: true });
+            const dark = departureStrip({ chosenAt: sunset.getTime() - HOUR, now: DAY - 24 * HOUR, source, inputs, lat: LAT, lon: LON, assessors: [rainy, windy] });
+            expect(dark[12].indicators).toEqual(['test.rain', 'test.wind', 'dark']);
+            expect(dark[0].indicators).not.toContain('dark');
+        });
+
+        it('has no marks without a feature, but the darkness', () => {
+            expect(cellsWith(undefined)[3].indicators).toEqual([]);
+        });
+
+        it('keeps what they say of each ride, for the panel to say it', () => {
+            const cells = cellsWith([rainy]);
+            expect(cells[8].summaries).toEqual(['rain 2 mm']);
+            expect(cells[2].summaries).toEqual([]);
+        });
+
+        describe('a ride a feature knows nothing of', () => {
+            const reach: DepartureAssessor = (at) =>
+                at < noon + HOUR ? { points: { rain: 3 }, indicators: ['test.rain'], covered: true } : { points: { rain: 99 }, indicators: ['test.rain'], covered: false };
+            const cells = cellsWith([reach]);
+
+            it('is marked unknown, its points and marks left out', () => {
+                expect(cells[9].uncovered).toBe(true);
+                expect(cells[9].indicators).toContain('unknown');
+                expect(cells[9].indicators).not.toContain('test.rain');
+                expect(cells[9].score).toBeCloseTo(cellsWith(undefined)[9].score, 5);
+                expect(cells[7].uncovered).toBe(false);
+                expect(cellsWith(undefined)[7].uncovered).toBeUndefined();
+            });
+
+            it('is never starred, which it would be for knowing nothing, and is rated unknown', () => {
+                const best = cells.find(({ best: starred }) => starred);
+                expect(best?.uncovered).toBe(false);
+                expect(cells.filter(({ uncovered }) => uncovered).every(({ level }) => level === 'unknown')).toBe(true);
+                expect(cells.filter(({ uncovered }) => uncovered === false).every(({ level }) => level !== 'unknown')).toBe(true);
+            });
+
+            it('takes no part in the range the others are rated by', () => {
+                const mixed = cellsWith([(at) => ({ points: { rain: at < noon - HOUR ? 0 : 2 }, indicators: [], covered: at < noon + HOUR })]);
+                const covered = mixed.filter(({ uncovered }) => uncovered === false);
+                expect(covered.some(({ level }) => level === 'good')).toBe(true);
+                expect(covered.some(({ level }) => level === 'poor')).toBe(true);
+            });
+        });
     });
 });

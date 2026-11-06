@@ -21,8 +21,11 @@
     import { formatter } from '~/mapModules/ItemFormatter';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
+    import Chip from '~/components/common/Chip.svelte';
+    import { isEInk } from '~/helpers/theme';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
+    import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
@@ -69,6 +72,27 @@
 
     // the hero map is the list's first row: it scrolls away with the page
     const HERO_HEIGHT = 240;
+    const FAB_SIZE = 48;
+    /** what the list leaves at its foot for the button: its size and the margin under it */
+    const FAB_ROOM = FAB_SIZE + 16;
+    // extended at the top and while the list is scrolled up, round while it is scrolled down
+    let fabExpanded = true;
+    let lastOffset = 0;
+    // the hero map is the list's first row: RecyclerView gives its view away once it is far enough off screen, and the map is built again.
+    // The list is short: it keeps the views of all its rows (Android; the iOS list reuses its cells as it likes)
+    const KEPT_VIEWS = 32;
+    $: if (__ANDROID__ && listView?.nativeView) {
+        listView.nativeView.nativeViewProtected?.setItemViewCacheSize?.(KEPT_VIEWS);
+    }
+    function onListScroll() {
+        const offset = listView?.nativeView?.scrollOffset ?? 0;
+        if (offset <= 8 || offset < lastOffset - 4) {
+            fabExpanded = true;
+        } else if (offset > lastOffset + 4) {
+            fabExpanded = false;
+        }
+        lastOffset = offset;
+    }
 
     const mapContext = getMapContext();
     let heroMap: RouteHeroMap;
@@ -105,8 +129,9 @@
         stored = { ...stored, [section.id]: open };
         const current = listItems.getItem(header);
         const summary = section.summary?.({ item });
-        if (current.type !== 'section' || current.open !== open || current.summary !== summary) {
-            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary });
+        const facts = section.facts?.({ item });
+        if (current.type !== 'section' || current.open !== open || current.summary !== summary || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
+            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts });
         }
         if (open) {
             sectionComponents.load(section.id, section.component);
@@ -162,6 +187,8 @@
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
+    // a departure looked at and not taken is not the route's
+    onDestroy(giveBackLook);
     // always true: it reruns this when the analysis changed in place
     $: analysis = analysisVersion >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
@@ -181,7 +208,23 @@
     }
     $: departureGone = passed && !keepPassed;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
-    $: setRow({ type: 'when', key: 'when' }, whenOpen, 'tiles');
+    $: setRow({ type: 'when', key: 'when', version: analysisVersion }, whenOpen, 'tiles');
+    // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
+    // their items, set again with each change of it
+    function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
+        ['tiles', 'when'].forEach((key) => {
+            const index = indexOfKey(key);
+            if (index >= 0) {
+                const row = listItems.getItem(index);
+                if (row.type === 'when') {
+                    listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
+                } else if (row.type === 'tiles') {
+                    listItems.setItem(index, { ...row, version });
+                }
+            }
+        });
+    }
+    $: refreshAnalysisRows(analysisVersion, committed, $routeAnalysisChanges);
     $: zone = routeTimeZone(departure);
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
@@ -190,17 +233,26 @@
 
     // the times change in place: only what shows them follows. The activity changes what the whole page reads
     let analysisVersion = 0;
-    // one save after the other: a slow one must not land after, and over, a newer one
-    let saving: Promise<unknown> = Promise.resolve();
-    function onAnalysisChange({ analysis, full }: { analysis: RouteAnalysis; full?: boolean }) {
-        item.analysis = analysis;
+    // a departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
+    // back. Nothing of it is saved until the departure is taken
+    $: committed = analysisVersion >= 0 && $routeAnalysisChanges >= 0 ? lookingBase(item) : undefined;
+    function onAnalysisChange({ analysis, full, preview }: { analysis: RouteAnalysis; full?: boolean; preview?: boolean }) {
+        if (preview) {
+            lookAt(item, analysis);
+        } else {
+            keepLook(item);
+            item.analysis = analysis;
+            saveAnalysis(item, analysis);
+        }
         analysisVersion++;
+        analysisChanged();
         if (full) {
             item = item;
         }
-        if (isSaved(item)) {
-            saving = saving.then(() => mapContext.mapModule('items').updateItem(item, { analysis }, false, false)).catch(showError);
-        }
+    }
+    function giveBackLook() {
+        revertLook(item);
+        analysisVersion++;
     }
     // an unsaved route keeps its analysis on the item until it is saved with it
     function isSaved(route: Item) {
@@ -289,26 +341,9 @@
                 <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
                 <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
             </stacklayout>
-            <!-- a long press leaves now -->
-            <gridlayout
-                backgroundColor={passed ? colorErrorContainer : departure.mode === 'planned' ? colorPrimaryContainer : null}
-                borderColor={colorOutlineVariant}
-                borderRadius={14}
-                borderWidth={1}
-                height={28}
-                padding="0 8"
-                rippleColor={colorPrimary}
-                verticalAlignment="middle"
-                on:tap={() => (whenOpen = !whenOpen)}
-                on:longPress={departNow}>
-                <stacklayout orientation="horizontal" verticalAlignment="middle">
-                    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={14} text="mdi-clock-outline" verticalAlignment="middle" />
-                    <label color={colorOnSurface} fontSize={12} paddingLeft={4} text={whenLabel} verticalAlignment="middle" />
-                </stacklayout>
-            </gridlayout>
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
-        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2}>
+        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2} on:scroll={onListScroll}>
             <Template key="hero">
                 <gridlayout height={HERO_HEIGHT}>
                     <RouteHeroMap bind:this={heroMap} {item} />
@@ -339,17 +374,17 @@
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="when">
+            <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel {item} version={analysisVersion} on:change={onAnalysisChange} />
+                        <WhenPanel {item} committed={row.committed} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="tiles">
+            <Template key="tiles" let:item={row}>
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
-                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={analysisVersion} on:when={() => (whenOpen = !whenOpen)} />
+                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
                 </gridlayout>
             </Template>
             <Template key="profile">
@@ -382,7 +417,16 @@
                             width={36} />
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
-                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
+                            {#if row.facts?.length}
+                                <!-- the summary as chips: an icon and its figure, in their colours -->
+                                <stacklayout orientation="horizontal">
+                                    {#each row.facts as fact}
+                                        <Chip alert={fact.alert} color={fact.color} height={20} icon={fact.icon} marginTop={2} text={fact.text} />
+                                    {/each}
+                                </stacklayout>
+                            {:else}
+                                <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
+                            {/if}
                         </stacklayout>
                         <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
                     </gridlayout>
@@ -401,5 +445,26 @@
                 <label backgroundColor={colorCanvas} color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
             </Template>
         </collectionview>
+        <!-- the departure: an extended button over the list, a round one once the list is scrolled down, as it is read -->
+        <gridlayout
+            backgroundColor={passed ? colorErrorContainer : colorPrimaryContainer}
+            borderColor={colorOutlineVariant}
+            borderRadius={FAB_SIZE / 2}
+            borderWidth={isEInk ? 1.5 : 0}
+            elevation={6}
+            height={FAB_SIZE}
+            horizontalAlignment="right"
+            margin={`0 16 ${16 + (__ANDROID__ ? $windowInset.bottom : 0)} 0`}
+            minWidth={FAB_SIZE}
+            row={1}
+            rippleColor={colorPrimary}
+            verticalAlignment="bottom"
+            on:tap={() => (whenOpen = !whenOpen)}
+            on:longPress={departNow}>
+            <stacklayout horizontalAlignment="center" orientation="horizontal" padding={fabExpanded ? '0 16 0 14' : '0'} verticalAlignment="middle">
+                <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={22} text="mdi-clock-outline" verticalAlignment="middle" />
+                <label color={colorOnSurface} fontSize={14} fontWeight="bold" paddingLeft={8} text={whenLabel} verticalAlignment="middle" visibility={fabExpanded ? 'visible' : 'collapse'} />
+            </stacklayout>
+        </gridlayout>
     </gridlayout>
 </page>

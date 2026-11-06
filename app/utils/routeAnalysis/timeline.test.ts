@@ -3,7 +3,7 @@ import { activityFromRoute } from './activity';
 import { departurePassed, resolveStart, routeTimeZone, withRouteTimeZone } from './departure';
 import { flatSpeedKmh, gradeSpeedKmh } from './speeds';
 import { DEFAULT_PACE } from './storage';
-import { buildTimeline, cumulativeDistances, timelineSource } from './timeline';
+import { buildTimeline, cumulativeDistances, timeAtDistance, timelineSource } from './timeline';
 import type { Activity, AnalysisInputs } from './types';
 
 const NOW = Date.UTC(2026, 5, 1, 12, 0, 0);
@@ -286,5 +286,30 @@ describe('timelineSource', () => {
         });
         expect(source.distances).toHaveLength(4);
         expect(source.recorded).toBe(recorded);
+    });
+});
+
+describe('timeAtDistance', () => {
+    // 3 vertexes 10 km apart, routed in 2 h, leaving at NOW
+    const distances = [0, 10000, 30000];
+    const timeline = buildTimeline({ distances, totalTime: 2 * HOUR }, inputs(), NOW);
+
+    it('is the time of the vertex at the distance', () => {
+        expect(timeAtDistance(distances, timeline, 0)).toBe(NOW);
+        expect(timeAtDistance(distances, timeline, 10000)).toBeCloseTo(NOW + (2 * HOUR * 1000) / 3, -2);
+        expect(timeAtDistance(distances, timeline, 30000)).toBe(NOW + 2 * HOUR * 1000);
+    });
+
+    it('goes between two vertexes by the distance', () => {
+        expect(timeAtDistance(distances, timeline, 20000)).toBeCloseTo(NOW + (2 * HOUR * 1000 * 2) / 3, -2);
+    });
+
+    it('stays within the ride', () => {
+        expect(timeAtDistance(distances, timeline, -5)).toBe(NOW);
+        expect(timeAtDistance(distances, timeline, 99999)).toBe(NOW + 2 * HOUR * 1000);
+    });
+
+    it('has the start of a ride of no distance', () => {
+        expect(timeAtDistance([0], buildTimeline({ distances: [0] }, inputs(), NOW), 100)).toBe(NOW);
     });
 });

@@ -1,9 +1,10 @@
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
-import { surfaceKey } from '~/routeFeatures/lens/lensPalette';
+import { surfaceLegend } from '~/routeFeatures/stats/legend';
+import { surfacePalette } from '~/routeFeatures/stats/palette';
 import { type LensProfile, type LensSection, type LensSlice, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
 import { routeFeatureStats } from '~/routeFeatures/stats/settings';
-import { pavedShare, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
+import { pavedShare, surfaceKey, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
 import { ROUTE_STATS_HEIGHT } from '~/utils/navigation';
 import type { IItem } from '~/models/Item';
 import { surfaceColors } from '~/utils/routing';
@@ -67,13 +68,15 @@ const surfaceLens: RouteLens = {
         return fills.get(segments);
     },
     sections: ({ item }) => readSegments(item).sections,
-    slices: ({ item }) => readSegments(item).slices
+    slices: ({ item }) => readSegments(item).slices,
+    legend: ({ item, palette, translate }) => surfaceLegend({ palette, surfaces: [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))], translate })
 };
 
 registerRouteFeature({
     id: 'stats',
     order: 20,
     setting: { title: () => lc('road_stats'), store: routeFeatureStats },
+    lensPalette: surfacePalette,
     lenses: [surfaceLens],
     pageSections: [
         {

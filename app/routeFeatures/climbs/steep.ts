@@ -293,7 +293,7 @@ export function steepAlerts(steep: SteepSection[]): { alerts: NavAlert[]; plates
     const severity = (section: SteepSection) => (section.tier === 3 ? 3 : 2);
     return {
         alerts: steep.map((section) => ({ kind: 'steep' as const, i0: section.startIndex, i1: section.endIndex, s: severity(section) })),
-        plates: steep.map((section) => ({ sym: 'grade' as const, i: section.startIndex, t: Math.abs(section.avgGrade).toFixed(0) + ' %', s: severity(section), p: 50 }))
+        plates: steep.map((section) => ({ shape: 'grade_label' as const, vertex: section.startIndex, label: Math.abs(section.avgGrade).toFixed(0) + ' %', severity: severity(section), priority: 50 }))
     };
 }
 
@@ -307,15 +307,15 @@ const CATEGORY_PRIORITY: Record<ClimbCategory, number> = { hc: 100, 1: 90, 2: 80
  * A plate in the middle of each ranked climb, `describe` wording it, with a tip under it pointing at the route:
  * the plate is a label and has no tail of its own.
  */
-export function climbPlates(climbs: Climb[], describe: (climb: Climb) => { t: string; t2?: string }): LensSymbol[] {
+export function climbPlates(climbs: Climb[], describe: (climb: Climb) => { label: string; sublabel?: string }): LensSymbol[] {
     return climbs
         .filter((climb) => climb.category !== undefined)
         .flatMap((climb) => {
             const vertex = Math.round((climb.startIndex + climb.endIndex) / 2);
             const priority = CATEGORY_PRIORITY[climb.category];
             return [
-                { sym: 'climb' as const, i: vertex, ...describe(climb), s: 0 as const, p: priority },
-                { sym: 'climbtip' as const, i: vertex, t: MDI_MENU_DOWN, s: 0 as const, p: priority }
+                { shape: 'climb_label' as const, vertex, ...describe(climb), severity: 0 as const, priority },
+                { shape: 'climb_label_tip' as const, vertex, label: MDI_MENU_DOWN, severity: 0 as const, priority }
             ];
         });
 }

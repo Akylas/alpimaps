@@ -10,8 +10,8 @@ import { get } from 'svelte/store';
 import { convertDurationSeconds, formatDate, formatTime, langStore, lc } from '~/helpers/locale';
 import { IItem } from '~/models/Item';
 export { convertDurationSeconds, formatDate };
-import { UNITS, UNIT_FAMILIES } from './units';
-import { imperialUnits } from '~/variables';
+import { DEFAULT_IMPERIAL_UINTS, DEFAULT_METRIC_UINTS, UNITS, UNIT_FAMILIES, celsiusToFahrenheit } from './units';
+import { imperialUnits, unitsSettings } from '~/variables';
 
 export { UNITS };
 
@@ -182,6 +182,12 @@ export function convertValueToUnit(value: any, unit: UNITS, defaultUnit: UNITS =
                 value /= 1.852;
             }
             break;
+        case UNITS.Celcius:
+            shouldRound = true;
+            if (unit === UNITS.Fahrenheit) {
+                value = celsiusToFahrenheit(value);
+            }
+            break;
         case UNITS.Date:
             return [formatDate(value, 'L LT'), ''];
         default:
@@ -310,6 +316,9 @@ export function defaultUnitForUnit(unit: UNITS) {
             return UNITS.Meters;
         case UNITS.Percent:
             return UNITS.Percent;
+        case UNITS.Celcius:
+        case UNITS.Fahrenheit:
+            return UNITS.Celcius;
         case UNITS.CM:
         case UNITS.MM:
             return UNITS.CM;
@@ -317,6 +326,21 @@ export function defaultUnitForUnit(unit: UNITS) {
             break;
     }
 }
+/** The unit the user shows a family of figures in: what they chose, else what the metric or imperial setting says. */
+export function unitOfFamily(family: string): UNITS {
+    return unitsSettings[family] ?? (imperialUnits ? DEFAULT_IMPERIAL_UINTS : DEFAULT_METRIC_UINTS)[family];
+}
+
+/** `value` in `defaultUnit` (what a source gives: mm, km/h, °C) said in the unit the user chose for the family. */
+export function formatFamilyValue(value: number, family: string, defaultUnit: UNITS, options?: { join?: string; roundedTo05?: boolean }) {
+    return formatValueToUnit(value, unitOfFamily(family), defaultUnit, options);
+}
+
+/** The same as a number and its unit, for what shows them apart. */
+export function convertFamilyValue(value: number, family: string, defaultUnit: UNITS): [number, string] {
+    return convertValueToUnit(value, unitOfFamily(family), defaultUnit);
+}
+
 export function formatValue(value, unit: UNITS, options?: { prefix?: string; join?: string; unitScale?: number; roundedTo05?: boolean; canForcePrecipUnit?: boolean; defaultUnit?: UNITS }) {
     return formatValueToUnit(value, unit, options?.defaultUnit ?? defaultUnitForUnit(unit), options);
 }

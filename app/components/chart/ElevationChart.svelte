@@ -21,7 +21,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark } from '~/routeFeatures/registry';
+    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
@@ -35,6 +35,8 @@
     const DEFAULT_FILL_ALPHA = 85;
     /** grade sections are read by colour, so their fill has to actually carry one */
     const GRADE_FILL_ALPHA = 225;
+    /** a lens that lays its own drawing over the profile leaves the grades this much of their fill */
+    const FADED_FILL_SHARE = 0.38;
 
     /** km between x labels: whatever gives about four of them */
     const xintervals = [0.1, 0.2, 0.5, 1, 2, 3, 5, 10, 15, 20, 25, 50, 100];
@@ -152,6 +154,7 @@
         overlayTextPaint.setTextSize(9 * $fontScale);
         const metrics = overlayTextPaint.getFontMetrics();
         const textHeight = metrics.descent - metrics.ascent;
+        overlay?.draw(canvas, { contentBottom, contentLeft, contentRight, contentTop, pixelX, pixelY, fontScale: $fontScale, isEInk, ink: colorOnSurface, background: colorBackground, iconFontFamily: $fonts.mdi });
         for (const { from, label, to, top } of brackets) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
@@ -202,7 +205,7 @@
         return marks.findIndex(({ from, to }) => highlight.x >= from && highlight.x <= to);
     }
 
-    // the cursor's card, in the manner of a weather chart's, laid out once when the cursor moves. Blocks apart by a
+    // the cursor's card, laid out once when the cursor moves. Blocks apart by a
     // hairline: what is here, what is left of the ascent it is on, what is left of the route
     const POPOVER_WIDTH = 132;
     const POPOVER_PADDING = 7;
@@ -385,6 +388,12 @@
     export let marks: ProfileMark[] = [];
     /** the fill's colours when a lens has its own, else the grade's if `showProfileGrades` */
     export let fill: ProfileFillStop[] = null;
+    /** the grade fill steps back, for what the lens lays over it */
+    export let fade = false;
+    /** what a feature draws over the plot: the chart is extendable */
+    export let overlay: ProfileOverlay = null;
+    /** the clock time the ride is at a distance from the start, meters: said under the distance on the axis. None when the route has no time */
+    export let clockAt: ((meters: number) => string) | null = null;
     /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
     export let besideMap = true;
     if (inCard && besideMap) {
@@ -528,7 +537,9 @@
     let builtFill = fill;
     let builtGrades = showProfileGrades;
     let builtAscents = showAscents;
-    $: if (chart?.nativeView?.data && (fill !== builtFill || showProfileGrades !== builtGrades || showAscents !== builtAscents)) {
+    let builtFade = fade;
+    $: if (chart?.nativeView?.data && (fill !== builtFill || showProfileGrades !== builtGrades || showAscents !== builtAscents || fade !== builtFade)) {
+        builtFade = fade;
         builtFill = fill;
         builtGrades = showProfileGrades;
         builtAscents = showAscents;
@@ -577,8 +588,17 @@
         });
         canvas.restore();
     }
+    // the room under the axis for the clock times, which are drawn with the overlay
+    const CLOCK_ROOM = 13;
+    $: if (chart?.nativeView && inCard && !mini) {
+        chart.nativeView.setExtraOffsets(0, BRACKET_ROOM, 10, clockAt ? CLOCK_ROOM * $fontScale : 0);
+        // the labels are worded when the axis is computed: a new clock needs them again
+        chart.nativeView.notifyDataSetChanged();
+        chart.nativeView.calculateOffsets(true);
+        chart.nativeView.invalidate();
+    }
     // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
-    $: if (chart?.nativeView && (brackets || marks)) {
+    $: if (chart?.nativeView && (brackets || marks || overlay || clockAt)) {
         chart.nativeView.invalidate();
     }
     let onChartDataUpdateCallbacks = [];
@@ -973,7 +993,25 @@
                 xAxis.drawLimitLinesBehindData = false;
                 xAxis.drawLabelsBehindData = true;
                 xAxis.valueFormatter = {
-                    getAxisLabel: (value) => formatDistance(value)
+                    // the clock time of a distance is the second line of its label: the axis draws it, see `customRenderer`
+                    getAxisLabel: (value) => (clockAt ? `${formatDistance(value)}\n${clockAt(value)}` : formatDistance(value))
+                };
+                xAxis.customRenderer = {
+                    // the first line as the axis draws it, the second, bold, under it
+                    drawLabel(c: Canvas, _axis: unknown, label: string, labelX: number, labelY: number, paint: Paint) {
+                        const [distanceLine, clockLine] = label.split('\n');
+                        const metrics = paint.getFontMetrics();
+                        const lineHeight = metrics.descent - metrics.ascent;
+                        const baseline = labelY - metrics.ascent;
+                        c.drawText(distanceLine, labelX, baseline, paint);
+                        if (clockLine) {
+                            const color = paint.getColor();
+                            paint.setFontWeight('bold');
+                            c.drawText(clockLine, labelX, baseline + lineHeight, paint);
+                            paint.setFontWeight('normal');
+                            paint.setColor(color);
+                        }
+                    }
                 };
 
                 chartView.customRenderer = {
@@ -1074,7 +1112,7 @@
                     // the grade buckets only mean something if they can be told apart, and the chart's
                     // default fill alpha washes them out. Eink keeps that default: there the fill is a
                     // grey wedge behind the curve, and darkening it buries the line in it
-                    set.fillAlpha = isEInk ? DEFAULT_FILL_ALPHA : GRADE_FILL_ALPHA;
+                    set.fillAlpha = isEInk ? DEFAULT_FILL_ALPHA : Math.round(GRADE_FILL_ALPHA * (fade ? FADED_FILL_SHARE : 1));
                 } else {
                     set.lineWidth = lineWidth;
                     set.resetColors();
