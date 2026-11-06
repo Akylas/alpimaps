@@ -145,7 +145,7 @@
     }
     function leaveAt(at: number) {
         previewAt = null;
-        ownKey = String(at);
+        takenHere = true;
         setDeparture(at);
     }
     // a departure looked at and not taken is given back with the panel
@@ -180,34 +180,30 @@
     // the dialog, `now`). Not as the clock goes, nor as a departure is looked at in the strip: it is in view already
     let strip: NativeViewElementNode<CollectionView>;
     $: departureKey = inputs.departure.mode === 'planned' ? String(inputs.departure.at) : 'now';
-    // the departure to bring into view, until the strip is there to show it
-    let showKey: string = null;
-    let seenKey: string;
-    let seenOpened: number;
-    // the departure the strip itself took: in view
-    let ownKey: string = null;
-    $: if (opened !== seenOpened || departureKey !== seenKey) {
-        if (opened !== seenOpened || departureKey !== ownKey) {
-            showKey = departureKey;
-        }
-        seenOpened = opened;
-        seenKey = departureKey;
-        ownKey = null;
-    }
-    // the cells of the departure are in the strip once the page has changed the analysis and the list holds them
-    $: if (showKey !== null && showKey === departureKey) {
+    let showPending = false;
+    let takenHere = false;
+    // the cells are in the strip once the page has changed the analysis and the list holds them
+    function requestShow() {
+        showPending = true;
         tick().then(showChosen);
+    }
+    // these run when their value changes only, and at start
+    $: opened, requestShow();
+    $: departureKey, onDepartureChange();
+    function onDepartureChange() {
+        if (takenHere) {
+            takenHere = false;
+        } else {
+            requestShow();
+        }
     }
     // also asked by the strip, which is not always there yet when the departure is: once it is loaded and laid out
     function showChosen() {
-        if (showKey === null) {
-            return;
-        }
         const view = strip?.nativeView;
-        if (showKey !== departureKey || !view?.isLoaded || !view.getMeasuredWidth()) {
+        if (!showPending || !view?.isLoaded || !view.getMeasuredWidth()) {
             return;
         }
-        showKey = null;
+        showPending = false;
         const { center, index } = stripScroll(cells, inputs.departure.mode);
         view.scrollToIndex(index, false, center ? SnapPosition.CENTER : SnapPosition.START);
     }
