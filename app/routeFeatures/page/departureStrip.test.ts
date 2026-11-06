@@ -113,7 +113,12 @@ describe('departureStrip', () => {
     describe('with what the features say', () => {
         const noon = DAY;
         // the rain comes at noon: every ride leaving from then on gets 6 points; a feature of its own marks it
-        const rainy: DepartureAssessor = (at) => ({ points: { rain: at >= noon ? 6 : 0 }, indicators: at >= noon ? ['test.rain'] : [], covered: true, rainMm: at >= noon ? 2 : undefined });
+        const rainy: DepartureAssessor = (at) => ({
+            points: { rain: at >= noon ? 6 : 0 },
+            indicators: at >= noon ? ['test.rain'] : [],
+            covered: true,
+            figure: at >= noon ? { text: '2', share: 0.4, color: '#4A90D9' } : undefined
+        });
         const cellsWith = (assessors: DepartureAssessor[] | undefined, chosenAt = noon) => departureStrip({ chosenAt, now: chosenAt - 24 * HOUR, source, inputs, lat: LAT, lon: LON, assessors });
 
         it('adds their points to the darkness', () => {
@@ -149,18 +154,16 @@ describe('departureStrip', () => {
             expect(cellsWith(undefined)[3].indicators).toEqual([]);
         });
 
-        it('keeps the sky they say of each ride, for the cell to always show it', () => {
-            const sky = { icon: 'mdi-weather-sunny', color: '#F2B72E' };
-            const sunny: DepartureAssessor = (at) => ({ points: {}, indicators: [], covered: at >= noon, sky: at >= noon ? sky : undefined });
-            const cells = cellsWith([sunny]);
-            expect(cells[8].sky).toEqual(sky);
-            expect(cells[2].sky).toBeUndefined();
+        it('keeps the figure they say of each ride, for the cell to show it', () => {
+            const cells = cellsWith([rainy]);
+            expect(cells[8].figure).toEqual({ text: '2', share: 0.4, color: '#4A90D9' });
+            expect(cells[2].figure).toBeUndefined();
         });
 
-        it('keeps the rain they expect on each ride, for the cell to show it', () => {
-            const cells = cellsWith([rainy]);
-            expect(cells[8].rainMm).toBe(2);
-            expect(cells[2].rainMm).toBeUndefined();
+        it('keeps the first figure when several features have one', () => {
+            const other: DepartureAssessor = () => ({ points: {}, indicators: [], covered: true, figure: { text: 'other' } });
+            expect(cellsWith([rainy, other])[8].figure?.text).toBe('2');
+            expect(cellsWith([other, rainy])[8].figure?.text).toBe('other');
         });
 
         describe('a ride a feature knows nothing of', () => {

@@ -24,7 +24,7 @@ import { weatherAssessment, weatherNeedsFetch } from '~/routeFeatures/weather/da
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
 import { type FactsWords, summaryFacts } from '~/routeFeatures/weather/ui/facts';
 import { weatherFormat, weatherUnitsKey } from '~/routeFeatures/weather/ui/format';
-import { heroGlyph, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
+import { SKY_MARKS, heroGlyph, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
 import { rainPalette } from '~/routeFeatures/weather/ui/palette';
 import { weatherProfileOverlay } from '~/routeFeatures/weather/ui/profileOverlay';
 import { type WeatherRead, readWeather } from '~/routeFeatures/weather/data/read';
@@ -265,7 +265,9 @@ const weatherPageSection: RoutePageSection = {
 
 // how the weather takes part in the choice of a departure: the hours of the forecast read for a ride leaving at another time
 const weatherDeparture: RouteDeparture = {
+    // the sky of the ride, which marks every departure, and the wind
     indicators: {
+        ...SKY_MARKS,
         wind: { icon: 'mdi-weather-windy', color: '#F29D38' }
     },
     assess: ({ analysis, at, item, now }) => {
@@ -279,7 +281,7 @@ const weatherDeparture: RouteDeparture = {
             instructions: item.instructions,
             analysis: { ...analysis, inputs: { ...analysis.inputs, departure: { ...analysis.inputs.departure, mode: 'planned' as const, at } } }
         };
-        return weatherAssessment(readWeather(shifted, Math.min(now, at), { format: weatherFormat }));
+        return weatherAssessment(readWeather(shifted, Math.min(now, at), { format: weatherFormat }), weatherFormat);
     },
     // a departure outside the hours of the forecast fetched: it is fetched again, for the user asked for a forecast of this ride before
     taken: ({ item }) => {
