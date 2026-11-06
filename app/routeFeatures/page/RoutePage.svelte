@@ -237,7 +237,16 @@
     }
     $: departureGone = passed && !keepPassed;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
-    $: setRow({ type: 'when', key: 'when', version: analysisVersion }, whenOpen, 'tiles');
+    // the list keeps the panel's view while it is closed: the panel is told each time it is opened
+    let whenOpened = 0;
+    let wasWhenOpen = false;
+    $: if (whenOpen !== wasWhenOpen) {
+        wasWhenOpen = whenOpen;
+        if (whenOpen) {
+            whenOpened++;
+        }
+    }
+    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, 'tiles');
     // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
     // their items, set again with each change of it
     function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
@@ -292,9 +301,12 @@
     }
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
+    // a body is its section's own component: one template for each, whose views are only reused by rows of the same section
     function itemTemplateSelector(row: ListRow) {
-        return row.type;
+        return row.type === 'body' ? `body:${row.section}` : row.type;
     }
+    // what a section's header shows of its facts: the slots its template has, which keeps its structure the same for every section
+    const FACT_SLOTS = [0, 1, 2, 3, 4, 5, 6];
 
     // the insight line's `›` on this page: the lens' own section, opened and brought into view
     let listView: NativeViewElementNode<CollectionView>;
@@ -406,7 +418,7 @@
             <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel committed={row.committed} {item} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
+                        <WhenPanel committed={row.committed} {item} opened={row.opened ?? 0} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
@@ -446,42 +458,42 @@
                             width={36} />
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
-                            {#if row.facts?.length}
-                                <!-- the summary as chips: an icon and its figure, in their colours, open or not: the rows under it do not say it again -->
-                                <stacklayout orientation="horizontal">
-                                    {#each row.facts as fact}
-                                        <Chip
-                                            alert={fact.alert}
-                                            bar={fact.bar ?? null}
-                                            color={fact.color}
-                                            height={20}
-                                            icon={fact.icon}
-                                            label={fact.label}
-                                            marginTop={2}
-                                            note={fact.note}
-                                            text={fact.text}
-                                            tint={fact.tint}
-                                            unit={fact.unit}
-                                            value={fact.value} />
-                                    {/each}
-                                </stacklayout>
-                            {:else}
-                                <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary ? 'visible' : 'collapse'} />
-                            {/if}
+                            <!-- the summary as chips: an icon and its figure, in their colours, open or not: the rows under it do not say it again.
+                                 A template keeps its views whatever the row: the chips are slots, collapsed when empty, and so is the summary line -->
+                            <stacklayout orientation="horizontal" visibility={row.facts?.length ? 'visible' : 'collapse'}>
+                                {#each FACT_SLOTS as slot}
+                                    <Chip
+                                        alert={row.facts?.[slot]?.alert ?? false}
+                                        bar={row.facts?.[slot]?.bar ?? null}
+                                        color={row.facts?.[slot]?.color}
+                                        height={20}
+                                        icon={row.facts?.[slot]?.icon}
+                                        label={row.facts?.[slot]?.label}
+                                        marginTop={2}
+                                        note={row.facts?.[slot]?.note}
+                                        text={row.facts?.[slot]?.text}
+                                        tint={row.facts?.[slot]?.tint}
+                                        unit={row.facts?.[slot]?.unit}
+                                        value={row.facts?.[slot]?.value}
+                                        visibility={row.facts?.[slot] ? 'visible' : 'collapse'} />
+                                {/each}
+                            </stacklayout>
+                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary && !row.facts?.length ? 'visible' : 'collapse'} />
                         </stacklayout>
                         <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="body" let:item={row}>
-                <gridlayout backgroundColor={colorCanvas} padding="0 6">
-                    <gridlayout backgroundColor={colorCard} borderRadius={row.last ? `0 0 ${CARD_RADIUS} ${CARD_RADIUS}` : 0} height={row.row.height ?? 'auto'} paddingBottom={row.last ? 8 : 0}>
-                        {#if $sectionComponents[row.section]}
-                            <svelte:component this={$sectionComponents[row.section]} {item} {...bodyProps(row)} on:focus={(section) => focusOn(row.section, section)} />
-                        {/if}
+            {#each sections as section (section.id)}
+                <Template key={`body:${section.id}`} let:item={row}>
+                    <gridlayout backgroundColor={colorCanvas} padding="0 6">
+                        <gridlayout backgroundColor={colorCard} borderRadius={row.last ? `0 0 ${CARD_RADIUS} ${CARD_RADIUS}` : 0} height={row.row.height ?? 'auto'} paddingBottom={row.last ? 8 : 0}>
+                            <!-- nothing until the section's component is loaded -->
+                            <svelte:component this={$sectionComponents[section.id]} {item} {...bodyProps(row)} on:focus={(lensSection) => focusOn(section.id, lensSection)} />
+                        </gridlayout>
                     </gridlayout>
-                </gridlayout>
-            </Template>
+                </Template>
+            {/each}
             <Template key="footer">
                 <label backgroundColor={colorCanvas} color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
             </Template>

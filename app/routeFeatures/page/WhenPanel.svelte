@@ -3,14 +3,14 @@
     // for the ride, the pace and the stops. Every change goes up as the route's new analysis
     import { Template } from '@nativescript-community/svelte-native/components';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import type { CollectionView } from '@nativescript-community/ui-collectionview';
+    import { type CollectionView, SnapPosition } from '@nativescript-community/ui-collectionview';
     import { pickDateTime } from '@nativescript-community/ui-datetimepicker';
-    import { Color, ObservableArray, Utils } from '@nativescript/core';
+    import { Color, ObservableArray } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { getTimes } from 'suncalc';
     import { nightMoon } from '~/utils/astronomy/moon';
-    import { onDestroy } from 'svelte';
+    import { onDestroy, tick } from 'svelte';
     import Chip from '~/components/common/Chip.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import { formatTime, lc } from '~/helpers/locale';
@@ -18,7 +18,7 @@
     import type { IItem } from '~/models/Item';
     import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
-    import { type DepartureAssessor, type StripCell, departureStrip, stripScrollIndex } from '~/routeFeatures/page/departureStrip';
+    import { type DepartureAssessor, type StripCell, departureStrip, stripScroll } from '~/routeFeatures/page/departureStrip';
     import { routeFeatures } from '~/routeFeatures/registry';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
@@ -31,7 +31,9 @@
     /** the page bumps it when it changed the item's analysis in place */
     export let version = 0;
     /** while a departure is looked at, what the route had before: the departure the strip is read from. `undefined`: the item's */
-    export let committed: RouteAnalysis | null | undefined = undefined;
+    export let committed: RouteAnalysis | null | undefined;
+    /** changes each time the panel is opened: the list keeps the panel's view when it is closed, so it is not made again */
+    export let opened = 0;
 
     interface $$Events {
         /** `full`: what the whole page reads changed (the activity sets the climbs' preset), not only the times */
@@ -54,8 +56,7 @@
     const PACE_MAX = 1.3;
     const STOPS_MAX = 20;
     const SLIDER_SAVE_DELAY = 400;
-    const STRIP_SCROLL_DELAY = 300;
-    /** dp a cell takes in the strip, margins included: the list's `colWidth` */
+    /** dp a cell takes in the strip, margins included */
     const STRIP_CELL = 66;
     /** how much of its bar a departure's level fills: longer is better, which no colour has to say */
     const LEVEL_SHARE = { good: 1, fair: 0.6, poor: 0.25, unknown: 0 };
@@ -117,6 +118,8 @@
     $: selected = cells.find((cell) => cell.at === selectedAt) ?? chosen;
     // what a cell shows is in the list's items: the template does not follow the panel's own variables
     $: listCells = cells.map((cell) => ({ ...cell, selected: cell.at === selectedAt, marks: cell.indicators.flatMap((id) => (marks[id] ? [marks[id]] : [])) }));
+    // the cell's template has the same views for every cell, whatever it shows: the slots it has for the marks and the figure
+    const MARK_SLOTS = [0, 1];
     // tapping a departure shows the page as it would be: everything read for it, kept only by `leaveAt`
     function look(cell: StripCell) {
         if (cell.past) {
@@ -142,6 +145,7 @@
     }
     function leaveAt(at: number) {
         previewAt = null;
+        takenHere = true;
         setDeparture(at);
     }
     // a departure looked at and not taken is given back with the panel
@@ -175,23 +179,33 @@
     // where the strip is looked at from: asked for when the panel opens and when the departure is not the strip's own doing (picked in
     // the dialog, `now`). Not as the clock goes, nor as a departure is looked at in the strip: it is in view already
     let strip: NativeViewElementNode<CollectionView>;
-    let shownMode: string;
-    let scrollTimer: ReturnType<typeof setTimeout>;
-    onDestroy(() => clearTimeout(scrollTimer));
-    function showChosen() {
-        // once the cells are laid out and the page has changed the analysis: the list gets its items after it is bound
-        clearTimeout(scrollTimer);
-        scrollTimer = setTimeout(() => {
-            const view = strip?.nativeView;
-            if (view) {
-                const visible = Math.max(1, Math.floor(view.getMeasuredWidth() / Utils.layout.getDisplayDensity() / STRIP_CELL));
-                view.scrollToIndex(stripScrollIndex(cells, inputs.departure.mode, visible), false);
-            }
-        }, STRIP_SCROLL_DELAY);
+    $: departureKey = inputs.departure.mode === 'planned' ? String(inputs.departure.at) : 'now';
+    let showPending = false;
+    let takenHere = false;
+    // the cells are in the strip once the page has changed the analysis and the list holds them
+    function requestShow() {
+        showPending = true;
+        tick().then(showChosen);
     }
-    $: if (strip && shownMode !== inputs.departure.mode) {
-        shownMode = inputs.departure.mode;
-        showChosen();
+    // these run when their value changes only, and at start
+    $: opened, requestShow();
+    $: departureKey, onDepartureChange();
+    function onDepartureChange() {
+        if (takenHere) {
+            takenHere = false;
+        } else {
+            requestShow();
+        }
+    }
+    // also asked by the strip, which is not always there yet when the departure is: once it is loaded and laid out
+    function showChosen() {
+        const view = strip?.nativeView;
+        if (!showPending || !view?.isLoaded || !view.getMeasuredWidth()) {
+            return;
+        }
+        showPending = false;
+        const { center, index } = stripScroll(cells, inputs.departure.mode);
+        view.scrollToIndex(index, false, center ? SnapPosition.CENTER : SnapPosition.START);
     }
     $: zone = routeTimeZone(inputs.departure);
 
@@ -228,7 +242,6 @@
             const picked = await pickDateTime({ date: new Date(chosenAt), title: lc('depart_at'), is24Hour: true });
             if (picked) {
                 setDeparture(picked.getTime());
-                showChosen();
             }
         } catch (error) {
             showError(error);
@@ -294,7 +307,17 @@
             <Pill col={3} height={32} icon={action.icon} on:tap={() => runAction(action.run)} />
         {/if}
     </gridlayout>
-    <collectionview bind:this={strip} colWidth={STRIP_CELL} height={88} items={stripItems} marginTop={10} orientation="horizontal">
+    <collectionview
+        bind:this={strip}
+        colWidth={STRIP_CELL}
+        height={88}
+        items={stripItems}
+        marginTop={10}
+        orientation="horizontal"
+        on:dataPopulated={showChosen}
+        on:layoutChanged={showChosen}
+        on:loaded={showChosen}>
+        <!-- no condition block in a cell: the views are reused from one cell to the next, what a cell does not show is collapsed -->
         <Template let:item={cell}>
             <gridlayout
                 backgroundColor={fillOf(cell)}
@@ -310,31 +333,37 @@
                 <label color={colorOnSurface} fontSize={11.5} fontWeight={cell.selected || cell.chosen ? 'bold' : 'normal'} text={clock(cell.at)} textAlignment="center" />
                 <!-- what the ride is worth a mark for: the best one's star, then the features' marks, the dark, a feature knowing nothing of it -->
                 <stacklayout horizontalAlignment="center" marginTop={4} orientation="horizontal" row={1}>
-                    {#if cell.best}
-                        <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" />
-                    {/if}
-                    {#each cell.marks.slice(0, 2) as mark}
-                        <label color={isEInk ? colorOnSurface : (mark.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={mark.icon} />
+                    <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" visibility={cell.best ? 'visible' : 'collapse'} />
+                    {#each MARK_SLOTS as slot}
+                        <label
+                            color={isEInk ? colorOnSurface : (cell.marks[slot]?.color ?? colorOnSurfaceVariant)}
+                            fontFamily={$fonts.mdi}
+                            fontSize={15}
+                            text={cell.marks[slot]?.icon ?? ''}
+                            visibility={cell.marks[slot] ? 'visible' : 'collapse'} />
                     {/each}
                 </stacklayout>
                 <!-- what a feature says of the ride in a figure, as a chip with its bar when it has a share: as oss-weather shows the rain of an hour -->
-                {#if cell.figure}
-                    {#if cell.figure.share > 0}
-                        <Chip
-                            bar={cell.figure.share}
-                            color={cell.figure.color}
-                            height={22}
-                            horizontalAlignment="center"
-                            marginRight={0}
-                            marginTop={0}
-                            padding="0 8"
-                            row={2}
-                            value={cell.figure.text}
-                            verticalAlignment="middle" />
-                    {:else}
-                        <label color={colorOnSurfaceVariant} fontSize={12} row={2} text={cell.figure.text} textAlignment="center" verticalAlignment="middle" />
-                    {/if}
-                {/if}
+                <Chip
+                    bar={cell.figure?.share > 0 ? cell.figure.share : null}
+                    color={cell.figure?.color}
+                    height={22}
+                    horizontalAlignment="center"
+                    marginRight={0}
+                    marginTop={0}
+                    padding="0 8"
+                    row={2}
+                    value={cell.figure?.text}
+                    verticalAlignment="middle"
+                    visibility={cell.figure?.share > 0 ? 'visible' : 'collapse'} />
+                <label
+                    color={colorOnSurfaceVariant}
+                    fontSize={12}
+                    row={2}
+                    text={cell.figure?.text ?? ''}
+                    textAlignment="center"
+                    verticalAlignment="middle"
+                    visibility={cell.figure && !(cell.figure.share > 0) ? 'visible' : 'collapse'} />
                 <!-- the score, longer the better: the star says which is best, the colours stay the weather's -->
                 <gridlayout backgroundColor={colorOutlineVariant} borderRadius={1.5} columns={`${share(LEVEL_SHARE[cell.level])}*,${share(1 - LEVEL_SHARE[cell.level])}*`} margin="0 12" row={3}>
                     <gridlayout backgroundColor={colorOnSurfaceVariant} borderRadius={1.5} opacity={cell.level === 'unknown' ? 0 : 1} />

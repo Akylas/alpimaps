@@ -44,4 +44,4 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
 }
 
 /** What the page's list holds: the page rows and the page's own, around them. */
-export type ListRow = PageRow | { type: 'hero' | 'passed'; key: string } | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null };
+export type ListRow = PageRow | { type: 'hero' | 'passed'; key: string } | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null; /** counts the openings of the panel */ opened?: number };
