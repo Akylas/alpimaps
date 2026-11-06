@@ -22,6 +22,7 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
     import Chip from '~/components/common/Chip.svelte';
+    import { isEInk } from '~/helpers/theme';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
     import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
@@ -71,6 +72,27 @@
 
     // the hero map is the list's first row: it scrolls away with the page
     const HERO_HEIGHT = 240;
+    const FAB_SIZE = 48;
+    /** what the list leaves at its foot for the button: its size and the margin under it */
+    const FAB_ROOM = FAB_SIZE + 16;
+    // extended at the top and while the list is scrolled up, round while it is scrolled down
+    let fabExpanded = true;
+    let lastOffset = 0;
+    // the hero map is the list's first row: RecyclerView gives its view away once it is far enough off screen, and the map is built again.
+    // The list is short: it keeps the views of all its rows (Android; the iOS list reuses its cells as it likes)
+    const KEPT_VIEWS = 32;
+    $: if (__ANDROID__ && listView?.nativeView) {
+        listView.nativeView.nativeViewProtected?.setItemViewCacheSize?.(KEPT_VIEWS);
+    }
+    function onListScroll() {
+        const offset = listView?.nativeView?.scrollOffset ?? 0;
+        if (offset <= 8 || offset < lastOffset - 4) {
+            fabExpanded = true;
+        } else if (offset > lastOffset + 4) {
+            fabExpanded = false;
+        }
+        lastOffset = offset;
+    }
 
     const mapContext = getMapContext();
     let heroMap: RouteHeroMap;
@@ -319,26 +341,9 @@
                 <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
                 <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
             </stacklayout>
-            <!-- a long press leaves now -->
-            <gridlayout
-                backgroundColor={passed ? colorErrorContainer : departure.mode === 'planned' ? colorPrimaryContainer : null}
-                borderColor={colorOutlineVariant}
-                borderRadius={14}
-                borderWidth={1}
-                height={28}
-                padding="0 8"
-                rippleColor={colorPrimary}
-                verticalAlignment="middle"
-                on:tap={() => (whenOpen = !whenOpen)}
-                on:longPress={departNow}>
-                <stacklayout orientation="horizontal" verticalAlignment="middle">
-                    <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={14} text="mdi-clock-outline" verticalAlignment="middle" />
-                    <label color={colorOnSurface} fontSize={12} paddingLeft={4} text={whenLabel} verticalAlignment="middle" />
-                </stacklayout>
-            </gridlayout>
             <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
         </CActionBar>
-        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2}>
+        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2} on:scroll={onListScroll}>
             <Template key="hero">
                 <gridlayout height={HERO_HEIGHT}>
                     <RouteHeroMap bind:this={heroMap} {item} />
@@ -440,5 +445,26 @@
                 <label backgroundColor={colorCanvas} color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
             </Template>
         </collectionview>
+        <!-- the departure: an extended button over the list, a round one once the list is scrolled down, as it is read -->
+        <gridlayout
+            backgroundColor={passed ? colorErrorContainer : colorPrimaryContainer}
+            borderColor={colorOutlineVariant}
+            borderRadius={FAB_SIZE / 2}
+            borderWidth={isEInk ? 1.5 : 0}
+            elevation={6}
+            height={FAB_SIZE}
+            horizontalAlignment="right"
+            margin={`0 16 ${16 + (__ANDROID__ ? $windowInset.bottom : 0)} 0`}
+            minWidth={FAB_SIZE}
+            row={1}
+            rippleColor={colorPrimary}
+            verticalAlignment="bottom"
+            on:tap={() => (whenOpen = !whenOpen)}
+            on:longPress={departNow}>
+            <stacklayout horizontalAlignment="center" orientation="horizontal" padding={fabExpanded ? '0 16 0 14' : '0'} verticalAlignment="middle">
+                <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={22} text="mdi-clock-outline" verticalAlignment="middle" />
+                <label color={colorOnSurface} fontSize={14} fontWeight="bold" paddingLeft={8} text={whenLabel} verticalAlignment="middle" visibility={fabExpanded ? 'visible' : 'collapse'} />
+            </stacklayout>
+        </gridlayout>
     </gridlayout>
 </page>
