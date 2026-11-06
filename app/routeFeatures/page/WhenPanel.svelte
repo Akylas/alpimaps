@@ -158,7 +158,12 @@
             shownAt = anchorAt;
             // once the cells are laid out: the list gets its items after it is bound, and before that there is nothing to scroll to
             clearTimeout(scrollTimer);
-            scrollTimer = setTimeout(() => strip?.nativeView?.scrollToIndex(Math.max(0, cells.findIndex((cell) => cell.chosen) - 3), false), STRIP_SCROLL_DELAY);
+            scrollTimer = setTimeout(() => {
+                const chosenIndex = cells.findIndex((cell) => cell.chosen);
+                // the past is not looked at: the strip starts at now, or at the first departure to come; a planned one has its neighbours
+                const firstToCome = Math.max(0, cells.findIndex((cell) => !cell.past));
+                strip?.nativeView?.scrollToIndex(inputs.departure.mode === 'now' ? firstToCome : Math.max(firstToCome, chosenIndex - 3), false);
+            }, STRIP_SCROLL_DELAY);
         }
     }
     $: if (strip && anchorAt !== shownAt) {

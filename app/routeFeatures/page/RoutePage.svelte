@@ -193,7 +193,23 @@
     }
     $: departureGone = passed && !keepPassed;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
-    $: setRow({ type: 'when', key: 'when' }, whenOpen, 'tiles');
+    $: setRow({ type: 'when', key: 'when', version: analysisVersion }, whenOpen, 'tiles');
+    // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
+    // their items, set again with each change of it
+    function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
+        ['tiles', 'when'].forEach((key) => {
+            const index = indexOfKey(key);
+            if (index >= 0) {
+                const row = listItems.getItem(index);
+                if (row.type === 'when') {
+                    listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
+                } else if (row.type === 'tiles') {
+                    listItems.setItem(index, { ...row, version });
+                }
+            }
+        });
+    }
+    $: refreshAnalysisRows(analysisVersion, committed, $routeAnalysisChanges);
     $: zone = routeTimeZone(departure);
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
@@ -360,17 +376,17 @@
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="when">
+            <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel {item} committed={committed ? committed.analysis : undefined} version={analysisVersion} on:change={onAnalysisChange} on:revert={giveBackLook} />
+                        <WhenPanel {item} committed={row.committed} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="tiles">
+            <Template key="tiles" let:item={row}>
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
-                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={analysisVersion} on:when={() => (whenOpen = !whenOpen)} />
+                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
                 </gridlayout>
             </Template>
             <Template key="profile">
