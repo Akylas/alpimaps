@@ -178,7 +178,7 @@
 
     let mapView: NativeViewElementNode<MassifMapView>;
 
-    // the map is a row of the page's list: a drag that starts on it moves the map, not the page
+    // the map sits over the page's list: a drag that starts on it moves the map, not the page
     function claimTouch(args: TouchGestureEventData) {
         if (__ANDROID__ && args.action === 'down') {
             const view: android.view.View = args.view?.nativeViewProtected;
@@ -216,6 +216,6 @@
 </script>
 
 <gridlayout {...$$restProps}>
-    <!-- a TextureView: a surface view does not scroll cleanly with the list it is a row of -->
+    <!-- a TextureView: a surface view does not follow a view that moves cleanly -->
     <massifmap bind:this={mapView} useTextureView={true} zoom={12} on:mapReady={onMapReady} on:touch={claimTouch} on:layoutChanged={() => frame()} />
 </gridlayout>

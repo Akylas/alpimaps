@@ -1,10 +1,9 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
-    import { ObservableArray } from '@nativescript/core';
+    import { Color, Font, FormattedString, type GridLayout, ImageSource, ObservableArray, Span } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
-    import CActionBar from '@shared/components/CActionBar.svelte';
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
@@ -13,7 +12,7 @@
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
-    import { onDestroy } from 'svelte';
+    import { onDestroy, onMount, tick } from 'svelte';
     import { get } from 'svelte/store';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { CollectionView } from '@nativescript-community/ui-collectionview';
@@ -33,6 +32,8 @@
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
+    import type { AppBar } from '@nativescript-community/ui-appbar';
+    import type { MenuItem } from '@nativescript-community/ui-menu';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
 
     export let item: Item;
@@ -70,30 +71,61 @@
     const SECTION_HEADER_HEIGHT = 56;
     const CARD_RADIUS = 16;
 
-    // the hero map is the list's first row: it scrolls away with the page
+    // the hero map is not a row of the list, which would give its view away once off screen and build the map again: it stays over the
+    // list's top padding and follows its scroll
     const HERO_HEIGHT = 240;
-    const FAB_SIZE = 48;
+    let heroHolder: NativeViewElementNode<GridLayout>;
+    const FAB_SIZE = 56;
     /** what the list leaves at its foot for the button: its size and the margin under it */
     const FAB_ROOM = FAB_SIZE + 16;
+    /** scroll that tells a direction: a smaller move is a finger's jitter, which would flicker the button */
+    const FAB_SCROLL_STEP = 24;
     // extended at the top and while the list is scrolled up, round while it is scrolled down
     let fabExpanded = true;
     let lastOffset = 0;
-    // the hero map is the list's first row: RecyclerView gives its view away once it is far enough off screen, and the map is built again.
-    // The list is short: it keeps the views of all its rows (Android; the iOS list reuses its cells as it likes)
-    const KEPT_VIEWS = 32;
-    $: if (__ANDROID__ && listView?.nativeView) {
-        listView.nativeView.nativeViewProtected?.setItemViewCacheSize?.(KEPT_VIEWS);
+    function moveHero(offset: number) {
+        if (heroHolder?.nativeView) {
+            heroHolder.nativeView.translateY = -Math.min(offset, HERO_HEIGHT);
+        }
+    }
+    // the Android list tells its scroll only while a finger drags it: a scroll asked of it (a button, a link) tells nothing, and the map would
+    // stay where it was, off screen. A listener of the native list hears every scroll. The iOS list tells them all
+    let nativeScrollListener: com.nativescript.collectionview.OnScrollListener;
+    function listenToScroll() {
+        const nativeList = listView?.nativeView?.nativeViewProtected;
+        if (!__ANDROID__ || !nativeList || nativeScrollListener) {
+            return;
+        }
+        nativeScrollListener = new com.nativescript.collectionview.OnScrollListener(
+            new com.nativescript.collectionview.OnScrollListener.Listener({
+                onScrollStateChanged: () => undefined,
+                onScrolled: () => moveHero(listView?.nativeView?.scrollOffset ?? 0)
+            })
+        );
+        nativeList.addOnScrollListener(nativeScrollListener);
+    }
+    onDestroy(() => {
+        if (nativeScrollListener) {
+            listView?.nativeView?.nativeViewProtected?.removeOnScrollListener(nativeScrollListener);
+        }
+    });
+    function scrollListTo(index: number) {
+        listView?.nativeView?.scrollToIndex(index, true);
     }
     function onListScroll() {
         const offset = listView?.nativeView?.scrollOffset ?? 0;
-        if (offset <= 8 || offset < lastOffset - 4) {
+        moveHero(offset);
+        if (offset <= FAB_SCROLL_STEP) {
             fabExpanded = true;
-        } else if (offset > lastOffset + 4) {
+            lastOffset = offset;
+        } else if (offset > lastOffset + FAB_SCROLL_STEP) {
             fabExpanded = false;
+            lastOffset = offset;
+        } else if (offset < lastOffset - FAB_SCROLL_STEP) {
+            fabExpanded = true;
+            lastOffset = offset;
         }
-        lastOffset = offset;
     }
-
     const mapContext = getMapContext();
     let heroMap: RouteHeroMap;
     const sectionComponents = lazyComponents();
@@ -108,11 +140,8 @@
     // the card is the profile feature's, which the user can switch off
     const hasProfileCard = get(routeFeatures).some((feature) => feature.id === 'profile') && !!item?.profile?.data?.length;
 
-    // filled once, then changed where something changed: a new array would rebuild every row, the hero map with it
-    const listItems = new ObservableArray<ListRow>([
-        { type: 'hero', key: 'hero' },
-        ...pageRows({ sections: routePageSections(get(routeFeatures)), ctx: { item }, stored, hasProfile: hasProfileCard })
-    ]);
+    // filled once, then changed where something changed: a new array would rebuild every row
+    const listItems = new ObservableArray<ListRow>([...pageRows({ sections: routePageSections(get(routeFeatures)), ctx: { item }, stored, hasProfile: hasProfileCard })]);
     function indexOfKey(key: string) {
         for (let index = 0; index < listItems.length; index++) {
             if (listItems.getItem(index).key === key) {
@@ -130,8 +159,9 @@
         const current = listItems.getItem(header);
         const summary = section.summary?.({ item });
         const facts = section.facts?.({ item });
-        if (current.type !== 'section' || current.open !== open || current.summary !== summary || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
-            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts });
+        const icon = section.iconOf?.({ item });
+        if (current.type !== 'section' || current.open !== open || current.summary !== summary || current.icon !== icon || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
+            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts, icon });
         }
         if (open) {
             sectionComponents.load(section.id, section.component);
@@ -173,17 +203,30 @@
         sections.forEach((section) => setSectionOpen(section, isSectionOpen(section, stored)));
     }
     $: refreshSections($routeFeatureChanges, item);
-    function setRow(row: ListRow, shown: boolean, after: string) {
+    // `after` undefined: the list's first row
+    function setRow(row: ListRow, shown: boolean, after?: string) {
         const index = indexOfKey(row.key);
         if (shown && index < 0) {
-            listItems.splice(indexOfKey(after) + 1, 0, row);
+            listItems.splice((after ? indexOfKey(after) : -1) + 1, 0, row);
         } else if (!shown && index >= 0) {
             listItems.splice(index, 1);
         }
     }
 
-    // the departure: the When pill says it, the panel under the tiles sets it
+    // the departure: the button says it, the panel under the tiles sets it
     let whenOpen = openWhen;
+    // the button opens the panel and brings it into view, where the list is scrolled to; with the panel in view already it closes it
+    async function onWhenTap() {
+        const tilesIndex = indexOfKey('tiles');
+        if (whenOpen && listView?.nativeView?.isItemAtIndexVisible(indexOfKey('when'))) {
+            whenOpen = false;
+            return;
+        }
+        whenOpen = true;
+        // once the panel's row is in the list
+        await tick();
+        scrollListTo(tilesIndex);
+    }
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
@@ -207,7 +250,7 @@
         keptAt = departure.mode === 'planned' ? departure.at : undefined;
     }
     $: departureGone = passed && !keepPassed;
-    $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
+    $: setRow({ type: 'passed', key: 'passed' }, departureGone);
     $: setRow({ type: 'when', key: 'when', version: analysisVersion }, whenOpen, 'tiles');
     // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
     // their items, set again with each change of it
@@ -276,7 +319,7 @@
         }
         return () => {
             setSectionOpen(section, true);
-            listView?.nativeView?.scrollToIndex(indexOfKey('section:' + section.id), true);
+            scrollListTo(indexOfKey('section:' + section.id));
         };
     }
 
@@ -294,34 +337,38 @@
         return row.type === 'body' && row.row.data !== undefined ? { data: row.row.data } : {};
     }
 
-    async function showMenu(event) {
+    // a font icon for the bar and its menu, drawn from a span
+    function mdiIcon(glyph: string) {
+        const span = new Span();
+        span.text = glyph;
+        span.fontFamily = $fonts.mdi;
+        span.fontSize = 24;
+        const icon = new FormattedString();
+        icon.spans.push(span);
+        return icon;
+    }
+    // the clock of the departure button, as an image: the button has no font icon
+    $: clockIcon = ImageSource.fromFontIconCodeSync('mdi-clock-outline', Font.default.withFontFamily($fonts.mdi).withFontSize(24), new Color('white'));
+
+    // svelte-native does not type the nested android.* properties
+    const navigationIcon = { 'android.systemIcon': 'ic_menu_back' };
+    let appBar: NativeViewElementNode<AppBar>;
+    // the bar follows the list
+    onMount(() => {
+        appBar.nativeView.scrollTarget = listView.nativeView;
+    });
+    let menu: MenuItem[];
+    $: menu = [
+        { title: lc('show_on_map'), icon: mdiIcon('mdi-map-outline'), onSelect: showOnMap },
+        { title: lc('share'), icon: mdiIcon('mdi-share-variant'), onSelect: () => shareItem(item, appBar?.nativeView, VerticalPosition.BELOW) },
+        ...(isSaved(item) ? [{ title: lc('edit'), icon: mdiIcon('mdi-pencil'), onSelect: editItem }] : [])
+    ];
+
+    // the item's own form: its name, colour and style
+    async function editItem() {
         try {
-            const options = [
-                { id: 'show_on_map', icon: 'mdi-map-outline', name: lc('show_on_map') },
-                { id: 'share', icon: 'mdi-share-variant', name: lc('share') },
-                ...(isSaved(item) ? [{ id: 'edit', icon: 'mdi-pencil', name: lc('edit') }] : [])
-            ];
-            await showPopoverMenu({
-                options,
-                anchor: event.object,
-                vertPos: VerticalPosition.BELOW,
-                onClose: async (result) => {
-                    switch (result?.id) {
-                        case 'show_on_map':
-                            showOnMap();
-                            break;
-                        case 'share':
-                            await shareItem(item, event.object, VerticalPosition.BELOW);
-                            break;
-                        case 'edit': {
-                            // the item's own form: its name, colour and style
-                            const ItemEdit = (await import('~/components/items/ItemEdit.svelte')).default;
-                            navigate({ page: ItemEdit, props: { item } });
-                            break;
-                        }
-                    }
-                }
-            });
+            const ItemEdit = (await import('~/components/items/ItemEdit.svelte')).default;
+            navigate({ page: ItemEdit, props: { item } });
         } catch (error) {
             showError(error);
         }
@@ -334,32 +381,26 @@
     }
 </script>
 
-<page actionBarHidden={true} on:navigatingFrom={(event) => event.isBackNavigation && heroMap?.dispose()}>
-    <gridlayout backgroundColor={colorCanvas} rows="auto,*">
-        <CActionBar canGoBack title={null}>
-            <stacklayout slot="center" col={1} verticalAlignment="middle">
-                <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
-                <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
-            </stacklayout>
-            <mdbutton class="actionBarButton" text="mdi-dots-vertical" variant="text" on:tap={showMenu} />
-        </CActionBar>
-        <collectionview bind:this={listView} {itemTemplateSelector} items={listItems} paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)} row={1} ios:contentInsetAdjustmentBehavior={2} on:scroll={onListScroll}>
-            <Template key="hero">
-                <gridlayout height={HERO_HEIGHT}>
-                    <RouteHeroMap bind:this={heroMap} {item} />
-                    <stacklayout horizontalAlignment="right" padding={8} verticalAlignment="top">
-                        <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} text="mdi-arrow-expand" on:tap={showOnMap} />
-                        <!-- the whole route again, after a section or a point was looked at -->
-                        <mdbutton
-                            class="small-floating-btn"
-                            backgroundColor={colorSurface}
-                            color={colorOnSurface}
-                            marginTop={8}
-                            text="mdi-fit-to-screen-outline"
-                            on:tap={() => heroMap?.showWholeRoute()} />
-                    </stacklayout>
-                </gridlayout>
-            </Template>
+<appPage backgroundColor={colorCanvas}>
+    <appBar bind:this={appBar} scrollBehavior="lift">
+        <navigationButton {...navigationIcon} on:tap={() => goBack()} />
+        <!-- the title on two lines, which the bar's own title does not do -->
+        <stacklayout verticalAlignment="middle">
+            <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
+            <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
+        </stacklayout>
+        <appBarItem android.position="actionBar" icon={mdiIcon('mdi-dots-vertical')} ios.position="right" {menu} text={lc('more')} />
+    </appBar>
+    <gridlayout>
+        <collectionview
+            bind:this={listView}
+            {itemTemplateSelector}
+            items={listItems}
+            paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)}
+            paddingTop={HERO_HEIGHT}
+            ios:contentInsetAdjustmentBehavior={2}
+            on:loaded={listenToScroll}
+            on:scroll={onListScroll}>
             <Template key="passed">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorErrorContainer} borderRadius={CARD_RADIUS} columns="*,auto,auto" padding="8 12">
@@ -377,7 +418,7 @@
             <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel {item} committed={row.committed} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
+                        <WhenPanel committed={row.committed} {item} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
@@ -411,17 +452,29 @@
                             fontFamily={$fonts.mdi}
                             fontSize={20}
                             height={36}
-                            text={row.section.icon}
+                            text={row.icon ?? row.section.icon}
                             textAlignment="center"
                             verticalTextAlignment="middle"
                             width={36} />
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
                             {#if row.facts?.length}
-                                <!-- the summary as chips: an icon and its figure, in their colours -->
+                                <!-- the summary as chips: an icon and its figure, in their colours, open or not: the rows under it do not say it again -->
                                 <stacklayout orientation="horizontal">
                                     {#each row.facts as fact}
-                                        <Chip alert={fact.alert} color={fact.color} height={20} icon={fact.icon} marginTop={2} text={fact.text} />
+                                        <Chip
+                                            alert={fact.alert}
+                                            bar={fact.bar ?? null}
+                                            color={fact.color}
+                                            height={20}
+                                            icon={fact.icon}
+                                            label={fact.label}
+                                            marginTop={2}
+                                            note={fact.note}
+                                            text={fact.text}
+                                            tint={fact.tint}
+                                            unit={fact.unit}
+                                            value={fact.value} />
                                     {/each}
                                 </stacklayout>
                             {:else}
@@ -445,26 +498,29 @@
                 <label backgroundColor={colorCanvas} color={colorOnSurfaceVariant} fontSize={11} padding="16 16 0 16" text={lc('route_page_attribution')} textAlignment="center" />
             </Template>
         </collectionview>
-        <!-- the departure: an extended button over the list, a round one once the list is scrolled down, as it is read -->
-        <gridlayout
-            backgroundColor={passed ? colorErrorContainer : colorPrimaryContainer}
-            borderColor={colorOutlineVariant}
-            borderRadius={FAB_SIZE / 2}
-            borderWidth={isEInk ? 1.5 : 0}
-            elevation={6}
-            height={FAB_SIZE}
-            horizontalAlignment="right"
-            margin={`0 16 ${16 + (__ANDROID__ ? $windowInset.bottom : 0)} 0`}
-            minWidth={FAB_SIZE}
-            row={1}
-            rippleColor={colorPrimary}
-            verticalAlignment="bottom"
-            on:tap={() => (whenOpen = !whenOpen)}
-            on:longPress={departNow}>
-            <stacklayout horizontalAlignment="center" orientation="horizontal" padding={fabExpanded ? '0 16 0 14' : '0'} verticalAlignment="middle">
-                <label color={colorOnSurface} fontFamily={$fonts.mdi} fontSize={22} text="mdi-clock-outline" verticalAlignment="middle" />
-                <label color={colorOnSurface} fontSize={14} fontWeight="bold" paddingLeft={8} text={whenLabel} verticalAlignment="middle" visibility={fabExpanded ? 'visible' : 'collapse'} />
+        <!-- over the list, which leaves room for it at its top: the map stays, the list's rows scroll under it -->
+        <gridlayout bind:this={heroHolder} height={HERO_HEIGHT} verticalAlignment="top">
+            <RouteHeroMap bind:this={heroMap} {item} />
+            <stacklayout horizontalAlignment="right" padding={8} verticalAlignment="top">
+                <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} text="mdi-arrow-expand" on:tap={showOnMap} />
+                <!-- the whole route again, after a section or a point was looked at -->
+                <mdbutton class="small-floating-btn" backgroundColor={colorSurface} color={colorOnSurface} marginTop={8} text="mdi-fit-to-screen-outline" on:tap={() => heroMap?.showWholeRoute()} />
             </stacklayout>
         </gridlayout>
     </gridlayout>
-</page>
+    <appPageOverlay>
+        <!-- the departure: an extended button over the list, a round one once the list is scrolled down, as it is read -->
+        <floatingactionbutton
+            backgroundColor={passed ? colorErrorContainer : colorPrimaryContainer}
+            color={passed ? colorOnErrorContainer : colorOnSurface}
+            expanded={fabExpanded}
+            horizontalAlignment="right"
+            margin={`0 16 ${16 + (__ANDROID__ ? $windowInset.bottom : 0)} 0`}
+            rippleColor={colorPrimary}
+            src={clockIcon}
+            text={whenLabel}
+            verticalAlignment="bottom"
+            on:tap={onWhenTap}
+            on:longPress={departNow} />
+    </appPageOverlay>
+</appPage>
