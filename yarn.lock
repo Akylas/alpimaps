@@ -1673,23 +1673,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.36":
-  version: 6.0.36
-  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.36"
+"@nativescript-community/ui-collectionview-swipemenu@npm:6.0.37":
+  version: 6.0.37
+  resolution: "@nativescript-community/ui-collectionview-swipemenu@npm:6.0.37"
   dependencies:
     "@nativescript-community/class-mixins": "npm:^1.0.0"
-    "@nativescript-community/ui-collectionview": "npm:^6.0.36"
+    "@nativescript-community/ui-collectionview": "npm:^6.0.37"
     "@nativescript-community/ui-drawer": "npm:^0.1.31"
-  checksum: 10/bfb8f255797fae3f6b039723774a497f34cc3813e3db6cbf7fd70a8d3e1ebcfc094c1c9f0f63e6831dc2c548f3dd2e08d74afcf6f2cab929822710fd4873c649
+  checksum: 10/f5dcf63591bb476b8180cad12c30f9f3defa8e3319fd04fde78efa1904fa6339a73135ed2fa5697aa676bc53079a4aa6a58357141b1a048b13b7c502f56ea171
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-collectionview@npm:6.0.36, @nativescript-community/ui-collectionview@npm:^6.0.36":
-  version: 6.0.36
-  resolution: "@nativescript-community/ui-collectionview@npm:6.0.36"
+"@nativescript-community/ui-collectionview@npm:6.0.37, @nativescript-community/ui-collectionview@npm:^6.0.37":
+  version: 6.0.37
+  resolution: "@nativescript-community/ui-collectionview@npm:6.0.37"
   dependencies:
     "@nativescript-community/arraybuffers": "npm:^1.1.5"
-  checksum: 10/8773e29bc890b566c0ba13f8c9cb2db014e7c8fa61c5bb62e848c00ae9a15069d9717c18f1ff91acf269b32c2404dff484b9cce2a36182fdd9adf11a9cbee7b3
+  checksum: 10/528904f4d41791322b2129ef6cc88f24d3b5f88166109fb954319b257a9fba6dbebbc07998bf5c439a919bc2f1bf783f3e0a6c1a8d5d34a4c49ff5ecdc1e98c4
   languageName: node
   linkType: hard
 
@@ -10454,8 +10454,8 @@ __metadata:
     "@nativescript-community/ui-card": "npm:1.5.1"
     "@nativescript-community/ui-chart": "npm:2.0.32"
     "@nativescript-community/ui-checkbox": "npm:1.5.1"
-    "@nativescript-community/ui-collectionview": "npm:6.0.36"
-    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.36"
+    "@nativescript-community/ui-collectionview": "npm:6.0.37"
+    "@nativescript-community/ui-collectionview-swipemenu": "npm:6.0.37"
     "@nativescript-community/ui-core": "npm:1.5.1"
     "@nativescript-community/ui-datetimepicker": "npm:1.5.1"
     "@nativescript-community/ui-dialogs": "npm:1.5.1"
