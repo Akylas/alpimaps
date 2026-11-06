@@ -9,7 +9,7 @@ import { activityOf } from '~/utils/routeAnalysis/activity';
 import { withRouteTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerExtra, type LayerStatus, type StatusKey, evaluateAnalysis } from '~/utils/routeAnalysis/freshness';
 import { createPipeline } from '~/utils/routeAnalysis/pipeline';
-import { createAnalysis, reconcileAnalysis } from '~/utils/routeAnalysis/storage';
+import { createAnalysis, reconcileAnalysis, withActivity } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { Layer, LayerId, RouteAnalysis } from '~/utils/routeAnalysis/types';
 
@@ -108,7 +108,10 @@ function commit(item: IItem, layer: LayerId, value: Layer<unknown>) {
 export async function computeLayers(item: IItem, layers: LayerId[]) {
     const itemKey = focusKeyOf(item);
     revertLook(item);
-    item.analysis = reconcileAnalysis(item.analysis, item.geometry) ?? createAnalysis(item.geometry, activityOf(item, null));
+    const analysis = reconcileAnalysis(item.analysis, item.geometry) ?? createAnalysis(item.geometry, activityOf(item, null));
+    // an analysis made for a departure or a pace has no activity yet: a computed route is what it was routed for
+    const activity = analysis.inputs.activity ? undefined : activityOf(item, null);
+    item.analysis = activity ? withActivity(analysis, item.geometry, activity) : analysis;
     const unsubscribe = pipeline.runs(itemKey).subscribe(notify);
     try {
         await pipeline.run({ itemKey, item, analysis: item.analysis, layers, commit: (layer, value) => commit(item, layer, value) });

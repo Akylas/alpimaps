@@ -871,7 +871,7 @@
             features.push(item);
             if (requestStats) {
                 // the layer lands on the item, which the sheet reads again once it does
-                import('~/routeFeatures/road/auto').then(({ computeRiskLayer }) => computeRiskLayer(item as IItem)).catch(showError);
+                import('~/routeFeatures/road/auto').then(({ computeRiskLayer }) => computeRiskLayer(item)).catch(showError);
             }
             DEV_LOG && console.log('prepared route item', Date.now() - startTime, 'ms', JSON.stringify(route.route.waypoints));
             return item as ItemFeature;

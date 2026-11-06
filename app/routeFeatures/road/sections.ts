@@ -36,32 +36,20 @@ export interface RoadRead {
 const SIGN_SPACING = 2000;
 const FILL_PATTERNS: Record<RiskLevel, ProfileFillStop['pattern']> = { 2: 'diagonal', 3: 'cross' };
 
-/** The first profile index at or after a distance, the last one when it is past the end. */
-export function indexAt(data: { d: number }[], distance: number): number {
-    let low = 0;
-    let high = data.length - 1;
-    while (low < high) {
-        const middle = (low + high) >> 1;
-        if (data[middle].d < distance) {
-            low = middle + 1;
-        } else {
-            high = middle;
-        }
-    }
-    return low;
-}
-
-/** The sections on the profile, in route order, each starting where the one before ended and at least one step long. */
+/**
+ * The sections on the profile, in route order, each starting where the one before ended and at least one step long. They are
+ * placed by the shape indexes of the match, as the surface segments are: the meters of the edges are the figures, not the place.
+ */
 function runsOf(sections: RiskSection[], data: { d: number }[]): RoadRun[] {
     const last = data.length - 1;
     const runs: RoadRun[] = [];
     let cursor = 0;
     sections
         .slice()
-        .sort((first, second) => first.startDist - second.startDist)
+        .sort((first, second) => first.start - second.start)
         .forEach((section) => {
-            const i0 = Math.max(indexAt(data, section.startDist), cursor);
-            const i1 = Math.min(Math.max(indexAt(data, section.startDist + section.length), i0 + 1), last);
+            const i0 = Math.max(section.start, cursor);
+            const i1 = Math.min(Math.max(section.end, i0 + 1), last);
             if (i1 > i0) {
                 runs.push({ section, i0, i1 });
                 cursor = i1;
@@ -100,16 +88,16 @@ export function buildRoadRead(sections: RiskSection[], unknown: number, data: { 
         // a sign in the middle of the run, and one every 2 km along a long one
         symbols: runs.flatMap(({ i0, i1, section }) => {
             const count = Math.max(1, Math.round(section.length / SIGN_SPACING));
-            return Array.from({ length: count }, (_, position): LensSymbol => {
-                const distance = section.startDist + (section.length * (position + 0.5)) / count;
-                return {
+            return Array.from(
+                { length: count },
+                (_, position): LensSymbol => ({
                     shape: 'speed_sign',
-                    vertex: Math.min(Math.max(indexAt(data, distance), i0), i1),
+                    vertex: Math.min(i0 + Math.round(((i1 - i0) * (position + 0.5)) / count), i1),
                     label: words.speedNumber(section.speed),
                     severity: section.level,
                     priority: 40 + section.level * 10
-                };
-            });
+                })
+            );
         }),
         marks: runs.map(({ section }, id) => ({ kind: 'fast' as const, color: ROAD_COLORS[section.level], tier: section.level, lens: 'road' as const, section: lensSections[id] })),
         alerts: runs.map(({ i0, i1, section }) => ({ kind: 'fast' as const, i0, i1, s: section.level })),

@@ -10,18 +10,18 @@
     import { readRoad, roadWords } from '~/routeFeatures/road/read';
     import { roadBanner, roadBannerLead, roadBannerMinLength } from '~/routeFeatures/road/settings';
     import { routeFeatureChanges } from '~/routeFeatures/registry';
-    import { navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
+    import { navigationDetour, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { colors, fonts } from '~/variables';
 
     let { colorError, colorOnSurface, colorOnSurfaceVariant } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
     const SIGN_SIZE = 38;
-    const outline = () => (isEInk ? '#000000' : colorError);
 
     // the `>= 0` only makes the statement depend on the settings changing what is read
     $: read = $routeFeatureChanges >= 0 ? readRoad($navigationItem) : null;
-    $: ahead = $roadBanner && read ? riskAhead(read.runs, $navigationItem.profile.data, $navigationProgress?.onPathIndex ?? -1, { lead: $roadBannerLead, minLength: $roadBannerMinLength }) : null;
+    // on a detour the progress is the base route's rejoin point: what is counted from it is not where the user is
+    $: ahead = $roadBanner && read && !$navigationDetour ? riskAhead(read.runs, $navigationItem.profile.data, $navigationProgress?.onPathIndex ?? -1, { lead: $roadBannerLead, minLength: $roadBannerMinLength }) : null;
 
     // the section the user sent away stays away, until another one comes
     let dismissed: number = null;
@@ -38,11 +38,11 @@
         : '';
 </script>
 
-<NavigationCard borderColor={outline()} borderWidth={2} columns="auto,*,auto" height={Math.round(58 * scale)} padding="0 6 0 10" visibility={shown ? 'visible' : 'collapse'} {...$$restProps}>
+<NavigationCard borderColor={isEInk ? '#000000' : colorError} borderWidth={2} columns="auto,*,auto" height={Math.round(58 * scale)} padding="0 6 0 10" visibility={shown ? 'visible' : 'collapse'} {...$$restProps}>
     <!-- the speed sign: a white disc in a ring -->
     <gridlayout
         backgroundColor="#ffffff"
-        borderColor={outline()}
+        borderColor={isEInk ? '#000000' : colorError}
         borderRadius={(SIGN_SIZE * scale) / 2}
         borderWidth={3}
         height={Math.round(SIGN_SIZE * scale)}

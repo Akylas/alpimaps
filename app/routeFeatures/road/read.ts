@@ -24,8 +24,8 @@ export function readRoad(item: IItem): RoadRead | null {
     if (!layer || !data?.length) {
         return null;
     }
-    // what the signs say depends on the speed unit
-    const key = `${settingsKey}|${convertFamilyValue(1, UNIT_FAMILIES.Speed, UNITS.SpeedKm)[1]}`;
+    // what the signs and the titles say depends on the units
+    const key = `${settingsKey}|${roadWords.speed(100)}|${roadWords.distance(1000)}`;
     const cached = reads.get(layer);
     if (cached?.key === key && cached.data === data) {
         return cached.read;

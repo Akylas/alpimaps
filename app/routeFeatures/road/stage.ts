@@ -17,7 +17,7 @@ export const riskStage: AnalysisStage = {
             throw new StageError('offline');
         }
         const edges = await packageService.getStats({ item, profile: 'bicycle', attributes: RISK_EDGE_ATTRIBUTES });
-        if (!edges) {
+        if (!edges?.length) {
             throw new StageError('error', 'no route to match');
         }
         const { candidates, unknown } = riskCandidates(edges);

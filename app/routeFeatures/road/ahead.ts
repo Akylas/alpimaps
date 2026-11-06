@@ -3,7 +3,7 @@ import type { RiskLevel } from '~/routeFeatures/road/risk';
 import type { RoadRun } from '~/routeFeatures/road/sections';
 
 export interface RiskAhead {
-    /** the section's start, meters from the route start: the same section keeps the same key */
+    /** the section's first profile index: the same section keeps the same key */
     key: number;
     /** `ahead`: coming up; `on`: on it */
     state: 'ahead' | 'on';
@@ -26,16 +26,16 @@ export function riskAhead(runs: RoadRun[], data: { d: number }[], index: number,
         return null;
     }
     // the runs are in route order: the first one not behind and long enough is the one
-    for (const { section } of runs) {
-        const end = section.startDist + section.length;
-        if (end <= here || section.length < minLength) {
+    for (const { i0, i1, section } of runs) {
+        const length = data[i1].d - data[i0].d;
+        if (i1 <= index || length < minLength) {
             continue;
         }
-        const distance = Math.max(section.startDist - here, 0);
+        const distance = Math.max(data[i0].d - here, 0);
         if (distance > lead) {
             return null;
         }
-        return { key: section.startDist, state: distance > 0 ? 'ahead' : 'on', distance, remaining: end - here, speed: section.speed, level: section.level };
+        return { key: i0, state: index >= i0 ? 'on' : 'ahead', distance, remaining: data[i1].d - here, speed: section.speed, level: section.level };
     }
     return null;
 }

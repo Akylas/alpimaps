@@ -116,7 +116,9 @@ const roadLens: RouteLens = {
 function roadTiles({ item }: RouteCtx): RouteTile[] {
     const read = isBikeRoute(item) ? readRoad(item) : null;
     // nothing to say, nothing to show
-    return read?.runs.length ? [{ key: 'risk', icon: 'mdi-alert-outline', label: lc('road_fast_tile'), value: formatDistance(read.exposed), lens: 'road', alert: true }] : [];
+    return read?.runs.length
+        ? [{ key: 'risk', icon: 'mdi-alert-outline', label: lc('road_fast_tile'), value: formatDistance(read.exposed), lens: 'road', alert: read.runs.some(({ section }) => section.level === 3) }]
+        : [];
 }
 
 const roadPageSection: RoutePageSection = {

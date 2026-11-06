@@ -94,6 +94,10 @@ export function riskCandidates(edges: RiskEdge[]): { candidates: RiskRun[]; unkn
         if (speed < MIN_CANDIDATE_SPEED || infra === undefined) {
             return;
         }
+        // an edge the match gave no place on the route cannot be shown there
+        if (!(edge.begin_shape_index >= 0 && edge.end_shape_index > edge.begin_shape_index)) {
+            return;
+        }
         const shoulder = edge.shoulder ? true : undefined;
         const previous = candidates[candidates.length - 1];
         if (previous && lastCandidateEnd === index - 1 && previous.speed === speed && previous.infra === infra && previous.shoulder === shoulder) {
@@ -127,7 +131,7 @@ export function classifyRisk(candidates: RiskRun[], { bridge = RISK_BRIDGE, minL
                 previous.end = run.end;
                 previous.length = run.startDist + run.length - previous.startDist;
                 previous.speed = Math.max(previous.speed, run.speed);
-                previous.level = Math.max(previous.level, level) as RiskLevel;
+                previous.level = previous.level === 3 || level === 3 ? 3 : 2;
             } else {
                 sections.push({ level, start: run.start, end: run.end, startDist: run.startDist, length: run.length, speed: run.speed });
             }

@@ -24,6 +24,10 @@ describe('riskCandidates', () => {
         expect(riskCandidates([edge(100, 0, { speed_limit: 90 })]).candidates).toHaveLength(1);
     });
 
+    it('skips an edge the match gave no place on the route', () => {
+        expect(riskCandidates([{ length: 0.1, speed_limit: 90 }, edge(100, 3, { speed_limit: 90, end_shape_index: 3 })]).candidates).toEqual([]);
+    });
+
     it('ignores what a car does not drive on', () => {
         const edges = ['cycleway', 'path', 'footway', 'steps'].map((use, index) => edge(100, index, { speed_limit: 90, use }));
         expect(riskCandidates(edges)).toEqual({ candidates: [], unknown: 0 });
