@@ -222,6 +222,8 @@
     function setDeparture(at: number | null) {
         previewAt = null;
         dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? { mode: 'now' } : { mode: 'planned', at }) });
+        // the route has the departure now: what a feature needs for it, it asks for
+        departureFeatures.forEach((feature) => feature.departure.taken?.({ item }));
     }
     async function pickDeparture() {
         try {
@@ -313,7 +315,10 @@
                     {#if cell.best}
                         <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" />
                     {/if}
-                    {#each cell.marks.slice(0, cell.best ? 1 : 2) as mark}
+                    {#if cell.sky}
+                        <label color={isEInk ? colorOnSurface : (cell.sky.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={cell.sky.icon} />
+                    {/if}
+                    {#each cell.marks.slice(0, 1) as mark}
                         <label color={isEInk ? colorOnSurface : (mark.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={mark.icon} />
                     {/each}
                 </stacklayout>

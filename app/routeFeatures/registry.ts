@@ -347,6 +347,8 @@ export interface DepartureAssessment {
     covered: boolean;
     /** mm of rain over the ride, shown in the departure's cell. */
     rainMm?: number;
+    /** The sky of the ride, always shown in the departure's cell: a glyph and its colour. */
+    sky?: { icon: string; color?: string };
 }
 
 /** What a feature asks of a departure: the route, as the page has it, timed from `at`. */
@@ -374,6 +376,8 @@ export interface RouteDeparture {
     indicators: Record<string, { icon: string; color?: string }>;
     assess: (request: DepartureRequest) => DepartureAssessment | undefined;
     status?: (ctx: RouteCtx) => DepartureStatus | undefined;
+    /** Said once the user took a departure, the route having it: a feature may ask for what it needs for it, as a forecast that does not reach it. */
+    taken?: (ctx: RouteCtx) => void;
 }
 
 /**

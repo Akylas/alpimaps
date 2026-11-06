@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { RAIN_BLUE, SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
 import type { RideRow } from '~/routeFeatures/weather/data/read';
-import { heroGlyph, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
+import { heroGlyph, isClearSky, skyMark, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
 
 const attribution = { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' };
 const footer = { attribution, updatedAt: 1, outdated: false, canUpdate: true };
@@ -64,5 +65,30 @@ describe('windLabel', () => {
         expect(windLabel(25, 0, 20)?.side).toBe('left');
         expect(windLabel(25, 0, -20)?.side).toBe('right');
         expect(windLabel(25, 20, 0)?.side).toBeUndefined();
+    });
+});
+
+describe('skyMark', () => {
+    const summary = { rainTotal: 0, headShare: 0, tailShare: 0, thunder: false };
+
+    it('is the glyph of the ride and the colour of what it is: the sun, the rain, the cloud', () => {
+        expect(skyMark({ ...summary, cloud: 10 })).toEqual({ icon: 'mdi-weather-sunny', color: SUN_COLOR });
+        expect(skyMark({ ...summary, rainTotal: 1, rainPeak: { mmPerHour: 1, distance: 0 } })).toEqual({ icon: 'mdi-weather-rainy', color: RAIN_BLUE });
+        expect(skyMark({ ...summary, thunder: true }).color).toBe(RAIN_BLUE);
+        expect(skyMark({ ...summary, cloud: 90 }).icon).toBe('mdi-weather-cloudy');
+        expect(skyMark({ ...summary, cloud: 90 }).color).not.toBe(SUN_COLOR);
+    });
+});
+
+describe('isClearSky', () => {
+    it('is the sun by day: a clear sky and no rain', () => {
+        expect(isClearSky({ cloud: 10, precip: 0 })).toBe(true);
+        expect(isClearSky({ code: 0, precip: 0 })).toBe(true);
+        expect(isClearSky({ cloud: 60, precip: 0 })).toBe(false);
+        expect(isClearSky({ cloud: 10, precip: 1 })).toBe(false);
+    });
+
+    it('is not the moon by night', () => {
+        expect(isClearSky({ cloud: 10, precip: 0, moon: 'x' })).toBe(false);
     });
 });

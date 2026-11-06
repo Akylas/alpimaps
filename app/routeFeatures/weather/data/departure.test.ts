@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { WeatherRead } from './read';
-import { weatherAssessment } from './departure';
+import { RAIN_BLUE, SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
+import { weatherAssessment, weatherNeedsFetch } from './departure';
 
 const entry = (known: boolean) => ({ sample: { i: 0, d: 0, alt: 0 }, at: 0, reading: known ? {} : undefined });
 const read = (summary: Partial<WeatherRead['summary']>, known = true): Pick<WeatherRead, 'ride' | 'summary'> => ({
@@ -26,24 +27,26 @@ describe('weatherAssessment', () => {
         expect(weatherAssessment(read({ rainTotal: 5, headShare: 1 }, false))).toEqual({ points: {}, indicators: [], covered: false });
     });
 
-    it('marks rain from a tenth of a millimeter', () => {
-        expect(weatherAssessment(read({ rainTotal: 0.1 }))?.indicators).toContain('rain');
-        expect(weatherAssessment(read({ rainTotal: 0.09 }))?.indicators).not.toContain('rain');
-    });
-
     it('marks wind when a quarter of the way is against it', () => {
         expect(weatherAssessment(read({ headShare: 0.25 }))?.indicators).toContain('wind');
         expect(weatherAssessment(read({ headShare: 0.24 }))?.indicators).not.toContain('wind');
     });
 
-    it('marks sun for a dry ride under a clear sky: under 40 % of cloud', () => {
-        expect(weatherAssessment(read({ cloud: 39 }))?.indicators).toContain('sun');
-        expect(weatherAssessment(read({ cloud: 40 }))?.indicators).not.toContain('sun');
-        expect(weatherAssessment(read({ cloud: 10, rainTotal: 1 }))?.indicators).not.toContain('sun');
-        expect(weatherAssessment(read({}))?.indicators).not.toContain('sun');
+    it('says the sky of the ride, which is what marks it: the sun, the rain or the cloud, each in its colour', () => {
+        expect(weatherAssessment(read({ cloud: 10 }))?.sky).toMatchObject({ icon: 'mdi-weather-sunny', color: SUN_COLOR });
+        expect(weatherAssessment(read({ cloud: 10, rainTotal: 1, rainPeak: { mmPerHour: 1, distance: 0 } }))?.sky).toMatchObject({ icon: 'mdi-weather-rainy', color: RAIN_BLUE });
+        expect(weatherAssessment(read({ cloud: 90 }))?.sky?.icon).toBe('mdi-weather-cloudy');
+        expect(weatherAssessment(read({ cloud: 90 }))?.sky?.color).toBeDefined();
     });
 
-    it('keeps the order: rain, wind, sun', () => {
-        expect(weatherAssessment(read({ rainTotal: 1, headShare: 0.5, cloud: 10 }))?.indicators).toEqual(['rain', 'wind']);
+    it('has no mark for rain nor sun: the sky says them', () => {
+        expect(weatherAssessment(read({ rainTotal: 1, cloud: 10 }))?.indicators).toEqual([]);
+        expect(weatherAssessment(read({ headShare: 0.5, rainTotal: 1 }))?.indicators).toEqual(['wind']);
+    });
+
+    it('needs a fetch when a forecast was fetched and does not reach the ride, not before one was asked for', () => {
+        expect(weatherNeedsFetch(null)).toBe(false);
+        expect(weatherNeedsFetch(read({}))).toBe(false);
+        expect(weatherNeedsFetch(read({}, false))).toBe(true);
     });
 });

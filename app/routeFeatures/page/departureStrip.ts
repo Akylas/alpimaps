@@ -46,6 +46,8 @@ export interface StripCell {
     indicators: string[];
     /** mm of rain the features expect over the ride: unknown when none says */
     rainMm?: number;
+    /** the sky of the ride, when a feature says it */
+    sky?: { icon: string; color?: string };
     /** a feature scores the departures, but knows nothing of this ride: it counts for its darkness only */
     uncovered?: boolean;
     /** thirds of the scores' range; when they are all alike, good without dark minutes, poor with */
@@ -107,6 +109,7 @@ export function departureStrip({
             past: at < now,
             chosen: at === chosenAt,
             best: false,
+            ...(known.find((assessment) => assessment.sky) ? { sky: known.find((assessment) => assessment.sky).sky } : {}),
             ...(rains.length ? { rainMm: rains.reduce((total, rain) => total + rain, 0) } : {}),
             ...(assessments.length ? { uncovered } : {})
         });

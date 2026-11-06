@@ -20,9 +20,8 @@ import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysi
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
-import { weatherAssessment } from '~/routeFeatures/weather/data/departure';
+import { weatherAssessment, weatherNeedsFetch } from '~/routeFeatures/weather/data/departure';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
-import { RAIN_BLUE } from '~/routeFeatures/weather/ui/colors';
 import { type FactsWords, summaryFacts } from '~/routeFeatures/weather/ui/facts';
 import { weatherFormat, weatherUnitsKey } from '~/routeFeatures/weather/ui/format';
 import { heroGlyph, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
@@ -267,9 +266,7 @@ const weatherPageSection: RoutePageSection = {
 // how the weather takes part in the choice of a departure: the hours of the forecast read for a ride leaving at another time
 const weatherDeparture: RouteDeparture = {
     indicators: {
-        rain: { icon: 'mdi-weather-rainy', color: RAIN_BLUE },
-        wind: { icon: 'mdi-weather-windy', color: '#F29D38' },
-        sun: { icon: 'mdi-weather-sunny', color: '#F2B72E' }
+        wind: { icon: 'mdi-weather-windy', color: '#F29D38' }
     },
     assess: ({ analysis, at, item, now }) => {
         if (!analysis?.layers.weather) {
@@ -283,6 +280,14 @@ const weatherDeparture: RouteDeparture = {
             analysis: { ...analysis, inputs: { ...analysis.inputs, departure: { ...analysis.inputs.departure, mode: 'planned' as const, at } } }
         };
         return weatherAssessment(readWeather(shifted, Math.min(now, at), { format: weatherFormat }));
+    },
+    // a departure outside the hours of the forecast fetched: it is fetched again, for the user asked for a forecast of this ride before
+    taken: ({ item }) => {
+        const status = statusOf(item);
+        const busy = status.state === 'running' || status.state === 'queued';
+        if (networkService.connected && !busy && weatherNeedsFetch(readOf(item, status))) {
+            computeLayers(item, ['weather']);
+        }
     },
     status: ({ item }) => {
         const status = statusOf(item);

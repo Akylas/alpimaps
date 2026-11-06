@@ -15,10 +15,10 @@
     import { routeTimeZone } from '~/utils/routeAnalysis/departure';
     import type { RideRow } from '~/routeFeatures/weather/data/read';
     import type { WeatherRowData } from '~/routeFeatures/weather/ui/pageRows';
-    import { HEADWIND_HARD_COLOR, TAILWIND_COLOR, TEMP_LINE, cloudBand, rainBarHeight, rainBarTint, rainColor, tempColor, windColor, windWash } from '~/routeFeatures/weather/ui/colors';
+    import { HEADWIND_HARD_COLOR, SUN_COLOR, TAILWIND_COLOR, TEMP_LINE, rainBarHeight, rainBarTint, rainColor, skyBand, tempColor, windColor, windWash } from '~/routeFeatures/weather/ui/colors';
     import { weatherFormat } from '~/routeFeatures/weather/ui/format';
     import { type FactsWords, rainPeakSentence } from '~/routeFeatures/weather/ui/facts';
-    import { windLabel } from '~/routeFeatures/weather/ui/pageRows';
+    import { isClearSky, windLabel } from '~/routeFeatures/weather/ui/pageRows';
     import { wxGlyph } from '~/routeFeatures/weather/data/read';
     import { weatherGust } from '~/routeFeatures/weather/settings';
     import { colors, fonts } from '~/variables';
@@ -45,6 +45,8 @@
     const tone = (color: string | undefined) => (isEInk || !color ? colorOnSurface : color);
     // the sky: neutral when it does not rain, as e-ink has no colour to give it
     const skyTone = (precip: number) => (isEInk ? colorOnSurface : (rainColor(precip) ?? colorOnSurfaceVariant));
+    // the sun is highlighted as the rain is
+    const rowSkyTone = (row: RideRow) => (isClearSky(row) && !isEInk ? SUN_COLOR : skyTone(row.precip));
 
     /** km/h of the wind along the ride from which a sample says it */
     const WIND_SHOWN = 10;
@@ -160,10 +162,10 @@
                     <label color={colorOnSurface} fontSize={12} fontWeight="bold" text={formatDistance(row.distance)} textAlignment="center" />
                     <label color={colorOnSurfaceVariant} fontSize={11} text={clock(row.at)} textAlignment="center" />
                 </stacklayout>
-                <!-- the cloud cover as a strip over the samples, as oss-weather draws the phase of the day over its hours -->
-                <gridlayout backgroundColor={isEInk || row.cloud === undefined ? null : cloudBand(row.cloud)} height={4} verticalAlignment="top" />
+                <!-- the sky as a strip over the samples, as oss-weather draws the phase of the day over its hours: the sun when it is clear, the cloud -->
+                <gridlayout backgroundColor={isEInk || row.cloud === undefined ? null : skyBand(row.cloud)} height={4} verticalAlignment="top" />
                 <!-- the sky, in the colour of the rain -->
-                <label color={skyTone(row.precip)} fontFamily={$fonts.mdi} fontSize={24} row={1} text={wxGlyph(row.code, row.cloud, row.moon)} textAlignment="center" verticalTextAlignment="middle" />
+                <label color={rowSkyTone(row)} fontFamily={$fonts.mdi} fontSize={24} row={1} text={wxGlyph(row.code, row.cloud, row.moon)} textAlignment="center" verticalTextAlignment="middle" />
                 <!-- the wind under the sky, as oss-weather puts it: an arrow of the way it blows, its speed, on a wash when it is strong or bursts -->
                 {#if windRow && wind && wind.kind !== 'calm' && wind.value >= WIND_SHOWN}
                     <gridlayout

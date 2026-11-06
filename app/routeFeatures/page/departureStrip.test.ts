@@ -149,6 +149,14 @@ describe('departureStrip', () => {
             expect(cellsWith(undefined)[3].indicators).toEqual([]);
         });
 
+        it('keeps the sky they say of each ride, for the cell to always show it', () => {
+            const sky = { icon: 'mdi-weather-sunny', color: '#F2B72E' };
+            const sunny: DepartureAssessor = (at) => ({ points: {}, indicators: [], covered: at >= noon, sky: at >= noon ? sky : undefined });
+            const cells = cellsWith([sunny]);
+            expect(cells[8].sky).toEqual(sky);
+            expect(cells[2].sky).toBeUndefined();
+        });
+
         it('keeps the rain they expect on each ride, for the cell to show it', () => {
             const cells = cellsWith([rainy]);
             expect(cells[8].rainMm).toBe(2);

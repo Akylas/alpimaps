@@ -25,6 +25,10 @@ export function tint(hex: string, opacity: number): string {
 }
 
 export const CLOUD_GRAY = '#8D96A3';
+/** The sun, as it is highlighted as the rain and the cloud are. */
+export const SUN_COLOR = '#F2B72E';
+/** % of cloud under which the sky is clear: the sun is what the ride has to say of it. */
+export const SUNNY_CLOUD = 40;
 /** mm/h from which the wash of the rain is the strongest */
 const RAIN_WASH_FULL = 4;
 
@@ -57,9 +61,19 @@ export function rainBarHeight(mmPerHour: number): number {
     return 14 + 28 * Math.max(0, Math.min(1, mmPerHour / RAIN_BAR_MAX));
 }
 
+/** The wash of a sun chip: the yellow of the sun, the stronger the clearer the sky. */
+export function sunTint(cloudPercent: number): string {
+    return tint(SUN_COLOR, 0.16 + 0.3 * (1 - Math.max(0, Math.min(1, cloudPercent / 100))));
+}
+
 /** The band of the cloud cover over the samples: the grey of the cloud, the stronger the more of the sky is covered, each sample a piece of one strip. */
 export function cloudBand(cloudPercent: number): string {
     return tint(CLOUD_GRAY, 0.12 + 0.6 * Math.max(0, Math.min(1, cloudPercent / 100)));
+}
+
+/** The band of the sky over the samples: the sun under 40 % of cloud, the stronger the clearer, else the grey of the cloud. */
+export function skyBand(cloudPercent: number): string {
+    return cloudPercent < SUNNY_CLOUD ? tint(SUN_COLOR, 0.25 + (0.45 * (SUNNY_CLOUD - Math.max(0, cloudPercent))) / SUNNY_CLOUD) : cloudBand(cloudPercent);
 }
 
 /** Rain as the profile draws it: blue, darker from 4 mm/h. None for dry. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HEADWIND_HARD_COLOR, cloudBand, cloudTint, rainBarHeight, rainBarTint, rainColor, rainTint, tempColor, tint, windColor, windWash } from './colors';
+import { HEADWIND_HARD_COLOR, SUN_COLOR, cloudBand, cloudTint, rainBarHeight, rainBarTint, rainColor, rainTint, skyBand, sunTint, tempColor, tint, windColor, windWash } from './colors';
 
 describe('tempColor', () => {
     it('says only the cold and the heat: the rest is neutral', () => {
@@ -111,5 +111,22 @@ describe('cloudBand', () => {
         expect(alpha(cloudBand(90))).toBeGreaterThan(alpha(cloudBand(20)));
         expect(alpha(cloudBand(0))).toBeGreaterThan(0);
         expect(cloudBand(50).startsWith('#8D96A3')).toBe(true);
+    });
+});
+
+describe('sunTint and skyBand', () => {
+    const alpha = (hex: string) => parseInt(hex.slice(7), 16);
+
+    it('wash a sun chip the more the clearer the sky, in the colour of the sun', () => {
+        expect(sunTint(0).startsWith(SUN_COLOR)).toBe(true);
+        expect(alpha(sunTint(0))).toBeGreaterThan(alpha(sunTint(35)));
+    });
+
+    it('make the band over the samples the sun under 40 % of cloud, the grey of the cloud over it', () => {
+        expect(skyBand(10).startsWith(SUN_COLOR)).toBe(true);
+        expect(skyBand(39).startsWith(SUN_COLOR)).toBe(true);
+        expect(skyBand(40)).toBe(cloudBand(40));
+        expect(skyBand(90).startsWith('#8D96A3')).toBe(true);
+        expect(alpha(skyBand(0))).toBeGreaterThan(alpha(skyBand(39)));
     });
 });
