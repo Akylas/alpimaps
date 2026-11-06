@@ -62,7 +62,7 @@
     $: fill = profileOptions?.fill ?? null;
     $: fade = profileOptions?.fade ?? false;
     // the clock time of each distance of the axis, when the route has a time
-    $: clockAt = $routeFeatureChanges >= 0 ? clockFor(item) : null;
+    $: clockAt = $routeFeatureChanges >= 0 && item ? clockFor(item) : null;
     function clockFor(route: Item): ((meters: number) => string) | null {
         const source = timelineSource(route);
         if (source.distances.length < 2) {
