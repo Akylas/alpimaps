@@ -24,6 +24,10 @@ export const UNLIMITED_SPEED = 130;
 export const DEFAULT_RISK_THRESHOLD = 70;
 /** meters, shorter runs are one vertex of noise: a short section still counts */
 export const DEFAULT_RISK_MIN_LENGTH = 30;
+/** meters, the banner leaves out what is shorter: every junction crossing would warn */
+export const DEFAULT_BANNER_MIN_LENGTH = 100;
+/** meters ahead of a section the banner appears at */
+export const DEFAULT_BANNER_LEAD = 500;
 /** meters of safe road between two risky runs that is not worth leaving the warning for */
 export const RISK_BRIDGE = 50;
 

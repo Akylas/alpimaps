@@ -72,8 +72,8 @@
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationItem, navigationScale } from '~/stores/navigationStore';
-    import { routeFeatureChanges, routeFeatures, routeNavSections } from '~/routeFeatures/registry';
-    import { MANEUVER_VIEW_HEIGHT, navigationSections, navigationSheetSteps } from '~/utils/navigation';
+    import { lazyComponents, routeFeatureChanges, routeFeatures, routeNavBanners, routeNavSections } from '~/routeFeatures/registry';
+    import { MANEUVER_VIEW_HEIGHT, NAVRAIL_BUTTON_SIZE, navigationSections, navigationSheetSteps } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -171,6 +171,13 @@
     // no 0 step: the bar is the only way out of navigation, so it can never be dismissed
     // the `>= 0` only makes the statement depend on the features' changes
     $: navigationSteps = navigationSheetSteps(navigationSections($navigationScale, $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : []));
+
+    // cards a feature floats under the maneuver card, loaded once navigation starts
+    const navBannerComponents = lazyComponents();
+    $: navBanners = routeNavBanners($routeFeatures);
+    $: if ($isNavigating) {
+        navBanners.forEach((banner) => navBannerComponents.load(banner.id, banner.component));
+    }
 
     async function loadNavigationViews() {
         if (navigationViewComponent) {
@@ -2234,6 +2241,23 @@
                         ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
                         android:marginTop={windowInsetTop + 10} />
                 {/if}
+                {#each navBanners as banner (banner.id)}
+                    {#if $navBannerComponents[banner.id] && $isNavigating}
+                        <!-- under the maneuver card; in portrait it stops short of the rail -->
+                        <svelte:component
+                            this={$navBannerComponents[banner.id]}
+                            style="z-index:1001;"
+                            horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                            marginRight={landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8}
+                            opacity={landscapeNavigation ? scrollingWidgetsOpacity : 1}
+                            verticalAlignment="top"
+                            width={landscapeNavigation ? navigationColumnWidth - 20 : 'auto'}
+                            android:marginLeft={(landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10}
+                            ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
+                            android:marginTop={windowInsetTop + 10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8}
+                            ios:marginTop={10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8} />
+                    {/if}
+                {/each}
                 {#if navigationRailComponent}
                     <svelte:component
                         this={navigationRailComponent}

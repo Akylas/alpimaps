@@ -296,6 +296,13 @@ export interface RouteNavSectionLayout {
     height: number;
 }
 
+/** A card floating over the map under the maneuver card while navigating: it hides itself when it has nothing to say. */
+export interface RouteNavBanner {
+    id: string;
+    /** Loaded the first time navigation starts, the navigation ui is not part of the startup graph. */
+    component: () => Promise<{ default: ComponentType }>;
+}
+
 /** A row of a page section's body. */
 export interface RoutePageRow {
     /** Unique in the section. */
@@ -421,6 +428,8 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
+    /** Cards floating over the map while navigating. */
+    navBanners?: RouteNavBanner[];
     /** Cards of the route page, in the feature's order. */
     pageSections?: RoutePageSection[];
     /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
@@ -491,6 +500,11 @@ export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale:
         .flatMap((feature) => feature.navSections ?? [])
         .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
         .filter((layout) => layout.height > 0);
+}
+
+/** The banners the enabled features float over the map while navigating. */
+export function routeNavBanners(features: RouteFeature[]): RouteNavBanner[] {
+    return features.flatMap((feature) => feature.navBanners ?? []);
 }
 
 /** Lazy components, loaded once and kept. A store, so the view renders a component when it arrives. */

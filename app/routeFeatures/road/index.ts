@@ -1,8 +1,10 @@
-import { derived } from 'svelte/store';
+import { derived, get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+import { routeLensStore } from '~/routeFeatures/lens/routeLensStore';
+import { alertFeatures, routeCoordinates, symbolFeatures } from '~/routeFeatures/lens/sections';
 import {
     type LensChip,
     type LensFact,
@@ -138,12 +140,22 @@ registerRouteFeature({
     order: 13,
     setting: { title: () => lc('road_safety'), store: routeFeatureRoad },
     settings: roadSettingRows,
-    // a layer finishing or failing, and a threshold or a minimum length reading the same layer again
-    changes: derived([routeAnalysisChanges, roadSettingsKey], (values) => values.join()),
+    // a layer finishing or failing, a threshold or a minimum length reading the same layer again, and the lens: the signs are the lens' own in the road lens
+    changes: derived([routeAnalysisChanges, roadSettingsKey, routeLensStore], (values) => values.join()),
     lensPalette: roadPalette,
     lenses: [roadLens],
     tiles: roadTiles,
     pageSections: [roadPageSection],
     attention: ({ item }) => (isBikeRoute(item) ? (readRoad(item)?.marks ?? []) : []),
+    navBanners: [{ id: 'road', component: () => import('~/routeFeatures/road/RiskBanner.svelte') }],
+    // while following the route, whatever the lens: the fast casing, and the signs unless the road lens draws them
+    mapFeatures: ({ item, navigating }) => {
+        const read = navigating && isBikeRoute(item) ? readRoad(item) : null;
+        if (!read?.alerts.length) {
+            return [];
+        }
+        const coordinates = routeCoordinates(item.geometry);
+        return [...alertFeatures(coordinates, read.alerts), ...(get(routeLensStore) === 'road' ? [] : symbolFeatures(coordinates, read.symbols))];
+    },
     compute: riskStage
 });

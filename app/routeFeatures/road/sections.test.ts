@@ -76,6 +76,14 @@ describe('buildRoadRead', () => {
         ]);
     });
 
+    it('alerts on each run with its level, for the map while following the route', () => {
+        const { alerts } = buildRoadRead([section(1000, 500), section(4000, 300, { level: 2 })], 0, data, words);
+        expect(alerts).toEqual([
+            { kind: 'fast', i0: 10, i1: 15, s: 3 },
+            { kind: 'fast', i0: 40, i1: 43, s: 2 }
+        ]);
+    });
+
     it('fills the profile grey, with a hatch on each run for e-ink', () => {
         const { fill } = buildRoadRead([section(0, 500), section(4000, 300, { level: 2 })], 0, data, words);
         expect(fill.map(({ d, pattern }) => [d, pattern])).toEqual([

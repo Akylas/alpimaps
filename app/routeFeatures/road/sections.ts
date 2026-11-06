@@ -1,5 +1,5 @@
 /** What the road lens shows of the risky sections: slices, speed signs, marks, the profile fill. Pure: nothing here may import NativeScript. */
-import type { AttentionMark, LensSection, LensSlice, LensSymbol, ProfileFillStop } from '~/routeFeatures/registry';
+import type { AttentionMark, LensSection, LensSlice, LensSymbol, NavAlert, ProfileFillStop } from '~/routeFeatures/registry';
 import { ROAD_COLORS, ROAD_CORE_KEY, riskKey } from '~/routeFeatures/road/palette';
 import type { RiskLevel, RiskSection } from '~/routeFeatures/road/risk';
 
@@ -27,6 +27,8 @@ export interface RoadRead {
     slices: LensSlice[];
     symbols: LensSymbol[];
     marks: AttentionMark[];
+    /** while following the route: the fast runs, to get ready for them */
+    alerts: NavAlert[];
     fill: ProfileFillStop[];
 }
 
@@ -110,6 +112,7 @@ export function buildRoadRead(sections: RiskSection[], unknown: number, data: { 
             });
         }),
         marks: runs.map(({ section }, id) => ({ kind: 'fast' as const, color: ROAD_COLORS[section.level], tier: section.level, lens: 'road' as const, section: lensSections[id] })),
+        alerts: runs.map(({ i0, i1, section }) => ({ kind: 'fast' as const, i0, i1, s: section.level })),
         fill
     };
 }
