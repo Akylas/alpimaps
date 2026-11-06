@@ -6,6 +6,7 @@ import type { SettingsStore } from '~/stores/settingsStore';
 import type { SurfacePattern } from '~/utils/surfacePattern';
 import type { IItem } from '~/models/Item';
 import type { AnalysisStage } from '~/utils/routeAnalysis/pipeline';
+import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 
 /** What every contribution is asked about. */
 export interface RouteCtx {
@@ -323,6 +324,43 @@ export interface RouteSettingRow {
     options?: { value: string; title: string }[];
 }
 
+/** What a feature says of a ride leaving at a time, for the When panel's strip. */
+export interface DepartureAssessment {
+    /** Points against the departure, by what they are for: the strip adds them to the others', the lowest total is the best. */
+    points: Record<string, number>;
+    /** What the ride is worth a mark for: ids of the feature's `indicators`, in the order they are drawn. */
+    indicators: string[];
+    /** False: the feature knows nothing of this ride, which then takes no part in the ranking. */
+    covered: boolean;
+    /** The figures of the ride in a few words, said for the departure looked at. */
+    summary?: string;
+}
+
+/** What a feature asks of a departure: the route, as the page has it, timed from `at`. */
+export interface DepartureRequest extends RouteCtx {
+    at: number;
+    now: number;
+    /** The analysis the route has, without the departure being looked at. */
+    analysis: RouteAnalysis | null;
+}
+
+/** What the When panel shows of a feature: a line under the strip and a button beside the departure. */
+export interface DepartureStatus {
+    /** A few words under the strip: how fresh the data is, what the strip is scored on. */
+    note: string;
+    /** The feature scores the departures now. */
+    scoring: boolean;
+    action?: { icon: string; busy?: boolean; run: () => void };
+}
+
+/** How a feature takes part in the choice of a departure. */
+export interface RouteDeparture {
+    /** The marks a departure can carry for this feature: a glyph and a colour for each id. */
+    indicators: Record<string, { icon: string; color?: string }>;
+    assess: (request: DepartureRequest) => DepartureAssessment | undefined;
+    status?: (ctx: RouteCtx) => DepartureStatus | undefined;
+}
+
 /**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
@@ -341,6 +379,8 @@ export interface RouteFeature {
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */
     tiles?: (ctx: RouteCtx) => RouteTile[];
+    /** How the feature scores and marks the departures of the When panel's strip. */
+    departure?: RouteDeparture;
     /** The colours the feature's slices and symbols are drawn in: keys of the style's palette, so the style needs to know none of its features. */
     lensPalette?: LensPaletteContribution;
     /** The ways of reading the route this feature adds to the lens bar. */

@@ -35,7 +35,7 @@
     const DEFAULT_FILL_ALPHA = 85;
     /** grade sections are read by colour, so their fill has to actually carry one */
     const GRADE_FILL_ALPHA = 225;
-    /** a lens that lays its own drawing over the profile (the weather) leaves the grades this much of their fill */
+    /** a lens that lays its own drawing over the profile leaves the grades this much of their fill */
     const FADED_FILL_SHARE = 0.38;
 
     /** km between x labels: whatever gives about four of them */
@@ -205,7 +205,7 @@
         return marks.findIndex(({ from, to }) => highlight.x >= from && highlight.x <= to);
     }
 
-    // the cursor's card, in the manner of a weather chart's, laid out once when the cursor moves. Blocks apart by a
+    // the cursor's card, laid out once when the cursor moves. Blocks apart by a
     // hairline: what is here, what is left of the ascent it is on, what is left of the route
     const POPOVER_WIDTH = 132;
     const POPOVER_PADDING = 7;

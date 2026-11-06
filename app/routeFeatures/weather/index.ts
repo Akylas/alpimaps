@@ -1,6 +1,6 @@
 import { derived, get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
-import { lc } from '~/helpers/locale';
+import { formatTime, lc } from '~/helpers/locale';
 import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import { networkService } from '~/services/NetworkService';
@@ -10,20 +10,23 @@ import {
     type LensHeadline,
     type LensProfile,
     type RouteCtx,
+    type RouteDeparture,
     type RouteLens,
     type RoutePageSection,
     type RouteSettingRow,
     registerRouteFeature
 } from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
+import { routeTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
 import { flatSpeedKmh } from '~/utils/routeAnalysis/speeds';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
+import { weatherAssessment } from '~/routeFeatures/weather/data/departure';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
-import { rainColor, tempColor } from '~/routeFeatures/weather/ui/colors';
+import { RAIN_BLUE, rainColor, tempColor } from '~/routeFeatures/weather/ui/colors';
 import { weatherRows } from '~/routeFeatures/weather/ui/pageRows';
 import { rainPalette } from '~/routeFeatures/weather/ui/palette';
 import { weatherProfileOverlay } from '~/routeFeatures/weather/ui/profileOverlay';
@@ -302,6 +305,55 @@ const weatherPageSection: RoutePageSection = {
     component: () => import('~/routeFeatures/weather/ui/WeatherRow.svelte')
 };
 
+// how the weather takes part in the choice of a departure: the hours of the forecast read for a ride leaving at another time
+const weatherDeparture: RouteDeparture = {
+    indicators: {
+        rain: { icon: 'mdi-weather-rainy', color: RAIN_BLUE },
+        wind: { icon: 'mdi-weather-windy', color: '#F29D38' },
+        sun: { icon: 'mdi-weather-sunny', color: '#F2B72E' }
+    },
+    assess: ({ analysis, at, item, now }) => {
+        if (!analysis?.layers.weather) {
+            return undefined;
+        }
+        const shifted = {
+            geometry: item.geometry,
+            profile: item.profile,
+            route: item.route,
+            instructions: item.instructions,
+            analysis: { ...analysis, inputs: { ...analysis.inputs, departure: { ...analysis.inputs.departure, mode: 'planned' as const, at } } }
+        };
+        const read = readWeather(shifted, Math.min(now, at));
+        const assessment = weatherAssessment(read);
+        if (assessment?.covered) {
+            assessment.summary = [
+                read.summary.rainTotal >= 0.1 ? formatRain(read.summary.rainTotal) : lc('weather_dry'),
+                read.summary.headShare >= 0.1 ? lc('weather_headwind', Math.round(read.summary.headShare * 100) + ' %') : ''
+            ]
+                .filter(Boolean)
+                .join(' · ');
+        }
+        return assessment;
+    },
+    status: ({ item }) => {
+        const status = statusOf(item);
+        const busy = status.state === 'running' || status.state === 'queued';
+        const layer = item.analysis?.layers.weather;
+        const forecast = busy
+            ? lc('weather_fetching')
+            : status.reason === 'out-of-coverage'
+              ? lc('weather_out_of_coverage')
+              : layer
+                ? lc('weather_forecast_updated', formatTime(layer.prov.computedAt, 'LT', routeTimeZone(item.analysis.inputs.departure).offset))
+                : lc('weather_forecast_none');
+        return {
+            note: layer ? `${forecast} · ${lc('when_scored_short')}` : forecast,
+            scoring: !!layer,
+            action: networkService.connected ? { icon: busy ? 'mdi-cloud-sync-outline' : 'mdi-cloud-refresh-outline', busy, run: () => !busy && computeLayers(item, ['weather']) } : undefined
+        };
+    }
+};
+
 registerRouteFeature({
     id: 'weather',
     order: 14,
@@ -309,6 +361,7 @@ registerRouteFeature({
     settings: weatherSettingRows,
     // a layer finishing or failing, a new departure read from the same hours, and the settings it is asked with
     changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey, weatherDetailsOpen], (values) => values.join()),
+    departure: weatherDeparture,
     lensPalette: rainPalette,
     lenses: [weatherLens],
     pageSections: [weatherPageSection],

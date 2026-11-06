@@ -150,7 +150,7 @@
 }
 
 // a plate: a glyph of the icon font, then, in a smaller type, a label, a sublabel and, on a line of its own, a note, on a white plate. What
-// it says is the app's (a feature puts the weather, or any figures, on it): the style only lays it out. The glyph is the main face
+// it says is the app's (a feature puts any figures on it): the style only lays it out. The glyph is the main face
 // of the list, so it is the one a glyph is looked for in, the text font following for the digits. The rim is the colour of the
 // palette key `tint` names, white without one; faded and grey-rimmed when what it says is out of date (`outdated`). The newline of
 // `note` is the app's

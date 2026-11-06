@@ -1,5 +1,6 @@
 /** The When panel's departure strip. Pure: nothing here may import NativeScript. */
 import { getTimes } from 'suncalc';
+import type { DepartureAssessment } from '~/routeFeatures/registry';
 import { type TimelineSource, buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
 
@@ -8,11 +9,8 @@ const DAY = 24 * 60 * MINUTE;
 /** minutes between two departures, and how many each side of the chosen one */
 const STEP = 30;
 const SIDE = 6;
-/** dark minutes worth one point of score: without weather, darkness is all the strip weighs */
+/** dark minutes worth one point of score: darkness is what the strip weighs of its own */
 const DARK_MINUTES_PER_POINT = 15;
-/** points for a millimeter of rain on the ride, and for the whole way against the wind */
-const RAIN_POINTS_PER_MM = 3;
-const HEADWIND_POINTS = 2;
 
 /** Minutes of the ride between sunset and sunrise, at the given place. */
 export function darkMinutes(start: number, end: number, lat: number, lon: number): number {
@@ -32,27 +30,8 @@ export function darkMinutes(start: number, end: number, lat: number, lon: number
     return Math.max(0, end - start - daylight) / MINUTE;
 }
 
-/** What the forecast says of a ride leaving at a time. `covered`: the hours it was fetched for include the whole ride. */
-export interface WeatherFactors {
-    /** mm over the whole ride */
-    rainMm: number;
-    /** 0..1, the share of the way ridden against the wind */
-    headShare: number;
-    /** %, over the way ridden */
-    cloud?: number;
-    covered: boolean;
-}
-
-/** What a ride is worth a mark for, in the order they are drawn. `unknown`: the forecast does not reach it. */
-export type StripIndicator = 'rain' | 'wind' | 'sun' | 'dark' | 'unknown';
-
-/** mm of rain, share of the way against the wind and cloud cover from which a ride is marked rainy, windy and not sunny */
-const RAINY_MM = 0.1;
-const WINDY_SHARE = 0.25;
-const SUNNY_CLOUD = 40;
-
-/** What weighs most on a departure. */
-export type StripFactor = 'rain' | 'wind' | 'dark';
+/** What a feature says of a ride leaving at a time, if it knows something of it. */
+export type DepartureAssessor = (at: number) => DepartureAssessment | undefined;
 
 export interface StripCell {
     /** epoch ms of the departure */
@@ -63,14 +42,11 @@ export interface StripCell {
     darkMinutes: number;
     /** lower is better */
     score: number;
-    /** the heaviest part of the score, when it is anything */
-    worst?: StripFactor;
-    /** what the ride is worth a mark for */
-    indicators: StripIndicator[];
-    /** what the forecast says of the ride, when it covers it */
-    rainMm?: number;
-    headShare?: number;
-    /** there is a forecast, but not for the hours of this ride: it counts for its darkness only */
+    /** what the ride is worth a mark for: the ids of the features' indicators, `dark` and `unknown` (a feature does not know this ride) */
+    indicators: string[];
+    /** what the features say of the ride, in a few words each */
+    summaries: string[];
+    /** a feature scores the departures, but knows nothing of this ride: it counts for its darkness only */
     uncovered?: boolean;
     /** thirds of the scores' range; when they are all alike, good without dark minutes, poor with */
     level: 'good' | 'fair' | 'poor' | 'unknown';
@@ -84,17 +60,17 @@ export interface StripCell {
 /**
  * The departures from 3 h before the anchor to 3 h after, each with how its ride would go. The anchor is the chosen
  * departure when none is given: the strip stays where it was when another one is chosen, so the choice moves along it.
- * `weather`: what the forecast says of a ride leaving at a time, when there is one.
+ * `assessors`: what the features say of a ride leaving at a time.
  */
 export function departureStrip({
     anchorAt,
+    assessors = [],
     chosenAt,
     inputs,
     lat,
     lon,
     now,
-    source,
-    weather
+    source
 }: {
     chosenAt: number;
     anchorAt?: number;
@@ -103,7 +79,7 @@ export function departureStrip({
     inputs: AnalysisInputs;
     lat: number;
     lon: number;
-    weather?: (at: number) => WeatherFactors | undefined;
+    assessors?: DepartureAssessor[];
 }): StripCell[] {
     const last = source.distances.length - 1;
     const cells: StripCell[] = [];
@@ -114,20 +90,15 @@ export function departureStrip({
         const timeline = buildTimeline(source, { ...inputs, departure: { ...inputs.departure, mode: 'planned', at } }, Math.min(now, at));
         const arrival = last >= 0 ? timeline.at(last) : at;
         const dark = darkMinutes(at, arrival, lat, lon);
-        const factors = weather?.(at);
-        const counted = factors?.covered ? factors : undefined;
-        const points: Record<StripFactor, number> = { rain: (counted?.rainMm ?? 0) * RAIN_POINTS_PER_MM, wind: (counted?.headShare ?? 0) * HEADWIND_POINTS, dark: dark / DARK_MINUTES_PER_POINT };
-        const score = points.rain + points.wind + points.dark;
-        const worst = (Object.keys(points) as StripFactor[]).reduce<StripFactor | undefined>((heaviest, factor) => (points[factor] > (heaviest ? points[heaviest] : 0) ? factor : heaviest), undefined);
-        const indicators: StripIndicator[] = [
-            ...(factors && !factors.covered ? (['unknown'] as const) : []),
-            ...(counted && counted.rainMm >= RAINY_MM ? (['rain'] as const) : []),
-            ...(counted && counted.headShare >= WINDY_SHARE ? (['wind'] as const) : []),
-            ...(counted && counted.rainMm < RAINY_MM && counted.cloud !== undefined && counted.cloud < SUNNY_CLOUD ? (['sun'] as const) : []),
-            ...(dark > 0 ? (['dark'] as const) : [])
-        ];
+        const assessments = assessors.map((assess) => assess(at)).filter((assessment): assessment is DepartureAssessment => !!assessment);
+        const known = assessments.filter(({ covered }) => covered);
+        const uncovered = assessments.some(({ covered }) => !covered);
+        const score = dark / DARK_MINUTES_PER_POINT + known.reduce((total, { points }) => total + Object.values(points).reduce((sum, value) => sum + value, 0), 0);
+        const indicators = [...(uncovered ? ['unknown'] : []), ...known.flatMap((assessment) => assessment.indicators), ...(dark > 0 ? ['dark'] : [])];
+        const summaries = known.flatMap(({ summary }) => (summary ? [summary] : []));
         cells.push({
             indicators,
+            summaries,
             at,
             offset,
             arrival,
@@ -137,12 +108,10 @@ export function departureStrip({
             past: at < now,
             chosen: at === chosenAt,
             best: false,
-            ...(worst ? { worst } : {}),
-            ...(factors ? { uncovered: !factors.covered } : {}),
-            ...(counted ? { rainMm: counted.rainMm, headShare: counted.headShare } : {})
+            ...(assessments.length ? { uncovered } : {})
         });
     }
-    // a ride the forecast does not reach is scored on its darkness alone: against rides that know the rain it would win for knowing nothing,
+    // a ride a feature knows nothing of is scored on its darkness alone: against rides that know more it would win for knowing nothing,
     // so it takes no part in the range and cannot be the best
     const coming = cells.filter(({ past, uncovered }) => !past && !uncovered);
     cells.forEach((cell) => {

@@ -14,12 +14,10 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
-    import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+    import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
-    import { type StripCell, type WeatherFactors, departureStrip } from '~/routeFeatures/page/departureStrip';
-    import { readWeather } from '~/routeFeatures/weather/data/read';
-    import { routeFeatureWeather } from '~/routeFeatures/weather/settings';
-    import { networkService } from '~/services/NetworkService';
+    import { type DepartureAssessor, type StripCell, departureStrip } from '~/routeFeatures/page/departureStrip';
+    import { routeFeatures } from '~/routeFeatures/registry';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
@@ -78,15 +76,20 @@
     $: if (previewAt === null && (anchorAt === null || Math.abs(chosenAt - anchorAt) > STRIP_SPAN || (chosenAt - anchorAt) % STRIP_STEP !== 0)) {
         anchorAt = chosenAt;
     }
-    // what the forecast fetched says of the ride leaving at a time: the same hours read for another departure
-    $: weatherLayer = $routeFeatureWeather ? analysis?.layers.weather : undefined;
-    function weatherAt(at: number): WeatherFactors | undefined {
-        const shifted = { geometry: item.geometry, profile: item.profile, route: item.route, instructions: item.instructions, analysis: { ...analysis, inputs: { ...inputs, departure: { ...inputs.departure, mode: 'planned' as const, at } } } };
-        const read = readWeather(shifted, Math.min(now, at));
-        return read ? { rainMm: read.summary.rainTotal, headShare: read.summary.headShare, cloud: read.summary.cloud, covered: read.ride.every((entry) => !!entry.reading) } : undefined;
-    }
-    $: cells = departureStrip({ chosenAt, anchorAt, now, source: timelineSource(item), inputs, lat, lon, weather: weatherLayer ? weatherAt : undefined });
+    // what each feature says of the ride leaving at a time, by the ids of its marks, which are the feature's own
+    $: departureFeatures = $routeFeatures.filter((feature) => feature.departure);
+    $: assessors = departureFeatures.map(
+        (feature): DepartureAssessor =>
+            (at) => {
+                const assessment = feature.departure.assess({ item, analysis, at, now });
+                return assessment && { ...assessment, indicators: assessment.indicators.map((id) => `${feature.id}.${id}`) };
+            }
+    );
+    $: cells = departureStrip({ chosenAt, anchorAt, now, source: timelineSource(item), inputs, lat, lon, assessors });
     $: uncovered = cells.some((cell) => cell.uncovered);
+    // the glyph and colour of each mark of a departure: the features', and the panel's own
+    const OWN_MARKS = { dark: { icon: 'mdi-weather-night' }, unknown: { icon: 'mdi-help-circle-outline' } };
+    $: marks = { ...OWN_MARKS, ...Object.fromEntries(departureFeatures.flatMap((feature) => Object.entries(feature.departure.indicators).map(([id, mark]) => [`${feature.id}.${id}`, mark]))) };
     // a departure looked at in the strip is not the ride's until it is taken: tapping one shows its figures, the button leaves then
     let previewAt: number = null;
     // given up when the page took it, or had it given back for a fetch: nothing to revert then. Only once the page has said it is looking:
@@ -104,8 +107,8 @@
     $: selectedAt = previewAt ?? chosenAt;
     $: selected = cells.find((cell) => cell.at === selectedAt) ?? chosen;
     // what a cell shows is in the list's items: the template does not follow the panel's own variables
-    $: listCells = cells.map((cell) => ({ ...cell, selected: cell.at === selectedAt }));
-    // tapping a departure shows the page as it would be: the forecast, the profile and the times read for it, kept only by `leaveAt`
+    $: listCells = cells.map((cell) => ({ ...cell, selected: cell.at === selectedAt, marks: cell.indicators.flatMap((id) => (marks[id] ? [marks[id]] : [])) }));
+    // tapping a departure shows the page as it would be: everything read for it, kept only by `leaveAt`
     function look(cell: StripCell) {
         if (cell.past) {
             return;
@@ -123,12 +126,10 @@
             dispatch('revert');
         }
     }
-    // a forecast is kept with the route as it is, not as it is being looked at
-    function updateForecast() {
-        if (networkService.connected && !weatherBusy) {
-            cancelLook();
-            computeLayers(item, ['weather']);
-        }
+    // what a feature asks of the route is asked of the route as it is, not as it is being looked at
+    function runAction(action: () => void) {
+        cancelLook();
+        action();
     }
     function leaveAt(at: number) {
         previewAt = null;
@@ -169,31 +170,15 @@
         return formatTime(at, 'LT', zone.offset);
     }
 
-    // the forecast is read again from the hours fetched when the departure moves, and fetched again only when asked
-    $: weather = $routeAnalysisChanges >= 0 && analysis ? layerStatuses(item).weather : null;
-    $: weatherBusy = weather?.state === 'running' || weather?.state === 'queued';
-    $: forecastText =
-        weather?.state === 'running' || weather?.state === 'queued'
-            ? lc('weather_fetching')
-            : weather?.reason === 'out-of-coverage'
-              ? lc('weather_out_of_coverage')
-              : analysis?.layers.weather
-                ? lc('weather_forecast_updated', clock(analysis.layers.weather.prov.computedAt))
-                : lc('weather_forecast_none');
-    // one line under the strip: when the forecast is from, and what the strip is scored on
-    $: noteText = weatherLayer
-        ? `${forecastText} · ${lc(uncovered ? 'when_scored_short_uncovered' : 'when_scored_short')}`
-        : $routeFeatureWeather
-          ? `${lc('when_darkness_only')} ${forecastText}`
-          : lc('when_darkness_only');
+    // what the features say of themselves: a line under the strip, a button beside the departure
+    $: statuses = $routeAnalysisChanges >= 0 ? departureFeatures.flatMap((feature) => feature.departure.status?.({ item }) ?? []) : [];
+    $: action = statuses.find((status) => status.action)?.action;
+    // one line under the strip: what it is scored on, and what the features say of their data
+    $: noteText = statuses.some((status) => status.scoring)
+        ? [...statuses.map((status) => status.note), uncovered ? lc('when_unknown_note') : ''].filter(Boolean).join(' · ')
+        : [lc('when_darkness_only'), ...statuses.map((status) => status.note)].join(' ');
     $: summaryText = selected
-        ? [
-              lc('when_arrive', clock(selected.arrival)),
-              !isNaN(sunset) && lc('when_sunset', clock(sunset)),
-              selected.darkMinutes > 0 && lc('when_dark', Math.round(selected.darkMinutes)),
-              selected.rainMm !== undefined && (selected.rainMm >= 0.1 ? `${selected.rainMm.toFixed(1)} mm` : lc('weather_dry')),
-              selected.headShare >= 0.1 && lc('weather_headwind', Math.round(selected.headShare * 100) + ' %')
-          ]
+        ? [lc('when_arrive', clock(selected.arrival)), !isNaN(sunset) && lc('when_sunset', clock(sunset)), selected.darkMinutes > 0 && lc('when_dark', Math.round(selected.darkMinutes)), ...selected.summaries]
               .filter(Boolean)
               .join(' · ')
         : '';
@@ -247,8 +232,6 @@
     // a change still waiting when the panel closes is saved, not lost
     onDestroy(savePace);
 
-    const INDICATOR_ICONS = { rain: 'mdi-weather-rainy', wind: 'mdi-weather-windy', sun: 'mdi-weather-sunny', dark: 'mdi-weather-night', unknown: 'mdi-cloud-sync-outline' };
-    const INDICATOR_COLORS: Record<string, string> = { rain: '#4A90D9', wind: '#F29D38', sun: '#F2B72E' };
     const LEVEL_COLORS = { good: '#1D9E75', fair: '#EF9F27', poor: '#E24B4A', unknown: '#9AA0A6' };
     // e-ink: empty, grey, black
     const LEVEL_SHADES = { good: 0, fair: 110, poor: 255, unknown: 60 };
@@ -277,9 +260,9 @@
         {#if inputs.departure.mode === 'planned'}
             <Pill col={1} height={32} label={lc('now')} on:tap={() => setDeparture(null)} />
         {/if}
-        <!-- the forecast is fetched again only when asked -->
-        {#if $routeFeatureWeather}
-            <Pill col={3} height={32} icon={weatherBusy ? 'mdi-cloud-sync-outline' : 'mdi-cloud-refresh-outline'} on:tap={updateForecast} />
+        <!-- what a feature asks to be done: fetch its data again... -->
+        {#if action}
+            <Pill col={3} height={32} icon={action.icon} on:tap={() => runAction(action.run)} />
         {/if}
     </gridlayout>
     <collectionview bind:this={strip} colWidth={54} height={72} items={listCells} marginTop={10} orientation="horizontal">
@@ -295,13 +278,13 @@
                 rows="auto,*,6"
                 on:tap={() => look(cell)}>
                 <label color={colorOnSurface} fontSize={11} fontWeight={cell.selected || cell.chosen ? 'bold' : 'normal'} text={clock(cell.at)} textAlignment="center" />
-                <!-- the best departure, then what the ride is worth a mark for: the rain, the wind, the sun, the dark, the forecast not reaching it -->
+                <!-- the best departure, then what the ride is worth a mark for: the features' marks, the dark, a feature knowing nothing of it -->
                 <stacklayout horizontalAlignment="center" orientation="horizontal" row={1} verticalAlignment="middle">
                     {#if cell.best}
                         <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={14} text="mdi-star" />
                     {/if}
-                    {#each cell.indicators.slice(0, cell.best ? 2 : 3) as indicator}
-                        <label color={isEInk ? colorOnSurface : INDICATOR_COLORS[indicator] ?? colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={INDICATOR_ICONS[indicator]} />
+                    {#each cell.marks.slice(0, cell.best ? 2 : 3) as mark}
+                        <label color={isEInk ? colorOnSurface : mark.color ?? colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={mark.icon} />
                     {/each}
                 </stacklayout>
                 <gridlayout backgroundColor={levelColor(cell)} borderColor={isEInk ? '#000000' : null} borderRadius={3} borderWidth={isEInk ? 1 : 0} row={2} />
