@@ -21,7 +21,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
+    import type { ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
@@ -123,7 +123,6 @@
     const BRACKET_ROOM = 24;
     /** of the plot's height, the bottom part of it, and what is under it, a tap counts as on the marks */
     const MARK_HIT_HEIGHT = 0.1;
-    const MARK_COLORS: Record<AttentionKind, string> = { steep: '#9E1B18' };
     /**
      * A limit line that is none: the axis draws its limit lines last, over the data, the plates and the axis, so
      * this is the way to the top layer. It is added after the plates.
@@ -175,13 +174,13 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
-        for (const { from, kind, tier, to } of marks) {
+        for (const { color, from, tier, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
             if (end < contentLeft || start > contentRight) {
                 continue;
             }
-            overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
+            overlayFillPaint.color = isEInk ? '#000000' : color;
             const top = contentBottom + MARK_GAP;
             // the harder, the thicker: it reads without colour, on e-ink too
             const height = MARK_HEIGHT + ((tier ?? 1) - 1) * MARK_TIER_STEP;

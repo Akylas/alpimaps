@@ -7,6 +7,9 @@ export function gradeKey(bucket: number) {
     return 'grade_' + bucket;
 }
 
+/** The mark of a steep way up under the profile. */
+export const STEEP_MARK_COLOR = '#9E1B18';
+
 const DARK_GRADES = ['#4F7FD0', '#5C98E8', '#93C1F0', '#8CD680', '#F5DA63', '#F4A24A', '#EE6A52', '#D9453F'];
 
 export const gradePalette: LensPaletteContribution = (variant) => Object.fromEntries(gradeBuckets.map(({ color }, bucket) => [gradeKey(bucket), variant === 'dark' ? DARK_GRADES[bucket] : color]));

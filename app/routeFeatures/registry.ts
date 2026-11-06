@@ -28,6 +28,8 @@ export interface RouteTile {
     lens?: LensId;
     /** A tap on the tile opens the route page on its When panel. */
     opensWhen?: boolean;
+    /** The figure is a warning: the tile is outlined in the error colour. */
+    alert?: boolean;
 }
 
 /**
@@ -94,10 +96,12 @@ export interface LensHeadline {
 }
 
 /** What needs attention along the route, whatever the lens: marked under the profile. */
-export type AttentionKind = 'steep';
+export type AttentionKind = 'steep' | 'fast';
 
 export interface AttentionMark {
     kind: AttentionKind;
+    /** The mark's colour on a colour display, the feature's own. */
+    color: string;
     /** How hard it is, 1 to 3: the mark is thicker the harder. */
     tier?: 1 | 2 | 3;
     /** The lens and section a tap on the mark goes to. */
@@ -110,6 +114,7 @@ export interface ProfileMark {
     from: number;
     to: number;
     kind: AttentionKind;
+    color: string;
     tier?: 1 | 2 | 3;
 }
 

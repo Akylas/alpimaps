@@ -81,11 +81,11 @@
     let marks = NO_MARKS;
     let marksKey = '';
     $: {
-        const key = attention.map(({ kind, section, tier }) => `${kind}:${section.i0}:${section.i1}:${tier}`).join();
+        const key = attention.map(({ color, kind, section, tier }) => `${kind}:${color}:${section.i0}:${section.i1}:${tier}`).join();
         if (key !== marksKey) {
             marksKey = key;
             const data = item?.profile?.data;
-            marks = data && attention.length ? attention.map(({ kind, section, tier }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, tier })) : NO_MARKS;
+            marks = data && attention.length ? attention.map(({ color, kind, section, tier }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color, tier })) : NO_MARKS;
         }
     }
 
