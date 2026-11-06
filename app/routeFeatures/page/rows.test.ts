@@ -75,6 +75,12 @@ describe('pageRows', () => {
         expect(plain?.type === 'section' && plain.facts).toBeUndefined();
     });
 
+    it('gives the header the icon a section draws for the route, the one it has when it draws none', () => {
+        const drawn = { ...sections[0], iconOf: () => 'mdi-weather-rainy' };
+        const header = pageRows({ sections: [drawn, sections[1]], ctx, stored: {}, hasProfile: false }).filter((row) => row.type === 'section');
+        expect(header.map((row) => row.type === 'section' && row.icon)).toEqual(['mdi-weather-rainy', undefined]);
+    });
+
     it('hands each body row to its section', () => {
         const rows = pageRows({ sections, ctx, stored: { climbs: true }, hasProfile: true });
         const body = rows.find((row) => row.key === 'climbs:1');

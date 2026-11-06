@@ -26,6 +26,7 @@ export function weatherAssessment(read: Pick<WeatherRead, 'ride' | 'summary'> | 
     return {
         points: { rain: rainTotal * RAIN_POINTS_PER_MM, wind: headShare * HEADWIND_POINTS },
         indicators: [...(rainTotal >= RAINY_MM ? ['rain'] : []), ...(headShare >= WINDY_SHARE ? ['wind'] : []), ...(rainTotal < RAINY_MM && cloud !== undefined && cloud < SUNNY_CLOUD ? ['sun'] : [])],
-        covered: true
+        covered: true,
+        rainMm: rainTotal
     };
 }

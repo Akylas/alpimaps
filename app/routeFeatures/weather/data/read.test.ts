@@ -4,6 +4,7 @@ import type { Departure, RouteAnalysis, WeatherData } from '~/utils/routeAnalysi
 import { type WeatherVar, quantise } from '~/routeFeatures/weather/data/series';
 import { METRIC_FORMAT, type WeatherFormat } from '~/routeFeatures/weather/data/format';
 import { type WeatherThresholds, readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
+import { MOON_GLYPHS, moonPhaseGlyph } from '~/utils/astronomy/moon';
 
 const HOUR = 3600;
 const T0 = Date.UTC(2026, 5, 1) / 1000;
@@ -248,6 +249,12 @@ describe('rows', () => {
         expect(read?.rows[1].distance).toBeCloseTo(5000, 0);
     });
 
+    it('says how likely the rain is at each, in percent, when the forecast says', () => {
+        const read = readWeather(item(layer([{}, { precip: rainAt(3, 7, 8), precipProb: Array(HOURS).fill(40) }, {}])), NOW);
+        expect(read?.rows[1].probability).toBe(40);
+        expect(read?.rows[0].probability).toBeUndefined();
+    });
+
     it('says the stretch of the route each speaks for, to be focused', () => {
         const read = readWeather(item(rainMiddle), NOW);
         expect(read?.rows.map(({ i0, i1 }) => [i0, i1])).toEqual([
@@ -318,6 +325,12 @@ describe('summary', () => {
         expect(readWeather(item(dry), NOW)?.summary.rainPeak).toBeUndefined();
     });
 
+    it('says how likely the heaviest rain is, when the forecast says', () => {
+        const unsure = layer([{}, { precip: rainAt(3, 7, 8), precipProb: Array(HOURS).fill(40) }, {}]);
+        expect(readWeather(item(unsure), NOW)?.summary.rainPeak?.probability).toBe(40);
+        expect(readWeather(item(rainMiddle), NOW)?.summary.rainPeak?.probability).toBeUndefined();
+    });
+
     it('is the share of the way ridden against a wind of over 10 km/h', () => {
         // the route goes north; a north wind at the middle sample, whose stretch is half of it
         const headwind = layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(0) }, {}]);
@@ -377,6 +390,14 @@ describe('profile', () => {
         expect(readWeather(item(rainMiddle), NOW)?.profile.rain[0].probability).toBe(1);
     });
 
+    it('has the cloud cover at each sample, for the band over the chart', () => {
+        const read = readWeather(item(layer([{ cloud: Array(HOURS).fill(5) }, { cloud: Array(HOURS).fill(50) }, {}])), NOW);
+        expect(read?.profile.cloud.map(({ d, value }) => [d, value])).toEqual([
+            [0, 5],
+            [5000, 50]
+        ]);
+    });
+
     it('has a temperature point at each sample, with the sky there', () => {
         const read = readWeather(item(layer([{ temp: Array(HOURS).fill(4), code: Array(HOURS).fill(61) }, {}, { temp: Array(HOURS).fill(17) }])), NOW);
         expect(read?.profile.temp.map(({ value }) => value)).toEqual([4, 10, 17]);
@@ -419,6 +440,34 @@ describe('profile', () => {
         expect(angle(270)).toBeCloseTo(90, 0);
         // from the east: pushes to the rider's left, the screen's up
         expect(angle(90)).toBeCloseTo(-90, 0);
+    });
+});
+
+/** the glyph index of the phase at a time, as the module says it */
+const moonIndexOf = (at: number) => MOON_GLYPHS.indexOf(moonPhaseGlyph(new Date(at)));
+
+describe('the sky at night', () => {
+    // a departure that has not gone by: one in the past is timed from now
+    const NIGHT = { mode: 'planned' as const, at: T0 * 1000 };
+    const BEFORE = T0 * 1000 - HOUR * 1000;
+
+    it('is the phase of the moon in place of the sun on a clear night, and nothing of it by day', () => {
+        const night = readWeather(item(dry, NIGHT, HOUR), BEFORE);
+        expect(night?.rows[0].moon).toBe(MOON_GLYPHS[moonIndexOf(T0 * 1000)]);
+        expect(wxGlyph(0, 5, night?.rows[0].moon)).toBe(night?.rows[0].moon);
+        expect(readWeather(item(dry), NOW)?.rows[0].moon).toBeUndefined();
+    });
+
+    it('is on the plates and the profile too', () => {
+        const night = readWeather(item(dry, NIGHT, HOUR), BEFORE);
+        expect(night?.symbols[0].glyph).toBe(night?.rows[0].moon);
+        expect(night?.profile.temp[0].glyph).toBe(night?.rows[0].moon);
+    });
+
+    it('is the night glyph of a partly cloudy sky, and the rest of the sky is the same as by day', () => {
+        expect(wxGlyph(2, undefined, MOON_GLYPHS[4])).toBe(String.fromCodePoint(0xf0f31));
+        expect(wxGlyph(61, undefined, MOON_GLYPHS[4])).toBe(wxGlyph(61));
+        expect(wxGlyph(3, 90, MOON_GLYPHS[4])).toBe(wxGlyph(3, 90));
     });
 });
 

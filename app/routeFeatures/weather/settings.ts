@@ -5,9 +5,6 @@ import { DEFAULT_THRESHOLDS, type WeatherThresholds } from '~/routeFeatures/weat
 
 export const routeFeatureWeather = settingsStore('route_feature_weather', true);
 
-/** The samples of the route page's weather card are listed under a header, closed until asked for: the summary comes first. */
-export const weatherDetailsOpen = settingsStore('weather_details_open', false);
-
 /** The provider the forecast is asked of. */
 export const weatherProviderId = settingsStore<string>('weather_provider', DEFAULT_WEATHER_PROVIDER);
 

@@ -44,6 +44,9 @@ try {
     registerNativeViewElement('absolutelayout', () => require('@nativescript/core').AbsoluteLayout);
     registerElement('frame', () => new FrameElement());
     registerElement('page', () => new PageElement());
+    // <appPage>, <appBar>, <appBarItem>, <appPageOverlay>
+    require('@nativescript-community/ui-appbar/svelte').register();
+    registerNativeViewElement('floatingactionbutton', () => require('@nativescript-community/ui-floatingactionbutton').FloatingActionButton);
     registerNativeViewElement('gridlayout', () => require('@nativescript/core').GridLayout);
     registerNativeViewElement('scrollview', () => NestedScrollView);
     registerNativeViewElement('stacklayout', () => require('@nativescript/core').StackLayout);

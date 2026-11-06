@@ -44,8 +44,8 @@ export interface StripCell {
     score: number;
     /** what the ride is worth a mark for: the ids of the features' indicators, `dark` and `unknown` (a feature does not know this ride) */
     indicators: string[];
-    /** what the features say of the ride, in a few words each */
-    summaries: string[];
+    /** mm of rain the features expect over the ride: unknown when none says */
+    rainMm?: number;
     /** a feature scores the departures, but knows nothing of this ride: it counts for its darkness only */
     uncovered?: boolean;
     /** thirds of the scores' range; when they are all alike, good without dark minutes, poor with */
@@ -95,10 +95,9 @@ export function departureStrip({
         const uncovered = assessments.some(({ covered }) => !covered);
         const score = dark / DARK_MINUTES_PER_POINT + known.reduce((total, { points }) => total + Object.values(points).reduce((sum, value) => sum + value, 0), 0);
         const indicators = [...(uncovered ? ['unknown'] : []), ...known.flatMap((assessment) => assessment.indicators), ...(dark > 0 ? ['dark'] : [])];
-        const summaries = known.flatMap(({ summary }) => (summary ? [summary] : []));
+        const rains = known.flatMap(({ rainMm }) => (rainMm === undefined ? [] : [rainMm]));
         cells.push({
             indicators,
-            summaries,
             at,
             offset,
             arrival,
@@ -108,6 +107,7 @@ export function departureStrip({
             past: at < now,
             chosen: at === chosenAt,
             best: false,
+            ...(rains.length ? { rainMm: rains.reduce((total, rain) => total + rain, 0) } : {}),
             ...(assessments.length ? { uncovered } : {})
         });
     }
@@ -133,4 +133,22 @@ export function departureStrip({
         best.best = true;
     }
     return cells;
+}
+
+/**
+ * Where the strip is scrolled to: `now` starts at the first departure to come, the past left out; another departure is put in the
+ * middle of the `visible` cells, without going past either end of the strip.
+ */
+export function stripScrollIndex(cells: StripCell[], mode: string, visible: number): number {
+    if (mode === 'now') {
+        return Math.max(
+            0,
+            cells.findIndex((cell) => !cell.past)
+        );
+    }
+    const chosenIndex = Math.max(
+        0,
+        cells.findIndex((cell) => cell.chosen)
+    );
+    return Math.max(0, Math.min(chosenIndex - Math.floor(visible / 2), cells.length - visible));
 }

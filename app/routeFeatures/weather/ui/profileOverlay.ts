@@ -4,13 +4,16 @@
  * a peak, below a dip; over the plot, a row of the sky and a row of the wind: an arrow of the way it pushes, the ride going to the right,
  * and its speed under it, a burst on a line of its own.
  */
-import { Align, type Canvas, Cap, Join, Paint, Style } from '@nativescript-community/ui-canvas';
+import { Align, type Canvas, Cap, Join, Paint, Path, Style } from '@nativescript-community/ui-canvas';
 import { Color } from '@nativescript/core';
 import type { ProfileOverlay, ProfileView } from '~/routeFeatures/registry';
 import type { WeatherFormat } from '~/routeFeatures/weather/data/format';
 import type { ProfileWeather } from '~/routeFeatures/weather/data/read';
-import { RAIN_BLUE, TEMP_LINE, windColor } from '~/routeFeatures/weather/ui/colors';
+import { CLOUD_GRAY, RAIN_BLUE, TEMP_LINE, tint, windColor } from '~/routeFeatures/weather/ui/colors';
 
+/** the cloud cover is a band from the top of the plot: as deep as a share of it at full cover */
+const CLOUD_BAND_SHARE = 0.18;
+const CLOUD_BAND_OPACITY = 0.28;
 const RAIN_FULL_MM = 4;
 const RAIN_BAR_SHARE = 0.25;
 const RAIN_BAR_MIN = 3;
@@ -45,10 +48,32 @@ linePaint.setStrokeCap(Cap.ROUND);
 linePaint.setStrokeJoin(Join.ROUND);
 const fillPaint = new Paint();
 fillPaint.setStyle(Style.FILL);
+const cloudPath = new Path();
 
 function drawText(canvas: Canvas, text: string, pointX: number, pointY: number) {
     canvas.drawText(text, pointX, pointY, haloPaint);
     canvas.drawText(text, pointX, pointY, textPaint);
+}
+
+// the cloud cover as a soft band from the top of the plot, deeper the more of the sky is covered, as oss-weather fills it. Under the rest
+function drawCloud(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
+    if (view.isEInk || !profile.cloud.length) {
+        return;
+    }
+    const { contentLeft, contentRight, contentTop, pixelX } = view;
+    const maxDepth = (view.contentBottom - contentTop) * CLOUD_BAND_SHARE;
+    const depth = (value: number) => (Math.max(0, Math.min(100, value)) / 100) * maxDepth;
+    const first = profile.cloud[0];
+    const last = profile.cloud[profile.cloud.length - 1];
+    cloudPath.reset();
+    cloudPath.moveTo(contentLeft, contentTop);
+    cloudPath.lineTo(contentLeft, contentTop + depth(first.value));
+    profile.cloud.forEach(({ d: distance, value }) => cloudPath.lineTo(Math.min(contentRight, Math.max(contentLeft, pixelX(distance))), contentTop + depth(value)));
+    cloudPath.lineTo(contentRight, contentTop + depth(last.value));
+    cloudPath.lineTo(contentRight, contentTop);
+    cloudPath.close();
+    fillPaint.color = tint(CLOUD_GRAY, CLOUD_BAND_OPACITY);
+    canvas.drawPath(cloudPath, fillPaint);
 }
 
 function drawRain(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
@@ -163,6 +188,7 @@ export function weatherProfileOverlay(profile: ProfileWeather, format: WeatherFo
             haloPaint.setTextSize(fontSize);
             haloPaint.color = view.isEInk ? '#ffffff' : view.background;
             glyphPaint.fontFamily = view.iconFontFamily;
+            drawCloud(canvas, profile, view);
             drawRain(canvas, profile, view);
             drawSkyAndWind(canvas, profile, view, fontSize, format);
             drawTemperature(canvas, profile, view, fontSize, format);

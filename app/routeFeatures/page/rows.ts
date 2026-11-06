@@ -6,7 +6,7 @@ export type PageRow =
     /** `version`: the analysis the row shows, which changes with the items: a template does not follow what the page changes */
     | { type: 'tiles'; key: 'tiles'; version?: number }
     | { type: 'profile'; key: 'profile' }
-    | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string; facts?: LensFact[] }
+    | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string; facts?: LensFact[]; icon?: string }
     | { type: 'body'; key: string; section: string; row: RoutePageRow; /** The card's last row, which rounds its bottom. */ last: boolean }
     | { type: 'footer'; key: 'footer' };
 
@@ -34,7 +34,7 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
             return;
         }
         const open = isSectionOpen(section, stored);
-        rows.push({ type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx), facts: section.facts?.(ctx) });
+        rows.push({ type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx), facts: section.facts?.(ctx), icon: section.iconOf?.(ctx) });
         if (open) {
             rows.push(...bodyRows(section.id, body));
         }
@@ -44,4 +44,4 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
 }
 
 /** What the page's list holds: the page rows and the page's own, around them. */
-export type ListRow = PageRow | { type: 'hero' | 'passed'; key: string } | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null };
+export type ListRow = PageRow | { type: 'passed'; key: string } | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null };

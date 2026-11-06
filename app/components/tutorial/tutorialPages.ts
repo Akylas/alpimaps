@@ -188,7 +188,6 @@ export const tutorialPages: TutorialPage[] = [
         parts: [
             icon(10, 12, 'mdi-arrow-left', 24),
             text(42, 14, 120, 'routes', { key: true, bold: true }),
-            pill(170, 8, 100, 30, { icon: 'mdi-clock-outline', selected: true }),
             icon(274, 12, 'mdi-dots-vertical', 22),
             card(0, 46, 300, 130, 0),
             icon(140, 100, 'mdi-map-marker-path', 28),
@@ -203,9 +202,10 @@ export const tutorialPages: TutorialPage[] = [
             text(216, 192, 70, () => convertElevation(1180), { bold: true, size: 11 }),
             card(12, 230, 276, 110),
             ...[0, 1, 2, 3, 4, 5, 6].map((index): TutorialPart => card(20 + index * 38, 242, 34, 50, 8)),
-            { kind: 'bars', x: 24, y: 304, width: 252, height: 28, values: [10, 10, 10, 20, 40, 70, 90] }
+            { kind: 'bars', x: 24, y: 304, width: 252, height: 28, values: [10, 10, 10, 20, 40, 70, 90] },
+            pill(150, 376, 138, 44, { icon: 'mdi-clock-outline', selected: true })
         ],
-        zones: [zone('when_now', 'longPress', 166, 4, 108, 38)]
+        zones: [zone('when_now', 'longPress', 146, 372, 146, 52)]
     },
     {
         id: 'routes',
