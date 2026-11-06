@@ -1,7 +1,7 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
-    import { Color, Font, FormattedString, type GridLayout, ImageSource, ObservableArray, Span } from '@nativescript/core';
+    import { Color, Font, FormattedString, type GridLayout, ImageSource, ObservableArray, Span, Utils } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showError } from '@shared/utils/showError';
@@ -71,10 +71,39 @@
     const SECTION_HEADER_HEIGHT = 56;
     const CARD_RADIUS = 16;
 
-    // the hero map is not a row of the list, which would give its view away once off screen and build the map again: it stays over the
-    // list's top padding and follows its scroll
+    // the hero map is not in the list, which would give its view away once off screen and build the map again: it stays over the list, which
+    // starts with an empty row as high as it, and follows that row
     const HERO_HEIGHT = 240;
     let heroHolder: NativeViewElementNode<GridLayout>;
+    // Android: the map is put on the empty row before each frame is drawn, wherever the row is: scrolled, animated by the list as its rows
+    // change, or gone. No scroll event or timer: the list tells nothing of a scroll it makes by itself
+    let heroPreDraw: android.view.ViewTreeObserver.OnPreDrawListener;
+    function trackHero() {
+        const nativeList = listView?.nativeView?.nativeViewProtected as androidx.recyclerview.widget.RecyclerView;
+        if (!__ANDROID__ || !nativeList || heroPreDraw) {
+            return;
+        }
+        heroPreDraw = new android.view.ViewTreeObserver.OnPreDrawListener({
+            onPreDraw: () => {
+                const holder = heroHolder?.nativeView?.nativeViewProtected as android.view.View;
+                const spacer = nativeList.getLayoutManager()?.findViewByPosition(0);
+                holder?.setTranslationY(spacer ? spacer.getTop() + spacer.getTranslationY() : -Utils.layout.toDevicePixels(HERO_HEIGHT));
+                return true;
+            }
+        });
+        nativeList.getViewTreeObserver().addOnPreDrawListener(heroPreDraw);
+    }
+    onDestroy(() => {
+        if (heroPreDraw) {
+            listView?.nativeView?.nativeViewProtected?.getViewTreeObserver()?.removeOnPreDrawListener(heroPreDraw);
+        }
+    });
+    // iOS: the list tells every scroll, the animated ones too
+    function moveHero(offset: number) {
+        if (heroHolder?.nativeView) {
+            heroHolder.nativeView.translateY = -Math.min(offset, HERO_HEIGHT);
+        }
+    }
     const FAB_SIZE = 56;
     /** what the list leaves at its foot for the button: its size and the margin under it */
     const FAB_ROOM = FAB_SIZE + 16;
@@ -83,38 +112,14 @@
     // extended at the top and while the list is scrolled up, round while it is scrolled down
     let fabExpanded = true;
     let lastOffset = 0;
-    function moveHero(offset: number) {
-        if (heroHolder?.nativeView) {
-            heroHolder.nativeView.translateY = -Math.min(offset, HERO_HEIGHT);
-        }
-    }
-    // the Android list tells its scroll only while a finger drags it: a scroll asked of it (a button, a link) tells nothing, and the map would
-    // stay where it was, off screen. A listener of the native list hears every scroll. The iOS list tells them all
-    let nativeScrollListener: com.nativescript.collectionview.OnScrollListener;
-    function listenToScroll() {
-        const nativeList = listView?.nativeView?.nativeViewProtected;
-        if (!__ANDROID__ || !nativeList || nativeScrollListener) {
-            return;
-        }
-        nativeScrollListener = new com.nativescript.collectionview.OnScrollListener(
-            new com.nativescript.collectionview.OnScrollListener.Listener({
-                onScrollStateChanged: () => undefined,
-                onScrolled: () => moveHero(listView?.nativeView?.scrollOffset ?? 0)
-            })
-        );
-        nativeList.addOnScrollListener(nativeScrollListener);
-    }
-    onDestroy(() => {
-        if (nativeScrollListener) {
-            listView?.nativeView?.nativeViewProtected?.removeOnScrollListener(nativeScrollListener);
-        }
-    });
     function scrollListTo(index: number) {
         listView?.nativeView?.scrollToIndex(index, true);
     }
     function onListScroll() {
         const offset = listView?.nativeView?.scrollOffset ?? 0;
-        moveHero(offset);
+        if (__IOS__) {
+            moveHero(offset);
+        }
         if (offset <= FAB_SCROLL_STEP) {
             fabExpanded = true;
             lastOffset = offset;
@@ -141,7 +146,10 @@
     const hasProfileCard = get(routeFeatures).some((feature) => feature.id === 'profile') && !!item?.profile?.data?.length;
 
     // filled once, then changed where something changed: a new array would rebuild every row
-    const listItems = new ObservableArray<ListRow>([...pageRows({ sections: routePageSections(get(routeFeatures)), ctx: { item }, stored, hasProfile: hasProfileCard })]);
+    const listItems = new ObservableArray<ListRow>([
+        { type: 'hero', key: 'hero' },
+        ...pageRows({ sections: routePageSections(get(routeFeatures)), ctx: { item }, stored, hasProfile: hasProfileCard })
+    ]);
     function indexOfKey(key: string) {
         for (let index = 0; index < listItems.length; index++) {
             if (listItems.getItem(index).key === key) {
@@ -203,11 +211,10 @@
         sections.forEach((section) => setSectionOpen(section, isSectionOpen(section, stored)));
     }
     $: refreshSections($routeFeatureChanges, item);
-    // `after` undefined: the list's first row
-    function setRow(row: ListRow, shown: boolean, after?: string) {
+    function setRow(row: ListRow, shown: boolean, after: string) {
         const index = indexOfKey(row.key);
         if (shown && index < 0) {
-            listItems.splice((after ? indexOfKey(after) : -1) + 1, 0, row);
+            listItems.splice(indexOfKey(after) + 1, 0, row);
         } else if (!shown && index >= 0) {
             listItems.splice(index, 1);
         }
@@ -217,7 +224,6 @@
     let whenOpen = openWhen;
     // the button opens the panel and brings it into view, where the list is scrolled to; with the panel in view already it closes it
     async function onWhenTap() {
-        const tilesIndex = indexOfKey('tiles');
         if (whenOpen && listView?.nativeView?.isItemAtIndexVisible(indexOfKey('when'))) {
             whenOpen = false;
             return;
@@ -225,7 +231,8 @@
         whenOpen = true;
         // once the panel's row is in the list
         await tick();
-        scrollListTo(tilesIndex);
+        // from the map down: the panel is under the tiles, which are under it
+        scrollListTo(indexOfKey('hero'));
     }
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
@@ -250,7 +257,7 @@
         keptAt = departure.mode === 'planned' ? departure.at : undefined;
     }
     $: departureGone = passed && !keepPassed;
-    $: setRow({ type: 'passed', key: 'passed' }, departureGone);
+    $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
     $: setRow({ type: 'when', key: 'when', version: analysisVersion }, whenOpen, 'tiles');
     // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
     // their items, set again with each change of it
@@ -397,10 +404,13 @@
             {itemTemplateSelector}
             items={listItems}
             paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)}
-            paddingTop={HERO_HEIGHT}
             ios:contentInsetAdjustmentBehavior={2}
-            on:loaded={listenToScroll}
+            on:loaded={trackHero}
             on:scroll={onListScroll}>
+            <!-- as high as the map over it, which follows it -->
+            <Template key="hero">
+                <gridlayout height={HERO_HEIGHT} />
+            </Template>
             <Template key="passed">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorErrorContainer} borderRadius={CARD_RADIUS} columns="*,auto,auto" padding="8 12">
