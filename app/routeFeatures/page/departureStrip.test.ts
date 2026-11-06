@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import { buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
-import { type DepartureAssessor, darkMinutes, departureStrip } from './departureStrip';
+import { type DepartureAssessor, darkMinutes, departureStrip, stripScrollIndex } from './departureStrip';
 
 // Grenoble, a November day
 const LAT = 45.19;
@@ -113,7 +113,7 @@ describe('departureStrip', () => {
     describe('with what the features say', () => {
         const noon = DAY;
         // the rain comes at noon: every ride leaving from then on gets 6 points; a feature of its own marks it
-        const rainy: DepartureAssessor = (at) => ({ points: { rain: at >= noon ? 6 : 0 }, indicators: at >= noon ? ['test.rain'] : [], covered: true, summary: at >= noon ? 'rain 2 mm' : undefined });
+        const rainy: DepartureAssessor = (at) => ({ points: { rain: at >= noon ? 6 : 0 }, indicators: at >= noon ? ['test.rain'] : [], covered: true, rainMm: at >= noon ? 2 : undefined });
         const cellsWith = (assessors: DepartureAssessor[] | undefined, chosenAt = noon) => departureStrip({ chosenAt, now: chosenAt - 24 * HOUR, source, inputs, lat: LAT, lon: LON, assessors });
 
         it('adds their points to the darkness', () => {
@@ -149,10 +149,10 @@ describe('departureStrip', () => {
             expect(cellsWith(undefined)[3].indicators).toEqual([]);
         });
 
-        it('keeps what they say of each ride, for the panel to say it', () => {
+        it('keeps the rain they expect on each ride, for the cell to show it', () => {
             const cells = cellsWith([rainy]);
-            expect(cells[8].summaries).toEqual(['rain 2 mm']);
-            expect(cells[2].summaries).toEqual([]);
+            expect(cells[8].rainMm).toBe(2);
+            expect(cells[2].rainMm).toBeUndefined();
         });
 
         describe('a ride a feature knows nothing of', () => {
@@ -182,6 +182,32 @@ describe('departureStrip', () => {
                 expect(covered.some(({ level }) => level === 'good')).toBe(true);
                 expect(covered.some(({ level }) => level === 'poor')).toBe(true);
             });
+        });
+    });
+
+    describe('stripScrollIndex', () => {
+        const cells = departureStrip({ chosenAt: DAY, now: DAY - 2 * HOUR, source, inputs, lat: LAT, lon: LON });
+        const firstToCome = cells.findIndex(({ past }) => !past);
+
+        it('starts at the first departure to come for now: the past is not shown', () => {
+            expect(stripScrollIndex(cells, 'now', 5)).toBe(firstToCome);
+        });
+
+        it('puts the chosen departure in the middle of the cells that fit for another one', () => {
+            const chosen = cells.findIndex(({ chosen }) => chosen);
+            expect(stripScrollIndex(cells, 'planned', 5)).toBe(chosen - 2);
+            expect(stripScrollIndex(cells, 'planned', 6)).toBe(chosen - 3);
+        });
+
+        it('does not scroll past either end of the strip', () => {
+            const early = departureStrip({ anchorAt: DAY, chosenAt: DAY - 3 * HOUR, now: DAY - 12 * HOUR, source, inputs, lat: LAT, lon: LON });
+            expect(stripScrollIndex(early, 'planned', 7)).toBe(0);
+            const late = departureStrip({ anchorAt: DAY, chosenAt: DAY + 3 * HOUR, now: DAY - 12 * HOUR, source, inputs, lat: LAT, lon: LON });
+            expect(stripScrollIndex(late, 'planned', 5)).toBe(late.length - 5);
+        });
+
+        it('starts at the first cell when they all fit', () => {
+            expect(stripScrollIndex(cells, 'planned', 40)).toBe(0);
         });
     });
 });

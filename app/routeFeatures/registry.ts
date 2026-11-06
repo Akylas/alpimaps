@@ -70,6 +70,17 @@ export interface LensChip {
 export interface LensFact {
     icon?: string;
     text: string;
+    /** The figure and its unit apart, a lighter unit after a bold figure: when there, they are shown in place of `text` */
+    value?: string;
+    unit?: string;
+    /** Before the figure, in the lighter type */
+    label?: string;
+    /** After the unit, lighter still */
+    note?: string;
+    /** The chip's wash, when it says how much there is of what it is about */
+    tint?: string;
+    /** 0..1: a thin bar under the figure */
+    bar?: number;
     /** The icon's colour, eg the surface it stands for. */
     color?: string;
     /** The figure is a warning: the icon takes the error colour. */
@@ -297,6 +308,8 @@ export interface RoutePageRow {
 export interface RoutePageSection {
     id: string;
     icon: string;
+    /** The icon in place of `icon`, when it says something of the route: the sky of its weather. */
+    iconOf?: (ctx: RouteCtx) => string | undefined;
     title: () => string;
     /** One line under the title. */
     summary?: (ctx: RouteCtx) => string | undefined;
@@ -332,8 +345,8 @@ export interface DepartureAssessment {
     indicators: string[];
     /** False: the feature knows nothing of this ride, which then takes no part in the ranking. */
     covered: boolean;
-    /** The figures of the ride in a few words, said for the departure looked at. */
-    summary?: string;
+    /** mm of rain over the ride, shown in the departure's cell. */
+    rainMm?: number;
 }
 
 /** What a feature asks of a departure: the route, as the page has it, timed from `at`. */
@@ -350,6 +363,8 @@ export interface DepartureStatus {
     note: string;
     /** The feature scores the departures now. */
     scoring: boolean;
+    /** epoch ms its data was last read, said in the header of the departure looked at. */
+    updatedAt?: number;
     action?: { icon: string; busy?: boolean; run: () => void };
 }
 

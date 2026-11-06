@@ -1,6 +1,7 @@
 <script lang="ts">
     // a small rounded figure: an icon, a value in bold and its unit after it, in a lighter type, on a light fill. The way a weather
-    // reads at a glance: one chip a fact. E-ink: outlined, in black. `color` tints the icon, and a warning the whole chip
+    // reads at a glance: one chip a fact. E-ink: outlined, in black. `color` tints the icon, `tint` the fill, and a warning the whole chip
+    import { Color } from '@nativescript/core';
     import { isEInk } from '~/helpers/theme';
     import { colors, fonts } from '~/variables';
 
@@ -17,17 +18,23 @@
     export let note: string = null;
     /** the value's colour, when it says something (a wind against, rain) */
     export let color: string = null;
+    /** the chip's fill: a wash of `color` when it has one, else the neutral fill */
+    export let tint: string = null;
+    /** 0..1: a thin bar under the value, as oss-weather draws the rain, filled to that share of the chip */
+    export let bar: number = null;
     /** the chip is a warning: it takes the error colour */
     export let alert = false;
     export let height = 26;
 
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorSurfaceFill } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorSurfaceFill } = $colors);
+    $: wash = tint ?? (color && !alert ? new Color(color).setAlpha(40).hex : colorSurfaceFill);
+    $: barPercent = Math.round(Math.max(0, Math.min(1, bar ?? 0)) * 100);
     $: ink = isEInk ? colorOnSurface : alert ? colorError : (color ?? colorOnSurface);
 </script>
 
 <gridlayout
-    backgroundColor={isEInk ? null : colorSurfaceFill}
+    backgroundColor={isEInk ? null : wash}
     borderColor={isEInk ? colorOnSurface : null}
     borderRadius={height / 2}
     borderWidth={isEInk ? 1 : 0}
@@ -46,4 +53,15 @@
         <span color={colorOnSurfaceVariant} fontSize={11} text={unit ? ' ' + unit : ''} />
         <span color={colorOnSurfaceVariant} fontSize={11} text={note ? ' ' + note : ''} />
     </label>
+    {#if bar !== null}
+        <!-- a gradient, not star columns: those would take the room they are given and stretch the chip to its container -->
+        <gridlayout
+            backgroundImage={`linear-gradient(to right, ${ink} ${barPercent}%, transparent ${barPercent}%)`}
+            borderColor={isEInk ? ink : null}
+            borderRadius={1.25}
+            borderWidth={isEInk ? 1 : 0}
+            height={2.5}
+            margin="0 10 2 10"
+            verticalAlignment="bottom" />
+    {/if}
 </gridlayout>

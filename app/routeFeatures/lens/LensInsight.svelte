@@ -1,8 +1,9 @@
 <script lang="ts">
     // the 40 dp row under the lens bar: the focused section with its steppers, else the headline
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
+    import Chip from '~/components/common/Chip.svelte';
     import { isEInk } from '~/helpers/theme';
-    import type { LensFact, LensHeadline } from '~/routeFeatures/registry';
+    import type { LensHeadline } from '~/routeFeatures/registry';
     import { colors, fonts } from '~/variables';
 
     export let headline: LensHeadline = null;
@@ -18,14 +19,10 @@
         more: undefined;
     }
     const dispatch = createEventDispatcher<$$Events>();
-    let { colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
-    $: ({ colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
+    let { colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorAccentContainer, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     $: accent = isEInk ? colorOnSurface : colorPrimary;
-    // e-ink has no colour to give a figure
-    function factColor(fact: LensFact) {
-        return isEInk ? colorOnSurface : fact.alert ? colorError : (fact.color ?? colorOnSurfaceVariant);
-    }
 </script>
 
 <gridlayout height={40} {...$$restProps}>
@@ -64,24 +61,21 @@
         </gridlayout>
     {:else if headline}
         <gridlayout columns="*,auto" padding="0 12" rippleColor={colorPrimary} on:tap={() => more && !headline.action && dispatch('more')}>
-            <!-- the facts as small chips, an icon and its figure in each, the way the tiles read -->
+            <!-- the facts as chips, as the weather card draws them: an icon, a bold figure and its unit, washed by what they are about -->
             <stacklayout orientation="horizontal" verticalAlignment="middle">
                 {#each headline.facts as fact}
-                    <gridlayout
-                        backgroundColor={isEInk ? null : colorSurfaceFill}
-                        borderColor={colorOnSurface}
-                        borderRadius={13}
-                        borderWidth={isEInk ? 1 : 0}
-                        height={26}
-                        horizontalAlignment="left"
-                        marginRight={6}
-                        padding="0 9">
-                        <!-- always the same spans: a formatted string whose children come and go breaks the update -->
-                        <label color={colorOnSurface} fontSize={12} maxLines={1} verticalAlignment="middle">
-                            <span color={factColor(fact)} fontFamily={$fonts.mdi} fontSize={14} text={fact.icon ?? ''} />
-                            <span fontWeight="bold" text={(fact.icon ? ' ' : '') + fact.text} />
-                        </label>
-                    </gridlayout>
+                    <Chip
+                        alert={fact.alert}
+                        bar={fact.bar ?? null}
+                        color={fact.color}
+                        icon={fact.icon}
+                        label={fact.label}
+                        marginTop={0}
+                        note={fact.note}
+                        text={fact.text}
+                        tint={fact.tint}
+                        unit={fact.unit}
+                        value={fact.value} />
                 {/each}
             </stacklayout>
             {#if headline.action}

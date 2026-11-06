@@ -4,10 +4,9 @@ import type { RideRow, WeatherRead, WeatherSummary } from '~/routeFeatures/weath
 
 export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }
-    /** the header of the samples, which are listed only while it is open */
-    | { type: 'details'; open: boolean; count: number }
-    | { type: 'ride'; row: RideRow }
-    | { type: 'footer'; provider: string; attribution: WeatherAttribution; updatedAt: number; decimals: number; outdated: boolean; canUpdate: boolean }
+    /** the samples of the ride, side by side */
+    | { type: 'strip'; rows: RideRow[] }
+    | { type: 'footer'; attribution: WeatherAttribution; updatedAt: number; outdated: boolean; canUpdate: boolean }
     /** nothing fetched: what the first fetch sends, or why it cannot be asked */
     | { type: 'fetch'; state: 'absent' | 'running' | 'failed' | 'offline'; points: number; decimals: number; provider: string };
 
@@ -15,18 +14,16 @@ export interface WeatherRowsInput {
     read: Pick<WeatherRead, 'rows' | 'summary'> | null;
     footer: Omit<Extract<WeatherRowData, { type: 'footer' }>, 'type'>;
     fetch: Omit<Extract<WeatherRowData, { type: 'fetch' }>, 'type'>;
-    detailsOpen: boolean;
 }
 
-/** What the card lists: the summary, the header of the samples and, while it is open, a row for each in the order of the ride, then where the forecast comes from. Without a forecast, how to ask for one. */
-export function weatherRows({ detailsOpen, fetch, footer, read }: WeatherRowsInput): { key: string; data: WeatherRowData }[] {
+/** What the card lists: the summary, the strip of the samples in the order of the ride, then where the forecast comes from. Without a forecast, how to ask for one. */
+export function weatherRows({ fetch, footer, read }: WeatherRowsInput): { key: string; data: WeatherRowData }[] {
     if (!read) {
         return [{ key: 'fetch', data: { type: 'fetch', ...fetch } }];
     }
     return [
         { key: 'summary', data: { type: 'summary', summary: read.summary } },
-        { key: 'details', data: { type: 'details', open: detailsOpen, count: read.rows.length } },
-        ...(detailsOpen ? read.rows.map((row) => ({ key: `ride${row.index}`, data: { type: 'ride' as const, row } })) : []),
+        { key: 'strip', data: { type: 'strip', rows: read.rows } },
         { key: 'footer', data: { type: 'footer', ...footer } }
     ];
 }
@@ -57,4 +54,22 @@ export function windLabel(speed: number | undefined, head: number | undefined, c
         return { kind: 'cross', value: Math.round(Math.abs(cross)), side: cross > 0 ? 'left' : 'right' };
     }
     return { kind: head > 0 ? 'head' : 'tail', value: Math.round(Math.abs(head)) };
+}
+
+/** mm/h from which the rain is heavy, as the colours of the rain have it */
+const HEAVY_RAIN = 4;
+/** % of cloud under which a dry ride is sunny, and from which it is cloudy */
+const SUNNY_CLOUD = 40;
+const CLOUDY = 70;
+
+/** The glyph that says the ride in one: the storm, the rain, or the sky of a dry one. */
+export function heroGlyph(summary: WeatherSummary): string {
+    if (summary.thunder) {
+        return 'mdi-weather-lightning-rainy';
+    }
+    if (summary.rainPeak) {
+        return summary.rainPeak.mmPerHour >= HEAVY_RAIN ? 'mdi-weather-pouring' : 'mdi-weather-rainy';
+    }
+    const cloud = summary.cloud ?? 0;
+    return cloud < SUNNY_CLOUD ? 'mdi-weather-sunny' : cloud < CLOUDY ? 'mdi-weather-partly-cloudy' : 'mdi-weather-cloudy';
 }

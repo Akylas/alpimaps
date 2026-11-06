@@ -1,12 +1,11 @@
 import { derived, get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
-import { formatTime, lc } from '~/helpers/locale';
+import { lc } from '~/helpers/locale';
 import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import { networkService } from '~/services/NetworkService';
 import {
     type LensChip,
-    type LensFact,
     type LensHeadline,
     type LensProfile,
     type RouteCtx,
@@ -17,23 +16,22 @@ import {
     registerRouteFeature
 } from '~/routeFeatures/registry';
 import type { IItem } from '~/models/Item';
-import { routeTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
 import { weatherAssessment } from '~/routeFeatures/weather/data/departure';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
-import { RAIN_BLUE, rainColor, tempColor } from '~/routeFeatures/weather/ui/colors';
+import { RAIN_BLUE } from '~/routeFeatures/weather/ui/colors';
+import { type FactsWords, summaryFacts } from '~/routeFeatures/weather/ui/facts';
 import { weatherFormat, weatherUnitsKey } from '~/routeFeatures/weather/ui/format';
-import { weatherRows } from '~/routeFeatures/weather/ui/pageRows';
+import { heroGlyph, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
 import { rainPalette } from '~/routeFeatures/weather/ui/palette';
 import { weatherProfileOverlay } from '~/routeFeatures/weather/ui/profileOverlay';
 import { type WeatherRead, readWeather } from '~/routeFeatures/weather/data/read';
 import {
     routeFeatureWeather,
     weatherDecimals,
-    weatherDetailsOpen,
     weatherGust,
     weatherPlateWind,
     weatherPrecision,
@@ -67,6 +65,8 @@ function readOf(item: IItem, status: LayerStatus): WeatherRead | null {
 const profiles = new WeakMap<WeatherRead, LensProfile>();
 
 const statusOf = (item: IItem) => layerStatuses(item).weather;
+
+const factsWords: FactsWords = { format: weatherFormat, t: lc, distance: formatDistance };
 
 function chipState(status: LayerStatus): LensChip['state'] {
     switch (status.state) {
@@ -144,22 +144,7 @@ const weatherLens: RouteLens = {
         if (!read) {
             return missingHeadline(item, status);
         }
-        const { headShare, rainPeak, tempMax, tempMin, thunder } = read.summary;
-        const facts: LensFact[] = [];
-        if (tempMin !== undefined) {
-            facts.push({ icon: 'mdi-thermometer', text: weatherFormat.temperatureRange(tempMin, tempMax) });
-        }
-        facts.push(
-            rainPeak
-                ? { icon: 'mdi-weather-rainy', text: lc('weather_rain_around', weatherFormat.rain(rainPeak.mmPerHour), formatDistance(rainPeak.distance)) }
-                : { icon: 'mdi-weather-sunny', text: lc('weather_dry') }
-        );
-        if (headShare >= 0.1) {
-            facts.push({ icon: 'mdi-weather-windy', text: lc('weather_headwind', Math.round(headShare * 100) + ' %') });
-        }
-        if (thunder) {
-            facts.push({ icon: 'mdi-weather-lightning', text: lc('weather_thunder'), alert: true });
-        }
+        const facts = summaryFacts(read.summary, factsWords);
         if (status.state === 'failed') {
             return { facts: [{ icon: 'mdi-cloud-alert-outline', text: failure(status.reason), alert: true }, ...facts], action: { label: lc('weather_retry'), run: fetchWeather(item) } };
         }
@@ -232,6 +217,11 @@ function updatedAt(item: IItem) {
 const weatherPageSection: RoutePageSection = {
     id: 'weather',
     icon: 'mdi-weather-partly-cloudy',
+    // the sky of the ride, in place of the section's own
+    iconOf: ({ item }) => {
+        const read = readOf(item, statusOf(item));
+        return read ? heroGlyph(read.summary) : undefined;
+    },
     title: () => lc('lens_weather'),
     lens: 'weather',
     summary: ({ item }) => {
@@ -253,41 +243,18 @@ const weatherPageSection: RoutePageSection = {
         if (!read) {
             return [];
         }
-        const { cloud, headShare, rainPeak, rainTotal, tempMax, tempMin, thunder } = read.summary;
-        const facts: LensFact[] = [];
-        if (tempMin !== undefined) {
-            facts.push({
-                icon: 'mdi-thermometer',
-                text: weatherFormat.temperatureRange(tempMin, tempMax),
-                color: tempColor(tempMin <= 0 ? tempMin : tempMax)
-            });
-        }
-        facts.push(rainPeak ? { icon: 'mdi-weather-rainy', text: weatherFormat.rain(rainTotal), color: rainColor(rainPeak.mmPerHour) } : { icon: 'mdi-weather-sunny', text: lc('weather_dry') });
-        if (cloud !== undefined) {
-            facts.push({ icon: 'mdi-cloud-outline', text: Math.round(cloud) + ' %' });
-        }
-        if (headShare >= 0.1) {
-            facts.push({ icon: 'mdi-weather-windy', text: Math.round(headShare * 100) + ' %', alert: headShare >= 0.3 });
-        }
-        if (thunder) {
-            facts.push({ icon: 'mdi-weather-lightning', text: lc('weather_thunder'), alert: true });
-        }
-        return facts;
+        return summaryFacts(read.summary, factsWords);
     },
     rows: ({ item }) => {
         const status = statusOf(item);
         const provider = getWeatherProvider(get(weatherProviderId));
         const busy = status.state === 'running' || status.state === 'queued';
         const state = busy ? 'running' : status.state === 'failed' ? 'failed' : networkService.connected ? 'absent' : 'offline';
-        const layer = item.analysis?.layers.weather;
         return weatherRows({
-            detailsOpen: get(weatherDetailsOpen),
             read: readOf(item, status),
             footer: {
-                provider: provider?.name ?? '',
                 attribution: provider?.attribution ?? { text: '', url: '', license: '' },
                 updatedAt: updatedAt(item),
-                decimals: layer?.data.request.decimals ?? weatherDecimals(),
                 outdated: isOutdated(status),
                 canUpdate: networkService.connected && !busy
             },
@@ -315,32 +282,17 @@ const weatherDeparture: RouteDeparture = {
             instructions: item.instructions,
             analysis: { ...analysis, inputs: { ...analysis.inputs, departure: { ...analysis.inputs.departure, mode: 'planned' as const, at } } }
         };
-        const read = readWeather(shifted, Math.min(now, at), { format: weatherFormat });
-        const assessment = weatherAssessment(read);
-        if (assessment?.covered) {
-            assessment.summary = [
-                read.summary.rainTotal >= 0.1 ? weatherFormat.rain(read.summary.rainTotal) : lc('weather_dry'),
-                read.summary.headShare >= 0.1 ? lc('weather_headwind', Math.round(read.summary.headShare * 100) + ' %') : ''
-            ]
-                .filter(Boolean)
-                .join(' · ');
-        }
-        return assessment;
+        return weatherAssessment(readWeather(shifted, Math.min(now, at), { format: weatherFormat }));
     },
     status: ({ item }) => {
         const status = statusOf(item);
         const busy = status.state === 'running' || status.state === 'queued';
         const layer = item.analysis?.layers.weather;
-        const forecast = busy
-            ? lc('weather_fetching')
-            : status.reason === 'out-of-coverage'
-              ? lc('weather_out_of_coverage')
-              : layer
-                ? lc('weather_forecast_updated', formatTime(layer.prov.computedAt, 'LT', routeTimeZone(item.analysis.inputs.departure).offset))
-                : lc('weather_forecast_none');
+        const note = busy ? lc('weather_fetching') : status.reason === 'out-of-coverage' ? lc('weather_out_of_coverage') : layer ? lc('when_scored_short') : lc('weather_forecast_none');
         return {
-            note: layer ? `${forecast} · ${lc('when_scored_short')}` : forecast,
+            note,
             scoring: !!layer,
+            updatedAt: layer?.prov.computedAt,
             action: networkService.connected ? { icon: busy ? 'mdi-cloud-sync-outline' : 'mdi-cloud-refresh-outline', busy, run: () => !busy && computeLayers(item, ['weather']) } : undefined
         };
     }
@@ -352,7 +304,7 @@ registerRouteFeature({
     setting: { title: () => lc('lens_weather'), store: routeFeatureWeather },
     settings: weatherSettingRows,
     // a layer finishing or failing, a new departure read from the same hours, and the settings it is asked with
-    changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey, weatherDetailsOpen], (values) => values.join()),
+    changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey], (values) => values.join()),
     departure: weatherDeparture,
     lensPalette: rainPalette,
     lenses: [weatherLens],

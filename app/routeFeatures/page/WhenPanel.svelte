@@ -9,15 +9,19 @@
     import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { getTimes } from 'suncalc';
+    import { nightMoon } from '~/utils/astronomy/moon';
     import { onDestroy } from 'svelte';
+    import Chip from '~/components/common/Chip.svelte';
     import Pill from '~/components/common/Pill.svelte';
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
-    import { type DepartureAssessor, type StripCell, departureStrip } from '~/routeFeatures/page/departureStrip';
+    import { type DepartureAssessor, type StripCell, departureStrip, stripScrollIndex } from '~/routeFeatures/page/departureStrip';
     import { routeFeatures } from '~/routeFeatures/registry';
+    import { RAIN_BAR_MAX, RAIN_BLUE } from '~/routeFeatures/weather/ui/colors';
+    import { weatherFormat } from '~/routeFeatures/weather/ui/format';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
@@ -39,8 +43,8 @@
     }
     const dispatch = createEventDispatcher<$$Events>();
 
-    let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
-    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceFill } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary, colorSurfaceFill } = $colors);
 
     const ACTIVITIES: { id: string; icon: string; label: string; activity: Omit<Activity, 'origin'> }[] = [
         { id: 'hike', icon: 'mdi-hiking', label: lc('climbs_preset_hiking'), activity: { kind: 'hike', subtype: 'walk' } },
@@ -53,8 +57,13 @@
     const STOPS_MAX = 20;
     const SLIDER_SAVE_DELAY = 400;
     const STRIP_SCROLL_DELAY = 300;
-    /** dp a cell takes in the strip: its width and its margins */
-    const STRIP_CELL = 58;
+    /** dp a cell takes in the strip, margins included: the list's `colWidth` */
+    const STRIP_CELL = 66;
+    /** how much of its bar a departure's level fills: longer is better, which no colour has to say */
+    const LEVEL_SHARE = { good: 1, fair: 0.6, poor: 0.25, unknown: 0 };
+    const SUNSET_COLOR = '#E8832A';
+    const DARK_COLOR = '#7F77DD';
+    const MOON_COLOR = '#7F77DD';
 
     // the clock moves the strip on: a departure that was ahead may have gone
     let now = Date.now();
@@ -165,32 +174,26 @@
     }
     $: syncStrip(listCells);
 
-    // where the strip is looked at from: `now` leaves the past out and starts at the first departure to come; another departure, from
-    // the dialog, is in the middle. Said again only when it changes: not as the clock goes, nor as a departure is looked at in the strip
+    // where the strip is looked at from: asked for when the panel opens and when the departure is not the strip's own doing (picked in
+    // the dialog, `now`). Not as the clock goes, nor as a departure is looked at in the strip: it is in view already
     let strip: NativeViewElementNode<CollectionView>;
-    let shownKey: string;
+    let shownMode: string;
     let scrollTimer: ReturnType<typeof setTimeout>;
     onDestroy(() => clearTimeout(scrollTimer));
-    function showChosen(key: string) {
-        if (strip?.nativeView && shownKey !== key) {
-            shownKey = key;
-            // once the cells are laid out: the list gets its items after it is bound, and before that there is nothing to scroll to
-            clearTimeout(scrollTimer);
-            scrollTimer = setTimeout(() => {
-                const view = strip?.nativeView;
-                if (!view) {
-                    return;
-                }
-                const firstToCome = Math.max(0, cells.findIndex((cell) => !cell.past));
-                const chosenIndex = Math.max(0, cells.findIndex((cell) => cell.chosen));
-                // the cells that fit, to put the chosen one in the middle of them
+    function showChosen() {
+        // once the cells are laid out and the page has changed the analysis: the list gets its items after it is bound
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+            const view = strip?.nativeView;
+            if (view) {
                 const visible = Math.max(1, Math.floor(view.getMeasuredWidth() / Utils.layout.getDisplayDensity() / STRIP_CELL));
-                view.scrollToIndex(inputs.departure.mode === 'now' ? firstToCome : Math.max(firstToCome, chosenIndex - Math.floor(visible / 2)), false);
-            }, STRIP_SCROLL_DELAY);
-        }
+                view.scrollToIndex(stripScrollIndex(cells, inputs.departure.mode, visible), false);
+            }
+        }, STRIP_SCROLL_DELAY);
     }
-    $: if (strip) {
-        showChosen(inputs.departure.mode === 'now' ? 'now' : String(anchorAt));
+    $: if (strip && shownMode !== inputs.departure.mode) {
+        shownMode = inputs.departure.mode;
+        showChosen();
     }
     $: zone = routeTimeZone(inputs.departure);
 
@@ -205,11 +208,9 @@
     $: noteText = statuses.some((status) => status.scoring)
         ? [...statuses.map((status) => status.note), uncovered ? lc('when_unknown_note') : ''].filter(Boolean).join(' · ')
         : [lc('when_darkness_only'), ...statuses.map((status) => status.note)].join(' ');
-    $: summaryText = selected
-        ? [lc('when_arrive', clock(selected.arrival)), !isNaN(sunset) && lc('when_sunset', clock(sunset)), selected.darkMinutes > 0 && lc('when_dark', Math.round(selected.darkMinutes)), ...selected.summaries]
-              .filter(Boolean)
-              .join(' · ')
-        : '';
+    // the moon over the dark part of the ride: its phase, and how long it is up to light the way
+    $: moon = selected && selected.darkMinutes > 0 ? nightMoon(selected.at, selected.arrival, lat, lon) : null;
+    $: updatedAt = statuses.find((status) => status.updatedAt)?.updatedAt;
     function isSelected(entry: (typeof ACTIVITIES)[number], activity: Activity | undefined) {
         return activity?.kind === entry.activity.kind && (entry.activity.kind === 'hike' || activity?.subtype === entry.activity.subtype);
     }
@@ -227,6 +228,7 @@
             const picked = await pickDateTime({ date: new Date(chosenAt), title: lc('depart_at'), is24Hour: true });
             if (picked) {
                 setDeparture(picked.getTime());
+                showChosen();
             }
         } catch (error) {
             showError(error);
@@ -260,12 +262,11 @@
     // a change still waiting when the panel closes is saved, not lost
     onDestroy(savePace);
 
-    const LEVEL_COLORS = { good: '#1D9E75', fair: '#EF9F27', poor: '#E24B4A', unknown: '#9AA0A6' };
-    // e-ink: empty, grey, black
-    const LEVEL_SHADES = { good: 0, fair: 110, poor: 255, unknown: 60 };
-    function levelColor(cell: StripCell) {
-        return isEInk ? new Color('#000000').setAlpha(LEVEL_SHADES[cell.level]).hex : LEVEL_COLORS[cell.level];
+    // the best departure is told by its star and a faint wash of the accent: the colours are the ride's, not the choice's
+    function fillOf(cell: StripCell & { selected: boolean }) {
+        return cell.selected ? colorSurfaceFill : cell.best && !isEInk ? new Color(colorPrimary).setAlpha(28).hex : null;
     }
+    const share = (value: number) => Math.max(0.001, Math.min(1, value));
     const multiplierText = (value: number) => '×' + value.toFixed(2);
 </script>
 
@@ -293,29 +294,51 @@
             <Pill col={3} height={32} icon={action.icon} on:tap={() => runAction(action.run)} />
         {/if}
     </gridlayout>
-    <collectionview bind:this={strip} colWidth={54} height={72} items={stripItems} marginTop={10} orientation="horizontal">
+    <collectionview bind:this={strip} colWidth={STRIP_CELL} height={88} items={stripItems} marginTop={10} orientation="horizontal">
         <Template let:item={cell}>
             <gridlayout
-                borderColor={cell.selected ? colorPrimary : cell.chosen ? colorOnSurfaceVariant : colorOutlineVariant}
-                borderRadius={10}
-                borderWidth={cell.selected || cell.chosen ? 2 : 1}
+                backgroundColor={fillOf(cell)}
+                borderColor={cell.selected ? colorOnSurface : cell.chosen ? colorOnSurfaceVariant : 'transparent'}
+                borderRadius={12}
+                borderWidth={cell.selected ? 1.5 : 1}
                 margin="0 2"
                 opacity={cell.past ? 0.35 : cell.uncovered ? 0.7 : 1}
-                padding="4 2"
+                padding="6 0 7 0"
                 rippleColor={colorPrimary}
-                rows="auto,*,6"
+                rows="auto,auto,*,3"
                 on:tap={() => look(cell)}>
-                <label color={colorOnSurface} fontSize={11} fontWeight={cell.selected || cell.chosen ? 'bold' : 'normal'} text={clock(cell.at)} textAlignment="center" />
-                <!-- the best departure, then what the ride is worth a mark for: the features' marks, the dark, a feature knowing nothing of it -->
-                <stacklayout horizontalAlignment="center" orientation="horizontal" row={1} verticalAlignment="middle">
+                <label color={colorOnSurface} fontSize={11.5} fontWeight={cell.selected || cell.chosen ? 'bold' : 'normal'} text={clock(cell.at)} textAlignment="center" />
+                <!-- what the ride is worth a mark for: the best one's star, then the features' marks, the dark, a feature knowing nothing of it -->
+                <stacklayout horizontalAlignment="center" marginTop={4} orientation="horizontal" row={1}>
                     {#if cell.best}
-                        <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={14} text="mdi-star" />
+                        <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" />
                     {/if}
-                    {#each cell.marks.slice(0, cell.best ? 2 : 3) as mark}
-                        <label color={isEInk ? colorOnSurface : mark.color ?? colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={mark.icon} />
+                    {#each cell.marks.slice(0, cell.best ? 1 : 2) as mark}
+                        <label color={isEInk ? colorOnSurface : (mark.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={mark.icon} />
                     {/each}
                 </stacklayout>
-                <gridlayout backgroundColor={levelColor(cell)} borderColor={isEInk ? '#000000' : null} borderRadius={3} borderWidth={isEInk ? 1 : 0} row={2} />
+                <!-- the rain on the ride, as a chip with its bar, as oss-weather shows the rain of an hour -->
+                {#if cell.rainMm !== undefined}
+                    {#if cell.rainMm >= 0.1}
+                        <Chip
+                            bar={cell.rainMm / RAIN_BAR_MAX}
+                            color={RAIN_BLUE}
+                            height={22}
+                            horizontalAlignment="center"
+                            marginRight={0}
+                            marginTop={0}
+                            padding="0 8"
+                            row={2}
+                            value={weatherFormat.rainNumber(cell.rainMm)}
+                            verticalAlignment="middle" />
+                    {:else}
+                        <label color={colorOnSurfaceVariant} fontSize={12} row={2} text="–" textAlignment="center" verticalAlignment="middle" />
+                    {/if}
+                {/if}
+                <!-- the score, longer the better: the star says which is best, the colours stay the weather's -->
+                <gridlayout backgroundColor={colorOutlineVariant} borderRadius={1.5} columns={`${share(LEVEL_SHARE[cell.level])}*,${share(1 - LEVEL_SHARE[cell.level])}*`} margin="0 12" row={3}>
+                    <gridlayout backgroundColor={colorOnSurfaceVariant} borderRadius={1.5} opacity={cell.level === 'unknown' ? 0 : 1} />
+                </gridlayout>
             </gridlayout>
         </Template>
     </collectionview>
@@ -344,7 +367,33 @@
         </gridlayout>
     {/if}
     {#if selected}
-        <label color={selected.darkMinutes > 0 && !isEInk ? colorError : colorOnSurface} fontSize={12} fontWeight="bold" marginTop={4} text={summaryText} />
+        <!-- the ride of the departure looked at, as oss-weather tops its page: the figure, then what goes with it -->
+        <gridlayout borderTopColor={colorOutlineVariant} borderTopWidth={0.5} columns="*,auto" marginTop={8} paddingTop={8}>
+            <label color={colorOnSurface} fontSize={20} fontWeight="bold" text={`${clock(selected.at)} → ${clock(selected.arrival)}`} verticalAlignment="bottom" />
+            {#if updatedAt}
+                <label col={1} color={colorOnSurfaceVariant} fontSize={11.5} text={lc('when_updated', clock(updatedAt))} verticalAlignment="bottom" />
+            {/if}
+        </gridlayout>
+        <stacklayout marginTop={4} orientation="horizontal">
+            {#if !isNaN(sunset)}
+                <label color={colorOnSurface} fontSize={13} marginRight={14} verticalAlignment="middle">
+                    <span color={isEInk ? colorOnSurface : SUNSET_COLOR} fontFamily={$fonts.mdi} fontSize={17} text="mdi-weather-sunset-down" />
+                    <span text={' ' + clock(sunset)} />
+                </label>
+            {/if}
+            {#if selected.darkMinutes > 0}
+                <label color={colorOnSurface} fontSize={13} verticalAlignment="middle">
+                    <span color={isEInk ? colorOnSurface : DARK_COLOR} fontFamily={$fonts.mdi} fontSize={17} text="mdi-weather-night" />
+                    <span text={' ' + lc('when_dark', Math.round(selected.darkMinutes))} />
+                </label>
+            {/if}
+            {#if moon}
+                <label color={colorOnSurface} fontSize={13} marginLeft={14} verticalAlignment="middle">
+                    <span color={isEInk ? colorOnSurface : MOON_COLOR} fontFamily={$fonts.mdi} fontSize={17} text={moon.glyph} />
+                    <span text={' ' + moon.illumination + ' %' + (moon.moonlitMinutes > 0 ? ' · ' + lc('when_moon_up', moon.moonlitMinutes) : '')} />
+                </label>
+            {/if}
+        </stacklayout>
     {/if}
     {#if previewAt !== null}
         <stacklayout marginTop={4} orientation="horizontal">

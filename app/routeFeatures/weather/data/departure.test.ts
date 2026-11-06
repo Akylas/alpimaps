@@ -17,6 +17,11 @@ describe('weatherAssessment', () => {
         expect(weatherAssessment(read({ rainTotal: 2, headShare: 0.5 }))?.points).toEqual({ rain: 6, wind: 1 });
     });
 
+    it('says the rain of the ride, for the cell of its departure', () => {
+        expect(weatherAssessment(read({ rainTotal: 2.5 }))?.rainMm).toBe(2.5);
+        expect(weatherAssessment(read({ rainTotal: 5 }, false))?.rainMm).toBeUndefined();
+    });
+
     it('says a ride the forecast does not reach is not covered, with no points and no marks', () => {
         expect(weatherAssessment(read({ rainTotal: 5, headShare: 1 }, false))).toEqual({ points: {}, indicators: [], covered: false });
     });

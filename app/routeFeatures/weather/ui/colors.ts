@@ -15,6 +15,53 @@ export const TAILWIND_COLOR = '#2E9E5B';
 const WIND_HARD = 20;
 const WIND_NOTICEABLE = 10;
 
+/** mm of rain that fill a rain bar, on the cards and in the When panel's cells */
+export const RAIN_BAR_MAX = 5;
+
+/** A colour at a share of its opacity, as the #RRGGBBAA the views read. `hex`: #RRGGBB */
+export function tint(hex: string, opacity: number): string {
+    const alpha = Math.round(Math.max(0, Math.min(1, opacity)) * 255);
+    return hex + alpha.toString(16).toUpperCase().padStart(2, '0');
+}
+
+export const CLOUD_GRAY = '#8D96A3';
+/** mm/h from which the wash of the rain is the strongest */
+const RAIN_WASH_FULL = 4;
+
+/** The wash of a cloud chip: the grey of the sky, the stronger the more of it is covered. */
+export function cloudTint(cloudPercent: number): string {
+    return tint(CLOUD_GRAY, 0.1 + 0.3 * Math.max(0, Math.min(1, cloudPercent / 100)));
+}
+
+/** The wash of a rain chip: the blue of the rain, the stronger the harder it rains. */
+export function rainTint(mmPerHour: number): string {
+    return tint(RAIN_BLUE, 0.14 + 0.3 * Math.max(0, Math.min(1, mmPerHour / RAIN_WASH_FULL)));
+}
+
+/** The wash behind the wind of a sample: red for a burst worth a warning, else the colour of a wind worth one. None for a plain wind. */
+export function windWash(head: number | undefined, gust: number | undefined, gustMin: number): string | undefined {
+    if (gust !== undefined && gust >= gustMin) {
+        return tint(HEADWIND_HARD_COLOR, 0.2);
+    }
+    const color = windColor(head);
+    return color ? tint(color, 0.18) : undefined;
+}
+
+/** The rain bar of a sample is as plain as the chance of it, as oss-weather draws it: half sure when the forecast does not say. */
+export function rainBarTint(probabilityPercent: number | undefined): string {
+    return tint(RAIN_BLUE, Math.max(0.25, (probabilityPercent ?? 55) / 100));
+}
+
+/** dp high of the rain bar of a sample, as high as the rain as oss-weather draws it: 14 for a drizzle, 42 from 5 mm/h */
+export function rainBarHeight(mmPerHour: number): number {
+    return 14 + 28 * Math.max(0, Math.min(1, mmPerHour / RAIN_BAR_MAX));
+}
+
+/** The band of the cloud cover over the samples: the grey of the cloud, the stronger the more of the sky is covered, each sample a piece of one strip. */
+export function cloudBand(cloudPercent: number): string {
+    return tint(CLOUD_GRAY, 0.12 + 0.6 * Math.max(0, Math.min(1, cloudPercent / 100)));
+}
+
 /** Rain as the profile draws it: blue, darker from 4 mm/h. None for dry. */
 export function rainColor(mmPerHour: number): string | undefined {
     return mmPerHour < 0.1 ? undefined : mmPerHour >= 4 ? RAIN_BLUE_DARK : RAIN_BLUE;

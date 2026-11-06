@@ -4,6 +4,7 @@ import { RAIN_PALETTE_KEYS } from '~/routeFeatures/weather/data/rain';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import type { LensSlice, LensSymbol } from '~/routeFeatures/registry';
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
+import { isNight, moonPhaseGlyph } from '~/utils/astronomy/moon';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 import { type RideReading, type WeatherReading, bearingAt, rainClass, readRide, readSample, windRelative } from '~/routeFeatures/weather/data/series';
@@ -23,6 +24,7 @@ const MDI_WINDY = glyph(0xf059d);
 const MDI_BURST = glyph(0xf059e);
 const MDI_ARROW_LEFT = glyph(0xf004d);
 const MDI_ARROW_RIGHT = glyph(0xf0054);
+const MDI_NIGHT_PARTLY_CLOUDY = glyph(0xf0f31);
 
 /** km/h: the settings' say on what is worth showing of the wind. */
 export interface WeatherThresholds {
@@ -40,16 +42,19 @@ export const DEFAULT_THRESHOLDS: WeatherThresholds = { profileWind: 15, plateWin
  * The sky, as a glyph of the icon font. The clear and cloudy codes (0 to 3) only say it roughly: the cloud cover, when there is
  * one, says how much (under 20 %: sun, up to 60 %: sun and cloud, more: cloud). A code of fog, rain, snow or a storm says it.
  */
-export function wxGlyph(code: number | undefined, cloud?: number): string {
+export function wxGlyph(code: number | undefined, cloud?: number, moon?: string): string {
+    // at night, `moon` is the phase of the moon: it takes the place of the sun, and the partly cloudy sky has its night glyph
+    const clear = moon ?? MDI_SUNNY;
+    const partly = moon ? MDI_NIGHT_PARTLY_CLOUDY : MDI_PARTLY_CLOUDY;
     if (cloud !== undefined && (code === undefined || (code >= 0 && code <= 3))) {
-        return cloud < CLOUD_CLEAR ? MDI_SUNNY : cloud <= CLOUD_PARTLY ? MDI_PARTLY_CLOUDY : MDI_CLOUDY;
+        return cloud < CLOUD_CLEAR ? clear : cloud <= CLOUD_PARTLY ? partly : MDI_CLOUDY;
     }
     switch (code) {
         case 0:
-            return MDI_SUNNY;
+            return clear;
         case 1:
         case 2:
-            return MDI_PARTLY_CLOUDY;
+            return partly;
         case 45:
         case 48:
             return MDI_FOG;
@@ -108,6 +113,8 @@ export interface ProfileWeather {
     wind: { d: number; speed: number; gust: number; head: number; angle: number }[];
     /** km/h of a gust that is worth a line of its own. */
     gustMin: number;
+    /** % of the sky covered, at each sample. */
+    cloud: { d: number; value: number }[];
 }
 
 /** A stretch of the route where it rains: vertex indexes, meters from the start, mm/h at the worst of it. */
@@ -124,8 +131,8 @@ export interface WeatherSummary {
     tempMax?: number;
     /** mm over the whole ride */
     rainTotal: number;
-    /** the heaviest rain: mm/h, and meters from the start */
-    rainPeak?: { mmPerHour: number; distance: number };
+    /** the heaviest rain: mm/h, meters from the start, and how likely it is in percent when the forecast says */
+    rainPeak?: { mmPerHour: number; distance: number; probability?: number };
     /** %, over the way ridden */
     cloud?: number;
     /** 0..1, the share of the distance ridden against a wind over 10 km/h */
@@ -153,6 +160,10 @@ export interface RideRow {
     code?: number;
     /** % */
     cloud?: number;
+    /** the phase of the moon as a glyph, when it is night at the sample */
+    moon?: string;
+    /** % chance of the rain, when the forecast says */
+    probability?: number;
     /** km/h, a gust, and the part of the wind against (above 0) or behind (below 0) the ride */
     wind?: number;
     gust?: number;
@@ -207,6 +218,8 @@ interface Chunk {
     precip: number;
     /** 0..1 */
     probability: number;
+    /** % chance of the rain, when the forecast says */
+    chance?: number;
     rain: 0 | 1 | 2 | 3;
     /** the hours the ride takes through it */
     hours: number;
@@ -262,6 +275,7 @@ export function readWeather(
                 hi: chunk === count - 1 ? hi : vertex(end),
                 precip,
                 probability: reading?.precipProb === undefined ? 1 : reading.precipProb / 100,
+                chance: reading?.precipProb,
                 rain: rainClass(precip),
                 hours: (end - start) / HOUR_MS
             };
@@ -293,10 +307,10 @@ export function readWeather(
     const total = last >= 0 ? distances[last] : 0;
     let rainTotal = 0;
     let rainPeak: WeatherSummary['rainPeak'];
-    chunks.forEach(({ hi, hours, lo, precip }) => {
+    chunks.forEach(({ chance, hi, hours, lo, precip }) => {
         rainTotal += precip * hours;
         if (precip >= RAIN_MIN && precip > (rainPeak?.mmPerHour ?? 0)) {
-            rainPeak = { mmPerHour: precip, distance: (distances[lo] + distances[hi]) / 2 };
+            rainPeak = { mmPerHour: precip, distance: (distances[lo] + distances[hi]) / 2, ...(chance === undefined ? {} : { probability: chance }) };
         }
     });
     let headDistance = 0;
@@ -316,7 +330,13 @@ export function readWeather(
         }
     });
 
-    const sampled: { plate: LensSymbol; temp: number }[] = ride.flatMap(({ reading, sample }, position) => {
+    // the moon takes the place of the sun in the sky of a sample reached after dark
+    const moonAt = (at: number, vertex: number) => {
+        const [lon, lat] = coordinates[vertex] ?? coordinates[0];
+        return isNight(at, lat, lon) ? moonPhaseGlyph(new Date(at)) : undefined;
+    };
+
+    const sampled: { plate: LensSymbol; temp: number }[] = ride.flatMap(({ at, reading, sample }, position) => {
         if (!reading || reading.temp === undefined) {
             return [];
         }
@@ -329,7 +349,7 @@ export function readWeather(
                 vertex: sample.i,
                 label: format.temperature(reading.temp),
                 sublabel: (reading.precip ?? 0) >= RAIN_MIN ? format.rain(reading.precip) : undefined,
-                glyph: wxGlyph(reading.code, reading.cloud),
+                glyph: wxGlyph(reading.code, reading.cloud, moonAt(at, sample.i)),
                 ...(line ? { note: line } : {}),
                 severity: rain,
                 tint: rain > 0 ? RAIN_PALETTE_KEYS[rain] : undefined,
@@ -351,6 +371,8 @@ export function readWeather(
         precip: reading?.precip ?? 0,
         code: reading?.code,
         cloud: reading?.cloud,
+        moon: moonAt(at, sample.i),
+        probability: reading?.precipProb,
         wind: reading?.wind,
         gust: reading?.gust,
         head,
@@ -381,13 +403,16 @@ export function readWeather(
         symbols,
         profile: {
             rain: chunks.flatMap(({ hi, lo, precip, probability }) => (precip >= RAIN_MIN ? [{ from: distances[lo], to: distances[hi], mmPerHour: precip, probability }] : [])),
-            temp: ride.flatMap(({ reading, sample }) => (reading?.temp === undefined ? [] : [{ d: sample.d, value: reading.temp, glyph: wxGlyph(reading.code, reading.cloud) }])),
+            temp: ride.flatMap(({ at, reading, sample }) =>
+                reading?.temp === undefined ? [] : [{ d: sample.d, value: reading.temp, glyph: wxGlyph(reading.code, reading.cloud, moonAt(at, sample.i)) }]
+            ),
             wind: ride.flatMap(({ cross, head, reading, sample }) =>
                 reading?.wind !== undefined && (reading.wind >= thresholds.profileWind || (reading.gust ?? 0) >= thresholds.gust)
                     ? [{ d: sample.d, speed: reading.wind, gust: reading.gust ?? 0, head: head ?? 0, angle: (Math.atan2(-(cross ?? 0), -(head ?? 0)) * 180) / Math.PI }]
                     : []
             ),
-            gustMin: thresholds.gust
+            gustMin: thresholds.gust,
+            cloud: ride.flatMap(({ reading, sample }) => (reading?.cloud === undefined ? [] : [{ d: sample.d, value: reading.cloud }]))
         },
         summary: {
             tempMin: temps.length ? Math.min(...temps) : undefined,

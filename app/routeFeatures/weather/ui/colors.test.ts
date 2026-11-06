@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rainColor, tempColor, windColor } from './colors';
+import { HEADWIND_HARD_COLOR, cloudBand, cloudTint, rainBarHeight, rainBarTint, rainColor, rainTint, tempColor, tint, windColor, windWash } from './colors';
 
 describe('tempColor', () => {
     it('says only the cold and the heat: the rest is neutral', () => {
@@ -40,5 +40,76 @@ describe('windColor', () => {
         expect(windColor(5)).toBeUndefined();
         expect(windColor(-5)).toBeUndefined();
         expect(windColor(undefined)).toBeUndefined();
+    });
+});
+
+describe('tint', () => {
+    it('is the colour at a share of its opacity, as the #RRGGBBAA the views read', () => {
+        expect(tint('#4A90D9', 0.5)).toBe('#4A90D980');
+        expect(tint('#4A90D9', 1)).toBe('#4A90D9FF');
+        expect(tint('#4A90D9', 0)).toBe('#4A90D900');
+    });
+});
+
+describe('cloudTint and rainTint', () => {
+    const alpha = (hex: string) => parseInt(hex.slice(7), 16);
+
+    it('wash the chip more the more there is of it, as oss-weather tints its data', () => {
+        expect(alpha(cloudTint(100))).toBeGreaterThan(alpha(cloudTint(10)));
+        expect(alpha(rainTint(4))).toBeGreaterThan(alpha(rainTint(0.2)));
+    });
+
+    it('never go clear, nor past the wash a figure can be read on', () => {
+        expect(alpha(cloudTint(0))).toBeGreaterThan(0);
+        expect(alpha(cloudTint(100))).toBeLessThanOrEqual(0x66);
+        expect(alpha(rainTint(40))).toBe(alpha(rainTint(4)));
+    });
+
+    it('are the colour of the sky and of the rain', () => {
+        expect(cloudTint(50).startsWith('#8D96A3')).toBe(true);
+        expect(rainTint(1).startsWith('#4A90D9')).toBe(true);
+    });
+});
+
+describe('windWash', () => {
+    it('is red under a burst that is worth a warning, whatever the wind along the ride', () => {
+        expect(windWash(0, 60, 50)).toBe(tint(HEADWIND_HARD_COLOR, 0.2));
+        expect(windWash(-15, 60, 50)).toBe(tint(HEADWIND_HARD_COLOR, 0.2));
+    });
+
+    it('is the colour of a wind that is worth one, a chip a plain wind has none of', () => {
+        expect(windWash(22, 30, 50)?.startsWith(windColor(22) as string)).toBe(true);
+        expect(windWash(5, 30, 50)).toBeUndefined();
+        expect(windWash(undefined, undefined, 50)).toBeUndefined();
+    });
+});
+
+describe('the rain bar of a sample', () => {
+    const alpha = (hex: string) => parseInt(hex.slice(7), 16);
+
+    it('is plainer the less likely the rain is, and not clear', () => {
+        expect(alpha(rainBarTint(90))).toBeGreaterThan(alpha(rainBarTint(30)));
+        expect(alpha(rainBarTint(0))).toBeGreaterThan(0);
+    });
+
+    it('is half sure when the forecast does not say how likely', () => {
+        expect(rainBarTint(undefined)).toBe(rainBarTint(55));
+    });
+
+    it('is as high as the rain, from 14 for a drizzle to 42 from 5 mm/h', () => {
+        expect(rainBarHeight(0.1)).toBeGreaterThanOrEqual(14);
+        expect(rainBarHeight(1)).toBeGreaterThan(rainBarHeight(0.1));
+        expect(rainBarHeight(2.5)).toBeCloseTo(28, 5);
+        expect(rainBarHeight(50)).toBe(42);
+    });
+});
+
+describe('cloudBand', () => {
+    const alpha = (hex: string) => parseInt(hex.slice(7), 16);
+
+    it('is the grey of the cloud, the stronger the more cover, and never clear so the band reads as one across the samples', () => {
+        expect(alpha(cloudBand(90))).toBeGreaterThan(alpha(cloudBand(20)));
+        expect(alpha(cloudBand(0))).toBeGreaterThan(0);
+        expect(cloudBand(50).startsWith('#8D96A3')).toBe(true);
     });
 });
