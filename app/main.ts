@@ -21,10 +21,18 @@ import { FrameElement, PageElement, registerElement, registerNativeViewElement }
 import Map from '~/components/map/Map.svelte';
 import { getBGServiceInstance } from '~/services/BgService';
 import { networkService } from '~/services/NetworkService';
+import { showError } from '@shared/utils/showError';
 import { startSentry } from '@shared/utils/sentry';
+import { installSvelteFlushGuard } from '@shared/utils/svelteFlushGuard';
 import { NestedScrollView } from '@shared/components/NestedScrollView';
 import { SETTINGS_ENABLE_CRASH_REPORT } from '~/utils/constants';
 import { installBottomSheetMinHeight } from '~/utils/ui/bottomSheetSize';
+
+// an error thrown by a Svelte update is reported, and the scheduler un-frozen: see the guard
+installSvelteFlushGuard((error) => {
+    DEV_LOG && console.error('SVELTE FLUSH ERROR', error, error?.['stack']);
+    showError(error instanceof Error ? error : String(error), { silent: true });
+});
 
 try {
     const shouldEnableSentry = ApplicationSettings.getBoolean(SETTINGS_ENABLE_CRASH_REPORT, PLAY_STORE_BUILD);
