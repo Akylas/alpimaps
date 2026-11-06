@@ -137,18 +137,23 @@ export function departureStrip({
 
 /**
  * Where the strip is scrolled to: `now` starts at the first departure to come, the past left out; another departure is put in the
- * middle of the `visible` cells, without going past either end of the strip.
+ * middle of the strip (`center`), which does not go past either end by itself.
  */
-export function stripScrollIndex(cells: StripCell[], mode: string, visible: number): number {
+export function stripScroll(cells: StripCell[], mode: string): { index: number; center: boolean } {
     if (mode === 'now') {
-        return Math.max(
-            0,
-            cells.findIndex((cell) => !cell.past)
-        );
+        return {
+            index: Math.max(
+                0,
+                cells.findIndex((cell) => !cell.past)
+            ),
+            center: false
+        };
     }
-    const chosenIndex = Math.max(
-        0,
-        cells.findIndex((cell) => cell.chosen)
-    );
-    return Math.max(0, Math.min(chosenIndex - Math.floor(visible / 2), cells.length - visible));
+    return {
+        index: Math.max(
+            0,
+            cells.findIndex((cell) => cell.chosen)
+        ),
+        center: true
+    };
 }

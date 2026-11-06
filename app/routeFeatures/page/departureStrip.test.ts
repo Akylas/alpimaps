@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import { buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
-import { type DepartureAssessor, darkMinutes, departureStrip, stripScrollIndex } from './departureStrip';
+import { type DepartureAssessor, darkMinutes, departureStrip, stripScroll } from './departureStrip';
 
 // Grenoble, a November day
 const LAT = 45.19;
@@ -196,29 +196,22 @@ describe('departureStrip', () => {
         });
     });
 
-    describe('stripScrollIndex', () => {
+    describe('stripScroll', () => {
         const cells = departureStrip({ chosenAt: DAY, now: DAY - 2 * HOUR, source, inputs, lat: LAT, lon: LON });
         const firstToCome = cells.findIndex(({ past }) => !past);
 
         it('starts at the first departure to come for now: the past is not shown', () => {
-            expect(stripScrollIndex(cells, 'now', 5)).toBe(firstToCome);
+            expect(stripScroll(cells, 'now')).toEqual({ index: firstToCome, center: false });
         });
 
-        it('puts the chosen departure in the middle of the cells that fit for another one', () => {
+        it('puts the chosen departure in the middle for another one', () => {
             const chosen = cells.findIndex(({ chosen }) => chosen);
-            expect(stripScrollIndex(cells, 'planned', 5)).toBe(chosen - 2);
-            expect(stripScrollIndex(cells, 'planned', 6)).toBe(chosen - 3);
+            expect(stripScroll(cells, 'planned')).toEqual({ index: chosen, center: true });
         });
 
-        it('does not scroll past either end of the strip', () => {
-            const early = departureStrip({ anchorAt: DAY, chosenAt: DAY - 3 * HOUR, now: DAY - 12 * HOUR, source, inputs, lat: LAT, lon: LON });
-            expect(stripScrollIndex(early, 'planned', 7)).toBe(0);
-            const late = departureStrip({ anchorAt: DAY, chosenAt: DAY + 3 * HOUR, now: DAY - 12 * HOUR, source, inputs, lat: LAT, lon: LON });
-            expect(stripScrollIndex(late, 'planned', 5)).toBe(late.length - 5);
-        });
-
-        it('starts at the first cell when they all fit', () => {
-            expect(stripScrollIndex(cells, 'planned', 40)).toBe(0);
+        it('falls back on the first cell when none is chosen', () => {
+            expect(stripScroll([], 'planned')).toEqual({ index: 0, center: true });
+            expect(stripScroll([], 'now')).toEqual({ index: 0, center: false });
         });
     });
 });

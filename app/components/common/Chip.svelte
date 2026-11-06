@@ -53,15 +53,15 @@
         <span color={colorOnSurfaceVariant} fontSize={11} text={unit ? ' ' + unit : ''} />
         <span color={colorOnSurfaceVariant} fontSize={11} text={note ? ' ' + note : ''} />
     </label>
-    {#if bar !== null}
-        <!-- a gradient, not star columns: those would take the room they are given and stretch the chip to its container -->
-        <gridlayout
-            backgroundImage={`linear-gradient(to right, ${ink} ${barPercent}%, transparent ${barPercent}%)`}
-            borderColor={isEInk ? ink : null}
-            borderRadius={1.25}
-            borderWidth={isEInk ? 1 : 0}
-            height={2.5}
-            margin="0 10 2 10"
-            verticalAlignment="bottom" />
-    {/if}
+    <!-- a gradient, not star columns: those would take the room they are given and stretch the chip to its container.
+         Always there, collapsed without a bar: a chip in a list template must keep its structure from one item to the next -->
+    <gridlayout
+        backgroundImage={`linear-gradient(to right, ${ink} ${barPercent}%, transparent ${barPercent}%)`}
+        borderColor={isEInk ? ink : null}
+        borderRadius={1.25}
+        borderWidth={isEInk ? 1 : 0}
+        height={2.5}
+        margin="0 10 2 10"
+        verticalAlignment="bottom"
+        visibility={bar !== null && bar !== undefined ? 'visible' : 'collapse'} />
 </gridlayout>
