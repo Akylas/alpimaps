@@ -5,7 +5,7 @@
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import type { CollectionView } from '@nativescript-community/ui-collectionview';
     import { pickDateTime } from '@nativescript-community/ui-datetimepicker';
-    import { Color } from '@nativescript/core';
+    import { Color, ObservableArray, Utils } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { getTimes } from 'suncalc';
@@ -53,6 +53,8 @@
     const STOPS_MAX = 20;
     const SLIDER_SAVE_DELAY = 400;
     const STRIP_SCROLL_DELAY = 300;
+    /** dp a cell takes in the strip: its width and its margins */
+    const STRIP_CELL = 58;
 
     // the clock moves the strip on: a departure that was ahead may have gone
     let now = Date.now();
@@ -148,26 +150,47 @@
         return today >= at ? today : getTimes(new Date(at + 24 * 3600 * 1000), lat, lon).sunset.getTime();
     }
 
-    // the chosen departure in the middle of the strip, the earlier ones left of it
+    // the strip's items are changed in place: a new array resets the list's scroll to its start
+    const stripItems = new ObservableArray<(typeof listCells)[number]>([]);
+    function syncStrip(next: typeof listCells) {
+        if (stripItems.length !== next.length) {
+            stripItems.splice(0, stripItems.length, ...next);
+            return;
+        }
+        next.forEach((cell, index) => {
+            if (JSON.stringify(stripItems.getItem(index)) !== JSON.stringify(cell)) {
+                stripItems.setItem(index, cell);
+            }
+        });
+    }
+    $: syncStrip(listCells);
+
+    // where the strip is looked at from: `now` leaves the past out and starts at the first departure to come; another departure, from
+    // the dialog, is in the middle. Said again only when it changes: not as the clock goes, nor as a departure is looked at in the strip
     let strip: NativeViewElementNode<CollectionView>;
-    let shownAt: number;
+    let shownKey: string;
     let scrollTimer: ReturnType<typeof setTimeout>;
     onDestroy(() => clearTimeout(scrollTimer));
-    function showChosen() {
-        if (strip?.nativeView && shownAt !== anchorAt) {
-            shownAt = anchorAt;
+    function showChosen(key: string) {
+        if (strip?.nativeView && shownKey !== key) {
+            shownKey = key;
             // once the cells are laid out: the list gets its items after it is bound, and before that there is nothing to scroll to
             clearTimeout(scrollTimer);
             scrollTimer = setTimeout(() => {
-                const chosenIndex = cells.findIndex((cell) => cell.chosen);
-                // the past is not looked at: the strip starts at now, or at the first departure to come; a planned one has its neighbours
+                const view = strip?.nativeView;
+                if (!view) {
+                    return;
+                }
                 const firstToCome = Math.max(0, cells.findIndex((cell) => !cell.past));
-                strip?.nativeView?.scrollToIndex(inputs.departure.mode === 'now' ? firstToCome : Math.max(firstToCome, chosenIndex - 3), false);
+                const chosenIndex = Math.max(0, cells.findIndex((cell) => cell.chosen));
+                // the cells that fit, to put the chosen one in the middle of them
+                const visible = Math.max(1, Math.floor(view.getMeasuredWidth() / Utils.layout.getDisplayDensity() / STRIP_CELL));
+                view.scrollToIndex(inputs.departure.mode === 'now' ? firstToCome : Math.max(firstToCome, chosenIndex - Math.floor(visible / 2)), false);
             }, STRIP_SCROLL_DELAY);
         }
     }
-    $: if (strip && anchorAt !== shownAt) {
-        showChosen();
+    $: if (strip) {
+        showChosen(inputs.departure.mode === 'now' ? 'now' : String(anchorAt));
     }
     $: zone = routeTimeZone(inputs.departure);
 
@@ -270,7 +293,7 @@
             <Pill col={3} height={32} icon={action.icon} on:tap={() => runAction(action.run)} />
         {/if}
     </gridlayout>
-    <collectionview bind:this={strip} colWidth={54} height={72} items={listCells} marginTop={10} orientation="horizontal">
+    <collectionview bind:this={strip} colWidth={54} height={72} items={stripItems} marginTop={10} orientation="horizontal">
         <Template let:item={cell}>
             <gridlayout
                 borderColor={cell.selected ? colorPrimary : cell.chosen ? colorOnSurfaceVariant : colorOutlineVariant}
