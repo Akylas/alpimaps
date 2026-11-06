@@ -23,7 +23,7 @@
     import { peakFinderEnabled, terrain3dEnabled } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
-    import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
+    import { DEFAULT_IMPERIAL_UINTS, DEFAULT_METRIC_UINTS, UNITS, UNIT_FAMILIES, availableUnits, unitFamilies, unitFamily } from '~/helpers/units';
     import { showGesturesTutorial } from '~/mapModules/features/gestures';
     import { allRouteFeatures, routeFeatures } from '~/routeFeatures/registry';
     import { getMapContext } from '~/mapModules/MapModule';
@@ -259,26 +259,16 @@
                         type: 'sectionheader',
                         title: lc('custom_units')
                     },
-                    {
+                    ...unitFamilies().map((family) => ({
                         id: 'setting',
-                        store: unitStore(UNIT_FAMILIES.Distance),
-                        key: UNIT_FAMILIES.Distance,
+                        store: unitStore(family),
+                        key: family,
                         valueType: 'string',
-                        title: lc('distance'),
-                        currentValue: () => unitsSettings[UNIT_FAMILIES.Distance],
-                        rightValue: () => unitsSettings[UNIT_FAMILIES.Distance],
-                        values: [UNITS.Kilometers, UNITS.Miles, UNITS.Meters, UNITS.Feet, UNITS.Inch].map((unit) => ({ title: unit, value: unit }))
-                    },
-                    {
-                        id: 'setting',
-                        store: unitStore(UNIT_FAMILIES.Speed),
-                        key: UNIT_FAMILIES.Speed,
-                        valueType: 'string',
-                        title: lc('speed'),
-                        currentValue: () => unitsSettings[UNIT_FAMILIES.Speed],
-                        rightValue: () => unitsSettings[UNIT_FAMILIES.Speed],
-                        values: [UNITS.SpeedKm, UNITS.SpeedM, UNITS.MPH, UNITS.FPH, UNITS.Knot].map((unit) => ({ title: unit, value: unit }))
-                    }
+                        title: lc(unitFamily(family).title),
+                        currentValue: () => unitsSettings[family] ?? ($imperial ? DEFAULT_IMPERIAL_UINTS : DEFAULT_METRIC_UINTS)[family],
+                        rightValue: () => unitsSettings[family] ?? ($imperial ? DEFAULT_IMPERIAL_UINTS : DEFAULT_METRIC_UINTS)[family],
+                        values: availableUnits(family).map((unit) => ({ title: unit, value: unit }))
+                    }))
                 ];
             case 'behavior':
                 return [

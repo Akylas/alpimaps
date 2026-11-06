@@ -2,11 +2,12 @@
  * What the weather draws over the profile, in the manner of a weather chart: rain as rounded bars from the foot, as high as the rain and as
  * plain as the chance of it (a bar full height at 4 mm/h); the temperature as a line with a ringed dot at each sample and its figure above
  * a peak, below a dip; over the plot, a row of the sky and a row of the wind: an arrow of the way it pushes, the ride going to the right,
- * and its speed in km/h under it, a burst on a line of its own.
+ * and its speed under it, a burst on a line of its own.
  */
 import { Align, type Canvas, Cap, Join, Paint, Style } from '@nativescript-community/ui-canvas';
 import { Color } from '@nativescript/core';
 import type { ProfileOverlay, ProfileView } from '~/routeFeatures/registry';
+import type { WeatherFormat } from '~/routeFeatures/weather/data/format';
 import type { ProfileWeather } from '~/routeFeatures/weather/data/read';
 import { RAIN_BLUE, TEMP_LINE, windColor } from '~/routeFeatures/weather/ui/colors';
 
@@ -66,7 +67,7 @@ function drawRain(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
 }
 
 // a row of the sky then a row of the wind at each sample while there is room for it
-function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number) {
+function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number, format: WeatherFormat) {
     const { contentLeft, contentRight, contentTop, fontScale, ink, isEInk, pixelX } = view;
     let lastSky = -Infinity;
     profile.temp.forEach(({ d: distance, glyph }) => {
@@ -99,10 +100,10 @@ function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileVi
         canvas.restore();
         textPaint.color = color;
         const speedBaseline = centerY + 8 * fontScale + fontSize;
-        drawText(canvas, String(Math.round(speed)), centerX, speedBaseline);
+        drawText(canvas, format.speedNumber(speed), centerX, speedBaseline);
         // a burst: its own line, the glyph and the gust, in red
         if (gust >= profile.gustMin) {
-            const text = String(Math.round(gust));
+            const text = format.speedNumber(gust);
             const burstColor = isEInk ? '#000000' : BURST_COLOR;
             textPaint.color = burstColor;
             const width = textPaint.measureText(text);
@@ -114,7 +115,7 @@ function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileVi
     });
 }
 
-function drawTemperature(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number) {
+function drawTemperature(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number, format: WeatherFormat) {
     if (!profile.temp.length) {
         return;
     }
@@ -131,7 +132,7 @@ function drawTemperature(canvas: Canvas, profile: ProfileWeather, view: ProfileV
         canvas.drawLine(points[index - 1].pointX, points[index - 1].pointY, points[index].pointX, points[index].pointY, linePaint);
     }
     let lastLabel = -Infinity;
-    let lastFigure = NaN;
+    let lastText = '';
     points.forEach(({ pointX, pointY, value }, index) => {
         if (pointX < contentLeft || pointX > contentRight) {
             return;
@@ -141,20 +142,20 @@ function drawTemperature(canvas: Canvas, profile: ProfileWeather, view: ProfileV
         fillPaint.color = isEInk ? '#000000' : TEMP_LINE;
         canvas.drawCircle(pointX, pointY, 3.5, fillPaint);
         // only what changes is said: a figure that is the one before is left out, the dot says it
-        const figure = Math.round(value);
-        if (figure !== lastFigure && pointX - lastLabel >= SAMPLE_LABEL_GAP * fontScale) {
+        const text = format.temperature(value);
+        if (text !== lastText && pointX - lastLabel >= SAMPLE_LABEL_GAP * fontScale) {
             lastLabel = pointX;
-            lastFigure = figure;
+            lastText = text;
             // above a peak, below a dip
             const dip = index > 0 && index < points.length - 1 && value < points[index - 1].value && value < points[index + 1].value;
             textPaint.color = ink;
-            drawText(canvas, figure + '°', Math.min(Math.max(pointX, contentLeft + 12), contentRight - 12), dip ? pointY + 8 + fontSize : pointY - 8);
+            drawText(canvas, text, Math.min(Math.max(pointX, contentLeft + 12), contentRight - 12), dip ? pointY + 8 + fontSize : pointY - 8);
         }
     });
 }
 
 /** The weather of a route, to hand to the profile chart. */
-export function weatherProfileOverlay(profile: ProfileWeather): ProfileOverlay {
+export function weatherProfileOverlay(profile: ProfileWeather, format: WeatherFormat): ProfileOverlay {
     return {
         draw(canvas, view) {
             const fontSize = 10 * view.fontScale;
@@ -163,8 +164,8 @@ export function weatherProfileOverlay(profile: ProfileWeather): ProfileOverlay {
             haloPaint.color = view.isEInk ? '#ffffff' : view.background;
             glyphPaint.fontFamily = view.iconFontFamily;
             drawRain(canvas, profile, view);
-            drawSkyAndWind(canvas, profile, view, fontSize);
-            drawTemperature(canvas, profile, view, fontSize);
+            drawSkyAndWind(canvas, profile, view, fontSize, format);
+            drawTemperature(canvas, profile, view, fontSize, format);
         }
     };
 }

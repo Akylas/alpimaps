@@ -27,6 +27,7 @@ import { sampleRoute } from '~/routeFeatures/weather/data/samples';
 import { weatherAssessment } from '~/routeFeatures/weather/data/departure';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
 import { RAIN_BLUE, rainColor, tempColor } from '~/routeFeatures/weather/ui/colors';
+import { weatherFormat, weatherUnitsKey } from '~/routeFeatures/weather/ui/format';
 import { weatherRows } from '~/routeFeatures/weather/ui/pageRows';
 import { rainPalette } from '~/routeFeatures/weather/ui/palette';
 import { weatherProfileOverlay } from '~/routeFeatures/weather/ui/profileOverlay';
@@ -58,9 +59,9 @@ function isOutdated(status: LayerStatus) {
 function readOf(item: IItem, status: LayerStatus): WeatherRead | null {
     const stale = isOutdated(status);
     const minute = Math.floor(Date.now() / MINUTE);
-    const wind = get(weatherWindKey);
+    const wind = `${get(weatherWindKey)}|${weatherUnitsKey()}`;
     if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.stale !== stale || memo.wind !== wind) {
-        memo = { item, analysis: item.analysis, minute, stale, wind, read: readWeather(item, Date.now(), { stale, thresholds: weatherThresholds() }) };
+        memo = { item, analysis: item.analysis, minute, stale, wind, read: readWeather(item, Date.now(), { stale, thresholds: weatherThresholds(), format: weatherFormat }) };
     }
     return memo.read;
 }
@@ -86,11 +87,6 @@ function chipState(status: LayerStatus): LensChip['state'] {
             return undefined;
     }
 }
-
-function formatRain(millimeters: number) {
-    return `${millimeters < 10 ? millimeters.toFixed(1) : Math.round(millimeters)} mm`;
-}
-const degrees = (value: number) => Math.round(value) + ' °C';
 
 function failure(reason: LayerReason | undefined) {
     switch (reason) {
@@ -138,7 +134,7 @@ const weatherLens: RouteLens = {
         const read = readOf(item, status);
         const chip: LensChip = { state: chipState(status) };
         if (read) {
-            chip.value = formatRain(read.summary.rainTotal);
+            chip.value = weatherFormat.rain(read.summary.rainTotal);
             // heavy rain or a storm on the way
             chip.alert = read.summary.thunder || read.spans.some((span) => span.peak >= 4);
         }
@@ -153,11 +149,11 @@ const weatherLens: RouteLens = {
         const { headShare, rainPeak, tempMax, tempMin, thunder } = read.summary;
         const facts: LensFact[] = [];
         if (tempMin !== undefined) {
-            facts.push({ icon: 'mdi-thermometer', text: Math.round(tempMin) === Math.round(tempMax) ? degrees(tempMin) : `${Math.round(tempMin)}–${degrees(tempMax)}` });
+            facts.push({ icon: 'mdi-thermometer', text: weatherFormat.temperatureRange(tempMin, tempMax) });
         }
         facts.push(
             rainPeak
-                ? { icon: 'mdi-weather-rainy', text: lc('weather_rain_around', formatRain(rainPeak.mmPerHour), formatDistance(rainPeak.distance)) }
+                ? { icon: 'mdi-weather-rainy', text: lc('weather_rain_around', weatherFormat.rain(rainPeak.mmPerHour), formatDistance(rainPeak.distance)) }
                 : { icon: 'mdi-weather-sunny', text: lc('weather_dry') }
         );
         if (headShare >= 0.1) {
@@ -178,12 +174,12 @@ const weatherLens: RouteLens = {
         if (at?.temp === undefined) {
             return undefined;
         }
-        const parts = [Math.round(at.temp) + '°'];
+        const parts = [weatherFormat.temperature(at.temp)];
         if ((at.precip ?? 0) >= 0.1) {
-            parts.push(lc('weather_rain_rate', at.precip.toFixed(1)));
+            parts.push(weatherFormat.rainRate(at.precip));
         }
         if (at.head !== undefined && Math.abs(at.head) >= 5) {
-            parts.push(lc(at.head > 0 ? 'weather_head' : 'weather_tail', Math.round(Math.abs(at.head)) + ' km/h'));
+            parts.push(lc(at.head > 0 ? 'weather_head' : 'weather_tail', weatherFormat.speed(Math.abs(at.head))));
         }
         return parts.join(' · ');
     },
@@ -194,7 +190,7 @@ const weatherLens: RouteLens = {
         }
         // the same object while the read is: the chart redraws for a new one
         if (!profiles.has(read)) {
-            profiles.set(read, { fade: true, overlay: weatherProfileOverlay(read.profile) });
+            profiles.set(read, { fade: true, overlay: weatherProfileOverlay(read.profile, weatherFormat) });
         }
         return profiles.get(read);
     },
@@ -204,8 +200,6 @@ const weatherLens: RouteLens = {
     symbols: ({ item }) => readOf(item, statusOf(item))?.symbols ?? [],
     legend: ({ palette, translate, variant }) => weatherLegend({ palette, translate, variant })
 };
-
-const kmh = (value: number) => `${value} km/h`;
 
 function weatherSettingRows(): RouteSettingRow[] {
     const rows: RouteSettingRow[] = [
@@ -222,9 +216,9 @@ function weatherSettingRows(): RouteSettingRow[] {
     ];
     rows.push(
         { type: 'sectionheader', title: lc('weather_wind') },
-        { type: 'slider', store: weatherProfileWind, title: lc('weather_wind_profile'), description: lc('weather_wind_profile_desc'), min: 5, max: 60, step: 5, format: kmh },
-        { type: 'slider', store: weatherPlateWind, title: lc('weather_wind_plate'), description: lc('weather_wind_plate_desc'), min: 10, max: 80, step: 5, format: kmh },
-        { type: 'slider', store: weatherGust, title: lc('weather_gust'), description: lc('weather_gust_desc'), min: 30, max: 100, step: 5, format: kmh }
+        { type: 'slider', store: weatherProfileWind, title: lc('weather_wind_profile'), description: lc('weather_wind_profile_desc'), min: 5, max: 60, step: 5, format: weatherFormat.speed },
+        { type: 'slider', store: weatherPlateWind, title: lc('weather_wind_plate'), description: lc('weather_wind_plate_desc'), min: 10, max: 80, step: 5, format: weatherFormat.speed },
+        { type: 'slider', store: weatherGust, title: lc('weather_gust'), description: lc('weather_gust_desc'), min: 30, max: 100, step: 5, format: weatherFormat.speed }
     );
     // a choice only once there is one to make
     if (weatherProviders().length > 1) {
@@ -249,8 +243,8 @@ const weatherPageSection: RoutePageSection = {
         }
         const { headShare, rainTotal, tempMax, tempMin } = read.summary;
         return [
-            tempMin === undefined ? '' : Math.round(tempMin) === Math.round(tempMax) ? degrees(tempMin) : `${Math.round(tempMin)}–${degrees(tempMax)}`,
-            formatRain(rainTotal),
+            tempMin === undefined ? '' : weatherFormat.temperatureRange(tempMin, tempMax),
+            weatherFormat.rain(rainTotal),
             headShare >= 0.1 ? lc('weather_headwind', Math.round(headShare * 100) + ' %') : ''
         ]
             .filter(Boolean)
@@ -266,11 +260,11 @@ const weatherPageSection: RoutePageSection = {
         if (tempMin !== undefined) {
             facts.push({
                 icon: 'mdi-thermometer',
-                text: Math.round(tempMin) === Math.round(tempMax) ? degrees(tempMin) : `${Math.round(tempMin)}–${degrees(tempMax)}`,
+                text: weatherFormat.temperatureRange(tempMin, tempMax),
                 color: tempColor(tempMin <= 0 ? tempMin : tempMax)
             });
         }
-        facts.push(rainPeak ? { icon: 'mdi-weather-rainy', text: formatRain(rainTotal), color: rainColor(rainPeak.mmPerHour) } : { icon: 'mdi-weather-sunny', text: lc('weather_dry') });
+        facts.push(rainPeak ? { icon: 'mdi-weather-rainy', text: weatherFormat.rain(rainTotal), color: rainColor(rainPeak.mmPerHour) } : { icon: 'mdi-weather-sunny', text: lc('weather_dry') });
         if (cloud !== undefined) {
             facts.push({ icon: 'mdi-cloud-outline', text: Math.round(cloud) + ' %' });
         }
@@ -323,11 +317,11 @@ const weatherDeparture: RouteDeparture = {
             instructions: item.instructions,
             analysis: { ...analysis, inputs: { ...analysis.inputs, departure: { ...analysis.inputs.departure, mode: 'planned' as const, at } } }
         };
-        const read = readWeather(shifted, Math.min(now, at));
+        const read = readWeather(shifted, Math.min(now, at), { format: weatherFormat });
         const assessment = weatherAssessment(read);
         if (assessment?.covered) {
             assessment.summary = [
-                read.summary.rainTotal >= 0.1 ? formatRain(read.summary.rainTotal) : lc('weather_dry'),
+                read.summary.rainTotal >= 0.1 ? weatherFormat.rain(read.summary.rainTotal) : lc('weather_dry'),
                 read.summary.headShare >= 0.1 ? lc('weather_headwind', Math.round(read.summary.headShare * 100) + ' %') : ''
             ]
                 .filter(Boolean)

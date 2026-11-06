@@ -1,4 +1,5 @@
 /** What a weather layer says of a route, for the lens, the chip and the profile. Pure: nothing here may import NativeScript. */
+import { METRIC_FORMAT, type WeatherFormat } from '~/routeFeatures/weather/data/format';
 import { RAIN_PALETTE_KEYS } from '~/routeFeatures/weather/data/rain';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import type { LensSlice, LensSymbol } from '~/routeFeatures/registry';
@@ -176,16 +177,16 @@ export interface WeatherRead {
 }
 
 /** A strong wind on a second line of a plate: its speed, how much of it is against (left arrow) or behind (right) the ride, a burst. */
-function windLine(wind: number, gust: number, head: number, thresholds: WeatherThresholds): string | undefined {
+function windLine(wind: number, gust: number, head: number, thresholds: WeatherThresholds, format: WeatherFormat): string | undefined {
     if (wind < thresholds.plateWind && head < Math.round(thresholds.plateWind * HEAD_SHARE) && gust < thresholds.gust) {
         return undefined;
     }
-    let line = `\n${MDI_WINDY} ${Math.round(wind)}`;
+    let line = `\n${MDI_WINDY} ${format.speedNumber(wind)}`;
     if (Math.abs(head) >= WIND_MIN) {
-        line += ` ${head > 0 ? MDI_ARROW_LEFT : MDI_ARROW_RIGHT}${Math.round(Math.abs(head))}`;
+        line += ` ${head > 0 ? MDI_ARROW_LEFT : MDI_ARROW_RIGHT}${format.speedNumber(Math.abs(head))}`;
     }
     if (gust >= thresholds.gust) {
-        line += ` ${MDI_BURST}${Math.round(gust)}`;
+        line += ` ${MDI_BURST}${format.speedNumber(gust)}`;
     }
     return line;
 }
@@ -216,7 +217,12 @@ interface Chunk {
 export function readWeather(
     item: StageItem & { analysis?: RouteAnalysis | null },
     now: number,
-    { ahead, stale = false, thresholds: custom }: { stale?: boolean; thresholds?: Partial<WeatherThresholds>; ahead?: { fromIndex: number; speedFactor?: number } } = {}
+    {
+        ahead,
+        format = METRIC_FORMAT,
+        stale = false,
+        thresholds: custom
+    }: { stale?: boolean; thresholds?: Partial<WeatherThresholds>; ahead?: { fromIndex: number; speedFactor?: number }; format?: WeatherFormat } = {}
 ): WeatherRead | null {
     const layer = item.analysis?.layers.weather;
     if (!layer) {
@@ -313,14 +319,14 @@ export function readWeather(
             return [];
         }
         const rain = rainClass(reading.precip ?? 0);
-        const line = windLine(reading.wind ?? 0, reading.gust ?? 0, ride[position].head ?? 0, thresholds);
+        const line = windLine(reading.wind ?? 0, reading.gust ?? 0, ride[position].head ?? 0, thresholds, format);
         const outdated = stale ? { outdated: 1 as const } : {};
         const plates: LensSymbol[] = [
             {
                 shape: 'plate',
                 vertex: sample.i,
-                label: Math.round(reading.temp) + '°',
-                sublabel: (reading.precip ?? 0) >= RAIN_MIN ? reading.precip.toFixed(1) + ' mm' : undefined,
+                label: format.temperature(reading.temp),
+                sublabel: (reading.precip ?? 0) >= RAIN_MIN ? format.rain(reading.precip) : undefined,
                 glyph: wxGlyph(reading.code, reading.cloud),
                 ...(line ? { note: line } : {}),
                 severity: rain,

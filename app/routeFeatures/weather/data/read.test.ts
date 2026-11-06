@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { Departure, RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 import { type WeatherVar, quantise } from '~/routeFeatures/weather/data/series';
+import { METRIC_FORMAT, type WeatherFormat } from '~/routeFeatures/weather/data/format';
 import { type WeatherThresholds, readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
 
 const HOUR = 3600;
@@ -233,6 +234,33 @@ describe('rows', () => {
         // the route goes north: a west wind comes from the left
         const read = readWeather(item(layer([{}, { wind: Array(HOURS).fill(20), dir: Array(HOURS).fill(270) }, {}])), NOW);
         expect(read?.rows[1].cross).toBeCloseTo(-20, 1);
+    });
+});
+
+describe('format', () => {
+    // a format of its own, as the user's units would be: Fahrenheit, inches, mph
+    const format: WeatherFormat = {
+        ...METRIC_FORMAT,
+        temperature: (celsius) => `${Math.round((celsius * 9) / 5 + 32)}°`,
+        rain: (mm) => `${(mm / 25.4).toFixed(2)} in`,
+        speedNumber: (kmh) => String(Math.round(kmh * 0.62))
+    };
+
+    it('says the figures of the plates in it', () => {
+        const read = readWeather(item(layer([{}, { precip: rainAt(2.54, 7, 8), wind: Array(HOURS).fill(40), dir: Array(HOURS).fill(0), gust: Array(HOURS).fill(60) }, {}])), NOW, { format });
+        const plate = read?.symbols.find((symbol) => symbol.vertex === 50);
+        expect(plate?.label).toBe('50°');
+        expect(plate?.sublabel).toBe('0.10 in');
+        // 40 km/h of wind, all of it against the ride, a gust of 60
+        expect(plate?.note).toContain(' 25');
+        expect(plate?.note).toContain(String.fromCodePoint(0xf004d) + '25');
+        expect(plate?.note).toContain(String.fromCodePoint(0xf059e) + '37');
+    });
+
+    it('says them in metric units without one', () => {
+        const plate = readWeather(item(layer([{}, { precip: rainAt(2.5, 7, 8) }, {}])), NOW)?.symbols.find((symbol) => symbol.vertex === 50);
+        expect(plate?.label).toBe('10°');
+        expect(plate?.sublabel).toBe('2.5 mm');
     });
 });
 
