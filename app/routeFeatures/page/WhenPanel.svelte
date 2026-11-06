@@ -20,8 +20,6 @@
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
     import { type DepartureAssessor, type StripCell, departureStrip, stripScrollIndex } from '~/routeFeatures/page/departureStrip';
     import { routeFeatures } from '~/routeFeatures/registry';
-    import { RAIN_BAR_MAX, RAIN_BLUE } from '~/routeFeatures/weather/ui/colors';
-    import { weatherFormat } from '~/routeFeatures/weather/ui/format';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
@@ -222,6 +220,8 @@
     function setDeparture(at: number | null) {
         previewAt = null;
         dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? { mode: 'now' } : { mode: 'planned', at }) });
+        // the route has the departure now: what a feature needs for it, it asks for
+        departureFeatures.forEach((feature) => feature.departure.taken?.({ item }));
     }
     async function pickDeparture() {
         try {
@@ -313,26 +313,26 @@
                     {#if cell.best}
                         <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" />
                     {/if}
-                    {#each cell.marks.slice(0, cell.best ? 1 : 2) as mark}
+                    {#each cell.marks.slice(0, 2) as mark}
                         <label color={isEInk ? colorOnSurface : (mark.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={mark.icon} />
                     {/each}
                 </stacklayout>
-                <!-- the rain on the ride, as a chip with its bar, as oss-weather shows the rain of an hour -->
-                {#if cell.rainMm !== undefined}
-                    {#if cell.rainMm >= 0.1}
+                <!-- what a feature says of the ride in a figure, as a chip with its bar when it has a share: as oss-weather shows the rain of an hour -->
+                {#if cell.figure}
+                    {#if cell.figure.share > 0}
                         <Chip
-                            bar={cell.rainMm / RAIN_BAR_MAX}
-                            color={RAIN_BLUE}
+                            bar={cell.figure.share}
+                            color={cell.figure.color}
                             height={22}
                             horizontalAlignment="center"
                             marginRight={0}
                             marginTop={0}
                             padding="0 8"
                             row={2}
-                            value={weatherFormat.rainNumber(cell.rainMm)}
+                            value={cell.figure.text}
                             verticalAlignment="middle" />
                     {:else}
-                        <label color={colorOnSurfaceVariant} fontSize={12} row={2} text="–" textAlignment="center" verticalAlignment="middle" />
+                        <label color={colorOnSurfaceVariant} fontSize={12} row={2} text={cell.figure.text} textAlignment="center" verticalAlignment="middle" />
                     {/if}
                 {/if}
                 <!-- the score, longer the better: the star says which is best, the colours stay the weather's -->

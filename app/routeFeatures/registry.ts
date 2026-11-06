@@ -337,6 +337,14 @@ export interface RouteSettingRow {
     options?: { value: string; title: string }[];
 }
 
+/** A figure for a departure's cell: shown as a chip with a bar when it has a `share`, as plain text when it has not. */
+export interface DepartureFigure {
+    text: string;
+    /** 0..1: how much of its bar the figure fills */
+    share?: number;
+    color?: string;
+}
+
 /** What a feature says of a ride leaving at a time, for the When panel's strip. */
 export interface DepartureAssessment {
     /** Points against the departure, by what they are for: the strip adds them to the others', the lowest total is the best. */
@@ -345,8 +353,8 @@ export interface DepartureAssessment {
     indicators: string[];
     /** False: the feature knows nothing of this ride, which then takes no part in the ranking. */
     covered: boolean;
-    /** mm of rain over the ride, shown in the departure's cell. */
-    rainMm?: number;
+    /** What the departure's cell says of the ride in a figure: its text, a bar filled to a share of it and the colour of both. */
+    figure?: DepartureFigure;
 }
 
 /** What a feature asks of a departure: the route, as the page has it, timed from `at`. */
@@ -374,6 +382,8 @@ export interface RouteDeparture {
     indicators: Record<string, { icon: string; color?: string }>;
     assess: (request: DepartureRequest) => DepartureAssessment | undefined;
     status?: (ctx: RouteCtx) => DepartureStatus | undefined;
+    /** Said once the user took a departure, the route having it: a feature may ask for what it needs for it, as a forecast that does not reach it. */
+    taken?: (ctx: RouteCtx) => void;
 }
 
 /**

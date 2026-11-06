@@ -9,11 +9,12 @@ import { Color } from '@nativescript/core';
 import type { ProfileOverlay, ProfileView } from '~/routeFeatures/registry';
 import type { WeatherFormat } from '~/routeFeatures/weather/data/format';
 import type { ProfileWeather } from '~/routeFeatures/weather/data/read';
-import { CLOUD_GRAY, RAIN_BLUE, TEMP_LINE, tint, windColor } from '~/routeFeatures/weather/ui/colors';
+import { CLOUD_GRAY, RAIN_BLUE, SUN_COLOR, TEMP_LINE, tint, windColor } from '~/routeFeatures/weather/ui/colors';
 
-/** the cloud cover is a band from the top of the plot: as deep as a share of it at full cover */
+/** the sky is a band from the top of the plot: as deep as a share of it */
 const CLOUD_BAND_SHARE = 0.18;
 const CLOUD_BAND_OPACITY = 0.28;
+const SUN_BAND_OPACITY = 0.3;
 const RAIN_FULL_MM = 4;
 const RAIN_BAR_SHARE = 0.25;
 const RAIN_BAR_MIN = 3;
@@ -55,24 +56,35 @@ function drawText(canvas: Canvas, text: string, pointX: number, pointY: number) 
     canvas.drawText(text, pointX, pointY, textPaint);
 }
 
-// the cloud cover as a soft band from the top of the plot, deeper the more of the sky is covered, as oss-weather fills it. Under the rest
-function drawCloud(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
+// the sky as a soft band from the top of the plot, a gauge of it: the cloud as deep as the sky is covered, the sun in the colour of the sun
+// under it, as deep as it is clear, as oss-weather fills its cloud cover. Under the rest
+function drawSky(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
     if (view.isEInk || !profile.cloud.length) {
         return;
     }
     const { contentLeft, contentRight, contentTop, pixelX } = view;
     const maxDepth = (view.contentBottom - contentTop) * CLOUD_BAND_SHARE;
-    const depth = (value: number) => (Math.max(0, Math.min(100, value)) / 100) * maxDepth;
-    const first = profile.cloud[0];
-    const last = profile.cloud[profile.cloud.length - 1];
+    const share = (value: number) => Math.max(0, Math.min(100, value)) / 100;
+    const points = [
+        { pointX: contentLeft, value: profile.cloud[0].value },
+        ...profile.cloud.map(({ d: distance, value }) => ({ pointX: Math.min(contentRight, Math.max(contentLeft, pixelX(distance))), value })),
+        { pointX: contentRight, value: profile.cloud[profile.cloud.length - 1].value }
+    ];
+    // the cloud: from the top down to its depth
     cloudPath.reset();
     cloudPath.moveTo(contentLeft, contentTop);
-    cloudPath.lineTo(contentLeft, contentTop + depth(first.value));
-    profile.cloud.forEach(({ d: distance, value }) => cloudPath.lineTo(Math.min(contentRight, Math.max(contentLeft, pixelX(distance))), contentTop + depth(value)));
-    cloudPath.lineTo(contentRight, contentTop + depth(last.value));
+    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, contentTop + share(value) * maxDepth));
     cloudPath.lineTo(contentRight, contentTop);
     cloudPath.close();
     fillPaint.color = tint(CLOUD_GRAY, CLOUD_BAND_OPACITY);
+    canvas.drawPath(cloudPath, fillPaint);
+    // the sun: from the cloud's depth down to the foot of the band
+    cloudPath.reset();
+    cloudPath.moveTo(contentLeft, contentTop + maxDepth);
+    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, contentTop + share(value) * maxDepth));
+    cloudPath.lineTo(contentRight, contentTop + maxDepth);
+    cloudPath.close();
+    fillPaint.color = tint(SUN_COLOR, SUN_BAND_OPACITY);
     canvas.drawPath(cloudPath, fillPaint);
 }
 
@@ -188,7 +200,7 @@ export function weatherProfileOverlay(profile: ProfileWeather, format: WeatherFo
             haloPaint.setTextSize(fontSize);
             haloPaint.color = view.isEInk ? '#ffffff' : view.background;
             glyphPaint.fontFamily = view.iconFontFamily;
-            drawCloud(canvas, profile, view);
+            drawSky(canvas, profile, view);
             drawRain(canvas, profile, view);
             drawSkyAndWind(canvas, profile, view, fontSize, format);
             drawTemperature(canvas, profile, view, fontSize, format);

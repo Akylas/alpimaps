@@ -1,6 +1,7 @@
 /** The rows of the weather card of the route page. Pure: nothing here may import NativeScript. */
 import type { WeatherAttribution } from '~/routeFeatures/weather/providers/provider';
 import type { RideRow, WeatherRead, WeatherSummary } from '~/routeFeatures/weather/data/read';
+import { CLOUD_GRAY, RAIN_BLUE, SUNNY_CLOUD, SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
 
 export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }
@@ -58,18 +59,42 @@ export function windLabel(speed: number | undefined, head: number | undefined, c
 
 /** mm/h from which the rain is heavy, as the colours of the rain have it */
 const HEAVY_RAIN = 4;
-/** % of cloud under which a dry ride is sunny, and from which it is cloudy */
-const SUNNY_CLOUD = 40;
+/** % of cloud from which a dry ride is cloudy */
 const CLOUDY = 70;
 
-/** The glyph that says the ride in one: the storm, the rain, or the sky of a dry one. */
-export function heroGlyph(summary: WeatherSummary): string {
+/** The sky of a ride in one word: the storm, the rain, or the sky of a dry one. */
+export type SkyId = 'sunny' | 'partly' | 'cloudy' | 'rainy' | 'pouring' | 'storm';
+
+export function skyId(summary: WeatherSummary): SkyId {
     if (summary.thunder) {
-        return 'mdi-weather-lightning-rainy';
+        return 'storm';
     }
     if (summary.rainPeak) {
-        return summary.rainPeak.mmPerHour >= HEAVY_RAIN ? 'mdi-weather-pouring' : 'mdi-weather-rainy';
+        return summary.rainPeak.mmPerHour >= HEAVY_RAIN ? 'pouring' : 'rainy';
     }
     const cloud = summary.cloud ?? 0;
-    return cloud < SUNNY_CLOUD ? 'mdi-weather-sunny' : cloud < CLOUDY ? 'mdi-weather-partly-cloudy' : 'mdi-weather-cloudy';
+    return cloud < SUNNY_CLOUD ? 'sunny' : cloud < CLOUDY ? 'partly' : 'cloudy';
+}
+
+/** The glyph of each sky and the colour of what it is, the sun and the rain as plain as the cloud: the marks of a departure. */
+export const SKY_MARKS: Record<SkyId, { icon: string; color: string }> = {
+    sunny: { icon: 'mdi-weather-sunny', color: SUN_COLOR },
+    partly: { icon: 'mdi-weather-partly-cloudy', color: CLOUD_GRAY },
+    cloudy: { icon: 'mdi-weather-cloudy', color: CLOUD_GRAY },
+    rainy: { icon: 'mdi-weather-rainy', color: RAIN_BLUE },
+    pouring: { icon: 'mdi-weather-pouring', color: RAIN_BLUE },
+    storm: { icon: 'mdi-weather-lightning-rainy', color: RAIN_BLUE }
+};
+
+/** The glyph that says the ride in one. */
+export function heroGlyph(summary: WeatherSummary): string {
+    return SKY_MARKS[skyId(summary)].icon;
+}
+
+/** mm/h under which there is no rain to speak of at a sample */
+const DRY = 0.1;
+
+/** The sun is what a sample says: by day, a clear sky and no rain. */
+export function isClearSky({ cloud, code, moon, precip }: { cloud?: number; code?: number; moon?: string; precip: number }): boolean {
+    return !moon && precip < DRY && (cloud !== undefined ? cloud < SUNNY_CLOUD : code === 0);
 }

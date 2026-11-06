@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { METRIC_FORMAT } from '~/routeFeatures/weather/data/format';
 import type { WeatherSummary } from '~/routeFeatures/weather/data/read';
+import { SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
 import { rainPeakSentence, summaryFacts } from '~/routeFeatures/weather/ui/facts';
 
 const words = { format: METRIC_FORMAT, t: (key: string, ...args: string[]) => [key, ...args].join(' '), distance: (meters: number) => `${meters / 1000} km` };
@@ -19,7 +20,7 @@ describe('summaryFacts', () => {
     });
 
     it('has no rain chip for a dry ride, nor for a trace of rain under a tenth of a millimeter', () => {
-        expect(summaryFacts({ ...summary, cloud: 20 }, words).map(({ icon }) => icon)).toEqual(['mdi-cloud-outline']);
+        expect(summaryFacts({ ...summary, cloud: 60 }, words).map(({ icon }) => icon)).toEqual(['mdi-cloud-outline']);
         const trace = summaryFacts({ ...summary, rainTotal: 0.04, rainPeak: { mmPerHour: 0.1, distance: 6000, probability: 0 } }, words);
         expect(trace).toEqual([]);
     });
@@ -38,10 +39,18 @@ describe('summaryFacts', () => {
     });
 
     it('washes the cloud chip by how cloudy it is', () => {
-        const [low] = summaryFacts({ ...summary, cloud: 10 }, words).slice(-1);
+        const [low] = summaryFacts({ ...summary, cloud: 50 }, words).slice(-1);
         const [high] = summaryFacts({ ...summary, cloud: 100 }, words).slice(-1);
-        expect(low.tint).toBeDefined();
+        expect(low.icon).toBe('mdi-cloud-outline');
         expect(parseInt(high.tint.slice(7), 16)).toBeGreaterThan(parseInt(low.tint.slice(7), 16));
+    });
+
+    it('highlights a clear sky as it does the cloud and the rain: a sun chip in its colour, the clear share, in place of the cloud one', () => {
+        const [sun] = summaryFacts({ ...summary, cloud: 15 }, words);
+        expect(sun).toMatchObject({ icon: 'mdi-weather-sunny', value: '85', unit: '%', color: SUN_COLOR });
+        expect(sun.tint?.startsWith(SUN_COLOR)).toBe(true);
+        expect(summaryFacts({ ...summary, cloud: 15 }, words).some(({ icon }) => icon === 'mdi-cloud-outline')).toBe(false);
+        expect(summaryFacts({ ...summary, cloud: 40 }, words)[0].icon).toBe('mdi-cloud-outline');
     });
 
     it('says the wind against the ride only from a tenth of the way, and a warning from 30 %', () => {

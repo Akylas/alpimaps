@@ -2,7 +2,7 @@
 import type { LensFact } from '~/routeFeatures/registry';
 import type { WeatherFormat } from '~/routeFeatures/weather/data/format';
 import type { WeatherSummary } from '~/routeFeatures/weather/data/read';
-import { HEADWIND_HARD_COLOR, cloudTint, rainColor, rainTint, tempColor, tint } from '~/routeFeatures/weather/ui/colors';
+import { HEADWIND_HARD_COLOR, SUNNY_CLOUD, SUN_COLOR, cloudTint, rainColor, rainTint, sunTint, tempColor, tint } from '~/routeFeatures/weather/ui/colors';
 
 /** What says the facts in words and units: the app's own, or a stand-in. */
 export interface FactsWords {
@@ -41,7 +41,11 @@ export function summaryFacts(summary: WeatherSummary, { format, t }: FactsWords)
             ...(rainPeak.probability === undefined ? {} : { bar: rainPeak.probability / 100 })
         });
     }
-    if (cloud !== undefined) {
+    if (cloud !== undefined && cloud < SUNNY_CLOUD) {
+        // a clear sky is highlighted as the cloud and the rain are: the share of it that is clear, in the colour of the sun
+        const value = String(Math.round(100 - cloud));
+        facts.push({ icon: 'mdi-weather-sunny', text: `${value} %`, value, unit: '%', color: SUN_COLOR, tint: sunTint(cloud) });
+    } else if (cloud !== undefined) {
         const value = String(Math.round(cloud));
         facts.push({ icon: 'mdi-cloud-outline', text: `${value} %`, value, unit: '%', tint: cloudTint(cloud) });
     }

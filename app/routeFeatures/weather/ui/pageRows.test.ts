@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { RAIN_BLUE, SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
 import type { RideRow } from '~/routeFeatures/weather/data/read';
-import { heroGlyph, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
+import { SKY_MARKS, heroGlyph, isClearSky, skyId, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
 
 const attribution = { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' };
 const footer = { attribution, updatedAt: 1, outdated: false, canUpdate: true };
@@ -64,5 +65,39 @@ describe('windLabel', () => {
         expect(windLabel(25, 0, 20)?.side).toBe('left');
         expect(windLabel(25, 0, -20)?.side).toBe('right');
         expect(windLabel(25, 20, 0)?.side).toBeUndefined();
+    });
+});
+
+describe('skyId', () => {
+    const summary = { rainTotal: 0, headShare: 0, tailShare: 0, thunder: false };
+
+    it('is the sky of the ride in one word: the storm, the rain, or the sky of a dry one', () => {
+        expect(skyId({ ...summary, cloud: 10 })).toBe('sunny');
+        expect(skyId({ ...summary, cloud: 50 })).toBe('partly');
+        expect(skyId({ ...summary, cloud: 90 })).toBe('cloudy');
+        expect(skyId({ ...summary, rainTotal: 1, rainPeak: { mmPerHour: 1, distance: 0 } })).toBe('rainy');
+        expect(skyId({ ...summary, rainTotal: 6, rainPeak: { mmPerHour: 5, distance: 0 } })).toBe('pouring');
+        expect(skyId({ ...summary, thunder: true })).toBe('storm');
+    });
+
+    it('has a glyph and a colour for each sky: the sun is as plain as the rain and the cloud', () => {
+        expect(Object.keys(SKY_MARKS).sort()).toEqual(['cloudy', 'partly', 'pouring', 'rainy', 'storm', 'sunny']);
+        expect(SKY_MARKS.sunny).toEqual({ icon: 'mdi-weather-sunny', color: SUN_COLOR });
+        expect(SKY_MARKS.rainy.color).toBe(RAIN_BLUE);
+        expect(SKY_MARKS.storm.color).toBe(RAIN_BLUE);
+        expect(SKY_MARKS.cloudy.color).not.toBe(SUN_COLOR);
+    });
+});
+
+describe('isClearSky', () => {
+    it('is the sun by day: a clear sky and no rain', () => {
+        expect(isClearSky({ cloud: 10, precip: 0 })).toBe(true);
+        expect(isClearSky({ code: 0, precip: 0 })).toBe(true);
+        expect(isClearSky({ cloud: 60, precip: 0 })).toBe(false);
+        expect(isClearSky({ cloud: 10, precip: 1 })).toBe(false);
+    });
+
+    it('is not the moon by night', () => {
+        expect(isClearSky({ cloud: 10, precip: 0, moon: 'x' })).toBe(false);
     });
 });

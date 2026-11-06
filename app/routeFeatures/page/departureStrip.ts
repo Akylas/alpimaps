@@ -1,6 +1,6 @@
 /** The When panel's departure strip. Pure: nothing here may import NativeScript. */
 import { getTimes } from 'suncalc';
-import type { DepartureAssessment } from '~/routeFeatures/registry';
+import type { DepartureAssessment, DepartureFigure } from '~/routeFeatures/registry';
 import { type TimelineSource, buildTimeline } from '~/utils/routeAnalysis/timeline';
 import type { AnalysisInputs } from '~/utils/routeAnalysis/types';
 
@@ -44,8 +44,8 @@ export interface StripCell {
     score: number;
     /** what the ride is worth a mark for: the ids of the features' indicators, `dark` and `unknown` (a feature does not know this ride) */
     indicators: string[];
-    /** mm of rain the features expect over the ride: unknown when none says */
-    rainMm?: number;
+    /** what a feature says of the ride in a figure, the first one that has one */
+    figure?: DepartureFigure;
     /** a feature scores the departures, but knows nothing of this ride: it counts for its darkness only */
     uncovered?: boolean;
     /** thirds of the scores' range; when they are all alike, good without dark minutes, poor with */
@@ -95,7 +95,7 @@ export function departureStrip({
         const uncovered = assessments.some(({ covered }) => !covered);
         const score = dark / DARK_MINUTES_PER_POINT + known.reduce((total, { points }) => total + Object.values(points).reduce((sum, value) => sum + value, 0), 0);
         const indicators = [...(uncovered ? ['unknown'] : []), ...known.flatMap((assessment) => assessment.indicators), ...(dark > 0 ? ['dark'] : [])];
-        const rains = known.flatMap(({ rainMm }) => (rainMm === undefined ? [] : [rainMm]));
+        const figure = known.find((assessment) => assessment.figure)?.figure;
         cells.push({
             indicators,
             at,
@@ -107,7 +107,7 @@ export function departureStrip({
             past: at < now,
             chosen: at === chosenAt,
             best: false,
-            ...(rains.length ? { rainMm: rains.reduce((total, rain) => total + rain, 0) } : {}),
+            ...(figure ? { figure } : {}),
             ...(assessments.length ? { uncovered } : {})
         });
     }
