@@ -1,7 +1,7 @@
 <script lang="ts">
     // a route's own page: its tiles, its profile read through the lens, then one card per feature section.
     // One collectionview: a section is its header row and, while open, its body rows
-    import { Color, Font, FormattedString, type GridLayout, ImageSource, ObservableArray, Span, Utils } from '@nativescript/core';
+    import { Color, type EventData, Font, FormattedString, type GridLayout, ImageSource, ObservableArray, Span } from '@nativescript/core';
     import { Template } from '@nativescript-community/svelte-native/components';
     import { VerticalPosition } from '@nativescript-community/ui-popover';
     import { showError } from '@shared/utils/showError';
@@ -75,33 +75,13 @@
     // starts with an empty row as high as it, and follows that row
     const HERO_HEIGHT = 240;
     let heroHolder: NativeViewElementNode<GridLayout>;
-    // Android: the map is put on the empty row before each frame is drawn, wherever the row is: scrolled, animated by the list as its rows
-    // change, or gone. No scroll event or timer: the list tells nothing of a scroll it makes by itself
-    let heroPreDraw: android.view.ViewTreeObserver.OnPreDrawListener;
-    function trackHero() {
-        const nativeList = listView?.nativeView?.nativeViewProtected as androidx.recyclerview.widget.RecyclerView;
-        if (!__ANDROID__ || !nativeList || heroPreDraw) {
-            return;
-        }
-        heroPreDraw = new android.view.ViewTreeObserver.OnPreDrawListener({
-            onPreDraw: () => {
-                const holder = heroHolder?.nativeView?.nativeViewProtected as android.view.View;
-                const spacer = nativeList.getLayoutManager()?.findViewByPosition(0);
-                holder?.setTranslationY(spacer ? spacer.getTop() + spacer.getTranslationY() : -Utils.layout.toDevicePixels(HERO_HEIGHT));
-                return true;
-            }
-        });
-        nativeList.getViewTreeObserver().addOnPreDrawListener(heroPreDraw);
-    }
-    onDestroy(() => {
-        if (heroPreDraw) {
-            listView?.nativeView?.nativeViewProtected?.getViewTreeObserver()?.removeOnPreDrawListener(heroPreDraw);
-        }
-    });
-    // iOS: the list tells every scroll, the animated ones too
+    // the list tells every scroll, the ones it makes by itself and its item animations too (`scrollOffset` is then where the content is drawn)
     function moveHero(offset: number) {
         if (heroHolder?.nativeView) {
-            heroHolder.nativeView.translateY = -Math.min(offset, HERO_HEIGHT);
+            // the offset is exact while the empty row is on screen; once it is gone the list only estimates it from the rows it shows, and
+            // the estimate can fall back under the height of the map: the map is hidden as long as its row is not there
+            const rowShown = listView?.nativeView?.isItemAtIndexVisible(0) ?? true;
+            heroHolder.nativeView.translateY = rowShown ? -Math.min(offset, HERO_HEIGHT) : -HERO_HEIGHT;
         }
     }
     const FAB_SIZE = 56;
@@ -115,11 +95,10 @@
     function scrollListTo(index: number) {
         listView?.nativeView?.scrollToIndex(index, true);
     }
-    function onListScroll() {
-        const offset = listView?.nativeView?.scrollOffset ?? 0;
-        if (__IOS__) {
-            moveHero(offset);
-        }
+    function onListScroll(event: EventData) {
+        // the event is typed for its base only
+        const offset = 'scrollOffset' in event && typeof event.scrollOffset === 'number' ? event.scrollOffset : (listView?.nativeView?.scrollOffset ?? 0);
+        moveHero(offset);
         if (offset <= FAB_SCROLL_STEP) {
             fabExpanded = true;
             lastOffset = offset;
@@ -405,7 +384,6 @@
             items={listItems}
             paddingBottom={16 + FAB_ROOM + (__ANDROID__ ? $windowInset.bottom : 0)}
             ios:contentInsetAdjustmentBehavior={2}
-            on:loaded={trackHero}
             on:scroll={onListScroll}>
             <!-- as high as the map over it, which follows it -->
             <Template key="hero">
