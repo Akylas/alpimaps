@@ -38,3 +38,8 @@ export function surfaceStops<Pattern extends string>(
 ): { d: number; color: string; pattern: Pattern }[] {
     return segments.map(({ id, start }) => ({ d: start, color: colors[id] ?? fallbackColor, pattern: patterns[id] ?? fallbackPattern })).sort((first, second) => first.d - second.d);
 }
+
+/** The key of a surface slice in the lens palette. */
+export function surfaceKey(id: string) {
+    return 'surface_' + id;
+}

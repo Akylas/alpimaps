@@ -1,4 +1,5 @@
 /** What a weather layer says of a route, for the lens, the chip and the profile. Pure: nothing here may import NativeScript. */
+import { RAIN_PALETTE_KEYS } from '~/routeFeatures/weather/data/rain';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import type { LensSlice, LensSymbol, ProfileWeather } from '~/routeFeatures/registry';
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
@@ -255,7 +256,7 @@ export function readWeather(
         if (previous?.s === rain) {
             previous.i1 = hi;
         } else {
-            slices.push({ i0: lo, i1: hi, k: 'w' + rain, s: rain });
+            slices.push({ i0: lo, i1: hi, k: RAIN_PALETTE_KEYS[rain], s: rain });
         }
         if (rain > 0) {
             const span = spans[spans.length - 1];
@@ -302,18 +303,19 @@ export function readWeather(
         }
         const rain = rainClass(reading.precip ?? 0);
         const line = windLine(reading.wind ?? 0, reading.gust ?? 0, ride[position].head ?? 0, thresholds);
-        const flag = stale ? { stale: 1 as const } : {};
+        const outdated = stale ? { outdated: 1 as const } : {};
         const plates: LensSymbol[] = [
             {
-                sym: 'wx',
-                i: sample.i,
-                t: Math.round(reading.temp) + '°',
-                t2: (reading.precip ?? 0) >= RAIN_MIN ? reading.precip.toFixed(1) + ' mm' : undefined,
-                icon: wxGlyph(reading.code, reading.cloud),
-                ...(line ? { t3: line } : {}),
-                s: rain,
-                p: 20 + rain * 5,
-                ...flag
+                shape: 'plate',
+                vertex: sample.i,
+                label: Math.round(reading.temp) + '°',
+                sublabel: (reading.precip ?? 0) >= RAIN_MIN ? reading.precip.toFixed(1) + ' mm' : undefined,
+                glyph: wxGlyph(reading.code, reading.cloud),
+                ...(line ? { note: line } : {}),
+                severity: rain,
+                tint: rain > 0 ? RAIN_PALETTE_KEYS[rain] : undefined,
+                priority: 20 + rain * 5,
+                ...outdated
             }
         ];
         return plates;

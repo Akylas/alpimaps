@@ -1,23 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// the surface table lives in a module that imports NativeScript
-vi.mock('~/utils/routing', () => ({ surfaceColors: { paved: '#D7D7D7' } }));
-
+import { registerRouteFeature } from '~/routeFeatures/registry';
 import { applyRouteFocus, lensStyleParameters, setRouteFocus } from './lensStyle';
 
+// a feature of its own colours: the style knows none of its features
+registerRouteFeature({ id: 'palette-test', order: 1, lensPalette: () => ({ test_swatch: '#7BC96F' }) });
+
 describe('lensStyleParameters', () => {
-    it('writes the palette as the JSON the style reads, with the surface colours in it', () => {
+    it('writes the palette as the JSON the style reads, with the colours of the features in it', () => {
         const parameters = lensStyleParameters('voyager');
         const palette = JSON.parse(parameters.lens_pal);
-        expect(palette.g3).toBe('#7BC96F');
-        expect(palette.f_paved).toBe('#D7D7D7');
+        expect(palette.test_swatch).toBe('#7BC96F');
+        expect(palette.plate).toBe('#2B2F33');
         expect(parameters.lens_case).toBe('#ffffff');
     });
 
     it('is black on the e-ink inner style', () => {
         const palette = JSON.parse(lensStyleParameters('eink').lens_pal);
-        expect(palette.g3).toBe('#000000');
-        expect(palette.f_paved).toBe('#000000');
+        expect(palette.test_swatch).toBe('#000000');
     });
 });
 

@@ -4,14 +4,11 @@
     import { get } from 'svelte/store';
     import { lang, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
-    import { lensLegend } from '~/routeFeatures/lens/lensLegend';
-    import { lensPalette } from '~/routeFeatures/lens/lensPalette';
-    import { lensVariant } from '~/routeFeatures/lens/lensStyle';
+    import { currentLensPalette, lensVariant } from '~/routeFeatures/lens/lensStyle';
     import { routeLensStore } from '~/routeFeatures/lens/routeLensStore';
     import { resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { legendVersion, showLegend } from '~/stores/legendStore';
     import { massifIconFont, massifIconFontFamily } from '~/utils/massif';
-    import { surfaceColors } from '~/utils/routing';
     import { colors } from '~/variables';
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainer } = $colors);
 
@@ -65,8 +62,8 @@
         }
         const lenses = routeLenses(get(routeFeatures), { item });
         const variant = lensVariant(ApplicationSettings.getString('innerStyle'));
-        const surfaces = [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))];
-        return lensLegend(resolveLens(get(routeLensStore), lenses), variant, lensPalette(variant, surfaceColors), lc, surfaces);
+        const active = lenses.find((lens) => lens.id === resolveLens(get(routeLensStore), lenses));
+        return active?.legend?.({ item, variant, palette: currentLensPalette(variant), translate: lc }) ?? null;
     }
 
     function readLegend() {

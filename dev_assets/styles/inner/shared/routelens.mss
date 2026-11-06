@@ -1,6 +1,6 @@
 // The route lenses: slices, the halo of a focused section, the alerts while following a route, their plates.
 // What the app sends is in app/routeFeatures/lens/sections.ts: `lens` (`k` its colour in the `lens_pal`
-// table, `s` 0-3 how serious, `f` 0 out of focus), `lensfocus`, `navalert` (`kind` fast | steep), `lsym`.
+// table, `s` 0-3 how serious, `f` 0 out of focus), `lensfocus`, `navalert` (`kind` fast | steep), `lens_symbol` (`shape` says its drawing: plate, speed_sign, grade_label, climb_label).
 // Planning draws in the items `poi` layer, following a route in `navigation`, under the maneuver arrows.
 // A feature is drawn after the ones before it: the app sends the focus halo and the fast casing first.
 // E-ink separates by width, ticks and dashes: the variables below, overridden in eink/.
@@ -49,7 +49,7 @@
 
 // an outer casing: it comes before the route in the layer, so it shows on both sides of it
 #navigation['mapnik::geometry_type'=2][class='navalert'][kind='fast'] {
-	line-color: get([param::lens_pal], 'r3', #D7263D);
+	line-color: get([param::lens_pal], 'alert_fast', #D7263D);
 	line-width: @directions_line_width + 2 * @nav_border_width + 5;
 	line-dasharray: @lens_alert_dash;
 	line-cap: round;
@@ -70,9 +70,9 @@
 }
 
 // a speed sign: a white disc in a red ring, bigger once zoomed in
-#poi[class='lsym'][sym='speed'][zoom>=12],
-#navigation[class='lsym'][sym='speed'][zoom>=12] {
-	text-name: [t];
+#poi[class='lens_symbol'][shape='speed_sign'][zoom>=12],
+#navigation[class='lens_symbol'][shape='speed_sign'][zoom>=12] {
+	text-name: [label];
 	text-face-name: @mont_bd;
 	text-size: 10;
 	text-fill: #1b1c1d;
@@ -80,10 +80,10 @@
 	text-background-width: 22;
 	text-background-height: 22;
 	text-background-radius: 11;
-	text-background-border-fill: get([param::lens_pal], 'sign', #D7263D);
+	text-background-border-fill: get([param::lens_pal], 'speed_sign_rim', #D7263D);
 	text-background-border-width: 3;
 	text-placement: billboard;
-	text-placement-priority: [p];
+	text-placement-priority: [priority];
 	text-clip: false;
 	[zoom>=16] {
 		text-size: 12;
@@ -94,25 +94,25 @@
 }
 
 // the grade at the start of a steep run, '11 %'
-#navigation[class='lsym'][sym='grade'][zoom>=14] {
-	text-name: [t];
+#navigation[class='lens_symbol'][shape='grade_label'][zoom>=14] {
+	text-name: [label];
 	text-face-name: @mont_bd;
 	text-size: 10;
 	text-fill: #ffffff;
-	text-background-fill: get([param::lens_pal], [s] = 3 ? 'g7' : 'g6', #E34A33);
+	text-background-fill: get([param::lens_pal], [severity] = 3 ? 'grade_7' : 'grade_6', #E34A33);
 	text-background-radius: 5;
 	text-background-padding-x: 4;
 	text-dx: 22;
 	text-placement: billboard;
-	text-placement-priority: [p];
+	text-placement-priority: [priority];
 	text-clip: false;
 }
 
 // a climb's plate in the middle of it: the category and what it gains, on two lines. Always shown:
 // a label of the map next to it must not take its place
-#poi[class='lsym'][sym='climb'][zoom>=11],
-#navigation[class='lsym'][sym='climb'][zoom>=11] {
-	text-name: [t];
+#poi[class='lens_symbol'][shape='climb_label'][zoom>=11],
+#navigation[class='lens_symbol'][shape='climb_label'][zoom>=11] {
+	text-name: [label];
 	text-face-name: @mont_bd;
 	text-size: 10;
 	text-line-spacing: 1;
@@ -125,16 +125,16 @@
 	text-vertical-alignment: bottom;
 	text-dy: -9;
 	text-placement: billboard;
-	text-placement-priority: [p];
+	text-placement-priority: [priority];
 	text-allow-overlap: true;
 	text-clip: false;
 }
 
 // the tip of the plate, a down triangle of the icon font under it: a label has no tail of its own
-#poi[class='lsym'][sym='climbtip'][zoom>=11],
-#navigation[class='lsym'][sym='climbtip'][zoom>=11] {
+#poi[class='lens_symbol'][shape='climb_label_tip'][zoom>=11],
+#navigation[class='lens_symbol'][shape='climb_label_tip'][zoom>=11] {
 	// the glyph's triangle is 0.42 em wide and sits mid-box (0.48 em up from the bottom): dy puts its top on the plate
-	text-name: [t];
+	text-name: [label];
 	text-face-name: 'Material Design Icons';
 	text-size: 24;
 	text-fill: get([param::lens_pal], 'plate', #2B2F33);
@@ -144,35 +144,36 @@
 	text-vertical-alignment: bottom;
 	text-dy: 7.5;
 	text-placement: billboard;
-	text-placement-priority: [p];
+	text-placement-priority: [priority];
 	text-allow-overlap: true;
 	text-clip: false;
 }
 
-// the weather at a point of the route, one label on a white plate: the sky as a glyph of the icon font (the main face of the list,
-// so it is the one a glyph is looked for in, the text font following for the digits), then, in a smaller type, the temperature
-// and the rain, then on a second line a strong wind and its burst. The rim takes the colour of the rain class (`s`, 0 dry .. 3
-// heavy); faded and grey-rimmed when the forecast is out of date. The newline of `t3` is the app's
-@wx_rim: [stale] = 1 ? #9aa0a6 : ([s] >= 3 ? get([param::lens_pal], 'w3', #1565C0) : ([s] = 2 ? get([param::lens_pal], 'w2', #42A5F5) : ([s] = 1 ? get([param::lens_pal], 'w1', #90CAF9) : #ffffff)));
-#poi[class='lsym'][sym='wx'][zoom>=9],
-#navigation[class='lsym'][sym='wx'][zoom>=9] {
-	text-name: [icon];
+// a plate: a glyph of the icon font, then, in a smaller type, a label, a sublabel and, on a line of its own, a note, on a white plate. What
+// it says is the app's (a feature puts the weather, or any figures, on it): the style only lays it out. The glyph is the main face
+// of the list, so it is the one a glyph is looked for in, the text font following for the digits. The rim is the colour of the
+// palette key `tint` names, white without one; faded and grey-rimmed when what it says is out of date (`outdated`). The newline of
+// `note` is the app's
+@plate_rim: [outdated] = 1 ? #9aa0a6 : ([tint] ? get([param::lens_pal], [tint], #ffffff) : #ffffff);
+#poi[class='lens_symbol'][shape='plate'][zoom>=9],
+#navigation[class='lens_symbol'][shape='plate'][zoom>=9] {
+	text-name: [glyph];
 	text-face-name: 'Material Design Icons, ' + @mont_bd;
 	text-size: 14;
-	text-fill: [stale] = 1 ? #9aa0a6 : ([s] >= 1 ? get([param::lens_pal], 'w3', #1565C0) : #1b1c1d);
-	text-secondary-name: ' ' + [t] + ([t2] ? (' ' + [t2]) : '') + ([t3] ? [t3] : '');
+	text-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
+	text-secondary-name: ' ' + [label] + ([sublabel] ? (' ' + [sublabel]) : '') + ([note] ? [note] : '');
 	text-secondary-scale: 0.6;
-	text-secondary-fill: [stale] = 1 ? #9aa0a6 : #1b1c1d;
+	text-secondary-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
 	text-background-fill: #ffffff;
 	text-background-radius: 7;
 	text-background-padding-x: 4;
 	text-background-padding-y: 2;
 	text-background-border-width: 1;
-	text-background-border-fill: @wx_rim;
-	text-opacity: [stale] = 1 ? 0.55 : 1;
-	text-secondary-opacity: [stale] = 1 ? 0.55 : 1;
-	text-background-opacity: [stale] = 1 ? 0.55 : 1;
+	text-background-border-fill: @plate_rim;
+	text-opacity: [outdated] = 1 ? 0.55 : 1;
+	text-secondary-opacity: [outdated] = 1 ? 0.55 : 1;
+	text-background-opacity: [outdated] = 1 ? 0.55 : 1;
 	text-placement: billboard;
-	text-placement-priority: [p];
+	text-placement-priority: [priority];
 	text-clip: false;
 }

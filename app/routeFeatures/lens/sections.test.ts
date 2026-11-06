@@ -130,15 +130,15 @@ describe('routeCoordinates', () => {
 
 describe('symbolFeatures', () => {
     it('puts a plate on the vertex it stands at, with what the style reads', () => {
-        const features = symbolFeatures(coordinates, [{ sym: 'climb', i: 4, t: 'Cat 1', t2: '1180 m', s: 2, p: 90 }]);
+        const features = symbolFeatures(coordinates, [{ shape: 'climb_label', vertex: 4, label: 'Cat 1', sublabel: '1180 m', severity: 2, priority: 90 }]);
         expect(features).toHaveLength(1);
         expect(features[0].geometry).toEqual({ type: 'Point', coordinates: coordinates[4] });
         // `at`: the vertex it stands at, for a tap on it to find its section
-        expect(features[0].properties).toEqual({ class: 'lsym', sym: 'climb', t: 'Cat 1', t2: '1180 m', s: 2, p: 90, at: 4 });
+        expect(features[0].properties).toEqual({ class: 'lens_symbol', shape: 'climb_label', label: 'Cat 1', sublabel: '1180 m', severity: 2, priority: 90, at: 4 });
     });
 
     it('leaves out a plate whose vertex is not on the route', () => {
-        expect(symbolFeatures(coordinates, [{ sym: 'speed', i: 99, t: '80', s: 3, p: 1 }])).toEqual([]);
+        expect(symbolFeatures(coordinates, [{ shape: 'speed_sign', vertex: 99, label: '80', severity: 3, priority: 1 }])).toEqual([]);
     });
 });
 
@@ -157,7 +157,7 @@ describe('alertFeatures', () => {
 
 describe('tappedVertex', () => {
     it('is the vertex a plate stands at, wherever on the plate the tap landed', () => {
-        expect(tappedVertex({ class: 'lsym', at: 6 }, coordinates, { lat: 45, lon: 6 })).toBe(6);
+        expect(tappedVertex({ class: 'lens_symbol', at: 6 }, coordinates, { lat: 45, lon: 6 })).toBe(6);
     });
 
     it('is the vertex nearest the tap for the route line or a slice of it', () => {
@@ -168,7 +168,7 @@ describe('tappedVertex', () => {
 
 describe('isLensFeature', () => {
     it('knows what the lens drew from an item', () => {
-        ['lens', 'lensfocus', 'lsym', 'navalert'].forEach((featureClass) => expect(isLensFeature({ class: featureClass })).toBe(true));
+        ['lens', 'lensfocus', 'lens_symbol', 'navalert'].forEach((featureClass) => expect(isLensFeature({ class: featureClass })).toBe(true));
         expect(isLensFeature({ class: 'waypoint' })).toBe(false);
         expect(isLensFeature({})).toBe(false);
         expect(isLensFeature(undefined)).toBe(false);

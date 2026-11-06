@@ -126,22 +126,35 @@ export interface LensSlice {
     s: 0 | 1 | 2 | 3;
 }
 
-/** A plate on the route at vertex `i`: a speed sign, a climb's category. `p` is its placement priority, the higher wins. */
+/** What a symbol of a lens looks like on the map: the style has a drawing for each. */
+export type LensSymbolShape = 'plate' | 'speed_sign' | 'grade_label' | 'climb_label' | 'climb_label_tip';
+
+/**
+ * A symbol on the route at a vertex: a glyph with its figures on a plate, a speed sign, a climb's category. The style draws it
+ * by its `shape`, from these fields alone, so what a feature puts on the map is its own to say.
+ */
 export interface LensSymbol {
-    sym: 'speed' | 'grade' | 'climb' | 'climbtip' | 'wx' | 'sunset' | 'sunrise' | 'night';
-    i: number;
-    t: string;
-    /** A smaller line under `t`. */
-    t2?: string;
-    /** What is worth a second line, starting with a newline: a strong wind. */
-    t3?: string;
-    icon?: string;
+    shape: LensSymbolShape;
+    /** The route vertex it stands at. */
+    vertex: number;
+    /** The main figure or word. */
+    label: string;
+    /** A smaller line after the label. */
+    sublabel?: string;
+    /** What is worth a line of its own under the rest, starting with a newline. */
+    note?: string;
+    /** A glyph of the icon font. */
+    glyph?: string;
     /** Degrees, for an arrow. */
-    rot?: number;
-    s: 0 | 1 | 2 | 3;
+    rotation?: number;
+    /** How serious it is, 0 to 3: the style sizes by it. */
+    severity: 0 | 1 | 2 | 3;
+    /** The key of the palette the accent colour of the symbol is: a rim, a tint. The style has none of its own. */
+    tint?: string;
     /** The data it shows is out of date. */
-    stale?: 0 | 1;
-    p: number;
+    outdated?: 0 | 1;
+    /** Where the placement of the symbols goes first: the higher wins the place. */
+    priority: number;
 }
 
 /** A stretch to watch while following the route, whatever the lens. `i0`..`i1` are route vertex indexes. */
@@ -182,6 +195,35 @@ export interface LensProfile {
 }
 
 /** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
+/** One line of a lens' legend: a swatch and what it says. */
+export interface LensLegendItem {
+    id: string;
+    label: string;
+    kind: 'line' | 'shield';
+    lines?: { color: string; width: number; dasharray?: number[] }[];
+    plate?: { color: string; radius?: number; border?: string; borderWidth?: number };
+    text?: { value: string; color: string };
+}
+
+export interface LensLegendSection {
+    id: 'route_lens';
+    label: string;
+    items: LensLegendItem[];
+}
+
+/** The colours of the lens slices and symbols, by the keys the style looks them up with. Each feature names its own. */
+export type LensPaletteVariant = 'light' | 'dark' | 'eink';
+export type LensPaletteContribution = (variant: LensPaletteVariant) => Record<string, string>;
+
+/** What a lens' legend is made from. */
+export interface LensLegendContext {
+    item: IItem;
+    variant: LensPaletteVariant;
+    /** Every key of the style's palette, as the map draws them. */
+    palette: Record<string, string>;
+    translate: (key: string) => string;
+}
+
 export interface RouteLens {
     id: LensId;
     icon: string;
@@ -201,6 +243,8 @@ export interface RouteLens {
     slices?: (ctx: RouteCtx) => LensSlice[];
     /** The plates on the map line, with the slices. */
     symbols?: (ctx: RouteCtx) => LensSymbol[];
+    /** What the colours and symbols of the lens mean, for the map's legend. None: nothing the legend could explain. */
+    legend?: (ctx: LensLegendContext) => LensLegendSection | null;
 }
 
 /** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
@@ -284,6 +328,8 @@ export interface RouteFeature {
     changes?: Readable<unknown>;
     /** The header's tiles, in the feature's order. */
     tiles?: (ctx: RouteCtx) => RouteTile[];
+    /** The colours the feature's slices and symbols are drawn in: keys of the style's palette, so the style needs to know none of its features. */
+    lensPalette?: LensPaletteContribution;
     /** The ways of reading the route this feature adds to the lens bar. */
     lenses?: RouteLens[];
     /** What needs attention along the route, marked under the profile whatever the lens. */

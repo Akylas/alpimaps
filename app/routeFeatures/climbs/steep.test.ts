@@ -275,8 +275,8 @@ describe('steepAlerts', () => {
     it('puts the grade on a plate at the start of the section, whichever the way it goes', () => {
         const { plates } = steepAlerts(steep);
         expect(plates).toMatchObject([
-            { sym: 'grade', i: 10, t: '11 %', s: 2 },
-            { sym: 'grade', i: 40, t: '14 %', s: 3 }
+            { shape: 'grade_label', vertex: 10, label: '11 %', severity: 2 },
+            { shape: 'grade_label', vertex: 40, label: '14 %', severity: 3 }
         ]);
     });
 });
@@ -285,14 +285,14 @@ describe('climbPlates', () => {
     const climbs = [climbAt({ startIndex: 20, endIndex: 40, category: 1 }), climbAt({ startIndex: 50, endIndex: 70 }), climbAt({ startIndex: 80, endIndex: 100, category: 'hc' })];
 
     it('puts a plate and its tip in the middle of each ranked climb, the harder ranking first', () => {
-        const plates = climbPlates(climbs, (climb) => ({ t: String(climb.category), t2: 'gain' }));
+        const plates = climbPlates(climbs, (climb) => ({ label: String(climb.category), sublabel: 'gain' }));
         expect(plates).toMatchObject([
-            { sym: 'climb', i: 30, t: '1', t2: 'gain' },
-            { sym: 'climbtip', i: 30, t: String.fromCodePoint(0xf035d) },
-            { sym: 'climb', i: 90, t: 'hc', t2: 'gain' },
-            { sym: 'climbtip', i: 90 }
+            { shape: 'climb_label', vertex: 30, label: '1', sublabel: 'gain' },
+            { shape: 'climb_label_tip', vertex: 30, label: String.fromCodePoint(0xf035d) },
+            { shape: 'climb_label', vertex: 90, label: 'hc', sublabel: 'gain' },
+            { shape: 'climb_label_tip', vertex: 90 }
         ]);
-        expect(plates[2].p).toBeGreaterThan(plates[0].p);
-        expect(plates[1].p).toBe(plates[0].p);
+        expect(plates[2].priority).toBeGreaterThan(plates[0].priority);
+        expect(plates[1].priority).toBe(plates[0].priority);
     });
 });

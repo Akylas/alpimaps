@@ -18,7 +18,7 @@ import {
     sortByDifficulty,
     steepAlerts
 } from '~/routeFeatures/climbs/steep';
-import { gradeKey } from '~/routeFeatures/lens/lensPalette';
+import { gradeKey } from '~/routeFeatures/climbs/palette';
 import type { AttentionMark, LensSection, LensSlice, LensSymbol, NavAlert, ProfileBracket } from '~/routeFeatures/registry';
 import { buildGradeSections, gradeBucketIndex } from '~/utils/grade';
 import { activityOf } from '~/utils/routeAnalysis/activity';
@@ -96,7 +96,7 @@ export function readClimbs(item: IItem): ClimbsRead | null {
                     section: { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) }
                 })),
             // two lines: the category and what the climb gains
-            symbols: climbPlates(climbs, (climb) => ({ t: `${categoryLabel(climb.category)}\n+${convertElevation(climb.gain)}` })),
+            symbols: climbPlates(climbs, (climb) => ({ label: `${categoryLabel(climb.category)}\n+${convertElevation(climb.gain)}` })),
             alerts: steepFollowing.alerts,
             gradePlates: steepFollowing.plates,
             // a profile saved before its grade sections were kept has none: cut it again from its grades

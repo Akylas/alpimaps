@@ -1,6 +1,7 @@
 /** The style parameters the route lenses read: the palette in the inner style, the focus in the base map's. */
+import { get } from 'svelte/store';
 import { type LensPaletteVariant, lensCase, lensPalette } from '~/routeFeatures/lens/lensPalette';
-import { surfaceColors } from '~/utils/routing';
+import { routeFeatures } from '~/routeFeatures/registry';
 
 interface StyleDecoder {
     call(method: string, ...args: unknown[]): unknown;
@@ -14,10 +15,18 @@ export function lensVariant(innerStyle: string): LensPaletteVariant {
     return innerStyle === 'eink' ? 'eink' : 'light';
 }
 
+/** Every colour the enabled features draw their slices and symbols in, and the generic ones. */
+export function currentLensPalette(variant: LensPaletteVariant) {
+    return lensPalette(
+        variant,
+        get(routeFeatures).flatMap((feature) => (feature.lensPalette ? [feature.lensPalette] : []))
+    );
+}
+
 /** What an inner decoder needs when it is made. */
 export function lensStyleParameters(innerStyle: string): Record<string, string> {
     const variant = lensVariant(innerStyle);
-    return { lens_pal: JSON.stringify(lensPalette(variant, surfaceColors)), lens_case: lensCase(variant) };
+    return { lens_pal: JSON.stringify(currentLensPalette(variant)), lens_case: lensCase(variant) };
 }
 
 /**

@@ -22,7 +22,9 @@ import { activityOf } from '~/utils/routeAnalysis/activity';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
+import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
 import { rainColor, tempColor, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
+import { rainPalette } from '~/routeFeatures/weather/ui/palette';
 import { type WeatherRead, readWeather } from '~/routeFeatures/weather/data/read';
 import {
     routeFeatureWeather,
@@ -194,7 +196,8 @@ const weatherLens: RouteLens = {
     sections: ({ item }) =>
         readOf(item, statusOf(item))?.spans.map((span, id) => ({ id, i0: span.i0, i1: span.i1, title: lc('weather_rain_span', formatDistance(span.from), formatDistance(span.to)) })) ?? [],
     slices: ({ item }) => readOf(item, statusOf(item))?.slices ?? [],
-    symbols: ({ item }) => readOf(item, statusOf(item))?.symbols ?? []
+    symbols: ({ item }) => readOf(item, statusOf(item))?.symbols ?? [],
+    legend: ({ palette, translate, variant }) => weatherLegend({ palette, translate, variant })
 };
 
 const kmh = (value: number) => `${value} km/h`;
@@ -304,6 +307,7 @@ registerRouteFeature({
     settings: weatherSettingRows,
     // a layer finishing or failing, a new departure read from the same hours, and the settings it is asked with
     changes: derived([routeAnalysisChanges, weatherSettingsKey, weatherWindKey, weatherDetailsOpen], (values) => values.join()),
+    lensPalette: rainPalette,
     lenses: [weatherLens],
     pageSections: [weatherPageSection],
     compute: weatherStage

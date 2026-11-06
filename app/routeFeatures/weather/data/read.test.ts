@@ -78,28 +78,28 @@ describe('readWeather', () => {
 
 describe('slices', () => {
     it('is one dry slice for a dry ride', () => {
-        expect(readWeather(item(dry), NOW)?.slices).toEqual([{ i0: 0, i1: 100, k: 'w0', s: 0 }]);
+        expect(readWeather(item(dry), NOW)?.slices).toEqual([{ i0: 0, i1: 100, k: 'rain_dry', s: 0 }]);
     });
 
     it('cuts the line half way between samples, each slice by the rain of its sample', () => {
         expect(readWeather(item(rainMiddle), NOW)?.slices).toEqual([
-            { i0: 0, i1: 25, k: 'w0', s: 0 },
-            { i0: 25, i1: 75, k: 'w2', s: 2 },
-            { i0: 75, i1: 100, k: 'w0', s: 0 }
+            { i0: 0, i1: 25, k: 'rain_dry', s: 0 },
+            { i0: 25, i1: 75, k: 'rain_steady', s: 2 },
+            { i0: 75, i1: 100, k: 'rain_dry', s: 0 }
         ]);
     });
 
     it('joins neighbours of the same class', () => {
         const slices = readWeather(item(layer([{}, { precip: rainAt(3, 7, 8) }, { precip: rainAt(3, 7, 8, 9) }])), NOW)?.slices;
         expect(slices).toEqual([
-            { i0: 0, i1: 25, k: 'w0', s: 0 },
-            { i0: 25, i1: 100, k: 'w2', s: 2 }
+            { i0: 0, i1: 25, k: 'rain_dry', s: 0 },
+            { i0: 25, i1: 100, k: 'rain_steady', s: 2 }
         ]);
     });
 
     it('draws a sample the forecast does not cover as dry', () => {
         const outside = readWeather(item(dry, { mode: 'planned', at: DEPART + 40 * HOUR * 1000 }), NOW);
-        expect(outside?.slices).toEqual([{ i0: 0, i1: 100, k: 'w0', s: 0 }]);
+        expect(outside?.slices).toEqual([{ i0: 0, i1: 100, k: 'rain_dry', s: 0 }]);
     });
 });
 
@@ -120,33 +120,33 @@ describe('spans', () => {
 describe('symbols', () => {
     it('puts a plate at each sample: the sky, the temperature, and the rain when there is', () => {
         const read = readWeather(item(layer([{ code: Array(HOURS).fill(3) }, { precip: rainAt(1.26, 7, 8), code: Array(HOURS).fill(61) }, {}])), NOW);
-        const plates = read?.symbols.filter((symbol) => symbol.sym === 'wx');
-        expect(plates?.map((plate) => plate.i)).toEqual([0, 50, 100]);
-        expect(plates?.[0]).toMatchObject({ t: '10°', icon: wxGlyph(3), s: 0 });
-        expect(plates?.[0].t2).toBeUndefined();
-        expect(plates?.[1]).toMatchObject({ t: '10°', t2: '1.3 mm', icon: wxGlyph(61), s: 2 });
+        const plates = read?.symbols.filter((symbol) => symbol.shape === 'plate');
+        expect(plates?.map((plate) => plate.vertex)).toEqual([0, 50, 100]);
+        expect(plates?.[0]).toMatchObject({ label: '10°', glyph: wxGlyph(3), severity: 0 });
+        expect(plates?.[0].sublabel).toBeUndefined();
+        expect(plates?.[1]).toMatchObject({ label: '10°', sublabel: '1.3 mm', glyph: wxGlyph(61), severity: 2 });
     });
 
     it('ranks the rainy plates first for the room on the map', () => {
-        const plates = readWeather(item(rainMiddle), NOW)?.symbols.filter((symbol) => symbol.sym === 'wx');
-        expect(plates?.[1].p).toBeGreaterThan(plates[0].p);
+        const plates = readWeather(item(rainMiddle), NOW)?.symbols.filter((symbol) => symbol.shape === 'plate');
+        expect(plates?.[1].priority).toBeGreaterThan(plates[0].priority);
     });
 
     it('says the plates are out of date', () => {
-        expect(readWeather(item(dry), NOW, { stale: true })?.symbols.every((symbol) => symbol.stale === 1)).toBe(true);
-        expect(readWeather(item(dry), NOW)?.symbols.every((symbol) => !symbol.stale)).toBe(true);
+        expect(readWeather(item(dry), NOW, { stale: true })?.symbols.every((symbol) => symbol.outdated === 1)).toBe(true);
+        expect(readWeather(item(dry), NOW)?.symbols.every((symbol) => !symbol.outdated)).toBe(true);
     });
 
     it('has no plate of its own for the wind', () => {
         const wind = layer([{}, { wind: Array(HOURS).fill(40), dir: Array(HOURS).fill(0) }, {}]);
-        expect(readWeather(item(wind), NOW)?.symbols.every((symbol) => symbol.sym === 'wx')).toBe(true);
+        expect(readWeather(item(wind), NOW)?.symbols.every((symbol) => symbol.shape === 'plate')).toBe(true);
     });
 
     // the route goes north: a north wind is a headwind, a south one a tailwind
     const windLine = (speed: number, dir: number, gust?: number, thresholds?: Partial<WeatherThresholds>) =>
         readWeather(item(layer([{}, { wind: Array(HOURS).fill(speed), dir: Array(HOURS).fill(dir), ...(gust ? { gust: Array(HOURS).fill(gust) } : {}) }, {}])), NOW, { thresholds })?.symbols.find(
-            (symbol) => symbol.i === 50
-        )?.t3;
+            (symbol) => symbol.vertex === 50
+        )?.note;
 
     it('puts a strong wind on a second line of the plate: 30 km/h, or 20 of it against the ride', () => {
         expect(windLine(12, 0)).toBeUndefined();
@@ -193,7 +193,7 @@ describe('cloud', () => {
         const read = readWeather(item(layer([{ cloud: Array(HOURS).fill(5) }, { cloud: Array(HOURS).fill(50) }, { cloud: Array(HOURS).fill(95) }])), NOW);
         expect(read?.rows.map(({ cloud }) => cloud)).toEqual([5, 50, 95]);
         expect(read?.profile.temp.map(({ glyph }) => glyph.codePointAt(0))).toEqual([0xf0599, 0xf0595, 0xf0590]);
-        expect(read?.symbols.map(({ icon }) => icon?.codePointAt(0))).toEqual([0xf0599, 0xf0595, 0xf0590]);
+        expect(read?.symbols.map(({ glyph }) => glyph?.codePointAt(0))).toEqual([0xf0599, 0xf0595, 0xf0590]);
     });
 
     it('is averaged over the way ridden in the summary', () => {
