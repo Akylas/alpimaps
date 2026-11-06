@@ -73,7 +73,7 @@
         const zone = routeTimeZone(inputs.departure);
         return (meters) => formatTime(timeAtDistance(source.distances, timeline, meters), 'LT', zone.offset);
     }
-    $: weather = profileOptions?.weather ?? null;
+    $: overlay = profileOptions?.overlay ?? null;
 
     // what needs attention is marked whatever the lens. The same array until it changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
@@ -193,7 +193,7 @@
         row={2}
         showAscents={$showAscents}
         showProfileGrades={$showGradeColors}
-        {weather}
+        {overlay}
         on:cursor={onCursor}
         on:mark={onMark}
         on:highlight={onChartHighlight} />

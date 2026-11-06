@@ -11,7 +11,8 @@
     import type { LensSection } from '~/routeFeatures/registry';
     import { routeTimeZone } from '~/utils/routeAnalysis/departure';
     import type { WeatherRowData } from '~/routeFeatures/weather/ui/pageRows';
-    import { rainColor, tempColor, windLabel } from '~/routeFeatures/weather/ui/pageRows';
+    import { HEADWIND_HARD_COLOR, TAILWIND_COLOR, rainColor, tempColor, windColor } from '~/routeFeatures/weather/ui/colors';
+    import { windLabel } from '~/routeFeatures/weather/ui/pageRows';
     import { wxGlyph } from '~/routeFeatures/weather/data/read';
     import { weatherDetailsOpen, weatherGust } from '~/routeFeatures/weather/settings';
     import { colors, fonts } from '~/variables';
@@ -27,13 +28,6 @@
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
-    // km/h of wind along the way that is worth saying, and how hard
-    const WIND_NOTICEABLE = 10;
-    const WIND_HARD = 20;
-    const HEAD_COLOR = '#D7263D';
-    const HEAD_SOFT_COLOR = '#F29D38';
-    const TAIL_COLOR = '#2E9E5B';
-
     $: zone = routeTimeZone(item?.analysis?.inputs.departure ?? { mode: 'now' });
     const clock = (at: number) => formatTime(at, 'LT', zone.offset);
     const percent = (share: number) => Math.round(share * 100) + ' %';
@@ -47,12 +41,7 @@
     // e-ink has no colour to give a figure
     const tone = (color: string | undefined) => (isEInk || !color ? colorOnSurface : color);
 
-    function windColor(head: number | undefined) {
-        if (isEInk || head === undefined) {
-            return colorOnSurface;
-        }
-        return head >= WIND_HARD ? HEAD_COLOR : head >= WIND_NOTICEABLE ? HEAD_SOFT_COLOR : head <= -WIND_NOTICEABLE ? TAIL_COLOR : colorOnSurface;
-    }
+    const windTone = (head: number | undefined) => tone(windColor(head));
 
     function focusRow(row: Extract<WeatherRowData, { type: 'ride' }>['row']) {
         dispatch('focus', { id: row.index, i0: row.i0, i1: row.i1, title: [formatDistance(row.distance), row.temp === undefined ? '' : degrees(row.temp)].filter(Boolean).join(' · ') });
@@ -92,7 +81,7 @@
                 <label color={colorOnSurfaceVariant} fontSize={12} text={lc('weather_stat_cloud')} />
             </stacklayout>
             <stacklayout col={3}>
-                <label color={tone(summary.headShare >= 0.3 ? HEAD_COLOR : undefined)} fontSize={17} fontWeight="bold" text={percent(summary.headShare)} />
+                <label color={tone(summary.headShare >= 0.3 ? HEADWIND_HARD_COLOR : undefined)} fontSize={17} fontWeight="bold" text={percent(summary.headShare)} />
                 <label color={colorOnSurfaceVariant} fontSize={12} text={lc('weather_stat_headwind')} />
             </stacklayout>
         </gridlayout>
@@ -105,9 +94,9 @@
             height={8}
             marginTop={12}
         >
-            <gridlayout backgroundColor={isEInk ? '#000000' : HEAD_COLOR} />
+            <gridlayout backgroundColor={isEInk ? '#000000' : HEADWIND_HARD_COLOR} />
             <gridlayout backgroundColor={isEInk ? '#ffffff' : colorOutlineVariant} col={1} />
-            <gridlayout backgroundColor={isEInk ? '#808080' : TAIL_COLOR} col={2} />
+            <gridlayout backgroundColor={isEInk ? '#808080' : TAILWIND_COLOR} col={2} />
         </gridlayout>
         <label color={colorOnSurfaceVariant} fontSize={12} marginTop={4} text={lc('weather_wind_share', percent(summary.headShare), percent(across), percent(summary.tailShare))} />
         {#if summary.thunder}
@@ -148,11 +137,11 @@
         />
         <!-- the wind as the rider has it: an arrow of where it blows to, the ride going up, in a word and how much of it, then all of it -->
         <label col={4} color={colorOnSurface} fontSize={12} verticalAlignment="middle">
-            <span color={windColor(row.head)} fontFamily={$fonts.mdi} fontSize={14} text={wind ? WIND_ARROWS[wind.kind === 'cross' ? `cross_${wind.side}` : wind.kind] : ''} />
-            <span color={windColor(row.head)} fontWeight="bold" text={wind ? ' ' + (wind.kind === 'calm' ? lc('weather_wind_calm') : `${lc('weather_wind_' + wind.kind)} ${wind.value}`) : ''} />
+            <span color={windTone(row.head)} fontFamily={$fonts.mdi} fontSize={14} text={wind ? WIND_ARROWS[wind.kind === 'cross' ? `cross_${wind.side}` : wind.kind] : ''} />
+            <span color={windTone(row.head)} fontWeight="bold" text={wind ? ' ' + (wind.kind === 'calm' ? lc('weather_wind_calm') : `${lc('weather_wind_' + wind.kind)} ${wind.value}`) : ''} />
             <span color={colorOnSurfaceVariant} fontSize={11} text={row.wind !== undefined && wind?.kind !== 'calm' ? ` (${Math.round(row.wind)})` : ''} />
             <span
-                color={isEInk ? colorOnSurface : HEAD_COLOR}
+                color={isEInk ? colorOnSurface : HEADWIND_HARD_COLOR}
                 fontFamily={$fonts.mdi}
                 fontSize={12}
                 text={row.gust !== undefined && row.gust >= $weatherGust ? ` mdi-weather-windy-variant ${Math.round(row.gust)}` : ''}

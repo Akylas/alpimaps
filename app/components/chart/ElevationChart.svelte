@@ -1,7 +1,7 @@
 <script lang="ts">
     import { packageService } from '~/services/PackageService';
     import { createNativeAttributedString } from '@nativescript-community/text';
-    import { Align, Canvas, Cap, DashPathEffect, Join, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
+    import { Align, Canvas, DashPathEffect, LayoutAlignment, Paint, Path, StaticLayout, Style } from '@nativescript-community/ui-canvas';
     import { LineChart } from '@nativescript-community/ui-chart/charts';
     import type { HighlightEventData } from '@nativescript-community/ui-chart/charts/Chart';
     import { XAxisPosition } from '@nativescript-community/ui-chart/components/XAxis';
@@ -21,7 +21,7 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileWeather } from '~/routeFeatures/registry';
+    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
@@ -133,210 +133,6 @@
             super(limit, '');
         }
     }
-    // the weather over the profile, in the manner of a weather chart: rain as rounded bars from the foot, as high as the rain and as
-    // plain as the chance of it (a bar full height at 4 mm/h); the temperature as a line with a ringed dot at each sample and its
-    // figure above a peak, below a dip; over the plot, a row of the sky and a row of the wind: an arrow of the way it pushes, the ride
-    // going to the right, and its speed in km/h under it. Orange and red for a headwind, green for a tailwind
-    const RAIN_FULL_MM = 4;
-    const RAIN_BAR_SHARE = 0.25;
-    const RAIN_BAR_MIN = 3;
-    const RAIN_BAR_GAP = 1;
-    const RAIN_BAR_RADIUS = 2;
-    const RAIN_BAR_MIN_OPACITY = 0.25;
-    const RAIN_COLOR = '#4A90D9';
-    const TEMP_BAND_TOP = 0.5;
-    const TEMP_BAND_BOTTOM = 0.74;
-    const TEMP_MIN_RANGE = 6;
-    const TEMP_COLOR = '#B5D334';
-    const SAMPLE_LABEL_GAP = 34;
-    const SKY_ROW = 12;
-    const WIND_ARROW_ROW = 30;
-    const WIND_HARD = 20;
-    const WIND_NOTICEABLE = 10;
-    const MDI_ARROW_RIGHT = String.fromCodePoint(0xf0054);
-    const MDI_BURST = String.fromCodePoint(0xf059e);
-    const BURST_COLOR = '#D7263D';
-    const weatherTextPaint = new Paint();
-    weatherTextPaint.setFontWeight('bold');
-    weatherTextPaint.setTextAlign(Align.CENTER);
-    // the figures read over the fill and the bars: a halo of the background colour round them
-    const weatherHaloPaint = new Paint();
-    weatherHaloPaint.setFontWeight('bold');
-    weatherHaloPaint.setTextAlign(Align.CENTER);
-    weatherHaloPaint.setStyle(Style.STROKE);
-    weatherHaloPaint.setStrokeWidth(3);
-    const weatherGlyphPaint = new Paint();
-    weatherGlyphPaint.setTextAlign(Align.CENTER);
-    const weatherLinePaint = new Paint();
-    weatherLinePaint.setStyle(Style.STROKE);
-    weatherLinePaint.setStrokeWidth(2.5);
-    weatherLinePaint.setStrokeCap(Cap.ROUND);
-    weatherLinePaint.setStrokeJoin(Join.ROUND);
-    function windColor(head: number) {
-        if (isEInk) {
-            return '#000000';
-        }
-        return head >= WIND_HARD ? '#D7263D' : head >= WIND_NOTICEABLE ? '#F29D38' : head <= -WIND_NOTICEABLE ? '#2E9E5B' : colorOnSurface;
-    }
-    function drawText(canvas: Canvas, text: string, pointX: number, pointY: number) {
-        canvas.drawText(text, pointX, pointY, weatherHaloPaint);
-        canvas.drawText(text, pointX, pointY, weatherTextPaint);
-    }
-    function drawWeather(canvas: Canvas, { contentBottom, contentLeft, contentRight, contentTop }: { contentBottom: number; contentLeft: number; contentRight: number; contentTop: number }, pixelX: (distance: number) => number) {
-        const plotHeight = contentBottom - contentTop;
-        const ink = isEInk ? '#000000' : colorOnSurface;
-        for (const { from, mmPerHour, probability, to } of weather.rain) {
-            const left = Math.max(contentLeft, pixelX(from));
-            const right = Math.min(contentRight, pixelX(to));
-            if (right - RAIN_BAR_GAP <= left) {
-                continue;
-            }
-            const height = Math.max(RAIN_BAR_MIN, Math.min(1, mmPerHour / RAIN_FULL_MM) * plotHeight * RAIN_BAR_SHARE);
-            // the chance is the opacity; e-ink has no opacity to give: its bars are black
-            overlayFillPaint.color = isEInk ? '#000000' : new Color(RAIN_COLOR).setAlpha(Math.round(255 * Math.max(RAIN_BAR_MIN_OPACITY, probability))).hex;
-            canvas.drawRoundRect(left, contentBottom - height, right - RAIN_BAR_GAP, contentBottom, RAIN_BAR_RADIUS, RAIN_BAR_RADIUS, overlayFillPaint);
-        }
-        const fontSize = 10 * $fontScale;
-        weatherTextPaint.setTextSize(fontSize);
-        weatherHaloPaint.setTextSize(fontSize);
-        weatherHaloPaint.color = isEInk ? '#ffffff' : colorBackground;
-        weatherGlyphPaint.fontFamily = $fonts.mdi;
-        // a row of the sky then a row of the wind at each sample while there is room for it
-        let lastSky = -Infinity;
-        weather.temp.forEach(({ d: distance, glyph }) => {
-            const pointX = pixelX(distance);
-            if (pointX >= contentLeft && pointX <= contentRight && pointX - lastSky >= SAMPLE_LABEL_GAP * $fontScale) {
-                lastSky = pointX;
-                weatherGlyphPaint.setTextSize(15 * $fontScale);
-                weatherGlyphPaint.color = ink;
-                canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + SKY_ROW * $fontScale, weatherGlyphPaint);
-            }
-        });
-        let lastWind = -Infinity;
-        weather.wind.forEach(({ angle, d: distance, gust, head, speed }) => {
-            const pointX = pixelX(distance);
-            if (pointX < contentLeft || pointX > contentRight || pointX - lastWind < SAMPLE_LABEL_GAP * $fontScale) {
-                return;
-            }
-            lastWind = pointX;
-            const color = windColor(head);
-            const centerX = Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8);
-            const centerY = contentTop + WIND_ARROW_ROW * $fontScale;
-            const arrowSize = 14 * $fontScale;
-            // an arrow of the way the wind pushes, the ride going to the right: right is with it, left against it, down to the rider's right
-            canvas.save();
-            canvas.translate(centerX, centerY);
-            canvas.rotate(angle);
-            weatherGlyphPaint.setTextSize(arrowSize);
-            weatherGlyphPaint.color = color;
-            canvas.drawText(MDI_ARROW_RIGHT, 0, arrowSize * 0.35, weatherGlyphPaint);
-            canvas.restore();
-            weatherTextPaint.color = color;
-            const speedBaseline = centerY + 8 * $fontScale + fontSize;
-            drawText(canvas, String(Math.round(speed)), centerX, speedBaseline);
-            // a burst: its own line, the glyph and the gust, in red
-            if (gust >= weather.gustMin) {
-                const text = String(Math.round(gust));
-                const burstColor = isEInk ? '#000000' : BURST_COLOR;
-                weatherTextPaint.color = burstColor;
-                const width = weatherTextPaint.measureText(text);
-                drawText(canvas, text, centerX + 6 * $fontScale, speedBaseline + fontSize + 1);
-                weatherGlyphPaint.setTextSize(11 * $fontScale);
-                weatherGlyphPaint.color = burstColor;
-                canvas.drawText(MDI_BURST, centerX + 6 * $fontScale - width / 2 - 7 * $fontScale, speedBaseline + fontSize + 1, weatherGlyphPaint);
-            }
-        });
-        if (!weather.temp.length) {
-            return;
-        }
-        const values = weather.temp.map(({ value }) => value);
-        const lowest = Math.min(...values);
-        const range = Math.max(TEMP_MIN_RANGE, Math.max(...values) - lowest);
-        const bandTop = contentTop + plotHeight * TEMP_BAND_TOP;
-        const bandBottom = contentTop + plotHeight * TEMP_BAND_BOTTOM;
-        const points = weather.temp.map(({ d: distance, value }) => ({ pointX: pixelX(distance), pointY: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
-        weatherLinePaint.color = isEInk ? '#000000' : TEMP_COLOR;
-        for (let index = 1; index < points.length; index++) {
-            canvas.drawLine(points[index - 1].pointX, points[index - 1].pointY, points[index].pointX, points[index].pointY, weatherLinePaint);
-        }
-        let lastLabel = -Infinity;
-        let lastFigure = NaN;
-        points.forEach(({ value, pointX, pointY }, index) => {
-            if (pointX < contentLeft || pointX > contentRight) {
-                return;
-            }
-            overlayFillPaint.color = '#ffffff';
-            canvas.drawCircle(pointX, pointY, 5, overlayFillPaint);
-            overlayFillPaint.color = isEInk ? '#000000' : TEMP_COLOR;
-            canvas.drawCircle(pointX, pointY, 3.5, overlayFillPaint);
-            // only what changes is said: a figure that is the one before is left out, the dot says it
-            const figure = Math.round(value);
-            if (figure !== lastFigure && pointX - lastLabel >= SAMPLE_LABEL_GAP * $fontScale) {
-                lastLabel = pointX;
-                lastFigure = figure;
-                // above a peak, below a dip
-                const dip = index > 0 && index < points.length - 1 && value < points[index - 1].value && value < points[index + 1].value;
-                weatherTextPaint.color = ink;
-                drawText(canvas, figure + '°', Math.min(Math.max(pointX, contentLeft + 12), contentRight - 12), dip ? pointY + 8 + fontSize : pointY - 8);
-            }
-        });
-    }
-    // under the axis: the clock time under each distance the axis labels, the ones there is room for, then the end of the way, its distance
-    // and time right aligned
-    /** room between two times */
-    const CLOCK_GAP = 6;
-    const clockPaint = new Paint();
-    clockPaint.setFontWeight('bold');
-    const endPaint = new Paint();
-    function drawAxisEnd(canvas: Canvas, { contentBottom, contentLeft, contentRight }: { contentBottom: number; contentLeft: number; contentRight: number }, min: number, max: number, pixelX: (distance: number) => number) {
-        const interval = axisInterval;
-        if (!(interval > 0)) {
-            return;
-        }
-        const fontSize = 9 * $fontScale;
-        const color = isEInk ? '#000000' : colorOnSurface;
-        clockPaint.setTextSize(fontSize);
-        clockPaint.color = color;
-        endPaint.setTextSize(fontSize);
-        endPaint.color = color;
-        // the axis writes its labels from the top of its row, which starts a few points under the plot; the clock is a line under them
-        const distanceBaseline = contentBottom + 4 + fontSize * 0.9;
-        const clockBaseline = distanceBaseline + fontSize + 3;
-        const endText = formatDistance(max);
-        const endWidth = endPaint.measureText(endText);
-        const ticks: number[] = [];
-        for (let distance = Math.ceil(min / interval) * interval; distance <= max; distance += interval) {
-            ticks.push(distance);
-        }
-        // the last label of the axis is the end of what is shown, unless a label of the axis is already there
-        const lastTick = ticks[ticks.length - 1];
-        const showEnd = max > min && (lastTick === undefined || pixelX(lastTick) + endPaint.measureText(formatDistance(lastTick)) / 2 + CLOCK_GAP * $fontScale < contentRight - endWidth);
-        let lastRight = -Infinity;
-        clockPaint.setTextAlign(Align.CENTER);
-        if (clockAt) {
-            ticks.forEach((distance) => {
-                const text = clockAt(distance);
-                const width = clockPaint.measureText(text);
-                const center = Math.min(Math.max(pixelX(distance), contentLeft + width / 2), contentRight - width / 2);
-                if (center - width / 2 - lastRight >= CLOCK_GAP * $fontScale) {
-                    lastRight = center + width / 2;
-                    canvas.drawText(text, center, clockBaseline, clockPaint);
-                }
-            });
-        }
-        if (showEnd) {
-            endPaint.setTextAlign(Align.RIGHT);
-            canvas.drawText(endText, contentRight, distanceBaseline, endPaint);
-            if (clockAt) {
-                const text = clockAt(max);
-                clockPaint.setTextAlign(Align.RIGHT);
-                // a time of the axis the end would cover is left out for it
-                if (contentRight - clockPaint.measureText(text) - lastRight >= CLOCK_GAP * $fontScale) {
-                    canvas.drawText(text, contentRight, clockBaseline, clockPaint);
-                }
-            }
-        }
-    }
     function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
         if (!chartView || mini) {
@@ -358,9 +154,7 @@
         overlayTextPaint.setTextSize(9 * $fontScale);
         const metrics = overlayTextPaint.getFontMetrics();
         const textHeight = metrics.descent - metrics.ascent;
-        if (weather) {
-            drawWeather(canvas, chartView.viewPortHandler, pixelX);
-        }
+        overlay?.draw(canvas, { contentBottom, contentLeft, contentRight, contentTop, pixelX, pixelY, fontScale: $fontScale, isEInk, ink: colorOnSurface, background: colorBackground, iconFontFamily: $fonts.mdi });
         for (const { from, label, to, top } of brackets) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
@@ -381,7 +175,6 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
-        drawAxisEnd(canvas, { contentBottom, contentLeft, contentRight }, min, max, pixelX);
         for (const { from, kind, tier, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
@@ -597,8 +390,8 @@
     export let fill: ProfileFillStop[] = null;
     /** the grade fill steps back, for what the lens lays over it */
     export let fade = false;
-    /** rain bars from the foot of the plot and a temperature line over it */
-    export let weather: ProfileWeather = null;
+    /** what a feature draws over the plot: the chart is extendable */
+    export let overlay: ProfileOverlay = null;
     /** the clock time the ride is at a distance from the start, meters: said under the distance on the axis. None when the route has no time */
     export let clockAt: ((meters: number) => string) | null = null;
     /** the chart is beside the main map: a picked point is shown on it, and the card goes when its sheet moves */
@@ -667,8 +460,6 @@
 
     // the whole route's label interval, which a stretch of it replaces while it is in view
     let wholeInterval = 0;
-    /** meters between the labels of the x axis, as the last chart was built */
-    let axisInterval = 0;
     /** The card's height range is that of the stretch in view, `from` to `to` being profile indexes. */
     function setHeight(from: number, to: number) {
         const chartView = chart?.nativeView;
@@ -801,11 +592,13 @@
     const CLOCK_ROOM = 13;
     $: if (chart?.nativeView && inCard && !mini) {
         chart.nativeView.setExtraOffsets(0, BRACKET_ROOM, 10, clockAt ? CLOCK_ROOM * $fontScale : 0);
+        // the labels are worded when the axis is computed: a new clock needs them again
+        chart.nativeView.notifyDataSetChanged();
         chart.nativeView.calculateOffsets(true);
         chart.nativeView.invalidate();
     }
     // the overlay is read as it is drawn: a new lens or new marks need a redraw, not a rebuilt chart
-    $: if (chart?.nativeView && (brackets || marks || weather || clockAt)) {
+    $: if (chart?.nativeView && (brackets || marks || overlay || clockAt)) {
         chart.nativeView.invalidate();
     }
     let onChartDataUpdateCallbacks = [];
@@ -1200,7 +993,25 @@
                 xAxis.drawLimitLinesBehindData = false;
                 xAxis.drawLabelsBehindData = true;
                 xAxis.valueFormatter = {
-                    getAxisLabel: (value) => formatDistance(value)
+                    // the clock time of a distance is the second line of its label: the axis draws it, see `customRenderer`
+                    getAxisLabel: (value) => (clockAt ? `${formatDistance(value)}\n${clockAt(value)}` : formatDistance(value))
+                };
+                xAxis.customRenderer = {
+                    // the first line as the axis draws it, the second, bold, under it
+                    drawLabel(c: Canvas, _axis: unknown, label: string, labelX: number, labelY: number, paint: Paint) {
+                        const [distanceLine, clockLine] = label.split('\n');
+                        const metrics = paint.getFontMetrics();
+                        const lineHeight = metrics.descent - metrics.ascent;
+                        const baseline = labelY - metrics.ascent;
+                        c.drawText(distanceLine, labelX, baseline, paint);
+                        if (clockLine) {
+                            const color = paint.getColor();
+                            paint.setFontWeight('bold');
+                            c.drawText(clockLine, labelX, baseline + lineHeight, paint);
+                            paint.setFontWeight('normal');
+                            paint.setColor(color);
+                        }
+                    }
                 };
 
                 chartView.customRenderer = {
@@ -1271,7 +1082,6 @@
             const totalDistance = it.route.totalDistance;
             const xLabelCount = inCard ? X_LABEL_COUNT : 6;
             xinterval = closestUpper(xintervals, totalDistance / xLabelCount / 1000) * 1000;
-            axisInterval = xinterval;
             xAxis.forcedInterval = xinterval;
             xAxis.labelCount = xLabelCount;
             xAxis.textSize = 9 * $fontScale;

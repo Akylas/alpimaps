@@ -1,7 +1,7 @@
 /** What a weather layer says of a route, for the lens, the chip and the profile. Pure: nothing here may import NativeScript. */
 import { RAIN_PALETTE_KEYS } from '~/routeFeatures/weather/data/rain';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
-import type { LensSlice, LensSymbol, ProfileWeather } from '~/routeFeatures/registry';
+import type { LensSlice, LensSymbol } from '~/routeFeatures/registry';
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
@@ -95,6 +95,17 @@ const HEAD_SHARE = 2 / 3;
 /** mm/h under which it does not rain */
 const RAIN_MIN = 0.1;
 const HOUR_MS = 3600000;
+
+/** What the weather lays over the profile, meters from the start: rain as bars from the foot, the temperature as a line, the wind along the way. */
+export interface ProfileWeather {
+    /** A bar over a stretch: as high as the rain, as plain as the chance of it. */
+    rain: { from: number; to: number; mmPerHour: number; probability: number }[];
+    temp: { d: number; value: number; glyph: string }[];
+    /** Where it is worth a mark. km/h, the part of it against (above 0) or behind (below 0) the rider, and where it pushes to: degrees clockwise on the screen, 0 with the ride, 180 against it, 90 to the rider's right. */
+    wind: { d: number; speed: number; gust: number; head: number; angle: number }[];
+    /** km/h of a gust that is worth a line of its own. */
+    gustMin: number;
+}
 
 /** A stretch of the route where it rains: vertex indexes, meters from the start, mm/h at the worst of it. */
 export interface RainSpan {

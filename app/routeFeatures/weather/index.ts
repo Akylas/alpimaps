@@ -23,8 +23,10 @@ import { timelineSource } from '~/utils/routeAnalysis/timeline';
 import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
-import { rainColor, tempColor, weatherRows } from '~/routeFeatures/weather/ui/pageRows';
+import { rainColor, tempColor } from '~/routeFeatures/weather/ui/colors';
+import { weatherRows } from '~/routeFeatures/weather/ui/pageRows';
 import { rainPalette } from '~/routeFeatures/weather/ui/palette';
+import { weatherProfileOverlay } from '~/routeFeatures/weather/ui/profileOverlay';
 import { type WeatherRead, readWeather } from '~/routeFeatures/weather/data/read';
 import {
     routeFeatureWeather,
@@ -189,7 +191,7 @@ const weatherLens: RouteLens = {
         }
         // the same object while the read is: the chart redraws for a new one
         if (!profiles.has(read)) {
-            profiles.set(read, { fade: true, weather: read.profile });
+            profiles.set(read, { fade: true, overlay: weatherProfileOverlay(read.profile) });
         }
         return profiles.get(read);
     },

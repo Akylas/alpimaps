@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RideRow } from '~/routeFeatures/weather/data/read';
-import { rainColor, tempColor, weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
+import { weatherRows, windLabel } from '~/routeFeatures/weather/ui/pageRows';
 
 const attribution = { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' };
 const footer = { provider: 'Open-Meteo', attribution, updatedAt: 1, decimals: 2, outdated: false, canUpdate: true };
@@ -27,31 +27,6 @@ describe('weatherRows', () => {
         const rows = weatherRows({ read, footer, fetch, detailsOpen: true });
         expect(rows[3].data).toEqual({ type: 'ride', row: read.rows[0] });
         expect(rows[5].data).toMatchObject({ type: 'footer', provider: 'Open-Meteo', decimals: 2 });
-    });
-});
-
-describe('tempColor', () => {
-    it('says only the cold and the heat: the rest is neutral', () => {
-        expect(tempColor(-5)).toBeDefined();
-        expect(tempColor(0)).toBeDefined();
-        expect(tempColor(12)).toBeUndefined();
-        expect(tempColor(24)).toBeUndefined();
-        expect(tempColor(27)).toBeDefined();
-        expect(tempColor(35)).not.toBe(tempColor(27));
-    });
-
-    it('is blue under freezing and warm over', () => {
-        expect(tempColor(-3)).toBe('#3F8FE0');
-        expect(tempColor(30)).toBe('#F29D38');
-        expect(tempColor(36)).toBe('#D7263D');
-    });
-});
-
-describe('rainColor', () => {
-    it('is the blue of the profile, darker the harder it rains', () => {
-        expect(rainColor(0)).toBeUndefined();
-        expect(rainColor(0.5)).toBe('#4A90D9');
-        expect(rainColor(5)).not.toBe(rainColor(0.5));
     });
 });
 

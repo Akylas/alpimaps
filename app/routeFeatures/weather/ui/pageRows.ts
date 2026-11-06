@@ -34,22 +34,6 @@ export function weatherRows({ detailsOpen, fetch, footer, read }: WeatherRowsInp
     ];
 }
 
-const BLUE = '#4A90D9';
-const BLUE_DARK = '#1565C0';
-const COLD = '#3F8FE0';
-const WARM = '#F29D38';
-const HOT = '#D7263D';
-
-/** Rain as the profile draws it: blue, darker from 4 mm/h. None for dry. */
-export function rainColor(mmPerHour: number): string | undefined {
-    return mmPerHour < 0.1 ? undefined : mmPerHour >= 4 ? BLUE_DARK : BLUE;
-}
-
-/** Only the cold (freezing or under) and the heat (from 25 degrees) have a colour: the rest is neutral. */
-export function tempColor(celsius: number): string | undefined {
-    return celsius <= 0 ? COLD : celsius >= 33 ? HOT : celsius >= 25 ? WARM : undefined;
-}
-
 /** km/h under which there is no wind to speak of */
 const CALM = 3;
 
