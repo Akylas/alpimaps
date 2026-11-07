@@ -8,7 +8,7 @@ import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
-import { SUN_PALETTE_KEYS, type SunClass, type SunRead, readSun } from '~/routeFeatures/sun/read';
+import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { sunRows } from '~/routeFeatures/sun/rows';
 import '~/routeFeatures/sun/sunMode';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
@@ -32,13 +32,11 @@ function readOf(item: IItem): SunRead | null {
 
 const profiles = new WeakMap<SunRead, LensProfile>();
 
-const LEGEND_CLASSES: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'moonlit', 'night'];
-
 /** The line under the profile: what the ribbon's colours mean, and their greys on e-ink. */
 function profileLegend() {
     const light = currentLensPalette('light');
     const eink = currentLensPalette('eink');
-    return LEGEND_CLASSES.map((sunClass) => ({ label: lc(`legend_sun_${sunClass}`), color: light[SUN_PALETTE_KEYS[sunClass]], eink: eink[SUN_PALETTE_KEYS[sunClass]] }));
+    return SUN_CLASS_ORDER.map((sunClass) => ({ label: lc(`legend_sun_${sunClass}`), color: light[SUN_PALETTE_KEYS[sunClass]], eink: eink[SUN_PALETTE_KEYS[sunClass]] }));
 }
 
 const timeOf = (read: SunRead, at: number) => formatTime(at, 'LT', read.offset);

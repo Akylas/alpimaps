@@ -1,6 +1,7 @@
 <script lang="ts">
     // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, when the ride starts and ends,
     // the sunset and the dusk against the ride, the dark and the glare, where the sun is against the way, the note on what is left out
+    import { showError } from '@shared/utils/showError';
     import { formatDistance, formatDuration } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
@@ -24,6 +25,14 @@
     const palette = currentLensPalette(isEInk ? 'eink' : 'light');
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
     const time = (at: number, offset?: number) => formatTime(at, 'LT', offset);
+
+    async function preview() {
+        try {
+            await startRouteSunMode(item);
+        } catch (error) {
+            showError(error);
+        }
+    }
 
     function eventSub(row: Extract<SunRowData, { type: 'event' }>) {
         switch (row.relation) {
@@ -98,7 +107,7 @@
         </stacklayout>
     </gridlayout>
 {:else if data.type === 'preview'}
-    <gridlayout columns="32,*" height={48} padding="0 16" rippleColor={colorPrimary} on:tap={() => startRouteSunMode(item)}>
+    <gridlayout columns="32,*" height={48} padding="0 16" rippleColor={colorPrimary} on:tap={preview}>
         <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={20} text="mdi-video-3d" verticalAlignment="middle" />
         <stacklayout col={1} verticalAlignment="middle">
             <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc('sun_mode_preview')} />

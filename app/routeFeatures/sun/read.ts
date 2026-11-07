@@ -14,6 +14,9 @@ import type { RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 
 export type SunClass = 'day' | 'overcast' | 'low' | 'glare' | 'twilight' | 'moonlit' | 'night';
 
+/** The classes from the most light to the least: the order of the palette, the legends and the bar. */
+export const SUN_CLASS_ORDER: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'moonlit', 'night'];
+
 /** What the classes are called in the lens palette. */
 export const SUN_PALETTE_KEYS: Record<SunClass, string> = {
     day: 'sun_day',
@@ -167,7 +170,7 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         const clear = clearnessAt(weather, vertex, at, position.altitude);
         // the moon is only looked for in the dark: it is the one light there is
         const moon = level === 'night' ? moonPositionAt(at, { lat, lon }) : undefined;
-        const moonlit = !!moon && moon.altitude > 0 && moonIllumination(new Date(at)) >= moonMin;
+        const moonlit = !!moon && moon.altitude > 0 && moonIllumination(new Date(at)) >= Math.max(1, moonMin);
         const moonSide = moonlit && heading !== undefined ? sunSide(moon.azimuth, heading) : undefined;
         return { ...position, at, class: classOf(level, glare, clear, moonlit), clearness: clear, glare, level, side, moonSide };
     };

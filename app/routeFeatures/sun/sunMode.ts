@@ -25,18 +25,24 @@ export const routeSunMode = writable<{ item: IItem; itemKey: string } | null>(nu
 const EINK_REST_MS = 300;
 
 let unsubscribers: (() => void)[] = [];
-let read: { item: IItem; analysis: unknown; value: SunRead | null } = null;
+let read: { item: IItem; analysis: unknown; minute: number; value: SunRead | null } = null;
 let rest: ReturnType<typeof setTimeout> = null;
 
 function readOf(item: IItem) {
-    if (read?.item !== item || read.analysis !== item.analysis) {
-        read = { item, analysis: item.analysis, value: readSun(item, Date.now()) };
+    // a ride leaving now moves with the clock, as the lens does
+    const minute = Math.floor(Date.now() / 60000);
+    if (read?.item !== item || read.analysis !== item.analysis || read.minute !== minute) {
+        read = { item, analysis: item.analysis, minute, value: readSun(item, Date.now()) };
     }
     return read.value;
 }
 
 /** The light at the profile's cursor, at the start while there is none. Degrees to a tenth: a finer move is not worth a new light. */
 function applyLight(itemKey: string, item: IItem) {
+    // a light asked for after the mode ended would light the map with the mode off
+    if (!get(routeSunMode)) {
+        return;
+    }
     const focus = get(routeFocus);
     const index = focus?.itemKey === itemKey ? (focus.cursor?.index ?? 0) : 0;
     const point = readOf(item)?.at(index);
@@ -73,6 +79,10 @@ export function stopRouteSunMode() {
 
 /** Shows the route on the main map in 3D, lit by the sun of the ride. */
 export async function startRouteSunMode(item: IItem) {
+    // a ride being followed has its own light: the mode is for looking at the plan
+    if (get(navigationState) !== NavigationState.IDLE) {
+        return;
+    }
     const context = getMapContext();
     goBack({ to: context.getMainPage() });
     await context.selectItem({ item, isFeatureInteresting: true });
@@ -91,7 +101,7 @@ export async function startRouteSunMode(item: IItem) {
             read = null;
             schedule(itemKey, item);
         }),
-        // a ride being followed has its own light: the mode is for looking at the plan
+        // the ride being followed from now on
         navigationState.subscribe((state) => {
             if (state !== NavigationState.IDLE) {
                 stopRouteSunMode();

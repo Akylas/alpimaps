@@ -13,9 +13,9 @@ const geometry: Geometry = {
 };
 const NOW = Date.UTC(2026, 5, 1);
 
-function rowsFor(at: number, options?: { preview?: boolean }): SunRowData[] {
+function rowsFor(at: number, options?: { preview?: boolean }, hours = 3): SunRowData[] {
     const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
-    const item: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
+    const item: SunItem = { geometry, route: { totalTime: hours * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
     return sunRows(readSun(item, NOW), options).map((row: RoutePageRow) => row.data as SunRowData);
 }
 
@@ -116,5 +116,13 @@ describe('sunRows', () => {
         const withPreview = rowsFor(at, { preview: true });
         expect(withPreview.map((row) => row.type).slice(-2)).toEqual(['preview', 'note']);
         expect(rowsFor(at).some((row) => row.type === 'preview')).toBe(false);
+    });
+
+    it('says the sunset of the day the ride is out at, on a ride that lasts past the next one', () => {
+        // 22:00 on the 21st to 04:00 on the 23rd in Grenoble: the sun of the 21st set before the start, the one of the 22nd is on the way
+        const sunset = of(rowsFor(Date.UTC(2026, 5, 21, 20, 0), undefined, 30), 'event').find((row) => row.id === 'sunset');
+        expect(sunset.relation).toBe('during');
+        expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 22, 19, 0));
+        expect(sunset.at).toBeLessThan(Date.UTC(2026, 5, 22, 20, 0));
     });
 });
