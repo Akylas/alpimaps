@@ -39,6 +39,13 @@
 	line-join: round;
 }
 
+// every lens but on e-ink is drawn as one line for the whole route (`ramp` 1): its colours are the ramp the app sends, not `k`.
+// The source needs lineMetrics, see lensFeatures
+#poi['mapnik::geometry_type'=2][class='lens'][ramp=1],
+#navigation['mapnik::geometry_type'=2][class='lens'][ramp=1] {
+	line-gradient: [gradient];
+}
+
 // followed on the navigation layer the slice is as wide as the route it covers
 #navigation['mapnik::geometry_type'=2][class='lens'] {
 	line-border-width: @nav_border_width;
@@ -58,7 +65,8 @@
 
 // the slice is oriented along the route: the chevrons point the way
 #navigation['mapnik::geometry_type'=2][class='navalert'][kind='steep'][zoom>=13]::chev,
-#poi['mapnik::geometry_type'=2][class='lens'][lens='climbs'][s>=2][zoom>=13]::chev {
+#poi['mapnik::geometry_type'=2][class='lens'][lens='climbs'][s>=2][zoom>=13]::chev,
+#poi['mapnik::geometry_type'=2][class='lens_chev'][lens='climbs'][zoom>=13]::chev {
 	marker-placement: line;
 	marker-type: arrow;
 	marker-line-width: 0;

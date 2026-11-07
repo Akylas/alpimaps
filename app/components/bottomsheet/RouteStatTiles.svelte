@@ -28,8 +28,8 @@
     const dispatch = createEventDispatcher<$$Events>();
     const NARROW_WIDTH = 360;
 
-    let { colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
-    $: ({ colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
+    let { colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors;
+    $: ({ colorError, colorHairline, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceFill } = $colors);
 
     let remaining: { distance?: string; time?: string; ascent?: string } = null;
 
@@ -78,9 +78,9 @@
         {@const color = second?.remaining ? (isEInk ? colorOnSurface : colorPrimary) : colorOnSurfaceVariant}
         <gridlayout
             backgroundColor={colorSurfaceFill}
-            borderColor={colorHairline}
+            borderColor={tile.alert ? (isEInk ? colorOnSurface : colorError) : colorHairline}
             borderRadius={10}
-            borderWidth={isEInk ? 1 : 0}
+            borderWidth={tile.alert ? (isEInk ? 2.5 : 1.5) : isEInk ? 1 : 0}
             col={index}
             height={40}
             margin="0 3"

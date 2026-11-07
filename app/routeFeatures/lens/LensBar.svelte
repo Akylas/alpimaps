@@ -2,7 +2,7 @@
     // the row of lenses: one chip each, with its headline value and what state its data is in. Layouts,
     // not buttons: inside the item sheet its pan gesture swallows a native button's touches (see Pill)
     import type { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import type { GridLayout, ScrollView } from '@nativescript/core';
+    import { type GridLayout, type ScrollView, View } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { tick } from 'svelte';
     import { isEInk } from '~/helpers/theme';
@@ -12,17 +12,25 @@
     export let entries: { id: LensId; icon: string; label: string; chip: LensChip }[];
     export let selected: LensId;
 
-    // an outdated lens keeps its data but looks it: there is no theme colour for amber
-    const OUTDATED_COLOR = '#F0902B';
+    // an outdated lens keeps its data but looks it: there is no theme colour for amber, and no colour on e-ink
+    const OUTDATED_COLOR = isEInk ? '#000000' : '#F0902B';
     const CHIP_HEIGHT = 32;
 
     // the shared dispatcher hands the payload itself to the listener, not a `CustomEvent`
     interface $$Events {
         select: { id: LensId };
+        /** a long press: the chip to anchor the menu to */
+        menu: { id: LensId; anchor: View };
     }
     const dispatch = createEventDispatcher<$$Events>();
     let { colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors;
     $: ({ colorAccentContainer, colorError, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPrimary } = $colors);
+
+    function onLongPress(id: LensId, event: { object?: unknown }) {
+        if (event.object instanceof View) {
+            dispatch('menu', { id, anchor: event.object });
+        }
+    }
 
     let scroller: NativeViewElementNode<ScrollView>;
     const chips: Record<string, NativeViewElementNode<GridLayout>> = {};
@@ -67,7 +75,8 @@
                 opacity={missing ? 0.7 : 1}
                 rippleColor={colorPrimary}
                 verticalAlignment="middle"
-                on:tap={() => dispatch('select', { id })}>
+                on:tap={() => dispatch('select', { id })}
+                on:longPress={(event) => onLongPress(id, event)}>
                 <stacklayout orientation="horizontal" padding="0 10" verticalAlignment="middle">
                     <!-- always the same spans: a formatted string whose children come and go breaks the update -->
                     <label color={contentColor} fontSize={13} maxLines={1} verticalAlignment="middle">

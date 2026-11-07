@@ -54,7 +54,7 @@
                     massifMap.addLayer(`layer.routeHero.base${index}`, spec);
                 }
             });
-            source = massifMap.source('source.routeHero', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
+            source = massifMap.source('source.routeHero', { type: 'geojson', lineMetrics: true, simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
             source.createLayer('items');
             source.createLayer('poi');
             createCursor();

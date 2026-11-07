@@ -1,16 +1,26 @@
+import { get } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { surfaceLegend } from '~/routeFeatures/stats/legend';
 import { surfacePalette } from '~/routeFeatures/stats/palette';
-import { type LensProfile, type LensSection, type LensSlice, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
+import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+import { type LensProfile, type LensSection, type LensSlice, type RouteLens, registerRouteFeature, routeFeatures, routeStatViews } from '~/routeFeatures/registry';
 import { routeFeatureStats } from '~/routeFeatures/stats/settings';
-import { pavedShare, surfaceKey, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
+import { shadeGrey } from '~/routeFeatures/lens/shades';
+import { pavedShare, statsCardHeight, surfaceKey, surfaceShade, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
 import { ROUTE_STATS_HEIGHT } from '~/utils/navigation';
 import type { IItem } from '~/models/Item';
 import { surfaceColors } from '~/utils/routing';
-import { surfacePatterns } from '~/utils/surfacePattern';
 
-const STATS_HEIGHT = 164;
+/** dp: the card is as tall as the longest legend of the views it reads in turn */
+function statsHeight(item: IItem) {
+    if (!item?.route || !item.stats) {
+        return 0;
+    }
+    const features = get(routeFeatures);
+    const extra = routeStatViews(features, { item }).map((view) => view.rows({ item }).length);
+    return statsCardHeight([item.stats.waytypes?.length ?? 0, item.stats.surfaces?.length ?? 0, ...extra]);
+}
 // a surface the palette does not know
 const UNKNOWN_SURFACE_COLOR = '#B9C2C8';
 
@@ -58,24 +68,30 @@ const surfaceLens: RouteLens = {
         return segment && lc(segment.id);
     },
     profile: ({ item }) => {
-        const segments = item.stats.surfaceSegments;
-        if (!segments?.length) {
+        const { surfaceSegments, surfaces } = item.stats;
+        // stats saved before the segments were kept have none: a route of one surface is still all of it
+        const segments = surfaceSegments?.length ? surfaceSegments : surfaces.length === 1 ? [{ id: surfaces[0].id, start: 0, end: 0 }] : null;
+        if (!segments) {
             return {};
         }
-        if (!fills.has(segments)) {
-            fills.set(segments, { fill: surfaceStops(segments, surfaceColors, surfacePatterns, UNKNOWN_SURFACE_COLOR, 'cross') });
+        if (!fills.has(surfaces)) {
+            fills.set(surfaces, { fill: surfaceStops(segments, surfaceColors, UNKNOWN_SURFACE_COLOR) });
         }
-        return fills.get(segments);
+        // what each colour is, in the line under the chart
+        const legend = topSurfaces(surfaces, 4).map(({ id }) => ({ label: lc(id), color: surfaceColors[id] ?? UNKNOWN_SURFACE_COLOR, eink: shadeGrey(surfaceShade(id)) }));
+        return { ...fills.get(surfaces), legend };
     },
     sections: ({ item }) => readSegments(item).sections,
     slices: ({ item }) => readSegments(item).slices,
-    legend: ({ item, palette, translate }) => surfaceLegend({ palette, surfaces: [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))], translate })
+    legend: ({ item, palette, translate, variant }) => surfaceLegend({ palette, surfaces: [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))], translate, variant })
 };
 
 registerRouteFeature({
     id: 'stats',
     order: 20,
     setting: { title: () => lc('road_stats'), store: routeFeatureStats },
+    // the views other features add to the card change what it needs to show
+    changes: routeAnalysisChanges,
     lensPalette: surfacePalette,
     lenses: [surfaceLens],
     pageSections: [
@@ -85,13 +101,13 @@ registerRouteFeature({
             title: () => lc('road_stats'),
             lens: 'surface',
             summary: ({ item }) => (item.stats?.surfaces?.length ? `${percent(pavedShare(item.stats.surfaces))} ${lc('paved')}` : undefined),
-            rows: ({ item }) => (item?.route && item.stats ? [{ key: 'stats', height: STATS_HEIGHT }] : []),
+            rows: ({ item }) => (item?.route && item.stats ? [{ key: 'stats', height: statsHeight(item) }] : []),
             component: () => import('~/routeFeatures/stats/RouteStatsView.svelte')
         }
     ],
     sheetCard: {
         component: () => import('~/routeFeatures/stats/RouteStatsView.svelte'),
-        height: ({ item }) => (item?.route && item.stats ? STATS_HEIGHT : 0)
+        height: ({ item }) => statsHeight(item)
     },
     navSections: [
         {

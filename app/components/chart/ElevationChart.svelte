@@ -21,10 +21,9 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { AscentSegment, IItem as Item } from '~/models/Item';
-    import type { AttentionKind, ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
+    import type { ProfileBracket, ProfileFillStop, ProfileMark, ProfileOverlay } from '~/routeFeatures/registry';
     import { showError } from '@shared/utils/showError';
     import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
-    import { drawSurfaceBand } from '~/utils/surfacePattern';
     import { colors, fontScale, fonts } from '~/variables';
     import { lc } from '~/helpers/locale';
     import { SDK_VERSION } from '@akylas/nativescript/utils';
@@ -115,15 +114,26 @@
     const BRACKET_PLATE_GAP = 3;
     const PLATE_PADDING = 4;
     // the marks lie in the room the axis labels leave under the plot
-    const MARK_GAP = 1;
+    const MARK_GAP = 0;
     const MARK_HEIGHT = 3;
-    const MARK_TIER_STEP = 2;
     const MARK_MIN_WIDTH = 4;
+    // the second row is lifted 2 px: it overlaps the foot of the first by half a pixel
+    const MARK_LANE_GAP = -0.5;
+    /** Each kind of mark has a row of its own, in the order the features gave them: two kinds over the same stretch both show. */
+    function markLanes() {
+        const kinds: string[] = [];
+        for (const { kind } of marks) {
+            if (!kinds.includes(kind)) {
+                kinds.push(kind);
+            }
+        }
+        return kinds;
+    }
+    const laneTop = (lane: number) => MARK_GAP + lane * (MARK_HEIGHT + MARK_LANE_GAP);
     /** the room over the plot for the plate of the highest bracket */
     const BRACKET_ROOM = 24;
     /** of the plot's height, the bottom part of it, and what is under it, a tap counts as on the marks */
     const MARK_HIT_HEIGHT = 0.1;
-    const MARK_COLORS: Record<AttentionKind, string> = { steep: '#9E1B18' };
     /**
      * A limit line that is none: the axis draws its limit lines last, over the data, the plates and the axis, so
      * this is the way to the top layer. It is added after the plates.
@@ -175,17 +185,16 @@
                 canvas.drawText(label, left + PLATE_PADDING, bottom - 1 - metrics.descent, overlayTextPaint);
             }
         }
-        for (const { from, kind, tier, to } of marks) {
+        const lanes = markLanes();
+        for (const { color, from, kind, to } of marks) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));
             if (end < contentLeft || start > contentRight) {
                 continue;
             }
-            overlayFillPaint.color = isEInk ? '#000000' : MARK_COLORS[kind];
-            const top = contentBottom + MARK_GAP;
-            // the harder, the thicker: it reads without colour, on e-ink too
-            const height = MARK_HEIGHT + ((tier ?? 1) - 1) * MARK_TIER_STEP;
-            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + height, height / 2, height / 2, overlayFillPaint);
+            overlayFillPaint.color = isEInk ? '#000000' : color;
+            const top = contentBottom + laneTop(lanes.indexOf(kind));
+            canvas.drawRoundRect(start, top, Math.max(end, start + MARK_MIN_WIDTH), top + MARK_HEIGHT, MARK_HEIGHT / 2, MARK_HEIGHT / 2, overlayFillPaint);
         }
         if (popover && cursorShown) {
             drawPopover(canvas);
@@ -202,7 +211,21 @@
         if (highlight.yTouchPx < contentBottom - (contentBottom - contentTop) * MARK_HIT_HEIGHT) {
             return -1;
         }
-        return marks.findIndex(({ from, to }) => highlight.x >= from && highlight.x <= to);
+        // over the same stretch, the row the finger is nearest to
+        const lanes = markLanes();
+        const fromPlot = highlight.yTouchPx - contentBottom;
+        let found = -1;
+        let foundDistance = Infinity;
+        marks.forEach(({ from, kind, to }, index) => {
+            if (highlight.x >= from && highlight.x <= to) {
+                const distance = Math.abs(fromPlot - (laneTop(lanes.indexOf(kind)) + MARK_HEIGHT / 2));
+                if (distance < foundDistance) {
+                    found = index;
+                    foundDistance = distance;
+                }
+            }
+        });
+        return found;
     }
 
     // the cursor's card, laid out once when the cursor moves. Blocks apart by a
@@ -551,7 +574,7 @@
     let fillShades: string[] = [];
     /**
      * On e-ink the fill is not coloured: the colours of the grades are greys that look alike. A grade is a shade of black, the more the
-     * steeper, and a surface is a hatching. Clipped to the area under the curve.
+     * steeper, and a surface or a road has its own shades. Clipped to the area under the curve.
      */
     function drawEInkFill(canvas: Canvas, set: LineDataSet, spline: Path, trans: Transformer, min: number, max: number, superMethod: () => void) {
         const data = item?.profile?.data;
@@ -575,10 +598,6 @@
             const left = Math.max(contentLeft, trans.getPixelForValues(data[stop.d].d, 0).x);
             const right = Math.min(contentRight, trans.getPixelForValues(data[fillStops[index + 1]?.d ?? data.length - 1].d, 0).x);
             if (right <= left) {
-                return;
-            }
-            if (stop.pattern) {
-                drawSurfaceBand(canvas, { id: '', pattern: stop.pattern, left, right, top: contentTop, bottom: contentBottom, fillColor: '#ffffff', patternColor: '#000000' });
                 return;
             }
             if (fillShades[index]) {
@@ -1002,7 +1021,8 @@
                         const [distanceLine, clockLine] = label.split('\n');
                         const metrics = paint.getFontMetrics();
                         const lineHeight = metrics.descent - metrics.ascent;
-                        const baseline = labelY - metrics.ascent;
+                        // half a pixel lower, clear of the marks under the plot
+                        const baseline = labelY - metrics.ascent + 0.5;
                         c.drawText(distanceLine, labelX, baseline, paint);
                         if (clockLine) {
                             const color = paint.getColor();
@@ -1094,7 +1114,9 @@
             // the curve is the ink of an e-ink screen: the light blue is a colour there
             const lineColor = isEInk ? colorOnSurface : '#60B3FC';
             function updateSetColors() {
-                const stops = fill ?? (showProfileGrades ? profile.colors : null);
+                const chosen: ProfileFillStop[] = fill ?? (showProfileGrades ? profile.colors : null);
+                // one stop is a route all of one kind: the colouring takes two to run between, so it is given its end
+                const stops = chosen?.length === 1 ? [chosen[0], { ...chosen[0], d: profileData.length - 1 }] : chosen;
                 fillStops = stops;
                 fillShades = (stops ?? []).map((stop, index) => {
                     const end = stops[index + 1]?.d ?? profileData.length - 1;
@@ -1102,7 +1124,8 @@
                     for (let point = stop.d; point <= end; point++) {
                         grades += profileData[point].g ?? 0;
                     }
-                    const shade = gradeShades[gradeBucketIndex(grades / (end - stop.d + 1))] ?? 0;
+                    // a lens that has its own colours has its own shades: the grade's is for what it did not say
+                    const shade = stop.shade ?? gradeShades[gradeBucketIndex(grades / (end - stop.d + 1))] ?? 0;
                     return shade > 0 ? new Color('#000000').setAlpha(shade).hex : '';
                 });
                 if (stops && stops.length > 1) {

@@ -287,6 +287,8 @@ export default class ItemsModule extends MapModule {
         DEV_LOG && console.log('updateLocalLayer');
         const oldLayer = this.localVectorLayer;
         this.localVectorLayer = null;
+        // the id is the same: the old one goes first. The source stays, so the new layer draws what it did, with the style it is given
+        oldLayer?.destroy();
         this.getOrCreateLocalVectorLayer(false);
         mapContext.replaceLayer(oldLayer, this.localVectorLayer);
     }
@@ -294,7 +296,7 @@ export default class ItemsModule extends MapModule {
         if (!this.localVectorLayer) {
             const map = mapContext.getMap();
             if (!this.localVectorDataSource) {
-                this.localVectorDataSource = map.source('source.items', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
+                this.localVectorDataSource = map.source('source.items', { type: 'geojson', lineMetrics: true, simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
                 this.localVectorDataSource.createLayer('items');
                 this.localVectorDataSource.createLayer('poi');
             }
@@ -611,7 +613,7 @@ export default class ItemsModule extends MapModule {
         if (item?.route) {
             const features = [];
             if (item.route.waypoints?.length > 0) {
-                DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
+                // DEV_LOG && console.log('waypoints', JSON.stringify(item.route.waypoints));
                 item.route.waypoints.forEach((p) => {
                     if (p.properties.showOnMap) {
                         features.push({
@@ -687,6 +689,9 @@ export default class ItemsModule extends MapModule {
         // the inner decoder changes through here too
         if (newDecoder === mapContext.mapDecoder) {
             applyRouteFocus(newDecoder);
+        } else if (this.localVectorLayer) {
+            // the items and the lens line are drawn by the inner style: a layer on the old decoder keeps its old look (e-ink or colour)
+            this.updateLocalLayer();
         }
     }
     async hideItem(item: IItem) {

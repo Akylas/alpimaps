@@ -1,12 +1,14 @@
+import { ApplicationSettings } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
+import { currentLensPalette, lensVariant, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { focusKeyOf, routeFocus } from '~/routeFeatures/lens/routeFocusStore';
 import { routeLensStore } from '~/routeFeatures/lens/routeLensStore';
 import { lensFeatures, routeCoordinates, symbolFeatures } from '~/routeFeatures/lens/sections';
 import { registerRouteFeature, resolveLens, routeFeatures, routeLenses } from '~/routeFeatures/registry';
 
-// the lens and the focused section redraw the route, the cursor does not: a key that only they change
-const lensChanges = derived([routeLensStore, routeFocus], ([lens, focus], set: (key: string) => void) => {
-    set(`${lens}|${focus?.itemKey}|${focus?.section?.lens}|${focus?.section?.i0}|${focus?.section?.i1}`);
+// the lens, the focused section and the style redraw the route, the cursor does not: a key that only they change
+const lensChanges = derived([routeLensStore, routeFocus, lensVariantStore], ([lens, focus, variant], set: (key: string) => void) => {
+    set(`${lens}|${variant}|${focus?.itemKey}|${focus?.section?.lens}|${focus?.section?.i0}|${focus?.section?.i1}`);
 });
 
 registerRouteFeature({
@@ -24,6 +26,9 @@ registerRouteFeature({
         const focus = get(routeFocus);
         const section = focus?.itemKey === focusKeyOf(item) && focus.section?.lens === lens.id ? focus.section : undefined;
         const coordinates = routeCoordinates(item.geometry);
-        return [...lensFeatures(coordinates, lens.id, slices, section), ...symbolFeatures(coordinates, lens.symbols?.({ item }) ?? [])];
+        // the slices are one gradient line; e-ink keeps them as slices, each a shade of grey in an outline
+        const variant = lensVariant(ApplicationSettings.getString('innerStyle'));
+        const gradientPalette = variant !== 'eink' ? currentLensPalette(variant) : undefined;
+        return [...lensFeatures(coordinates, lens.id, slices, section, gradientPalette), ...symbolFeatures(coordinates, lens.symbols?.({ item }) ?? [])];
     }
 });

@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerRouteFeature } from '~/routeFeatures/registry';
-import { applyRouteFocus, lensStyleParameters, setRouteFocus } from './lensStyle';
+import { get } from 'svelte/store';
+import { applyRouteFocus, lensStyleParameters, lensVariantStore, setLensVariant, setRouteFocus } from './lensStyle';
 
 // a feature of its own colours: the style knows none of its features
-registerRouteFeature({ id: 'palette-test', order: 1, lensPalette: () => ({ test_swatch: '#7BC96F' }) });
+registerRouteFeature({ id: 'palette-test', order: 1, lensPalette: (variant) => ({ test_swatch: variant === 'eink' ? '#969696' : '#7BC96F' }) });
 
 describe('lensStyleParameters', () => {
     it('writes the palette as the JSON the style reads, with the colours of the features in it', () => {
@@ -15,9 +16,12 @@ describe('lensStyleParameters', () => {
         expect(parameters.lens_case).toBe('#ffffff');
     });
 
-    it('is black on the e-ink inner style', () => {
-        const palette = JSON.parse(lensStyleParameters('eink').lens_pal);
-        expect(palette.test_swatch).toBe('#000000');
+    it('is the features greys, outlined in black, on the e-ink inner style', () => {
+        const parameters = lensStyleParameters('eink');
+        const palette = JSON.parse(parameters.lens_pal);
+        expect(palette.test_swatch).toBe('#969696');
+        expect(palette.plate).toBe('#000000');
+        expect(parameters.lens_case).toBe('#000000');
     });
 });
 
@@ -49,5 +53,19 @@ describe('setRouteFocus', () => {
         const made = { call: vi.fn() };
         applyRouteFocus(made);
         expect(made.call).not.toHaveBeenCalled();
+    });
+});
+
+describe('setLensVariant', () => {
+    it('follows the inner style, so what draws the lenses is drawn again when the style changes', () => {
+        const seen: string[] = [];
+        const unsubscribe = lensVariantStore.subscribe((variant) => seen.push(variant));
+        setLensVariant('eink');
+        setLensVariant('eink');
+        setLensVariant('voyager');
+        unsubscribe();
+        expect(seen.slice(-2)).toEqual(['eink', 'light']);
+        expect(seen.filter((variant) => variant === 'eink')).toHaveLength(1);
+        expect(get(lensVariantStore)).toBe('light');
     });
 });

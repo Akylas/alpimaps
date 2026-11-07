@@ -3,6 +3,7 @@
     import { isPermResultAuthorized, request } from '@nativescript-community/perms';
     import { SDK_VERSION } from '@nativescript-community/sentry';
     import { Template } from '@nativescript-community/svelte-native/components';
+    import ListItemAutoSize from '@shared/components/ListItemAutoSize.svelte';
     import { openFilePicker, pickFolder, saveFile } from '@nativescript-community/ui-document-picker';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
     import { alert, confirm, prompt } from '@nativescript-community/ui-dialogs';
@@ -50,7 +51,7 @@
         SETTINGS_VALHALLA_ONLINE_URL
     } from '~/utils/constants';
     import { CARD_INSET, CARD_PADDING, groupRows } from '~/components/settings/groupedRows';
-    import { panelPopoverStyle, showSnack } from '~/utils/ui';
+    import { panelPopoverStyle, showSettings, showSnack } from '~/utils/ui';
     import { confirmRestartApp, createView, hideLoading, openLink, showLoading } from '~/utils/ui/index.common';
     import { ANDROID_30, getAndroidRealPath, getItemsDataFolder, getSavedMBTilesDir, moveFileOrFolder, resetItemsDataFolder, setItemsDataFolder } from '~/utils/utils';
     import { pickLocalDataFolder } from '~/mapModules/localData/folder';
@@ -191,6 +192,7 @@
             return icon ? { ...row, icon } : row;
         });
     }
+    const ROUTE_FEATURE_PAGE = 'route_feature:';
     function storeSwitch(store: SettingsStore<boolean>, title: string, description?: string) {
         return { type: 'switch', key: title, title, description, store, value: get(store) };
     }
@@ -220,6 +222,10 @@
     }
 
     function getSubSettings(id: string): any[] {
+        // the page of one route analysis feature, opened from its row or from its lens' menu
+        if (id?.startsWith(ROUTE_FEATURE_PAGE)) {
+            return (get(allRouteFeatures).find((feature) => feature.id === id.slice(ROUTE_FEATURE_PAGE.length))?.settings?.() ?? []).map(sharedSettingItem);
+        }
         switch (id) {
             case 'appearance':
                 return [
@@ -406,12 +412,12 @@
                     { type: 'sectionheader', title: lc('route_features'), dynamic: 'route_analysis' },
                     ...get(allRouteFeatures)
                         .filter((feature) => feature.setting)
-                        .flatMap((feature) => [
-                            storeSwitch(feature.setting.store, feature.setting.title()),
-                            ...(feature.settings && get(feature.setting.store)
-                                ? [{ id: 'sub_settings', icon: 'mdi-tune', title: lc('settings'), options: () => feature.settings().map(sharedSettingItem) }]
-                                : [])
-                        ])
+                        .map((feature) =>
+                            // a feature with settings is one row: its switch, then a divider and a chevron, a tap elsewhere opens its page
+                            feature.settings
+                                ? { type: 'featureswitch', key: feature.setting.title(), title: feature.setting.title(), store: feature.setting.store, value: get(feature.setting.store), page: ROUTE_FEATURE_PAGE + feature.id }
+                                : storeSwitch(feature.setting.store, feature.setting.title())
+                        )
                 ];
             case 'terrain_3d':
                 return [{ ...storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), icon: 'mdi-terrain' }, ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
@@ -1133,6 +1139,14 @@
         }
     }
 
+    // the checkbox of a feature's row; the row itself opens the feature's page
+    function onFeatureSwitch(item, value: boolean) {
+        if (item.value !== value) {
+            item.value = value;
+            item.store.set(value);
+        }
+    }
+
     async function onCheckBox(item, event) {
         switch (item.id) {
             case SETTINGS_ENABLE_CRASH_REPORT:
@@ -1148,6 +1162,8 @@
         }
     }
 
+    $: itemProps = { backgroundColor: $colors.colorCard, fontSize: 17, subtitleFontSize: 14, padding: `0 ${CARD_INSET + CARD_PADDING}` };
+
     onMapLanguageChanged(() => refresh?.());
     $: refresh?.();
     $: if ($routeFeatures && options?.[0]?.dynamic === 'route_analysis') {
@@ -1162,7 +1178,7 @@
     collectionViewProps={{ backgroundColor: $colors.colorCanvas }}
     {getDescription}
     {getTitle}
-    itemProps={{ backgroundColor: $colors.colorCard, fontSize: 17, subtitleFontSize: 14, padding: `0 ${CARD_INSET + CARD_PADDING}` }}
+    {itemProps}
     leftIconClass="listIcon"
     {onCheckBox}
     onItemLongPress={onLongPress}
@@ -1177,6 +1193,15 @@
             <mdbutton class="actionBarButton" text={button.icon} variant="text" on:tap={(event) => onTap({ id: button.id }, event)} />
         {/each}
     </svelte:fragment>
+
+    <Template key="featureswitch" let:item>
+        <ListItemAutoSize chevron="mdi-chevron-right" {item} {...itemProps} on:tap={() => showSettings({ title: item.title, id: `settings[${item.page}]`, subSettingsOptions: item.page })}>
+            <stacklayout col={1} marginRight={36} orientation="horizontal" verticalAlignment="center">
+                <checkbox checked={item.value} verticalAlignment="center" on:checkedChange={(event) => onFeatureSwitch(item, event.value)} />
+                <absolutelayout backgroundColor={$colors.colorOutlineVariant} height={26} marginLeft={12} verticalAlignment="center" width={1} />
+            </stacklayout>
+        </ListItemAutoSize>
+    </Template>
 
     <Template key="header" let:item>
         <gridlayout rows="auto,auto">

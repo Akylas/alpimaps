@@ -1,17 +1,33 @@
 /** The sections of a lens, on the map and on the profile. Pure: nothing here may import NativeScript. */
 import type { Feature, Geometry } from 'geojson';
+import { gradientRamp, lineProgress } from '~/routeFeatures/lens/gradient';
 import type { LensId, LensSection, LensSlice, LensSymbol, NavAlert } from '~/routeFeatures/registry';
 
 /**
  * The map's version of a lens: the focused section's own `lensfocus` line for a halo, then one `lens` line per
  * slice, faded (`f` 0) when another section is focused. The look is the style's, see `routelens.mss`.
+ * With a `gradientPalette` the slices are one `lens` line for the whole route instead, its colours a `gradient` ramp (the focus dims
+ * it there), and the steep slices come as `lens_chev` lines for the chevrons. The source needs `lineMetrics`.
  */
-export function lensFeatures(coordinates: number[][], lens: LensId, slices: LensSlice[], focus?: { i0: number; i1: number }): Feature[] {
+export function lensFeatures(coordinates: number[][], lens: LensId, slices: LensSlice[], focus?: { i0: number; i1: number }, gradientPalette?: Record<string, string>): Feature[] {
     const features: Feature[] = [];
     // first: a feature is drawn after the ones before it, and the halo goes under the slices
     const halo = focus && coordinates.slice(focus.i0, focus.i1 + 1);
     if (halo?.length > 1) {
         features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: halo }, properties: { class: 'lensfocus', lens } });
+    }
+    if (gradientPalette) {
+        const gradient = gradientRamp(lineProgress(coordinates), slices, { palette: gradientPalette, focus });
+        if (gradient) {
+            features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates }, properties: { class: 'lens', lens, gradient, ramp: 1, f: 1, id: 0 } });
+            slices.forEach((slice) => {
+                const line = coordinates.slice(slice.i0, slice.i1 + 1);
+                if (slice.s >= 2 && line.length > 1) {
+                    features.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: line }, properties: { class: 'lens_chev', lens, s: slice.s } });
+                }
+            });
+        }
+        return features;
     }
     slices.forEach((slice, id) => {
         const line = coordinates.slice(slice.i0, slice.i1 + 1);
@@ -65,7 +81,7 @@ export function paddedRange(section: { i0: number; i1: number }, count: number):
     return { fromIndex: Math.max(0, section.i0 - padding), toIndex: Math.min(count - 1, section.i1 + padding) };
 }
 
-const LENS_CLASSES = ['lens', 'lensfocus', 'lens_symbol', 'navalert'];
+const LENS_CLASSES = ['lens', 'lens_chev', 'lensfocus', 'lens_symbol', 'navalert'];
 
 /** Whether a tapped feature is something the lens drew, not an item. */
 export function isLensFeature(featureData: Record<string, unknown> | undefined): boolean {

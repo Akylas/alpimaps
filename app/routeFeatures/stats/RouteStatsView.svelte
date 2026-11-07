@@ -4,6 +4,9 @@
 
     const barPaint = new Paint();
     barPaint.strokeWidth = 2;
+    const outlinePaint = new Paint();
+    outlinePaint.style = Style.STROKE;
+    outlinePaint.strokeWidth = 1;
     const textPaint = new Paint();
     textPaint.textSize = 12;
     const valuePaint = new Paint();
@@ -23,32 +26,60 @@
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { surfaceColors } from '~/utils/routing';
-    import { drawSurfaceBand } from '~/utils/surfacePattern';
     import { colors } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
+    import { shadeGrey } from '~/routeFeatures/lens/shades';
+    import { STATS_LEGEND_ROW, STATS_LEGEND_TOP, surfaceShade } from '~/routeFeatures/stats/surfaces';
+    import { routeFeatureChanges, routeFeatures, routeStatViews } from '~/routeFeatures/registry';
 
     export let item: IItem;
 
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurfaceContainerHigh } = $colors);
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     let statsCanvas: NativeViewElementNode<CanvasView>;
-    let statsKey = ApplicationSettings.getString('stats_key', 'waytypes');
+    let savedKey = ApplicationSettings.getString('stats_key', 'waytypes');
 
-    $: if (item) {
+    // the way types and the surfaces, then what the features have to say of the route; `>= 0` makes it follow their changes
+    $: extraViews = $routeFeatureChanges >= 0 ? routeStatViews($routeFeatures, { item }) : [];
+    $: viewIds = ['waytypes', 'surfaces', ...extraViews.map((view) => view.id)];
+    // a view that is gone (another route, a feature switched off) leaves the first one
+    $: statsKey = viewIds.includes(savedKey) ? savedKey : 'waytypes';
+    $: viewIndex = viewIds.indexOf(statsKey);
+
+    $: if (item || extraViews) {
         statsCanvas?.nativeView?.invalidate();
     }
     onThemeChanged(() => statsCanvas?.nativeView?.invalidate());
 
-    function setStatsKey(value) {
+    function setStatsKey(value: string) {
+        savedKey = value;
         statsKey = value;
         ApplicationSettings.setString('stats_key', value);
         statsCanvas?.nativeView?.invalidate();
     }
 
+    /** a line of the view being read: the way types and surfaces carry their id, a feature's view the whole of it */
+    interface StatLine {
+        id: string;
+        perc: number;
+        dist: number;
+        label: string;
+        color: string;
+        eink: string;
+    }
+    function linesOf(key: string): StatLine[] {
+        const extra = extraViews.find((view) => view.id === key);
+        if (extra) {
+            return extra.rows({ item });
+        }
+        return (item.stats[key] ?? []).map((stat) => ({ ...stat, label: lc(stat.id), color: surfaceColors[stat.id] || '#000000', eink: shadeGrey(surfaceShade(stat.id)) }));
+    }
+    const titleOf = (key: string) => extraViews.find((view) => view.id === key)?.title() ?? lc(key);
+
     const BAR_TOP = 38;
     const BAR_HEIGHT = 10;
-    const LEGEND_TOP = 58;
-    const LEGEND_ROW = 20;
+    const LEGEND_TOP = STATS_LEGEND_TOP;
+    const LEGEND_ROW = STATS_LEGEND_ROW;
     const PADDING = 16;
 
     // a stacked bar with a gap between segments, then a two column legend read in rows: dot, name, length
@@ -59,13 +90,10 @@
             }
             const w = canvas.getWidth();
             const h = canvas.getHeight();
-            const stats = item.stats[statsKey];
-            // On eink the surface palette renders as indistinguishable greys, so surfaces are hatched.
-            // Not reactive: `setStatsKey` invalidates the canvas before svelte flushes derived values.
-            const patterned = isEInk && statsKey === 'surfaces';
+            const stats = linesOf(statsKey);
 
             bigTextPaint.color = isEInk ? colorOnSurface : colorPrimary;
-            canvas.drawText(lc(statsKey), PADDING, 26, bigTextPaint);
+            canvas.drawText(titleOf(statsKey), PADDING, 26, bigTextPaint);
 
             const usedWidth = w - PADDING * 2;
             const barClip = new Path();
@@ -78,20 +106,9 @@
                 // the gap, so neighbouring greys stay apart
                 const segmentRight = index === stats.length - 1 ? right : Math.max(x, right - 2);
                 barPaint.style = Style.FILL;
-                barPaint.color = surfaceColors[stat.id] || '#000000';
-                if (patterned) {
-                    drawSurfaceBand(canvas, {
-                        id: stat.id,
-                        left: x,
-                        right: segmentRight,
-                        top: BAR_TOP,
-                        bottom: BAR_TOP + BAR_HEIGHT,
-                        fillColor: colorSurfaceContainerHigh,
-                        patternColor: colorOnSurface
-                    });
-                } else {
-                    canvas.drawRect(x, BAR_TOP, segmentRight, BAR_TOP + BAR_HEIGHT, barPaint);
-                }
+                // on e-ink a kind is a shade of grey, as it is under the profile
+                barPaint.color = isEInk ? stat.eink : stat.color;
+                canvas.drawRect(x, BAR_TOP, segmentRight, BAR_TOP + BAR_HEIGHT, barPaint);
                 x = right;
             });
             canvas.restore();
@@ -107,14 +124,15 @@
                 const left = PADDING + column * columnWidth + (column ? 12 : 0);
                 const right = PADDING + (column + 1) * columnWidth - (column ? 0 : 12);
                 const baseline = LEGEND_TOP + row * LEGEND_ROW + 13;
-                barPaint.color = surfaceColors[stat.id] || '#000000';
-                if (patterned) {
-                    drawSurfaceBand(canvas, { id: stat.id, left, right: left + 9, top: baseline - 9, bottom: baseline, fillColor: colorSurfaceContainerHigh, patternColor: colorOnSurface });
-                } else {
-                    canvas.drawCircle(left + 4.5, baseline - 4.5, 4.5, barPaint);
+                barPaint.color = isEInk ? stat.eink : stat.color;
+                canvas.drawCircle(left + 4.5, baseline - 4.5, 4.5, barPaint);
+                if (isEInk) {
+                    // a light grey would vanish on the paper: its outline stays
+                    outlinePaint.color = colorOnSurface;
+                    canvas.drawCircle(left + 4.5, baseline - 4.5, 4.5, outlinePaint);
                 }
                 textPaint.color = colorOnSurfaceVariant;
-                canvas.drawText(lc(stat.id), left + 15, baseline, textPaint);
+                canvas.drawText(stat.label, left + 15, baseline, textPaint);
                 valuePaint.color = colorOnSurface;
                 canvas.drawText(formatDistance(stat.dist * 1000), right, baseline, valuePaint);
             });
@@ -125,24 +143,11 @@
 </script>
 
 <canvasview bind:this={statsCanvas} {...$$restProps} on:draw={drawStats}>
-    <IconButton
-        fontSize={18}
-        horizontalAlignment="right"
-        isEnabled={statsKey === 'waytypes'}
-        marginRight={4}
-        marginTop={4}
-        size={36}
-        text="mdi-chevron-right"
-        verticalAlignment="top"
-        on:tap={() => setStatsKey('surfaces')} />
-    <IconButton
-        fontSize={18}
-        horizontalAlignment="right"
-        isEnabled={statsKey === 'surfaces'}
-        marginRight={40}
-        marginTop={4}
-        size={36}
-        text="mdi-chevron-left"
-        verticalAlignment="top"
-        on:tap={() => setStatsKey('waytypes')} />
+    <!-- a button that has nothing to go to is gone, not disabled: one disabled while it is pressed keeps its pressed look -->
+    {#if viewIndex < viewIds.length - 1}
+        <IconButton fontSize={18} horizontalAlignment="right" marginRight={4} marginTop={4} size={36} text="mdi-chevron-right" verticalAlignment="top" on:tap={() => setStatsKey(viewIds[viewIndex + 1])} />
+    {/if}
+    {#if viewIndex > 0}
+        <IconButton fontSize={18} horizontalAlignment="right" marginRight={40} marginTop={4} size={36} text="mdi-chevron-left" verticalAlignment="top" on:tap={() => setStatsKey(viewIds[viewIndex - 1])} />
+    {/if}
 </canvasview>

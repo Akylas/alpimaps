@@ -158,7 +158,7 @@ export default class NavigationRouteModule extends MapModule {
     private getOrCreateLayer() {
         if (!this.layer) {
             const map = mapContext.getMap();
-            this.dataSource = map.source('source.navigation', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
+            this.dataSource = map.source('source.navigation', { type: 'geojson', lineMetrics: true, simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
             this.dataSource.createLayer('navigation');
             this.dataSource.createLayer('navigation_hint');
             this.layer = map.buildLayer('layer.navigation', {
