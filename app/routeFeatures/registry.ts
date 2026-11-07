@@ -28,6 +28,8 @@ export interface RouteTile {
     lens?: LensId;
     /** A tap on the tile opens the route page on its When panel. */
     opensWhen?: boolean;
+    /** The figure is a warning: the tile is outlined in the error colour. */
+    alert?: boolean;
 }
 
 /**
@@ -94,10 +96,12 @@ export interface LensHeadline {
 }
 
 /** What needs attention along the route, whatever the lens: marked under the profile. */
-export type AttentionKind = 'steep';
+export type AttentionKind = 'steep' | 'fast';
 
 export interface AttentionMark {
     kind: AttentionKind;
+    /** The mark's colour on a colour display, the feature's own. */
+    color: string;
     /** How hard it is, 1 to 3: the mark is thicker the harder. */
     tier?: 1 | 2 | 3;
     /** The lens and section a tap on the mark goes to. */
@@ -110,6 +114,7 @@ export interface ProfileMark {
     from: number;
     to: number;
     kind: AttentionKind;
+    color: string;
     tier?: 1 | 2 | 3;
 }
 
@@ -291,6 +296,13 @@ export interface RouteNavSectionLayout {
     height: number;
 }
 
+/** A card floating over the map under the maneuver card while navigating: it hides itself when it has nothing to say. */
+export interface RouteNavBanner {
+    id: string;
+    /** Loaded the first time navigation starts, the navigation ui is not part of the startup graph. */
+    component: () => Promise<{ default: ComponentType }>;
+}
+
 /** A row of a page section's body. */
 export interface RoutePageRow {
     /** Unique in the section. */
@@ -416,6 +428,8 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
+    /** Cards floating over the map while navigating. */
+    navBanners?: RouteNavBanner[];
     /** Cards of the route page, in the feature's order. */
     pageSections?: RoutePageSection[];
     /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
@@ -486,6 +500,11 @@ export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale:
         .flatMap((feature) => feature.navSections ?? [])
         .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
         .filter((layout) => layout.height > 0);
+}
+
+/** The banners the enabled features float over the map while navigating. */
+export function routeNavBanners(features: RouteFeature[]): RouteNavBanner[] {
+    return features.flatMap((feature) => feature.navBanners ?? []);
 }
 
 /** Lazy components, loaded once and kept. A store, so the view renders a component when it arrives. */

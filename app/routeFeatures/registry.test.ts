@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
-import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeStages } from './registry';
+import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages } from './registry';
 
 describe('routeStages', () => {
     const stage = (layer: 'weather' | 'sun') => ({ layer, run: () => Promise.resolve({ prov: { computedAt: 0, inputsHash: '', provider: '', quality: 'ok' as const }, data: null }) });
@@ -38,5 +38,24 @@ describe('lenses', () => {
         const lenses = [lens('overview'), lens('climbs')];
         expect(resolveLens('climbs', lenses)).toBe('climbs');
         expect(resolveLens('road', lenses)).toBe('overview');
+    });
+});
+
+describe('routeNavBanners', () => {
+    it('collects the banners of the features, in feature order', () => {
+        const component = () => Promise.resolve({ default: null });
+        const features: RouteFeature[] = [
+            {
+                id: 'one',
+                order: 1,
+                navBanners: [
+                    { id: 'a', component },
+                    { id: 'b', component }
+                ]
+            },
+            { id: 'none', order: 2 },
+            { id: 'two', order: 3, navBanners: [{ id: 'c', component }] }
+        ];
+        expect(routeNavBanners(features).map(({ id }) => id)).toEqual(['a', 'b', 'c']);
     });
 });
