@@ -14,7 +14,7 @@ import {
     refreshSkySelection,
     skyMoment
 } from '~/mapModules/features/peakFinderCelestial';
-import { sunPositionAt } from '~/mapModules/features/peakFinderSun';
+import { sunPositionAt } from '~/utils/astronomy/sun';
 import { direction } from '~/mapModules/features/sky/astronomy';
 import { MOON_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
 import { peakFinderMoon } from '~/stores/terrainStore';
