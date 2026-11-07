@@ -1,5 +1,5 @@
 /** The style parameters the route lenses read: the palette in the inner style, the focus in the base map's. */
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { type LensPaletteVariant, lensCase, lensPalette } from '~/routeFeatures/lens/lensPalette';
 import { routeFeatures } from '~/routeFeatures/registry';
 
@@ -13,6 +13,14 @@ let routeFocus = false;
 /** The palette is by inner style: e-ink is black, the rest the light one. A dark one is in `lensPalette` for the day the base map has a dark look. */
 export function lensVariant(innerStyle: string): LensPaletteVariant {
     return innerStyle === 'eink' ? 'eink' : 'light';
+}
+
+/** The palette of the inner style in use: what draws the route lenses (gradient or slices, their colours) changes with it. */
+export const lensVariantStore = writable<LensPaletteVariant>('light');
+
+/** The inner style changed: the lenses are drawn again for it. */
+export function setLensVariant(innerStyle: string) {
+    lensVariantStore.set(lensVariant(innerStyle));
 }
 
 /** Every colour the enabled features draw their slices and symbols in, and the generic ones. */

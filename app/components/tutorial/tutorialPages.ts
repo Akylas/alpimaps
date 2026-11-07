@@ -181,7 +181,7 @@ export const tutorialPages: TutorialPage[] = [
             card(12, 308, 276, 110),
             { kind: 'bars', x: 24, y: 320, width: 252, height: 86, values: [20, 26, 34, 44, 56, 70, 86, 96, 80, 62, 48, 40, 52, 66, 60, 44, 32, 28, 36, 30] }
         ],
-        zones: [zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_more', 'tap', 10, 270, 280, 34)]
+        zones: [zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_menu', 'longPress', 102, 236, 84, 28), zone('lens_more', 'tap', 10, 270, 280, 34)]
     },
     {
         id: 'route_page',

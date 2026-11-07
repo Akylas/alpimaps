@@ -180,6 +180,8 @@ const weatherLens: RouteLens = {
         readOf(item, statusOf(item))?.spans.map((span, id) => ({ id, i0: span.i0, i1: span.i1, title: lc('weather_rain_span', formatDistance(span.from), formatDistance(span.to)) })) ?? [],
     slices: ({ item }) => readOf(item, statusOf(item))?.slices ?? [],
     symbols: ({ item }) => readOf(item, statusOf(item))?.symbols ?? [],
+    // the user asks for the forecast again, whatever its age
+    refresh: ({ item }) => (networkService.connected ? computeLayers(item, ['weather']) : undefined),
     legend: ({ palette, translate, variant }) => weatherLegend({ palette, translate, variant })
 };
 

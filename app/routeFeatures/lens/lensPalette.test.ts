@@ -24,17 +24,19 @@ describe('lensPalette', () => {
         expect(lensPalette('dark').plate).not.toBe(lensPalette('light').plate);
     });
 
-    it('is black on e-ink, where a colour means nothing, and writes white on a black plate', () => {
-        const { plate_text: plateText, ...colours } = lensPalette('eink', [rain]);
-        Object.values(colours).forEach((color) => expect(color).toBe('#000000'));
+    it('is black on e-ink for what no feature owns, with white writing on a black plate, and leaves the features their own greys', () => {
+        const grey = () => ({ rain_light: '#969696' });
+        const { plate, plate_text: plateText, alert_fast: alert, rain_light: rainLight } = lensPalette('eink', [grey]);
+        expect([plate, alert]).toEqual(['#000000', '#000000']);
         expect(plateText).toBe('#ffffff');
+        expect(rainLight).toBe('#969696');
     });
 });
 
 describe('lensCase', () => {
-    it('is white, dark on a dark map, white on e-ink', () => {
+    it('is white, dark on a dark map, black on e-ink', () => {
         expect(lensCase('light')).toBe('#ffffff');
         expect(lensCase('dark')).toBe('#101316');
-        expect(lensCase('eink')).toBe('#ffffff');
+        expect(lensCase('eink')).toBe('#000000');
     });
 });

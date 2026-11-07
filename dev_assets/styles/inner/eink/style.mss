@@ -39,9 +39,9 @@
 @transit_stop_border_width: 3;
 
 
-// the route lenses (shared/routelens.mss): nothing can be told apart by colour, so a slice is a black
-// core a little wider than usual and its severity is ticks along it (eink/routelens.mss). A section out
-// of focus is thinner and has no ticks, not translucent: translucency dithers into noise here
+// the route lenses (shared/routelens.mss): nothing can be told apart by colour, so a slice is a shade of grey (the app's
+// `lens_pal`, as under the profile) in a black outline (`lens_case`), a little wider than usual. A section out of
+// focus is thinner, not translucent: translucency dithers into noise here
 @lens_core_extra: 2;
 @lens_dim_opacity: 1;
 @lens_dim_shrink: 2;

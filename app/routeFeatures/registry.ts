@@ -3,7 +3,6 @@ import type { Feature } from 'geojson';
 import type { ComponentType } from 'svelte';
 import { type Readable, derived, writable } from 'svelte/store';
 import type { SettingsStore } from '~/stores/settingsStore';
-import type { SurfacePattern } from '~/utils/surfacePattern';
 import type { IItem } from '~/models/Item';
 import type { AnalysisStage } from '~/utils/routeAnalysis/pipeline';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
@@ -102,8 +101,6 @@ export interface AttentionMark {
     kind: AttentionKind;
     /** The mark's colour on a colour display, the feature's own. */
     color: string;
-    /** How hard it is, 1 to 3: the mark is thicker the harder. */
-    tier?: 1 | 2 | 3;
     /** The lens and section a tap on the mark goes to. */
     lens: LensId;
     section: LensSection;
@@ -115,7 +112,6 @@ export interface ProfileMark {
     to: number;
     kind: AttentionKind;
     color: string;
-    tier?: 1 | 2 | 3;
 }
 
 /** A span of the profile marked above the curve, eg a climb with its category. Meters from the start. */
@@ -187,8 +183,8 @@ export interface NavAlert {
 export interface ProfileFillStop {
     d: number;
     color: string;
-    /** The hatch that says it where colour cannot, on e-ink. The grade's own when missing. */
-    pattern?: SurfacePattern;
+    /** What it is on e-ink, where colour is lost: how dark, 0 to 255, as a grade is. The grade's own when missing. */
+    shade?: number;
 }
 
 /** Where the chart puts its plot and how a distance or an elevation turns into a pixel of it, handed to what a feature draws over it. */
@@ -213,8 +209,18 @@ export interface ProfileOverlay {
     draw(canvas: Canvas, view: ProfileView): void;
 }
 
+/** One entry of the line under the profile that says what its colours mean. */
+export interface ProfileLegendEntry {
+    label: string;
+    color: string;
+    /** the swatch on e-ink, where colour is lost; the colour's when missing */
+    eink?: string;
+}
+
 /** What a lens asks of the profile chart. */
 export interface LensProfile {
+    /** What the fill's colours mean, in the line under the chart: the grade legend is there when none. */
+    legend?: ProfileLegendEntry[];
     brackets?: ProfileBracket[];
     /** The grade fill steps back, for what the lens lays over it to read. */
     fade?: boolean;
@@ -273,6 +279,8 @@ export interface RouteLens {
     slices?: (ctx: RouteCtx) => LensSlice[];
     /** The plates on the map line, with the slices. */
     symbols?: (ctx: RouteCtx) => LensSymbol[];
+    /** Reads the lens' data again, from its long press menu. None: nothing to refresh. */
+    refresh?: (ctx: RouteCtx) => void | Promise<void>;
     /** What the colours and symbols of the lens mean, for the map's legend. None: nothing the legend could explain. */
     legend?: (ctx: LensLegendContext) => LensLegendSection | null;
 }
@@ -398,6 +406,26 @@ export interface RouteDeparture {
     taken?: (ctx: RouteCtx) => void;
 }
 
+/** A line of a stats view: how much of the route is of one kind. */
+export interface RouteStatRow {
+    id: string;
+    label: string;
+    /** km */
+    dist: number;
+    /** share of the route, 0..1 */
+    perc: number;
+    color: string;
+    /** the swatch on e-ink */
+    eink: string;
+}
+
+/** A view of the stats card besides the way types and the surfaces. No rows: the route has nothing to say, so no view. */
+export interface RouteStatView {
+    id: string;
+    title: () => string;
+    rows: (ctx: RouteCtx) => RouteStatRow[];
+}
+
 /**
  * One route-analysis feature: it plugs its pieces into the sheet, the navigation and the map, and can be
  * switched off without any other code changing. Contribution points are added with their consumer.
@@ -428,6 +456,8 @@ export interface RouteFeature {
     sheetCard?: RouteSheetCard;
     /** Blocks of the navigation sheet. */
     navSections?: RouteNavSection[];
+    /** Views of the stats card, read in turn with the way types and the surfaces. */
+    statViews?: RouteStatView[];
     /** Cards floating over the map while navigating. */
     navBanners?: RouteNavBanner[];
     /** Cards of the route page, in the feature's order. */
@@ -500,6 +530,11 @@ export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale:
         .flatMap((feature) => feature.navSections ?? [])
         .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
         .filter((layout) => layout.height > 0);
+}
+
+/** The stats views the enabled features add that have something to say of this route. */
+export function routeStatViews(features: RouteFeature[], ctx: RouteCtx): RouteStatView[] {
+    return features.flatMap((feature) => feature.statViews ?? []).filter((view) => view.rows(ctx).length > 0);
 }
 
 /** The banners the enabled features float over the map while navigating. */

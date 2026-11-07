@@ -75,12 +75,12 @@ describe('buildRoadRead', () => {
         expect(symbols[0].priority).toBeGreaterThan(symbols[1].priority);
     });
 
-    it('focuses a run by its speed and length, and marks it by its level', () => {
+    it('focuses a run by its speed and length, and marks it in its own colour', () => {
         const read = buildRoadRead([section(10, 15, { speed: 90 }), section(40, 43, { level: 2 })], 0, data, words);
         expect(read.sections[0]).toEqual({ id: 0, i0: 10, i1: 15, title: '90 km/h · 500 m' });
-        expect(read.marks.map((mark) => [mark.kind, mark.tier, mark.lens, mark.section.id, mark.color])).toEqual([
-            ['fast', 3, 'road', 0, '#D7263D'],
-            ['fast', 2, 'road', 1, '#E08A00']
+        expect(read.marks.map((mark) => [mark.kind, mark.lens, mark.section.id, mark.color])).toEqual([
+            ['fast', 'road', 0, '#7E3FD0'],
+            ['fast', 'road', 1, '#7E3FD0']
         ]);
     });
 
@@ -92,13 +92,13 @@ describe('buildRoadRead', () => {
         ]);
     });
 
-    it('fills the profile grey, with a hatch on each run for e-ink', () => {
+    it('fills the profile grey, with a shade on each run for e-ink', () => {
         const { fill } = buildRoadRead([section(0, 5), section(40, 43, { level: 2 })], 0, data, words);
-        expect(fill.map(({ d, pattern }) => [d, pattern])).toEqual([
-            [0, 'cross'],
-            [5, 'solid'],
-            [40, 'diagonal'],
-            [43, 'solid']
+        expect(fill.map(({ d, shade }) => [d, shade])).toEqual([
+            [0, 170],
+            [5, 30],
+            [40, 100],
+            [43, 30]
         ]);
         expect(fill[1].color).toBe('#9AA3AE');
         expect(fill[0].color).toBe('#D7263D');

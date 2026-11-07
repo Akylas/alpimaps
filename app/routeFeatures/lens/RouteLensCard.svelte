@@ -1,11 +1,13 @@
 <script lang="ts">
     // the sheet's profile card: the lens bar, its insight line and the elevation chart, which the lens reads.
     // The sheet moves the chart's cursor along the route and reloads it
+    import type { View } from '@nativescript/core';
     import type { ComponentEvents } from 'svelte';
     import { onDestroy } from 'svelte';
     import ElevationChart from '~/components/chart/ElevationChart.svelte';
     import GradeLegend from '~/components/chart/GradeLegend.svelte';
-    import { formatTime } from '~/helpers/locale';
+    import ProfileLegend from '~/components/chart/ProfileLegend.svelte';
+    import { formatTime, lc } from '~/helpers/locale';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
     import LensBar from '~/routeFeatures/lens/LensBar.svelte';
@@ -21,6 +23,8 @@
     import { buildTimeline, timeAtDistance, timelineSource } from '~/utils/routeAnalysis/timeline';
     import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { showAscents, showGradeColors } from '~/stores/mapStore';
+    import { showPopoverMenu, showSettings } from '~/utils/ui';
+    import { showError } from '@shared/utils/showError';
 
     export let item: Item;
     /** false on the route page: the main map is behind it, a focused section is not framed there */
@@ -60,6 +64,7 @@
     $: profileOptions = activeLens?.profile?.({ item });
     $: brackets = profileOptions?.brackets ?? NO_BRACKETS;
     $: fill = profileOptions?.fill ?? null;
+    $: legend = profileOptions?.legend;
     $: fade = profileOptions?.fade ?? false;
     // the clock time of each distance of the axis, when the route has a time
     $: clockAt = $routeFeatureChanges >= 0 && item ? clockFor(item) : null;
@@ -81,11 +86,11 @@
     let marks = NO_MARKS;
     let marksKey = '';
     $: {
-        const key = attention.map(({ color, kind, section, tier }) => `${kind}:${color}:${section.i0}:${section.i1}:${tier}`).join();
+        const key = attention.map(({ color, kind, section }) => `${kind}:${color}:${section.i0}:${section.i1}`).join();
         if (key !== marksKey) {
             marksKey = key;
             const data = item?.profile?.data;
-            marks = data && attention.length ? attention.map(({ color, kind, section, tier }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color, tier })) : NO_MARKS;
+            marks = data && attention.length ? attention.map(({ color, kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color })) : NO_MARKS;
         }
     }
 
@@ -160,14 +165,43 @@
         const { remainingDistance, remainingDistanceToStep, remainingTime } = computeRouteProgress({ item, location, positions, onPathIndex, computeRemaining: true, computeInstruction: false });
         chart?.hilghlightPathIndex({ onPathIndex, remainingDistance, remainingDistanceToStep, remainingTime, dplus: item.profile?.dplus, dmin: item.profile?.dmin }, highlight, false, true);
     }
+    // a long press on a lens: its feature's settings, and reading its data again, when it has them
+    async function onLensMenu({ anchor, id }: { id: LensId; anchor: View }) {
+        try {
+            const feature = $routeFeatures.find((candidate) => candidate.lenses?.some((lens) => lens.id === id));
+            const lens = lenses.find((candidate) => candidate.id === id);
+            const options = [
+                ...(feature?.settings ? [{ id: 'settings', name: lc('settings'), icon: 'mdi-tune' }] : []),
+                ...(lens?.refresh ? [{ id: 'refresh', name: lc('refresh'), icon: 'mdi-refresh' }] : [])
+            ];
+            if (!options.length) {
+                return;
+            }
+            await showPopoverMenu({
+                options,
+                anchor,
+                props: { autoSizeListItem: true },
+                onClose: (option) => {
+                    if (option?.id === 'settings') {
+                        showSettings({ title: feature.setting?.title() ?? lc('settings'), id: `settings[route_feature:${feature.id}]`, subSettingsOptions: `route_feature:${feature.id}` });
+                    } else if (option?.id === 'refresh') {
+                        lens.refresh({ item });
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
+    }
     // what the lens says of the point under the cursor, in the card that follows it
     function noteOf(index: number) {
         return activeLens?.readout?.({ item, index });
     }
 </script>
 
-<gridlayout rows="44,40,*,auto" {...$$restProps}>
-    <LensBar {entries} selected={active} on:select={onSelect} />
+<!-- the legend row is always there: a lens without one must not give the chart its room -->
+<gridlayout rows="44,40,*,26" {...$$restProps}>
+    <LensBar {entries} selected={active} on:menu={onLensMenu} on:select={onSelect} />
     <LensInsight
         focus={focused && { text: focused.title }}
         {headline}
@@ -188,16 +222,18 @@
         {item}
         {marks}
         note={noteOf}
+        {overlay}
         padding="0 6 0 6"
         {range}
         row={2}
         showAscents={$showAscents}
         showProfileGrades={$showGradeColors}
-        {overlay}
         on:cursor={onCursor}
         on:mark={onMark}
         on:highlight={onChartHighlight} />
-    {#if $showGradeColors && (active === 'overview' || active === 'climbs')}
-        <GradeLegend row={3} />
+    {#if legend?.length}
+        <ProfileLegend entries={legend} row={3} />
+    {:else if $showGradeColors && (active === 'overview' || active === 'climbs' || active === 'weather')}
+        <GradeLegend row={3} verticalAlignment="center" />
     {/if}
 </gridlayout>

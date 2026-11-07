@@ -78,9 +78,9 @@
         {@const color = second?.remaining ? (isEInk ? colorOnSurface : colorPrimary) : colorOnSurfaceVariant}
         <gridlayout
             backgroundColor={colorSurfaceFill}
-            borderColor={tile.alert ? colorError : colorHairline}
+            borderColor={tile.alert ? (isEInk ? colorOnSurface : colorError) : colorHairline}
             borderRadius={10}
-            borderWidth={tile.alert ? 1.5 : isEInk ? 1 : 0}
+            borderWidth={tile.alert ? (isEInk ? 2.5 : 1.5) : isEInk ? 1 : 0}
             col={index}
             height={40}
             margin="0 3"

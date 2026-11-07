@@ -23,14 +23,20 @@ const DARK = {
 const BLACK = '#000000';
 const WHITE = '#ffffff';
 
+// what no feature owns on e-ink: black, white on a black plate. The features' own are shades of grey.
+const EINK = {
+    alert_fast: BLACK,
+    speed_sign_rim: BLACK,
+    plate: BLACK,
+    plate_text: WHITE
+};
+
 /** Every key the style reads, for a theme: the generic ones and the features'. */
 export function lensPalette(variant: LensPaletteVariant, contributions: LensPaletteContribution[] = []): Record<string, string> {
-    const palette = Object.assign({}, variant === 'dark' ? DARK : LIGHT, ...contributions.map((contribution) => contribution(variant)));
-    // nothing can be told apart by colour on e-ink: the style separates slices by ticks. White on a black plate.
-    return variant === 'eink' ? Object.fromEntries(Object.keys(palette).map((key) => [key, key === 'plate_text' ? WHITE : BLACK])) : palette;
+    return Object.assign({}, variant === 'dark' ? DARK : variant === 'eink' ? EINK : LIGHT, ...contributions.map((contribution) => contribution(variant)));
 }
 
-/** The outline of a slice: dark on a dark map, where a white one glares. */
+/** The outline of a slice: dark on a dark map, where a white one glares; black on e-ink, where the greys of the slices are the line. */
 export function lensCase(variant: LensPaletteVariant) {
-    return variant === 'dark' ? '#101316' : '#ffffff';
+    return variant === 'dark' ? '#101316' : variant === 'eink' ? BLACK : WHITE;
 }

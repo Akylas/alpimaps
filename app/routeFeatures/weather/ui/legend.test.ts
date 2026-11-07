@@ -21,8 +21,10 @@ describe('weatherLegend', () => {
         expect(section.items[4]).toMatchObject({ kind: 'shield', label: 't:legend_weather_plate', plate: { color: '#ffffff', border: light.rain_heavy } });
     });
 
-    it('draws the rain as ticks on e-ink, none for dry', () => {
+    it('draws the rain as greys on e-ink, the darker the harder', () => {
         const lines = weatherLegend({ palette: eink, translate, variant: 'eink' }).items.filter((item) => item.kind === 'line');
-        expect(lines.map((item) => item.lines[1]?.dasharray)).toEqual([undefined, [2, 7], [2, 3], [6, 2]]);
+        const greys = lines.map((item) => item.lines[1].color);
+        expect(greys).toEqual([eink.rain_dry, eink.rain_light, eink.rain_steady, eink.rain_heavy]);
+        expect([...greys].sort().reverse()).toEqual(greys);
     });
 });

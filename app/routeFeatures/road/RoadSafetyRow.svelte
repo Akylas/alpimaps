@@ -7,9 +7,10 @@
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import type { LensSection } from '~/routeFeatures/registry';
-    import { ROAD_COLORS } from '~/routeFeatures/road/palette';
+    import { ROAD_SHARE_COLORS, ROAD_SHARE_EINK } from '~/routeFeatures/road/palette';
     import { readRoad, roadWords } from '~/routeFeatures/road/read';
-    import type { RoadRowData } from '~/routeFeatures/road/rows';
+    import { ROAD_SHARE_LABELS, type RoadRowData, type RoadShareId } from '~/routeFeatures/road/rows';
+    import { roadSectionsOpen } from '~/routeFeatures/road/settings';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
@@ -23,33 +24,31 @@
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
-    // nothing is told apart by colour on e-ink: black, a grey and a light one
-    const swatch = isEInk ? { high: '#000000', medium: '#7A7A7A', rest: '#D6D6D6' } : { high: ROAD_COLORS[3], medium: ROAD_COLORS[2], rest: ROAD_COLORS.core };
-    $: parts =
-        data.type === 'bar'
-            ? [
-                  { id: 'high', meters: data.high, color: swatch.high, label: lc('road_level_high') },
-                  { id: 'medium', meters: data.medium, color: swatch.medium, label: lc('road_level_medium') },
-                  { id: 'rest', meters: Math.max(data.total - data.high - data.medium, 0), color: swatch.rest, label: lc('road_bar_rest') }
-              ].filter((part) => part.meters > 0)
-            : [];
+    const swatch = (id: RoadShareId) => (isEInk ? ROAD_SHARE_EINK[id] : ROAD_SHARE_COLORS[id]);
+    $: shares = data.type === 'bar' ? data.shares : [];
 </script>
 
 {#if data.type === 'bar'}
     <stacklayout padding="8 16">
-        <gridlayout borderRadius={5} columns={parts.map((part) => part.meters + '*').join(',') || '*'} height={10}>
-            {#each parts as part, index}
-                <absolutelayout backgroundColor={part.color} col={index} />
+        <gridlayout borderRadius={5} columns={shares.map((share) => share.meters + '*').join(',') || '*'} height={10}>
+            {#each shares as share, index}
+                <absolutelayout backgroundColor={swatch(share.id)} col={index} />
             {/each}
         </gridlayout>
-        {#each parts as part}
+        {#each shares as share}
             <gridlayout columns="22,*,auto" height={26}>
-                <label color={part.color} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" verticalAlignment="middle" />
-                <label col={1} color={colorOnSurface} fontSize={13} text={part.label} verticalAlignment="middle" />
-                <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={formatDistance(part.meters)} verticalAlignment="middle" />
+                <label color={swatch(share.id)} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" verticalAlignment="middle" />
+                <label col={1} color={colorOnSurface} fontSize={13} text={lc(ROAD_SHARE_LABELS[share.id])} verticalAlignment="middle" />
+                <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={formatDistance(share.meters)} verticalAlignment="middle" />
             </gridlayout>
         {/each}
     </stacklayout>
+{:else if data.type === 'header'}
+    <gridlayout columns="24,*,auto" height={44} padding="0 16" rippleColor={colorPrimary} on:tap={() => roadSectionsOpen.set(!$roadSectionsOpen)}>
+        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={data.open ? 'mdi-chevron-down' : 'mdi-chevron-right'} verticalAlignment="middle" />
+        <label class="sectionHeader" col={1} padding="0" text={lc('road_sections')} verticalAlignment="middle" />
+        <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={String(data.count)} verticalAlignment="middle" />
+    </gridlayout>
 {:else if data.type === 'section'}
     <gridlayout columns="46,*" height={56} padding="0 16" rippleColor={colorPrimary} on:tap={() => dispatch('focus', readRoad(item)?.sections[data.id])}>
         <!-- the speed sign: a white disc in a ring -->

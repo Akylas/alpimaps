@@ -16,14 +16,20 @@ import {
     type RouteTile,
     registerRouteFeature
 } from '~/routeFeatures/registry';
-import { roadLegend } from '~/routeFeatures/road/legend';
-import { roadPalette } from '~/routeFeatures/road/palette';
+import { roadLegend, roadProfileLegend } from '~/routeFeatures/road/legend';
+import { ROAD_SHARE_COLORS, ROAD_SHARE_EINK, roadPalette } from '~/routeFeatures/road/palette';
 import { readRoad, roadWords } from '~/routeFeatures/road/read';
-import { roadRows } from '~/routeFeatures/road/rows';
+import { ROAD_SHARE_LABELS, roadRows, roadShares } from '~/routeFeatures/road/rows';
 import { riskStage } from '~/routeFeatures/road/stage';
-import { roadSettingRows, roadSettingsKey, routeFeatureRoad } from '~/routeFeatures/road/settings';
+import { roadSectionsOpen, roadSettingRows, roadSettingsKey, routeFeatureRoad } from '~/routeFeatures/road/settings';
 import { activityOf } from '~/utils/routeAnalysis/activity';
 import type { LayerStatus } from '~/utils/routeAnalysis/freshness';
+
+/** meters, from the profile */
+function routeLength(item: IItem) {
+    const data = item?.profile?.data;
+    return data?.[data.length - 1]?.d ?? 0;
+}
 
 const statusOf = (item: IItem) => layerStatuses(item).risk;
 
@@ -105,11 +111,14 @@ const roadLens: RouteLens = {
         if (!fills.has(read)) {
             fills.set(read, { fill: read.fill });
         }
-        return fills.get(read);
+        // the fill is the same object while the read is; the line under the chart says what it means
+        const levels = { high: read.runs.some(({ section }) => section.level === 3), medium: read.runs.some(({ section }) => section.level === 2) };
+        return { ...fills.get(read), legend: roadProfileLegend(levels, lc) };
     },
     sections: ({ item }) => readRoad(item)?.sections ?? [],
     slices: ({ item }) => readRoad(item)?.slices ?? [],
     symbols: ({ item }) => readRoad(item)?.symbols ?? [],
+    refresh: ({ item }) => computeLayers(item, ['risk']),
     legend: ({ palette, translate, variant }) => roadLegend({ palette, translate, variant })
 };
 
@@ -130,10 +139,7 @@ const roadPageSection: RoutePageSection = {
         const read = readRoad(item);
         return read && (read.runs.length ? lc('road_fast_km', formatDistance(read.exposed)) : lc('road_none'));
     },
-    rows: ({ item }) => {
-        const data = item?.profile?.data;
-        return isBikeRoute(item) ? roadRows(readRoad(item), data?.[data.length - 1]?.d ?? 0) : [];
-    },
+    rows: ({ item }) => (isBikeRoute(item) ? roadRows(readRoad(item), routeLength(item), get(roadSectionsOpen)) : []),
     component: () => import('~/routeFeatures/road/RoadSafetyRow.svelte')
 };
 
@@ -143,11 +149,32 @@ registerRouteFeature({
     setting: { title: () => lc('road_safety'), store: routeFeatureRoad },
     settings: roadSettingRows,
     // a layer finishing or failing, a threshold or a minimum length reading the same layer again, and the lens: the signs are the lens' own in the road lens
-    changes: derived([routeAnalysisChanges, roadSettingsKey, routeLensStore], (values) => values.join()),
+    changes: derived([routeAnalysisChanges, roadSettingsKey, routeLensStore, roadSectionsOpen], (values) => values.join()),
     lensPalette: roadPalette,
     lenses: [roadLens],
     tiles: roadTiles,
     pageSections: [roadPageSection],
+    // the stats card's third view, for a route that has been read
+    statViews: [
+        {
+            id: 'risk',
+            title: () => lc('road_safety'),
+            rows: ({ item }) => {
+                const read = isBikeRoute(item) ? readRoad(item) : null;
+                const total = routeLength(item);
+                return read && total > 0
+                    ? roadShares(read, total).map(({ id, meters }) => ({
+                          id,
+                          label: lc(ROAD_SHARE_LABELS[id]),
+                          dist: meters / 1000,
+                          perc: meters / total,
+                          color: ROAD_SHARE_COLORS[id],
+                          eink: ROAD_SHARE_EINK[id]
+                      }))
+                    : [];
+            }
+        }
+    ],
     attention: ({ item }) => (isBikeRoute(item) ? (readRoad(item)?.marks ?? []) : []),
     navBanners: [{ id: 'road', component: () => import('~/routeFeatures/road/RiskBanner.svelte') }],
     // while following the route, whatever the lens: the fast casing, and the signs unless the road lens draws them

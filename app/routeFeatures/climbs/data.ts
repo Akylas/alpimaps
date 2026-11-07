@@ -93,7 +93,6 @@ export function readClimbs(item: IItem): ClimbsRead | null {
                     kind: 'steep' as const,
                     color: STEEP_MARK_COLOR,
                     lens: 'climbs' as const,
-                    tier: section.tier,
                     section: { id, i0: section.startIndex, i1: section.endIndex, title: steepTitle(section) }
                 })),
             // two lines: the category and what the climb gains

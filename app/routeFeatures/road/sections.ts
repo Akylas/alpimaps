@@ -1,6 +1,6 @@
 /** What the road lens shows of the risky sections: slices, speed signs, marks, the profile fill. Pure: nothing here may import NativeScript. */
 import type { AttentionMark, LensSection, LensSlice, LensSymbol, NavAlert, ProfileFillStop } from '~/routeFeatures/registry';
-import { ROAD_COLORS, ROAD_CORE_KEY, riskKey } from '~/routeFeatures/road/palette';
+import { ROAD_COLORS, ROAD_CORE_KEY, ROAD_MARK_COLOR, ROAD_SHADES, riskKey } from '~/routeFeatures/road/palette';
 import type { RiskLevel, RiskSection } from '~/routeFeatures/road/risk';
 
 /** How the figures are said, in the units the user chose. */
@@ -34,7 +34,6 @@ export interface RoadRead {
 
 /** meters between two speed signs of a long run */
 const SIGN_SPACING = 2000;
-const FILL_PATTERNS: Record<RiskLevel, ProfileFillStop['pattern']> = { 2: 'diagonal', 3: 'cross' };
 
 /**
  * The sections on the profile, in route order, each starting where the one before ended and at least one step long. They are
@@ -62,7 +61,7 @@ export function buildRoadRead(sections: RiskSection[], unknown: number, data: { 
     const last = data.length - 1;
     const runs = runsOf(sections, data);
     const slices: LensSlice[] = [];
-    const fill: ProfileFillStop[] = [{ d: 0, color: ROAD_COLORS.core, pattern: 'solid' }];
+    const fill: ProfileFillStop[] = [{ d: 0, color: ROAD_COLORS.core, shade: ROAD_SHADES.core }];
     let cursor = 0;
     runs.forEach(({ i0, i1, section }) => {
         if (i0 > cursor) {
@@ -72,7 +71,7 @@ export function buildRoadRead(sections: RiskSection[], unknown: number, data: { 
         if (fill[fill.length - 1].d === i0) {
             fill.pop();
         }
-        fill.push({ d: i0, color: ROAD_COLORS[section.level], pattern: FILL_PATTERNS[section.level] }, { d: i1, color: ROAD_COLORS.core, pattern: 'solid' });
+        fill.push({ d: i0, color: ROAD_COLORS[section.level], shade: ROAD_SHADES[section.level] }, { d: i1, color: ROAD_COLORS.core, shade: ROAD_SHADES.core });
         cursor = i1;
     });
     if (last > 0 && cursor < last) {
@@ -99,7 +98,7 @@ export function buildRoadRead(sections: RiskSection[], unknown: number, data: { 
                 })
             );
         }),
-        marks: runs.map(({ section }, id) => ({ kind: 'fast' as const, color: ROAD_COLORS[section.level], tier: section.level, lens: 'road' as const, section: lensSections[id] })),
+        marks: runs.map(({ section }, id) => ({ kind: 'fast' as const, color: ROAD_MARK_COLOR, lens: 'road' as const, section: lensSections[id] })),
         alerts: runs.map(({ i0, i1, section }) => ({ kind: 'fast' as const, i0, i1, s: section.level })),
         fill
     };

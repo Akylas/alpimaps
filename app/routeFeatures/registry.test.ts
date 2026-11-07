@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
-import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages } from './registry';
+import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages, routeStatViews } from './registry';
 
 describe('routeStages', () => {
     const stage = (layer: 'weather' | 'sun') => ({ layer, run: () => Promise.resolve({ prov: { computedAt: 0, inputsHash: '', provider: '', quality: 'ok' as const }, data: null }) });
@@ -57,5 +57,24 @@ describe('routeNavBanners', () => {
             { id: 'two', order: 3, navBanners: [{ id: 'c', component }] }
         ];
         expect(routeNavBanners(features).map(({ id }) => id)).toEqual(['a', 'b', 'c']);
+    });
+});
+
+describe('routeStatViews', () => {
+    const row = { id: 'a', label: 'a', dist: 1, perc: 1, color: '#000000', eink: '#000000' };
+
+    it('lists the views of the features that have rows for this route', () => {
+        const features: RouteFeature[] = [
+            {
+                id: 'one',
+                order: 1,
+                statViews: [
+                    { id: 'full', title: () => 'full', rows: () => [row] },
+                    { id: 'empty', title: () => 'empty', rows: () => [] }
+                ]
+            },
+            { id: 'none', order: 2 }
+        ];
+        expect(routeStatViews(features, { item: null }).map(({ id }) => id)).toEqual(['full']);
     });
 });

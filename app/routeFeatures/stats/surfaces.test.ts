@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pavedShare, surfaceStops, topSurfaces } from './surfaces';
+import { pavedShare, statsCardHeight, surfaceShade, surfaceStops, topSurfaces } from './surfaces';
 
 const surfaces = [
     { id: 'gravel', perc: 0.14 },
@@ -35,20 +35,38 @@ describe('topSurfaces', () => {
 
 describe('surfaceStops', () => {
     const colors = { gravel: '#a', path: '#b' };
-    const patterns = { gravel: 'coarse_dots', path: 'cross' };
 
-    it('starts a stop at each segment, in order, with its colour and hatch', () => {
+    it('starts a stop at each segment, in order, with its colour and shade', () => {
         const segments = [
             { id: 'path', start: 40, end: 99 },
             { id: 'gravel', start: 0, end: 39 }
         ];
-        expect(surfaceStops(segments, colors, patterns, '#z', 'solid')).toEqual([
-            { d: 0, color: '#a', pattern: 'coarse_dots' },
-            { d: 40, color: '#b', pattern: 'cross' }
+        expect(surfaceStops(segments, colors, '#z')).toEqual([
+            { d: 0, color: '#a', shade: surfaceShade('gravel') },
+            { d: 40, color: '#b', shade: surfaceShade('path') }
         ]);
     });
 
-    it('falls back for a surface without a colour or a hatch', () => {
-        expect(surfaceStops([{ id: 'steps', start: 0, end: 9 }], colors, patterns, '#z', 'solid')).toEqual([{ d: 0, color: '#z', pattern: 'solid' }]);
+    it('falls back for a surface without a colour, and gives an unknown one a middle shade', () => {
+        expect(surfaceStops([{ id: 'mud', start: 0, end: 9 }], colors, '#z')).toEqual([{ d: 0, color: '#z', shade: 120 }]);
+    });
+
+    it('is darker the rougher the surface', () => {
+        expect(surfaceShade('paved')).toBeLessThan(surfaceShade('gravel'));
+        expect(surfaceShade('gravel')).toBeLessThan(surfaceShade('path'));
+    });
+});
+
+describe('statsCardHeight', () => {
+    it('is the legend of the longest view, two lines to a row', () => {
+        expect(statsCardHeight([1, 2])).toBe(58 + 20 + 12);
+        expect(statsCardHeight([4, 1])).toBe(58 + 40 + 12);
+        expect(statsCardHeight([5, 1])).toBe(58 + 60 + 12);
+    });
+
+    it('keeps a row for a route with no lines, and stops at six rows', () => {
+        expect(statsCardHeight([])).toBe(58 + 20 + 12);
+        expect(statsCardHeight([0, 0])).toBe(58 + 20 + 12);
+        expect(statsCardHeight([40])).toBe(58 + 120 + 12);
     });
 });

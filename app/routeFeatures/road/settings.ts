@@ -13,6 +13,9 @@ export const roadThreshold = settingsStore('road_threshold', DEFAULT_RISK_THRESH
 /** meters, 0 keeps every section */
 export const roadMinLength = settingsStore('road_min_length', DEFAULT_RISK_MIN_LENGTH);
 
+/** The sections list is folded away until asked for: the bar comes first. */
+export const roadSectionsOpen = settingsStore('road_sections_open', false);
+
 /** A banner while following the route, when a fast section is near. */
 export const roadBanner = settingsStore('road_banner', true);
 /** meters, the shortest section the banner warns of: the list keeps every one over `roadMinLength` */

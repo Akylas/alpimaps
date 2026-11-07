@@ -1,5 +1,5 @@
 /** What the colours and the plate of the climbs lens mean. Pure: nothing here may import NativeScript. */
-import { SEVERITY_TICKS, legendLine } from '~/routeFeatures/lens/lensLegend';
+import { legendLine } from '~/routeFeatures/lens/lensLegend';
 import { gradeKey } from '~/routeFeatures/climbs/palette';
 import type { LensLegendContext, LensLegendSection } from '~/routeFeatures/registry';
 import { gradeBuckets } from '~/utils/grade';
@@ -25,13 +25,13 @@ export function climbsLegend({ palette, translate, variant }: Pick<LensLegendCon
         plate: { color: palette.plate, radius: 4 },
         text: { value: '1', color: palette.plate_text }
     };
-    // on e-ink every colour is black: the ticks say how steep
+    // on e-ink the greys of the eight steps look alike: three, each a darker one
     const items =
         variant === 'eink'
             ? [
-                  legendLine('not_steep', translate('legend_not_steep'), palette[gradeKey(3)]),
-                  legendLine('steep', translate('legend_steep'), palette[gradeKey(6)], SEVERITY_TICKS[2]),
-                  legendLine('very_steep', translate('legend_very_steep'), palette[gradeKey(7)], SEVERITY_TICKS[3])
+                  legendLine('not_steep', translate('legend_not_steep'), palette[gradeKey(3)], variant),
+                  legendLine('steep', translate('legend_steep'), palette[gradeKey(6)], variant),
+                  legendLine('very_steep', translate('legend_very_steep'), palette[gradeKey(7)], variant)
               ]
             : gradeBuckets.map((_, bucket) => legendLine(gradeKey(bucket), gradeLabel(bucket), palette[gradeKey(bucket)]));
     return { id: 'route_lens', label: translate('lens_climbs'), items: [...items, plate] };
