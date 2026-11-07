@@ -42,6 +42,8 @@ export interface SunPoint extends SunPosition {
     class: SunClass;
     /** where the sun is against the way the ride goes; none when the route does not go anywhere there */
     side?: SunSide;
+    /** 0..1: how much of the clear-sky sun gets through, by the forecast; none when there is no forecast for it */
+    clearness?: number;
 }
 
 export interface SunSummary {
@@ -162,11 +164,12 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         const glare = isGlare(position, heading, rule);
         const level = sunLevel(position.altitude);
         const side = heading === undefined ? undefined : sunSide(position.azimuth, heading);
+        const clear = clearnessAt(weather, vertex, at, position.altitude);
         // the moon is only looked for in the dark: it is the one light there is
         const moon = level === 'night' ? moonPositionAt(at, { lat, lon }) : undefined;
         const moonlit = !!moon && moon.altitude > 0 && moonIllumination(new Date(at)) >= moonMin;
         const moonSide = moonlit && heading !== undefined ? sunSide(moon.azimuth, heading) : undefined;
-        return { ...position, at, class: classOf(level, glare, clearnessAt(weather, vertex, at, position.altitude), moonlit), glare, level, side, moonSide };
+        return { ...position, at, class: classOf(level, glare, clear, moonlit), clearness: clear, glare, level, side, moonSide };
     };
 
     const vertexes = sampledVertexes(distances, STEP[kind]);
@@ -217,8 +220,8 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         place: { lat: coordinates[0][1], lon: coordinates[0][0] },
         distanceAt: (at) => distances[Math.min(last, timeline.indexAt(at))],
         at: (index) => {
-            const { altitude, at, azimuth, class: sunClass, side } = pointAt(Math.max(0, Math.min(last, index)));
-            return { altitude, at, azimuth, class: sunClass, side };
+            const { altitude, at, azimuth, class: sunClass, clearness: clear, side } = pointAt(Math.max(0, Math.min(last, index)));
+            return { altitude, at, azimuth, class: sunClass, clearness: clear, side };
         }
     };
 }

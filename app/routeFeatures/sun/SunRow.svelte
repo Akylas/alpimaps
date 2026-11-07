@@ -7,6 +7,7 @@
     import type { IItem } from '~/models/Item';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
     import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
+    import { startRouteSunMode } from '~/routeFeatures/sun/sunMode';
     import type { SunRowData } from '~/routeFeatures/sun/rows';
     import type { SunSide } from '~/utils/astronomy/sun';
     import { colors, fonts } from '~/variables';
@@ -14,12 +15,9 @@
     // the page hands every row its item; the rows of this card say it all
     export let item: IItem;
     export let data: SunRowData;
-    // the page gives every row its item, this card's rows have no use for it
-    // eslint-disable-next-line no-unused-expressions
-    $: item;
 
-    let { colorError, colorOnSurface, colorOnSurfaceVariant } = $colors;
-    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant } = $colors);
+    let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     const EVENT_ICONS = { sunset: 'mdi-weather-sunset-down', dusk: 'mdi-weather-sunset', moonrise: 'mdi-moon-waxing-crescent', moonset: 'mdi-moon-waning-crescent' };
     const SIDES: SunSide[] = ['left', 'ahead', 'right', 'behind'];
@@ -97,6 +95,14 @@
         <stacklayout col={1}>
             <label color={colorOnSurface} fontSize={14} text={lc(data.body === 'moon' ? 'sun_moon_side_title' : 'sun_side_title')} />
             <label color={colorOnSurfaceVariant} fontSize={12} text={sideText} textWrap={true} />
+        </stacklayout>
+    </gridlayout>
+{:else if data.type === 'preview'}
+    <gridlayout columns="32,*" height={48} padding="0 16" rippleColor={colorPrimary} on:tap={() => startRouteSunMode(item)}>
+        <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={20} text="mdi-video-3d" verticalAlignment="middle" />
+        <stacklayout col={1} verticalAlignment="middle">
+            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc('sun_mode_preview')} />
+            <label color={colorOnSurfaceVariant} fontSize={12} text={lc('sun_mode_preview_desc')} />
         </stacklayout>
     </gridlayout>
 {:else}

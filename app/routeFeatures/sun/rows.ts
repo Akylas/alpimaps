@@ -15,6 +15,8 @@ export type SunRowData =
     | { type: 'glare'; meters: number }
     /** the shares of the metres ridden by day, by where the sun is against the way; or by the light of the moon, by where it is */
     | { type: 'side'; body: 'sun' | 'moon'; left: number; right: number; ahead: number; behind: number }
+    /** the button that lights the 3D map with the sun of the ride */
+    | { type: 'preview' }
     | { type: 'note' };
 
 const CLASSES = Object.keys(SUN_PALETTE_KEYS) as SunClass[];
@@ -29,7 +31,7 @@ function moonAround(read: SunRead): { rise: number | null; set: number | null } 
 }
 
 /** The bar, the times, what the sun does against the ride, and the note on what the figures leave out. None before the sun is read. */
-export function sunRows(read: SunRead | null): RoutePageRow[] {
+export function sunRows(read: SunRead | null, { preview = false }: { preview?: boolean } = {}): RoutePageRow[] {
     if (!read) {
         return [];
     }
@@ -71,6 +73,9 @@ export function sunRows(read: SunRead | null): RoutePageRow[] {
     const moonlit = moonSides.left + moonSides.right + moonSides.ahead + moonSides.behind;
     if (moonlit > 0) {
         rows.push({ type: 'side', body: 'moon', left: moonSides.left / moonlit, right: moonSides.right / moonlit, ahead: moonSides.ahead / moonlit, behind: moonSides.behind / moonlit });
+    }
+    if (preview) {
+        rows.push({ type: 'preview' });
     }
     rows.push({ type: 'note' });
     return rows.map((data, index) => ({ key: `${data.type}${data.type === 'event' ? data.id : ''}${index}`, data }));

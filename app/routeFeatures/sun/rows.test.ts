@@ -13,10 +13,10 @@ const geometry: Geometry = {
 };
 const NOW = Date.UTC(2026, 5, 1);
 
-function rowsFor(at: number): SunRowData[] {
+function rowsFor(at: number, options?: { preview?: boolean }): SunRowData[] {
     const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
     const item: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
-    return sunRows(readSun(item, NOW)).map((row: RoutePageRow) => row.data as SunRowData);
+    return sunRows(readSun(item, NOW), options).map((row: RoutePageRow) => row.data as SunRowData);
 }
 
 const HOUR = 3600000;
@@ -109,5 +109,12 @@ describe('sunRows', () => {
         const rise = of(rowsFor(Date.UTC(2026, 6, 31, 22)), 'event').find((row) => row.id === 'moonrise');
         expect(rise.at).toBeGreaterThan(Date.UTC(2026, 6, 31, 12));
         expect(rise.relation).toBe('before');
+    });
+
+    it('offers the preview in 3D before the note when the map has terrain, and not otherwise', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        const withPreview = rowsFor(at, { preview: true });
+        expect(withPreview.map((row) => row.type).slice(-2)).toEqual(['preview', 'note']);
+        expect(rowsFor(at).some((row) => row.type === 'preview')).toBe(false);
     });
 });

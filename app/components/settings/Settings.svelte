@@ -21,7 +21,7 @@
     import type { SettingsStore } from '~/stores/settingsStore';
     import { terrain3dSettingRows } from '~/components/map/terrain3dSettingRows';
     import { type PeakFinderSettingRow, peakFinderSettingRows } from '~/components/peaks/peakFinderSettingRows';
-    import { peakFinderEnabled, terrain3dEnabled } from '~/stores/terrainStore';
+    import { peakFinderEnabled, routeSunLight, terrain3dEnabled } from '~/stores/terrainStore';
     import { clock_24, getLocaleDisplayName, l, lc, onMapLanguageChanged, selectLanguage, selectMapLanguage, slc } from '~/helpers/locale';
     import { getColorThemeDisplayName, getThemeDisplayName, selectColorTheme, selectTheme } from '~/helpers/theme';
     import { DEFAULT_IMPERIAL_UINTS, DEFAULT_METRIC_UINTS, UNITS, UNIT_FAMILIES, availableUnits, unitFamilies, unitFamily } from '~/helpers/units';
@@ -420,7 +420,7 @@
                         )
                 ];
             case 'terrain_3d':
-                return [{ ...storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), icon: 'mdi-terrain' }, ...terrain3dSettingRows().map(sharedSettingItem).filter(Boolean)];
+                return [{ ...storeSwitch(terrain3dEnabled, lc('terrain_3d'), lc('terrain_3d_settings')), icon: 'mdi-terrain' }, ...terrain3dSettingRows(undefined, get(routeSunLight) !== null).map(sharedSettingItem).filter(Boolean)];
             case 'peak_finder':
                 return [
                     { ...storeSwitch(peakFinderEnabled, lc('peak_finder'), lc('peak_finder_settings')), icon: 'mdi-image-filter-hdr' },

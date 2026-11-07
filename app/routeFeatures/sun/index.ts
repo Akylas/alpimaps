@@ -10,6 +10,8 @@ import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_PALETTE_KEYS, type SunClass, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { sunRows } from '~/routeFeatures/sun/rows';
+import '~/routeFeatures/sun/sunMode';
+import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { routeFeatureSun, sunGlareAngle, sunMoonMin, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
 import type { IItem } from '~/models/Item';
 
@@ -110,7 +112,8 @@ const sunPageSection: RoutePageSection = {
         const read = readOf(item);
         return read ? facts(read) : [];
     },
-    rows: ({ item }) => sunRows(readOf(item)),
+    // the preview needs the 3D map, which needs a terrain
+    rows: ({ item }) => sunRows(readOf(item), { preview: get(mapCapabilities).hasTerrain }),
     component: () => import('~/routeFeatures/sun/SunRow.svelte')
 };
 

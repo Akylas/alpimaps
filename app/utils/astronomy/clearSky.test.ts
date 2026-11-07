@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearSkyDni, clearness } from '~/utils/astronomy/clearSky';
+import { clearSkyDni, clearness, shadowStrengthFor } from '~/utils/astronomy/clearSky';
 
 describe('clearSkyDni', () => {
     it('is 947 W/m2 for a sun overhead at sea level', () => {
@@ -40,5 +40,21 @@ describe('clearness', () => {
     it('says nothing when the forecast does not', () => {
         expect(clearness({ altitude: 40, elevation: 0 })).toBeUndefined();
         expect(clearness({ altitude: 2, elevation: 0, dni: 100 })).toBeUndefined();
+    });
+});
+
+describe('shadowStrengthFor', () => {
+    it('is the strength of the user under a clear sky, and under a forecast that says nothing', () => {
+        expect(shadowStrengthFor(0.6, 1)).toBeCloseTo(0.6, 5);
+        expect(shadowStrengthFor(0.6, undefined)).toBe(0.6);
+    });
+
+    it('is as weak as the sun that gets through', () => {
+        expect(shadowStrengthFor(0.6, 0.5)).toBeCloseTo(0.3, 5);
+    });
+
+    it('is none when the sun hardly gets through, which spares the shadow pass', () => {
+        expect(shadowStrengthFor(0.6, 0.07)).toBe(0);
+        expect(shadowStrengthFor(0.6, 0.09)).toBeGreaterThan(0);
     });
 });

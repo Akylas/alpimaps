@@ -34,3 +34,14 @@ export function clearness({ altitude, cloud, dni, elevation }: Sky): number | un
     }
     return cloud === undefined ? undefined : Math.max(0, Math.min(1, 1 - cloud / 100));
 }
+
+/** Under this share of the sun getting through, a shadow is too faint to be worth the pass that draws it. */
+const MIN_SHADOW_CLEARNESS = 0.08;
+
+/** How strong the shadows are: the user's strength, as much as the sun gets through, none when it hardly does. 1 where the forecast says nothing. */
+export function shadowStrengthFor(strength: number, clear: number | undefined): number {
+    if (clear === undefined) {
+        return strength;
+    }
+    return clear < MIN_SHADOW_CLEARNESS ? 0 : strength * clear;
+}

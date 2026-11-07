@@ -146,6 +146,13 @@ describe('readSun', () => {
         expect(moonSides.right + moonSides.ahead).toBe(0);
     });
 
+    it('says how much sun gets through at a vertex, from the forecast', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100)), NOW).at(20).clearness).toBe(0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 900, 0)), NOW).at(20).clearness).toBeGreaterThan(0.9);
+        expect(readSun(itemLeaving(at), NOW).at(20).clearness).toBeUndefined();
+    });
+
     it('tells where the sun sets, the dark ms and the km into the glare', () => {
         const { summary } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
         expect(summary.sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));
