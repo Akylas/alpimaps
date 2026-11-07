@@ -1,14 +1,14 @@
 import { ApplicationSettings } from '@nativescript/core';
 import { derived, get } from 'svelte/store';
-import { currentLensPalette, lensVariant } from '~/routeFeatures/lens/lensStyle';
+import { currentLensPalette, lensVariant, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { focusKeyOf, routeFocus } from '~/routeFeatures/lens/routeFocusStore';
 import { routeLensStore } from '~/routeFeatures/lens/routeLensStore';
 import { lensFeatures, routeCoordinates, symbolFeatures } from '~/routeFeatures/lens/sections';
 import { registerRouteFeature, resolveLens, routeFeatures, routeLenses } from '~/routeFeatures/registry';
 
-// the lens and the focused section redraw the route, the cursor does not: a key that only they change
-const lensChanges = derived([routeLensStore, routeFocus], ([lens, focus], set: (key: string) => void) => {
-    set(`${lens}|${focus?.itemKey}|${focus?.section?.lens}|${focus?.section?.i0}|${focus?.section?.i1}`);
+// the lens, the focused section and the style redraw the route, the cursor does not: a key that only they change
+const lensChanges = derived([routeLensStore, routeFocus, lensVariantStore], ([lens, focus, variant], set: (key: string) => void) => {
+    set(`${lens}|${variant}|${focus?.itemKey}|${focus?.section?.lens}|${focus?.section?.i0}|${focus?.section?.i1}`);
 });
 
 registerRouteFeature({
