@@ -4,9 +4,12 @@
     "variables.mss",
     "style.mss",
     "models.mss",
+    "app-rules.mss",
     "alpimaps-ranking.mss"
   ],
   "styleparameters": {
+    "app_fast_roads": 0,
+    "app_fast_speed": 70,
     "ranking": {
       "default": "default",
       "values": {
