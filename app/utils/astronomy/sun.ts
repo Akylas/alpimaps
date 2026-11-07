@@ -45,6 +45,13 @@ export interface GlareRule {
     window: number;
 }
 
+/** What blinds on foot, and on wheels: a bike's rider looks further down the road, so a narrower window but a higher sun. */
+export const GLARE_RULES: Record<'hike' | 'bike' | 'motor', GlareRule> = {
+    hike: { below: 12, window: 35 },
+    bike: { below: 15, window: 25 },
+    motor: { below: 15, window: 25 }
+};
+
 /** The sun blinds a ride that goes toward it while it is low. Not when it is down, and not without a heading to compare. */
 export function isGlare(sun: SunPosition, heading: number | undefined, rule: GlareRule): boolean {
     if (heading === undefined || sun.altitude < SUN_DOWN || sun.altitude >= rule.below) {

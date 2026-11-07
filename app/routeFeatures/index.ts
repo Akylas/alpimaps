@@ -7,3 +7,4 @@ import '~/routeFeatures/surface';
 import '~/routeFeatures/stats';
 import '~/routeFeatures/osm';
 import '~/routeFeatures/weather';
+import '~/routeFeatures/sun';
