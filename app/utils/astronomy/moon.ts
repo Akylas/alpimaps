@@ -2,7 +2,7 @@
  * The moon along a ride: its phase as a glyph, the lit part, and how long it is up while the sun is not. Pure, and nothing of the app in it
  * (suncalc only): it is the part the weather apps of the family can share. Altitudes are suncalc 2's, in degrees.
  */
-import { getMoonIllumination, getMoonPosition, getPosition } from 'suncalc';
+import { getMoonIllumination, getMoonPosition, getMoonTimes, getPosition } from 'suncalc';
 
 const glyph = (codePoint: number) => String.fromCodePoint(codePoint);
 
@@ -52,4 +52,22 @@ export function nightMoon(start: number, end: number, lat: number, lon: number):
         }
     }
     return { glyph: moonPhaseGlyph(middle), illumination: moonIllumination(middle), moonlitMinutes: Math.round(moonlit) };
+}
+
+/** Where the moon is, degrees: azimuth clockwise from north, altitude as seen. */
+export function moonPositionAt(at: number, place: { lat: number; lon: number }): { azimuth: number; altitude: number } {
+    const { altitude, azimuth } = getMoonPosition(new Date(at), place.lat, place.lon);
+    return { azimuth, altitude };
+}
+
+export interface MoonEvents {
+    /** epoch ms, or null on the day the moon does not rise or set */
+    rise: number | null;
+    set: number | null;
+}
+
+/** The moonrise and the moonset of the civil day `at` falls in, in the zone of `utcOffset` (minutes east of UTC) when given. */
+export function moonEvents(at: number, place: { lat: number; lon: number }, utcOffset?: number): MoonEvents {
+    const { rise, set } = getMoonTimes(new Date(at), place.lat, place.lon, utcOffset);
+    return { rise: rise ? rise.getTime() : null, set: set ? set.getTime() : null };
 }

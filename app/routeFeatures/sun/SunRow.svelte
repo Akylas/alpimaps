@@ -21,6 +21,7 @@
     let { colorError, colorOnSurface, colorOnSurfaceVariant } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant } = $colors);
 
+    const EVENT_ICONS = { sunset: 'mdi-weather-sunset-down', dusk: 'mdi-weather-sunset', moonrise: 'mdi-moon-waxing-crescent', moonset: 'mdi-moon-waning-crescent' };
     const SIDES: SunSide[] = ['left', 'ahead', 'right', 'behind'];
     const palette = currentLensPalette(isEInk ? 'eink' : 'light');
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
@@ -74,7 +75,7 @@
     </gridlayout>
 {:else if data.type === 'event'}
     <gridlayout columns="32,*" height={48} padding="0 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={data.id === 'sunset' ? 'mdi-weather-sunset-down' : 'mdi-weather-sunset'} verticalAlignment="middle" />
+        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={EVENT_ICONS[data.id]} verticalAlignment="middle" />
         <stacklayout col={1} verticalAlignment="middle">
             <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc(`sun_event_${data.id}`, time(data.at, data.offset))} />
             <label color={colorOnSurfaceVariant} fontSize={12} text={eventSub(data)} />
@@ -92,9 +93,9 @@
     </gridlayout>
 {:else if data.type === 'side'}
     <gridlayout columns="32,*" padding="8 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text="mdi-compass-outline" verticalAlignment="top" />
+        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={data.body === 'moon' ? 'mdi-moon-waning-crescent' : 'mdi-compass-outline'} verticalAlignment="top" />
         <stacklayout col={1}>
-            <label color={colorOnSurface} fontSize={14} text={lc('sun_side_title')} />
+            <label color={colorOnSurface} fontSize={14} text={lc(data.body === 'moon' ? 'sun_moon_side_title' : 'sun_side_title')} />
             <label color={colorOnSurfaceVariant} fontSize={12} text={sideText} textWrap={true} />
         </stacklayout>
     </gridlayout>

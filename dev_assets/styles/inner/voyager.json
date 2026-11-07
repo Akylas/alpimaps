@@ -38,7 +38,7 @@
             "default": {
                 "grade_0": "#1B4E9B", "grade_1": "#3B7DD8", "grade_2": "#7FB2E8", "grade_3": "#7BC96F", "grade_4": "#F2D14B", "grade_5": "#F0902B", "grade_6": "#E34A33", "grade_7": "#9E1B18",
                 "rain_dry": "#8D96A3", "rain_light": "#90CAF9", "rain_steady": "#42A5F5", "rain_heavy": "#1565C0",
-                "sun_day": "#F2C94C", "sun_overcast": "#9AA5B1", "sun_low": "#F2994A", "sun_glare": "#E5484D", "sun_twilight": "#7E57C2", "sun_night": "#2B3A8C",
+                "sun_day": "#F2C94C", "sun_overcast": "#9AA5B1", "sun_low": "#F2994A", "sun_glare": "#E5484D", "sun_twilight": "#7E57C2", "sun_moonlit": "#5A7BB5", "sun_night": "#2B3A8C",
                 "alert_fast": "#D7263D", "speed_sign_rim": "#D7263D", "plate": "#2B2F33", "plate_text": "#ffffff"
             }
         },

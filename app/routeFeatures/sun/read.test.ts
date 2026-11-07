@@ -73,8 +73,8 @@ describe('readSun', () => {
     });
 
     it('goes from day to night on a ride into the evening, blinded while it rides toward the sun', () => {
-        // 19:30 to 22:30 in Grenoble: the sun sets at 21:30 and it is dark by 22:00
-        expect(sequence(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)))).toEqual([KEY.day, KEY.glare, KEY.twilight, KEY.night]);
+        // 19:30 to 22:30 in Grenoble: the sun sets at 21:30 and it is dark by 22:00, under a first quarter moon high in the south
+        expect(sequence(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)))).toEqual([KEY.day, KEY.glare, KEY.twilight, KEY.moonlit]);
     });
 
     it('is the low sun, not glare, when the ride turns its back to it', () => {
@@ -117,6 +117,33 @@ describe('readSun', () => {
         expect(read.end).toBe(leaving + 3 * HOUR);
         expect(read.place).toEqual({ lat: START.lat, lon: START.lon });
         expect(read.distanceAt(leaving + 1.5 * HOUR)).toBeCloseTo(10000, -3);
+    });
+
+    it('is moonlit when the moon is up and bright over a ride in the night', () => {
+        // 00:00 to 03:00 in Grenoble in the night of the full moon of July 2026, the moon high in the south
+        const read = readSun(itemLeaving(Date.UTC(2026, 6, 28, 22)), NOW);
+        expect(read.slices.map((slice) => slice.k)).toEqual([KEY.moonlit]);
+        expect(read.summary.moonlitMs).toBeCloseTo(3 * HOUR, -5);
+        expect(read.at(20).class).toBe('moonlit');
+    });
+
+    it('stays night under a new moon, which is not up', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 6, 14, 22)), NOW);
+        expect(read.slices.map((slice) => slice.k)).toEqual([KEY.night]);
+        expect(read.summary.moonlitMs).toBe(0);
+    });
+
+    it('is dark under a moon too thin for the threshold, moonlit under a lower one', () => {
+        // 04:00 to 05:00 in Grenoble on the 11th: the moon is up, 16 % lit
+        const item = itemLeaving(Date.UTC(2026, 6, 11, 2), 'bicycle', undefined, geometry, 1);
+        expect(readSun(item, NOW).slices.map((slice) => slice.k)).toEqual([KEY.night]);
+        expect(readSun(item, NOW, { moonMin: 10 }).slices.map((slice) => slice.k)).toEqual([KEY.moonlit]);
+    });
+
+    it('says which side the moon is on for the metres it lights', () => {
+        const { moonSides } = readSun(itemLeaving(Date.UTC(2026, 6, 28, 22)), NOW).summary;
+        expect(moonSides.left + moonSides.behind).toBeCloseTo(20000, -3);
+        expect(moonSides.right + moonSides.ahead).toBe(0);
     });
 
     it('tells where the sun sets, the dark ms and the km into the glare', () => {

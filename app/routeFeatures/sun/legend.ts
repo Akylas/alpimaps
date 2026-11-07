@@ -3,7 +3,7 @@ import { legendLine } from '~/routeFeatures/lens/lensLegend';
 import type { LensLegendContext, LensLegendSection } from '~/routeFeatures/registry';
 import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
 
-const ORDER: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'night'];
+const ORDER: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'moonlit', 'night'];
 
 /** The six classes in the colours the map draws them; on e-ink the greys of how little light there is. */
 export function sunLegend({ palette, translate, variant }: Pick<LensLegendContext, 'palette' | 'translate' | 'variant'>): LensLegendSection {

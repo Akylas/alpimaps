@@ -27,13 +27,14 @@ describe('sunLegend', () => {
             ['t:legend_sun_low', light.sun_low],
             ['t:legend_sun_glare', light.sun_glare],
             ['t:legend_sun_twilight', light.sun_twilight],
+            ['t:legend_sun_moonlit', light.sun_moonlit],
             ['t:legend_sun_night', light.sun_night]
         ]);
     });
 
     it('draws the classes as greys on e-ink, the darker the less light', () => {
         const greys = sunLegend({ palette: eink, translate, variant: 'eink' }).items.map((item) => item.lines[1].color);
-        expect(greys).toEqual([eink.sun_day, eink.sun_overcast, eink.sun_low, eink.sun_glare, eink.sun_twilight, eink.sun_night]);
+        expect(greys).toEqual([eink.sun_day, eink.sun_overcast, eink.sun_low, eink.sun_glare, eink.sun_twilight, eink.sun_moonlit, eink.sun_night]);
         expect([...greys].sort().reverse()).toEqual(greys);
     });
 });
