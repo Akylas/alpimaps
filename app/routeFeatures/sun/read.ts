@@ -49,8 +49,17 @@ export interface SunSummary {
     glareDistance: number;
 }
 
+/** A stretch of one class, in metres from the start: what the profile draws. */
+export interface SunRun {
+    from: number;
+    to: number;
+    k: string;
+}
+
 export interface SunRead {
     slices: LensSlice[];
+    /** the slices in metres */
+    runs: SunRun[];
     summary: SunSummary;
     /** minutes east of UTC in the route's zone; none: the phone's */
     offset?: number;
@@ -164,6 +173,7 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
 
     return {
         slices,
+        runs: slices.map((slice) => ({ from: distances[slice.i0], to: distances[slice.i1], k: String(slice.k) })),
         summary,
         offset: routeTimeZone(analysis.inputs.departure).offset,
         at: (index) => {

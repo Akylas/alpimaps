@@ -89,6 +89,14 @@ describe('readSun', () => {
         slices.slice(1).forEach((slice, index) => expect(slice.i0).toBe(slices[index].i1));
     });
 
+    it('gives the slices in metres for the profile, as long as the route', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
+        expect(read.runs.map((run) => run.k)).toEqual(read.slices.map((slice) => slice.k));
+        expect(read.runs[0].from).toBe(0);
+        expect(read.runs[read.runs.length - 1].to).toBeCloseTo(20000, -3);
+        read.runs.slice(1).forEach((run, index) => expect(run.from).toBe(read.runs[index].to));
+    });
+
     it('tells where the sun sets, the dark ms and the km into the glare', () => {
         const { summary } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
         expect(summary.sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));

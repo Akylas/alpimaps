@@ -2,11 +2,13 @@ import { derived, get } from 'svelte/store';
 import { formatDistance, formatDuration } from '~/helpers/formatter';
 import { formatTime, lc } from '~/helpers/locale';
 import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+import { currentLensPalette, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
-import { type LensChip, type LensFact, type LensHeadline, type RouteCtx, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunPalette } from '~/routeFeatures/sun/palette';
-import { type SunRead, readSun } from '~/routeFeatures/sun/read';
+import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
+import { SUN_PALETTE_KEYS, type SunClass, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { routeFeatureSun, sunGlareAngle, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
 import type { IItem } from '~/models/Item';
 
@@ -22,6 +24,17 @@ function readOf(item: IItem): SunRead | null {
         memo = { item, analysis: item.analysis, minute, glare, read: readSun(item, Date.now(), { glareBelow: glare }) };
     }
     return memo.read;
+}
+
+const profiles = new WeakMap<SunRead, LensProfile>();
+
+const LEGEND_CLASSES: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'night'];
+
+/** The line under the profile: what the ribbon's colours mean, and their greys on e-ink. */
+function profileLegend() {
+    const light = currentLensPalette('light');
+    const eink = currentLensPalette('eink');
+    return LEGEND_CLASSES.map((sunClass) => ({ label: lc(`legend_sun_${sunClass}`), color: light[SUN_PALETTE_KEYS[sunClass]], eink: eink[SUN_PALETTE_KEYS[sunClass]] }));
 }
 
 const timeOf = (read: SunRead, at: number) => formatTime(at, 'LT', read.offset);
@@ -67,6 +80,17 @@ const sunLens: RouteLens = {
             return lc(`sun_readout_${point.class}`);
         }
         return point.side ? lc('sun_readout', String(Math.round(point.altitude)), lc(`sun_side_${point.side}`)) : lc('sun_readout_up', String(Math.round(point.altitude)));
+    },
+    profile: ({ item }): LensProfile => {
+        const read = readOf(item);
+        if (!read) {
+            return {};
+        }
+        // the same object while the read is: the chart redraws for a new one
+        if (!profiles.has(read)) {
+            profiles.set(read, { fade: true, legend: profileLegend(), overlay: sunProfileOverlay(read, (isEInk) => currentLensPalette(isEInk ? 'eink' : get(lensVariantStore))) });
+        }
+        return profiles.get(read);
     },
     slices: ({ item }) => readOf(item)?.slices ?? [],
     legend: ({ palette, translate, variant }) => sunLegend({ palette, translate, variant })
