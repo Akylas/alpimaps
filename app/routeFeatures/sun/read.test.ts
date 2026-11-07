@@ -69,7 +69,7 @@ describe('readSun', () => {
     it('is daylight all along a ride at noon', () => {
         const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
         expect(read.slices).toEqual([{ i0: 0, i1: COUNT - 1, k: KEY.day, s: 0 }]);
-        expect(read.summary).toEqual({ darkMs: 0, glareDistance: 0 });
+        expect(read.summary).toMatchObject({ darkMs: 0, glareDistance: 0 });
     });
 
     it('goes from day to night on a ride into the evening, blinded while it rides toward the sun', () => {
@@ -95,6 +95,28 @@ describe('readSun', () => {
         expect(read.runs[0].from).toBe(0);
         expect(read.runs[read.runs.length - 1].to).toBeCloseTo(20000, -3);
         read.runs.slice(1).forEach((run, index) => expect(run.from).toBe(read.runs[index].to));
+    });
+
+    it('says which side the sun is on for the metres of daylight', () => {
+        // the sun goes round the south while the ride goes north-west: on the left, then behind, never on the right
+        const { sides } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW).summary;
+        expect(sides.left).toBeGreaterThan(0);
+        expect(sides.right + sides.ahead).toBe(0);
+        expect(sides.left + sides.behind).toBeCloseTo(20000, -3);
+    });
+
+    it('does not count the metres ridden in the dark as sun', () => {
+        const { sides } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 20, 30)), NOW).summary;
+        expect(sides.left + sides.right + sides.ahead + sides.behind).toBe(0);
+    });
+
+    it('gives the ride its start, its end, its place and the distance it is at a time', () => {
+        const leaving = Date.UTC(2026, 5, 21, 10, 0);
+        const read = readSun(itemLeaving(leaving), NOW);
+        expect(read.start).toBe(leaving);
+        expect(read.end).toBe(leaving + 3 * HOUR);
+        expect(read.place).toEqual({ lat: START.lat, lon: START.lon });
+        expect(read.distanceAt(leaving + 1.5 * HOUR)).toBeCloseTo(10000, -3);
     });
 
     it('tells where the sun sets, the dark ms and the km into the glare', () => {

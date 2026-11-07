@@ -47,6 +47,8 @@ export interface SunSummary {
     darkMs: number;
     /** m ridden into the low sun */
     glareDistance: number;
+    /** m ridden by day with the sun on each side of the way the ride goes */
+    sides: Record<SunSide, number>;
 }
 
 /** A stretch of one class, in metres from the start: what the profile draws. */
@@ -63,6 +65,13 @@ export interface SunRead {
     summary: SunSummary;
     /** minutes east of UTC in the route's zone; none: the phone's */
     offset?: number;
+    /** epoch ms the ride starts and ends */
+    start: number;
+    end: number;
+    /** where it starts */
+    place: { lat: number; lon: number };
+    /** m from the start the ride is at a time */
+    distanceAt(at: number): number;
     at(index: number): SunPoint;
 }
 
@@ -144,7 +153,7 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
 
     const vertexes = sampledVertexes(distances, STEP[kind]);
     const slices: LensSlice[] = [];
-    const summary: SunSummary = { darkMs: 0, glareDistance: 0 };
+    const summary: SunSummary = { darkMs: 0, glareDistance: 0, sides: { left: 0, right: 0, ahead: 0, behind: 0 } };
     let previousLevel: SunLevel | undefined;
     vertexes.forEach((vertex, position) => {
         const point = pointAt(vertex);
@@ -161,6 +170,9 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
             if (point.level === 'twilight' || point.level === 'night') {
                 summary.darkMs += timeline.at(hi) - timeline.at(lo);
             }
+            if (point.side && (point.level === 'day' || point.level === 'low')) {
+                summary.sides[point.side] += distances[hi] - distances[lo];
+            }
             if (point.glare && point.class === 'glare') {
                 summary.glareDistance += distances[hi] - distances[lo];
             }
@@ -176,6 +188,10 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         runs: slices.map((slice) => ({ from: distances[slice.i0], to: distances[slice.i1], k: String(slice.k) })),
         summary,
         offset: routeTimeZone(analysis.inputs.departure).offset,
+        start: timeline.at(0),
+        end: timeline.at(last),
+        place: { lat: coordinates[0][1], lon: coordinates[0][0] },
+        distanceAt: (at) => distances[Math.min(last, timeline.indexAt(at))],
         at: (index) => {
             const { altitude, at, azimuth, class: sunClass, side } = pointAt(Math.max(0, Math.min(last, index)));
             return { altitude, at, azimuth, class: sunClass, side };

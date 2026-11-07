@@ -2,7 +2,7 @@
  * The sun along a ride: where it is, how high, whether it blinds and on which side. Pure, and nothing of the app in it
  * (suncalc only), like `moon.ts`. Angles are suncalc 2's, in degrees: azimuth clockwise from north, altitude as seen.
  */
-import { getPosition } from 'suncalc';
+import { getPosition, getTimes } from 'suncalc';
 
 export interface SunPosition {
     azimuth: number;
@@ -72,4 +72,19 @@ export function sunSide(azimuth: number, heading: number): SunSide {
         return 'behind';
     }
     return turn > 0 ? 'right' : 'left';
+}
+
+export interface SunEvents {
+    /** epoch ms, or null where the sun does not rise or set that day (the poles in summer and winter) */
+    sunrise: number | null;
+    sunset: number | null;
+    /** the end of civil twilight */
+    dusk: number | null;
+}
+
+/** The rise, the set and the end of civil twilight of the civil day `at` falls in, in the zone of `utcOffset` (minutes east of UTC) when given. */
+export function sunEvents(at: number, place: { lat: number; lon: number }, utcOffset?: number): SunEvents {
+    const times = getTimes(new Date(at), place.lat, place.lon, 0, utcOffset);
+    const epoch = (date: Date | null) => (date ? date.getTime() : null);
+    return { sunrise: epoch(times.sunrise), sunset: epoch(times.sunset), dusk: epoch(times.dusk) };
 }

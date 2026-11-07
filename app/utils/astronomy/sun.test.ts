@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type GlareRule, isGlare, sunLevel, sunPositionAt, sunSide } from '~/utils/astronomy/sun';
+import { type GlareRule, isGlare, sunEvents, sunLevel, sunPositionAt, sunSide } from '~/utils/astronomy/sun';
 
 const GRENOBLE = { lat: 45.19, lon: 5.72 };
 const BIKE: GlareRule = { below: 15, window: 25 };
@@ -92,5 +92,34 @@ describe('sunSide', () => {
         expect(sunSide(10, 350)).toBe('ahead');
         expect(sunSide(80, 350)).toBe('right');
         expect(sunSide(280, 350)).toBe('left');
+    });
+});
+
+describe('sunEvents', () => {
+    const MIDSUMMER = Date.UTC(2026, 5, 21, 15, 0);
+
+    it('gives the rise, the set and the end of civil twilight of the day', () => {
+        const { dusk, sunrise, sunset } = sunEvents(MIDSUMMER, GRENOBLE, 120);
+        // 05:50 and 21:30 in Grenoble, dusk 22:05
+        expect(sunrise).toBeGreaterThan(Date.UTC(2026, 5, 21, 3, 30));
+        expect(sunrise).toBeLessThan(Date.UTC(2026, 5, 21, 4, 10));
+        expect(sunset).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));
+        expect(sunset).toBeLessThan(Date.UTC(2026, 5, 21, 19, 45));
+        expect(dusk).toBeGreaterThan(sunset);
+        expect(dusk - sunset).toBeLessThan(60 * 60000);
+    });
+
+    it('is the day of the route zone, not the UTC one', () => {
+        // 23:30 on the 21st in Grenoble is 21:30 UTC the same day, 00:30 on the 22nd is 22:30 UTC
+        const evening = sunEvents(Date.UTC(2026, 5, 21, 21, 30), GRENOBLE, 120);
+        const afterMidnight = sunEvents(Date.UTC(2026, 5, 21, 22, 30), GRENOBLE, 120);
+        expect(evening.sunset).toBeLessThan(Date.UTC(2026, 5, 22));
+        expect(afterMidnight.sunset).toBeGreaterThan(Date.UTC(2026, 5, 22));
+    });
+
+    it('has no set where the sun does not set', () => {
+        const north = sunEvents(Date.UTC(2026, 5, 21, 12, 0), { lat: 78.2, lon: 15.6 }, 120);
+        expect(north.sunset).toBeNull();
+        expect(north.sunrise).toBeNull();
     });
 });

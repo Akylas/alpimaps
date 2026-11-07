@@ -4,11 +4,12 @@ import { formatTime, lc } from '~/helpers/locale';
 import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { currentLensPalette, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
-import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RoutePageSection, registerRouteFeature } from '~/routeFeatures/registry';
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_PALETTE_KEYS, type SunClass, type SunRead, readSun } from '~/routeFeatures/sun/read';
+import { sunRows } from '~/routeFeatures/sun/rows';
 import { routeFeatureSun, sunGlareAngle, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
 import type { IItem } from '~/models/Item';
 
@@ -96,6 +97,19 @@ const sunLens: RouteLens = {
     legend: ({ palette, translate, variant }) => sunLegend({ palette, translate, variant })
 };
 
+const sunPageSection: RoutePageSection = {
+    id: 'sun',
+    icon: 'mdi-white-balance-sunny',
+    title: () => lc('lens_sun'),
+    lens: 'sun',
+    facts: ({ item }) => {
+        const read = readOf(item);
+        return read ? facts(read) : [];
+    },
+    rows: ({ item }) => sunRows(readOf(item)),
+    component: () => import('~/routeFeatures/sun/SunRow.svelte')
+};
+
 registerRouteFeature({
     id: 'sun',
     order: 15,
@@ -104,5 +118,6 @@ registerRouteFeature({
     // a new departure or pace moves the ride in the sky, and so does the glare angle
     changes: derived([routeAnalysisChanges, sunSettingsKey], (values) => values.join()),
     lensPalette: sunPalette,
-    lenses: [sunLens]
+    lenses: [sunLens],
+    pageSections: [sunPageSection]
 });
