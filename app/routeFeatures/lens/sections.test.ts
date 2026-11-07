@@ -40,6 +40,39 @@ describe('lensFeatures', () => {
     });
 });
 
+describe('lensFeatures as a gradient', () => {
+    const palette = { grade_1: '#112233', grade_7: '#778899', grade_2: '#445566' };
+    const slices = [
+        { i0: 0, i1: 3, k: 'grade_1', s: 0 as const },
+        { i0: 3, i1: 6, k: 'grade_7', s: 3 as const },
+        { i0: 6, i1: 9, k: 'grade_2', s: 1 as const }
+    ];
+
+    it('draws the whole route as one lens line carrying its ramp', () => {
+        const features = lensFeatures(coordinates, 'climbs', slices, undefined, palette);
+        const lines = features.filter((feature) => feature.properties.class === 'lens');
+        expect(lines).toHaveLength(1);
+        expect(lines[0].geometry).toEqual({ type: 'LineString', coordinates });
+        expect(lines[0].properties).toMatchObject({ lens: 'climbs', ramp: 1, f: 1 });
+        expect(lines[0].properties.gradient).toMatch(/^0:#112233,.*,1:#445566$/);
+    });
+
+    it('keeps the steep slices as lens_chev lines, for the chevrons the ramp cannot carry', () => {
+        const chevrons = lensFeatures(coordinates, 'climbs', slices, undefined, palette).filter((feature) => feature.properties.class === 'lens_chev');
+        expect(chevrons.map((feature) => [feature.properties.s, feature.geometry])).toEqual([[3, { type: 'LineString', coordinates: coordinates.slice(3, 7) }]]);
+    });
+
+    it('still puts the focus halo first, and dims what the focus does not touch in the ramp', () => {
+        const features = lensFeatures(coordinates, 'climbs', slices, { i0: 4, i1: 5 }, palette);
+        expect(features[0].properties.class).toBe('lensfocus');
+        expect(features.find((feature) => feature.properties.class === 'lens').properties.gradient).toContain('#11223359');
+    });
+
+    it('draws nothing for a route with no slice', () => {
+        expect(lensFeatures(coordinates, 'climbs', [], undefined, palette)).toEqual([]);
+    });
+});
+
 describe('sections', () => {
     const sections: LensSection[] = [
         { id: 0, i0: 10, i1: 20, title: 'a' },
@@ -168,7 +201,7 @@ describe('tappedVertex', () => {
 
 describe('isLensFeature', () => {
     it('knows what the lens drew from an item', () => {
-        ['lens', 'lensfocus', 'lens_symbol', 'navalert'].forEach((featureClass) => expect(isLensFeature({ class: featureClass })).toBe(true));
+        ['lens', 'lens_chev', 'lensfocus', 'lens_symbol', 'navalert'].forEach((featureClass) => expect(isLensFeature({ class: featureClass })).toBe(true));
         expect(isLensFeature({ class: 'waypoint' })).toBe(false);
         expect(isLensFeature({})).toBe(false);
         expect(isLensFeature(undefined)).toBe(false);

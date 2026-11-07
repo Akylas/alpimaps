@@ -294,7 +294,7 @@ export default class ItemsModule extends MapModule {
         if (!this.localVectorLayer) {
             const map = mapContext.getMap();
             if (!this.localVectorDataSource) {
-                this.localVectorDataSource = map.source('source.items', { type: 'geojson', simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
+                this.localVectorDataSource = map.source('source.items', { type: 'geojson', lineMetrics: true, simplifyTolerance: 2, minZoom: 0, maxZoom: 24 });
                 this.localVectorDataSource.createLayer('items');
                 this.localVectorDataSource.createLayer('poi');
             }
