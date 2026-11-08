@@ -1,0 +1,292 @@
+import type { Geometry } from 'geojson';
+import { describe, expect, it } from 'vitest';
+import { SUN_PALETTE_KEYS, type SunItem, readSun } from '~/routeFeatures/sun/read';
+import { sunPositionAt } from '~/utils/astronomy/sun';
+import { createAnalysis, withDeparture } from '~/utils/routeAnalysis/storage';
+import type { RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
+
+const START = { lat: 45.19, lon: 5.72 };
+const COUNT = 41;
+// 20 km from Grenoble in 41 vertices, toward the way the sun sets in June (295 degrees)
+const geometry: Geometry = lineToward(295);
+
+function lineToward(bearing: number): Geometry {
+    const radians = (bearing * Math.PI) / 180;
+    const kilometers = 20;
+    const lonSpan = (kilometers * Math.sin(radians)) / (111.32 * Math.cos((START.lat * Math.PI) / 180));
+    const latSpan = (kilometers * Math.cos(radians)) / 111.32;
+    return { type: 'LineString', coordinates: Array.from({ length: COUNT }, (_, index) => [START.lon + (lonSpan * index) / (COUNT - 1), START.lat + (latSpan * index) / (COUNT - 1)]) };
+}
+const HOUR = 3600000;
+const NOW = Date.UTC(2026, 5, 1);
+const KEY = SUN_PALETTE_KEYS;
+
+function itemLeaving(at: number, type = 'bicycle', weather?: WeatherData, line = geometry, hours = 3): SunItem {
+    const base = withDeparture(createAnalysis(line), line, { mode: 'planned', at });
+    const analysis: RouteAnalysis = weather ? { ...base, layers: { weather: { prov: { computedAt: NOW, inputsHash: '', provider: 'test', quality: 'ok' }, data: weather } } } : base;
+    return { geometry: line, route: { totalTime: hours * 3600 }, properties: { route: { type } }, analysis };
+}
+
+/** the classes the line goes through, in order */
+const sequence = (item: SunItem) => {
+    const keys = readSun(item, NOW).slices.map((slice) => slice.k);
+    return keys.filter((key, index) => key !== keys[index - 1]);
+};
+
+function weatherOf(from: number, dni: number, cloud = 0): WeatherData {
+    const hours = 6;
+    const column = (value: number) => [Array(hours).fill(value), Array(hours).fill(value)];
+    return {
+        samples: [
+            { i: 0, d: 0, alt: 300 },
+            { i: COUNT - 1, d: 20000, alt: 300 }
+        ],
+        t0: from / 1000,
+        n: hours,
+        v: {
+            temp: column(0),
+            precip: column(0),
+            precipProb: column(0),
+            wind: column(0),
+            gust: column(0),
+            dir: column(0),
+            cloud: column(cloud),
+            code: column(0),
+            fl: column(0),
+            dni: column(dni)
+        },
+        request: { decimals: 2, vars: [], models: '' }
+    };
+}
+
+const coordinatesOf = (line: Geometry) => (line.type === 'LineString' ? line.coordinates : []);
+
+describe('readSun', () => {
+    it('says nothing of a route without a line', () => {
+        expect(readSun({ analysis: createAnalysis(geometry) }, NOW)).toBeNull();
+    });
+
+    it('is daylight all along a ride at noon', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
+        expect(read.slices).toEqual([{ i0: 0, i1: COUNT - 1, k: KEY.day, s: 0 }]);
+        expect(read.summary).toMatchObject({ darkMs: 0, glareDistance: 0 });
+    });
+
+    it('goes from day to night on a ride into the evening, blinded while it rides toward the sun', () => {
+        // 19:30 to 22:30 in Grenoble: the sun sets at 21:30 and it is dark by 22:00, under a first quarter moon high in the south
+        expect(sequence(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)))).toEqual([KEY.day, KEY.glare, KEY.twilight, KEY.moonlit]);
+    });
+
+    it('is the low sun, not glare, when the ride turns its back to it', () => {
+        const east = lineToward(115);
+        expect(sequence(itemLeaving(Date.UTC(2026, 5, 21, 18, 45), 'bicycle', undefined, east, 1))).toEqual([KEY.low, KEY.twilight]);
+    });
+
+    it('cuts the line in contiguous slices from the first vertex to the last', () => {
+        const { slices } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
+        expect(slices[0].i0).toBe(0);
+        expect(slices[slices.length - 1].i1).toBe(COUNT - 1);
+        slices.slice(1).forEach((slice, index) => expect(slice.i0).toBe(slices[index].i1));
+    });
+
+    it('gives the slices in metres for the profile, as long as the route', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
+        expect(read.runs.map((run) => run.k)).toEqual(read.slices.map((slice) => slice.k));
+        expect(read.runs[0].from).toBe(0);
+        expect(read.runs[read.runs.length - 1].to).toBeCloseTo(20000, -3);
+        read.runs.slice(1).forEach((run, index) => expect(run.from).toBe(read.runs[index].to));
+    });
+
+    it('says which side the sun is on for the metres of daylight', () => {
+        // the sun goes round the south while the ride goes north-west: on the left, then behind, never on the right
+        const { sides } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW).summary;
+        expect(sides.left).toBeGreaterThan(0);
+        expect(sides.right + sides.ahead).toBe(0);
+        expect(sides.left + sides.behind).toBeCloseTo(20000, -3);
+    });
+
+    it('does not count the metres ridden in the dark as sun', () => {
+        const { sides } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 20, 30)), NOW).summary;
+        expect(sides.left + sides.right + sides.ahead + sides.behind).toBe(0);
+    });
+
+    it('gives the ride its start, its end, its place and the distance it is at a time', () => {
+        const leaving = Date.UTC(2026, 5, 21, 10, 0);
+        const read = readSun(itemLeaving(leaving), NOW);
+        expect(read.start).toBe(leaving);
+        expect(read.end).toBe(leaving + 3 * HOUR);
+        expect(read.place).toEqual({ lat: START.lat, lon: START.lon });
+        expect(read.distanceAt(leaving + 1.5 * HOUR)).toBeCloseTo(10000, -3);
+    });
+
+    it('is moonlit when the moon is up and bright over a ride in the night', () => {
+        // 00:00 to 03:00 in Grenoble in the night of the full moon of July 2026, the moon high in the south
+        const read = readSun(itemLeaving(Date.UTC(2026, 6, 28, 22)), NOW);
+        expect(read.slices.map((slice) => slice.k)).toEqual([KEY.moonlit]);
+        expect(read.summary.moonlitMs).toBeCloseTo(3 * HOUR, -5);
+        expect(read.at(20).class).toBe('moonlit');
+    });
+
+    it('stays night under a new moon, which is not up', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 6, 14, 22)), NOW);
+        expect(read.slices.map((slice) => slice.k)).toEqual([KEY.night]);
+        expect(read.summary.moonlitMs).toBe(0);
+    });
+
+    it('is dark under a moon too thin for the threshold, moonlit under a lower one', () => {
+        // 04:00 to 05:00 in Grenoble on the 11th: the moon is up, 16 % lit
+        const item = itemLeaving(Date.UTC(2026, 6, 11, 2), 'bicycle', undefined, geometry, 1);
+        expect(readSun(item, NOW).slices.map((slice) => slice.k)).toEqual([KEY.night]);
+        expect(readSun(item, NOW, { moonMin: 10 }).slices.map((slice) => slice.k)).toEqual([KEY.moonlit]);
+    });
+
+    it('says which side the moon is on for the metres it lights', () => {
+        const { moonSides } = readSun(itemLeaving(Date.UTC(2026, 6, 28, 22)), NOW).summary;
+        expect(moonSides.left + moonSides.behind).toBeCloseTo(20000, -3);
+        expect(moonSides.right + moonSides.ahead).toBe(0);
+    });
+
+    it('says how much sun gets through at a vertex, from the forecast', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100)), NOW).at(20).clearness).toBe(0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 900, 0)), NOW).at(20).clearness).toBeGreaterThan(0.9);
+        expect(readSun(itemLeaving(at), NOW).at(20).clearness).toBeUndefined();
+    });
+
+    it('finds the vertex a distance from the start falls at', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
+        expect(read.indexAtDistance(0)).toBe(0);
+        expect(read.indexAtDistance(10000)).toBeGreaterThanOrEqual(19);
+        expect(read.indexAtDistance(10000)).toBeLessThanOrEqual(21);
+        expect(read.indexAtDistance(1e9)).toBe(COUNT - 1);
+        expect(read.indexAtDistance(-5)).toBe(0);
+    });
+
+    it('gives the samples the sun is looked at for: where they are, and where the sun is, with the step and what carries the ride', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
+        expect(read.kind).toBe('bike');
+        expect(read.step).toBe(100);
+        // the route's vertexes are further apart than the step: one sample each
+        expect(read.samples).toHaveLength(COUNT);
+        expect(read.samples[0]).toMatchObject({ vertex: 0, lat: START.lat, lon: START.lon });
+        expect(read.samples[read.samples.length - 1].vertex).toBe(COUNT - 1);
+        expect(read.samples[0].altitude).toBeGreaterThan(40);
+    });
+
+    it('is shade where the terrain hides the sun, and day where it does not', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        const shaded = readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(5) } });
+        expect(shaded.slices.map((slice) => slice.k)).toEqual([KEY.shade]);
+        const open = readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(95) } });
+        expect(open.slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it('is only shade for the samples the terrain hides, and day for the rest', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        const lit = Array.from({ length: count }, (_, index) => (index < count / 2 ? 0 : 100));
+        const keys = readSun(item, NOW, { terrain: { step: 100, lit } }).slices.map((slice) => slice.k);
+        expect(keys).toEqual([KEY.shade, KEY.day]);
+    });
+
+    it('does not know the terrain of another step or another count of samples: it is read as if there were none', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW, { terrain: { step: 50, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count - 1).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it('does not know a share it was not given: unknown ground is not shade', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(-1) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it("says how far of the ride is in the terrain's shade", () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW).summary.shadeDistance).toBe(0);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(100) } }).summary.shadeDistance).toBe(0);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).summary.shadeDistance).toBeCloseTo(20000, -3);
+    });
+
+    it('has the terrain hide the glare, and the clouds: no sun, nothing to blind, nothing to cloud', () => {
+        const evening = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
+        const count = readSun(evening, NOW).samples.length;
+        const keys = readSun(evening, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k);
+        expect(keys).not.toContain(KEY.glare);
+        expect(keys).toContain(KEY.shade);
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        const cloudy = itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100));
+        const cloudyCount = readSun(cloudy, NOW).samples.length;
+        expect(readSun(cloudy, NOW, { terrain: { step: 100, lit: Array(cloudyCount).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.shade]);
+    });
+
+    it('leaves the twilight and the night to themselves: the terrain has nothing to say of them', () => {
+        const evening = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
+        const count = readSun(evening, NOW).samples.length;
+        const keys = readSun(evening, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k);
+        expect(keys).toContain(KEY.twilight);
+        expect(keys).toContain(KEY.moonlit);
+    });
+
+    it('tells where the sun sets, the dark ms and the km into the glare', () => {
+        const { summary } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
+        expect(summary.sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));
+        expect(summary.sunset.at).toBeLessThan(Date.UTC(2026, 5, 21, 19, 45));
+        expect(summary.sunset.distance).toBeGreaterThan(0);
+        expect(summary.darkMs).toBeGreaterThan(0);
+        expect(summary.glareDistance).toBeGreaterThan(0);
+    });
+
+    it('tells where the sun rises on a ride that starts in the dark, and not for one that never was in it', () => {
+        // 04:30 to 07:30 in Grenoble: the sun rises at 05:55
+        const summary = readSun(itemLeaving(Date.UTC(2026, 5, 21, 2, 30)), NOW).summary;
+        expect(summary.sunrise.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 3, 30));
+        expect(summary.sunrise.at).toBeLessThan(Date.UTC(2026, 5, 21, 4, 30));
+        expect(summary.sunrise.distance).toBeGreaterThan(0);
+        expect(readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW).summary.sunrise).toBeUndefined();
+        expect(readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW).summary.sunrise).toBeUndefined();
+    });
+
+    it('lets a lower glare angle blind for fewer km', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
+        const wide = readSun(item, NOW).summary.glareDistance;
+        expect(readSun(item, NOW, { glareBelow: 6 }).summary.glareDistance).toBeLessThan(wide);
+    });
+
+    it('blinds a walker less than a rider: the sun has to be lower', () => {
+        const bike = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30), 'bicycle'), NOW).summary.glareDistance;
+        const walk = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30), 'pedestrian'), NOW).summary.glareDistance;
+        expect(walk).not.toBe(bike);
+    });
+
+    it('is overcast when the forecast lets no direct sun through', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100)), NOW).slices).toEqual([{ i0: 0, i1: COUNT - 1, k: KEY.overcast, s: 0 }]);
+    });
+
+    it('stays day under a clear forecast', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        expect(readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 900, 0)), NOW).slices).toEqual([{ i0: 0, i1: COUNT - 1, k: KEY.day, s: 0 }]);
+    });
+
+    it('does not say overcast for the night', () => {
+        const at = Date.UTC(2026, 5, 21, 22, 30);
+        const keys = readSun(itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100)), NOW).slices.map((slice) => slice.k);
+        expect(keys).not.toContain(KEY.overcast);
+    });
+
+    it('reads the sun at a vertex as the ride gets there', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const read = readSun(item, NOW);
+        const point = read.at(20);
+        const [lon, lat] = coordinatesOf(geometry)[20];
+        // half way of a three hour ride
+        expect(point.at).toBeCloseTo(Date.UTC(2026, 5, 21, 11, 30), -4);
+        expect(point.altitude).toBeCloseTo(sunPositionAt(point.at, { lat, lon }).altitude, 5);
+        // the sun is due south at noon, the route goes north-west: it is on the left
+        expect(point.side).toBe('left');
+    });
+});

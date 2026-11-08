@@ -343,6 +343,21 @@ export interface RoutePageSection {
     component: () => Promise<{ default: ComponentType }>;
 }
 
+/** A small figure of the trip strip under the tiles: a glyph, a figure and the colour of the glyph. */
+export interface TripChip {
+    key: string;
+    /** an icon name, or a glyph of the icon font */
+    icon: string;
+    text: string;
+    color?: string;
+}
+
+/** What a feature adds to the trip strip: chips beside the times, and a line under them. */
+export interface TripFigures {
+    chips?: TripChip[];
+    note?: string;
+}
+
 /** A row of a feature's settings, drawn by the settings screen. Backed by a store, which owns the persistence. */
 export interface RouteSettingRow {
     type: 'sectionheader' | 'switch' | 'slider' | 'segment';
@@ -460,6 +475,8 @@ export interface RouteFeature {
     statViews?: RouteStatView[];
     /** Cards floating over the map while navigating. */
     navBanners?: RouteNavBanner[];
+    /** What the feature adds to the strip under the tiles of the route page: the times of the ride are its own. */
+    trip?: (ctx: RouteCtx) => TripFigures;
     /** Cards of the route page, in the feature's order. */
     pageSections?: RoutePageSection[];
     /** GeoJSON drawn with the selected or navigated route. Rebuilt on item, route or switch changes, never per GPS fix. */
@@ -517,6 +534,12 @@ export const routeFeatureChanges: Readable<number> = derived(
 
 export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[] {
     return features.flatMap((feature) => feature.tiles?.(ctx) ?? []);
+}
+
+/** The chips and the line the enabled features add to the trip strip, in feature order. */
+export function routeTrip(features: RouteFeature[], ctx: RouteCtx): { chips: TripChip[]; note: string } {
+    const figures = features.flatMap((feature) => feature.trip?.(ctx) ?? []);
+    return { chips: figures.flatMap((figure) => figure.chips ?? []), note: figures.flatMap((figure) => (figure.note ? [figure.note] : [])).join(' · ') };
 }
 
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */

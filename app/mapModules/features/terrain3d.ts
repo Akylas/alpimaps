@@ -12,6 +12,7 @@ import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
 import { packageService } from '~/services/PackageService';
+import { shadowStrengthFor } from '~/utils/astronomy/clearSky';
 import {
     TERRAIN_AUTO_FLATTEN_TILT,
     TERRAIN_FOG,
@@ -24,6 +25,7 @@ import {
     mapTiltRange,
     mapTiltTransition,
     resolveDrapeCacheSize,
+    routeSunLight,
     terrain3dActive,
     terrain3dEnabled,
     terrain3dTilt,
@@ -334,14 +336,16 @@ function applyLight() {
     if (!map) {
         return;
     }
-    const lit = get(terrainLighting);
+    // the route sun mode lights the map with the sun of a time of the ride, whatever the settings say
+    const route = get(routeSunLight);
+    const lit = route ? true : get(terrainLighting);
     map.light({ type: 'light' }).apply({
         terrainLightingEnabled: lit,
         // follows the lighting switch, or the override would change the style's sun
         sunOverridingStyle: lit,
-        sunAzimuth: get(terrainSunAzimuth),
-        sunAltitude: get(terrainSunAltitude),
-        shadowStrength: lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
+        sunAzimuth: route ? route.azimuth : get(terrainSunAzimuth),
+        sunAltitude: route ? route.altitude : get(terrainSunAltitude),
+        shadowStrength: route ? shadowStrengthFor(get(terrainShadowStrength), route.clearness) : lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
         shadowDistance: get(terrainShadowDistance),
         shadowMapSize: get(terrainShadowMapSize),
         shadowCascades: get(terrainShadowCascades),
@@ -601,6 +605,7 @@ applyLive(terrainViewDistanceMetres, () => applyViewDistance(is3D()));
 applyLive(terrainViewDistanceMax, () => applyViewDistance(is3D()));
 // The light follows the lighting switch whether or not the terrain is attached, so not through `applyLive`.
 for (const store of [
+    routeSunLight,
     terrainLighting,
     terrainSunAzimuth,
     terrainSunAltitude,

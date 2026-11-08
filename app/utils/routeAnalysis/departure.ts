@@ -26,3 +26,16 @@ export function routeTimeZone(departure: Departure): { tz?: string; offset?: num
 export function withRouteTimeZone(departure: Departure, tz: string, utcOffset: number): Departure {
     return { ...departure, tz, utcOffset, tzFromPhone: false };
 }
+
+/** The offset of the route's zone at an instant, minutes east of UTC; none: the phone's clock. */
+export type OffsetAt = (at: number) => number | undefined;
+
+/**
+ * The route's zone offset at each instant, which is not one number for a ride over a change of the clocks. `zoneOffset` is the platform's
+ * zone database (the runtime has no `Intl`); without it, or when it cannot say, the offset the route was given at its start holds.
+ */
+export function offsetAtFor(departure: Departure, zoneOffset?: (tz: string, at: number) => number | undefined): OffsetAt {
+    const { offset } = routeTimeZone(departure);
+    const { tz } = departure;
+    return (at) => (tz && zoneOffset ? (zoneOffset(tz, at) ?? offset) : offset);
+}

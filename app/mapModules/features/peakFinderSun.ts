@@ -1,6 +1,5 @@
 import type { MassifLayer, MassifObject, Subscription } from '@nativescript-community/ui-massifmaps/api';
 import { Screen } from '@nativescript/core';
-import { getPosition } from 'suncalc';
 import { get, writable } from 'svelte/store';
 import { formatTime, lc } from '~/helpers/locale';
 import {
@@ -16,6 +15,7 @@ import {
 } from '~/mapModules/features/peakFinderCelestial';
 import { SUN_WIKIDATA } from '~/mapModules/features/sky/starCatalogue';
 import { peakFinderElevation, peakFinderSun, peakFinderSunHours } from '~/stores/terrainStore';
+import { sunPositionAt } from '~/utils/astronomy/sun';
 import type { MapPos } from '~/utils/geo';
 
 // Sky objects are depth-tested, so ridges hide the path; drawn as the whole day's circle, it runs into
@@ -36,17 +36,6 @@ interface Sample {
     time: number;
     az: number;
     alt: number;
-}
-
-export interface SunPosition {
-    azimuth: number;
-    altitude: number;
-}
-
-/** Where the sun is, degrees: azimuth clockwise from north, altitude as seen (refraction included, so it compares with a skyline). */
-export function sunPositionAt(time: number, position: MapPos): SunPosition {
-    const { altitude, azimuth } = getPosition(new Date(time), position.lat, position.lon);
-    return { azimuth, altitude };
 }
 
 function dayStart(time: number) {

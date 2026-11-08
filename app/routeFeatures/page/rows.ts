@@ -1,10 +1,13 @@
 /** The route page's rows, flat for its one collectionview. Pure: nothing here may import NativeScript. */
 import type { LensFact, RouteCtx, RoutePageRow, RoutePageSection } from '~/routeFeatures/registry';
+import { tripTimes } from '~/routeFeatures/page/trip';
 import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 
 export type PageRow =
     /** `version`: the analysis the row shows, which changes with the items: a template does not follow what the page changes */
     | { type: 'tiles'; key: 'tiles'; version?: number }
+    /** the times of the ride and what the features say of it: follows the analysis like the tiles */
+    | { type: 'trip'; key: 'trip'; version?: number }
     | { type: 'profile'; key: 'profile' }
     | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string; facts?: LensFact[]; icon?: string }
     | { type: 'body'; key: string; section: string; row: RoutePageRow; /** The card's last row, which rounds its bottom. */ last: boolean }
@@ -25,6 +28,10 @@ export function bodyRows(sectionId: string, body: RoutePageRow[]): PageRow[] {
 
 export function pageRows({ ctx, hasProfile, sections, stored }: { sections: RoutePageSection[]; ctx: RouteCtx; stored: StoredSections; hasProfile: boolean }): PageRow[] {
     const rows: PageRow[] = [{ type: 'tiles', key: 'tiles' }];
+    // a route with no line has no ride to time
+    if (tripTimes(ctx.item, Date.now())) {
+        rows.push({ type: 'trip', key: 'trip' });
+    }
     if (hasProfile) {
         rows.push({ type: 'profile', key: 'profile' });
     }
@@ -44,4 +51,7 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
 }
 
 /** What the page's list holds: the page rows and the page's own, around them. */
-export type ListRow = PageRow | { type: 'hero' | 'passed'; key: string } | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null; /** counts the openings of the panel */ opened?: number };
+export type ListRow =
+    | PageRow
+    | { type: 'hero' | 'passed'; key: string }
+    | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null; /** counts the openings of the panel */ opened?: number };

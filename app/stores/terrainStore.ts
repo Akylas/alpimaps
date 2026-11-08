@@ -99,6 +99,20 @@ export const terrainShadows = settingsStore('terrainShadows', __CATALYST__);
  * soft shadow on the light Massif map.
  */
 export const terrainShadowStrength = settingsStore('terrainShadowStrength', 0.3);
+
+/** The sun a route is lit with while its sun mode is on: where it stands then, and how much of it gets through the clouds. */
+export interface RouteSunLight {
+    azimuth: number;
+    altitude: number;
+    /** 0..1, none when the forecast says nothing */
+    clearness?: number;
+}
+
+/**
+ * The light of the route sun mode, over the sun, lighting and shadow settings above, which it never writes: leaving the mode
+ * is setting it to null, and the look the user chose is back as it was. Not persisted.
+ */
+export const routeSunLight = writable<RouteSunLight | null>(null);
 /**
  * Shadow reach in multiples of the camera-to-focus distance; 0 takes the SDK's 4.5. Further costs texel
  * size, the shadow map resolution being fixed.

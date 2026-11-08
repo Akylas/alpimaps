@@ -45,9 +45,13 @@ const degrees = (value: number) => `${Math.round(value)}°`;
 
 /**
  * Shared by the `Terrain3DSettings` sheet and the settings screen. The sheet passes `show` to hide
- * the sun/shadow knobs while lighting/shadows are off.
+ * the sun/shadow knobs while lighting/shadows are off. `locked`: the route sun mode lights the map, so the
+ * switches and the sun are left out, with a word on why.
  */
-export function terrain3dSettingRows(show = { lighting: true, shadows: true }): SettingRow[] {
+export function terrain3dSettingRows(show = { lighting: true, shadows: true }, locked = false): SettingRow[] {
+    const lockedNote: SettingRow = { type: 'sectionheader', title: lc('sun_mode_locked') };
+    const lightingSwitch: SettingRow = { type: 'switch', store: terrainLighting, title: lc('terrain_lighting'), description: lc('terrain_lighting_desc') };
+    const shadowsSwitch: SettingRow = { type: 'switch', store: terrainShadows, title: lc('shadows'), description: lc('shadows_desc') };
     return [
         section(header(lc('terrain_3d'))),
         { type: 'slider', store: terrainExaggeration, title: lc('exageration'), min: 0.5, max: 3, step: 0.05, format: (value) => `${value.toFixed(2)}×` },
@@ -131,14 +135,14 @@ export function terrain3dSettingRows(show = { lighting: true, shadows: true }): 
         { type: 'slider', store: terrainFogVerticalEnd, title: lc('fog_vertical_end'), description: lc('fog_vertical_end_desc'), min: 0, max: 6000, step: 100, format: formatDistance },
 
         section(header(lc('lighting'))),
-        { type: 'switch', store: terrainLighting, title: lc('terrain_lighting'), description: lc('terrain_lighting_desc') },
-        ...(show.lighting
+        ...(locked ? [lockedNote] : [lightingSwitch]),
+        ...(show.lighting && !locked
             ? ([
                   { type: 'slider', store: terrainSunAzimuth, title: lc('sun_azimuth'), description: lc('sun_azimuth_desc'), min: 0, max: 360, step: 1, format: degrees },
                   { type: 'slider', store: terrainSunAltitude, title: lc('sun_altitude'), description: lc('sun_altitude_desc'), min: 0, max: 90, step: 1, format: degrees }
               ] as SettingRow[])
             : []),
-        { type: 'switch', store: terrainShadows, title: lc('shadows'), description: lc('shadows_desc') },
+        ...(locked ? [] : [shadowsSwitch]),
         ...(show.shadows
             ? ([
                   {

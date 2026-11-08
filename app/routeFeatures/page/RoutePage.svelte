@@ -7,6 +7,7 @@
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
+    import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
     import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
@@ -95,10 +96,18 @@
     function scrollListTo(index: number) {
         listView?.nativeView?.scrollToIndex(index, true);
     }
+    // the times of the ride are the bar's subtitle once the strip that says them has scrolled away
+    let tripHidden = false;
+    function updateTripHidden(offset: number) {
+        const index = indexOfKey('trip');
+        const view = listView?.nativeView;
+        tripHidden = index >= 0 && !!view && offset > 0 && !view.isItemAtIndexVisible(index);
+    }
     function onListScroll(event: EventData) {
         // the event is typed for its base only
         const offset = 'scrollOffset' in event && typeof event.scrollOffset === 'number' ? event.scrollOffset : (listView?.nativeView?.scrollOffset ?? 0);
         moveHero(offset);
+        updateTripHidden(offset);
         if (offset <= FAB_SCROLL_STEP) {
             fabExpanded = true;
             lastOffset = offset;
@@ -246,17 +255,17 @@
             whenOpened++;
         }
     }
-    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, 'tiles');
+    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
     // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
     // their items, set again with each change of it
     function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
-        ['tiles', 'when'].forEach((key) => {
+        ['tiles', 'trip', 'when'].forEach((key) => {
             const index = indexOfKey(key);
             if (index >= 0) {
                 const row = listItems.getItem(index);
                 if (row.type === 'when') {
                     listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
-                } else if (row.type === 'tiles') {
+                } else if (row.type === 'tiles' || row.type === 'trip') {
                     listItems.setItem(index, { ...row, version });
                 }
             }
@@ -385,7 +394,13 @@
         <!-- the title on two lines, which the bar's own title does not do -->
         <stacklayout verticalAlignment="middle">
             <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
-            <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
+            <label
+                color={colorOnSurfaceVariant}
+                fontSize={11.5}
+                lineBreak="end"
+                maxLines={1}
+                text={(tripHidden && !isNaN(arrivalAt) ? whenLabel : subtitle) || ''}
+                visibility={(tripHidden && !isNaN(arrivalAt)) || subtitle ? 'visible' : 'collapse'} />
         </stacklayout>
         <appBarItem android.position="actionBar" icon={mdiIcon('mdi-dots-vertical')} ios.position="right" {menu} text={lc('more')} />
     </appBar>
@@ -426,6 +441,13 @@
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
                     <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
+                </gridlayout>
+            </Template>
+            <Template key="trip" let:item={row}>
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
+                        <TripStrip {item} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
+                    </gridlayout>
                 </gridlayout>
             </Template>
             <Template key="profile">
@@ -478,7 +500,13 @@
                                         visibility={row.facts?.[slot] ? 'visible' : 'collapse'} />
                                 {/each}
                             </stacklayout>
-                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary && !row.facts?.length ? 'visible' : 'collapse'} />
+                            <label
+                                color={colorOnSurfaceVariant}
+                                fontSize={12}
+                                lineBreak="end"
+                                maxLines={1}
+                                text={row.summary || ''}
+                                visibility={row.summary && !row.facts?.length ? 'visible' : 'collapse'} />
                         </stacklayout>
                         <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
                     </gridlayout>

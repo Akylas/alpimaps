@@ -9,11 +9,11 @@
     import StoreSwitch from '~/components/settings/StoreSwitch.svelte';
     import PanelHeader from '~/components/common/PanelHeader.svelte';
     import { lc } from '~/helpers/locale';
-    import { terrainLighting, terrainShadows } from '~/stores/terrainStore';
+    import { routeSunLight, terrainLighting, terrainShadows } from '~/stores/terrainStore';
     import { screenHeightDips, windowInset } from '~/variables';
 
     // rebuilt when lighting or shadows switch, which show or hide their knobs
-    $: rows = terrain3dSettingRows({ lighting: $terrainLighting, shadows: $terrainShadows });
+    $: rows = terrain3dSettingRows({ lighting: $terrainLighting, shadows: $terrainShadows }, $routeSunLight !== null);
 
     function itemTemplateSelector(item: SettingRow) {
         return item.type;

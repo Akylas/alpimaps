@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MOON_GLYPHS, isNight, moonIllumination, moonPhaseGlyph, nightMoon } from './moon';
+import { getMoonPosition } from 'suncalc';
+import { MOON_GLYPHS, isNight, moonEvents, moonIllumination, moonPhaseGlyph, moonPositionAt, nightMoon } from './moon';
 
 const LAT = 45;
 const LON = 6;
@@ -63,5 +64,46 @@ describe('nightMoon', () => {
 
     it('is nothing for a ride that does not go anywhere in time', () => {
         expect(nightMoon(start(30), start(30), LAT, LON).moonlitMinutes).toBe(0);
+    });
+});
+
+describe('moonPositionAt', () => {
+    it('is the moon over the horizon where the sky says it is', () => {
+        // the night of the full moon of July 2026, 00:00 in Grenoble: the moon is high in the south
+        const { altitude, azimuth } = moonPositionAt(Date.UTC(2026, 6, 28, 22), { lat: 45.19, lon: 5.72 });
+        expect(altitude).toBeCloseTo(getMoonPosition(new Date(Date.UTC(2026, 6, 28, 22)), 45.19, 5.72).altitude, 5);
+        expect(altitude).toBeGreaterThan(15);
+        expect(azimuth).toBeGreaterThan(150);
+        expect(azimuth).toBeLessThan(220);
+    });
+});
+
+describe('moonEvents', () => {
+    const GRENOBLE = { lat: 45.19, lon: 5.72 };
+    const altitudeAt = (at: number) => moonPositionAt(at, GRENOBLE).altitude;
+
+    it('has the moon go over the horizon at its rise and under it at its set', () => {
+        let found = 0;
+        for (let day = 1; day <= 5; day++) {
+            const { rise, set } = moonEvents(Date.UTC(2026, 6, day, 12), GRENOBLE, 120);
+            if (rise !== null) {
+                found++;
+                expect(altitudeAt(rise - 10 * MINUTE)).toBeLessThan(0);
+                expect(altitudeAt(rise + 10 * MINUTE)).toBeGreaterThan(0);
+            }
+            if (set !== null) {
+                found++;
+                expect(altitudeAt(set - 10 * MINUTE)).toBeGreaterThan(0);
+                expect(altitudeAt(set + 10 * MINUTE)).toBeLessThan(0);
+            }
+        }
+        expect(found).toBeGreaterThanOrEqual(6);
+    });
+
+    it('is the civil day of the route zone', () => {
+        // the full moon of the 29th rises at 21:20 in Grenoble: on the 29th there, 19:20 UTC
+        const { rise } = moonEvents(Date.UTC(2026, 6, 29, 8), GRENOBLE, 120);
+        expect(rise).toBeGreaterThan(Date.UTC(2026, 6, 29, 19));
+        expect(rise).toBeLessThan(Date.UTC(2026, 6, 29, 20));
     });
 });
