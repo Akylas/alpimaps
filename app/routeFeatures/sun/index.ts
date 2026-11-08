@@ -1,7 +1,7 @@
 import { derived, get } from 'svelte/store';
 import { formatDistance, formatDuration } from '~/helpers/formatter';
 import { formatTime, lc } from '~/helpers/locale';
-import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+import { computeLayers, layerStatuses, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { currentLensPalette, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import {
@@ -10,6 +10,7 @@ import {
     type LensHeadline,
     type LensProfile,
     type RouteCtx,
+    type RouteDeparture,
     type RouteLens,
     type RoutePageSection,
     type TripChip,
@@ -21,25 +22,38 @@ import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { sunRows } from '~/routeFeatures/sun/rows';
+import { freshTerrain } from '~/routeFeatures/sun/terrain/layer';
+import { type TerrainPhase, terrainPhase } from '~/routeFeatures/sun/terrain/phase';
+import { terrainShadeAvailable } from '~/routeFeatures/sun/terrain/service';
 import { sunStage } from '~/routeFeatures/sun/terrain/stage';
 import { sunTrip } from '~/routeFeatures/sun/trip';
 import '~/routeFeatures/sun/sunMode';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
-import { routeFeatureSun, sunGlareAngle, sunMoonMin, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
+import { routeFeatureSun, sunGlareAngle, sunMoonMin, sunSettingRows, sunSettingsKey, sunTerrain } from '~/routeFeatures/sun/settings';
 import type { IItem } from '~/models/Item';
 import { utcOffsetAt } from '~/utils/timezone';
 
 const MINUTE = 60000;
 
 // the lens asks for the same read several times a refresh (chip, line, headline...): one per route state and minute
-let memo: { item: IItem; analysis: unknown; minute: number; glare: number; moon: number; read: SunRead | null };
+let memo: { item: IItem; analysis: unknown; minute: number; glare: number; moon: number; terrain: boolean; read: SunRead | null };
 
 function readOf(item: IItem): SunRead | null {
     const minute = Math.floor(Date.now() / MINUTE);
     const glare = get(sunGlareAngle);
     const moon = get(sunMoonMin);
-    if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.glare !== glare || memo.moon !== moon) {
-        memo = { item, analysis: item.analysis, minute, glare, moon, read: readSun(item, Date.now(), { glareBelow: glare, moonMin: moon, zoneOffset: utcOffsetAt }) };
+    const terrain = get(sunTerrain);
+    if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.glare !== glare || memo.moon !== moon || memo.terrain !== terrain) {
+        // the shade of the terrain is of the ride as the inputs time it: a layer of another departure is not read
+        memo = {
+            item,
+            analysis: item.analysis,
+            minute,
+            glare,
+            moon,
+            terrain,
+            read: readSun(item, Date.now(), { glareBelow: glare, moonMin: moon, zoneOffset: utcOffsetAt, terrain: terrain ? freshTerrain(item.analysis) : undefined })
+        };
     }
     return memo.read;
 }
@@ -55,7 +69,34 @@ function profileLegend() {
 
 const timeOf = (read: SunRead, at: number) => formatTime(at, 'LT', read.offsetAt(at));
 
-function facts(read: SunRead): LensFact[] {
+function phaseOf(item: IItem): TerrainPhase {
+    return terrainPhase({ available: terrainShadeAvailable(), enabled: get(sunTerrain), state: layerStatuses(item).sun.state, hasLayer: !!item.analysis?.layers.sun });
+}
+
+const computeShade = (item: IItem) => () => computeLayers(item, ['sun']);
+
+/** What the terrain adds to the figures: how far of the ride is in its shade, how much of it was read, and where it stands. */
+function terrainFacts(item: IItem, read: SunRead, phase: TerrainPhase): LensFact[] {
+    switch (phase) {
+        case 'running':
+            return [{ icon: 'mdi-image-filter-hdr', text: lc('sun_computing') }];
+        case 'failed':
+            return [{ icon: 'mdi-image-filter-hdr', text: lc('sun_terrain_failed'), alert: true }];
+        default: {
+            const result: LensFact[] = [];
+            if (read.summary.shadeDistance > 0) {
+                result.push({ icon: 'mdi-terrain', text: lc('sun_shade_for', formatDistance(read.summary.shadeDistance)) });
+            }
+            const coverage = item.analysis?.layers.sun?.data.coverage;
+            if (read.shaded && coverage !== undefined && coverage < 1) {
+                result.push({ icon: 'mdi-image-filter-hdr', text: lc('sun_terrain_coverage', Math.round(coverage * 100) + ' %') });
+            }
+            return result;
+        }
+    }
+}
+
+function facts(item: IItem, read: SunRead): LensFact[] {
     const { darkMs, glareDistance, moonlitMs, sunset } = read.summary;
     const result: LensFact[] = [];
     if (sunset) {
@@ -70,6 +111,7 @@ function facts(read: SunRead): LensFact[] {
     if (glareDistance > 0) {
         result.push({ icon: 'mdi-white-balance-sunny', text: lc('sun_glare_for', formatDistance(glareDistance)), alert: true });
     }
+    result.push(...terrainFacts(item, read, phaseOf(item)));
     return result.length ? result : [{ icon: 'mdi-white-balance-sunny', text: lc('sun_daylight') }];
 }
 
@@ -84,11 +126,26 @@ const sunLens: RouteLens = {
             return {};
         }
         // dark before the end of the ride is the serious figure; else the sunset, when it is on the way
-        return { value: read.summary.sunset ? timeOf(read, read.summary.sunset.at) : undefined, alert: read.summary.darkMs > 0 };
+        const phase = phaseOf(item);
+        return {
+            value: read.summary.sunset ? timeOf(read, read.summary.sunset.at) : undefined,
+            alert: read.summary.darkMs > 0,
+            state: phase === 'running' ? 'running' : phase === 'update' ? 'outdated' : phase === 'failed' ? 'missing' : undefined
+        };
     },
     headline: ({ item }): LensHeadline => {
         const read = readOf(item);
-        return { facts: read ? facts(read) : [] };
+        if (!read) {
+            return { facts: [] };
+        }
+        const phase = phaseOf(item);
+        const label = phase === 'compute' ? 'sun_compute_shade' : phase === 'update' || phase === 'failed' ? 'sun_update_shade' : undefined;
+        return { facts: facts(item, read), action: label ? { label: lc(label), run: computeShade(item) } : undefined };
+    },
+    // the user asks for the shade again, from the long press menu
+    refresh: ({ item }) => {
+        const phase = phaseOf(item);
+        return phase === 'off' || phase === 'running' ? undefined : computeLayers(item, ['sun']);
     },
     readout: ({ index, item }) => {
         const point = readOf(item)?.at(index);
@@ -122,7 +179,7 @@ const sunPageSection: RoutePageSection = {
     lens: 'sun',
     facts: ({ item }) => {
         const read = readOf(item);
-        return read ? facts(read) : [];
+        return read ? facts(item, read) : [];
     },
     // the preview needs the 3D map, which needs a terrain
     rows: ({ item }) => sunRows(readOf(item), { preview: get(mapCapabilities).hasTerrain }),
@@ -164,6 +221,17 @@ function tripOf(read: SunRead): TripFigures {
     return trips.get(read);
 }
 
+// a departure the user took moves the ride in the sky: the shade that was read is read again, once there is one
+const sunDeparture: RouteDeparture = {
+    indicators: {},
+    assess: () => undefined,
+    taken: ({ item }) => {
+        if (item.analysis?.layers.sun && phaseOf(item) === 'update') {
+            computeLayers(item, ['sun']);
+        }
+    }
+};
+
 registerRouteFeature({
     id: 'sun',
     order: 15,
@@ -177,6 +245,7 @@ registerRouteFeature({
         const read = readOf(item);
         return read ? tripOf(read) : {};
     },
+    departure: sunDeparture,
     compute: sunStage,
     pageSections: [sunPageSection]
 });

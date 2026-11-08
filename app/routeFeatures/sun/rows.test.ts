@@ -128,4 +128,18 @@ describe('sunRows', () => {
         expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 9, 25, 12));
         expect(sunset.offset).toBe(60);
     });
+
+    it('says whether the terrain is counted in the note under the card', () => {
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
+        const item: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
+        const count = readSun(item, NOW).samples.length;
+        const noteOf = (terrain?: { step: number; lit: number[] }) =>
+            of(
+                sunRows(readSun(item, NOW, { terrain })).map((row) => row.data as SunRowData),
+                'note'
+            )[0];
+        expect(noteOf()).toEqual({ type: 'note', terrain: false });
+        expect(noteOf({ step: 100, lit: Array(count).fill(100) })).toEqual({ type: 'note', terrain: true });
+    });
 });

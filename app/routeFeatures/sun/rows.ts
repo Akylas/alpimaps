@@ -15,7 +15,8 @@ export type SunRowData =
     | { type: 'side'; body: 'sun' | 'moon'; left: number; right: number; ahead: number; behind: number }
     /** the button that lights the 3D map with the sun of the ride */
     | { type: 'preview' }
-    | { type: 'note' };
+    /** what the figures leave out: with the terrain counted, the trees and the buildings; else the terrain too */
+    | { type: 'note'; terrain: boolean };
 
 /** The bar, what the sun does against the ride, and the note on what the figures leave out. None before the sun is read. */
 export function sunRows(read: SunRead | null, { preview = false }: { preview?: boolean } = {}): RoutePageRow[] {
@@ -75,6 +76,6 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
     if (preview) {
         rows.push({ type: 'preview' });
     }
-    rows.push({ type: 'note' });
+    rows.push({ type: 'note', terrain: read.shaded });
     return rows.map((data, index) => ({ key: `${data.type}${data.type === 'event' ? data.id : ''}${index}`, data }));
 }

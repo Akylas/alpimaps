@@ -58,6 +58,8 @@ export interface SunSummary {
     darkMs: number;
     /** m ridden into the low sun */
     glareDistance: number;
+    /** m ridden in the shade of the terrain, where it is known */
+    shadeDistance: number;
     /** m ridden by day with the sun on each side of the way the ride goes */
     sides: Record<SunSide, number>;
     /** ms of the night with the moon up and bright enough to see by */
@@ -206,7 +208,14 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
     const terrain = options.terrain && options.terrain.step === STEP[kind] && options.terrain.lit.length === vertexes.length ? options.terrain : undefined;
     const samples: SunSample[] = [];
     const slices: LensSlice[] = [];
-    const summary: SunSummary = { darkMs: 0, glareDistance: 0, sides: { left: 0, right: 0, ahead: 0, behind: 0 }, moonlitMs: 0, moonSides: { left: 0, right: 0, ahead: 0, behind: 0 } };
+    const summary: SunSummary = {
+        darkMs: 0,
+        glareDistance: 0,
+        shadeDistance: 0,
+        sides: { left: 0, right: 0, ahead: 0, behind: 0 },
+        moonlitMs: 0,
+        moonSides: { left: 0, right: 0, ahead: 0, behind: 0 }
+    };
     let previousLevel: SunLevel | undefined;
     vertexes.forEach((vertex, position) => {
         const point = pointAt(vertex, terrain ? isShaded(terrain.lit[position]) : false);
@@ -233,6 +242,9 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
             }
             if (point.side && (point.level === 'day' || point.level === 'low')) {
                 summary.sides[point.side] += distances[hi] - distances[lo];
+            }
+            if (point.class === 'shade') {
+                summary.shadeDistance += distances[hi] - distances[lo];
             }
             if (point.glare && point.class === 'glare') {
                 summary.glareDistance += distances[hi] - distances[lo];

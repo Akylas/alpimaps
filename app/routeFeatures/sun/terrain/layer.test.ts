@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type ExposureAsker, computeTerrainLayer, sunExtras } from '~/routeFeatures/sun/terrain/layer';
+import { type ExposureAsker, computeTerrainLayer, freshTerrain, sunExtras } from '~/routeFeatures/sun/terrain/layer';
 import { EXPOSURE_STATUS } from '~/routeFeatures/sun/terrain/exposure';
 import { layerInputsHash } from '~/utils/routeAnalysis/freshness';
 import { StageError } from '~/utils/routeAnalysis/pipeline';
@@ -115,5 +115,30 @@ describe('computeTerrainLayer', () => {
 
     it('fails for a route with no line', async () => {
         await expect(compute(asker().expose, { item: { route: { totalTime: 100 } } })).rejects.toBeInstanceOf(StageError);
+    });
+});
+
+describe('freshTerrain', () => {
+    it('gives the shares lit of a layer that is of the ride as it is timed', async () => {
+        const layer = await compute(asker().expose);
+        const terrain = freshTerrain({ ...analysis, layers: { sun: layer } });
+        expect(terrain.step).toBe(100);
+        expect(terrain.lit).toHaveLength(COUNT);
+    });
+
+    it('gives none for a layer of another departure, or another pace', async () => {
+        const layer = await compute(asker().expose);
+        const later: AnalysisInputs = { ...inputs, departure: { mode: 'planned', at: DEPART + 3600000 } };
+        expect(freshTerrain({ v: 1, inputs: later, layers: { sun: layer } })).toBeUndefined();
+        const slower: AnalysisInputs = { ...inputs, pace: { ...inputs.pace, multiplier: 1.2 } };
+        expect(freshTerrain({ v: 1, inputs: slower, layers: { sun: layer } })).toBeUndefined();
+    });
+
+    it('gives none without a layer, or for a layer that holds no shares', async () => {
+        expect(freshTerrain(analysis)).toBeUndefined();
+        expect(freshTerrain(null)).toBeUndefined();
+        const layer = await compute(asker().expose);
+        const { lit: _lit, ...astronomyOnly } = layer.data;
+        expect(freshTerrain({ ...analysis, layers: { sun: { ...layer, data: astronomyOnly } } })).toBeUndefined();
     });
 });

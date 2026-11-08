@@ -76,3 +76,12 @@ export async function computeTerrainLayer({
         }
     };
 }
+
+/** What the lens reads of the layer: its shares lit, when it is of the ride as the inputs time it now. */
+export function freshTerrain(analysis: RouteAnalysis | null | undefined): { step: number; lit: number[] } | undefined {
+    const layer = analysis?.layers.sun;
+    if (!analysis || !layer?.data.lit || layer.prov.inputsHash !== layerInputsHash('sun', analysis.inputs, sunExtras())) {
+        return undefined;
+    }
+    return { step: layer.data.step, lit: layer.data.lit };
+}

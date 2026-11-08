@@ -203,6 +203,14 @@ describe('readSun', () => {
         expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(-1) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
     });
 
+    it("says how far of the ride is in the terrain's shade", () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW).summary.shadeDistance).toBe(0);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(100) } }).summary.shadeDistance).toBe(0);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).summary.shadeDistance).toBeCloseTo(20000, -3);
+    });
+
     it('has the terrain hide the glare, and the clouds: no sun, nothing to blind, nothing to cloud', () => {
         const evening = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
         const count = readSun(evening, NOW).samples.length;

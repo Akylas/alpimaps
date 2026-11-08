@@ -103,5 +103,5 @@
         </stacklayout>
     </gridlayout>
 {:else}
-    <label color={colorOnSurfaceVariant} fontSize={12} padding="8 16 12 16" text={lc('sun_note')} textWrap={true} />
+    <label color={colorOnSurfaceVariant} fontSize={12} padding="8 16 12 16" text={lc(data.terrain ? 'sun_note_terrain' : 'sun_note')} textWrap={true} />
 {/if}
