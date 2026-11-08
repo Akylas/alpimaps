@@ -6,7 +6,7 @@ import { Align, DashPathEffect, Paint, Style } from '@nativescript-community/ui-
 import type { ProfileOverlay } from '~/routeFeatures/registry';
 import type { SunRead } from '~/routeFeatures/sun/read';
 
-const RIBBON_HEIGHT = 9;
+const RIBBON_HEIGHT = 4;
 const SUNSET_GLYPH_ROW = 12;
 const MDI_SUNSET_DOWN = String.fromCodePoint(0xf059b);
 

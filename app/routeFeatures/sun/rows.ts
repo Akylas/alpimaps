@@ -7,8 +7,6 @@ import { sunEvents } from '~/utils/astronomy/sun';
 export type SunRowData =
     /** what the route is made of, by class of the sun, in metres */
     | { type: 'bar'; shares: { k: SunClass; meters: number }[] }
-    /** epoch ms the ride starts and ends, in the route's zone */
-    | { type: 'times'; start: number; end: number; offset?: number }
     /** the sunset or the end of civil twilight of the day, against the ride: during it (the distance), before it starts or after it ends (ms) */
     | { type: 'event'; id: 'sunset' | 'dusk' | 'moonrise' | 'moonset'; at: number; offset?: number; relation: 'during' | 'before' | 'after'; distance?: number; ms?: number }
     | { type: 'dark'; ms: number }
@@ -53,7 +51,7 @@ function moonAround(read: SunRead): { rise: number | null; set: number | null } 
     return { rise: rises.length ? Math.max(...rises) : null, set: sets.length ? Math.min(...sets) : null };
 }
 
-/** The bar, the times, what the sun does against the ride, and the note on what the figures leave out. None before the sun is read. */
+/** The bar, what the sun does against the ride, and the note on what the figures leave out. None before the sun is read. */
 export function sunRows(read: SunRead | null, { preview = false }: { preview?: boolean } = {}): RoutePageRow[] {
     if (!read) {
         return [];
@@ -68,7 +66,6 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
         meters.set(sunClass, (meters.get(sunClass) ?? 0) + to - from);
     });
     rows.push({ type: 'bar', shares: SUN_CLASS_ORDER.filter((sunClass) => meters.has(sunClass)).map((sunClass) => ({ k: sunClass, meters: meters.get(sunClass) })) });
-    rows.push({ type: 'times', start: read.start, end: read.end, offset: read.offset });
     const moon = read.summary.darkMs > 0 ? moonAround(read) : { rise: null, set: null };
     const times = {
         sunset: aroundRide(

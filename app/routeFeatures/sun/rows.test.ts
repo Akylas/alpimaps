@@ -36,12 +36,6 @@ describe('sunRows', () => {
         expect(bar.shares.reduce((sum, share) => sum + share.meters, 0)).toBeCloseTo(20000, -3);
     });
 
-    it('says when the ride starts and ends', () => {
-        const [times] = of(rowsFor(Date.UTC(2026, 5, 21, 10, 0)), 'times');
-        expect(times.start).toBe(Date.UTC(2026, 5, 21, 10, 0));
-        expect(times.end).toBe(Date.UTC(2026, 5, 21, 13, 0));
-    });
-
     it('puts the sunset and the dusk at a distance when the ride is out then', () => {
         const events = of(rowsFor(Date.UTC(2026, 5, 21, 17, 30)), 'event').filter((row) => row.id === 'sunset' || row.id === 'dusk');
         expect(events.map((row) => [row.id, row.relation])).toEqual([

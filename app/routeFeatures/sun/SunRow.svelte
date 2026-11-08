@@ -1,5 +1,5 @@
 <script lang="ts">
-    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, when the ride starts and ends,
+    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun,
     // the sunset and the dusk against the ride, the dark and the glare, where the sun is against the way, the note on what is left out
     import { showError } from '@shared/utils/showError';
     import { formatDistance, formatDuration } from '~/helpers/formatter';
@@ -68,18 +68,6 @@
             </gridlayout>
         {/each}
     </stacklayout>
-{:else if data.type === 'times'}
-    <gridlayout columns="32,*,*" height={48} padding="0 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text="mdi-clock-outline" verticalAlignment="middle" />
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={time(data.start, data.offset)} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={lc('sun_leave')} />
-        </stacklayout>
-        <stacklayout col={2} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={time(data.end, data.offset)} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={lc('sun_arrive')} />
-        </stacklayout>
-    </gridlayout>
 {:else if data.type === 'event'}
     <gridlayout columns="32,*" height={48} padding="0 16">
         <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={EVENT_ICONS[data.id]} verticalAlignment="middle" />
