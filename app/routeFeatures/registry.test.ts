@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
-import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages, routeStatViews } from './registry';
+import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages, routeStatViews, routeTrip } from './registry';
 
 describe('routeStages', () => {
     const stage = (layer: 'weather' | 'sun') => ({ layer, run: () => Promise.resolve({ prov: { computedAt: 0, inputsHash: '', provider: '', quality: 'ok' as const }, data: null }) });
@@ -76,5 +76,41 @@ describe('routeStatViews', () => {
             { id: 'none', order: 2 }
         ];
         expect(routeStatViews(features, { item: null }).map(({ id }) => id)).toEqual(['full']);
+    });
+});
+
+describe('routeTrip', () => {
+    const ctx = { item: null };
+
+    it('collects the chips of the features in order and joins their notes', () => {
+        const features: RouteFeature[] = [
+            { id: 'first', order: 1, trip: () => ({ chips: [{ key: 'a', icon: 'mdi-a', text: '1' }], note: 'one' }) },
+            { id: 'none', order: 2 },
+            { id: 'second', order: 3, trip: () => ({ chips: [{ key: 'b', icon: 'mdi-b', text: '2' }], note: 'two' }) }
+        ];
+        const trip = routeTrip(features, ctx);
+        expect(trip.chips.map((chip) => chip.key)).toEqual(['a', 'b']);
+        expect(trip.note).toBe('one · two');
+    });
+
+    it('leaves out the feature that has chips and no line', () => {
+        const features: RouteFeature[] = [
+            { id: 'first', order: 1, trip: () => ({ note: 'one' }) },
+            { id: 'quiet', order: 2, trip: () => ({ chips: [{ key: 'a', icon: 'mdi-a', text: '1' }] }) },
+            { id: 'last', order: 3, trip: () => ({ note: 'two' }) }
+        ];
+        expect(routeTrip(features, ctx).note).toBe('one · two');
+    });
+
+    it('has nothing to say when no feature does', () => {
+        expect(
+            routeTrip(
+                [
+                    { id: 'none', order: 1 },
+                    { id: 'quiet', order: 2, trip: () => ({}) }
+                ],
+                ctx
+            )
+        ).toEqual({ chips: [], note: '' });
     });
 });

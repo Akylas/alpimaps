@@ -87,4 +87,18 @@ describe('pageRows', () => {
         expect(body).toEqual({ type: 'body', key: 'climbs:1', section: 'climbs', row: { key: '1', data: 1 }, last: true });
         expect(rows.find((row) => row.key === 'climbs:0')).toMatchObject({ last: false });
     });
+
+    it('puts the trip strip under the tiles for a route that has a line, and not for one that has none', () => {
+        const geometry = {
+            type: 'LineString' as const,
+            coordinates: [
+                [5.7, 45.1],
+                [5.71, 45.11],
+                [5.72, 45.12]
+            ]
+        };
+        const withLine = pageRows({ sections, ctx: { item: { id: 1, geometry, route: { totalTime: 600 } } }, stored: {}, hasProfile: true });
+        expect(withLine.map((row) => row.type).slice(0, 3)).toEqual(['tiles', 'trip', 'profile']);
+        expect(pageRows({ sections, ctx, stored: {}, hasProfile: true }).map((row) => row.type)).not.toContain('trip');
+    });
 });

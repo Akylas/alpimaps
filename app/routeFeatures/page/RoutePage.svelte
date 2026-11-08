@@ -7,6 +7,7 @@
     import { showError } from '@shared/utils/showError';
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
+    import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
     import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
@@ -246,17 +247,17 @@
             whenOpened++;
         }
     }
-    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, 'tiles');
+    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
     // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
     // their items, set again with each change of it
     function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
-        ['tiles', 'when'].forEach((key) => {
+        ['tiles', 'trip', 'when'].forEach((key) => {
             const index = indexOfKey(key);
             if (index >= 0) {
                 const row = listItems.getItem(index);
                 if (row.type === 'when') {
                     listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
-                } else if (row.type === 'tiles') {
+                } else if (row.type === 'tiles' || row.type === 'trip') {
                     listItems.setItem(index, { ...row, version });
                 }
             }
@@ -428,6 +429,13 @@
                     <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
                 </gridlayout>
             </Template>
+            <Template key="trip" let:item={row}>
+                <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
+                    <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
+                        <TripStrip {item} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
+                    </gridlayout>
+                </gridlayout>
+            </Template>
             <Template key="profile">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS} height={ROUTE_LENS_CARD_HEIGHT}>
@@ -478,7 +486,13 @@
                                         visibility={row.facts?.[slot] ? 'visible' : 'collapse'} />
                                 {/each}
                             </stacklayout>
-                            <label color={colorOnSurfaceVariant} fontSize={12} lineBreak="end" maxLines={1} text={row.summary || ''} visibility={row.summary && !row.facts?.length ? 'visible' : 'collapse'} />
+                            <label
+                                color={colorOnSurfaceVariant}
+                                fontSize={12}
+                                lineBreak="end"
+                                maxLines={1}
+                                text={row.summary || ''}
+                                visibility={row.summary && !row.facts?.length ? 'visible' : 'collapse'} />
                         </stacklayout>
                         <label col={2} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text={row.open ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
                     </gridlayout>

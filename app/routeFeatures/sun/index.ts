@@ -4,12 +4,24 @@ import { formatTime, lc } from '~/helpers/locale';
 import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { currentLensPalette, lensVariantStore } from '~/routeFeatures/lens/lensStyle';
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
-import { type LensChip, type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RoutePageSection, registerRouteFeature } from '~/routeFeatures/registry';
+import {
+    type LensChip,
+    type LensFact,
+    type LensHeadline,
+    type LensProfile,
+    type RouteCtx,
+    type RouteLens,
+    type RoutePageSection,
+    type TripChip,
+    type TripFigures,
+    registerRouteFeature
+} from '~/routeFeatures/registry';
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { sunRows } from '~/routeFeatures/sun/rows';
+import { sunTrip } from '~/routeFeatures/sun/trip';
 import '~/routeFeatures/sun/sunMode';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { routeFeatureSun, sunGlareAngle, sunMoonMin, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
@@ -115,6 +127,41 @@ const sunPageSection: RoutePageSection = {
     component: () => import('~/routeFeatures/sun/SunRow.svelte')
 };
 
+// the colours oss-weather gives them
+const SUNRISE_COLOR = '#EF9F27';
+const SUNSET_COLOR = '#D85A30';
+const MOON_COLOR = '#7F77DD';
+const EVENT_CHIPS = {
+    sunrise: { icon: 'mdi-weather-sunset-up', color: SUNRISE_COLOR },
+    sunset: { icon: 'mdi-weather-sunset-down', color: SUNSET_COLOR },
+    moonrise: { icon: 'mdi-moon-waxing-crescent', color: MOON_COLOR },
+    moonset: { icon: 'mdi-moon-waning-crescent', color: MOON_COLOR }
+};
+
+const trips = new WeakMap<SunRead, TripFigures>();
+
+/** The sun's say under the tiles: its events as chips, the moon's lit part after them, and a line for where the sun goes down and how long it is dark. */
+function tripOf(read: SunRead): TripFigures {
+    if (!trips.has(read)) {
+        const trip = sunTrip(read);
+        const eventChips = (ids: string[]): TripChip[] =>
+            trip.events.filter((event) => ids.includes(event.id)).map((event) => ({ key: event.id, text: timeOf(read, event.at), ...EVENT_CHIPS[event.id] }));
+        const chips: TripChip[] = [
+            ...eventChips(['sunrise', 'sunset']),
+            ...(trip.moon ? [{ key: 'moon', icon: trip.moon.glyph, text: `${trip.moon.illumination}%`, color: MOON_COLOR }] : []),
+            ...eventChips(['moonrise', 'moonset'])
+        ];
+        const notes = trip.events.flatMap((event) =>
+            event.relation === 'during' && (event.id === 'sunrise' || event.id === 'sunset') ? [lc(`sun_trip_${event.id}`, formatDistance(event.distance))] : []
+        );
+        if (trip.darkMs > 0) {
+            notes.push(lc('sun_dark_for', formatDuration(trip.darkMs / 1000)));
+        }
+        trips.set(read, { chips, note: notes.join(' · ') });
+    }
+    return trips.get(read);
+}
+
 registerRouteFeature({
     id: 'sun',
     order: 15,
@@ -124,5 +171,9 @@ registerRouteFeature({
     changes: derived([routeAnalysisChanges, sunSettingsKey], (values) => values.join()),
     lensPalette: sunPalette,
     lenses: [sunLens],
+    trip: ({ item }) => {
+        const read = readOf(item);
+        return read ? tripOf(read) : {};
+    },
     pageSections: [sunPageSection]
 });
