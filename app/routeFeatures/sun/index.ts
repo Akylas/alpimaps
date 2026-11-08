@@ -21,6 +21,7 @@ import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { sunRows } from '~/routeFeatures/sun/rows';
+import { sunStage } from '~/routeFeatures/sun/terrain/stage';
 import { sunTrip } from '~/routeFeatures/sun/trip';
 import '~/routeFeatures/sun/sunMode';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
@@ -176,5 +177,6 @@ registerRouteFeature({
         const read = readOf(item);
         return read ? tripOf(read) : {};
     },
+    compute: sunStage,
     pageSections: [sunPageSection]
 });

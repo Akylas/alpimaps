@@ -90,8 +90,14 @@ export interface WeatherData {
 export interface SunData {
     /** metres between samples */
     step: number;
-    /** 0..100 geometric lit % per sample, terrain only; absent: astronomy-only layer */
+    /** 0..100 geometric lit % per sample, terrain only, -1 where there is no ground to read it from; absent: astronomy-only layer */
     lit?: number[];
+    /** the samples the answer is weaker for: the SDK's status bits (no ground, coarse ground, low sun, cut short) */
+    flags?: { i: number; f: number }[];
+    /** 0..1: the share of the samples read from ground fine enough */
+    coverage?: number;
+    /** what it was computed with */
+    params?: { kind: 'hike' | 'bike' | 'motor'; eyeHeight: number; algo: 1 };
     /** the timeline the `lit` values were computed for; if it differs from the live one the layer is `inputs-changed` */
     basis: { departureHash: string; paceHash: string };
 }
