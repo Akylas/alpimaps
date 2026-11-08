@@ -13,10 +13,10 @@ const geometry: Geometry = {
 };
 const NOW = Date.UTC(2026, 5, 1);
 
-function rowsFor(at: number, options?: { preview?: boolean }, hours = 3): SunRowData[] {
-    const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
+function rowsFor(at: number, options?: { preview?: boolean }, hours = 3, zone?: { tz: string; utcOffset: number; zoneOffset: (tz: string, at: number) => number | undefined }): SunRowData[] {
+    const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at, ...(zone ? { tz: zone.tz, utcOffset: zone.utcOffset } : {}) });
     const item: SunItem = { geometry, route: { totalTime: hours * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
-    return sunRows(readSun(item, NOW), options).map((row: RoutePageRow) => row.data as SunRowData);
+    return sunRows(readSun(item, NOW, zone ? { zoneOffset: zone.zoneOffset } : {}), options).map((row: RoutePageRow) => row.data as SunRowData);
 }
 
 const HOUR = 3600000;
@@ -118,5 +118,14 @@ describe('sunRows', () => {
         expect(sunset.relation).toBe('during');
         expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 22, 19, 0));
         expect(sunset.at).toBeLessThan(Date.UTC(2026, 5, 22, 20, 0));
+    });
+
+    it('says each event in the offset of its own moment: a ride over a change of the clocks', () => {
+        // 20:00 in Grenoble on the 24th of October 2026, for 30 hours: the clocks go back in the night, the sunset of the 25th is on the way
+        const zoneOffset = (_tz: string, at: number) => (at < Date.UTC(2026, 9, 25, 1) ? 120 : 60);
+        const sunset = of(rowsFor(Date.UTC(2026, 9, 24, 18, 0), undefined, 30, { tz: 'Europe/Paris', utcOffset: 120, zoneOffset }), 'event').find((row) => row.id === 'sunset');
+        expect(sunset.relation).toBe('during');
+        expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 9, 25, 12));
+        expect(sunset.offset).toBe(60);
     });
 });

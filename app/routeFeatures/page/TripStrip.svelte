@@ -7,6 +7,7 @@
     import type { IItem } from '~/models/Item';
     import { tripTimes } from '~/routeFeatures/page/trip';
     import { routeFeatureChanges, routeFeatures, routeTrip } from '~/routeFeatures/registry';
+    import { utcOffsetAt } from '~/utils/timezone';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
@@ -24,12 +25,12 @@
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
-    $: times = version >= 0 ? tripTimes(item, Date.now()) : null;
+    $: times = version >= 0 ? tripTimes(item, Date.now(), utcOffsetAt) : null;
     $: figures = version >= 0 && $routeFeatureChanges >= 0 ? routeTrip($routeFeatures, { item }) : { chips: [], note: '' };
 
     // a ride for another day says which; one that goes on past midnight says how many days
-    const clock = (at: number) => formatTime(at, 'LT', times.offset);
-    $: leave = !times ? '' : times.now ? lc('now') : `${times.startDay === 0 ? '' : formatTime(times.start, 'ddd', times.offset) + ' '}${clock(times.start)}`;
+    const clock = (at: number) => formatTime(at, 'LT', times.offsetAt(at));
+    $: leave = !times ? '' : times.now ? lc('now') : `${times.startDay === 0 ? '' : formatTime(times.start, 'ddd', times.offsetAt(times.start)) + ' '}${clock(times.start)}`;
     $: arrive = !times ? '' : `${clock(times.end)}${times.endShift > 0 ? ' +' + times.endShift : ''}`;
 </script>
 

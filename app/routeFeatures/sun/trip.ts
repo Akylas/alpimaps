@@ -25,7 +25,7 @@ export interface SunTrip {
  */
 export function sunTrip(read: SunRead): SunTrip {
     const { darkMs, moonlitMs } = read.summary;
-    const days = daysOf(read).map((at) => sunEvents(at, read.place, read.offset));
+    const days = daysOf(read).map((at) => sunEvents(at, read.place, read.offsetAt(at)));
     const during = (at: number | null) => at !== null && at >= read.start && at <= read.end;
     const eventOf = (id: TripEvent['id'], at: number): TripEvent =>
         during(at) ? { id, at, relation: 'during', distance: read.distanceAt(at) } : { id, at, relation: at < read.start ? 'before' : 'after' };

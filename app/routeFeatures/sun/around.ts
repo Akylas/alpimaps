@@ -30,7 +30,7 @@ export function aroundRide(read: SunRead, events: (number | null)[]): number | n
 
 /** The moon that matters to a ride: the last rise before it ends, the first set after it starts. None where the moon does neither around then. */
 export function moonAround(read: SunRead): { rise: number | null; set: number | null } {
-    const days = [read.start - DAY, ...daysOf(read)].map((at) => moonEvents(at, read.place, read.offset));
+    const days = [read.start - DAY, ...daysOf(read)].map((at) => moonEvents(at, read.place, read.offsetAt(at)));
     const rises = days.flatMap(({ rise }) => (rise !== null && rise <= read.end ? [rise] : []));
     const sets = days.flatMap(({ set }) => (set !== null && set >= read.start ? [set] : []));
     return { rise: rises.length ? Math.max(...rises) : null, set: sets.length ? Math.min(...sets) : null };

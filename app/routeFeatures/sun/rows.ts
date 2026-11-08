@@ -23,7 +23,7 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
         return [];
     }
     // a ride can last past a night: every day it is out on is looked at
-    const days = daysOf(read).map((at) => sunEvents(at, read.place, read.offset));
+    const days = daysOf(read).map((at) => sunEvents(at, read.place, read.offsetAt(at)));
     const { darkMs, glareDistance, moonSides, sides } = read.summary;
     const rows: SunRowData[] = [];
     const meters = new Map<SunClass, number>();
@@ -51,11 +51,11 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
             return;
         }
         if (at < read.start) {
-            rows.push({ type: 'event', id, at, offset: read.offset, relation: 'before', ms: read.start - at });
+            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'before', ms: read.start - at });
         } else if (at > read.end) {
-            rows.push({ type: 'event', id, at, offset: read.offset, relation: 'after', ms: at - read.end });
+            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'after', ms: at - read.end });
         } else {
-            rows.push({ type: 'event', id, at, offset: read.offset, relation: 'during', distance: read.distanceAt(at) });
+            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'during', distance: read.distanceAt(at) });
         }
     });
     if (darkMs > 0) {

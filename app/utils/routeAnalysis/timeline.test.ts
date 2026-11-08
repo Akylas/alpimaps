@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute } from './activity';
-import { departurePassed, resolveStart, routeTimeZone, withRouteTimeZone } from './departure';
+import { departurePassed, offsetAtFor, resolveStart, routeTimeZone, withRouteTimeZone } from './departure';
 import { flatSpeedKmh, gradeSpeedKmh } from './speeds';
 import { DEFAULT_PACE } from './storage';
 import { buildTimeline, cumulativeDistances, timeAtDistance, timelineSource } from './timeline';
@@ -311,5 +311,27 @@ describe('timeAtDistance', () => {
 
     it('has the start of a ride of no distance', () => {
         expect(timeAtDistance([0], buildTimeline({ distances: [0] }, inputs(), NOW), 100)).toBe(NOW);
+    });
+});
+
+describe('offsetAtFor', () => {
+    // Europe's clocks go back at 01:00 UTC on the 25th of October 2026
+    const CHANGE = Date.UTC(2026, 9, 25, 1);
+    const zoneOffset = (_tz: string, at: number) => (at < CHANGE ? 120 : 60);
+    const known = { mode: 'now' as const, tz: 'Europe/Paris', utcOffset: 120 };
+
+    it('is the zone offset at each instant, so a ride over a clock change has both', () => {
+        const offsetAt = offsetAtFor(known, zoneOffset);
+        expect(offsetAt(CHANGE - 1)).toBe(120);
+        expect(offsetAt(CHANGE)).toBe(60);
+    });
+
+    it('is the offset the route was given when the platform cannot say', () => {
+        expect(offsetAtFor(known, () => undefined)(CHANGE)).toBe(120);
+        expect(offsetAtFor(known)(CHANGE)).toBe(120);
+    });
+
+    it('is none for a route whose zone is not known: the phone clock', () => {
+        expect(offsetAtFor({ mode: 'now' }, zoneOffset)(CHANGE)).toBeUndefined();
     });
 });

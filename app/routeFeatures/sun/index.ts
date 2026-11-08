@@ -26,6 +26,7 @@ import '~/routeFeatures/sun/sunMode';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { routeFeatureSun, sunGlareAngle, sunMoonMin, sunSettingRows, sunSettingsKey } from '~/routeFeatures/sun/settings';
 import type { IItem } from '~/models/Item';
+import { utcOffsetAt } from '~/utils/timezone';
 
 const MINUTE = 60000;
 
@@ -37,7 +38,7 @@ function readOf(item: IItem): SunRead | null {
     const glare = get(sunGlareAngle);
     const moon = get(sunMoonMin);
     if (memo?.item !== item || memo.analysis !== item.analysis || memo.minute !== minute || memo.glare !== glare || memo.moon !== moon) {
-        memo = { item, analysis: item.analysis, minute, glare, moon, read: readSun(item, Date.now(), { glareBelow: glare, moonMin: moon }) };
+        memo = { item, analysis: item.analysis, minute, glare, moon, read: readSun(item, Date.now(), { glareBelow: glare, moonMin: moon, zoneOffset: utcOffsetAt }) };
     }
     return memo.read;
 }
@@ -51,7 +52,7 @@ function profileLegend() {
     return SUN_CLASS_ORDER.map((sunClass) => ({ label: lc(`legend_sun_${sunClass}`), color: light[SUN_PALETTE_KEYS[sunClass]], eink: eink[SUN_PALETTE_KEYS[sunClass]] }));
 }
 
-const timeOf = (read: SunRead, at: number) => formatTime(at, 'LT', read.offset);
+const timeOf = (read: SunRead, at: number) => formatTime(at, 'LT', read.offsetAt(at));
 
 function facts(read: SunRead): LensFact[] {
     const { darkMs, glareDistance, moonlitMs, sunset } = read.summary;
@@ -168,7 +169,7 @@ registerRouteFeature({
     setting: { title: () => lc('lens_sun'), store: routeFeatureSun },
     settings: sunSettingRows,
     // a new departure or pace moves the ride in the sky, and so does the glare angle
-    changes: derived([routeAnalysisChanges, sunSettingsKey], (values) => values.join()),
+    changes: derived([routeAnalysisChanges, sunSettingsKey, derived(mapCapabilities, (capabilities) => capabilities.hasTerrain)], (values) => values.join()),
     lensPalette: sunPalette,
     lenses: [sunLens],
     trip: ({ item }) => {

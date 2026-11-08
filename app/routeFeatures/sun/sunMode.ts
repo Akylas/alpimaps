@@ -13,6 +13,7 @@ import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
 import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
 import { focusKeyOf, routeFocus } from '~/routeFeatures/lens/routeFocusStore';
+import { routeSunLightAt, sameLight } from '~/routeFeatures/sun/light';
 import { type SunRead, readSun } from '~/routeFeatures/sun/read';
 import { NavigationState, navigationState } from '~/stores/navigationStore';
 import { routeSunLight } from '~/stores/terrainStore';
@@ -37,21 +38,15 @@ function readOf(item: IItem) {
     return read.value;
 }
 
-/** The light at the profile's cursor, at the start while there is none. Degrees to a tenth: a finer move is not worth a new light. */
+/** The light at the profile's cursor, at the start while there is none. The cursor's distance, not its index: the profile may not cover every vertex. */
 function applyLight(itemKey: string, item: IItem) {
     // a light asked for after the mode ended would light the map with the mode off
     if (!get(routeSunMode)) {
         return;
     }
     const focus = get(routeFocus);
-    const index = focus?.itemKey === itemKey ? (focus.cursor?.index ?? 0) : 0;
-    const point = readOf(item)?.at(index);
-    if (!point) {
-        return;
-    }
-    const next = { azimuth: Math.round(point.azimuth * 10) / 10, altitude: Math.round(point.altitude * 10) / 10, clearness: point.clearness };
-    const current = get(routeSunLight);
-    if (current?.azimuth !== next.azimuth || current.altitude !== next.altitude || current.clearness !== next.clearness) {
+    const next = routeSunLightAt(readOf(item), focus?.itemKey === itemKey ? focus.cursor?.distance : undefined);
+    if (next && !sameLight(get(routeSunLight), next)) {
         routeSunLight.set(next);
     }
 }
@@ -86,6 +81,10 @@ export async function startRouteSunMode(item: IItem) {
     const context = getMapContext();
     goBack({ to: context.getMainPage() });
     await context.selectItem({ item, isFeatureInteresting: true });
+    // the map may refuse the selection (the item lock, the peak finder): the mode has no route to light then
+    if (context.getSelectedItem() !== item) {
+        return;
+    }
     // the 3D module is not part of what the route features need at startup
     const { is3D, setTerrain3DImmediate } = await import('~/mapModules/features/terrain3d');
     if (!is3D()) {

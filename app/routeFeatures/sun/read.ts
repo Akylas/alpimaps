@@ -6,7 +6,7 @@ import { clearness } from '~/utils/astronomy/clearSky';
 import { moonIllumination, moonPositionAt } from '~/utils/astronomy/moon';
 import { GLARE_RULES, type SunLevel, type SunPosition, type SunSide, isGlare, sunLevel, sunPositionAt, sunSide } from '~/utils/astronomy/sun';
 import { activityOf } from '~/utils/routeAnalysis/activity';
-import { routeTimeZone } from '~/utils/routeAnalysis/departure';
+import { type OffsetAt, offsetAtFor } from '~/utils/routeAnalysis/departure';
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
 import { createAnalysis } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
@@ -76,8 +76,8 @@ export interface SunRead {
     /** the slices in metres */
     runs: SunRun[];
     summary: SunSummary;
-    /** minutes east of UTC in the route's zone; none: the phone's */
-    offset?: number;
+    /** minutes east of UTC in the route's zone at an instant; none: the phone's */
+    offsetAt: OffsetAt;
     /** epoch ms the ride starts and ends */
     start: number;
     end: number;
@@ -85,6 +85,8 @@ export interface SunRead {
     place: { lat: number; lon: number };
     /** m from the start the ride is at a time */
     distanceAt(at: number): number;
+    /** the first vertex at or after a distance from the start, m: the ends for a distance outside the route */
+    indexAtDistance(meters: number): number;
     at(index: number): SunPoint;
 }
 
@@ -93,6 +95,8 @@ export interface SunReadOptions {
     glareBelow?: number;
     /** The moon lights the night from this share of it lit, %, in place of 30. */
     moonMin?: number;
+    /** The platform's zone database, for the offset of the route's zone at each instant of a ride. */
+    zoneOffset?: (tz: string, at: number) => number | undefined;
 }
 
 /** The vertexes the sun is looked at, from the first to the last, a `step` apart. */
@@ -217,11 +221,24 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         slices,
         runs: slices.map((slice) => ({ from: distances[slice.i0], to: distances[slice.i1], k: String(slice.k) })),
         summary,
-        offset: routeTimeZone(analysis.inputs.departure).offset,
+        offsetAt: offsetAtFor(analysis.inputs.departure, options.zoneOffset),
         start: timeline.at(0),
         end: timeline.at(last),
         place: { lat: coordinates[0][1], lon: coordinates[0][0] },
         distanceAt: (at) => distances[Math.min(last, timeline.indexAt(at))],
+        indexAtDistance: (meters) => {
+            let low = 0;
+            let high = last;
+            while (low < high) {
+                const middle = (low + high) >> 1;
+                if (distances[middle] < meters) {
+                    low = middle + 1;
+                } else {
+                    high = middle;
+                }
+            }
+            return low;
+        },
         at: (index) => {
             const { altitude, at, azimuth, class: sunClass, clearness: clear, side } = pointAt(Math.max(0, Math.min(last, index)));
             return { altitude, at, azimuth, class: sunClass, clearness: clear, side };

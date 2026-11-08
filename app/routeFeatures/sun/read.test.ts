@@ -153,6 +153,15 @@ describe('readSun', () => {
         expect(readSun(itemLeaving(at), NOW).at(20).clearness).toBeUndefined();
     });
 
+    it('finds the vertex a distance from the start falls at', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
+        expect(read.indexAtDistance(0)).toBe(0);
+        expect(read.indexAtDistance(10000)).toBeGreaterThanOrEqual(19);
+        expect(read.indexAtDistance(10000)).toBeLessThanOrEqual(21);
+        expect(read.indexAtDistance(1e9)).toBe(COUNT - 1);
+        expect(read.indexAtDistance(-5)).toBe(0);
+    });
+
     it('tells where the sun sets, the dark ms and the km into the glare', () => {
         const { summary } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
         expect(summary.sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));
