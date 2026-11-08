@@ -1392,6 +1392,7 @@
     "sun_side_behind": "behind you",
     "legend_sun_day": "daylight",
     "legend_sun_overcast": "overcast",
+    "legend_sun_shade": "in the shade of the terrain",
     "legend_sun_low": "low sun",
     "legend_sun_glare": "low sun in your eyes",
     "legend_sun_twilight": "after sunset",

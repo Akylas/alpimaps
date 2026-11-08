@@ -24,6 +24,7 @@ describe('sunLegend', () => {
         expect(section.items.map(({ label, lines }) => [label, lines[0].color])).toEqual([
             ['t:legend_sun_day', light.sun_day],
             ['t:legend_sun_overcast', light.sun_overcast],
+            ['t:legend_sun_shade', light.sun_shade],
             ['t:legend_sun_low', light.sun_low],
             ['t:legend_sun_glare', light.sun_glare],
             ['t:legend_sun_twilight', light.sun_twilight],
@@ -34,7 +35,7 @@ describe('sunLegend', () => {
 
     it('draws the classes as greys on e-ink, the darker the less light', () => {
         const greys = sunLegend({ palette: eink, translate, variant: 'eink' }).items.map((item) => item.lines[1].color);
-        expect(greys).toEqual([eink.sun_day, eink.sun_overcast, eink.sun_low, eink.sun_glare, eink.sun_twilight, eink.sun_moonlit, eink.sun_night]);
+        expect(greys).toEqual([eink.sun_day, eink.sun_overcast, eink.sun_shade, eink.sun_low, eink.sun_glare, eink.sun_twilight, eink.sun_moonlit, eink.sun_night]);
         expect([...greys].sort().reverse()).toEqual(greys);
     });
 });

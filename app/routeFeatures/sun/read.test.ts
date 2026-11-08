@@ -162,6 +162,67 @@ describe('readSun', () => {
         expect(read.indexAtDistance(-5)).toBe(0);
     });
 
+    it('gives the samples the sun is looked at for: where they are, and where the sun is, with the step and what carries the ride', () => {
+        const read = readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW);
+        expect(read.kind).toBe('bike');
+        expect(read.step).toBe(100);
+        // the route's vertexes are further apart than the step: one sample each
+        expect(read.samples).toHaveLength(COUNT);
+        expect(read.samples[0]).toMatchObject({ vertex: 0, lat: START.lat, lon: START.lon });
+        expect(read.samples[read.samples.length - 1].vertex).toBe(COUNT - 1);
+        expect(read.samples[0].altitude).toBeGreaterThan(40);
+    });
+
+    it('is shade where the terrain hides the sun, and day where it does not', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        const shaded = readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(5) } });
+        expect(shaded.slices.map((slice) => slice.k)).toEqual([KEY.shade]);
+        const open = readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(95) } });
+        expect(open.slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it('is only shade for the samples the terrain hides, and day for the rest', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        const lit = Array.from({ length: count }, (_, index) => (index < count / 2 ? 0 : 100));
+        const keys = readSun(item, NOW, { terrain: { step: 100, lit } }).slices.map((slice) => slice.k);
+        expect(keys).toEqual([KEY.shade, KEY.day]);
+    });
+
+    it('does not know the terrain of another step or another count of samples: it is read as if there were none', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW, { terrain: { step: 50, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count - 1).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it('does not know a share it was not given: unknown ground is not shade', () => {
+        const item = itemLeaving(Date.UTC(2026, 5, 21, 10, 0));
+        const count = readSun(item, NOW).samples.length;
+        expect(readSun(item, NOW, { terrain: { step: 100, lit: Array(count).fill(-1) } }).slices.map((slice) => slice.k)).toEqual([KEY.day]);
+    });
+
+    it('has the terrain hide the glare, and the clouds: no sun, nothing to blind, nothing to cloud', () => {
+        const evening = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
+        const count = readSun(evening, NOW).samples.length;
+        const keys = readSun(evening, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k);
+        expect(keys).not.toContain(KEY.glare);
+        expect(keys).toContain(KEY.shade);
+        const at = Date.UTC(2026, 5, 21, 10, 0);
+        const cloudy = itemLeaving(at, 'bicycle', weatherOf(at - HOUR, 0, 100));
+        const cloudyCount = readSun(cloudy, NOW).samples.length;
+        expect(readSun(cloudy, NOW, { terrain: { step: 100, lit: Array(cloudyCount).fill(0) } }).slices.map((slice) => slice.k)).toEqual([KEY.shade]);
+    });
+
+    it('leaves the twilight and the night to themselves: the terrain has nothing to say of them', () => {
+        const evening = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
+        const count = readSun(evening, NOW).samples.length;
+        const keys = readSun(evening, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } }).slices.map((slice) => slice.k);
+        expect(keys).toContain(KEY.twilight);
+        expect(keys).toContain(KEY.moonlit);
+    });
+
     it('tells where the sun sets, the dark ms and the km into the glare', () => {
         const { summary } = readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW);
         expect(summary.sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 19, 15));

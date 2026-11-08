@@ -3,12 +3,12 @@ import { shadeGrey } from '~/routeFeatures/lens/shades';
 import type { LensPaletteContribution } from '~/routeFeatures/registry';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS } from '~/routeFeatures/sun/read';
 
-const LIGHT = ['#F2C94C', '#9AA5B1', '#F2994A', '#E5484D', '#7E57C2', '#5A7BB5', '#2B3A8C'];
+const LIGHT = ['#F2C94C', '#9AA5B1', '#5F7D95', '#F2994A', '#E5484D', '#7E57C2', '#5A7BB5', '#2B3A8C'];
 // every step lifted: the dark ones read as a hole on a dark map
-const DARK = ['#F5D77A', '#B4BEC9', '#F5AC6E', '#F0686C', '#9B7FD6', '#7F9AD0', '#5566C2'];
+const DARK = ['#F5D77A', '#B4BEC9', '#8CA6BC', '#F5AC6E', '#F0686C', '#9B7FD6', '#7F9AD0', '#5566C2'];
 
 // on e-ink the darker the less light: from daylight, the lightest
-const EINK = [20, 50, 85, 125, 165, 190, 225].map(shadeGrey);
+const EINK = [20, 45, 70, 95, 130, 165, 195, 225].map(shadeGrey);
 
 export const sunPalette: LensPaletteContribution = (variant) =>
     Object.fromEntries(SUN_CLASS_ORDER.map((sunClass, level) => [SUN_PALETTE_KEYS[sunClass], variant === 'eink' ? EINK[level] : (variant === 'dark' ? DARK : LIGHT)[level]]));

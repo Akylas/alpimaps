@@ -1,6 +1,7 @@
 /** What the sun does along a route, for the lens, the chip and the profile. Pure: nothing here may import NativeScript. */
 import { routeCoordinates } from '~/routeFeatures/lens/sections';
 import type { LensSlice } from '~/routeFeatures/registry';
+import { isShaded } from '~/routeFeatures/sun/terrain/exposure';
 import { bearingAt, readSample } from '~/routeFeatures/weather/data/series';
 import { clearness } from '~/utils/astronomy/clearSky';
 import { moonIllumination, moonPositionAt } from '~/utils/astronomy/moon';
@@ -12,15 +13,16 @@ import { createAnalysis } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 
-export type SunClass = 'day' | 'overcast' | 'low' | 'glare' | 'twilight' | 'moonlit' | 'night';
+export type SunClass = 'day' | 'overcast' | 'shade' | 'low' | 'glare' | 'twilight' | 'moonlit' | 'night';
 
 /** The classes from the most light to the least: the order of the palette, the legends and the bar. */
-export const SUN_CLASS_ORDER: SunClass[] = ['day', 'overcast', 'low', 'glare', 'twilight', 'moonlit', 'night'];
+export const SUN_CLASS_ORDER: SunClass[] = ['day', 'overcast', 'shade', 'low', 'glare', 'twilight', 'moonlit', 'night'];
 
 /** What the classes are called in the lens palette. */
 export const SUN_PALETTE_KEYS: Record<SunClass, string> = {
     day: 'sun_day',
     overcast: 'sun_overcast',
+    shade: 'sun_shade',
     low: 'sun_low',
     glare: 'sun_glare',
     twilight: 'sun_twilight',
@@ -29,14 +31,14 @@ export const SUN_PALETTE_KEYS: Record<SunClass, string> = {
 };
 
 /** How serious each class is, 0 to 3: the style draws the line a little wider for the darkest. */
-const SEVERITY: Record<SunClass, LensSlice['s']> = { day: 0, overcast: 0, low: 1, glare: 2, twilight: 2, moonlit: 2, night: 3 };
+const SEVERITY: Record<SunClass, LensSlice['s']> = { day: 0, overcast: 0, shade: 0, low: 1, glare: 2, twilight: 2, moonlit: 2, night: 3 };
 
 /** Under this share of the clear-sky sun a daylight stretch is overcast. */
 const OVERCAST = 0.35;
 /** The moon lights the night from this share of it lit, % */
 const MOON_MIN = 30;
 /** metres between two looks at the sun: a rider's sun moves less between two than a walker's shade does */
-const STEP = { hike: 50, bike: 100, motor: 250 };
+export const STEP = { hike: 50, bike: 100, motor: 250 };
 
 export type SunItem = StageItem & Pick<Parameters<typeof activityOf>[0], 'properties'> & { analysis?: RouteAnalysis | null };
 
@@ -64,6 +66,13 @@ export interface SunSummary {
     moonSides: Record<SunSide, number>;
 }
 
+/** A look at the sun along the route: the vertex, where it is, and where the sun is there. */
+export interface SunSample extends SunPosition {
+    vertex: number;
+    lat: number;
+    lon: number;
+}
+
 /** A stretch of one class, in metres from the start: what the profile draws. */
 export interface SunRun {
     from: number;
@@ -72,6 +81,14 @@ export interface SunRun {
 }
 
 export interface SunRead {
+    /** what carries the ride: the glare, the eye height and the step between samples depend on it */
+    kind: 'hike' | 'bike' | 'motor';
+    /** metres between two samples */
+    step: number;
+    /** the looks at the sun, in route order: what the terrain is asked about */
+    samples: SunSample[];
+    /** the slices tell where the terrain hides the sun */
+    shaded: boolean;
     slices: LensSlice[];
     /** the slices in metres */
     runs: SunRun[];
@@ -95,6 +112,8 @@ export interface SunReadOptions {
     glareBelow?: number;
     /** The moon lights the night from this share of it lit, %, in place of 30. */
     moonMin?: number;
+    /** Where the terrain hides the sun, per sample, as the layer keeps it: used when it is of this route's samples. */
+    terrain?: { step: number; lit: number[] };
     /** The platform's zone database, for the offset of the route's zone at each instant of a ride. */
     zoneOffset?: (tz: string, at: number) => number | undefined;
 }
@@ -134,12 +153,16 @@ function clearnessAt(data: WeatherData | undefined, vertex: number, at: number, 
     return reading ? clearness({ altitude, dni: reading.dni, cloud: reading.cloud, elevation: data.samples[nearest].alt }) : undefined;
 }
 
-function classOf(level: SunLevel, glare: boolean, clear: number | undefined, moonlit: boolean): SunClass {
+function classOf(level: SunLevel, glare: boolean, clear: number | undefined, moonlit: boolean, shaded: boolean): SunClass {
     if (level === 'night') {
         return moonlit ? 'moonlit' : level;
     }
     if (level === 'twilight') {
         return level;
+    }
+    // no sun to blind, none to cloud over
+    if (shaded) {
+        return 'shade';
     }
     if (clear !== undefined && clear < OVERCAST) {
         return 'overcast';
@@ -163,7 +186,7 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
     const last = coordinates.length - 1;
 
     const moonMin = options.moonMin ?? MOON_MIN;
-    const pointAt = (vertex: number): SunPoint & { glare: boolean; level: SunLevel; moonSide?: SunSide } => {
+    const pointAt = (vertex: number, shaded = false): SunPoint & { glare: boolean; level: SunLevel; moonSide?: SunSide } => {
         const at = timeline.at(vertex);
         const [lon, lat] = coordinates[vertex];
         const position = sunPositionAt(at, { lat, lon });
@@ -176,15 +199,19 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         const moon = level === 'night' ? moonPositionAt(at, { lat, lon }) : undefined;
         const moonlit = !!moon && moon.altitude > 0 && moonIllumination(new Date(at)) >= Math.max(1, moonMin);
         const moonSide = moonlit && heading !== undefined ? sunSide(moon.azimuth, heading) : undefined;
-        return { ...position, at, class: classOf(level, glare, clear, moonlit), clearness: clear, glare, level, side, moonSide };
+        return { ...position, at, class: classOf(level, glare, clear, moonlit, shaded), clearness: clear, glare, level, side, moonSide };
     };
 
     const vertexes = sampledVertexes(distances, STEP[kind]);
+    const terrain = options.terrain && options.terrain.step === STEP[kind] && options.terrain.lit.length === vertexes.length ? options.terrain : undefined;
+    const samples: SunSample[] = [];
     const slices: LensSlice[] = [];
     const summary: SunSummary = { darkMs: 0, glareDistance: 0, sides: { left: 0, right: 0, ahead: 0, behind: 0 }, moonlitMs: 0, moonSides: { left: 0, right: 0, ahead: 0, behind: 0 } };
     let previousLevel: SunLevel | undefined;
     vertexes.forEach((vertex, position) => {
-        const point = pointAt(vertex);
+        const point = pointAt(vertex, terrain ? isShaded(terrain.lit[position]) : false);
+        const [lon, lat] = coordinates[vertex];
+        samples.push({ vertex, lat, lon, azimuth: point.azimuth, altitude: point.altitude });
         // the part of the route a look speaks for: half way to its neighbours each side
         const lo = position === 0 ? 0 : Math.round((vertexes[position - 1] + vertex) / 2);
         const hi = position === vertexes.length - 1 ? last : Math.round((vertex + vertexes[position + 1]) / 2);
@@ -218,6 +245,10 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
     });
 
     return {
+        kind,
+        step: STEP[kind],
+        samples,
+        shaded: !!terrain,
         slices,
         runs: slices.map((slice) => ({ from: distances[slice.i0], to: distances[slice.i1], k: String(slice.k) })),
         summary,
