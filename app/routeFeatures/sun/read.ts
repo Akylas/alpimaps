@@ -54,6 +54,8 @@ export interface SunPoint extends SunPosition {
 export interface SunSummary {
     /** where and when the sun goes down on the ride; none when it does not */
     sunset?: { at: number; distance: number };
+    /** where and when the sun rises on a ride that starts before it; none when it does not */
+    sunrise?: { at: number; distance: number };
     /** ms spent after sunset */
     darkMs: number;
     /** m ridden into the low sun */
@@ -252,6 +254,9 @@ export function readSun(item: SunItem, now: number, options: SunReadOptions = {}
         }
         if (!summary.sunset && (previousLevel === 'day' || previousLevel === 'low') && (point.level === 'twilight' || point.level === 'night')) {
             summary.sunset = { at: point.at, distance: distances[vertex] };
+        }
+        if (!summary.sunrise && (previousLevel === 'twilight' || previousLevel === 'night') && (point.level === 'day' || point.level === 'low')) {
+            summary.sunrise = { at: point.at, distance: distances[vertex] };
         }
         previousLevel = point.level;
     });

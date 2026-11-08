@@ -96,10 +96,18 @@
     function scrollListTo(index: number) {
         listView?.nativeView?.scrollToIndex(index, true);
     }
+    // the times of the ride are the bar's subtitle once the strip that says them has scrolled away
+    let tripHidden = false;
+    function updateTripHidden(offset: number) {
+        const index = indexOfKey('trip');
+        const view = listView?.nativeView;
+        tripHidden = index >= 0 && !!view && offset > 0 && !view.isItemAtIndexVisible(index);
+    }
     function onListScroll(event: EventData) {
         // the event is typed for its base only
         const offset = 'scrollOffset' in event && typeof event.scrollOffset === 'number' ? event.scrollOffset : (listView?.nativeView?.scrollOffset ?? 0);
         moveHero(offset);
+        updateTripHidden(offset);
         if (offset <= FAB_SCROLL_STEP) {
             fabExpanded = true;
             lastOffset = offset;
@@ -386,7 +394,13 @@
         <!-- the title on two lines, which the bar's own title does not do -->
         <stacklayout verticalAlignment="middle">
             <label color={colorOnSurface} fontSize={15} fontWeight="bold" lineBreak="end" maxLines={2} text={title || ''} />
-            <label color={colorOnSurfaceVariant} fontSize={11.5} lineBreak="end" maxLines={1} text={subtitle || ''} visibility={subtitle ? 'visible' : 'collapse'} />
+            <label
+                color={colorOnSurfaceVariant}
+                fontSize={11.5}
+                lineBreak="end"
+                maxLines={1}
+                text={(tripHidden && !isNaN(arrivalAt) ? whenLabel : subtitle) || ''}
+                visibility={(tripHidden && !isNaN(arrivalAt)) || subtitle ? 'visible' : 'collapse'} />
         </stacklayout>
         <appBarItem android.position="actionBar" icon={mdiIcon('mdi-dots-vertical')} ios.position="right" {menu} text={lc('more')} />
     </appBar>

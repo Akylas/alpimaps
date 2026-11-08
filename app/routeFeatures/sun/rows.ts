@@ -4,13 +4,21 @@ import { aroundRide, daysOf, moonAround } from '~/routeFeatures/sun/around';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunClass, type SunRead } from '~/routeFeatures/sun/read';
 import { sunEvents } from '~/utils/astronomy/sun';
 
+/** An event of the sun or the moon against the ride: during it (the distance), before it starts or after it ends (ms). */
+export interface SunEventData {
+    id: 'sunrise' | 'sunset' | 'dusk' | 'moonrise' | 'moonset';
+    at: number;
+    offset?: number;
+    relation: 'during' | 'before' | 'after';
+    distance?: number;
+    ms?: number;
+}
+
 export type SunRowData =
     /** what the route is made of, by class of the sun, in metres */
     | { type: 'bar'; shares: { k: SunClass; meters: number }[] }
-    /** the sunset or the end of civil twilight of the day, against the ride: during it (the distance), before it starts or after it ends (ms) */
-    | { type: 'event'; id: 'sunset' | 'dusk' | 'moonrise' | 'moonset'; at: number; offset?: number; relation: 'during' | 'before' | 'after'; distance?: number; ms?: number }
-    | { type: 'dark'; ms: number }
-    | { type: 'glare'; meters: number }
+    /** the figures of the ride as chips in one row: the events of the sun and the moon, and how long the dark, the moonlight, the shade and the glare last */
+    | { type: 'chips'; events: SunEventData[]; darkMs: number; moonlitMs: number; shadeMeters: number; glareMeters: number }
     /** the shares of the metres ridden by day, by where the sun is against the way; or by the light of the moon, by where it is */
     | { type: 'side'; body: 'sun' | 'moon'; left: number; right: number; ahead: number; behind: number }
     /** the button that lights the 3D map with the sun of the ride */
@@ -35,6 +43,10 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
     rows.push({ type: 'bar', shares: SUN_CLASS_ORDER.filter((sunClass) => meters.has(sunClass)).map((sunClass) => ({ k: sunClass, meters: meters.get(sunClass) })) });
     const moon = read.summary.darkMs > 0 ? moonAround(read) : { rise: null, set: null };
     const times = {
+        sunrise: aroundRide(
+            read,
+            days.map((day) => day.sunrise)
+        ),
         sunset: aroundRide(
             read,
             days.map((day) => day.sunset)
@@ -46,25 +58,22 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
         moonrise: moon.rise,
         moonset: moon.set
     };
-    (['sunset', 'dusk', 'moonrise', 'moonset'] as const).forEach((id) => {
+    const events: SunEventData[] = [];
+    (['sunrise', 'sunset', 'dusk', 'moonrise', 'moonset'] as const).forEach((id) => {
         const at = times[id];
         if (at === null) {
             return;
         }
+        const offset = read.offsetAt(at);
         if (at < read.start) {
-            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'before', ms: read.start - at });
+            events.push({ id, at, offset, relation: 'before', ms: read.start - at });
         } else if (at > read.end) {
-            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'after', ms: at - read.end });
+            events.push({ id, at, offset, relation: 'after', ms: at - read.end });
         } else {
-            rows.push({ type: 'event', id, at, offset: read.offsetAt(at), relation: 'during', distance: read.distanceAt(at) });
+            events.push({ id, at, offset, relation: 'during', distance: read.distanceAt(at) });
         }
     });
-    if (darkMs > 0) {
-        rows.push({ type: 'dark', ms: darkMs });
-    }
-    if (glareDistance > 0) {
-        rows.push({ type: 'glare', meters: glareDistance });
-    }
+    rows.push({ type: 'chips', events, darkMs, moonlitMs: read.summary.moonlitMs, shadeMeters: read.summary.shadeDistance, glareMeters: glareDistance });
     const daylight = sides.left + sides.right + sides.ahead + sides.behind;
     if (daylight > 0) {
         rows.push({ type: 'side', body: 'sun', left: sides.left / daylight, right: sides.right / daylight, ahead: sides.ahead / daylight, behind: sides.behind / daylight });
@@ -77,5 +86,5 @@ export function sunRows(read: SunRead | null, { preview = false }: { preview?: b
         rows.push({ type: 'preview' });
     }
     rows.push({ type: 'note', terrain: read.shaded });
-    return rows.map((data, index) => ({ key: `${data.type}${data.type === 'event' ? data.id : ''}${index}`, data }));
+    return rows.map((data, index) => ({ key: `${data.type}${index}`, data }));
 }

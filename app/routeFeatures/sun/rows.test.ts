@@ -21,6 +21,8 @@ function rowsFor(at: number, options?: { preview?: boolean }, hours = 3, zone?: 
 
 const HOUR = 3600000;
 const of = <Type extends SunRowData['type']>(rows: SunRowData[], type: Type) => rows.filter((row): row is Extract<SunRowData, { type: Type }> => row.type === type);
+const chipsOf = (rows: SunRowData[]) => of(rows, 'chips')[0];
+const eventsOf = (rows: SunRowData[]) => chipsOf(rows).events;
 
 describe('sunRows', () => {
     it('has no rows before the sun is read', () => {
@@ -37,7 +39,7 @@ describe('sunRows', () => {
     });
 
     it('puts the sunset and the dusk at a distance when the ride is out then', () => {
-        const events = of(rowsFor(Date.UTC(2026, 5, 21, 17, 30)), 'event').filter((row) => row.id === 'sunset' || row.id === 'dusk');
+        const events = eventsOf(rowsFor(Date.UTC(2026, 5, 21, 17, 30))).filter((row) => row.id === 'sunset' || row.id === 'dusk');
         expect(events.map((row) => [row.id, row.relation])).toEqual([
             ['sunset', 'during'],
             ['dusk', 'during']
@@ -47,25 +49,25 @@ describe('sunRows', () => {
     });
 
     it('says how long after the ride the sun goes down, when it does after', () => {
-        const [sunset] = of(rowsFor(Date.UTC(2026, 5, 21, 10, 0)), 'event');
+        const sunset = eventsOf(rowsFor(Date.UTC(2026, 5, 21, 10, 0))).find((row) => row.id === 'sunset');
         expect(sunset.relation).toBe('after');
         // the ride ends at 13:00 UTC, the sun sets at 19:30
         expect(sunset.ms).toBeGreaterThan(5.5 * 3600000);
     });
 
     it('says how long before the ride the sun went down, for a ride in the night', () => {
-        const [sunset] = of(rowsFor(Date.UTC(2026, 5, 21, 21, 0)), 'event');
+        const sunset = eventsOf(rowsFor(Date.UTC(2026, 5, 21, 21, 0))).find((row) => row.id === 'sunset');
         expect(sunset.relation).toBe('before');
         expect(sunset.ms).toBeGreaterThan(0);
     });
 
     it('says the dark and the glare when there are some, and nothing of them when there are none', () => {
         const evening = rowsFor(Date.UTC(2026, 5, 21, 17, 30));
-        expect(of(evening, 'dark')[0].ms).toBeGreaterThan(0);
-        expect(of(evening, 'glare')[0].meters).toBeGreaterThan(0);
+        expect(chipsOf(evening).darkMs).toBeGreaterThan(0);
+        expect(chipsOf(evening).glareMeters).toBeGreaterThan(0);
         const noon = rowsFor(Date.UTC(2026, 5, 21, 10, 0));
-        expect(of(noon, 'dark')).toEqual([]);
-        expect(of(noon, 'glare')).toEqual([]);
+        expect(chipsOf(noon).darkMs).toBe(0);
+        expect(chipsOf(noon).glareMeters).toBe(0);
     });
 
     it('gives the shares of the sun on each side of the way, by day only', () => {
@@ -76,13 +78,13 @@ describe('sunRows', () => {
 
     it('says nothing of the moon for a ride in daylight', () => {
         const rows = rowsFor(Date.UTC(2026, 5, 21, 10, 0));
-        expect(of(rows, 'event').map((row) => row.id)).toEqual(['sunset', 'dusk']);
+        expect(eventsOf(rows).map((row) => row.id)).toEqual(['sunrise', 'sunset', 'dusk']);
         expect(of(rows, 'side').map((row) => row.body)).toEqual(['sun']);
     });
 
     it('puts the moonrise before a ride in the night of the full moon and the moonset after it', () => {
         // 00:00 to 03:00 in Grenoble on the 29th of July 2026: the moon rose at 20:30 the evening before and sets at 05:46
-        const events = of(rowsFor(Date.UTC(2026, 6, 28, 22)), 'event');
+        const events = eventsOf(rowsFor(Date.UTC(2026, 6, 28, 22)));
         const rise = events.find((row) => row.id === 'moonrise');
         const set = events.find((row) => row.id === 'moonset');
         expect(rise.relation).toBe('before');
@@ -100,7 +102,7 @@ describe('sunRows', () => {
 
     it('takes the last moonrise before the ride, not one of the days before', () => {
         // the moon rises an hour later every day after the full moon: on the 31st of July it rose in the evening, 22:00 UTC is after it
-        const rise = of(rowsFor(Date.UTC(2026, 6, 31, 22)), 'event').find((row) => row.id === 'moonrise');
+        const rise = eventsOf(rowsFor(Date.UTC(2026, 6, 31, 22))).find((row) => row.id === 'moonrise');
         expect(rise.at).toBeGreaterThan(Date.UTC(2026, 6, 31, 12));
         expect(rise.relation).toBe('before');
     });
@@ -114,7 +116,7 @@ describe('sunRows', () => {
 
     it('says the sunset of the day the ride is out at, on a ride that lasts past the next one', () => {
         // 22:00 on the 21st to 04:00 on the 23rd in Grenoble: the sun of the 21st set before the start, the one of the 22nd is on the way
-        const sunset = of(rowsFor(Date.UTC(2026, 5, 21, 20, 0), undefined, 30), 'event').find((row) => row.id === 'sunset');
+        const sunset = eventsOf(rowsFor(Date.UTC(2026, 5, 21, 20, 0), undefined, 30)).find((row) => row.id === 'sunset');
         expect(sunset.relation).toBe('during');
         expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 5, 22, 19, 0));
         expect(sunset.at).toBeLessThan(Date.UTC(2026, 5, 22, 20, 0));
@@ -123,7 +125,7 @@ describe('sunRows', () => {
     it('says each event in the offset of its own moment: a ride over a change of the clocks', () => {
         // 20:00 in Grenoble on the 24th of October 2026, for 30 hours: the clocks go back in the night, the sunset of the 25th is on the way
         const zoneOffset = (_tz: string, at: number) => (at < Date.UTC(2026, 9, 25, 1) ? 120 : 60);
-        const sunset = of(rowsFor(Date.UTC(2026, 9, 24, 18, 0), undefined, 30, { tz: 'Europe/Paris', utcOffset: 120, zoneOffset }), 'event').find((row) => row.id === 'sunset');
+        const sunset = eventsOf(rowsFor(Date.UTC(2026, 9, 24, 18, 0), undefined, 30, { tz: 'Europe/Paris', utcOffset: 120, zoneOffset })).find((row) => row.id === 'sunset');
         expect(sunset.relation).toBe('during');
         expect(sunset.at).toBeGreaterThan(Date.UTC(2026, 9, 25, 12));
         expect(sunset.offset).toBe(60);
@@ -141,5 +143,24 @@ describe('sunRows', () => {
             )[0];
         expect(noteOf()).toEqual({ type: 'note', terrain: false });
         expect(noteOf({ step: 100, lit: Array(count).fill(100) })).toEqual({ type: 'note', terrain: true });
+    });
+
+    it('puts the sun, the moon, the dark and the glare in one row of chips, not a row each', () => {
+        const rows = rowsFor(Date.UTC(2026, 5, 21, 17, 30));
+        expect(of(rows, 'chips')).toHaveLength(1);
+        expect(rows.some((row) => (row.type as string) === 'event' || (row.type as string) === 'dark' || (row.type as string) === 'glare')).toBe(false);
+    });
+
+    it('says how long the ride is in the moonlight and in the shade of the terrain', () => {
+        const at = Date.UTC(2026, 6, 28, 22);
+        const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
+        const item: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
+        const count = readSun(item, NOW).samples.length;
+        expect(chipsOf(rowsFor(at)).moonlitMs).toBeGreaterThan(2.5 * HOUR);
+        expect(chipsOf(rowsFor(at)).shadeMeters).toBe(0);
+        const noon = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at: Date.UTC(2026, 5, 21, 10, 0) });
+        const noonItem: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis: noon };
+        const shaded = sunRows(readSun(noonItem, NOW, { terrain: { step: 100, lit: Array(count).fill(0) } })).map((row) => row.data as SunRowData);
+        expect(chipsOf(shaded).shadeMeters).toBeCloseTo(20000, -3);
     });
 });

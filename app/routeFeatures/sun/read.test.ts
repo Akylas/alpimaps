@@ -240,6 +240,16 @@ describe('readSun', () => {
         expect(summary.glareDistance).toBeGreaterThan(0);
     });
 
+    it('tells where the sun rises on a ride that starts in the dark, and not for one that never was in it', () => {
+        // 04:30 to 07:30 in Grenoble: the sun rises at 05:55
+        const summary = readSun(itemLeaving(Date.UTC(2026, 5, 21, 2, 30)), NOW).summary;
+        expect(summary.sunrise.at).toBeGreaterThan(Date.UTC(2026, 5, 21, 3, 30));
+        expect(summary.sunrise.at).toBeLessThan(Date.UTC(2026, 5, 21, 4, 30));
+        expect(summary.sunrise.distance).toBeGreaterThan(0);
+        expect(readSun(itemLeaving(Date.UTC(2026, 5, 21, 10, 0)), NOW).summary.sunrise).toBeUndefined();
+        expect(readSun(itemLeaving(Date.UTC(2026, 5, 21, 17, 30)), NOW).summary.sunrise).toBeUndefined();
+    });
+
     it('lets a lower glare angle blind for fewer km', () => {
         const item = itemLeaving(Date.UTC(2026, 5, 21, 17, 30));
         const wide = readSun(item, NOW).summary.glareDistance;

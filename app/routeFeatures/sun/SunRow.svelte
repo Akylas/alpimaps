@@ -1,47 +1,68 @@
 <script lang="ts">
-    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun,
-    // the sunset and the dusk against the ride, the dark and the glare, where the sun is against the way, the note on what is left out
+    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, the figures of the ride as chips in
+    // their colours (the sun and the moon's events, the dark, the moonlight, the shade, the glare), where the sun is against the way, the
+    // note on what is left out
     import { showError } from '@shared/utils/showError';
+    import Chip from '~/components/common/Chip.svelte';
     import { formatDistance, formatDuration } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
+    import type { LensFact } from '~/routeFeatures/registry';
+    import { SUN_COLORS } from '~/routeFeatures/sun/colors';
     import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
     import { startRouteSunMode } from '~/routeFeatures/sun/sunMode';
     import type { SunRowData } from '~/routeFeatures/sun/rows';
     import type { SunSide } from '~/utils/astronomy/sun';
     import { colors, fonts } from '~/variables';
 
-    // the page hands every row its item; the rows of this card say it all
     export let item: IItem;
     export let data: SunRowData;
 
-    let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
-    const EVENT_ICONS = { sunset: 'mdi-weather-sunset-down', dusk: 'mdi-weather-sunset', moonrise: 'mdi-moon-waxing-crescent', moonset: 'mdi-moon-waning-crescent' };
+    const EVENT_CHIPS = {
+        sunrise: { icon: 'mdi-weather-sunset-up', color: SUN_COLORS.sunrise },
+        sunset: { icon: 'mdi-weather-sunset-down', color: SUN_COLORS.sunset },
+        dusk: { icon: 'mdi-weather-sunset', color: SUN_COLORS.dusk },
+        moonrise: { icon: 'mdi-moon-waxing-crescent', color: SUN_COLORS.moon },
+        moonset: { icon: 'mdi-moon-waning-crescent', color: SUN_COLORS.moon }
+    };
     const SIDES: SunSide[] = ['left', 'ahead', 'right', 'behind'];
     const palette = currentLensPalette(isEInk ? 'eink' : 'light');
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
-    const time = (at: number, offset?: number) => formatTime(at, 'LT', offset);
+
+    // the icon says what it is, the time or the length is all the chip says; an event the ride is out at says how far
+    $: chips = data.type === 'chips' ? chipsOf(data) : [];
+    function chipsOf(row: Extract<SunRowData, { type: 'chips' }>): (LensFact & { key: string })[] {
+        const result: (LensFact & { key: string })[] = row.events.map((event) => ({
+            key: event.id,
+            ...EVENT_CHIPS[event.id],
+            text: formatTime(event.at, 'LT', event.offset),
+            note: event.relation === 'during' ? formatDistance(event.distance) : undefined
+        }));
+        if (row.darkMs > 0) {
+            result.push({ key: 'dark', icon: 'mdi-weather-night', text: formatDuration(row.darkMs / 1000), color: SUN_COLORS.dark });
+        }
+        if (row.moonlitMs > 0) {
+            result.push({ key: 'moonlit', icon: 'mdi-moon-waning-crescent', text: formatDuration(row.moonlitMs / 1000), color: SUN_COLORS.moon });
+        }
+        if (row.shadeMeters > 0) {
+            result.push({ key: 'shade', icon: 'mdi-terrain', text: formatDistance(row.shadeMeters), color: SUN_COLORS.shade });
+        }
+        if (row.glareMeters > 0) {
+            result.push({ key: 'glare', icon: 'mdi-white-balance-sunny', text: formatDistance(row.glareMeters), alert: true });
+        }
+        return result;
+    }
 
     async function preview() {
         try {
             await startRouteSunMode(item);
         } catch (error) {
             showError(error);
-        }
-    }
-
-    function eventSub(row: Extract<SunRowData, { type: 'event' }>) {
-        switch (row.relation) {
-            case 'during':
-                return lc('sun_event_during', formatDistance(row.distance));
-            case 'before':
-                return lc('sun_event_before', formatDuration(row.ms / 1000));
-            default:
-                return lc('sun_event_after', formatDuration(row.ms / 1000));
         }
     }
 
@@ -68,31 +89,16 @@
             </gridlayout>
         {/each}
     </stacklayout>
-{:else if data.type === 'event'}
-    <gridlayout columns="32,*" height={48} padding="0 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={EVENT_ICONS[data.id]} verticalAlignment="middle" />
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc(`sun_event_${data.id}`, time(data.at, data.offset))} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={eventSub(data)} />
-        </stacklayout>
-    </gridlayout>
-{:else if data.type === 'dark'}
-    <gridlayout columns="32,*" height={40} padding="0 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text="mdi-weather-night" verticalAlignment="middle" />
-        <label col={1} color={colorOnSurface} fontSize={14} text={lc('sun_dark_for', formatDuration(data.ms / 1000))} verticalAlignment="middle" />
-    </gridlayout>
-{:else if data.type === 'glare'}
-    <gridlayout columns="32,*" height={40} padding="0 16">
-        <label color={isEInk ? colorOnSurface : colorError} fontFamily={$fonts.mdi} fontSize={20} text="mdi-white-balance-sunny" verticalAlignment="middle" />
-        <label col={1} color={colorOnSurface} fontSize={14} text={lc('sun_glare_for', formatDistance(data.meters))} verticalAlignment="middle" />
-    </gridlayout>
+{:else if data.type === 'chips'}
+    <wraplayout padding="6 12 2 12">
+        {#each chips as chip (chip.key)}
+            <Chip alert={chip.alert ?? false} color={chip.color} height={24} icon={chip.icon} note={chip.note} text={chip.text} />
+        {/each}
+    </wraplayout>
 {:else if data.type === 'side'}
-    <gridlayout columns="32,*" padding="8 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={data.body === 'moon' ? 'mdi-moon-waning-crescent' : 'mdi-compass-outline'} verticalAlignment="top" />
-        <stacklayout col={1}>
-            <label color={colorOnSurface} fontSize={14} text={lc(data.body === 'moon' ? 'sun_moon_side_title' : 'sun_side_title')} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={sideText} textWrap={true} />
-        </stacklayout>
+    <gridlayout columns="32,*" height={30} padding="0 16">
+        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={18} text={data.body === 'moon' ? 'mdi-moon-waning-crescent' : 'mdi-white-balance-sunny'} verticalAlignment="middle" />
+        <label col={1} color={colorOnSurface} fontSize={13} maxLines={1} text={sideText} verticalAlignment="middle" />
     </gridlayout>
 {:else if data.type === 'preview'}
     <gridlayout columns="32,*" height={48} padding="0 16" rippleColor={colorPrimary} on:tap={preview}>

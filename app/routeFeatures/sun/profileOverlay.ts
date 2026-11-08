@@ -1,14 +1,16 @@
 /**
  * What the sun draws over the profile: a ribbon along the foot of the plot, a stretch for each class of the sun in the colour of the lens,
- * and the sun going down as a dashed line with its glyph at the top. On e-ink the ribbon is the greys of the lens in a black outline.
+ * and the sun rising and going down as dashed lines in their colours, with their glyph at the top. On e-ink the ribbon is the greys of the lens in a black outline.
  */
 import { Align, DashPathEffect, Paint, Style } from '@nativescript-community/ui-canvas';
 import type { ProfileOverlay } from '~/routeFeatures/registry';
+import { SUN_COLORS } from '~/routeFeatures/sun/colors';
 import type { SunRead } from '~/routeFeatures/sun/read';
 
 const RIBBON_HEIGHT = 4;
-const SUNSET_GLYPH_ROW = 12;
+const GLYPH_ROW = 12;
 const MDI_SUNSET_DOWN = String.fromCodePoint(0xf059b);
+const MDI_SUNSET_UP = String.fromCodePoint(0xf059c);
 
 const fillPaint = new Paint();
 fillPaint.setStyle(Style.FILL);
@@ -26,7 +28,7 @@ glyphPaint.setTextAlign(Align.CENTER);
 export function sunProfileOverlay(read: Pick<SunRead, 'runs' | 'summary'>, colors: (isEInk: boolean) => Record<string, string>): ProfileOverlay {
     return {
         draw(canvas, view) {
-            const { contentBottom, contentLeft, contentRight, contentTop, fontScale, ink, isEInk, pixelX } = view;
+            const { contentBottom, contentLeft, contentRight, contentTop, fontScale, isEInk, pixelX } = view;
             const palette = colors(isEInk);
             const height = RIBBON_HEIGHT * fontScale;
             read.runs.forEach(({ from, k, to }) => {
@@ -41,18 +43,27 @@ export function sunProfileOverlay(read: Pick<SunRead, 'runs' | 'summary'>, color
                 outlinePaint.color = '#000000';
                 canvas.drawRect(contentLeft, contentBottom - height, contentRight, contentBottom, outlinePaint);
             }
-            const { sunset } = read.summary;
-            if (sunset) {
-                const pointX = pixelX(sunset.distance);
-                if (pointX >= contentLeft && pointX <= contentRight) {
-                    linePaint.color = isEInk ? '#000000' : ink;
-                    canvas.drawLine(pointX, contentTop + SUNSET_GLYPH_ROW * fontScale, pointX, contentBottom - height, linePaint);
-                    glyphPaint.fontFamily = view.iconFontFamily;
-                    glyphPaint.setTextSize(14 * fontScale);
-                    glyphPaint.color = isEInk ? '#000000' : ink;
-                    canvas.drawText(MDI_SUNSET_DOWN, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + SUNSET_GLYPH_ROW * fontScale, glyphPaint);
+            const { sunrise, sunset } = read.summary;
+            [
+                { event: sunrise, glyph: MDI_SUNSET_UP, color: SUN_COLORS.sunrise },
+                { event: sunset, glyph: MDI_SUNSET_DOWN, color: SUN_COLORS.sunset }
+            ].forEach(({ color, event, glyph }) => {
+                if (!event) {
+                    return;
                 }
-            }
+                const pointX = pixelX(event.distance);
+                if (pointX < contentLeft || pointX > contentRight) {
+                    return;
+                }
+                // e-ink has no colour to give
+                const stroke = isEInk ? '#000000' : color;
+                linePaint.color = stroke;
+                canvas.drawLine(pointX, contentTop + GLYPH_ROW * fontScale, pointX, contentBottom - height, linePaint);
+                glyphPaint.fontFamily = view.iconFontFamily;
+                glyphPaint.setTextSize(14 * fontScale);
+                glyphPaint.color = stroke;
+                canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + GLYPH_ROW * fontScale, glyphPaint);
+            });
         }
     };
 }

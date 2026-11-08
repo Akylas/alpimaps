@@ -17,6 +17,7 @@ import {
     type TripFigures,
     registerRouteFeature
 } from '~/routeFeatures/registry';
+import { SUN_COLORS } from '~/routeFeatures/sun/colors';
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
@@ -85,7 +86,7 @@ function terrainFacts(item: IItem, read: SunRead, phase: TerrainPhase): LensFact
         default: {
             const result: LensFact[] = [];
             if (read.summary.shadeDistance > 0) {
-                result.push({ icon: 'mdi-terrain', text: lc('sun_shade_for', formatDistance(read.summary.shadeDistance)) });
+                result.push({ icon: 'mdi-terrain', text: formatDistance(read.summary.shadeDistance), color: SUN_COLORS.shade });
             }
             const coverage = item.analysis?.layers.sun?.data.coverage;
             if (read.shaded && coverage !== undefined && coverage < 1) {
@@ -97,19 +98,23 @@ function terrainFacts(item: IItem, read: SunRead, phase: TerrainPhase): LensFact
 }
 
 function facts(item: IItem, read: SunRead): LensFact[] {
-    const { darkMs, glareDistance, moonlitMs, sunset } = read.summary;
+    const { darkMs, glareDistance, moonlitMs, sunrise, sunset } = read.summary;
     const result: LensFact[] = [];
+    // each a figure in its colour, the icon saying what it is: the words would only widen the chip
+    if (sunrise) {
+        result.push({ icon: 'mdi-weather-sunset-up', text: timeOf(read, sunrise.at), color: SUN_COLORS.sunrise });
+    }
     if (sunset) {
-        result.push({ icon: 'mdi-weather-sunset-down', text: lc('sun_sunset_at', timeOf(read, sunset.at), formatDistance(sunset.distance)) });
+        result.push({ icon: 'mdi-weather-sunset-down', text: timeOf(read, sunset.at), color: SUN_COLORS.sunset });
     }
     if (darkMs > 0) {
-        result.push({ icon: 'mdi-weather-night', text: lc('sun_dark_for', formatDuration(darkMs / 1000)) });
+        result.push({ icon: 'mdi-weather-night', text: formatDuration(darkMs / 1000), color: SUN_COLORS.dark });
     }
     if (moonlitMs > 0) {
-        result.push({ icon: 'mdi-moon-waning-crescent', text: lc('sun_moonlit_for', formatDuration(moonlitMs / 1000)) });
+        result.push({ icon: 'mdi-moon-waning-crescent', text: formatDuration(moonlitMs / 1000), color: SUN_COLORS.moon });
     }
     if (glareDistance > 0) {
-        result.push({ icon: 'mdi-white-balance-sunny', text: lc('sun_glare_for', formatDistance(glareDistance)), alert: true });
+        result.push({ icon: 'mdi-white-balance-sunny', text: formatDistance(glareDistance), alert: true });
     }
     result.push(...terrainFacts(item, read, phaseOf(item)));
     return result.length ? result : [{ icon: 'mdi-white-balance-sunny', text: lc('sun_daylight') }];
@@ -186,15 +191,11 @@ const sunPageSection: RoutePageSection = {
     component: () => import('~/routeFeatures/sun/SunRow.svelte')
 };
 
-// the colours oss-weather gives them
-const SUNRISE_COLOR = '#EF9F27';
-const SUNSET_COLOR = '#D85A30';
-const MOON_COLOR = '#7F77DD';
 const EVENT_CHIPS = {
-    sunrise: { icon: 'mdi-weather-sunset-up', color: SUNRISE_COLOR },
-    sunset: { icon: 'mdi-weather-sunset-down', color: SUNSET_COLOR },
-    moonrise: { icon: 'mdi-moon-waxing-crescent', color: MOON_COLOR },
-    moonset: { icon: 'mdi-moon-waning-crescent', color: MOON_COLOR }
+    sunrise: { icon: 'mdi-weather-sunset-up', color: SUN_COLORS.sunrise },
+    sunset: { icon: 'mdi-weather-sunset-down', color: SUN_COLORS.sunset },
+    moonrise: { icon: 'mdi-moon-waxing-crescent', color: SUN_COLORS.moon },
+    moonset: { icon: 'mdi-moon-waning-crescent', color: SUN_COLORS.moon }
 };
 
 const trips = new WeakMap<SunRead, TripFigures>();
@@ -207,7 +208,7 @@ function tripOf(read: SunRead): TripFigures {
             trip.events.filter((event) => ids.includes(event.id)).map((event) => ({ key: event.id, text: timeOf(read, event.at), ...EVENT_CHIPS[event.id] }));
         const chips: TripChip[] = [
             ...eventChips(['sunrise', 'sunset']),
-            ...(trip.moon ? [{ key: 'moon', icon: trip.moon.glyph, text: `${trip.moon.illumination}%`, color: MOON_COLOR }] : []),
+            ...(trip.moon ? [{ key: 'moon', icon: trip.moon.glyph, text: `${trip.moon.illumination}%`, color: SUN_COLORS.moon }] : []),
             ...eventChips(['moonrise', 'moonset'])
         ];
         const notes = trip.events.flatMap((event) =>
