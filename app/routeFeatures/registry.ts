@@ -421,6 +421,8 @@ export interface RouteDeparture {
     taken?: (ctx: RouteCtx) => void;
     /** Said when the user moved a `now` to the clock: what the feature holds for the time is read again. Not said: `taken` is. */
     restamped?: (ctx: RouteCtx) => void;
+    /** Said once a change of the pace has settled (the sliders of the When panel): a feature that reads the ride's times may read them again. Only the ones that ask hear it: a pace is no departure. */
+    paced?: (ctx: RouteCtx) => void;
 }
 
 /** A line of a stats view: how much of the route is of one kind. */
@@ -544,9 +546,9 @@ export function routeTrip(features: RouteFeature[], ctx: RouteCtx): { chips: Tri
     return { chips: figures.flatMap((figure) => figure.chips ?? []), note: figures.flatMap((figure) => (figure.note ? [figure.note] : [])).join(' · ') };
 }
 
-/** Tells the features that take part in the departure what happened to it. A feature that does not listen for `restamped` hears `taken`. */
-export function tellDeparture(features: RouteFeature[], ctx: RouteCtx, event: 'taken' | 'restamped') {
-    features.forEach(({ departure }) => (event === 'restamped' ? (departure?.restamped ?? departure?.taken) : departure?.taken)?.(ctx));
+/** Tells the features that take part in the departure what happened to it. A feature that does not listen for `restamped` hears `taken`; `paced` is heard by the ones that ask for it only. */
+export function tellDeparture(features: RouteFeature[], ctx: RouteCtx, event: 'taken' | 'restamped' | 'paced') {
+    features.forEach(({ departure }) => (event === 'paced' ? departure?.paced : event === 'restamped' ? (departure?.restamped ?? departure?.taken) : departure?.taken)?.(ctx));
 }
 
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */

@@ -228,15 +228,17 @@ function tripOf(read: SunRead): TripFigures {
     return trips.get(read);
 }
 
-// a departure the user took moves the ride in the sky: the shade that was read is read again, once there is one
+// a departure the user took, or a pace that settled, moves the ride in the sky: the shade that was read is read again, once there is one
+const readShadeAgain = ({ item }: RouteCtx) => {
+    if (item.analysis?.layers.sun && phaseOf(item) === 'update') {
+        computeLayers(item, ['sun']);
+    }
+};
 const sunDeparture: RouteDeparture = {
     indicators: {},
     assess: () => undefined,
-    taken: ({ item }) => {
-        if (item.analysis?.layers.sun && phaseOf(item) === 'update') {
-            computeLayers(item, ['sun']);
-        }
-    }
+    taken: readShadeAgain,
+    paced: readShadeAgain
 };
 
 registerRouteFeature({

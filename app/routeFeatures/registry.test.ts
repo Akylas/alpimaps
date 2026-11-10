@@ -145,6 +145,16 @@ describe('tellDeparture', () => {
         expect(heard).toEqual(['one', 'two']);
     });
 
+    it('says a pace change to the ones that asked for it, not to the ones that listen to departures', () => {
+        const heard: string[] = [];
+        const features: RouteFeature[] = [
+            { id: 'one', order: 1, departure: { indicators, assess, taken: () => heard.push('taken'), restamped: () => heard.push('restamped') } },
+            { id: 'two', order: 2, departure: { indicators, assess, paced: () => heard.push('paced') } }
+        ];
+        tellDeparture(features, ctx, 'paced');
+        expect(heard).toEqual(['paced']);
+    });
+
     it('says a now moved to the clock to the ones that read it, else as a departure taken', () => {
         const heard: string[] = [];
         const features: RouteFeature[] = [

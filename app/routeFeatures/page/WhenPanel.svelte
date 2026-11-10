@@ -264,6 +264,8 @@
             pendingPace = null;
             previewAt = null;
             dispatch('change', { analysis: withPace(analysis, item.geometry, pace) });
+            // the weather reads the same hours at another pace: only what reads the ride's times again has to hear it
+            tellDeparture(departureFeatures, { item }, 'paced');
         }
     }
     function setPace(pace: { multiplier?: number; stopsMinPerHour?: number }) {
