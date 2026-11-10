@@ -141,7 +141,7 @@ export interface LensSlice {
 }
 
 /** What a symbol of a lens looks like on the map: the style has a drawing for each. */
-export type LensSymbolShape = 'plate' | 'speed_sign' | 'grade_label' | 'climb_label' | 'climb_label_tip';
+export type LensSymbolShape = 'plate' | 'marker' | 'speed_sign' | 'grade_label' | 'climb_label' | 'climb_label_tip';
 
 /**
  * A symbol on the route at a vertex: a glyph with its figures on a plate, a speed sign, a climb's category. The style draws it

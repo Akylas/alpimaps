@@ -1,6 +1,6 @@
 // The route lenses: slices, the halo of a focused section, the alerts while following a route, their plates.
 // What the app sends is in app/routeFeatures/lens/sections.ts: `lens` (`k` its colour in the `lens_pal`
-// table, `s` 0-3 how serious, `f` 0 out of focus), `lensfocus`, `navalert` (`kind` fast | steep), `lens_symbol` (`shape` says its drawing: plate, speed_sign, grade_label, climb_label).
+// table, `s` 0-3 how serious, `f` 0 out of focus), `lensfocus`, `navalert` (`kind` fast | steep), `lens_symbol` (`shape` says its drawing: plate, marker, speed_sign, grade_label, climb_label).
 // Planning draws in the items `poi` layer, following a route in `navigation`, under the maneuver arrows.
 // A feature is drawn after the ones before it: the app sends the focus halo and the fast casing first.
 // E-ink separates by width, ticks and dashes: the variables below, overridden in eink/.
@@ -154,6 +154,24 @@
 	text-placement: billboard;
 	text-placement-priority: [priority];
 	text-allow-overlap: true;
+	text-clip: false;
+}
+
+// a marker: a point of interest, a glyph of the icon font in the colour of the palette key `tint` with the map's halo, and the time or
+// the figure `label` after it in a smaller type. No plate: for what is a place on the route, not a reading of it
+#poi[class='lens_symbol'][shape='marker'][zoom>=9],
+#navigation[class='lens_symbol'][shape='marker'][zoom>=9] {
+	text-name: [glyph];
+	text-face-name: 'Material Design Icons, ' + @mont_bd;
+	text-size: 15;
+	text-fill: get([param::lens_pal], [tint], #1b1c1d);
+	text-secondary-name: ' ' + [label];
+	text-secondary-scale: 0.7;
+	text-secondary-fill: #1b1c1d;
+	text-halo-fill: @standard-halo-fill;
+	text-halo-radius: @standard-halo-radius;
+	text-placement: billboard;
+	text-placement-priority: [priority];
 	text-clip: false;
 }
 

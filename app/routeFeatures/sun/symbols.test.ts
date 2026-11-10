@@ -25,22 +25,22 @@ function readLeaving(at: number, hours = 3) {
 const clock = (at: number) => `t${at}`;
 
 describe('sunSymbols', () => {
-    it('puts a plate where the sun goes down, with the time it does in the zone of the route', () => {
+    it('puts a marker where the sun goes down, with the time it does in the zone of the route', () => {
         const read = readLeaving(Date.UTC(2026, 5, 21, 17, 30));
         const symbols = sunSymbols(read, clock);
         expect(symbols).toHaveLength(1);
-        const [plate] = symbols;
-        expect(plate.shape).toBe('plate');
-        expect(plate.glyph).toBe('mdi-weather-sunset-down');
-        expect(plate.label).toBe(clock(read.summary.sunset.at));
-        expect(plate.tint).toBe(SUN_EVENT_PALETTE_KEYS.sunset);
+        const [marker] = symbols;
+        expect(marker.shape).toBe('marker');
+        expect(marker.glyph).toBe('mdi-weather-sunset-down');
+        expect(marker.label).toBe(clock(read.summary.sunset.at));
+        expect(marker.tint).toBe(SUN_EVENT_PALETTE_KEYS.sunset);
         // at the look the sun went down at, not between two
-        const sample = read.samples.find((candidate) => candidate.vertex === plate.vertex);
+        const sample = read.samples.find((candidate) => candidate.vertex === marker.vertex);
         expect(sample).toBeDefined();
-        expect(read.at(plate.vertex).at).toBe(read.summary.sunset.at);
+        expect(read.at(marker.vertex).at).toBe(read.summary.sunset.at);
     });
 
-    it('puts a plate where the sun rises on a ride that starts in the dark', () => {
+    it('puts a marker where the sun rises on a ride that starts in the dark', () => {
         const read = readLeaving(Date.UTC(2026, 5, 21, 2, 30));
         const symbols = sunSymbols(read, clock);
         expect(symbols.map(({ glyph }) => glyph)).toEqual(['mdi-weather-sunset-up']);
@@ -61,7 +61,7 @@ describe('sunSymbols', () => {
     });
 });
 
-describe('the palette of the sun plates', () => {
+describe('the palette of the sun markers', () => {
     it('has a colour for each event in every variant, the lens palette keeps the ones of the classes', () => {
         (['light', 'dark', 'eink'] as const).forEach((variant) => {
             const palette = lensPalette(variant, [sunPalette]);

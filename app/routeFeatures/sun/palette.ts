@@ -11,7 +11,7 @@ const DARK = ['#F5D77A', '#B4BEC9', '#8CA6BC', '#F5AC6E', '#F0686C', '#9B7FD6', 
 
 // on e-ink the darker the less light: from daylight, the lightest
 const EINK = [20, 45, 70, 95, 130, 165, 195, 225].map(shadeGrey);
-// the rim of a sunrise or sunset plate, on a white plate on every map: the colours of the chips, a grey on e-ink
+// the glyph of a sunrise or sunset marker, over the map's light halo: the colours of the chips, a grey on e-ink
 const EVENT_RIM = { light: SUN_COLORS, dark: SUN_COLORS, eink: { sunrise: shadeGrey(110), sunset: shadeGrey(180) } };
 
 export const sunPalette: LensPaletteContribution = (variant) => ({
