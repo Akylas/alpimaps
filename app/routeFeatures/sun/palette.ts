@@ -11,11 +11,13 @@ const DARK = ['#F5D77A', '#B4BEC9', '#8CA6BC', '#F5AC6E', '#F0686C', '#9B7FD6', 
 
 // on e-ink the darker the less light: from daylight, the lightest
 const EINK = [20, 45, 70, 95, 130, 165, 195, 225].map(shadeGrey);
-// the glyph of a sunrise or sunset marker, over the map's light halo: the colours of the chips, a grey on e-ink
-const EVENT_RIM = { light: SUN_COLORS, dark: SUN_COLORS, eink: { sunrise: shadeGrey(110), sunset: shadeGrey(180) } };
+// the glyph of a sun or moon marker, over the map's light halo: the colours of the chips, a grey on e-ink
+const EVENT_COLORS = { light: SUN_COLORS, dark: SUN_COLORS, eink: { sunrise: shadeGrey(110), sunset: shadeGrey(180), moon: shadeGrey(200) } };
 
 export const sunPalette: LensPaletteContribution = (variant) => ({
     ...Object.fromEntries(SUN_CLASS_ORDER.map((sunClass, level) => [SUN_PALETTE_KEYS[sunClass], variant === 'eink' ? EINK[level] : (variant === 'dark' ? DARK : LIGHT)[level]])),
-    [SUN_EVENT_PALETTE_KEYS.sunrise]: EVENT_RIM[variant].sunrise,
-    [SUN_EVENT_PALETTE_KEYS.sunset]: EVENT_RIM[variant].sunset
+    [SUN_EVENT_PALETTE_KEYS.sunrise]: EVENT_COLORS[variant].sunrise,
+    [SUN_EVENT_PALETTE_KEYS.sunset]: EVENT_COLORS[variant].sunset,
+    [SUN_EVENT_PALETTE_KEYS.moonrise]: EVENT_COLORS[variant].moon,
+    [SUN_EVENT_PALETTE_KEYS.moonset]: EVENT_COLORS[variant].moon
 });
