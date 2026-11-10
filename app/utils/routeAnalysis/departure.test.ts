@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SNAPSHOT_OLD_MS, STAMP_REUSE_MS, TIME_LAYERS, fixedStart, floatsWithClock, isSnapshot, snapshotOutdated, stampNow } from './departure';
+import { SNAPSHOT_OLD_MS, STAMP_REUSE_MS, TIME_LAYERS, departurePassed, fixedStart, floatsWithClock, isSnapshot, resolveStart, snapshotOutdated, stampNow } from './departure';
 import { changedInputs, layerInputsHash } from './freshness';
-import { DEFAULT_PACE, withNowStamp } from './storage';
+import { DEFAULT_PACE, withDeparture, withNowStamp } from './storage';
 import type { AnalysisInputs, Departure } from './types';
 
 const NOW = Date.UTC(2026, 5, 1, 15, 0, 0);
@@ -78,5 +78,32 @@ describe('now snapshot', () => {
         expect(layerInputsHash('sun', first)).not.toBe(layerInputsHash('sun', second));
         expect(layerInputsHash('terrain', first)).toBe(layerInputsHash('terrain', second));
         expect(changedInputs(inputs({ mode: 'now' }), first)).toEqual(['departure']);
+    });
+});
+
+describe('a plan that went by and was kept', () => {
+    const kept: Departure = { mode: 'planned', at: NOW - 2 * 3600000, keepPast: true };
+
+    it('is read at its own time, not moved to now', () => {
+        expect(resolveStart(kept, NOW)).toBe(NOW - 2 * 3600000);
+        expect(resolveStart({ ...kept, keepPast: undefined }, NOW)).toBe(NOW);
+    });
+
+    it('has not passed: nothing to offer', () => {
+        expect(departurePassed(kept, NOW)).toBe(false);
+        expect(departurePassed({ ...kept, keepPast: false }, NOW)).toBe(true);
+    });
+
+    it('changes what layers are hashed with, the time being read otherwise', () => {
+        const plain = inputs({ mode: 'planned', at: NOW - 2 * 3600000 });
+        expect(changedInputs(plain, inputs(kept))).toEqual(['departure']);
+        expect(layerInputsHash('sun', plain)).not.toBe(layerInputsHash('sun', inputs(kept)));
+    });
+
+    it("keeps its flag through the user's new departure only when it says so", () => {
+        const analysis = { v: 1 as const, inputs: inputs({ mode: 'planned', at: NOW + 3600000 }), layers: {} };
+        const geometry = { type: 'LineString' as const, coordinates: [] };
+        expect(withDeparture(analysis, geometry, kept).inputs.departure.keepPast).toBe(true);
+        expect(withDeparture(withDeparture(analysis, geometry, kept), geometry, { mode: 'planned', at: NOW + 7200000 }).inputs.departure.keepPast).toBeUndefined();
     });
 });

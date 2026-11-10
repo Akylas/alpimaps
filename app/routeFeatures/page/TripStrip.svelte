@@ -1,12 +1,13 @@
 <script lang="ts">
-    // the ride in one line under the tiles of the route page: when it leaves and arrives, and beside the times the small figures the
-    // features have for it (the sun and the moon, as oss-weather says them). A line under them for what is worth a few words
+    // the ride under the tiles of the route page: when it leaves and arrives, and under the times the small figures the features have for it
+    // (the sun and the moon, as oss-weather says them), a tap on one saying what it is. A line under them for what is worth a few words
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
-    import { tripTimes } from '~/routeFeatures/page/trip';
+    import { dayFormat, tripTimes } from '~/routeFeatures/page/trip';
     import { routeFeatureChanges, routeFeatures, routeTrip } from '~/routeFeatures/registry';
+    import { showSnack } from '~/utils/ui';
     import { utcOffsetAt } from '~/utils/timezone';
     import { colors, fonts } from '~/variables';
 
@@ -19,8 +20,8 @@
         when: undefined;
     }
     const dispatch = createEventDispatcher<$$Events>();
-    /** room for three beside the times on a phone */
-    const MAX_CHIPS = 3;
+    /** under the times, a line or two */
+    const MAX_CHIPS = 5;
 
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
@@ -30,34 +31,34 @@
 
     // a ride for another day says which; one that goes on past midnight says how many days
     const clock = (at: number) => formatTime(at, 'LT', times.offsetAt(at));
-    $: leave = !times ? '' : times.now ? lc('now') : `${times.startDay === 0 ? '' : formatTime(times.start, 'ddd', times.offsetAt(times.start)) + ' '}${clock(times.start)}`;
+    $: leaveDay = times && dayFormat(times.startDay);
+    $: leave = !times ? '' : times.now ? lc('now') : `${leaveDay ? formatTime(times.start, leaveDay, times.offsetAt(times.start)) + ' ' : ''}${clock(times.start)}`;
     $: arrive = !times ? '' : `${clock(times.end)}${times.endShift > 0 ? ' +' + times.endShift : ''}`;
 </script>
 
 {#if times}
     <stacklayout padding="8 14" rippleColor={colorPrimary} on:tap={() => dispatch('when')}>
-        <gridlayout columns="auto,*">
-            <stacklayout orientation="horizontal" verticalAlignment="middle">
-                <stacklayout>
-                    <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
-                    <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
-                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
-                </stacklayout>
-                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
-                <stacklayout>
-                    <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
-                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_arrive')} />
-                </stacklayout>
+        <stacklayout orientation="horizontal" verticalAlignment="middle">
+            <stacklayout>
+                <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
+                <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
+                <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
             </stacklayout>
-            <stacklayout col={1} horizontalAlignment="right" orientation="horizontal" verticalAlignment="middle">
-                {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
-                    <stacklayout marginLeft={10} orientation="horizontal" verticalAlignment="middle">
-                        <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={18} text={chip.icon} verticalAlignment="middle" />
-                        <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
-                    </stacklayout>
-                {/each}
+            <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
+            <stacklayout>
+                <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
+                <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_arrive')} />
             </stacklayout>
-        </gridlayout>
+        </stacklayout>
+        <!-- under the times, where a week day or a date does not squeeze them: they go on a second line when they do not fit. A tap says what a chip is -->
+        <wraplayout visibility={figures.chips.length ? 'visible' : 'collapse'}>
+            {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
+                <stacklayout marginRight={12} marginTop={6} orientation="horizontal" verticalAlignment="middle" on:tap={() => chip.help && showSnack({ message: chip.help })}>
+                    <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={18} text={chip.icon} verticalAlignment="middle" />
+                    <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
+                </stacklayout>
+            {/each}
+        </wraplayout>
         {#if figures.note}
             <label color={colorOnSurfaceVariant} fontSize={11} marginTop={4} text={figures.note} textWrap={true} />
         {/if}

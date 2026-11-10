@@ -18,6 +18,7 @@ import {
     registerRouteFeature
 } from '~/routeFeatures/registry';
 import { SUN_COLORS } from '~/routeFeatures/sun/colors';
+import { explainChip } from '~/routeFeatures/sun/explain';
 import { sunLegend } from '~/routeFeatures/sun/legend';
 import { sunSymbols } from '~/routeFeatures/sun/symbols';
 import { sunPalette } from '~/routeFeatures/sun/palette';
@@ -86,9 +87,6 @@ function terrainFacts(item: IItem, read: SunRead, phase: TerrainPhase): LensFact
             return [{ icon: 'mdi-image-filter-hdr', text: lc('sun_terrain_failed'), alert: true }];
         default: {
             const result: LensFact[] = [];
-            if (read.summary.shadeDistance > 0) {
-                result.push({ icon: 'mdi-terrain', text: formatDistance(read.summary.shadeDistance), color: SUN_COLORS.shade });
-            }
             const coverage = item.analysis?.layers.sun?.data.coverage;
             if (read.shaded && coverage !== undefined && coverage < 1) {
                 result.push({ icon: 'mdi-image-filter-hdr', text: lc('sun_terrain_coverage', Math.round(coverage * 100) + ' %') });
@@ -211,10 +209,18 @@ function tripOf(read: SunRead): TripFigures {
     if (!trips.has(read)) {
         const trip = sunTrip(read);
         const eventChips = (ids: string[]): TripChip[] =>
-            trip.events.filter((event) => ids.includes(event.id)).map((event) => ({ key: event.id, text: timeOf(read, event.at), ...EVENT_CHIPS[event.id] }));
+            trip.events
+                .filter((event) => ids.includes(event.id))
+                .map((event) => {
+                    const time = timeOf(read, event.at);
+                    const where = event.relation === 'during' ? formatDistance(event.distance) : formatDuration((event.relation === 'before' ? read.start - event.at : event.at - read.end) / 1000);
+                    return { key: event.id, text: time, ...EVENT_CHIPS[event.id], help: explainChip({ kind: event.id, time, relation: event.relation, where }, lc) };
+                });
         const chips: TripChip[] = [
             ...eventChips(['sunrise', 'sunset']),
-            ...(trip.moon ? [{ key: 'moon', icon: trip.moon.glyph, text: `${trip.moon.illumination}%`, color: SUN_COLORS.moon }] : []),
+            ...(trip.moon
+                ? [{ key: 'moon', icon: trip.moon.glyph, text: `${trip.moon.illumination}%`, color: SUN_COLORS.moon, help: explainChip({ kind: 'moon', length: `${trip.moon.illumination} %` }, lc) }]
+                : []),
             ...eventChips(['moonrise', 'moonset'])
         ];
         const notes = trip.events.flatMap((event) =>

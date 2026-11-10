@@ -17,6 +17,8 @@ export interface Departure {
     at?: number;
     /** multi-day: day k starts at `days[k].startAt` and moves at most `maxHours`; day 0 is `at` */
     days?: { startAt: number; maxHours?: number }[];
+    /** a planned departure that went by, which the user kept: the ride is read at its own time, not moved to now */
+    keepPast?: boolean;
     /** IANA zone of the route start. From the first weather response, else the phone zone, flagged */
     tz?: string;
     /** minutes east of UTC in that zone, from the same response: the runtime has no zone database (no `Intl`) */

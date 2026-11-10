@@ -1,6 +1,6 @@
 import type { Geometry } from 'geojson';
 import { describe, expect, it } from 'vitest';
-import { tripTimes } from '~/routeFeatures/page/trip';
+import { dayFormat, daysFrom, tripTimes } from '~/routeFeatures/page/trip';
 import { createAnalysis, withDeparture } from '~/utils/routeAnalysis/storage';
 
 const geometry: Geometry = {
@@ -15,6 +15,27 @@ function item(departure: Parameters<typeof withDeparture>[2] | null, hours = 3) 
     const analysis = departure ? withDeparture(createAnalysis(geometry), geometry, departure) : createAnalysis(geometry);
     return { geometry, route: { totalTime: hours * 3600 }, analysis };
 }
+
+describe('dayFormat', () => {
+    it('says nothing of today, the weekday for the week to come, the date for the rest, and for a day gone, which has no week to say it in', () => {
+        expect(dayFormat(0)).toBeUndefined();
+        expect(dayFormat(1)).toBe('ddd');
+        expect(dayFormat(6)).toBe('ddd');
+        expect(dayFormat(7)).toBe('ddd D MMM');
+        expect(dayFormat(-1)).toBe('ddd D MMM');
+        expect(dayFormat(-40)).toBe('ddd D MMM');
+    });
+});
+
+describe('daysFrom', () => {
+    it('counts the civil days between two instants in the zone asked for', () => {
+        // 01:00 on the 22nd in Grenoble is 23:00 UTC on the 21st
+        const at = Date.UTC(2026, 5, 21, 23, 0);
+        expect(daysFrom(at, NOW, () => 120)).toBe(1);
+        expect(daysFrom(at, NOW, () => 0)).toBe(0);
+        expect(daysFrom(Date.UTC(2026, 5, 20, 8, 0), NOW, () => 120)).toBe(-1);
+    });
+});
 
 describe('tripTimes', () => {
     it('says nothing of a route with no line', () => {
@@ -39,6 +60,15 @@ describe('tripTimes', () => {
         expect(trip.outdated).toBe(true);
         expect(tripTimes(item({ mode: 'now', at: NOW - 5 * 60000 }), NOW).outdated).toBe(false);
         expect(tripTimes(item(null), NOW).outdated).toBe(false);
+    });
+
+    it('keeps a plan that went by and was kept at its own time, a day before: the strip says which', () => {
+        const at = Date.UTC(2026, 5, 20, 8, 0);
+        const trip = tripTimes(item({ mode: 'planned', at, keepPast: true }), NOW);
+        expect(trip.start).toBe(at);
+        expect(trip.startDay).toBe(-1);
+        // not kept, it leaves with the clock
+        expect(tripTimes(item({ mode: 'planned', at }), NOW).start).toBe(NOW);
     });
 
     it('has a planned ride at its time, today', () => {

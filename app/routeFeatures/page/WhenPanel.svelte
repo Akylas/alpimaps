@@ -91,11 +91,14 @@
     $: assessors = departureFeatures.map(
         (feature): DepartureAssessor =>
             (at) => {
-                const assessment = feature.departure.assess({ item, analysis, at, now });
+                const assessment = feature.departure.assess({ item, analysis, at, now: stripNow });
                 return assessment && { ...assessment, indicators: assessment.indicators.map((id) => `${feature.id}.${id}`) };
             }
     );
-    $: cells = departureStrip({ chosenAt, anchorAt, now, source: timelineSource(item), inputs, lat, lon, assessors });
+    // a plan kept at its own time is looked at in its own day: nothing in the strip is gone, whatever the clock says
+    $: kept = !!inputs.departure.keepPast;
+    $: stripNow = kept ? 0 : now;
+    $: cells = departureStrip({ chosenAt, anchorAt, now: stripNow, source: timelineSource(item), inputs, lat, lon, assessors });
     $: uncovered = cells.some((cell) => cell.uncovered);
     // the glyph and colour of each mark of a departure: the features', and the panel's own
     const OWN_MARKS = { dark: { icon: 'mdi-weather-night' }, unknown: { icon: 'mdi-help-circle-outline' } };
@@ -130,7 +133,7 @@
             return;
         }
         previewAt = cell.at;
-        dispatch('change', { analysis: withDeparture(analysis, item.geometry, { mode: 'planned', at: cell.at }), preview: true });
+        dispatch('change', { analysis: withDeparture(analysis, item.geometry, { mode: 'planned', at: cell.at, ...(kept ? { keepPast: true } : {}) }), preview: true });
     }
     function cancelLook() {
         if (previewAt !== null) {
@@ -234,7 +237,8 @@
     function setDeparture(at: number | null) {
         previewAt = null;
         // now is a snapshot: it keeps the time it was taken at, and what is read at a time is read again for it
-        dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? stampNow({ mode: 'now' }, Date.now()) : { mode: 'planned', at }) });
+        // a plan kept at its own time stays so as another is taken in the same day
+        dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? stampNow({ mode: 'now' }, Date.now()) : { mode: 'planned', at, ...(kept ? { keepPast: true } : {}) }) });
         // the route has the departure now: what a feature needs for it, it asks for
         tellDeparture(departureFeatures, { item }, at === null ? 'restamped' : 'taken');
     }

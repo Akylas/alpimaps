@@ -35,11 +35,11 @@ export function snapshotOutdated(departure: Departure, now: number): boolean {
     return isSnapshot(departure) && now - departure.at >= SNAPSHOT_OLD_MS;
 }
 
-/** Epoch ms the ride starts. A planned departure that is already past reads as now; a stamped now stays where it was stamped. */
+/** Epoch ms the ride starts. A planned departure that is already past reads as now, unless the user kept it; a stamped now stays where it was stamped. */
 export function resolveStart(departure: Departure, now: number): number {
     switch (departure.mode) {
         case 'planned':
-            return Math.max(departure.at ?? now, now);
+            return departure.keepPast ? (departure.at ?? now) : Math.max(departure.at ?? now, now);
         case 'recorded':
             return departure.at ?? now;
         default:
@@ -49,7 +49,7 @@ export function resolveStart(departure: Departure, now: number): number {
 
 /** A plan whose time went by: the Route page offers to shift it to now. */
 export function departurePassed(departure: Departure, now: number): boolean {
-    return departure.mode === 'planned' && departure.at !== undefined && departure.at < now;
+    return departure.mode === 'planned' && departure.at !== undefined && departure.at < now && !departure.keepPast;
 }
 
 /** The zone the ride's clock times are shown in: the route's own once known with its offset, else the phone's clock, flagged. */

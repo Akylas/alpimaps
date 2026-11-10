@@ -350,6 +350,8 @@ export interface TripChip {
     icon: string;
     text: string;
     color?: string;
+    /** what the chip says in words, for the one who taps it */
+    help?: string;
 }
 
 /** What a feature adds to the trip strip: chips beside the times, and a line under them. */
