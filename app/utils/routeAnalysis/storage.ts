@@ -1,4 +1,5 @@
 import type { Geometry } from 'geojson';
+import { stampNow } from './departure';
 import { geometryKey } from './geometryKey';
 import type { Activity, AnalysisInputs, Departure, Pace, RouteAnalysis } from './types';
 
@@ -66,6 +67,12 @@ export function withDeparture(analysis: RouteAnalysis | null | undefined, geomet
     const { tz, tzFromPhone, utcOffset } = base.inputs.departure;
     const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
     return { ...base, inputs: { ...base.inputs, departure: { ...zone, ...departure } } };
+}
+
+/** A `now` departure stamped with the time, as the user pressed it or a layer was read in it. The same analysis when there is nothing to stamp. */
+export function withNowStamp(analysis: RouteAnalysis, now: number): RouteAnalysis {
+    const departure = stampNow(analysis.inputs.departure, now);
+    return departure === analysis.inputs.departure ? analysis : { ...analysis, inputs: { ...analysis.inputs, departure } };
 }
 
 /** The user's pace: what is given changes, the rest stays. */

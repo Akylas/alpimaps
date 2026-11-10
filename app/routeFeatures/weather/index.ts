@@ -293,6 +293,14 @@ const weatherDeparture: RouteDeparture = {
             computeLayers(item, ['weather']);
         }
     },
+    // a now moved to the clock reads the forecast of the ride again, for a ride that has one: it is the hours from now that are wanted
+    restamped: ({ item }) => {
+        const status = statusOf(item);
+        const busy = status.state === 'running' || status.state === 'queued';
+        if (networkService.connected && !busy && item.analysis?.layers.weather) {
+            computeLayers(item, ['weather']);
+        }
+    },
     status: ({ item }) => {
         const status = statusOf(item);
         const busy = status.state === 'running' || status.state === 'queued';

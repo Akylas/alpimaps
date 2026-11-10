@@ -1291,7 +1291,9 @@
     "when_departure_passed": "Départ prévu passé (%s)",
     "when_use_now": "partir maintenant",
     "when_keep": "garder",
+    "when_snapshot_old": "Départ de %s, données anciennes",
+    "when_now_at": "maintenant · %s",
     "tutorial_page_route_page": "Page d’itinéraire",
     "gesture_when_now_title": "Partir maintenant",
-    "gesture_when_now_desc": "Appui long sur le bouton de départ en bas de la page d’itinéraire pour partir maintenant : les heures et l’arrivée suivent de nouveau l’horloge. Un appui ouvre le panneau Quand pour planifier un départ."
+    "gesture_when_now_desc": "Appui long sur le bouton de départ en bas de la page d’itinéraire pour ramener le départ à maintenant : les heures passent à l’heure actuelle et la météo et le soleil sont relus. Un appui ouvre le panneau Quand pour planifier un départ."
 }

@@ -9,7 +9,7 @@
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
     import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
-    import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
+    import { departurePassed, fixedStart, resolveStart, routeTimeZone, snapshotOutdated, stampNow } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
@@ -29,7 +29,7 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -233,16 +233,16 @@
     $: startAt = resolveStart(departure, now);
     $: timeline = analysis ? buildTimeline(timelineSource(item), analysis.inputs, now) : null;
     $: arrivalAt = timeline?.t.length ? timeline.at(timeline.t.length - 1) : item?.route?.totalTime ? startAt + item.route.totalTime * 1000 : NaN;
-    $: passed = departurePassed(departure, now);
-    // the banner offers to move a plan that has gone by; "keep" puts it away for this visit
+    // a plan that has gone by, or a now whose data is old: the banner offers to move it to the clock, "keep" puts it away for this visit
+    $: passed = departurePassed(departure, now) || snapshotOutdated(departure, now);
     let keepPassed = false;
     let keptAt: number;
-    $: if (departure.mode === 'planned' && departure.at !== keptAt) {
+    $: if (departure.at !== keptAt) {
         keepPassed = false;
     }
     function keepDeparture() {
         keepPassed = true;
-        keptAt = departure.mode === 'planned' ? departure.at : undefined;
+        keptAt = departure.at;
     }
     $: departureGone = passed && !keepPassed;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
@@ -276,7 +276,7 @@
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
     }
-    $: whenLabel = `${departure.mode === 'planned' ? clock(departure.at) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
+    $: whenLabel = `${fixedStart(departure) !== undefined ? clock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
     // the times change in place: only what shows them follows. The activity changes what the whole page reads
     let analysisVersion = 0;
@@ -306,7 +306,9 @@
         return route?.id !== undefined && route.id !== null;
     }
     function departNow() {
-        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { mode: 'now' }) });
+        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, stampNow({ mode: 'now' }, Date.now())) });
+        // the data that is read at a time is read again
+        tellDeparture($routeFeatures, { item }, 'restamped');
     }
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
@@ -422,7 +424,7 @@
                         <label
                             color={colorOnErrorContainer}
                             fontSize={13}
-                            text={lc('when_departure_passed', departure.mode === 'planned' ? clock(departure.at) : '')}
+                            text={departure.mode === 'planned' ? lc('when_departure_passed', clock(departure.at)) : lc('when_snapshot_old', clock(departure.at))}
                             textWrap={true}
                             verticalAlignment="middle" />
                         <mdbutton col={1} text={lc('when_use_now')} variant="text" verticalAlignment="middle" on:tap={departNow} />

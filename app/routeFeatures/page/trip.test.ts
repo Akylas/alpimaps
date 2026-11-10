@@ -30,6 +30,17 @@ describe('tripTimes', () => {
         expect(trip.endShift).toBe(0);
     });
 
+    it('keeps a stamped now at its stamp as the clock goes on, and says when it is old', () => {
+        const stamp = NOW - 2 * HOUR;
+        const trip = tripTimes(item({ mode: 'now', at: stamp }), NOW);
+        expect(trip.now).toBe(false);
+        expect(trip.start).toBe(stamp);
+        expect(trip.end).toBe(stamp + 3 * HOUR);
+        expect(trip.outdated).toBe(true);
+        expect(tripTimes(item({ mode: 'now', at: NOW - 5 * 60000 }), NOW).outdated).toBe(false);
+        expect(tripTimes(item(null), NOW).outdated).toBe(false);
+    });
+
     it('has a planned ride at its time, today', () => {
         const at = Date.UTC(2026, 5, 21, 15, 0);
         const trip = tripTimes(item({ mode: 'planned', at }), NOW);

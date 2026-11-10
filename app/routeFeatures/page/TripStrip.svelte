@@ -22,8 +22,8 @@
     /** room for three beside the times on a phone */
     const MAX_CHIPS = 3;
 
-    let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
+    $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     $: times = version >= 0 ? tripTimes(item, Date.now(), utcOffsetAt) : null;
     $: figures = version >= 0 && $routeFeatureChanges >= 0 ? routeTrip($routeFeatures, { item }) : { chips: [], note: '' };
@@ -39,7 +39,8 @@
         <gridlayout columns="auto,*">
             <stacklayout orientation="horizontal" verticalAlignment="middle">
                 <stacklayout>
-                    <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
+                    <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
+                    <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
                     <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
                 </stacklayout>
                 <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />

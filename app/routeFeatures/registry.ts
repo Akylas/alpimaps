@@ -419,6 +419,8 @@ export interface RouteDeparture {
     status?: (ctx: RouteCtx) => DepartureStatus | undefined;
     /** Said once the user took a departure, the route having it: a feature may ask for what it needs for it, as a forecast that does not reach it. */
     taken?: (ctx: RouteCtx) => void;
+    /** Said when the user moved a `now` to the clock: what the feature holds for the time is read again. Not said: `taken` is. */
+    restamped?: (ctx: RouteCtx) => void;
 }
 
 /** A line of a stats view: how much of the route is of one kind. */
@@ -540,6 +542,11 @@ export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[]
 export function routeTrip(features: RouteFeature[], ctx: RouteCtx): { chips: TripChip[]; note: string } {
     const figures = features.flatMap((feature) => feature.trip?.(ctx) ?? []);
     return { chips: figures.flatMap((figure) => figure.chips ?? []), note: figures.flatMap((figure) => (figure.note ? [figure.note] : [])).join(' · ') };
+}
+
+/** Tells the features that take part in the departure what happened to it. A feature that does not listen for `restamped` hears `taken`. */
+export function tellDeparture(features: RouteFeature[], ctx: RouteCtx, event: 'taken' | 'restamped') {
+    features.forEach(({ departure }) => (event === 'restamped' ? (departure?.restamped ?? departure?.taken) : departure?.taken)?.(ctx));
 }
 
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */

@@ -6,10 +6,10 @@ import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
 import { routeFeatures, routeStages } from '~/routeFeatures/registry';
 import { networkService } from '~/services/NetworkService';
 import { activityOf } from '~/utils/routeAnalysis/activity';
-import { withRouteTimeZone } from '~/utils/routeAnalysis/departure';
+import { TIME_LAYERS, withRouteTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerExtra, type LayerStatus, type StatusKey, evaluateAnalysis } from '~/utils/routeAnalysis/freshness';
 import { createPipeline } from '~/utils/routeAnalysis/pipeline';
-import { createAnalysis, reconcileAnalysis, withActivity } from '~/utils/routeAnalysis/storage';
+import { createAnalysis, reconcileAnalysis, withActivity, withNowStamp } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { Layer, LayerId, RouteAnalysis } from '~/utils/routeAnalysis/types';
 
@@ -103,12 +103,15 @@ function commit(item: IItem, layer: LayerId, value: Layer<unknown>) {
 
 /**
  * Computes layers of a route and keeps them on it, saved when the route is. Resolves once each has finished or failed;
- * what failed is in `layerStatuses`. A departure being looked at is given back first: what is fetched is the route's.
+ * what failed is in `layerStatuses`. A departure being looked at is given back first: what is fetched is the route's. A route leaving now
+ * is stamped with the time when a layer that reads it is computed.
  */
 export async function computeLayers(item: IItem, layers: LayerId[]) {
     const itemKey = focusKeyOf(item);
     revertLook(item);
-    const analysis = reconcileAnalysis(item.analysis, item.geometry) ?? createAnalysis(item.geometry, activityOf(item, null));
+    const current = reconcileAnalysis(item.analysis, item.geometry) ?? createAnalysis(item.geometry, activityOf(item, null));
+    // a ride leaving now keeps the time its data was read at: the stamp goes first, the layers are hashed with it
+    const analysis = layers.some((layer) => TIME_LAYERS.includes(layer)) ? withNowStamp(current, Date.now()) : current;
     // an analysis made for a departure or a pace has no activity yet: a computed route is what it was routed for
     const activity = analysis.inputs.activity ? undefined : activityOf(item, null);
     item.analysis = activity ? withActivity(analysis, item.geometry, activity) : analysis;

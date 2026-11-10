@@ -13,7 +13,7 @@ export interface Activity {
 
 export interface Departure {
     mode: 'now' | 'planned' | 'recorded';
-    /** epoch ms; absent in `now` mode (floats with the clock) */
+    /** epoch ms. In `now` mode: absent while the ride floats with the clock, else the stamp of the last time the user pressed now or a layer was read, which the ride keeps */
     at?: number;
     /** multi-day: day k starts at `days[k].startAt` and moves at most `maxHours`; day 0 is `at` */
     days?: { startAt: number; maxHours?: number }[];

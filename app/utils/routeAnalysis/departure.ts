@@ -1,6 +1,41 @@
-import type { Departure } from './types';
+import type { Departure, LayerId } from './types';
 
-/** Epoch ms the ride starts. A planned departure that is already past reads as now. */
+/** A stamped `now` older than this is offered a refresh. */
+export const SNAPSHOT_OLD_MS = 15 * 60_000;
+/** Layers computed together stamp within this and share the stamp: it is part of what their data is hashed with. */
+export const STAMP_REUSE_MS = 10_000;
+/** The layers whose data is read at the time of the ride: computing one of them stamps a `now`. */
+export const TIME_LAYERS: LayerId[] = ['weather', 'sun'];
+
+/** A `now` the user pressed or a layer was read in: it keeps its time, as the data it has is from then. Else it floats with the clock. */
+export function isSnapshot(departure: Departure): boolean {
+    return departure.mode === 'now' && departure.at !== undefined;
+}
+
+/** A `now` never refreshed: the ride leaves with the clock, so its start is not a time to say. */
+export function floatsWithClock(departure: Departure): boolean {
+    return departure.mode === 'now' && departure.at === undefined;
+}
+
+/** The start the user or the snapshot holds, for the clock times that say it. None: it floats with the clock, or is recorded. */
+export function fixedStart(departure: Departure): number | undefined {
+    return departure.mode === 'planned' || isSnapshot(departure) ? departure.at : undefined;
+}
+
+/** Stamps a `now` with the time. A recent stamp stays, so what is computed together is hashed with the same one. */
+export function stampNow(departure: Departure, now: number): Departure {
+    if (departure.mode !== 'now' || (departure.at !== undefined && now - departure.at >= 0 && now - departure.at < STAMP_REUSE_MS)) {
+        return departure;
+    }
+    return { ...departure, at: now };
+}
+
+/** A snapshot whose data has aged: the Route page offers to move it to the clock. */
+export function snapshotOutdated(departure: Departure, now: number): boolean {
+    return isSnapshot(departure) && now - departure.at >= SNAPSHOT_OLD_MS;
+}
+
+/** Epoch ms the ride starts. A planned departure that is already past reads as now; a stamped now stays where it was stamped. */
 export function resolveStart(departure: Departure, now: number): number {
     switch (departure.mode) {
         case 'planned':
@@ -8,7 +43,7 @@ export function resolveStart(departure: Departure, now: number): number {
         case 'recorded':
             return departure.at ?? now;
         default:
-            return now;
+            return departure.at ?? now;
     }
 }
 

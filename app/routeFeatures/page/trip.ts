@@ -1,5 +1,5 @@
 /** When a ride leaves and arrives, for the strip under the tiles of the route page. Pure: nothing here may import NativeScript. */
-import { type OffsetAt, offsetAtFor } from '~/utils/routeAnalysis/departure';
+import { type OffsetAt, floatsWithClock, offsetAtFor, snapshotOutdated } from '~/utils/routeAnalysis/departure';
 import type { StageItem } from '~/utils/routeAnalysis/pipeline';
 import { createAnalysis } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
@@ -13,6 +13,8 @@ export interface TripTimes {
     offsetAt: OffsetAt;
     /** the ride leaves with the clock: its start is not a time to say */
     now: boolean;
+    /** the start is a snapshot of an hour long gone: what the figures say is from then */
+    outdated: boolean;
     /** civil days from today to the day it leaves */
     startDay: number;
     /** civil days from the day it leaves to the day it arrives */
@@ -37,5 +39,13 @@ export function tripTimes(item: StageItem & { analysis?: RouteAnalysis | null },
     const start = timeline.at(0);
     const end = timeline.at(timeline.t.length - 1);
     const offsetAt = offsetAtFor(inputs.departure, zoneOffset);
-    return { start, end, offsetAt, now: inputs.departure.mode === 'now', startDay: dayOf(start, offsetAt) - dayOf(now, offsetAt), endShift: dayOf(end, offsetAt) - dayOf(start, offsetAt) };
+    return {
+        start,
+        end,
+        offsetAt,
+        now: floatsWithClock(inputs.departure),
+        outdated: snapshotOutdated(inputs.departure, now),
+        startDay: dayOf(start, offsetAt) - dayOf(now, offsetAt),
+        endShift: dayOf(end, offsetAt) - dayOf(start, offsetAt)
+    };
 }
