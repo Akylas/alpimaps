@@ -170,7 +170,7 @@
 #navigation[class='lens_symbol'][shape='marker'][zoom>=9] {
 	shield-icon-name: [glyph];
 	shield-icon-face-name: 'Material Design Icons';
-	shield-icon-size: 20;
+	shield-icon-size: 16;
 	shield-icon-fill: get([param::lens_pal], [tint], #1b1c1d);
 	shield-icon-halo-fill: @standard-halo-fill;
 	shield-icon-halo-radius: @standard-halo-radius;
@@ -182,7 +182,7 @@
 	shield-halo-radius: @standard-halo-radius;
 	shield-anchors: 'bottom,right,left,top';
 	shield-text-optional: true;
-	shield-text-radial-offset: 1;
+	shield-text-radial-offset: 4;
 	shield-text-horizontal-alignment: 'auto';
 	shield-placement: billboard;
 	shield-placement-priority: [priority];
@@ -214,7 +214,7 @@
 	shield-halo-radius: @standard-halo-radius;
 	shield-anchors: 'bottom,right,left,top';
 	shield-text-optional: true;
-	shield-text-radial-offset: 1;
+	shield-text-radial-offset: 4;
 	shield-text-horizontal-alignment: 'auto';
 	shield-placement: billboard;
 	shield-placement-priority: [priority];
