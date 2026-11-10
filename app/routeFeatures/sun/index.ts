@@ -19,6 +19,7 @@ import {
 } from '~/routeFeatures/registry';
 import { SUN_COLORS } from '~/routeFeatures/sun/colors';
 import { sunLegend } from '~/routeFeatures/sun/legend';
+import { sunSymbols } from '~/routeFeatures/sun/symbols';
 import { sunPalette } from '~/routeFeatures/sun/palette';
 import { sunProfileOverlay } from '~/routeFeatures/sun/profileOverlay';
 import { SUN_CLASS_ORDER, SUN_PALETTE_KEYS, type SunRead, readSun } from '~/routeFeatures/sun/read';
@@ -174,6 +175,11 @@ const sunLens: RouteLens = {
         return profiles.get(read);
     },
     slices: ({ item }) => readOf(item)?.slices ?? [],
+    // where the sun goes down and rises on the ride, at the time it does there
+    symbols: ({ item }) => {
+        const read = readOf(item);
+        return read ? sunSymbols(read, (at) => timeOf(read, at)) : [];
+    },
     legend: ({ palette, translate, variant }) => sunLegend({ palette, translate, variant })
 };
 
