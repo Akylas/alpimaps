@@ -100,12 +100,14 @@ export const terrainShadows = settingsStore('terrainShadows', __CATALYST__);
  */
 export const terrainShadowStrength = settingsStore('terrainShadowStrength', 0.3);
 
-/** The sun a route is lit with while its sun mode is on: where it stands then, and how much of it gets through the clouds. */
+/** The sun a route is lit with while its sun mode is on: where it stands then, and how much of it gets through the clouds; the moon's at night. */
 export interface RouteSunLight {
     azimuth: number;
     altitude: number;
     /** 0..1, none when the forecast says nothing */
     clearness?: number;
+    /** The light is the moon's, the sun being down: 0..1, how much of a full moon at the zenith it is. Its place is `azimuth` and `altitude`. */
+    moon?: number;
 }
 
 /**

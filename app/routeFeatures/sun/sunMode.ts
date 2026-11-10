@@ -1,7 +1,7 @@
 /**
  * The route sun mode: the 3D map lit with the sun of a time of the ride. The profile's cursor is the time, the departure and the
- * pace say when the ride is where, and the forecast says how much of the sun gets through. It lights through `routeSunLight`, which
- * the user's own sun settings never feel.
+ * pace say when the ride is where, and the forecast says how much of the sun gets through. With the sun down it is the moon that lights
+ * the map. It lights through `routeSunLight`, which the user's own sun settings never feel.
  */
 import { goBack } from '@shared/utils/svelte/ui';
 import { derived, get, writable } from 'svelte/store';

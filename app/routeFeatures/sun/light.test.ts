@@ -1,7 +1,8 @@
 import type { Geometry } from 'geojson';
 import { describe, expect, it } from 'vitest';
-import { routeSunLightAt, sameLight } from '~/routeFeatures/sun/light';
+import { MOON_LIGHT_COLOR, MOON_MAX_INTENSITY, moonLightLook, moonShare, routeSunLightAt, sameLight } from '~/routeFeatures/sun/light';
 import { type SunItem, readSun } from '~/routeFeatures/sun/read';
+import { moonPositionAt } from '~/utils/astronomy/moon';
 import { createAnalysis, withDeparture } from '~/utils/routeAnalysis/storage';
 
 const COUNT = 41;
@@ -44,6 +45,77 @@ describe('routeSunLightAt', () => {
     });
 });
 
+describe('moonShare', () => {
+    it('is how much of a full moon at the zenith the light is: the lit part, and how high it stands', () => {
+        expect(moonShare(100, 90)).toBeCloseTo(1);
+        expect(moonShare(50, 90)).toBeCloseTo(0.5);
+        expect(moonShare(100, 30)).toBeCloseTo(0.5);
+        expect(moonShare(100, 10)).toBeLessThan(moonShare(100, 30));
+    });
+
+    it('is none for a moon under the horizon or a new one', () => {
+        expect(moonShare(100, 0)).toBe(0);
+        expect(moonShare(100, -5)).toBe(0);
+        expect(moonShare(0, 60)).toBe(0);
+    });
+});
+
+describe('moonLightLook', () => {
+    it('lights as much as the moon does, in a cold light, with the shadows the user chose scaled by it', () => {
+        const full = moonLightLook(1, 0.3);
+        expect(full.sunIntensity).toBeCloseTo(MOON_MAX_INTENSITY);
+        expect(full.sunColor).toBe(MOON_LIGHT_COLOR);
+        expect(full.shadowStrength).toBeCloseTo(0.3);
+        const half = moonLightLook(0.5, 0.3);
+        expect(half.sunIntensity).toBeCloseTo(MOON_MAX_INTENSITY / 2);
+        expect(half.shadowStrength).toBeCloseTo(0.15);
+    });
+
+    it('draws no shadow of a moon too faint to be worth the pass', () => {
+        expect(moonLightLook(0.02, 0.3).shadowStrength).toBe(0);
+    });
+});
+
+describe('routeSunLightAt by night', () => {
+    // 23:00 to 02:00 in Grenoble: the sun is down all along, a full moon is up
+    const fullMoon = () => read(Date.UTC(2026, 5, 29, 21, 0));
+    const place = { lat: 45.19, lon: 5.72 };
+
+    it('lights the ride with the moon where it stands, in place of a sun that is under the horizon', () => {
+        const light = routeSunLightAt(fullMoon(), 0);
+        const moon = moonPositionAt(Date.UTC(2026, 5, 29, 21, 0), place);
+        expect(light.altitude).toBeGreaterThan(0);
+        expect(light.altitude).toBeCloseTo(moon.altitude, 0);
+        expect(light.azimuth).toBeCloseTo(moon.azimuth, 0);
+        // full: how high it stands is all that is left of the share
+        expect(light.moon).toBeCloseTo(Math.sin((moon.altitude * Math.PI) / 180), 1);
+        expect(light.clearness).toBeUndefined();
+    });
+
+    it('moves with the moon along the ride', () => {
+        const night = fullMoon();
+        expect(routeSunLightAt(night, 20000).altitude).toBeGreaterThan(routeSunLightAt(night, 0).altitude);
+    });
+
+    it('is the sun below the horizon, as before, for a new moon', () => {
+        const light = routeSunLightAt(read(Date.UTC(2026, 5, 15, 21, 0)), 0);
+        expect(light.moon).toBeUndefined();
+        expect(light.altitude).toBeLessThan(0);
+    });
+
+    it('goes back to the sun below the horizon when the moon sets on the ride', () => {
+        const night = read(Date.UTC(2026, 5, 22, 21, 0));
+        expect(routeSunLightAt(night, 0).moon).toBeGreaterThan(0);
+        const end = routeSunLightAt(night, 20000);
+        expect(end.moon).toBeUndefined();
+        expect(end.altitude).toBeLessThan(0);
+    });
+
+    it('keeps the sun by day, whatever the moon', () => {
+        expect(routeSunLightAt(read(Date.UTC(2026, 5, 29, 10, 0)), 0).moon).toBeUndefined();
+    });
+});
+
 describe('sameLight', () => {
     const light = { azimuth: 120.5, altitude: 40.1, clearness: 0.5 };
 
@@ -52,6 +124,8 @@ describe('sameLight', () => {
         expect(sameLight(light, { ...light, azimuth: 120.6 })).toBe(false);
         expect(sameLight(light, { ...light, altitude: 40.2 })).toBe(false);
         expect(sameLight(light, { ...light, clearness: 0.4 })).toBe(false);
+        expect(sameLight(light, { ...light, moon: 0.4 })).toBe(false);
+        expect(sameLight({ ...light, moon: 0.4 }, { ...light, moon: 0.4 })).toBe(true);
     });
 
     it('is not the same as no light', () => {

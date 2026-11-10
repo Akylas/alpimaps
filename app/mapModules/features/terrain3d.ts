@@ -11,6 +11,7 @@ import { getMapContext } from '~/mapModules/MapModule';
 import { mapCapabilities } from '~/mapModules/CustomLayersModule';
 import { registerMapFeature } from '~/mapModules/mapFeatures';
 import { registerMapModule } from '~/mapModules/registry';
+import { moonLightLook } from '~/routeFeatures/sun/light';
 import { packageService } from '~/services/PackageService';
 import { shadowStrengthFor } from '~/utils/astronomy/clearSky';
 import {
@@ -326,6 +327,10 @@ function applyAtmosphere(on: boolean) {
     }
 }
 
+// the moon's colour and brightness are set only while it lights the map, then given back to the SDK's defaults: the app never sets them otherwise
+let moonLit = false;
+const SDK_SUN = { sunIntensity: 1, sunColor: '#FFFFFF' };
+
 /**
  * Not tied to 3D: the SDK casts building and model shadows on the flat map too, so the lighting choice
  * holds in both. Strength is where shadows OFF lives: `LightOptions` has no shadow switch.
@@ -339,13 +344,18 @@ function applyLight() {
     // the route sun mode lights the map with the sun of a time of the ride, whatever the settings say
     const route = get(routeSunLight);
     const lit = route ? true : get(terrainLighting);
+    // at night it is the moon's: its place for the direction, and as much light and shadow as it has
+    const moon = route?.moon === undefined ? undefined : moonLightLook(route.moon, get(terrainShadowStrength));
+    const sun = moon ? { sunIntensity: moon.sunIntensity, sunColor: moon.sunColor } : moonLit ? SDK_SUN : {};
+    moonLit = !!moon;
     map.light({ type: 'light' }).apply({
         terrainLightingEnabled: lit,
         // follows the lighting switch, or the override would change the style's sun
         sunOverridingStyle: lit,
         sunAzimuth: route ? route.azimuth : get(terrainSunAzimuth),
         sunAltitude: route ? route.altitude : get(terrainSunAltitude),
-        shadowStrength: route ? shadowStrengthFor(get(terrainShadowStrength), route.clearness) : lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
+        ...sun,
+        shadowStrength: moon ? moon.shadowStrength : route ? shadowStrengthFor(get(terrainShadowStrength), route.clearness) : lit && get(terrainShadows) ? get(terrainShadowStrength) : 0,
         shadowDistance: get(terrainShadowDistance),
         shadowMapSize: get(terrainShadowMapSize),
         shadowCascades: get(terrainShadowCascades),
