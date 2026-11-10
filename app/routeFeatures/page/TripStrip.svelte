@@ -1,6 +1,6 @@
 <script lang="ts">
-    // the ride under the tiles of the route page: when it leaves and arrives, and under the times the small figures the features have for it
-    // (the sun and the moon, as oss-weather says them), a tap on one saying what it is. A line under them for what is worth a few words
+    // the ride under the tiles of the route page: when it leaves and arrives, and right of the times, one over the other, the small figures the
+    // features have for it (the sun and the moon, as oss-weather says them), a tap on one saying what it is. A line under them for what is worth a few words
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
@@ -20,8 +20,8 @@
         when: undefined;
     }
     const dispatch = createEventDispatcher<$$Events>();
-    /** under the times, a line or two */
-    const MAX_CHIPS = 5;
+    /** one over the other beside the times: three are as high as the times are */
+    const MAX_CHIPS = 3;
 
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
@@ -38,27 +38,29 @@
 
 {#if times}
     <stacklayout padding="8 14" rippleColor={colorPrimary} on:tap={() => dispatch('when')}>
-        <stacklayout orientation="horizontal" verticalAlignment="middle">
-            <stacklayout>
-                <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
-                <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
-                <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
-            </stacklayout>
-            <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
-            <stacklayout>
-                <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
-                <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_arrive')} />
-            </stacklayout>
-        </stacklayout>
-        <!-- under the times, where a week day or a date does not squeeze them: they go on a second line when they do not fit. A tap says what a chip is -->
-        <wraplayout visibility={figures.chips.length ? 'visible' : 'collapse'}>
-            {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
-                <stacklayout marginRight={12} marginTop={6} orientation="horizontal" verticalAlignment="middle" on:tap={() => chip.help && showSnack({ message: chip.help })}>
-                    <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={18} text={chip.icon} verticalAlignment="middle" />
-                    <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
+        <gridlayout columns="auto,*">
+            <stacklayout orientation="horizontal" verticalAlignment="middle">
+                <stacklayout>
+                    <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
+                    <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
+                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
                 </stacklayout>
-            {/each}
-        </wraplayout>
+                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
+                <stacklayout>
+                    <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
+                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_arrive')} />
+                </stacklayout>
+            </stacklayout>
+            <!-- right of the times, one over the other: a week day or a date does not squeeze them. A tap says what a chip is -->
+            <stacklayout col={1} horizontalAlignment="right" verticalAlignment="middle">
+                {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
+                    <stacklayout horizontalAlignment="right" marginLeft={10} orientation="horizontal" on:tap={() => chip.help && showSnack({ message: chip.help })}>
+                        <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={16} text={chip.icon} verticalAlignment="middle" />
+                        <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
+                    </stacklayout>
+                {/each}
+            </stacklayout>
+        </gridlayout>
         {#if figures.note}
             <label color={colorOnSurfaceVariant} fontSize={11} marginTop={4} text={figures.note} textWrap={true} />
         {/if}
