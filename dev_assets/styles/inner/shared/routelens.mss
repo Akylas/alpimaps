@@ -157,49 +157,66 @@
 	text-clip: false;
 }
 
-// a marker: a point of interest, a glyph of the icon font in the colour of the palette key `tint` with the map's halo, and the time or
-// the figure `label` after it in a smaller type. No plate: for what is a place on the route, not a reading of it
+// The marker and the plate are shields: an icon run of the icon font and a text run, which takes the first free side of the icon
+// (`shield-anchors`, the bottom first, as the map's own points of interest) and is left out, the icon staying, when none is. What they say is
+// the app's (a feature puts any figures on them): the style only lays them out. The rim and the colour are the colour of the palette key `tint`
+// names; greyed and faded when what it says is out of date (`outdated`). The newline of `note` is the app's.
+@plate_rim: [outdated] = 1 ? #9aa0a6 : ([tint] ? get([param::lens_pal], [tint], #ffffff) : #ffffff);
+@lens_shield_opacity: [outdated] = 1 ? 0.55 : 1;
+
+// a marker: a place on the route, not a reading of it: the glyph in the colour of `tint` and the time or the figure `label`, both with the
+// map's halo, like a point of interest
 #poi[class='lens_symbol'][shape='marker'][zoom>=9],
 #navigation[class='lens_symbol'][shape='marker'][zoom>=9] {
-	text-name: [glyph];
-	text-face-name: 'Material Design Icons, ' + @mont_bd;
-	text-size: 15;
-	text-fill: get([param::lens_pal], [tint], #1b1c1d);
-	text-secondary-name: ' ' + [label];
-	text-secondary-scale: 0.7;
-	text-secondary-fill: #1b1c1d;
-	text-halo-fill: @standard-halo-fill;
-	text-halo-radius: @standard-halo-radius;
-	text-placement: billboard;
-	text-placement-priority: [priority];
-	text-clip: false;
+	shield-icon-name: [glyph];
+	shield-icon-face-name: 'Material Design Icons';
+	shield-icon-size: 20;
+	shield-icon-fill: get([param::lens_pal], [tint], #1b1c1d);
+	shield-icon-halo-fill: @standard-halo-fill;
+	shield-icon-halo-radius: @standard-halo-radius;
+	shield-name: [label];
+	shield-face-name: @mont_md;
+	shield-size: 10;
+	shield-fill: #1b1c1d;
+	shield-halo-fill: @standard-halo-fill;
+	shield-halo-radius: @standard-halo-radius;
+	shield-anchors: 'bottom,right,left,top';
+	shield-text-optional: true;
+	shield-text-radial-offset: 1;
+	shield-text-horizontal-alignment: 'auto';
+	shield-placement: billboard;
+	shield-placement-priority: [priority];
+	shield-clip: false;
 }
 
-// a plate: a glyph of the icon font, then, in a smaller type, a label, a sublabel and, on a line of its own, a note, on a white plate. What
-// it says is the app's (a feature puts any figures on it): the style only lays it out. The glyph is the main face
-// of the list, so it is the one a glyph is looked for in, the text font following for the digits. The rim is the colour of the
-// palette key `tint` names, white without one; faded and grey-rimmed when what it says is out of date (`outdated`). The newline of
-// `note` is the app's
-@plate_rim: [outdated] = 1 ? #9aa0a6 : ([tint] ? get([param::lens_pal], [tint], #ffffff) : #ffffff);
+// a plate: a reading at a place. The glyph on a white chip rimmed with `tint`, then, in a smaller type, a label, a sublabel and, on a line of
+// its own, a note
 #poi[class='lens_symbol'][shape='plate'][zoom>=9],
 #navigation[class='lens_symbol'][shape='plate'][zoom>=9] {
-	text-name: [glyph];
-	text-face-name: 'Material Design Icons, ' + @mont_bd;
-	text-size: 14;
-	text-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
-	text-secondary-name: ' ' + [label] + ([sublabel] ? (' ' + [sublabel]) : '') + ([note] ? [note] : '');
-	text-secondary-scale: 0.6;
-	text-secondary-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
-	text-background-fill: #ffffff;
-	text-background-radius: 7;
-	text-background-padding-x: 4;
-	text-background-padding-y: 2;
-	text-background-border-width: 1;
-	text-background-border-fill: @plate_rim;
-	text-opacity: [outdated] = 1 ? 0.55 : 1;
-	text-secondary-opacity: [outdated] = 1 ? 0.55 : 1;
-	text-background-opacity: [outdated] = 1 ? 0.55 : 1;
-	text-placement: billboard;
-	text-placement-priority: [priority];
-	text-clip: false;
+	shield-icon-name: [glyph];
+	shield-icon-face-name: 'Material Design Icons';
+	shield-icon-size: 14;
+	shield-icon-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
+	shield-icon-opacity: @lens_shield_opacity;
+	shield-icon-background-fill: #ffffff;
+	shield-icon-background-opacity: @lens_shield_opacity;
+	shield-icon-background-radius: 7;
+	shield-icon-background-padding-x: 3;
+	shield-icon-background-padding-y: 3;
+	shield-icon-background-border-width: 1;
+	shield-icon-background-border-fill: @plate_rim;
+	shield-name: [label] + ([sublabel] ? (' ' + [sublabel]) : '') + ([note] ? [note] : '');
+	shield-face-name: @mont_md;
+	shield-size: 10;
+	shield-fill: [outdated] = 1 ? #9aa0a6 : #1b1c1d;
+	shield-text-opacity: @lens_shield_opacity;
+	shield-halo-fill: @standard-halo-fill;
+	shield-halo-radius: @standard-halo-radius;
+	shield-anchors: 'bottom,right,left,top';
+	shield-text-optional: true;
+	shield-text-radial-offset: 1;
+	shield-text-horizontal-alignment: 'auto';
+	shield-placement: billboard;
+	shield-placement-priority: [priority];
+	shield-clip: false;
 }
