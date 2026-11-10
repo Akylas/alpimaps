@@ -39,7 +39,7 @@ function placeAt(read: SunRead, vertex: number) {
 
 /**
  * The light at a distance from the start, at the start without one. Degrees to a tenth: a finer move is not worth a new light.
- * With the sun under the horizon the moon is the light, if it is up and lit enough: its place and how much of its light there is.
+ * With the sun under the horizon the moon is the light, if it is up and lit enough, under the clouds there are: its place and how much of its light there is.
  */
 export function routeSunLightAt(read: SunRead | null, distance: number | undefined): RouteSunLight | null {
     if (!read) {
@@ -51,7 +51,8 @@ export function routeSunLightAt(read: SunRead | null, distance: number | undefin
     if (level === 'twilight' || level === 'night') {
         const place = placeAt(read, vertex);
         const moon = moonPositionAt(point.at, place);
-        const share = moonShare(moonIllumination(new Date(point.at)), moon.altitude);
+        // the clouds the forecast says thin the moon's light as they do the sun's: by night the cover is what `clearness` reads
+        const share = moonShare(moonIllumination(new Date(point.at)), moon.altitude) * (point.clearness ?? 1);
         if (share >= MIN_MOON_SHARE) {
             return { azimuth: Math.round(moon.azimuth * 10) / 10, altitude: Math.round(moon.altitude * 10) / 10, moon: Math.round(share * 100) / 100 };
         }

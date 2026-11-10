@@ -4,6 +4,7 @@ import { MOON_LIGHT_COLOR, MOON_MAX_INTENSITY, moonLightLook, moonShare, routeSu
 import { type SunItem, readSun } from '~/routeFeatures/sun/read';
 import { moonPositionAt } from '~/utils/astronomy/moon';
 import { createAnalysis, withDeparture } from '~/utils/routeAnalysis/storage';
+import type { RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 
 const COUNT = 41;
 const geometry: Geometry = {
@@ -12,8 +13,25 @@ const geometry: Geometry = {
 };
 const NOW = Date.UTC(2026, 5, 1);
 
-function read(at: number) {
-    const analysis = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
+/** a forecast of the same cloud cover for every hour from `from`, all along the route */
+function weatherOf(from: number, cloud: number): WeatherData {
+    const hours = 6;
+    const column = (value: number) => [Array(hours).fill(value), Array(hours).fill(value)];
+    return {
+        samples: [
+            { i: 0, d: 0, alt: 300 },
+            { i: COUNT - 1, d: 20000, alt: 300 }
+        ],
+        t0: from / 1000,
+        n: hours,
+        v: { temp: column(0), precip: column(0), precipProb: column(0), wind: column(0), gust: column(0), dir: column(0), cloud: column(cloud), code: column(0), fl: column(0), dni: column(0) },
+        request: { decimals: 2, vars: [], models: '' }
+    };
+}
+
+function read(at: number, weather?: WeatherData) {
+    const base = withDeparture(createAnalysis(geometry), geometry, { mode: 'planned', at });
+    const analysis: RouteAnalysis = weather ? { ...base, layers: { weather: { prov: { computedAt: NOW, inputsHash: '', provider: 'test', quality: 'ok' }, data: weather } } } : base;
     const item: SunItem = { geometry, route: { totalTime: 3 * 3600 }, properties: { route: { type: 'bicycle' } }, analysis };
     return readSun(item, NOW);
 }
@@ -109,6 +127,21 @@ describe('routeSunLightAt by night', () => {
         const end = routeSunLightAt(night, 20000);
         expect(end.moon).toBeUndefined();
         expect(end.altitude).toBeLessThan(0);
+    });
+
+    it('lights less under the clouds the forecast says: the moon is thinned by the cloud cover as the sun is', () => {
+        const start = Date.UTC(2026, 5, 29, 21, 0);
+        const clear = routeSunLightAt(read(start, weatherOf(start - 3600000, 0)), 0).moon;
+        const half = routeSunLightAt(read(start, weatherOf(start - 3600000, 50)), 0).moon;
+        expect(clear).toBeCloseTo(routeSunLightAt(read(start), 0).moon, 2);
+        expect(half).toBeCloseTo(clear / 2, 1);
+    });
+
+    it('has no moon light under a sky that is all cloud', () => {
+        const start = Date.UTC(2026, 5, 29, 21, 0);
+        const light = routeSunLightAt(read(start, weatherOf(start - 3600000, 100)), 0);
+        expect(light.moon).toBeUndefined();
+        expect(light.altitude).toBeLessThan(0);
     });
 
     it('keeps the sun by day, whatever the moon', () => {
