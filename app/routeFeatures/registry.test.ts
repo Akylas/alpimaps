@@ -1,6 +1,19 @@
 import { get, writable } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
-import { type LensId, type RouteFeature, type RouteLens, registerRouteFeature, resolveLens, routeFeatures, routeLenses, routeNavBanners, routeStages, routeStatViews, routeTrip } from './registry';
+import {
+    type LensId,
+    type RouteFeature,
+    type RouteLens,
+    registerRouteFeature,
+    resolveLens,
+    routeFeatures,
+    routeLenses,
+    routeNavBanners,
+    routeStages,
+    routeStatViews,
+    routeTrip,
+    tellDeparture
+} from './registry';
 
 describe('routeStages', () => {
     const stage = (layer: 'weather' | 'sun') => ({ layer, run: () => Promise.resolve({ prov: { computedAt: 0, inputsHash: '', provider: '', quality: 'ok' as const }, data: null }) });
@@ -112,5 +125,43 @@ describe('routeTrip', () => {
                 ctx
             )
         ).toEqual({ chips: [], note: '' });
+    });
+});
+
+describe('tellDeparture', () => {
+    const ctx = { item: null };
+    const indicators = {};
+    const assess = () => undefined;
+
+    it('says it to the features that listen, in feature order', () => {
+        const heard: string[] = [];
+        const features: RouteFeature[] = [
+            { id: 'one', order: 1, departure: { indicators, assess, taken: () => heard.push('one') } },
+            { id: 'none', order: 2 },
+            { id: 'deaf', order: 3, departure: { indicators, assess } },
+            { id: 'two', order: 4, departure: { indicators, assess, taken: () => heard.push('two') } }
+        ];
+        tellDeparture(features, ctx, 'taken');
+        expect(heard).toEqual(['one', 'two']);
+    });
+
+    it('says a pace change to the ones that asked for it, not to the ones that listen to departures', () => {
+        const heard: string[] = [];
+        const features: RouteFeature[] = [
+            { id: 'one', order: 1, departure: { indicators, assess, taken: () => heard.push('taken'), restamped: () => heard.push('restamped') } },
+            { id: 'two', order: 2, departure: { indicators, assess, paced: () => heard.push('paced') } }
+        ];
+        tellDeparture(features, ctx, 'paced');
+        expect(heard).toEqual(['paced']);
+    });
+
+    it('says a now moved to the clock to the ones that read it, else as a departure taken', () => {
+        const heard: string[] = [];
+        const features: RouteFeature[] = [
+            { id: 'one', order: 1, departure: { indicators, assess, taken: () => heard.push('one taken') } },
+            { id: 'two', order: 2, departure: { indicators, assess, taken: () => heard.push('two taken'), restamped: () => heard.push('two restamped') } }
+        ];
+        tellDeparture(features, ctx, 'restamped');
+        expect(heard).toEqual(['one taken', 'two restamped']);
     });
 });

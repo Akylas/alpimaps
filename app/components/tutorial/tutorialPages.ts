@@ -203,9 +203,13 @@ export const tutorialPages: TutorialPage[] = [
             card(12, 230, 276, 110),
             ...[0, 1, 2, 3, 4, 5, 6].map((index): TutorialPart => card(20 + index * 38, 242, 34, 50, 8)),
             { kind: 'bars', x: 24, y: 304, width: 252, height: 28, values: [10, 10, 10, 20, 40, 70, 90] },
+            card(12, 346, 62, 20, 10),
+            icon(18, 348, 'mdi-weather-sunset-down', 16),
+            card(80, 346, 62, 20, 10),
+            icon(86, 348, 'mdi-moon-waning-crescent', 16),
             pill(150, 376, 138, 44, { icon: 'mdi-clock-outline', selected: true })
         ],
-        zones: [zone('when_now', 'longPress', 146, 372, 146, 52)]
+        zones: [zone('sun_chip', 'tap', 8, 342, 138, 28), zone('when_now', 'longPress', 146, 372, 146, 52)]
     },
     {
         id: 'routes',

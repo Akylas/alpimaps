@@ -1,11 +1,12 @@
 <script lang="ts">
     // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, the figures of the ride as chips in
-    // their colours (the sun and the moon's events, the dark, the moonlight, the shade, the glare), where the sun is against the way, the
-    // note on what is left out
+    // their colours (the sun and the moon's events, the dark, the moonlight, the glare), where the sun is against the way, the note on what is
+    // left out. The shade is in the bar's legend. A tap on a chip says what it is and where it falls
     import { showError } from '@shared/utils/showError';
     import Chip from '~/components/common/Chip.svelte';
     import { formatDistance, formatDuration } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
+    import { explainChip } from '~/routeFeatures/sun/explain';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
@@ -13,6 +14,7 @@
     import { SUN_COLORS } from '~/routeFeatures/sun/colors';
     import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
     import { startRouteSunMode } from '~/routeFeatures/sun/sunMode';
+    import { showSnack } from '~/utils/ui';
     import type { SunRowData } from '~/routeFeatures/sun/rows';
     import type { SunSide } from '~/utils/astronomy/sun';
     import { colors, fonts } from '~/variables';
@@ -34,26 +36,28 @@
     const palette = currentLensPalette(isEInk ? 'eink' : 'light');
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
 
-    // the icon says what it is, the time or the length is all the chip says; an event the ride is out at says how far
+    // the icon says what it is, the time or the length is all the chip says; a tap says the rest (`help`)
     $: chips = data.type === 'chips' ? chipsOf(data) : [];
-    function chipsOf(row: Extract<SunRowData, { type: 'chips' }>): (LensFact & { key: string })[] {
-        const result: (LensFact & { key: string })[] = row.events.map((event) => ({
-            key: event.id,
-            ...EVENT_CHIPS[event.id],
-            text: formatTime(event.at, 'LT', event.offset),
-            note: event.relation === 'during' ? formatDistance(event.distance) : undefined
-        }));
+    type SunChip = LensFact & { key: string; help: string };
+    function whereOf(event: Extract<SunRowData, { type: 'chips' }>['events'][number]) {
+        return event.relation === 'during' ? formatDistance(event.distance) : formatDuration(event.ms / 1000);
+    }
+    function chipsOf(row: Extract<SunRowData, { type: 'chips' }>): SunChip[] {
+        const result: SunChip[] = row.events.map((event) => {
+            const time = formatTime(event.at, 'LT', event.offset);
+            return { key: event.id, ...EVENT_CHIPS[event.id], text: time, help: explainChip({ kind: event.id, time, relation: event.relation, where: whereOf(event) }, lc) };
+        });
         if (row.darkMs > 0) {
-            result.push({ key: 'dark', icon: 'mdi-weather-night', text: formatDuration(row.darkMs / 1000), color: SUN_COLORS.dark });
+            const length = formatDuration(row.darkMs / 1000);
+            result.push({ key: 'dark', icon: 'mdi-weather-night', text: length, color: SUN_COLORS.dark, help: explainChip({ kind: 'dark', length }, lc) });
         }
         if (row.moonlitMs > 0) {
-            result.push({ key: 'moonlit', icon: 'mdi-moon-waning-crescent', text: formatDuration(row.moonlitMs / 1000), color: SUN_COLORS.moon });
-        }
-        if (row.shadeMeters > 0) {
-            result.push({ key: 'shade', icon: 'mdi-terrain', text: formatDistance(row.shadeMeters), color: SUN_COLORS.shade });
+            const length = formatDuration(row.moonlitMs / 1000);
+            result.push({ key: 'moonlit', icon: 'mdi-moon-waning-crescent', text: length, color: SUN_COLORS.moon, help: explainChip({ kind: 'moonlit', length }, lc) });
         }
         if (row.glareMeters > 0) {
-            result.push({ key: 'glare', icon: 'mdi-white-balance-sunny', text: formatDistance(row.glareMeters), alert: true });
+            const length = formatDistance(row.glareMeters);
+            result.push({ key: 'glare', icon: 'mdi-white-balance-sunny', text: length, alert: true, help: explainChip({ kind: 'glare', length }, lc) });
         }
         return result;
     }
@@ -92,7 +96,7 @@
 {:else if data.type === 'chips'}
     <wraplayout padding="6 12 2 12">
         {#each chips as chip (chip.key)}
-            <Chip alert={chip.alert ?? false} color={chip.color} height={24} icon={chip.icon} note={chip.note} text={chip.text} />
+            <Chip alert={chip.alert ?? false} color={chip.color} height={24} icon={chip.icon} text={chip.text} on:tap={() => showSnack({ message: chip.help })} />
         {/each}
     </wraplayout>
 {:else if data.type === 'side'}

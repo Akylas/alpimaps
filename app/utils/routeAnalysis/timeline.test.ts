@@ -21,6 +21,9 @@ describe('departure', () => {
         expect(resolveStart({ mode: 'planned', at: NOW + 5000 }, NOW)).toBe(NOW + 5000);
         expect(resolveStart({ mode: 'recorded', at: NOW - 5000 }, NOW)).toBe(NOW - 5000);
     });
+    it('keeps a stamped now where it was stamped, the clock moving on', () => {
+        expect(resolveStart({ mode: 'now', at: NOW - 3600_000 }, NOW)).toBe(NOW - 3600_000);
+    });
     it('reads a plan that is in the past as now (decision 03.2)', () => {
         expect(resolveStart({ mode: 'planned', at: NOW - 5000 }, NOW)).toBe(NOW);
     });
@@ -91,6 +94,11 @@ describe('buildTimeline', () => {
         expect(future.startAt).toBe(NOW + 60_000);
         const past = buildTimeline({ distances, totalTime: 100 }, inputs({ departure: { mode: 'planned', at: NOW - 60_000 } }), NOW);
         expect(past.startAt).toBe(NOW);
+    });
+    it('starts a stamped now at its stamp, a floating one with the clock', () => {
+        const stamped = buildTimeline({ distances, totalTime: 100 }, inputs({ departure: { mode: 'now', at: NOW - 3600_000 } }), NOW);
+        expect(stamped.startAt).toBe(NOW - 3600_000);
+        expect(buildTimeline({ distances, totalTime: 100 }, inputs(), NOW).startAt).toBe(NOW);
     });
     it('rides on the grade when nothing was routed', () => {
         const flat = buildTimeline({ distances: [0, 2000, 4000] }, inputs(), NOW);

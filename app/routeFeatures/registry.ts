@@ -141,7 +141,7 @@ export interface LensSlice {
 }
 
 /** What a symbol of a lens looks like on the map: the style has a drawing for each. */
-export type LensSymbolShape = 'plate' | 'speed_sign' | 'grade_label' | 'climb_label' | 'climb_label_tip';
+export type LensSymbolShape = 'plate' | 'marker' | 'speed_sign' | 'grade_label' | 'climb_label' | 'climb_label_tip';
 
 /**
  * A symbol on the route at a vertex: a glyph with its figures on a plate, a speed sign, a climb's category. The style draws it
@@ -350,6 +350,8 @@ export interface TripChip {
     icon: string;
     text: string;
     color?: string;
+    /** what the chip says in words, for the one who taps it */
+    help?: string;
 }
 
 /** What a feature adds to the trip strip: chips beside the times, and a line under them. */
@@ -419,6 +421,10 @@ export interface RouteDeparture {
     status?: (ctx: RouteCtx) => DepartureStatus | undefined;
     /** Said once the user took a departure, the route having it: a feature may ask for what it needs for it, as a forecast that does not reach it. */
     taken?: (ctx: RouteCtx) => void;
+    /** Said when the user moved a `now` to the clock: what the feature holds for the time is read again. Not said: `taken` is. */
+    restamped?: (ctx: RouteCtx) => void;
+    /** Said once a change of the pace has settled (the sliders of the When panel): a feature that reads the ride's times may read them again. Only the ones that ask hear it: a pace is no departure. */
+    paced?: (ctx: RouteCtx) => void;
 }
 
 /** A line of a stats view: how much of the route is of one kind. */
@@ -540,6 +546,11 @@ export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[]
 export function routeTrip(features: RouteFeature[], ctx: RouteCtx): { chips: TripChip[]; note: string } {
     const figures = features.flatMap((feature) => feature.trip?.(ctx) ?? []);
     return { chips: figures.flatMap((figure) => figure.chips ?? []), note: figures.flatMap((figure) => (figure.note ? [figure.note] : [])).join(' · ') };
+}
+
+/** Tells the features that take part in the departure what happened to it. A feature that does not listen for `restamped` hears `taken`; `paced` is heard by the ones that ask for it only. */
+export function tellDeparture(features: RouteFeature[], ctx: RouteCtx, event: 'taken' | 'restamped' | 'paced') {
+    features.forEach(({ departure }) => (event === 'paced' ? departure?.paced : event === 'restamped' ? (departure?.restamped ?? departure?.taken) : departure?.taken)?.(ctx));
 }
 
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */

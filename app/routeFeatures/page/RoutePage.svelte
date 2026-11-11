@@ -8,8 +8,9 @@
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
     import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
+    import { dayFormat, daysFrom } from '~/routeFeatures/page/trip';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
-    import { departurePassed, resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
+    import { departurePassed, fixedStart, resolveStart, routeTimeZone, snapshotOutdated, stampNow } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
@@ -29,7 +30,7 @@
     import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -233,16 +234,23 @@
     $: startAt = resolveStart(departure, now);
     $: timeline = analysis ? buildTimeline(timelineSource(item), analysis.inputs, now) : null;
     $: arrivalAt = timeline?.t.length ? timeline.at(timeline.t.length - 1) : item?.route?.totalTime ? startAt + item.route.totalTime * 1000 : NaN;
-    $: passed = departurePassed(departure, now);
-    // the banner offers to move a plan that has gone by; "keep" puts it away for this visit
+    // a plan that has gone by, or a now whose data is old: the banner offers to move it to the clock. "keep" keeps a plan at its own time, the
+    // route read then; a now is only put away for this visit
+    $: passed = departurePassed(departure, now) || snapshotOutdated(departure, now);
     let keepPassed = false;
     let keptAt: number;
-    $: if (departure.mode === 'planned' && departure.at !== keptAt) {
+    $: if (departure.at !== keptAt) {
         keepPassed = false;
     }
     function keepDeparture() {
+        if (departure.mode === 'planned') {
+            onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { ...departure, keepPast: true }) });
+            // the route is read at another time now: what a feature needs for it, it asks for
+            tellDeparture($routeFeatures, { item }, 'taken');
+            return;
+        }
         keepPassed = true;
-        keptAt = departure.mode === 'planned' ? departure.at : undefined;
+        keptAt = departure.at;
     }
     $: departureGone = passed && !keepPassed;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
@@ -276,7 +284,12 @@
     function clock(at: number) {
         return formatTime(at, 'LT', zone.offset);
     }
-    $: whenLabel = `${departure.mode === 'planned' ? clock(departure.at) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
+    // a departure that is not today says its day: the weekday ahead, the date for a day gone
+    function dayAndClock(at: number) {
+        const day = dayFormat(daysFrom(at, now, () => zone.offset));
+        return `${day ? formatTime(at, day, zone.offset) + ' ' : ''}${clock(at)}`;
+    }
+    $: whenLabel = `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
     // the times change in place: only what shows them follows. The activity changes what the whole page reads
     let analysisVersion = 0;
@@ -306,7 +319,9 @@
         return route?.id !== undefined && route.id !== null;
     }
     function departNow() {
-        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { mode: 'now' }) });
+        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, stampNow({ mode: 'now' }, Date.now())) });
+        // the data that is read at a time is read again
+        tellDeparture($routeFeatures, { item }, 'restamped');
     }
     $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
@@ -422,7 +437,7 @@
                         <label
                             color={colorOnErrorContainer}
                             fontSize={13}
-                            text={lc('when_departure_passed', departure.mode === 'planned' ? clock(departure.at) : '')}
+                            text={departure.mode === 'planned' ? lc('when_departure_passed', dayAndClock(departure.at)) : lc('when_snapshot_old', dayAndClock(departure.at))}
                             textWrap={true}
                             verticalAlignment="middle" />
                         <mdbutton col={1} text={lc('when_use_now')} variant="text" verticalAlignment="middle" on:tap={departNow} />
@@ -481,8 +496,9 @@
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
                             <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
                             <!-- the summary as chips: an icon and its figure, in their colours, open or not: the rows under it do not say it again.
-                                 A template keeps its views whatever the row: the chips are slots, collapsed when empty, and so is the summary line -->
-                            <stacklayout orientation="horizontal" visibility={row.facts?.length ? 'visible' : 'collapse'}>
+                                 A template keeps its views whatever the row: the chips are slots, collapsed when empty, and so is the summary line.
+                                 They wrap onto a line of their own when there are more than fit: none is cut off -->
+                            <wraplayout visibility={row.facts?.length ? 'visible' : 'collapse'}>
                                 {#each FACT_SLOTS as slot}
                                     <Chip
                                         alert={row.facts?.[slot]?.alert ?? false}
@@ -499,7 +515,7 @@
                                         value={row.facts?.[slot]?.value}
                                         visibility={row.facts?.[slot] ? 'visible' : 'collapse'} />
                                 {/each}
-                            </stacklayout>
+                            </wraplayout>
                             <label
                                 color={colorOnSurfaceVariant}
                                 fontSize={12}

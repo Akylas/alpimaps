@@ -19,9 +19,9 @@
     import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
     import { type DepartureAssessor, type StripCell, departureStrip, stripScroll } from '~/routeFeatures/page/departureStrip';
-    import { routeFeatures } from '~/routeFeatures/registry';
+    import { routeFeatures, tellDeparture } from '~/routeFeatures/registry';
     import { activityOf } from '~/utils/routeAnalysis/activity';
-    import { resolveStart, routeTimeZone } from '~/utils/routeAnalysis/departure';
+    import { fixedStart, isSnapshot, resolveStart, routeTimeZone, stampNow } from '~/utils/routeAnalysis/departure';
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
     import { timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { Activity, RouteAnalysis } from '~/utils/routeAnalysis/types';
@@ -91,11 +91,14 @@
     $: assessors = departureFeatures.map(
         (feature): DepartureAssessor =>
             (at) => {
-                const assessment = feature.departure.assess({ item, analysis, at, now });
+                const assessment = feature.departure.assess({ item, analysis, at, now: stripNow });
                 return assessment && { ...assessment, indicators: assessment.indicators.map((id) => `${feature.id}.${id}`) };
             }
     );
-    $: cells = departureStrip({ chosenAt, anchorAt, now, source: timelineSource(item), inputs, lat, lon, assessors });
+    // a plan kept at its own time is looked at in its own day: nothing in the strip is gone, whatever the clock says
+    $: kept = !!inputs.departure.keepPast;
+    $: stripNow = kept ? 0 : now;
+    $: cells = departureStrip({ chosenAt, anchorAt, now: stripNow, source: timelineSource(item), inputs, lat, lon, assessors });
     $: uncovered = cells.some((cell) => cell.uncovered);
     // the glyph and colour of each mark of a departure: the features', and the panel's own
     const OWN_MARKS = { dark: { icon: 'mdi-weather-night' }, unknown: { icon: 'mdi-help-circle-outline' } };
@@ -130,7 +133,7 @@
             return;
         }
         previewAt = cell.at;
-        dispatch('change', { analysis: withDeparture(analysis, item.geometry, { mode: 'planned', at: cell.at }), preview: true });
+        dispatch('change', { analysis: withDeparture(analysis, item.geometry, { mode: 'planned', at: cell.at, ...(kept ? { keepPast: true } : {}) }), preview: true });
     }
     function cancelLook() {
         if (previewAt !== null) {
@@ -179,7 +182,7 @@
     // where the strip is looked at from: asked for when the panel opens and when the departure is not the strip's own doing (picked in
     // the dialog, `now`). Not as the clock goes, nor as a departure is looked at in the strip: it is in view already
     let strip: NativeViewElementNode<CollectionView>;
-    $: departureKey = inputs.departure.mode === 'planned' ? String(inputs.departure.at) : 'now';
+    $: departureKey = String(fixedStart(inputs.departure) ?? 'now');
     let showPending = false;
     let takenHere = false;
     // the cells are in the strip once the page has changed the analysis and the list holds them
@@ -204,7 +207,7 @@
             return;
         }
         showPending = false;
-        const { center, index } = stripScroll(cells, inputs.departure.mode);
+        const { center, index } = stripScroll(cells, isSnapshot(inputs.departure) ? 'planned' : inputs.departure.mode);
         view.scrollToIndex(index, false, center ? SnapPosition.CENTER : SnapPosition.START);
     }
     $: zone = routeTimeZone(inputs.departure);
@@ -233,9 +236,11 @@
     }
     function setDeparture(at: number | null) {
         previewAt = null;
-        dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? { mode: 'now' } : { mode: 'planned', at }) });
+        // now is a snapshot: it keeps the time it was taken at, and what is read at a time is read again for it
+        // a plan kept at its own time stays so as another is taken in the same day
+        dispatch('change', { analysis: withDeparture(analysis, item.geometry, at === null ? stampNow({ mode: 'now' }, Date.now()) : { mode: 'planned', at, ...(kept ? { keepPast: true } : {}) }) });
         // the route has the departure now: what a feature needs for it, it asks for
-        departureFeatures.forEach((feature) => feature.departure.taken?.({ item }));
+        tellDeparture(departureFeatures, { item }, at === null ? 'restamped' : 'taken');
     }
     async function pickDeparture() {
         try {
@@ -263,6 +268,8 @@
             pendingPace = null;
             previewAt = null;
             dispatch('change', { analysis: withPace(analysis, item.geometry, pace) });
+            // the weather reads the same hours at another pace: only what reads the ride's times again has to hear it
+            tellDeparture(departureFeatures, { item }, 'paced');
         }
     }
     function setPace(pace: { multiplier?: number; stopsMinPerHour?: number }) {
@@ -295,11 +302,11 @@
         <Pill
             height={32}
             icon="mdi-calendar-clock"
-            label={inputs.departure.mode === 'planned' ? `${formatTime(chosenAt, 'ddd D MMM', zone.offset)} ${clock(chosenAt)}` : lc('now')}
+            label={inputs.departure.mode === 'planned' ? `${formatTime(chosenAt, 'ddd D MMM', zone.offset)} ${clock(chosenAt)}` : isSnapshot(inputs.departure) ? lc('when_now_at', clock(chosenAt)) : lc('now')}
             marginRight={6}
             selected={inputs.departure.mode === 'planned'}
             on:tap={pickDeparture} />
-        {#if inputs.departure.mode === 'planned'}
+        {#if inputs.departure.mode === 'planned' || isSnapshot(inputs.departure)}
             <Pill col={1} height={32} label={lc('now')} on:tap={() => setDeparture(null)} />
         {/if}
         <!-- what a feature asks to be done: fetch its data again... -->

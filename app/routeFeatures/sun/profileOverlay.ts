@@ -1,16 +1,19 @@
 /**
  * What the sun draws over the profile: a ribbon along the foot of the plot, a stretch for each class of the sun in the colour of the lens,
- * and the sun rising and going down as dashed lines in their colours, with their glyph at the top. On e-ink the ribbon is the greys of the lens in a black outline.
+ * and the sun rising and going down, and the moon in the dark, as dashed lines in their colours, with their glyph at the top. On e-ink the ribbon is the greys of the lens in a black outline.
  */
 import { Align, DashPathEffect, Paint, Style } from '@nativescript-community/ui-canvas';
 import type { ProfileOverlay } from '~/routeFeatures/registry';
 import { SUN_COLORS } from '~/routeFeatures/sun/colors';
 import type { SunRead } from '~/routeFeatures/sun/read';
+import { rideMoonEvents } from '~/routeFeatures/sun/symbols';
 
 const RIBBON_HEIGHT = 4;
 const GLYPH_ROW = 12;
 const MDI_SUNSET_DOWN = String.fromCodePoint(0xf059b);
 const MDI_SUNSET_UP = String.fromCodePoint(0xf059c);
+const MDI_MOON_WAXING_CRESCENT = String.fromCodePoint(0xf0f67);
+const MDI_MOON_WANING_CRESCENT = String.fromCodePoint(0xf0f65);
 
 const fillPaint = new Paint();
 fillPaint.setStyle(Style.FILL);
@@ -25,7 +28,15 @@ const glyphPaint = new Paint();
 glyphPaint.setTextAlign(Align.CENTER);
 
 /** The sun of a route, to hand to the profile chart. `colors` is the lens palette for a theme: a map of the classes' keys to colours. */
-export function sunProfileOverlay(read: Pick<SunRead, 'runs' | 'summary'>, colors: (isEInk: boolean) => Record<string, string>): ProfileOverlay {
+export function sunProfileOverlay(read: SunRead, colors: (isEInk: boolean) => Record<string, string>): ProfileOverlay {
+    const { sunrise, sunset } = read.summary;
+    const moon = rideMoonEvents(read);
+    // where each is on the ride, in metres, as the lines are drawn
+    const marks = [
+        { distance: sunrise?.distance, glyph: MDI_SUNSET_UP, color: SUN_COLORS.sunrise },
+        { distance: sunset?.distance, glyph: MDI_SUNSET_DOWN, color: SUN_COLORS.sunset },
+        ...moon.map(({ distance, id }) => ({ distance, glyph: id === 'moonrise' ? MDI_MOON_WAXING_CRESCENT : MDI_MOON_WANING_CRESCENT, color: SUN_COLORS.moon }))
+    ];
     return {
         draw(canvas, view) {
             const { contentBottom, contentLeft, contentRight, contentTop, fontScale, isEInk, pixelX } = view;
@@ -43,15 +54,11 @@ export function sunProfileOverlay(read: Pick<SunRead, 'runs' | 'summary'>, color
                 outlinePaint.color = '#000000';
                 canvas.drawRect(contentLeft, contentBottom - height, contentRight, contentBottom, outlinePaint);
             }
-            const { sunrise, sunset } = read.summary;
-            [
-                { event: sunrise, glyph: MDI_SUNSET_UP, color: SUN_COLORS.sunrise },
-                { event: sunset, glyph: MDI_SUNSET_DOWN, color: SUN_COLORS.sunset }
-            ].forEach(({ color, event, glyph }) => {
-                if (!event) {
+            marks.forEach(({ color, distance, glyph }) => {
+                if (distance === undefined) {
                     return;
                 }
-                const pointX = pixelX(event.distance);
+                const pointX = pixelX(distance);
                 if (pointX < contentLeft || pointX > contentRight) {
                     return;
                 }

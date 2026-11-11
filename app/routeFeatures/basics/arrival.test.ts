@@ -35,6 +35,11 @@ describe('arrivalOf', () => {
         expect(arrivalOf({ geometry, route: { totalTime: HOUR } }, NOW)).toBeUndefined();
     });
 
+    it('is the stamp plus the time of the route when the now was stamped', () => {
+        const at = NOW - 2 * HOUR * 1000;
+        expect(arrivalOf(item({ mode: 'now', at }), NOW)?.at).toBeCloseTo(at + HOUR * 1000, -3);
+    });
+
     it('is in the route zone when it is known, the phone zone else', () => {
         const at = Date.UTC(2026, 6, 15, 8);
         expect(arrivalOf(item({ mode: 'planned', at, tz: 'Europe/Paris', utcOffset: 120, tzFromPhone: false }), NOW)?.offset).toBe(120);

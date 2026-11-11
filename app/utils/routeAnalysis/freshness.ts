@@ -43,7 +43,7 @@ export function affectedLayers(changed: InputKey[]): StatusKey[] {
 
 /** The time zone arrives with the first weather response: it does not change when the ride happens. */
 function departureKey(departure: Departure) {
-    return JSON.stringify({ mode: departure.mode, at: departure.at, days: departure.days });
+    return JSON.stringify({ mode: departure.mode, at: departure.at, days: departure.days, keepPast: departure.keepPast });
 }
 
 /** What changed between two sets of inputs. */
