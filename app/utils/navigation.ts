@@ -326,16 +326,21 @@ export function findClosestOnRoute(
     const limitAhead = fromIndex >= 0 ? maxAhead : Number.POSITIVE_INFINITY;
     let best: RouteProjection = null;
     let bestScore = Number.POSITIVE_INFINITY;
+    // the road from the vertex we were at to the start of the segment looked at
     let ahead = 0;
     for (let index = start; index < end; index++) {
+        // a window counted in vertices is kilometres long on a sparse track: stepping off the route
+        // there would match a piece of it the user has not walked yet and read as progress. A segment
+        // is out of reach by where it starts, not by how long it is: the one the user is on can be longer
+        // than the room ahead
+        if (best && ahead > limitAhead) {
+            break;
+        }
         const from = positions[index];
         const to = positions[index + 1];
         const projection = projectOnSegment(location.lat, location.lon, from.lat, from.lon, to.lat, to.lon);
-        // a window counted in vertices is kilometres long on a sparse track: stepping off the route
-        // there would match a piece of it the user has not walked yet and read as progress
-        ahead += projection.segmentLength;
-        if (best && ahead > limitAhead) {
-            break;
+        if (index >= fromIndex) {
+            ahead += projection.segmentLength;
         }
         // the two legs of an out and back are the same segments: only the heading tells them apart,
         // so a segment heading against the user is scored as further away
@@ -498,18 +503,54 @@ export class OffRouteDetector {
         return now - this.lastFullScanTime >= OFF_ROUTE_RESCAN_INTERVAL || computeDistanceBetween(location, this.lastFullScanLocation) >= OFF_ROUTE_RESCAN_DISTANCE;
     }
 
+    /** one line per fix: where the fix is, what the window and the full scan found, and what the detector believes after */
+    private logFix(
+        location: MapPos & { horizontalAccuracy?: number; speed?: number },
+        positions: MapPos[],
+        { bearing, before, best, maxAhead, scanned, tolerance, windowed }: { before: number; tolerance: number; bearing: number; maxAhead: number; windowed: RouteProjection; scanned: RouteProjection | 'none' | undefined; best: RouteProjection }
+    ) {
+        if (!DEV_LOG) {
+            return;
+        }
+        const brief = (projection: RouteProjection) => (projection ? `${projection.index}@${Math.round(projection.distanceFromRoute)}m` : 'none');
+        console.log(
+            '[OffRoute] fix',
+            JSON.stringify({
+                at: [Number(location.lat.toFixed(5)), Number(location.lon.toFixed(5))],
+                accuracy: location.horizontalAccuracy,
+                speed: location.speed,
+                bearing: Math.round(bearing ?? -1),
+                points: positions.length,
+                tolerance: Math.round(tolerance),
+                before,
+                after: this.lastOnPathIndex,
+                ahead: Math.round(maxAhead),
+                window: brief(windowed),
+                scan: scanned === undefined ? 'skipped' : scanned === 'none' ? 'none' : brief(scanned),
+                chosen: brief(best),
+                offRoute: this.mOffRoute,
+                offFixes: this.offFixes,
+                onFixes: this.onFixes
+            })
+        );
+    }
+
     update(location: MapPos & { horizontalAccuracy?: number; bearing?: number; speed?: number }, positions: MapPos[], now = Date.now()): OffRouteState {
+        const before = this.lastOnPathIndex;
         const tolerance = this.toleranceFor(location);
         const bearing = this.bearingFor(location);
         const maxAhead = this.projectionLookAhead(location, now);
         this.lastUpdateTime = now;
         this.lastSpeed = location.speed > 0 ? location.speed : 0;
         let best = findClosestOnRoute(location, positions, { fromIndex: this.lastOnPathIndex, bearing, maxAhead });
+        const windowed = best;
+        let scanned: RouteProjection | 'none' | undefined;
         if ((!best || best.distanceFromRoute > tolerance) && this.lastOnPathIndex !== -1 && this.shouldFullScan(location, now)) {
             // out of the window: either we left the route, or we rejoined it somewhere else entirely
             this.lastFullScanTime = now;
             this.lastFullScanLocation = location;
             const full = findClosestOnRoute(location, positions, { bearing });
+            scanned = full ?? 'none';
             // only a real rejoin: stepping aside often ends up nearer a later part of the route,
             // which would jump the user kilometres forward
             if (full && full.distanceFromRoute <= tolerance && (!best || full.distanceFromRoute < best.distanceFromRoute)) {
@@ -517,6 +558,7 @@ export class OffRouteDetector {
             }
         }
         if (!best) {
+            this.logFix(location, positions, { before, tolerance, bearing, maxAhead, windowed, scanned, best });
             return {
                 onPathIndex: this.lastOnPathIndex,
                 distanceToIndex: this.lastDistanceToIndex,
@@ -557,6 +599,7 @@ export class OffRouteDetector {
             }
         }
 
+        this.logFix(location, positions, { before, tolerance, bearing, maxAhead, windowed, scanned, best });
         return {
             onPathIndex: this.lastOnPathIndex,
             distanceToIndex: this.lastDistanceToIndex,

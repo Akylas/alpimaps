@@ -413,6 +413,7 @@ export class GeoHandler extends Handler {
         //     console.log('onLocation', JSON.stringify(loc));
         // }
         if (this.simulating && loc?.provider !== SIMULATED_PROVIDER) {
+            DEV_LOG && console.log('[GeoHandler] simulating: dropped a fix of', loc?.provider, loc?.lat, loc?.lon);
             return;
         }
         if (loc) {

@@ -207,6 +207,7 @@ export class NavigationService extends Observable {
         }
         DEV_LOG && console.log(TAG, 'start', item.id);
         this.route = new NavigationRoute(item);
+        DEV_LOG && console.log(TAG, 'start: route of', this.route.activePositions.length, 'points, first', JSON.stringify(this.route.activePositions[0]), 'last', JSON.stringify(this.route.activePositions[this.route.activePositions.length - 1]));
         this.reset();
 
         const userLocationModule = this.userLocationModule;
@@ -465,6 +466,7 @@ export class NavigationService extends Observable {
                     return;
                 }
             }
+            DEV_LOG && console.log(TAG, 'fix', location.provider, 'state', this.state, 'speed', location.speed, 'fixTime', fixTime, 'previous', this.lastFixTime);
             this.lastFixTime = fixTime;
             navigationLocation.set(location);
             if (location.bearing >= 0) {
@@ -477,6 +479,7 @@ export class NavigationService extends Observable {
             }
 
             if (this.state === NavigationState.PAUSED) {
+                DEV_LOG && console.log(TAG, 'paused: fix not measured against the route, auto paused', this.autoPaused);
                 // only thing left to do while paused is notice that we started moving again
                 if (this.autoPaused && speed > get(navigationAutoPauseSpeed)) {
                     this.resume();
@@ -527,6 +530,7 @@ export class NavigationService extends Observable {
      * detector has to be told: its indices refer to the old one and mean nothing on the new one.
      */
     private setDetour(detour: NavigationDetour, resumeIndex = -1) {
+        DEV_LOG && console.log(TAG, 'setDetour', detour ? `detour of ${detour.positions.length} points, rejoin at ${detour.rejoinIndex}` : `none, detector restarts from ${resumeIndex}`, 'base points', this.route?.positions?.length);
         if (detour) {
             this.route.setDetour(detour);
             this.offRouteDetector.reset();
