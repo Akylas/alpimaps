@@ -9,7 +9,8 @@
     import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
     import { climbNow, steepNow } from '~/routeFeatures/climbs/dock';
     import { profileAhead } from '~/routeFeatures/profile/ahead';
-    import { routeFeatureChanges } from '~/routeFeatures/registry';
+    import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
+    import { nextLens, resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { navigationGradeLookAhead, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { gradeAhead, gradeColor } from '~/utils/grade';
     import { colors } from '~/variables';
@@ -50,12 +51,27 @@
 
     $: category = now?.climb.category ? categoryLabel(now.climb.category) : null;
     $: title = [now?.mode === 'next' ? lc('navigation_next_climb') : lc('navigation_page_climb'), category].filter(Boolean).join(' · ');
+    // nothing to say when there is no climb to speak of: no filler
     $: detail = !now
-        ? lc('navigation_no_climb_left')
+        ? ''
         : now.mode === 'on'
           ? `${formatDistance(now.distance)} · +${convertElevation(now.gain)} ${lc('navigation_to_the_top')}`
-          : `${lc('navigation_in_distance', formatDistance(now.distance))} · +${convertElevation(now.gain)}`;
-    $: steepText = steep ? `${Math.abs(steep.grade).toFixed(0)} % ${lc(steep.inside ? 'navigation_steep_left' : 'navigation_in_distance', formatDistance(steep.distance))}` : '';
+          : lc('navigation_value_in', `+${convertElevation(now.gain)}`, formatDistance(now.distance));
+    $: steepText = steep ? (steep.inside ? lc('navigation_steep_left', `${Math.abs(steep.grade).toFixed(0)} %`, formatDistance(steep.distance)) : lc('navigation_value_in', `${Math.abs(steep.grade).toFixed(0)} %`, formatDistance(steep.distance))) : '';
+
+    // the profile is read in the lens the map is in; a tap goes to the next one
+    $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item: $navigationItem }) : [];
+    $: activeLens = lenses.find((lens) => lens.id === resolveLens($routeLensStore, lenses));
+    $: profileOptions = activeLens?.profile?.({ item: $navigationItem });
+    $: fill = profileOptions?.fill ?? null;
+    $: fade = profileOptions?.fade ?? false;
+    $: overlay = profileOptions?.overlay ?? null;
+    function onLensTap() {
+        const next = nextLens(lenses, activeLens?.id);
+        if (next) {
+            selectLens(next);
+        }
+    }
 
     let elevationChart: ElevationChart;
     let highlightedIndex = -2;
@@ -87,13 +103,26 @@
         <gridlayout columns="auto,*" row={1}>
             <stacklayout paddingRight={12} verticalAlignment="center" width={Math.round(92 * $navigationScale)}>
                 <label maxLines={1}>
-                    <cspan color={gradeValueColor} fontSize={30 * $navigationScale} fontWeight="bold" text={gradeText} />
+                    <cspan color={gradeValueColor} fontSize={26 * $navigationScale} fontWeight="bold" text={gradeText} />
                     <cspan color={colorOnSurfaceVariant} fontSize={15 * $navigationScale} text=" %" />
                 </label>
-                <label color={colorOnSurfaceVariant} fontSize={12 * $navigationScale} text={lc('grade_now')} />
                 <label color={isEInk ? colorOnSurface : colorError} fontSize={12 * $navigationScale} fontWeight="500" lineBreak="end" maxLines={1} text={steepText} />
             </stacklayout>
-            <ElevationChart bind:this={elevationChart} col={1} filled={!isEInk} item={$navigationItem} mini={true} {range} showAscents={false} showProfileGrades={true} showWaypoints={false} />
+            <ElevationChart
+                bind:this={elevationChart}
+                col={1}
+                {fade}
+                {fill}
+                filled={!isEInk}
+                item={$navigationItem}
+                mini={true}
+                {overlay}
+                {range}
+                showAscents={false}
+                showProfileGrades={true}
+                showWaypoints={false} />
+            <!-- over the chart, which a tap would not reach: the lens changes -->
+            <gridlayout col={1} on:tap={onLensTap} />
         </gridlayout>
     </gridlayout>
 {/if}

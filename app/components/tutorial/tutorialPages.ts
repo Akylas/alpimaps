@@ -261,15 +261,14 @@ export const tutorialPages: TutorialPage[] = [
             text(176, 336, 60, '14:32', { bold: true, size: 13 }),
             fab(244, 326, 'mdi-pause', true, 40),
             divider(8, 372, 284),
-            text(22, 378, 120, 'navigation_page_climb', { key: true, muted: true, size: 11 }),
-            text(150, 378, 130, () => formatDistance(1800), { bold: true, size: 11 }),
-            text(22, 392, 80, '7.4 %', { bold: true, size: 22 }),
-            { kind: 'bars', x: 110, y: 388, width: 170, height: 22, values: [30, 40, 55, 70, 80, 60, 40] },
+            text(22, 378, 120, 'navigation_page_profile', { key: true, muted: true, size: 11 }),
+            text(150, 378, 130, () => formatDistance(15000), { bold: true, size: 11 }),
+            { kind: 'bars', x: 22, y: 392, width: 258, height: 20, values: [30, 40, 55, 70, 80, 60, 40, 35, 50, 65] },
             { kind: 'meter', x: 122, y: 414, width: 18, height: 4, value: 1 },
             { kind: 'meter', x: 146, y: 414, width: 6, height: 4, value: 0 },
             { kind: 'meter', x: 158, y: 414, width: 6, height: 4, value: 0 }
         ],
-        zones: [zone('nav_pages', 'swipe', 8, 374, 284, 48), zone('end_navigation', 'longPress', 238, 322, 52, 48)]
+        zones: [zone('nav_summary', 'tap', 8, 322, 222, 48), zone('nav_pages', 'swipe', 8, 374, 284, 48), zone('nav_lens', 'tap', 20, 390, 262, 22), zone('end_navigation', 'longPress', 238, 322, 52, 48)]
     },
     {
         id: 'lists',

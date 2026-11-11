@@ -25,6 +25,7 @@ import {
     DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
     DEFAULT_NAVIGATION_PAGE,
     DEFAULT_NAVIGATION_PAGES,
+    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
@@ -62,6 +63,7 @@ import {
     SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
     SETTINGS_NAVIGATION_PAGE,
     SETTINGS_NAVIGATION_PAGES,
+    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_POSITION_OFFSET,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
@@ -179,6 +181,8 @@ export const navigationPages = settingsStore(SETTINGS_NAVIGATION_PAGES, DEFAULT_
 export const navigationPageIds = derived(navigationPages, parseNavPages);
 /** the page the dock showed last, brought back on the next ride */
 export const navigationPage = settingsStore(SETTINGS_NAVIGATION_PAGE, DEFAULT_NAVIGATION_PAGE);
+/** the summary row says what is done, not what is left: a tap on it swaps them */
+export const navigationSummaryDone = settingsStore(SETTINGS_NAVIGATION_SUMMARY_DONE, DEFAULT_NAVIGATION_SUMMARY_DONE);
 /** the page the dock shows now, null when there is none: a page that costs something to read waits for it */
 export const navigationPageShown = writable<string | null>(null);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);

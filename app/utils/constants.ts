@@ -53,6 +53,7 @@ export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
 export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
 export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
 export const SETTINGS_NAVIGATION_PAGE = 'navigation_page';
+export const SETTINGS_NAVIGATION_SUMMARY_DONE = 'navigation_summary_done';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
 export const SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD = 'navigation_grade_look_ahead';
 export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
@@ -125,6 +126,7 @@ export const DEFAULT_NAVIGATION_RECORD_TRACK = false;
 /** the dock pages that are on, in order: ids of the route features' `navPages` */
 export const DEFAULT_NAVIGATION_PAGES = 'climb,profile,ahead,trip';
 export const DEFAULT_NAVIGATION_PAGE = '';
+export const DEFAULT_NAVIGATION_SUMMARY_DONE = false;
 /** meters of road ahead the surface widget covers, so the bar has a readable scale */
 export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
 /** meters of road the live grade averages over: the single point value is too twitchy to read */

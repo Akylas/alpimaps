@@ -6,7 +6,8 @@
     import { convertElevation, formatDistance } from '~/helpers/formatter';
     import { isEInk } from '~/helpers/theme';
     import { PROFILE_AHEAD_SPAN, profileAhead } from '~/routeFeatures/profile/ahead';
-    import { type ProfileMark, routeAttention, routeFeatureChanges, routeFeatures } from '~/routeFeatures/registry';
+    import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
+    import { type ProfileMark, nextLens, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { navigationItem, navigationProgress } from '~/stores/navigationStore';
 
     export let height: number = null;
@@ -34,6 +35,20 @@
         }
     }
 
+    // the profile is read in the lens the map is in; a tap goes to the next one
+    $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item: $navigationItem }) : [];
+    $: activeLens = lenses.find((lens) => lens.id === resolveLens($routeLensStore, lenses));
+    $: profileOptions = activeLens?.profile?.({ item: $navigationItem });
+    $: fill = profileOptions?.fill ?? null;
+    $: fade = profileOptions?.fade ?? false;
+    $: overlay = profileOptions?.overlay ?? null;
+    function onLensTap() {
+        const next = nextLens(lenses, activeLens?.id);
+        if (next) {
+            selectLens(next);
+        }
+    }
+
     // the marks, the same array until they change: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
     $: attention = $routeFeatureChanges >= 0 ? routeAttention($routeFeatures, { item: $navigationItem }) : [];
@@ -50,6 +65,7 @@
 
     // the first thing to watch in the stretch
     $: next = ahead && attention.map(({ kind, section }) => ({ kind, i0: Math.max(section.i0, ahead.fromIndex), i1: section.i1 })).filter(({ i0, i1 }) => i1 > ahead.fromIndex && i0 <= ahead.toIndex).sort((first, second) => first.i0 - second.i0)[0];
+    $: title = [activeLens && activeLens.id !== 'overview' ? activeLens.label() : null, lc('navigation_next_distance', formatDistance(PROFILE_AHEAD_SPAN))].filter(Boolean).join(' · ');
     $: headline = ahead
         ? [
               ahead.ascent > 0 ? '↗ ' + convertElevation(ahead.ascent) : null,
@@ -87,7 +103,22 @@
 
 {#if available}
     <gridlayout {height} rows="auto,*" {...$$restProps}>
-        <NavigationPageHeader detail={headline} title={lc('navigation_next_distance', formatDistance(PROFILE_AHEAD_SPAN))} />
-        <ElevationChart bind:this={elevationChart} filled={!isEInk} item={$navigationItem} {marks} mini={true} {range} row={1} showAscents={false} showProfileGrades={true} showWaypoints={false} />
+        <NavigationPageHeader detail={headline} {title} />
+        <ElevationChart
+            bind:this={elevationChart}
+            {fade}
+            {fill}
+            filled={!isEInk}
+            item={$navigationItem}
+            {marks}
+            mini={true}
+            {overlay}
+            {range}
+            row={1}
+            showAscents={false}
+            showProfileGrades={true}
+            showWaypoints={false} />
+        <!-- over the chart, which a tap would not reach: the lens changes -->
+        <gridlayout row={1} on:tap={onLensTap} />
     </gridlayout>
 {/if}

@@ -5,6 +5,7 @@ import {
     type RouteFeature,
     type RouteLens,
     migrateNavPages,
+    nextLens,
     parseNavPages,
     registerRouteFeature,
     resolveLens,
@@ -197,5 +198,17 @@ describe('dock pages', () => {
         expect(migrateNavPages(defaults, { surface: true })).toEqual(['climb', 'profile', 'surface', 'ahead', 'trip']);
         expect(migrateNavPages(defaults, { chart: false, surface: true })).toEqual(['surface', 'climb', 'ahead', 'trip']);
         expect(migrateNavPages(defaults, { chart: true, surface: false })).toEqual(defaults);
+    });
+});
+
+describe('nextLens', () => {
+    const lenses = ['overview', 'climbs', 'weather'].map((id) => ({ id }) as RouteLens);
+    it('goes to the lens after the active one, round to the first', () => {
+        expect(nextLens(lenses, 'overview')).toBe('climbs');
+        expect(nextLens(lenses, 'weather')).toBe('overview');
+    });
+    it('starts from the first when the active lens is not offered, and says nothing without lenses', () => {
+        expect(nextLens(lenses, 'sun')).toBe('overview');
+        expect(nextLens([], 'overview')).toBeUndefined();
     });
 });

@@ -8,7 +8,6 @@ import { type LensProfile, type LensSection, type LensSlice, type RouteLens, reg
 import { routeFeatureStats } from '~/routeFeatures/stats/settings';
 import { shadeGrey } from '~/routeFeatures/lens/shades';
 import { pavedShare, statsCardHeight, surfaceKey, surfaceShade, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
-import { ROUTE_STATS_HEIGHT } from '~/utils/navigation';
 import type { IItem } from '~/models/Item';
 import { surfaceColors } from '~/utils/routing';
 
@@ -108,12 +107,5 @@ registerRouteFeature({
     sheetCard: {
         component: () => import('~/routeFeatures/stats/RouteStatsView.svelte'),
         height: ({ item }) => statsHeight(item)
-    },
-    navSections: [
-        {
-            id: 'stats',
-            component: () => import('~/routeFeatures/stats/RouteStatsView.svelte'),
-            height: (_scale, { item }) => (item?.stats ? ROUTE_STATS_HEIGHT + 8 : 0)
-        }
-    ]
+    }
 });

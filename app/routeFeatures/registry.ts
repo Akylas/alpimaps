@@ -287,21 +287,6 @@ export interface RouteLens {
     legend?: (ctx: LensLegendContext) => LensLegendSection | null;
 }
 
-/** A card of the navigation sheet, under the actions: it gets `item` and its card look. */
-export interface RouteNavSection {
-    id: string;
-    /** Loaded the first time the section has a height, the navigation ui is not part of the startup graph. */
-    component: () => Promise<{ default: ComponentType }>;
-    /** dp at the navigation scale. 0: nothing to show, so no row. */
-    height: (scale: number, ctx: RouteCtx) => number;
-}
-
-export interface RouteNavSectionLayout {
-    id: string;
-    section: RouteNavSection;
-    height: number;
-}
-
 /**
  * A page of the navigation dock: the one the user swipes to, under the summary. The component gets its `height` and
  * draws its own title line; the user's setting `navigationPages` says which pages are shown and in what order.
@@ -488,8 +473,6 @@ export interface RouteFeature {
     attention?: (ctx: RouteCtx) => AttentionMark[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
-    /** Cards of the navigation sheet, under the actions. */
-    navSections?: RouteNavSection[];
     /** Pages of the navigation dock. */
     navPages?: RouteNavPage[];
     /** Views of the stats card, read in turn with the way types and the surfaces. */
@@ -571,14 +554,6 @@ export function tellDeparture(features: RouteFeature[], ctx: RouteCtx, event: 't
 /** Every enabled card, in order, with its height now; a height of 0 is kept so the card stays mounted. */
 export function routeSheetCards(features: RouteFeature[], ctx: RouteCtx, gap: number): RouteSheetCardLayout[] {
     return features.filter((feature) => feature.sheetCard).map((feature) => ({ id: feature.id, card: feature.sheetCard, height: feature.sheetCard.height(ctx, gap) }));
-}
-
-/** The navigation sections that have something to show, in feature order. */
-export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale: number): RouteNavSectionLayout[] {
-    return features
-        .flatMap((feature) => feature.navSections ?? [])
-        .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
-        .filter((layout) => layout.height > 0);
 }
 
 /** The dock pages the user turned on that have something to show, in the user's order. An id nobody registers is skipped. */
@@ -672,6 +647,11 @@ export function routeAttention(features: RouteFeature[], ctx: RouteCtx): Attenti
 /** The lens to show: the one asked for, or the overview when this route cannot show it. */
 export function resolveLens(requested: LensId, lenses: RouteLens[]): LensId {
     return lenses.some((lens) => lens.id === requested) ? requested : 'overview';
+}
+
+/** The lens after the active one, round to the first: what a tap on a profile that has no bar to pick from goes to. */
+export function nextLens(lenses: RouteLens[], active: LensId): LensId | undefined {
+    return lenses.length ? lenses[(lenses.findIndex((lens) => lens.id === active) + 1) % lenses.length].id : undefined;
 }
 
 /** The cards the enabled features add to the route page, in feature order. */

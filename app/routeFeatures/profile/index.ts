@@ -1,7 +1,7 @@
 import { lc } from '~/helpers/locale';
 import { profileSettingRows, routeFeatureProfile } from '~/routeFeatures/profile/settings';
 import { registerRouteFeature } from '~/routeFeatures/registry';
-import { ROUTE_LENS_CARD_HEIGHT, ROUTE_PROFILE_HEIGHT } from '~/utils/navigation';
+import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
 
 registerRouteFeature({
     id: 'profile',
@@ -19,13 +19,6 @@ registerRouteFeature({
             label: () => lc('navigation_page_profile'),
             component: () => import('~/routeFeatures/profile/ProfilePage.svelte'),
             available: ({ detour, item }) => !detour && item?.profile?.data?.length > 0
-        }
-    ],
-    navSections: [
-        {
-            id: 'profile',
-            component: () => import('~/routeFeatures/profile/NavSection.svelte'),
-            height: (_scale, { item }) => (item?.profile?.data?.length > 0 ? ROUTE_PROFILE_HEIGHT + 8 : 0)
         }
     ]
 });

@@ -145,8 +145,8 @@
     }
     function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
-        // the widget draws the marks, and nothing else of the overlay
-        if (!chartView || (mini && !marks.length)) {
+        // the widget draws the marks and what the lens lays over the plot, and nothing else of the overlay
+        if (!chartView || (mini && !marks.length && !overlay)) {
             return;
         }
         const { contentBottom, contentLeft, contentRight, contentTop } = chartView.viewPortHandler;

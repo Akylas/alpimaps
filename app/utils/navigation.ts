@@ -3,7 +3,6 @@ import { UNITS, convertDurationSeconds, convertValueToUnit, formatDuration, form
 import { getRhumbLineBearing } from '~/helpers/geolib';
 import { type AscentSegment, type Item, type Route, type RouteInstruction, type RouteProfile, RoutingAction } from '~/models/Item';
 import { EARTH_RADIUS, type MapPos, TO_DEG, TO_RAD, computeDistanceBetween, distanceToEnd, isLocationOnPath } from '~/utils/geo';
-import type { RouteNavSectionLayout } from '~/routeFeatures/registry';
 import type { ValhallaProfile } from '~/utils/routing';
 
 export const DEFAULT_LOCATION_DISTANCE_FROM_ROUTE = 15;
@@ -24,8 +23,6 @@ const PROJECTION_LOOKAHEAD_TOLERANCE = 3;
 /** how many segments ahead of the last known position we look for the user */
 export const DEFAULT_PROJECTION_WINDOW = 200;
 
-/** every navigation button, so the controls and the actions row cannot end up different sizes */
-export const NAVBUTTON_SIZE = 48;
 /** the maneuver banner: its main line, then one line whose content depends on the state */
 export const MANEUVER_VIEW_HEIGHT = 104;
 /** the primary button, in the dock's summary row */
@@ -33,42 +30,21 @@ export const NAVPRIMARY_SIZE = 40;
 /** the buttons on the right of the map */
 export const NAVRAIL_BUTTON_SIZE = 44;
 
-/** full elevation chart and route stats, same heights the item sheet gives them */
-export const ROUTE_PROFILE_HEIGHT = 155;
 /** the lens card, in the sheet and on the route page: lens bar 44, insight 40, the chart with its grade legend */
 export const ROUTE_LENS_CARD_HEIGHT = 242;
-export const ROUTE_STATS_HEIGHT = 180;
 /** the dock: the summary row (with the handle over it), one data page, the dots; before the navigation scale */
-export const DOCK_SUMMARY_HEIGHT = 46;
-export const DOCK_PAGE_HEIGHT = 108;
-export const DOCK_DOTS_HEIGHT = 14;
+export const DOCK_SUMMARY_HEIGHT = 44;
+export const DOCK_PAGE_HEIGHT = 92;
+export const DOCK_DOTS_HEIGHT = 12;
 
 /**
- * The sheet, top first: the dock (always, with its pages when there is one), then one step per
- * section; a section with nothing to show is 0 and has no step. Lives here so the map can size the
- * sheet without bundling the navigation ui: a step always ends where its section does.
+ * The sheet: closed, or the dock, with its pages when there is one. Lives here so the map can size
+ * the sheet without bundling the navigation ui. No 0 step to land on by a drag: the dock is the only
+ * way out of navigation, so it can never be dismissed.
  */
-export function navigationSections(scale: number, contributed: RouteNavSectionLayout[], hasPages: boolean) {
-    return {
-        // the 8 is the gap under the card
-        dock: Math.round((DOCK_SUMMARY_HEIGHT + (hasPages ? DOCK_PAGE_HEIGHT + DOCK_DOTS_HEIGHT : 0) + 8) * scale),
-        // always there (astronomy), so the profile and stats can be fetched before they are shown
-        actions: Math.round((NAVBUTTON_SIZE + 8) * scale),
-        details: contributed.map((layout) => layout.height)
-    };
-}
-
-/** No 0 step: the dock is the only way out of navigation, so it can never be dismissed. */
-export function navigationSheetSteps(sections: ReturnType<typeof navigationSections>) {
-    const steps = [0];
-    let total = 0;
-    [sections.dock, sections.actions, ...sections.details].forEach((height) => {
-        if (height > 0) {
-            total += height;
-            steps.push(total);
-        }
-    });
-    return steps;
+export function navigationSheetSteps(scale: number, hasPages: boolean) {
+    // the 8 is the gap under the card
+    return [0, Math.round((DOCK_SUMMARY_HEIGHT + (hasPages ? DOCK_PAGE_HEIGHT + DOCK_DOTS_HEIGHT : 0) + 8) * scale)];
 }
 
 /** Value and unit kept apart so the UI can draw the unit smaller. */
