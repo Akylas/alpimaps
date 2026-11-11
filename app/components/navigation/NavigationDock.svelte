@@ -1,13 +1,14 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { Template } from '@nativescript-community/svelte-native/components';
+    import { onDestroy } from 'svelte';
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
     import NavigationControls from '~/components/navigation/NavigationControls.svelte';
     import NavigationInfo from '~/components/navigation/NavigationInfo.svelte';
     import { formatTime } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { type RouteNavPage, lazyComponents, routeFeatureChanges, routeFeatures, routeNavPages } from '~/routeFeatures/registry';
-    import { NavigationState, navigationDetour, navigationItem, navigationPage, navigationPageIds, navigationProgress, navigationScale, navigationState, navigationStats } from '~/stores/navigationStore';
+    import { NavigationState, navigationDetour, navigationItem, navigationPage, navigationPageIds, navigationPageShown, navigationProgress, navigationScale, navigationState, navigationStats } from '~/stores/navigationStore';
     import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, formatNavigationDuration, splitDistance, splitElevation } from '~/utils/navigation';
     import { colors } from '~/variables';
 
@@ -24,6 +25,10 @@
         pages.findIndex((page) => page.id === $navigationPage),
         0
     );
+
+    // the pages that cost something to read wait for the user to be on them
+    $: navigationPageShown.set(pages[selectedIndex]?.id ?? null);
+    onDestroy(() => navigationPageShown.set(null));
 
     // the pager also says its page when the pages change under it: only the user's swipe is remembered
     function onPageChange(event: { value?: number }) {

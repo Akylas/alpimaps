@@ -14,7 +14,7 @@
     import { readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
     import { weatherFormat } from '~/routeFeatures/weather/ui/format';
     import { networkService } from '~/services/NetworkService';
-    import { navigationDetour, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
+    import { navigationDetour, navigationItem, navigationPageShown, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { formatNavigationDuration } from '~/utils/navigation';
     import { tierOf } from '~/utils/routeAnalysis/freshness';
     import { showSnack } from '~/utils/ui';
@@ -35,7 +35,12 @@
     $: item = $navigationItem;
     $: layer = $routeAnalysisChanges >= 0 ? item?.analysis?.layers.weather : null;
     $: computedAt = layer?.prov.computedAt;
-    $: outdated = $routeAnalysisChanges >= 0 && !!item && tierOf(layerStatuses(item).weather.state) === 'outdated';
+    // nothing is read for the page until the user is on it: it is not worth the work while it is not looked at
+    $: active = $navigationPageShown === 'ahead';
+    let outdated = false;
+    $: if (active) {
+        outdated = $routeAnalysisChanges >= 0 && !!item && tierOf(layerStatuses(item).weather.state) === 'outdated';
+    }
     // a detour's position is not on the route the forecast is for
     $: detour = !!$navigationDetour;
     $: onPathIndex = Math.max($navigationProgress?.onPathIndex ?? 0, 0);
@@ -43,7 +48,9 @@
     let cells: AheadCell[] = [];
     let sunClasses: SunClass[] = [];
     let readFor = { analysis: null, minute: -1, distance: -Infinity, detour: false };
-    $: refresh(layer, minute, onPathIndex, detour);
+    $: if (active) {
+        refresh(layer, minute, onPathIndex, detour);
+    }
 
     function refresh(currentLayer: typeof layer, currentMinute: number, index: number, onDetour: boolean) {
         const data = item?.profile?.data;

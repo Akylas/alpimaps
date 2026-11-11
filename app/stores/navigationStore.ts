@@ -179,6 +179,8 @@ export const navigationPages = settingsStore(SETTINGS_NAVIGATION_PAGES, DEFAULT_
 export const navigationPageIds = derived(navigationPages, parseNavPages);
 /** the page the dock showed last, brought back on the next ride */
 export const navigationPage = settingsStore(SETTINGS_NAVIGATION_PAGE, DEFAULT_NAVIGATION_PAGE);
+/** the page the dock shows now, null when there is none: a page that costs something to read waits for it */
+export const navigationPageShown = writable<string | null>(null);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
 export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD, DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD);
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
