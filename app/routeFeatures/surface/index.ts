@@ -9,7 +9,7 @@ registerRouteFeature({
             id: 'surface',
             label: () => lc('navigation_page_surface'),
             component: () => import('~/routeFeatures/surface/SurfacePage.svelte'),
-            available: ({ item }) => item?.stats?.surfaceSegments?.length > 0 || item?.stats?.surfaces?.length > 0
+            available: ({ detour, item }) => !detour && (item?.stats?.surfaceSegments?.length > 0 || item?.stats?.surfaces?.length > 0)
         }
     ]
 });

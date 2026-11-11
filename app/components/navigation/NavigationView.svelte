@@ -8,7 +8,7 @@
     import NavigationDock from '~/components/navigation/NavigationDock.svelte';
     import { lazyComponents, routeFeatureChanges, routeFeatures, routeNavPages, routeNavSections } from '~/routeFeatures/registry';
     import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
-    import { navigationItem, navigationPageIds, navigationScale } from '~/stores/navigationStore';
+    import { navigationDetour, navigationItem, navigationPageIds, navigationScale } from '~/stores/navigationStore';
     import { navigationSections } from '~/utils/navigation';
     import { showSnack } from '~/utils/ui';
     import { colors } from '~/variables';
@@ -30,7 +30,7 @@
     // the sections the map builds the sheet steps from, so a step ends where its section does
     // the `>= 0` only makes the statements depend on the features' changes
     $: contributed = $routeFeatureChanges >= 0 ? routeNavSections($routeFeatures, { item: $navigationItem }, $navigationScale) : [];
-    $: hasPages = $routeFeatureChanges >= 0 && routeNavPages($routeFeatures, { item: $navigationItem }, $navigationPageIds).length > 0;
+    $: hasPages = $routeFeatureChanges >= 0 && routeNavPages($routeFeatures, { item: $navigationItem, detour: !!$navigationDetour }, $navigationPageIds).length > 0;
     $: sections = navigationSections($navigationScale, contributed, hasPages);
     // the sections' components load the first time they have a height
     const sectionComponents = lazyComponents();

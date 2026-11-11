@@ -95,6 +95,14 @@ registerRouteFeature({
     lensPalette: gradePalette,
     lenses: [climbsLens],
     pageSections: [climbsPageSection],
+    navPages: [
+        {
+            id: 'climb',
+            label: () => lc('navigation_page_climb'),
+            component: () => import('~/routeFeatures/climbs/ClimbPage.svelte'),
+            available: ({ detour, item }) => !detour && !!readClimbs(item)
+        }
+    ],
     attention: ({ item }) => readClimbs(item)?.marks ?? [],
     // while following the route, whatever the lens: the steep ways, to be ready for them
     mapFeatures: ({ item, navigating }) => {

@@ -7,7 +7,7 @@
     import { formatTime } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { type RouteNavPage, lazyComponents, routeFeatureChanges, routeFeatures, routeNavPages } from '~/routeFeatures/registry';
-    import { NavigationState, navigationItem, navigationPage, navigationPageIds, navigationProgress, navigationScale, navigationState, navigationStats } from '~/stores/navigationStore';
+    import { NavigationState, navigationDetour, navigationItem, navigationPage, navigationPageIds, navigationProgress, navigationScale, navigationState, navigationStats } from '~/stores/navigationStore';
     import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, formatNavigationDuration, splitDistance, splitElevation } from '~/utils/navigation';
     import { colors } from '~/variables';
 
@@ -15,7 +15,7 @@
 
     $: profile = $navigationItem?.profile;
     // the `>= 0` only makes the statement depend on the features' changes
-    $: pages = $routeFeatureChanges >= 0 ? routeNavPages($routeFeatures, { item: $navigationItem }, $navigationPageIds) : [];
+    $: pages = $routeFeatureChanges >= 0 ? routeNavPages($routeFeatures, { item: $navigationItem, detour: !!$navigationDetour }, $navigationPageIds) : [];
     // the pages' components load the first time they are in the dock
     const pageComponents = lazyComponents();
     $: pages.forEach((page) => pageComponents.load(page.id, page.component));

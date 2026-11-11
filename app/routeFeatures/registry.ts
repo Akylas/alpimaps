@@ -10,6 +10,8 @@ import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 /** What every contribution is asked about. */
 export interface RouteCtx {
     item: IItem;
+    /** Navigating a leg that takes the user back to the route: the position is not on `item`, so what is read off its indexes is wrong. */
+    detour?: boolean;
 }
 
 /** A compact stat of the sheet's header. */

@@ -18,7 +18,7 @@ registerRouteFeature({
             id: 'profile',
             label: () => lc('navigation_page_profile'),
             component: () => import('~/routeFeatures/profile/ProfilePage.svelte'),
-            available: ({ item }) => item?.profile?.data?.length > 0
+            available: ({ detour, item }) => !detour && item?.profile?.data?.length > 0
         }
     ],
     navSections: [
