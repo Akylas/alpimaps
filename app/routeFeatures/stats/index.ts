@@ -112,7 +112,6 @@ registerRouteFeature({
     navSections: [
         {
             id: 'stats',
-            slot: 'details',
             component: () => import('~/routeFeatures/stats/RouteStatsView.svelte'),
             height: (_scale, { item }) => (item?.stats ? ROUTE_STATS_HEIGHT + 8 : 0)
         }

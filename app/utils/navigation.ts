@@ -28,8 +28,8 @@ export const DEFAULT_PROJECTION_WINDOW = 200;
 export const NAVBUTTON_SIZE = 48;
 /** the maneuver banner: its main line, then one line whose content depends on the state */
 export const MANEUVER_VIEW_HEIGHT = 104;
-/** the primary button */
-export const NAVPRIMARY_SIZE = 52;
+/** the primary button, in the dock's summary row */
+export const NAVPRIMARY_SIZE = 40;
 /** the buttons on the right of the map */
 export const NAVRAIL_BUTTON_SIZE = 44;
 
@@ -38,31 +38,33 @@ export const ROUTE_PROFILE_HEIGHT = 155;
 /** the lens card, in the sheet and on the route page: lens bar 44, insight 40, the chart with its grade legend */
 export const ROUTE_LENS_CARD_HEIGHT = 242;
 export const ROUTE_STATS_HEIGHT = 180;
-/** the row of widgets above the actions, before the navigation scale */
-export const NAVIGATION_AHEAD_HEIGHT = 80;
+/** the dock: the summary row (with the handle over it), one data page, the dots; before the navigation scale */
+export const DOCK_SUMMARY_HEIGHT = 46;
+export const DOCK_PAGE_HEIGHT = 108;
+export const DOCK_DOTS_HEIGHT = 14;
 
 /**
- * The sheet, top first: the bar (always), then one step per section. A section with nothing to show
- * is 0 and has no step. The features contribute the ahead row and the details cards. Lives here, not
- * in the component, so the map can size the sheet without bundling the navigation ui; both read it,
- * so a step always ends where its section does.
+ * The sheet, top first: the dock (always), then one step per section. A section with nothing to show
+ * is 0 and has no step. The dock is the summary, plus the pages when there is one to show; the
+ * features contribute the pages and the details cards. Lives here, not in the component, so the map
+ * can size the sheet without bundling the navigation ui; both read it, so a step always ends where
+ * its section does.
  */
-export function navigationSections(scale: number, contributed: RouteNavSectionLayout[]) {
+export function navigationSections(scale: number, contributed: RouteNavSectionLayout[], hasPages: boolean) {
     return {
-        bar: Math.round(112 * scale),
-        trip: Math.round(72 * scale),
-        ahead: Math.max(0, ...contributed.filter((layout) => layout.section.slot === 'ahead').map((layout) => layout.height)),
+        // the 8 is the gap under the card
+        dock: Math.round((DOCK_SUMMARY_HEIGHT + (hasPages ? DOCK_PAGE_HEIGHT + DOCK_DOTS_HEIGHT : 0) + 8) * scale),
         // always there (astronomy), so the profile and stats can be fetched before they are shown
         actions: Math.round((NAVBUTTON_SIZE + 8) * scale),
-        details: contributed.filter((layout) => layout.section.slot === 'details').map((layout) => layout.height)
+        details: contributed.map((layout) => layout.height)
     };
 }
 
-/** No 0 step: the bar is the only way out of navigation, so it can never be dismissed. */
+/** No 0 step: the dock is the only way out of navigation, so it can never be dismissed. */
 export function navigationSheetSteps(sections: ReturnType<typeof navigationSections>) {
     const steps = [0];
     let total = 0;
-    [sections.bar, sections.trip, sections.ahead, sections.actions, ...sections.details].forEach((height) => {
+    [sections.dock, sections.actions, ...sections.details].forEach((height) => {
         if (height > 0) {
             total += height;
             steps.push(total);

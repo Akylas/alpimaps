@@ -2,7 +2,7 @@ import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { RouteSettingRow } from '~/routeFeatures/registry';
 import { showAscents, showGradeColors } from '~/stores/mapStore';
-import { navigationChartCurrentAscent, navigationGradeLookAhead, navigationShowElevationChart } from '~/stores/navigationStore';
+import { navigationChartCurrentAscent, navigationGradeLookAhead } from '~/stores/navigationStore';
 import { settingsStore } from '~/stores/settingsStore';
 import { DEFAULT_ELEVATION_PROFILE_FILTER_STEP, DEFAULT_ELEVATION_PROFILE_SMOOTH_WINDOW, SETTINGS_ELEVATION_PROFILE_FILTER_STEP, SETTINGS_ELEVATION_PROFILE_SMOOTH_WINDOW } from '~/utils/constants';
 
@@ -24,7 +24,6 @@ export function profileSettingRows(): RouteSettingRow[] {
         { type: 'slider', store: elevationProfileSmoothWindow, title: lc('elevation_profile_smooth_window'), min: 0, max: 20, step: 1 },
         { type: 'slider', store: elevationProfileFilterStep, title: lc('elevation_profile_filter_step'), min: 1, max: 50, step: 1 },
         { type: 'sectionheader', title: lc('navigation') },
-        { type: 'switch', store: navigationShowElevationChart, title: lc('navigation_show_elevation_chart'), description: lc('navigation_show_elevation_chart_desc') },
         { type: 'switch', store: navigationChartCurrentAscent, title: lc('navigation_chart_current_ascent'), description: lc('navigation_chart_current_ascent_desc') },
         {
             type: 'slider',

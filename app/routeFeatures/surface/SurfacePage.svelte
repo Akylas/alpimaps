@@ -15,7 +15,7 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
-    import NavigationCard, { NAVWIDGET_CARD_HEIGHT } from '~/components/navigation/NavigationCard.svelte';
+    import NavigationPageHeader from '~/components/navigation/NavigationPageHeader.svelte';
     import { formatDistance } from '~/helpers/formatter';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import { navigationItem, navigationProgress, navigationScale, navigationSurfaceSpan } from '~/stores/navigationStore';
@@ -23,9 +23,8 @@
     import { drawSurfaceBand } from '~/utils/surfacePattern';
     import { colors } from '~/variables';
 
-    /** null lets the flex row share its width out; the canvas still needs an explicit height */
-    export let height: number = null;
-    $: cardHeight = height ?? Math.round(NAVWIDGET_CARD_HEIGHT * $navigationScale);
+    /** the canvas has no intrinsic size, so the page needs an explicit height */
+    export let height: number;
 
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorSurfaceContainerHigh } = $colors);
 
@@ -168,9 +167,8 @@
 </script>
 
 {#if available}
-    <!-- the canvas has no intrinsic size, so the card has to carry explicit dimensions -->
-    <NavigationCard height={cardHeight} padding="6 12 8 12" rows="auto,auto,*" {...$$restProps}>
-        <label color={colorOnSurfaceVariant} fontSize={12 * $navigationScale} text={lc('navigation_surface')} />
+    <gridlayout {height} rows="auto,auto,*" {...$$restProps}>
+        <NavigationPageHeader title={lc('navigation_surface')} />
         <label lineBreak="end" maxLines={1} row={1}>
             <cspan color={colorOnSurface} fontSize={18 * $navigationScale} fontWeight="bold" text={currentName} />
             <cspan
@@ -178,6 +176,6 @@
                 fontSize={12 * $navigationScale}
                 text={next && nextDistance > 0 ? '  ' + lc('navigation_next_surface', lc(next.id), formatDistance(nextDistance)) : ''} />
         </label>
-        <canvasview bind:this={surfaceCanvas} borderRadius={4} marginTop={4} row={2} on:draw={onDraw} />
-    </NavigationCard>
+        <canvasview bind:this={surfaceCanvas} borderRadius={4} margin="4 0 8 0" row={2} on:draw={onDraw} />
+    </gridlayout>
 {/if}
