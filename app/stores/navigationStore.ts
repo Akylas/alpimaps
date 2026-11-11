@@ -5,7 +5,7 @@ import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/fo
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
-import { migrateNavPages, parseNavPages } from '~/routeFeatures/registry';
+import { migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
@@ -698,6 +698,18 @@ export function getNavigationSettingsOptions() {
             return options;
         }
         options.push({ type: 'sectionheader', title: NAVIGATION_SECTION_TITLES[section]() });
+        if (section === NavigationSection.Display) {
+            // opens the list of the dock's pages: which are on, in what order
+            options.push({
+                id: 'navigation_pages',
+                title: lc('navigation_pages'),
+                description: () =>
+                    routeNavPageChoices(get(routeFeatures), parseNavPages(get(navigationPages)))
+                        .filter((page) => parseNavPages(get(navigationPages)).includes(page.id))
+                        .map((page) => page.label())
+                        .join(' · ') || lc('navigation_pages_none')
+            });
+        }
         sectionParams.forEach((param) =>
             options.push(
                 param.type === 'boolean'
