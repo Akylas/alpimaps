@@ -3,7 +3,7 @@ import type { Climb, SteepSection } from './steep';
 import { climbNow, steepNow } from './dock';
 
 // a vertex every 100 m, 10 m higher each
-const data = Array.from({ length: 21 }, (_, index) => ({ d: index * 100, a: 500 + index * 10 }));
+const data = Array.from({ length: 21 }, (unused, index) => ({ d: index * 100, a: 500 + index * 10 }));
 const climb = (startIndex: number, endIndex: number): Climb => ({
     startIndex,
     endIndex,

@@ -55,7 +55,6 @@ export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
 export const SETTINGS_NAVIGATION_PAGE = 'navigation_page';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
 export const SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD = 'navigation_grade_look_ahead';
-export const SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT = 'navigation_chart_current_ascent';
 export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
 export const SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE = 'navigation_off_route_distance';
 export const SETTINGS_NAVIGATION_OFF_ROUTE_FIXES = 'navigation_off_route_fixes';
@@ -131,7 +130,6 @@ export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
 /** meters of road the live grade averages over: the single point value is too twitchy to read */
 export const DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD = 100;
 /** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
-export const DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT = true;
 export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
 /**
  * meters from the route past which a fix counts as off route. The gps accuracy is added on top, so

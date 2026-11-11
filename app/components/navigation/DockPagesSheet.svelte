@@ -18,10 +18,12 @@
     }
     let rows: PageRow[] = routeNavPageChoices($routeFeatures, $navigationPageIds).map((page) => ({ id: page.id, label: page.label(), on: $navigationPageIds.includes(page.id) }));
 
-    // the setting holds the pages that are on, in the order they are shown in here
+    // the pages that are on come first, in the order of the swipe: only they can be moved
+    const grouped = (list: PageRow[]) => [...list.filter((row) => row.on), ...list.filter((row) => !row.on)];
+
     function save(next: PageRow[]) {
-        rows = next;
-        navigationPages.set(next.filter((row) => row.on).map((row) => row.id).join(','));
+        rows = grouped(next);
+        navigationPages.set(rows.filter((row) => row.on).map((row) => row.id).join(','));
     }
     function toggle(index: number, on: boolean) {
         if (rows[index].on !== on) {
@@ -30,7 +32,7 @@
     }
     function move(index: number, step: number) {
         const target = index + step;
-        if (target < 0 || target >= rows.length) {
+        if (!rows[index].on || !rows[target]?.on) {
             return;
         }
         const next = rows.slice();
@@ -44,8 +46,8 @@
         <Template let:index let:item>
             <gridlayout borderBottomColor={colorHairline} borderBottomWidth={1} columns="*,auto,auto,auto" padding="0 16">
                 <label color={item.on ? colorOnSurface : colorOnSurfaceVariant} fontSize={16} text={item.label} verticalAlignment="center" />
-                <IconButton col={1} color={colorOnSurfaceVariant} opacity={index === 0 ? 0.3 : 1} text="mdi-arrow-up" tooltip={lc('move_up')} on:tap={() => move(index, -1)} />
-                <IconButton col={2} color={colorOnSurfaceVariant} opacity={index === rows.length - 1 ? 0.3 : 1} text="mdi-arrow-down" tooltip={lc('move_down')} on:tap={() => move(index, 1)} />
+                <IconButton col={1} color={colorOnSurfaceVariant} opacity={item.on && rows[index - 1]?.on ? 1 : 0.3} text="mdi-arrow-up" tooltip={lc('move_up')} on:tap={() => move(index, -1)} />
+                <IconButton col={2} color={colorOnSurfaceVariant} opacity={item.on && rows[index + 1]?.on ? 1 : 0.3} text="mdi-arrow-down" tooltip={lc('move_down')} on:tap={() => move(index, 1)} />
                 <switch checked={item.on} col={3} marginLeft={8} verticalAlignment="center" on:checkedChange={(event) => toggle(index, event.value)} />
             </gridlayout>
         </Template>

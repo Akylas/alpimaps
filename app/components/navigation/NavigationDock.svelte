@@ -25,9 +25,10 @@
         0
     );
 
+    // the pager also says its page when the pages change under it: only the user's swipe is remembered
     function onPageChange(event: { value?: number }) {
-        const page: RouteNavPage = pages[event['value']];
-        if (page && page.id !== $navigationPage) {
+        const page: RouteNavPage | undefined = pages[event['value']];
+        if (page && event['value'] !== selectedIndex) {
             navigationPage.set(page.id);
         }
     }
@@ -54,8 +55,8 @@
 <!-- the dock: the main figures and the primary button, then one page of data to swipe through -->
 <NavigationCard margin="0 8 8 8" rows={[Math.round(DOCK_SUMMARY_HEIGHT * scale), pages.length ? pageHeight : 0, pages.length ? Math.round(DOCK_DOTS_HEIGHT * scale) : 0].join(',')} {...$$restProps}>
     <!-- the sheet drags from anywhere on the dock; the handle says it does -->
-    <absolutelayout backgroundColor={colorOutline} borderRadius={2} height={4} horizontalAlignment="center" marginTop={6} opacity={0.6} verticalAlignment="top" width={32} />
-    <gridlayout columns="*,*,1.5*,auto" marginTop={10} padding="0 8 0 14">
+    <absolutelayout backgroundColor={colorOutline} borderRadius={2} height={4} horizontalAlignment="center" marginTop={2} opacity={0.6} verticalAlignment="top" width={32} />
+    <gridlayout columns="*,*,1.5*,auto" marginTop={Math.round(6 * scale)} padding="0 8 0 14">
         <NavigationInfo unit={distanceParts?.[1]} value={distanceParts ? distanceParts[0] + '' : '-'} valueFontSize={19} />
         <NavigationInfo col={1} unit={ascentParts?.[1]} value={ascentParts ? '+' + ascentParts[0] : '-'} valueFontSize={19} />
         <!-- what the third figure is changes with the state: off the route says how far, paused says how long it moved, else the arrival -->

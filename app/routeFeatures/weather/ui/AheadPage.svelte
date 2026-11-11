@@ -1,5 +1,5 @@
 <script lang="ts">
-    // dock page: the weather where the rider will be in the next two hours, every 20 minutes, with the light under it, and
+    // dock page: the weather where the rider will be in the next hours, every 20 minutes, with the light under it, and
     // how old the forecast is
     import { lc } from '@nativescript-community/l';
     import { onDestroy } from 'svelte';
@@ -72,7 +72,7 @@
     $: detail = detour
         ? lc('navigation_route_changed')
         : outdated && computedAt
-          ? lc('navigation_weather_outdated', formatNavigationDuration((Date.now() - computedAt) / 1000))
+          ? lc('navigation_weather_outdated', formatNavigationDuration(Math.max(minute * MINUTE_MS - computedAt, 0) / 1000))
           : computedAt
             ? lc('when_updated', formatTime(computedAt))
             : '';

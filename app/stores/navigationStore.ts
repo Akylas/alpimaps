@@ -17,7 +17,6 @@ import {
     DEFAULT_NAVIGATION_AUTO_ZOOM,
     DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
-    DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
     DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
     DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD,
     DEFAULT_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
@@ -55,7 +54,6 @@ import {
     SETTINGS_NAVIGATION_AUTO_ZOOM,
     SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
-    SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
     SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
     SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
     SETTINGS_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
@@ -183,7 +181,6 @@ export const navigationPageIds = derived(navigationPages, parseNavPages);
 export const navigationPage = settingsStore(SETTINGS_NAVIGATION_PAGE, DEFAULT_NAVIGATION_PAGE);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
 export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD, DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD);
-export const navigationChartCurrentAscent = settingsStore(SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT, DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT);
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
 export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET);
 
@@ -634,16 +631,6 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         default: DEFAULT_NAVIGATION_RECORD_TRACK,
         title: () => lc('navigation_record_track'),
         description: () => lc('navigation_record_track_desc')
-    },
-    {
-        key: SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
-        section: NavigationSection.Display,
-        store: navigationChartCurrentAscent,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
-        title: () => lc('navigation_chart_current_ascent'),
-        description: () => lc('navigation_chart_current_ascent_desc'),
-        quick: true
     },
     {
         key: SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,

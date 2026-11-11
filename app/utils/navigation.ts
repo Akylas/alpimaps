@@ -44,11 +44,9 @@ export const DOCK_PAGE_HEIGHT = 108;
 export const DOCK_DOTS_HEIGHT = 14;
 
 /**
- * The sheet, top first: the dock (always), then one step per section. A section with nothing to show
- * is 0 and has no step. The dock is the summary, plus the pages when there is one to show; the
- * features contribute the pages and the details cards. Lives here, not in the component, so the map
- * can size the sheet without bundling the navigation ui; both read it, so a step always ends where
- * its section does.
+ * The sheet, top first: the dock (always, with its pages when there is one), then one step per
+ * section; a section with nothing to show is 0 and has no step. Lives here so the map can size the
+ * sheet without bundling the navigation ui: a step always ends where its section does.
  */
 export function navigationSections(scale: number, contributed: RouteNavSectionLayout[], hasPages: boolean) {
     return {

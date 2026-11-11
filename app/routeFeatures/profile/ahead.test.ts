@@ -3,7 +3,7 @@ import type { RouteProfile } from '~/models/Item';
 import { indexAtDistance, profileAhead } from './ahead';
 
 // a vertex every 100 m, climbing 5 m each, so `dp` is the index times 5
-const data = Array.from({ length: 11 }, (_, index) => ({ d: index * 100, a: 500 + index * 5, dp: index * 5, dm: 0 }));
+const data = Array.from({ length: 11 }, (unused, index) => ({ d: index * 100, a: 500 + index * 5, dp: index * 5, dm: 0 }));
 const profile = {
     max: [0, 0],
     min: [0, 0],
