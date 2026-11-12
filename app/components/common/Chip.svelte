@@ -38,6 +38,7 @@
     borderColor={isEInk ? colorOnSurface : null}
     borderRadius={height / 2}
     borderWidth={isEInk ? 1 : 0}
+    columns="auto"
     horizontalAlignment="left"
     {height}
     marginRight={6}
