@@ -25,6 +25,7 @@
     import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
     import { timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { Activity, RouteAnalysis } from '~/utils/routeAnalysis/types';
+    import { syncList } from '~/utils/syncList';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
@@ -163,18 +164,7 @@
 
     // the strip's items are changed in place: a new array resets the list's scroll to its start
     const stripItems = new ObservableArray<(typeof listCells)[number]>([]);
-    function syncStrip(next: typeof listCells) {
-        if (stripItems.length !== next.length) {
-            stripItems.splice(0, stripItems.length, ...next);
-            return;
-        }
-        next.forEach((cell, index) => {
-            if (JSON.stringify(stripItems.getItem(index)) !== JSON.stringify(cell)) {
-                stripItems.setItem(index, cell);
-            }
-        });
-    }
-    $: syncStrip(listCells);
+    $: syncList(stripItems, 0, stripItems.length, listCells);
 
     // where the strip is looked at from: asked for when the panel opens and when the departure is not the strip's own doing (picked in
     // the dialog, `now`). Not as the clock goes, nor as a departure is looked at in the strip: it is in view already

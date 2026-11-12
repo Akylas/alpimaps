@@ -34,6 +34,7 @@
     import { showPopoverMenu } from '~/utils/ui/index.common';
     import type { AppBar } from '@nativescript-community/ui-appbar';
     import type { MenuItem } from '@nativescript-community/ui-menu';
+    import { syncList } from '~/utils/syncList';
     import { utcOffsetAt } from '~/utils/timezone';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
 
@@ -138,44 +139,28 @@
             return;
         }
         stored = { ...stored, [section.id]: open };
-        const current = listItems.getItem(header);
-        const summary = section.summary?.({ item });
-        const facts = section.facts?.({ item });
-        const icon = section.iconOf?.({ item });
-        if (current.type !== 'section' || current.open !== open || current.summary !== summary || current.icon !== icon || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
-            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts, icon });
-        }
         if (open) {
             sectionComponents.load(section.id, section.component);
         }
-        showBody(header, open ? bodyRows(section.id, section.rows({ item })) : []);
+        const ctx = { item };
+        const rows: ListRow[] = [
+            { type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx), facts: section.facts?.(ctx), icon: section.iconOf?.(ctx) },
+            ...(open ? bodyRows(section.id, section.rows(ctx)) : [])
+        ];
+        // the section is its header and the rows under it
+        const bodyKey = section.id + ':';
+        let length = 1;
+        while (header + length < listItems.length && listItems.getItem(header + length).key.startsWith(bodyKey)) {
+            length++;
+        }
+        syncList(listItems, header, length, rows, { key: (row) => row.key, same: sameRow });
     }
-    // the section's rows under its header: the ones still the same stay, only the rest is spliced
-    function showBody(header: number, body: PageRow[]) {
-        const sectionKey = listItems.getItem(header).key.slice('section:'.length) + ':';
-        let shown = 0;
-        while (header + 1 + shown < listItems.length && listItems.getItem(header + 1 + shown).key.startsWith(sectionKey)) {
-            shown++;
+    function sameRow(shown: ListRow, next: ListRow) {
+        if (shown.type === 'section' && next.type === 'section') {
+            return shown.open === next.open && shown.summary === next.summary && shown.icon === next.icon && JSON.stringify(shown.facts) === JSON.stringify(next.facts);
         }
-        let kept = 0;
-        while (kept < shown && kept < body.length && sameBody(listItems.getItem(header + 1 + kept), body[kept])) {
-            kept++;
-        }
-        if (shown > kept) {
-            listItems.splice(header + 1 + kept, shown - kept);
-        }
-        if (body.length > kept) {
-            listItems.splice(header + 1 + kept, 0, ...body.slice(kept));
-        }
-        // the card's last row rounds its bottom: the last row kept may have become, or stopped being, the last one
-        const shownLast = listItems.getItem(header + kept);
-        const nextLast = body[kept - 1];
-        if (kept && shownLast.type === 'body' && nextLast.type === 'body' && shownLast.last !== nextLast.last) {
-            listItems.setItem(header + kept, nextLast);
-        }
-    }
-    function sameBody(shown: ListRow, next: PageRow) {
-        return shown.type === 'body' && next.type === 'body' && shown.key === next.key && JSON.stringify(shown.row.data) === JSON.stringify(next.row.data);
+        // the card's last row rounds its bottom
+        return shown.type === 'body' && next.type === 'body' && shown.last === next.last && JSON.stringify(shown.row.data) === JSON.stringify(next.row.data);
     }
     function toggleSection(section: RoutePageSection) {
         setSectionOpen(section, !isSectionOpen(section, stored));
