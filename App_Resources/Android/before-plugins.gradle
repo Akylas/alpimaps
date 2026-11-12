@@ -22,8 +22,8 @@ ext {
     lottieVersion = "6.2.0"
     ndkVersion = "27.3.13750724"
     licenseReporterVersion = "2.4"
-    sentryVersion = "7.22.6"
-    sentryGradleVersion = "4.14.1"
+    sentryVersion = "8.52.0"
+    sentryGradleVersion = "6.18.0"
     massifSDKVersion = "6.4.0"
     // The local surface-only AAR built from massif-sdk; remove both lines to use the published one.
     // massifAar = "massif-release"

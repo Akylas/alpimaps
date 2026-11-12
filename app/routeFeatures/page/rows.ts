@@ -1,13 +1,11 @@
 /** The route page's rows, flat for its one collectionview. Pure: nothing here may import NativeScript. */
 import type { LensFact, RouteCtx, RoutePageRow, RoutePageSection } from '~/routeFeatures/registry';
 import { tripTimes } from '~/routeFeatures/page/trip';
-import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 
 export type PageRow =
-    /** `version`: the analysis the row shows, which changes with the items: a template does not follow what the page changes */
-    | { type: 'tiles'; key: 'tiles'; version?: number }
+    | { type: 'tiles'; key: 'tiles' }
     /** the times of the ride and what the features say of it: follows the analysis like the tiles */
-    | { type: 'trip'; key: 'trip'; version?: number }
+    | { type: 'trip'; key: 'trip' }
     | { type: 'profile'; key: 'profile' }
     | { type: 'section'; key: string; section: RoutePageSection; open: boolean; summary?: string; facts?: LensFact[]; icon?: string }
     | { type: 'body'; key: string; section: string; row: RoutePageRow; /** The card's last row, which rounds its bottom. */ last: boolean }
@@ -54,4 +52,4 @@ export function pageRows({ ctx, hasProfile, sections, stored }: { sections: Rout
 export type ListRow =
     | PageRow
     | { type: 'hero' | 'passed'; key: string }
-    | { type: 'when'; key: string; version?: number; committed?: RouteAnalysis | null; /** counts the openings of the panel */ opened?: number };
+    | { type: 'when'; key: string; /** counts the openings of the panel */ opened?: number };

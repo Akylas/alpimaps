@@ -168,11 +168,11 @@ const weatherLens: RouteLens = {
     profile: ({ item }): LensProfile => {
         const read = readOf(item, statusOf(item));
         if (!read) {
-            return {};
+            return { gradeLegend: true };
         }
         // the same object while the read is: the chart redraws for a new one
         if (!profiles.has(read)) {
-            profiles.set(read, { fade: true, overlay: weatherProfileOverlay(read.profile, weatherFormat) });
+            profiles.set(read, { fade: true, gradeLegend: true, overlay: weatherProfileOverlay(read.profile, weatherFormat) });
         }
         return profiles.get(read);
     },

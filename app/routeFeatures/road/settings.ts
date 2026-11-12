@@ -3,7 +3,7 @@ import { convertFamilyValue, formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
 import { DEFAULT_BANNER_LEAD, DEFAULT_BANNER_MIN_LENGTH, DEFAULT_RISK_MIN_LENGTH, DEFAULT_RISK_THRESHOLD } from '~/routeFeatures/road/risk';
-import type { RouteSettingRow } from '~/routeFeatures/registry';
+import { type RouteSettingRow, visitStore } from '~/routeFeatures/registry';
 import { settingsStore } from '~/stores/settingsStore';
 
 export const routeFeatureRoad = settingsStore('route_feature_road', true);
@@ -13,8 +13,8 @@ export const roadThreshold = settingsStore('road_threshold', DEFAULT_RISK_THRESH
 /** meters, 0 keeps every section */
 export const roadMinLength = settingsStore('road_min_length', DEFAULT_RISK_MIN_LENGTH);
 
-/** The sections list is folded away until asked for: the bar comes first. */
-export const roadSectionsOpen = settingsStore('road_sections_open', false);
+/** The sections list is folded away until asked for, on every visit: the bar comes first. */
+export const roadSectionsOpen = visitStore(false);
 
 /** A banner while following the route, when a fast section is near. */
 export const roadBanner = settingsStore('road_banner', true);

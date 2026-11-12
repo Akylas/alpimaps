@@ -10,6 +10,7 @@ import { shadeGrey } from '~/routeFeatures/lens/shades';
 import { pavedShare, statsCardHeight, surfaceKey, surfaceShade, surfaceStops, topSurfaces } from '~/routeFeatures/stats/surfaces';
 import type { IItem } from '~/models/Item';
 import { surfaceColors } from '~/utils/routing';
+import { weakMemo } from '~/utils/weakMemo';
 
 /** dp: the card is as tall as the longest legend of the views it reads in turn */
 function statsHeight(item: IItem) {
@@ -25,8 +26,20 @@ const UNKNOWN_SURFACE_COLOR = '#B9C2C8';
 
 const percent = (share: number) => Math.round(share * 100) + ' %';
 
-// the stats are replaced, never edited, so they key what the profile fill was built from
-const fills = new WeakMap<object, LensProfile>();
+// the stats are replaced, never edited, so they key what the profile asks of the chart: the same object for as long as they are
+const surfaceProfile = weakMemo((stats: NonNullable<IItem['stats']>): LensProfile => {
+    const { surfaceSegments, surfaces } = stats;
+    // stats saved before the segments were kept have none: a route of one surface is still all of it
+    const segments = surfaceSegments?.length ? surfaceSegments : surfaces.length === 1 ? [{ id: surfaces[0].id, start: 0, end: 0 }] : null;
+    if (!segments) {
+        return {};
+    }
+    return {
+        fill: surfaceStops(segments, surfaceColors, UNKNOWN_SURFACE_COLOR),
+        // what each colour is, in the line under the chart
+        legend: topSurfaces(surfaces, 4).map(({ id }) => ({ label: lc(id), color: surfaceColors[id] ?? UNKNOWN_SURFACE_COLOR, eink: shadeGrey(surfaceShade(id)) }))
+    };
+});
 
 const NO_SECTIONS: LensSection[] = [];
 const NO_SLICES: LensSlice[] = [];
@@ -66,20 +79,7 @@ const surfaceLens: RouteLens = {
         const segment = item.stats?.surfaceSegments?.find(({ end, start }) => index >= start && index <= end);
         return segment && lc(segment.id);
     },
-    profile: ({ item }) => {
-        const { surfaceSegments, surfaces } = item.stats;
-        // stats saved before the segments were kept have none: a route of one surface is still all of it
-        const segments = surfaceSegments?.length ? surfaceSegments : surfaces.length === 1 ? [{ id: surfaces[0].id, start: 0, end: 0 }] : null;
-        if (!segments) {
-            return {};
-        }
-        if (!fills.has(surfaces)) {
-            fills.set(surfaces, { fill: surfaceStops(segments, surfaceColors, UNKNOWN_SURFACE_COLOR) });
-        }
-        // what each colour is, in the line under the chart
-        const legend = topSurfaces(surfaces, 4).map(({ id }) => ({ label: lc(id), color: surfaceColors[id] ?? UNKNOWN_SURFACE_COLOR, eink: shadeGrey(surfaceShade(id)) }));
-        return { ...fills.get(surfaces), legend };
-    },
+    profile: ({ item }) => surfaceProfile(item.stats),
     sections: ({ item }) => readSegments(item).sections,
     slices: ({ item }) => readSegments(item).slices,
     legend: ({ item, palette, translate, variant }) => surfaceLegend({ palette, surfaces: [...new Set((item.stats?.surfaceSegments ?? []).map(({ id }) => id))], translate, variant })

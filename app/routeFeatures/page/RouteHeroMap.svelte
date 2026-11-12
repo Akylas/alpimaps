@@ -14,7 +14,7 @@
     import type { IItem } from '~/models/Item';
     import { clearSection, focusKeyOf, routeFocus } from '~/routeFeatures/lens/routeFocusStore';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
-    import { routeFeatureChanges, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
+    import { liveRouteFeatures, routeFeatures, routeMapFeatures } from '~/routeFeatures/registry';
     import { geometryBounds, toBounds, toPosition } from '~/utils/geo';
     import { colors } from '~/variables';
 
@@ -136,7 +136,7 @@
             massifMap.camera().moveTo({ lat: position[1], lon: position[0] }, { duration: isEInk ? 0 : 100 });
         }
     }
-    $: if (source && $routeFeatureChanges >= 0) {
+    $: if (source && $liveRouteFeatures) {
         drawLens();
     }
     $: if (source && item) {
@@ -161,13 +161,10 @@
             massifMap.camera().fitBounds(toBounds(bounds), { screen, resetRotation: true, duration: isEInk ? 0 : 200 });
         }
     }
-    let sectionKey = '';
-    $: {
-        const key = section ? `${section.i0}:${section.i1}` : '';
-        if (key !== sectionKey) {
-            sectionKey = key;
-            frame();
-        }
+    // only another stretch moves the camera: `frame` reads the rest untracked
+    $: sectionKey = section ? `${section.i0}:${section.i1}` : '';
+    $: if (sectionKey !== undefined) {
+        frame();
     }
 
     /** The whole route again, the focused section left. */

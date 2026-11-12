@@ -19,7 +19,7 @@ export interface SteepNow {
     inside: boolean;
 }
 
-/** The climb the rider is in, else the next one; the summit itself is where a climb is over. Null when none is left. */
+/** The climb the rider is in, else the next one; the summit itself is where a climb is over. Null when none is left. `climbs` run in route order. */
 export function climbNow(climbs: Climb[], data: { d: number; a: number }[], index: number): ClimbNow | null {
     if (index < 0 || !data.length) {
         return null;
@@ -30,17 +30,17 @@ export function climbNow(climbs: Climb[], data: { d: number; a: number }[], inde
         const summit = data[Math.min(current.endIndex, data.length - 1)];
         return { mode: 'on', climb: current, gain: Math.max(summit.a - here.a, 0), distance: Math.max(summit.d - here.d, 0) };
     }
-    const next = climbs.filter((climb) => climb.startIndex > index).sort((first, second) => first.startIndex - second.startIndex)[0];
+    const next = climbs.find((climb) => climb.startIndex > index);
     return next ? { mode: 'next', climb: next, gain: next.gain, distance: Math.max(next.startDistance - here.d, 0) } : null;
 }
 
-/** The steep way up the rider is on, else the next one. Null when none is left. */
+/** The steep way up the rider is on, else the next one. Null when none is left. `steep` runs in route order. */
 export function steepNow(steep: SteepSection[], data: { d: number }[], index: number): SteepNow | null {
     if (index < 0 || !data.length) {
         return null;
     }
     const here = data[Math.min(index, data.length - 1)];
-    const section = steep.filter((candidate) => candidate.direction === 'up' && candidate.endIndex > index).sort((first, second) => first.startIndex - second.startIndex)[0];
+    const section = steep.find((candidate) => candidate.direction === 'up' && candidate.endIndex > index);
     if (!section) {
         return null;
     }

@@ -8,11 +8,10 @@
     import { goBack, navigate } from '@shared/utils/svelte/ui';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
     import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
-    import { dayFormat, daysFrom } from '~/routeFeatures/page/trip';
+    import { dayFormat, daysFrom, tripTimes } from '~/routeFeatures/page/trip';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
-    import { departurePassed, fixedStart, resolveStart, routeTimeZone, snapshotOutdated, stampNow } from '~/utils/routeAnalysis/departure';
+    import { departurePassed, fixedStart, offsetAtFor, resolveStart, snapshotOutdated, stampNow } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
-    import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
     import { onDestroy, onMount, tick } from 'svelte';
     import { get } from 'svelte/store';
@@ -23,38 +22,26 @@
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
     import Chip from '~/components/common/Chip.svelte';
-    import { isEInk } from '~/helpers/theme';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
-    import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
-    import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
-    import { selectLens } from '~/routeFeatures/lens/routeLensStore';
+    import { analysisChanged, keepLook, lookAt, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
+    import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
+    import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, endVisit, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
     import type { AppBar } from '@nativescript-community/ui-appbar';
     import type { MenuItem } from '@nativescript-community/ui-menu';
+    import { syncList } from '~/utils/syncList';
+    import { utcOffsetAt } from '~/utils/timezone';
     import { colors, fonts, screenWidthDips, windowInset } from '~/variables';
 
     export let item: Item;
     /** opened from the Time tile: the When panel shows */
     export let openWhen = false;
 
-    let {
-        colorCanvas,
-        colorCard,
-        colorErrorContainer,
-        colorOnErrorContainer,
-        colorOnSurface,
-        colorOnSurfaceVariant,
-        colorOutlineVariant,
-        colorPrimary,
-        colorPrimaryContainer,
-        colorSurface,
-        colorSurfaceFill
-    } = $colors;
     $: ({
         colorCanvas,
         colorCard,
@@ -62,7 +49,6 @@
         colorOnErrorContainer,
         colorOnSurface,
         colorOnSurfaceVariant,
-        colorOutlineVariant,
         colorPrimary,
         colorPrimaryContainer,
         colorSurface,
@@ -153,44 +139,28 @@
             return;
         }
         stored = { ...stored, [section.id]: open };
-        const current = listItems.getItem(header);
-        const summary = section.summary?.({ item });
-        const facts = section.facts?.({ item });
-        const icon = section.iconOf?.({ item });
-        if (current.type !== 'section' || current.open !== open || current.summary !== summary || current.icon !== icon || JSON.stringify(current.facts) !== JSON.stringify(facts)) {
-            listItems.setItem(header, { type: 'section', key: 'section:' + section.id, section, open, summary, facts, icon });
-        }
         if (open) {
             sectionComponents.load(section.id, section.component);
         }
-        showBody(header, open ? bodyRows(section.id, section.rows({ item })) : []);
+        const ctx = { item };
+        const rows: ListRow[] = [
+            { type: 'section', key: 'section:' + section.id, section, open, summary: section.summary?.(ctx), facts: section.facts?.(ctx), icon: section.iconOf?.(ctx) },
+            ...(open ? bodyRows(section.id, section.rows(ctx)) : [])
+        ];
+        // the section is its header and the rows under it
+        const bodyKey = section.id + ':';
+        let length = 1;
+        while (header + length < listItems.length && listItems.getItem(header + length).key.startsWith(bodyKey)) {
+            length++;
+        }
+        syncList(listItems, header, length, rows, { key: (row) => row.key, same: sameRow });
     }
-    // the section's rows under its header: the ones still the same stay, only the rest is spliced
-    function showBody(header: number, body: PageRow[]) {
-        const sectionKey = listItems.getItem(header).key.slice('section:'.length) + ':';
-        let shown = 0;
-        while (header + 1 + shown < listItems.length && listItems.getItem(header + 1 + shown).key.startsWith(sectionKey)) {
-            shown++;
+    function sameRow(shown: ListRow, next: ListRow) {
+        if (shown.type === 'section' && next.type === 'section') {
+            return shown.open === next.open && shown.summary === next.summary && shown.icon === next.icon && JSON.stringify(shown.facts) === JSON.stringify(next.facts);
         }
-        let kept = 0;
-        while (kept < shown && kept < body.length && sameBody(listItems.getItem(header + 1 + kept), body[kept])) {
-            kept++;
-        }
-        if (shown > kept) {
-            listItems.splice(header + 1 + kept, shown - kept);
-        }
-        if (body.length > kept) {
-            listItems.splice(header + 1 + kept, 0, ...body.slice(kept));
-        }
-        // the card's last row rounds its bottom: the last row kept may have become, or stopped being, the last one
-        const shownLast = listItems.getItem(header + kept);
-        const nextLast = body[kept - 1];
-        if (kept && shownLast.type === 'body' && nextLast.type === 'body' && shownLast.last !== nextLast.last) {
-            listItems.setItem(header + kept, nextLast);
-        }
-    }
-    function sameBody(shown: ListRow, next: PageRow) {
-        return shown.type === 'body' && next.type === 'body' && shown.key === next.key && JSON.stringify(shown.row.data) === JSON.stringify(next.row.data);
+        // the card's last row rounds its bottom
+        return shown.type === 'body' && next.type === 'body' && shown.last === next.last && JSON.stringify(shown.row.data) === JSON.stringify(next.row.data);
     }
     function toggleSection(section: RoutePageSection) {
         setSectionOpen(section, !isSectionOpen(section, stored));
@@ -223,25 +193,25 @@
         // from the map down: the panel is under the tiles, which are under it
         scrollListTo(indexOfKey('hero'));
     }
+    function toggleWhen() {
+        whenOpen = !whenOpen;
+    }
     let now = Date.now();
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
     // a departure looked at and not taken is not the route's
     onDestroy(giveBackLook);
-    // always true: it reruns this when the analysis changed in place
-    $: analysis = analysisVersion >= 0 ? item?.analysis : null;
+    // what the sections had open, as the climbs' steep list, is not kept for the next route
+    onDestroy(endVisit);
+    // `>= 0` is always true: it reruns this when the analysis changed in place
+    $: analysis = $routeAnalysisChanges >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
-    $: startAt = resolveStart(departure, now);
-    $: timeline = analysis ? buildTimeline(timelineSource(item), analysis.inputs, now) : null;
-    $: arrivalAt = timeline?.t.length ? timeline.at(timeline.t.length - 1) : item?.route?.totalTime ? startAt + item.route.totalTime * 1000 : NaN;
+    $: trip = analysis ? tripTimes(item, now, utcOffsetAt) : null;
+    $: arrivalAt = trip ? trip.end : item?.route?.totalTime ? resolveStart(departure, now) + item.route.totalTime * 1000 : NaN;
     // a plan that has gone by, or a now whose data is old: the banner offers to move it to the clock. "keep" keeps a plan at its own time, the
     // route read then; a now is only put away for this visit
     $: passed = departurePassed(departure, now) || snapshotOutdated(departure, now);
-    let keepPassed = false;
-    let keptAt: number;
-    $: if (departure.at !== keptAt) {
-        keepPassed = false;
-    }
+    let keptAt: number | undefined;
     function keepDeparture() {
         if (departure.mode === 'planned') {
             onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, { ...departure, keepPast: true }) });
@@ -249,53 +219,30 @@
             tellDeparture($routeFeatures, { item }, 'taken');
             return;
         }
-        keepPassed = true;
         keptAt = departure.at;
     }
-    $: departureGone = passed && !keepPassed;
+    $: departureGone = passed && departure.at !== keptAt;
     $: setRow({ type: 'passed', key: 'passed' }, departureGone, 'hero');
     // the list keeps the panel's view while it is closed: the panel is told each time it is opened
     let whenOpened = 0;
-    let wasWhenOpen = false;
-    $: if (whenOpen !== wasWhenOpen) {
-        wasWhenOpen = whenOpen;
-        if (whenOpen) {
-            whenOpened++;
-        }
+    $: if (whenOpen) {
+        whenOpened++;
     }
-    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
-    // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
-    // their items, set again with each change of it
-    function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
-        ['tiles', 'trip', 'when'].forEach((key) => {
-            const index = indexOfKey(key);
-            if (index >= 0) {
-                const row = listItems.getItem(index);
-                if (row.type === 'when') {
-                    listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
-                } else if (row.type === 'tiles' || row.type === 'trip') {
-                    listItems.setItem(index, { ...row, version });
-                }
-            }
-        });
-    }
-    $: refreshAnalysisRows(analysisVersion, committed, $routeAnalysisChanges);
-    $: zone = routeTimeZone(departure);
+    $: setRow({ type: 'when', key: 'when', opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
+    $: offsetAt = offsetAtFor(departure, utcOffsetAt);
     function clock(at: number) {
-        return formatTime(at, 'LT', zone.offset);
+        return formatTime(at, 'LT', offsetAt(at));
     }
     // a departure that is not today says its day: the weekday ahead, the date for a day gone
     function dayAndClock(at: number) {
-        const day = dayFormat(daysFrom(at, now, () => zone.offset));
-        return `${day ? formatTime(at, day, zone.offset) + ' ' : ''}${clock(at)}`;
+        const day = dayFormat(daysFrom(at, now, offsetAt));
+        return `${day ? formatTime(at, day, offsetAt(at)) + ' ' : ''}${clock(at)}`;
     }
     $: whenLabel = `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
-    // the times change in place: only what shows them follows. The activity changes what the whole page reads
-    let analysisVersion = 0;
-    // a departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
+    // the times change in place: what shows them follows the analysis' changes. The activity changes what the whole page reads.
+    // A departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
     // back. Nothing of it is saved until the departure is taken
-    $: committed = analysisVersion >= 0 && $routeAnalysisChanges >= 0 ? lookingBase(item) : undefined;
     function onAnalysisChange({ analysis, full, preview }: { analysis: RouteAnalysis; full?: boolean; preview?: boolean }) {
         if (preview) {
             lookAt(item, analysis);
@@ -304,7 +251,6 @@
             item.analysis = analysis;
             saveAnalysis(item, analysis);
         }
-        analysisVersion++;
         analysisChanged();
         if (full) {
             item = item;
@@ -312,7 +258,6 @@
     }
     function giveBackLook() {
         revertLook(item);
-        analysisVersion++;
     }
     // an unsaved route keeps its analysis on the item until it is saved with it
     function isSaved(route: Item) {
@@ -323,7 +268,6 @@
         // the data that is read at a time is read again
         tellDeparture($routeFeatures, { item }, 'restamped');
     }
-    $: sectionsById = Object.fromEntries(sections.map((section) => [section.id, section]));
 
     // a body is its section's own component: one template for each, whose views are only reused by rows of the same section
     function itemTemplateSelector(row: ListRow) {
@@ -346,13 +290,11 @@
     }
 
     // a row of a section asks to focus a stretch of the route: it is read in the section's lens
-    function focusOn(sectionId: string, section: LensSection) {
-        const lens = sectionsById[sectionId]?.lens;
-        if (!section || !lens) {
+    function focusOn(section: RoutePageSection, lensSection: LensSection) {
+        if (!lensSection || !section.lens) {
             return;
         }
-        selectLens(lens);
-        focusSection(focusKeyOf(item), { ...section, lens });
+        focusLensSection(focusKeyOf(item), section.lens, lensSection);
     }
 
     function bodyProps(row: PageRow) {
@@ -448,20 +390,20 @@
             <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel committed={row.committed} {item} opened={row.opened ?? 0} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
+                        <WhenPanel {item} opened={row.opened ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="tiles" let:item={row}>
+            <Template key="tiles">
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
-                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
+                    <RouteStatTiles {item} sheetWidth={screenWidthDips} on:when={toggleWhen} />
                 </gridlayout>
             </Template>
-            <Template key="trip" let:item={row}>
+            <Template key="trip">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <TripStrip {item} version={row.version ?? 0} on:when={() => (whenOpen = !whenOpen)} />
+                        <TripStrip {item} on:when={toggleWhen} />
                     </gridlayout>
                 </gridlayout>
             </Template>
@@ -533,7 +475,7 @@
                     <gridlayout backgroundColor={colorCanvas} padding="0 6">
                         <gridlayout backgroundColor={colorCard} borderRadius={row.last ? `0 0 ${CARD_RADIUS} ${CARD_RADIUS}` : 0} height={row.row.height ?? 'auto'} paddingBottom={row.last ? 8 : 0}>
                             <!-- nothing until the section's component is loaded -->
-                            <svelte:component this={$sectionComponents[section.id]} {item} {...bodyProps(row)} on:focus={(lensSection) => focusOn(section.id, lensSection)} />
+                            <svelte:component this={$sectionComponents[section.id]} {item} {...bodyProps(row)} on:focus={(lensSection) => focusOn(section, lensSection)} />
                         </gridlayout>
                     </gridlayout>
                 </Template>

@@ -4,7 +4,7 @@
 
     $: ({ colorOnSurface, colorOnSurfaceVariant } = $colors);
 
-    // one figure: its width is its cell's, so a changing value never moves its neighbours
+    // one figure, a single label: its width is its cell's, so a changing value never moves its neighbours
     export let label: string = null;
     export let value: string = '-';
     export let unit: string = null;
@@ -12,10 +12,8 @@
     export let labelFontSize = 12;
 </script>
 
-<stacklayout verticalAlignment="center" {...$$restProps}>
-    <label color={colorOnSurfaceVariant} fontSize={labelFontSize * $navigationScale} lineBreak="end" maxLines={1} text={label} visibility={label ? 'visible' : 'collapse'} />
-    <label lineBreak="end" maxLines={1}>
-        <cspan color={colorOnSurface} fontSize={valueFontSize * $navigationScale} fontWeight="bold" text={value} />
-        <cspan color={colorOnSurfaceVariant} fontSize={11 * $navigationScale} text={unit ? ' ' + unit : ''} />
-    </label>
-</stacklayout>
+<label lineBreak="end" maxLines={2} verticalAlignment="center" {...$$restProps}>
+    <cspan color={colorOnSurfaceVariant} fontSize={labelFontSize * $navigationScale} text={label ? label + '\n' : ''} />
+    <cspan color={colorOnSurface} fontSize={valueFontSize * $navigationScale} fontWeight="bold" text={value} />
+    <cspan color={colorOnSurfaceVariant} fontSize={11 * $navigationScale} text={unit ? ' ' + unit : ''} />
+</label>

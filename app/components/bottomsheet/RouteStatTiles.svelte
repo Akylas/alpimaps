@@ -8,6 +8,7 @@
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
+    import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type LensId, routeFeatures, routeLenses, routeTiles } from '~/routeFeatures/registry';
@@ -17,8 +18,6 @@
     export let item: Item;
     /** the sheet's width: a narrow one has no room for the icon of the first tiles */
     export let sheetWidth: number;
-    /** bumped when the item's analysis changed in place: the arrival under the time follows */
-    export let version = 0;
 
     // no payload: the listener gets `undefined`
     interface $$Events {
@@ -57,8 +56,8 @@
         remaining = null;
     }
 
-    // `version >= 0` is always true: it reruns this when the analysis changed in place
-    $: tiles = version >= 0 ? routeTiles($routeFeatures, { item }) : [];
+    // `>= 0` is always true: it reruns this when the analysis changed in place, the arrival under the time follows
+    $: tiles = $routeAnalysisChanges >= 0 ? routeTiles($routeFeatures, { item }) : [];
     $: narrow = sheetWidth < NARROW_WIDTH;
 
     // a tile with a lens reads the route in it, and the sheet shows the card that has it

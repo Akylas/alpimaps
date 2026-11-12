@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpi Maps: steep sections (mockups)</title>
+<style>
+/* tokens copied from docs/design/mockups.html (app/variables.ts), light; the .dark scope overrides them */
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);
+--bg-accent:rgba(41,182,246,.12);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.6);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--text-danger:#d32f2f;--border-danger:rgba(211,47,47,.5);
+--steep:#E34A33;--steep-hi:#9E1B18;--down:#6A3FB5;--down-hi:#4527A0;--map:#e9ecef;--map-line:rgba(0,0,0,.08);--route:#60A5F4}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);
+--bg-accent:rgba(41,182,246,.16);--text-accent:#7fd3fa;--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--text-danger:#ef9a9a;--border-danger:rgba(239,154,154,.5);
+--steep:#FF7A5C;--steep-hi:#FF4D4D;--down:#B39DDB;--down-hi:#D1C4E9;--map:#171a1d;--map-line:rgba(255,255,255,.07);--route:#60A5F4}
+*{box-sizing:border-box}
+body{margin:0;padding:16px 16px 48px;font-family:Roboto,system-ui,sans-serif;background:#d9dcdf;color:#1b1c1d}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:28px 0 2px}p.note{font-size:12px;color:#444;margin:0 0 8px;max-width:760px}
+.banner{display:inline-block;background:#fff3cd;border:1px solid #e0c36a;color:#5c4700;border-radius:8px;padding:4px 10px;font-size:12px;margin:6px 0 10px}
+.pair{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;padding:6px 0}
+.cell{display:flex;flex-direction:column;gap:4px}
+.cap{font-size:11px;color:#444;margin-left:4px}
+.phone{width:340px;border-radius:22px;border:1px solid var(--border-strong);background:var(--surface-0);color:var(--text-primary);overflow:hidden;font-size:12px;position:relative}
+.ek.phone{background:#fff;color:#000;border-color:#000}
+svg.ic{width:1em;height:1em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:middle}
+svg.fi{fill:currentColor;stroke:none}
+.ib{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-secondary);flex:none}
+.sh{background:var(--surface-2);border:.5px solid var(--border);border-radius:16px 16px 0 0;padding:10px 12px 12px}
+.hd{display:flex;align-items:center;gap:10px;min-height:40px}
+.tl{width:33px;height:33px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:18px;flex:none}
+.t{font-size:13px;font-weight:500;line-height:1.3}.s{font-size:11px;color:var(--text-secondary);line-height:1.35}
+.stats{display:grid;gap:4px;margin-top:10px}
+.st{background:var(--surface-1);border-radius:10px;padding:0 4px;height:40px;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:700;white-space:nowrap;min-width:0}
+.st svg{color:var(--text-secondary);font-size:13px}
+.st.hot{color:var(--text-danger);outline:1px solid var(--border-danger);outline-offset:-1px}.st.hot svg{color:var(--text-danger)}
+.st small{font-weight:400;font-size:10px;color:var(--text-secondary);margin-left:1px}
+.pills{display:flex;gap:6px;margin-top:10px;overflow:hidden}
+.p{height:33px;border:.5px solid var(--border-strong);border-radius:99px;padding:0 12px;font-size:12px;white-space:nowrap;display:flex;gap:5px;align-items:center;flex:none}
+.pa{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.pt{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.pd{color:var(--text-danger);border-color:var(--border-danger)}
+.capr{font-size:11px;color:var(--text-secondary);margin:12px 0 6px;display:flex;justify-content:space-between;font-weight:700}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:11px;color:var(--text-secondary)}
+.legend span{display:flex;align-items:center;gap:5px}
+.sw{width:14px;height:8px;border-radius:2px;display:inline-block}
+.card{background:var(--surface-2);border:.5px solid var(--border);border-radius:14px;margin:6px 10px 0;padding:10px 12px}
+.row{display:flex;align-items:center;gap:10px;min-height:46px}
+.row+.row{border-top:.5px solid var(--border)}
+.rt{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;font-size:16px}
+.up{background:rgba(227,74,51,.14);color:var(--steep)}.dn{background:rgba(106,63,181,.14);color:var(--down)}
+.dark .dn{background:rgba(179,157,219,.16)}
+.bold{font-weight:700;font-size:13px}.r{margin-left:auto;text-align:right}
+.chip{border:.5px solid var(--border-strong);border-radius:99px;padding:1px 7px;font-size:10px;color:var(--text-secondary);white-space:nowrap}
+.chipd{color:var(--text-danger);border-color:var(--border-danger)}
+.map{position:relative;background:var(--map)}
+.map>svg{display:block;width:100%}
+.mchip{position:absolute;background:var(--surface-2);opacity:.96;border:.5px solid var(--border-strong);border-radius:99px;padding:3px 9px;font-size:11px;display:flex;gap:5px;align-items:center}
+.mbtn{position:absolute;width:40px;height:40px;border-radius:50%;background:var(--surface-2);opacity:.92;border:.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:20px}
+.navcard{margin:8px 10px 0;background:var(--surface-2);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
+.navmain{display:flex;gap:10px;align-items:center;padding:10px 12px}
+.navico{width:44px;height:44px;border-radius:12px;background:var(--fill-accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:26px}
+.navline{border-top:.5px solid var(--border);padding:8px 12px;font-size:12px;color:var(--text-secondary);display:flex;gap:6px;align-items:center}
+.ahead{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:8px 12px}
+.ahead .fig{padding-right:10px;display:flex;flex-direction:column;justify-content:center}
+.ahead .fig b{font-size:26px;line-height:1.1}
+.ahead .cv{border-left:.5px solid var(--border);padding-left:10px;min-width:0}
+.warn{display:inline-flex;gap:5px;align-items:center;border:1px solid var(--border-danger);color:var(--text-danger);border-radius:99px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.page{background:var(--surface-0);padding:8px 0 14px}
+.sec{font-size:13px;font-weight:700;color:var(--text-accent);margin:12px 14px 0}
+.grp{background:var(--surface-2);border:.5px solid var(--border);border-radius:16px;margin:6px 12px 0;padding:0 14px}
+.grp .row{min-height:52px}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:12px 0 8px;flex:1}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2)}
+.tg{width:43px;height:26px;border-radius:13px;background:var(--fill-accent);position:relative;flex:none}
+.tg:after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--on-accent)}
+.tg.off{background:var(--border-strong)}.tg.off:after{right:auto;left:3px}
+.ek .sh,.ek .card,.ek .grp,.ek .navcard{background:#fff;border:1px solid #000}
+.ek .st{background:#fff;border:1px solid #000;color:#000}.ek .st svg,.ek .s,.ek .capr,.ek .legend,.ek .r{color:#000}
+.ek .st.hot{outline:2px solid #000;outline-offset:-2px;color:#000}
+.ek .p{border:1px solid #000;color:#000}.ek .pa{background:#000;color:#fff}.ek .tl,.ek .rt{background:#fff;color:#000;border:1px solid #000}
+.ek .chip,.ek .chipd{border-color:#000;color:#000}
+.ek .map{background:#fff;border-bottom:1px solid #000}
+.ek .mchip,.ek .mbtn{background:#fff;border:1px solid #000;opacity:1}
+.ek .warn{border:2px solid #000;color:#000}
+.ek .tg,.ek .trk i,.ek .trk u{background:#000}.ek .tg.off{background:#fff;border:1px solid #000}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px;opacity:.7}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<symbol id="i-dist" viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></symbol>
+<symbol id="i-time" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2.5"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M7 7l10 10M17 8v9H8"/></symbol>
+<symbol id="i-slope" viewBox="0 0 24 24"><path d="M3 19h18V6L3 19zM15 19a5 5 0 0 0-2-4"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4h12l-2 4 2 4H5"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4l9 16H3zM12 10v4M12 17v.5"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9L9 6H7"/></symbol>
+<symbol id="i-nav" viewBox="0 0 24 24"><path d="M12 3l7 17-7-4-7 4z"/></symbol>
+<symbol id="i-tri-up" viewBox="0 0 24 24"><path d="M12 5l8 14H4z"/></symbol>
+<symbol id="i-tri-down" viewBox="0 0 24 24"><path d="M12 19L4 5h16z"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+<symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></symbol>
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 4l9 5-9 5-9-5zM3 14l9 5 9-5"/></symbol>
+<symbol id="i-mount" viewBox="0 0 24 24"><path d="M3 19l6-10 4 6 3-4 5 8z"/></symbol>
+<symbol id="i-turn" viewBox="0 0 24 24"><path d="M9 20v-8a4 4 0 0 1 4-4h6M15 4l4 4-4 4"/></symbol>
+<symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="4" r="1.5"/><path d="M8 21l3-7 3 3v5M11 14l-1-5 4-1 2 4h3M8 12l2-3"/></symbol>
+</defs>
+</svg>
+
+<h1>Steep sections on cycling routes: mockups</h1>
+<div class="banner">MOCKUP with fake data. Not the app. Companion to <b>02-steep-sections.md</b>. Light + dark pairs, then an e-ink frame.</div>
+<p class="note">Visual language, tokens and e-ink rules come from <code>docs/design/mockups.html</code> and <code>docs/design/README.md</code>. The 24 km road route below is invented: three steep sections (two climbs, one descent), detected at road-bike presets (steep up &ge; 8 %, very steep &ge; 12 %, steep down &ge; 10 %, very steep down &ge; 14 %). Colour is never the only signal: direction glyphs, brackets, hatching and labels carry the meaning too.</p>
+
+<h2>1. Route header: stat tile</h2>
+<p class="note">A fifth tile appears only when there is something steep. Value = length above the "steep" threshold; red outline + red text when it contains very steep parts. Long-press shows a tooltip. Open question: five narrower tiles vs replacing one.</p>
+<div class="pair" data-pair="header"></div>
+
+<h2>2. Elevation profile: steep spans + legend</h2>
+<p class="note">The bucket-coloured fill is unchanged (<code>GradeLegend</code> scale). Brackets above the curve mark steep spans with their average grade; heavier line where very steep. Up = filled triangle, down = hollow triangle (violet, because blue is already the descent bucket and the map route).</p>
+<div class="pair" data-pair="profile"></div>
+
+<h2>3. Map: route with steep segments</h2>
+<p class="note">Overlay features in the item's <code>poi</code> sub-layer (and the <code>navigation</code> layer while navigating), drawn over the route line. Up spans carry arrow markers, descents are hollow; one label at the steepest point. Descent spans use violet because the route itself is blue.</p>
+<div class="pair" data-pair="map"></div>
+
+<h2>4. Steep sections list</h2>
+<p class="note">A card under the chart. Tap a row: chart zooms to the span (existing <code>range</code> prop) and the map frames it. Tutorial page must gain the zone.</p>
+<div class="pair" data-pair="list"></div>
+
+<h2>5. Navigation heads-up (in the "ahead" card)</h2>
+<p class="note">Replaces the generic "elevation ahead" caption. Three states: approaching, inside, descent (earlier trigger, stronger wording). Warning is an outlined danger pill, not a filled block.</p>
+<div class="pair" data-pair="nav"></div>
+
+<h2>6. Settings</h2>
+<p class="note">Preset defaults from the route's bicycle type (<code>route.subtype</code>); sliders override. Descriptions state the limits honestly (DEM, bridges and tunnels).</p>
+<div class="pair" data-pair="settings"></div>
+
+<h2>7. E-ink variant</h2>
+<p class="note">No colour: tile outlined, spans hatched on the profile (diagonal = steep up, dense diagonal = very steep, cross-hatch = steep down), map spans thick black with a white arrow dash (up) or a white hollow centre (down).</p>
+<div class="pair" data-pair="eink"></div>
+
+<script>
+(function () {
+  var uid = 0;
+  function ic(name, extra) { return '<svg class="ic ' + (extra || '') + '" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+
+  /* ---- fake route: [km, elevation m] ---- */
+  var PTS = [[0,320],[3,326],[6,340],[7,365],[7.6,415],[8.3,480],[8.7,545],[9.3,575],[11,590],[12.5,575],[13.2,500],[13.8,420],[14.2,360],[15,350],[17,360],[18.4,392],[19,440],[19.6,500],[20,552],[21,560],[22.5,545],[24,520]];
+  var TOTAL = 24;
+  var SECTIONS = [
+    { from: 7.0,  to: 8.7,  dir: 'up',   avg: '10.6', max: 16, core: [8.3, 8.7],   gain: 180 },
+    { from: 12.5, to: 14.2, dir: 'down', avg: '12.6', max: 15, core: [13.8, 14.2], gain: 215 },
+    { from: 18.4, to: 20.0, dir: 'up',   avg: '10.0', max: 13, core: [19.6, 20.0], gain: 160 }
+  ];
+  function elevAt(km) { for (var i = 1; i < PTS.length; i++) { if (km <= PTS[i][0]) { var a = PTS[i-1], b = PTS[i]; return a[1] + (b[1]-a[1]) * (km-a[0]) / (b[0]-a[0]); } } return PTS[PTS.length-1][1]; }
+  function gradeOf(i) { var a = PTS[i-1], b = PTS[i]; return (b[1]-a[1]) / ((b[0]-a[0]) * 1000) * 100; }
+  /* the app's gradeBuckets (app/utils/grade.ts) */
+  var BUCKETS = [[-Infinity,'#1B4E9B'],[-9,'#3B7DD8'],[-6,'#7FB2E8'],[-3,'#7BC96F'],[3,'#F2D14B'],[6,'#F0902B'],[9,'#E34A33'],[12,'#9E1B18']];
+  function bucketColor(g) { for (var i = BUCKETS.length - 1; i > 0; i--) { if (g >= BUCKETS[i][0]) return BUCKETS[i][1]; } return BUCKETS[0][1]; }
+
+  /* ---- elevation chart ---- */
+  function chart(o) {
+    o = o || {};
+    var w = o.w || 316, h = o.h || 96, padL = o.mini ? 2 : 24, padB = o.mini ? 2 : 14, padT = o.mini ? 6 : 22;
+    var x0 = o.from != null ? o.from : 0, x1 = o.to != null ? o.to : TOTAL;
+    var eMin = o.mini ? 340 : 280, eMax = 640;
+    var X = function (km) { return padL + (km - x0) / (x1 - x0) * (w - padL - 4); };
+    var Y = function (e) { return padT + (1 - (e - eMin) / (eMax - eMin)) * (h - padT - padB); };
+    var base = h - padB, id = ++uid, s = '';
+    s += '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" role="img"><title>Elevation profile with steep sections (mockup)</title>';
+    if (o.eink) {
+      s += '<defs>' +
+        '<pattern id="hu' + id + '" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0" stroke="#000" stroke-width=".8"/></pattern>' +
+        '<pattern id="hv' + id + '" width="3" height="3" patternUnits="userSpaceOnUse"><path d="M0 3L3 0" stroke="#000" stroke-width="1.1"/></pattern>' +
+        '<pattern id="hd' + id + '" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 5L5 0M0 0L5 5" stroke="#000" stroke-width=".7"/></pattern></defs>';
+    }
+    if (!o.mini) {
+      [300, 450, 600].forEach(function (e) {
+        s += '<line x1="' + padL + '" y1="' + Y(e) + '" x2="' + (w - 4) + '" y2="' + Y(e) + '" stroke="var(--border)" stroke-width=".5"/>' +
+             '<text x="0" y="' + (Y(e) + 3) + '" style="font-size:9px;fill:var(--text-secondary)">' + e + '</text>';
+      });
+    }
+    /* fill per vertex pair, bucket coloured (the existing behaviour) */
+    for (var i = 1; i < PTS.length; i++) {
+      var a = PTS[i-1], b = PTS[i];
+      if (b[0] < x0 || a[0] > x1) continue;
+      var xa = X(Math.max(a[0], x0)), xb = X(Math.min(b[0], x1));
+      var ya = Y(elevAt(Math.max(a[0], x0))), yb = Y(elevAt(Math.min(b[0], x1)));
+      var fill = o.eink ? '#fff' : bucketColor(gradeOf(i));
+      s += '<path d="M' + xa + ' ' + ya + ' L' + xb + ' ' + yb + ' L' + xb + ' ' + base + ' L' + xa + ' ' + base + 'Z" fill="' + fill + '" ' + (o.eink ? '' : 'fill-opacity=".88"') + '/>';
+    }
+    if (o.eink) {
+      SECTIONS.forEach(function (sec) {
+        var pat = sec.dir === 'down' ? 'hd' : 'hu';
+        [[sec.from, sec.to, pat], [sec.core[0], sec.core[1], sec.dir === 'down' ? 'hd' : 'hv']].forEach(function (r) {
+          var d = 'M' + X(r[0]) + ' ' + Y(elevAt(r[0]));
+          for (var k = 0; k < PTS.length; k++) if (PTS[k][0] > r[0] && PTS[k][0] < r[1]) d += ' L' + X(PTS[k][0]) + ' ' + Y(PTS[k][1]);
+          d += ' L' + X(r[1]) + ' ' + Y(elevAt(r[1])) + ' L' + X(r[1]) + ' ' + base + ' L' + X(r[0]) + ' ' + base + 'Z';
+          s += '<path d="' + d + '" fill="url(#' + r[2] + id + ')"/>';
+        });
+      });
+    }
+    var line = 'M' + X(0) + ' ' + Y(elevAt(0));
+    PTS.forEach(function (p) { if (p[0] >= x0 && p[0] <= x1) line += ' L' + X(p[0]) + ' ' + Y(p[1]); });
+    s += '<path d="' + line + '" fill="none" stroke="' + (o.eink ? '#000' : 'var(--text-primary)') + '" stroke-width="' + (o.mini ? 1.6 : o.eink ? 1.5 : 1.1) + '"/>';
+    /* heavier line + brackets on steep spans */
+    SECTIONS.forEach(function (sec) {
+      var col = o.eink ? '#000' : (sec.dir === 'up' ? 'var(--steep)' : 'var(--down)');
+      var colHi = o.eink ? '#000' : (sec.dir === 'up' ? 'var(--steep-hi)' : 'var(--down-hi)');
+      var seg = function (a, b) { var d = 'M' + X(a) + ' ' + Y(elevAt(a)); PTS.forEach(function (p) { if (p[0] > a && p[0] < b) d += ' L' + X(p[0]) + ' ' + Y(p[1]); }); return d + ' L' + X(b) + ' ' + Y(elevAt(b)); };
+      if (sec.from < x0 || sec.to > x1) { if (o.mini) return; }
+      if (!o.eink) s += '<path d="' + seg(sec.from, sec.to) + '" fill="none" stroke="' + col + '" stroke-width="' + (o.mini ? 2.4 : 2) + '" stroke-linecap="round"/>';
+      s += '<path d="' + seg(sec.core[0], sec.core[1]) + '" fill="none" stroke="' + (o.eink ? '#000' : colHi) + '" stroke-width="' + (o.eink ? 3 : 3) + '" stroke-linecap="round"/>';
+      if (!o.mini) {
+        var xa = X(sec.from), xb = X(sec.to), by = padT - 8;
+        s += '<path d="M' + xa + ' ' + (by + 3) + 'V' + by + 'H' + xb + 'V' + (by + 3) + '" fill="none" stroke="' + (o.eink ? '#000' : col) + '" stroke-width="1.2"' + (sec.dir === 'down' ? ' stroke-dasharray="3 2"' : '') + '/>';
+        var tx = (xa + xb) / 2, label = (sec.dir === 'up' ? '▲ ' : '▽ ') + sec.avg + ' %';
+        s += '<rect x="' + (tx - 27) + '" y="' + (by - 12) + '" width="54" height="12" rx="6" fill="var(--surface-2)" fill-opacity=".92" stroke="' + (o.eink ? '#000' : col) + '" stroke-width=".7"/>' +
+             '<text x="' + tx + '" y="' + (by - 3.4) + '" text-anchor="middle" style="font-size:9px;font-weight:700;fill:' + (o.eink ? '#000' : 'var(--text-primary)') + '">' + label + '</text>';
+      }
+    });
+    if (!o.mini) {
+      [0, 6, 12, 18, 24].forEach(function (km) { if (km >= x0 && km <= x1) s += '<text x="' + X(km) + '" y="' + (h - 2) + '" text-anchor="middle" style="font-size:9px;fill:var(--text-secondary)">' + km + (km === 24 ? ' km' : '') + '</text>'; });
+    }
+    if (o.cursor != null) {
+      var cx = X(o.cursor), cy = Y(elevAt(o.cursor));
+      s += o.mini
+        ? '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + (o.eink ? '#000' : 'var(--text-accent)') + '" stroke="var(--surface-2)" stroke-width="1.5"/>'
+        : '<line x1="' + cx + '" y1="4" x2="' + cx + '" y2="' + base + '" stroke="' + (o.eink ? '#000' : 'var(--text-accent)') + '" stroke-width="1.3"/><circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="' + (o.eink ? '#000' : 'var(--text-accent)') + '" stroke="var(--surface-2)" stroke-width="1.5"/>';
+    }
+    return s + '</svg>';
+  }
+
+  /* ---- legend ---- */
+  function legend(eink) {
+    function sw(kind) {
+      if (!eink) return '<i class="sw" style="background:' + kind.c + '"></i>';
+      return '<svg width="14" height="8"><rect width="14" height="8" fill="#fff" stroke="#000" stroke-width=".8"/><path d="' + kind.h + '" stroke="#000" stroke-width="1"/></svg>';
+    }
+    var items = [
+      { c: 'var(--steep)', h: 'M0 8L8 0M6 8L14 0', t: ic('tri-up', 'fi') + ' Steep ≥ 8 %' },
+      { c: 'var(--steep-hi)', h: 'M0 4L4 0M0 8L8 0M4 8L12 0M8 8L14 2M12 8L14 6', t: ic('tri-up', 'fi') + ' Very steep ≥ 12 %' },
+      { c: 'var(--down)', h: 'M0 8L8 0M0 0L8 8', t: ic('tri-down') + ' Steep descent ≥ 10 %' }
+    ];
+    return '<div class="legend">' + items.map(function (i) { return '<span>' + sw(i) + i.t + '</span>'; }).join('') + '</div>';
+  }
+
+  /* ---- map ---- */
+  var ROUTE_D = 'M28 232 C60 220 70 190 104 188 C140 186 150 214 188 200 C230 184 214 150 188 138 C160 126 150 108 176 92 C206 74 246 90 262 66 C274 48 296 44 312 36';
+  function map(o) {
+    o = o || {};
+    var w = 340, h = o.h || 250, id = ++uid, s = '<svg viewBox="0 0 340 ' + h + '" role="img"><title>Map with steep route sections (mockup)</title>';
+    /* fake terrain: contour loops + a river */
+    for (var k = 0; k < 6; k++) s += '<ellipse cx="' + (236 - k * 2) + '" cy="' + (120 + k) + '" rx="' + (24 + k * 15) + '" ry="' + (14 + k * 10) + '" fill="none" stroke="var(--map-line)" stroke-width="' + (k % 3 === 0 ? 1.4 : .8) + '"/>';
+    s += '<path d="M0 60 C60 90 90 40 150 80 S260 150 340 170" fill="none" stroke="' + (o.eink ? '#000' : 'rgba(79,150,220,.45)') + '" stroke-width="' + (o.eink ? 1 : 5) + '"' + (o.eink ? ' stroke-dasharray="1 3"' : '') + '/>';
+    s += '<path d="M0 150 C60 160 110 120 190 130 S300 110 340 90" fill="none" stroke="var(--map-line)" stroke-width="3"/>';
+    /* the route: casing + line, pathLength 1000 so spans are fractions */
+    var route = '<path id="rt' + id + '" d="' + ROUTE_D + '" pathLength="1000"';
+    s += route + ' fill="none" stroke="' + (o.eink ? '#fff' : 'rgba(255,255,255,.95)') + '" stroke-width="' + (o.eink ? 8 : 7) + '" stroke-linecap="round" stroke-linejoin="round"/>';
+    s += route.replace(' id="rt' + id + '"', '') + ' fill="none" stroke="' + (o.eink ? '#000' : 'var(--route)') + '" stroke-width="' + (o.eink ? 2 : 4) + '" stroke-linecap="round" stroke-linejoin="round"/>';
+    SECTIONS.forEach(function (sec) {
+      var f = function (km) { return km / TOTAL * 1000; };
+      var span = function (a, b, stroke, width, extra) {
+        return '<path d="' + ROUTE_D + '" pathLength="1000" fill="none" stroke="' + stroke + '" stroke-width="' + width + '" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="' + (f(b) - f(a)) + ' 2000" stroke-dashoffset="' + (-f(a)) + '" ' + (extra || '') + '/>';
+      };
+      if (o.eink) {
+        s += span(sec.from, sec.to, '#000', 8);
+        if (sec.dir === 'up') s += span(sec.from, sec.to, '#fff', 2, 'style="stroke-dasharray:' + 1.2 + ' ' + 5 + '"');
+        else s += span(sec.from, sec.to, '#fff', 3);
+        s += span(sec.core[0], sec.core[1], '#000', 11) + span(sec.core[0], sec.core[1], '#fff', sec.dir === 'up' ? 2 : 4, sec.dir === 'up' ? 'style="stroke-dasharray:1.2 5"' : '');
+      } else {
+        var col = sec.dir === 'up' ? 'var(--steep)' : 'var(--down)', hi = sec.dir === 'up' ? 'var(--steep-hi)' : 'var(--down-hi)';
+        s += span(sec.from, sec.to, col, 6) + span(sec.core[0], sec.core[1], hi, 7);
+      }
+    });
+    s += '<g data-markers="rt' + id + '"></g>';
+    s += '<circle cx="28" cy="232" r="6" fill="#2e9b4f" stroke="#fff" stroke-width="2"/><circle cx="312" cy="36" r="6" fill="#d32f2f" stroke="#fff" stroke-width="2"/>';
+    if (o.me) s += '<g data-me="rt' + id + '" data-at="' + o.me + '"></g>';
+    return s + '</svg>';
+  }
+  /* markers need real geometry: place them once the svg is in the DOM */
+  function placeMarkers(root) {
+    root.querySelectorAll('g[data-markers]').forEach(function (g) {
+      var path = root.querySelector('#' + g.getAttribute('data-markers'));
+      if (!path) return;
+      var len = path.getTotalLength(), eink = !!g.closest('.ek');
+      SECTIONS.forEach(function (sec) {
+        var mid = (sec.from + sec.to) / 2 / TOTAL * len;
+        var p = path.getPointAtLength(mid), a = path.getPointAtLength(Math.max(mid - 2, 0)), b = path.getPointAtLength(Math.min(mid + 2, len));
+        var ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+        var col = eink ? '#000' : (sec.dir === 'up' ? 'var(--steep-hi)' : 'var(--down-hi)');
+        /* arrow markers every ~ 1/6 of the span for up, none for down (hollow) */
+        if (sec.dir === 'up') for (var t = 0.2; t < 0.9; t += 0.3) {
+          var at = (sec.from + (sec.to - sec.from) * t) / TOTAL * len, q = path.getPointAtLength(at), qa = path.getPointAtLength(at - 2), qb = path.getPointAtLength(at + 2);
+          var qang = Math.atan2(qb.y - qa.y, qb.x - qa.x) * 180 / Math.PI;
+          g.insertAdjacentHTML('beforeend', '<path transform="translate(' + q.x + ' ' + q.y + ') rotate(' + qang + ')" d="M-3 -3L3 0L-3 3Z" fill="#fff"/>');
+        }
+        var peak = sec.core[0] + (sec.core[1] - sec.core[0]) / 2, pp = path.getPointAtLength(peak / TOTAL * len);
+        var label = (sec.dir === 'up' ? '▲ ' : '▽ ') + sec.max + ' %';
+        var dy = sec.dir === 'up' ? -16 : 18, dx = sec.dir === 'up' ? 22 : -26;
+        g.insertAdjacentHTML('beforeend',
+          '<line x1="' + pp.x + '" y1="' + pp.y + '" x2="' + (pp.x + dx) + '" y2="' + (pp.y + dy) + '" stroke="' + col + '" stroke-width="1"/>' +
+          '<g transform="translate(' + (pp.x + dx) + ' ' + (pp.y + dy) + ')"><rect x="-26" y="-9" width="52" height="18" rx="9" fill="var(--surface-2)" stroke="' + col + '" stroke-width="1.2"/>' +
+          '<text y="3.6" text-anchor="middle" style="font-size:10px;font-weight:700;fill:' + (eink ? '#000' : 'var(--text-primary)') + '">' + label + '</text></g>');
+      });
+    });
+    root.querySelectorAll('g[data-me]').forEach(function (g) {
+      var path = root.querySelector('#' + g.getAttribute('data-me'));
+      var p = path.getPointAtLength(parseFloat(g.getAttribute('data-at')) / TOTAL * path.getTotalLength());
+      var me = g.closest('.ek') ? '#000' : 'var(--text-accent)';
+      g.innerHTML = '<circle cx="' + p.x + '" cy="' + p.y + '" r="11" fill="' + me + '" fill-opacity=".22"/><circle cx="' + p.x + '" cy="' + p.y + '" r="6" fill="' + me + '" stroke="#fff" stroke-width="2"/>';
+    });
+  }
+
+  /* ---- frames ---- */
+  function tiles(eink) {
+    return '<div class="stats" style="grid-template-columns:repeat(5,1fr)">' +
+      '<div class="st">' + ic('dist') + '24 km</div>' +
+      '<div class="st">' + ic('time') + '1h22</div>' +
+      '<div class="st">' + ic('up') + '+470</div>' +
+      '<div class="st">' + ic('down') + '−270</div>' +
+      '<div class="st hot">' + ic('slope') + '3.3 km</div></div>';
+  }
+  function header(eink) {
+    return '<div class="map" style="height:70px"></div><div class="sh">' +
+      '<div class="hd"><div class="tl">' + ic('bike') + '</div><div style="flex:1"><div class="t">Col de la Madeleine loop</div><div class="s">Road bike route · saved</div></div><span class="ib">' + ic('dots') + '</span></div>' +
+      tiles(eink) +
+      '<div class="s" style="margin-top:6px">' + ic('warn') + ' 3.3 km above 8 % (14 %), 0.8 km above 12 %, max 16 %</div>' +
+      '<div class="pills"><span class="p pa">' + ic('nav') + 'Navigate</span><span class="p">Edit</span><span class="p">Share</span></div></div>';
+  }
+  function profileFrame(eink) {
+    return '<div class="map" style="height:40px"></div><div class="sh">' +
+      '<div class="hd"><div class="tl">' + ic('bike') + '</div><div style="flex:1"><div class="t">Col de la Madeleine loop</div><div class="s">Road bike route · saved</div></div></div>' +
+      tiles(eink) +
+      '<div class="capr"><span>Elevation</span><span style="font-weight:400">tap or drag the chart</span></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface-1);border-radius:10px;padding:6px 8px">' +
+      '<div><div class="s">At</div><div class="t">8.5 km</div></div><div><div class="s">Altitude</div><div class="t">520 m</div></div><div><div class="s">Grade</div><div class="t" style="color:' + (eink ? '#000' : 'var(--steep-hi)') + '">14.2 %</div></div><div><div class="s">Left</div><div class="t">15.5 km</div></div></div>' +
+      '<div style="margin-top:6px">' + chart({ eink: eink, cursor: 8.5, h: 118 }) + '</div>' + legend(eink) + '</div>';
+  }
+  function mapFrame(eink) {
+    return '<div class="map">' + map({ eink: eink, h: 270, me: 5 }) +
+      '<span class="mchip" style="left:10px;top:10px">' + ic('slope') + ' Steep sections <b>3</b></span>' +
+      '<span class="mbtn" style="right:10px;top:10px">' + ic('layers') + '</span>' +
+      '</div><div class="sh" style="border-radius:16px 16px 0 0;margin-top:-10px;position:relative"><div class="hd"><div class="tl">' + ic('bike') + '</div><div style="flex:1"><div class="t">Col de la Madeleine loop</div><div class="s">24.0 km · +470 m · 3.3 km steep</div></div></div></div>';
+  }
+  function listFrame(eink) {
+    function row(i, sec, extra) {
+      var len = (sec.to - sec.from).toFixed(1), coreLen = Math.round((sec.core[1] - sec.core[0]) * 1000);
+      return '<div class="row"><span class="rt ' + (sec.dir === 'up' ? 'up' : 'dn') + '">' + ic(sec.dir === 'up' ? 'tri-up' : 'tri-down', sec.dir === 'up' ? 'fi' : '') + '</span>' +
+        '<div style="min-width:0"><div class="bold">' + sec.from.toFixed(1) + ' → ' + sec.to.toFixed(1) + ' km <span class="chip' + (sec.max >= (sec.dir === 'up' ? 12 : 14) ? ' chipd' : '') + '">' + (sec.max >= (sec.dir === 'up' ? 12 : 14) ? 'very steep ' + coreLen + ' m' : 'steep') + '</span>' + (extra || '') + '</div>' +
+        '<div class="s">' + len + ' km · avg ' + sec.avg + ' % · max ' + sec.max + ' % · ' + (sec.dir === 'up' ? '+' : '−') + sec.gain + ' m</div></div>' +
+        '<span class="r" style="color:var(--text-secondary)">' + ic('chev') + '</span></div>';
+    }
+    return '<div class="map" style="height:36px"></div><div class="sh" style="padding-bottom:6px">' +
+      '<div class="hd"><div class="tl">' + ic('bike') + '</div><div style="flex:1"><div class="t">Col de la Madeleine loop</div><div class="s">Road bike route · saved</div></div></div>' +
+      '<div style="margin-top:6px">' + chart({ eink: eink, h: 92, from: 5.5, to: 10, cursor: 8.0 }) + '</div></div>' +
+      '<div class="card"><div class="capr" style="margin:0 0 4px;color:' + (eink ? '#000' : 'var(--text-accent)') + '"><span>Steep sections</span><span style="font-weight:400;color:var(--text-secondary)">preset: road bike</span></div>' +
+      '<div class="s" style="margin-bottom:4px">3 sections · 3.3 km up, 1.7 km down · 14 % of the route</div>' +
+      row(1, SECTIONS[0], ' <span class="chip">Cat 3</span>') + row(2, SECTIONS[1]) + row(3, SECTIONS[2], ' <span class="chip">Cat 3</span>') + '</div>' +
+      '<div class="card" style="margin-bottom:10px"><div class="s">Grades come from the elevation model, averaged over about 150 m. Bridges and tunnels can read steeper than they ride.</div></div>';
+  }
+  function navFrame(state, eink) {
+    var main, ahead;
+    var ico = '<div class="navico">' + ic('turn') + '</div>';
+    var figs = { appr: ['9.8', 'var(--steep)'], inside: ['13.1', 'var(--steep-hi)'], down: ['−13.4', 'var(--down-hi)'] };
+    var f = figs[state];
+    var caption;
+    if (state === 'appr') caption = '<span class="warn">' + ic('warn') + ' Steep in 400 m</span> <span class="s">1.7 km at 10.6 %</span>';
+    else if (state === 'inside') caption = '<span class="warn">' + ic('warn') + ' Very steep</span> <span class="s">400 m left, max 16 %</span>';
+    else caption = '<span class="warn">' + ic('warn') + ' Descent in 600 m</span> <span class="s">brake early</span>';
+    var cur = state === 'appr' ? 7.6 : state === 'inside' ? 8.4 : 12.0;
+    var from = state === 'down' ? 11.5 : 6.0, to = state === 'down' ? 15 : 10;
+    return '<div class="map" style="height:150px">' + map({ eink: eink, h: 150, me: cur }) + '</div>' +
+      '<div class="navcard"><div class="navmain">' + ico + '<div style="flex:1;min-width:0"><div style="font-size:24px;font-weight:700;line-height:1.1">' + (state === 'down' ? '1.1 km' : '420 m') + '</div><div class="s" style="font-size:13px">Turn left onto D902</div></div><div class="r"><div class="bold">' + (state === 'down' ? '12.0' : '7.6') + ' km</div><div class="s">of 24.0</div></div></div>' +
+      '<div class="navline">Then ' + ic('turn') + ' <b style="color:var(--text-primary)">1.2 km</b> · Route du Col</div></div>' +
+      '<div class="navcard" style="margin-bottom:10px"><div class="ahead"><div class="fig"><span class="s">grade</span><b style="color:' + (eink ? '#000' : f[1]) + '">' + f[0] + '<span class="s" style="font-weight:400;font-size:13px"> %</span></b></div>' +
+      '<div class="cv"><div style="margin-bottom:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">' + caption + '</div>' + chart({ mini: true, eink: eink, h: 54, from: from, to: to, cursor: cur }) + '</div></div></div>';
+  }
+  function settingsFrame(eink) {
+    function sliderRow(icon, title, sub, val, pct) {
+      return '<div class="row" style="flex-wrap:wrap;gap:0 10px;padding:6px 0"><span class="rt" style="background:var(--bg-accent);color:var(--text-accent)">' + ic(icon) + '</span><div style="flex:1"><div class="t">' + title + '</div><div class="s">' + sub + '</div></div><b class="bold">' + val + '</b>' +
+        '<div class="trk" style="flex:0 0 100%"><i style="width:' + pct + '%"></i><u style="left:calc(' + pct + '% - 8px)"></u></div></div>';
+    }
+    return '<div class="page">' +
+      '<div class="hd" style="padding:0 12px"><span class="ib">' + ic('back') + '</span><div class="t" style="font-size:17px;font-weight:700">Steep sections</div></div>' +
+      '<div class="grp"><div class="row"><span class="rt" style="background:var(--bg-accent);color:var(--text-accent)">' + ic('slope') + '</span><div style="flex:1"><div class="t">Highlight steep sections</div><div class="s">On the profile, the map and in the route header</div></div><span class="tg"></span></div>' +
+      '<div class="row"><span class="rt" style="background:var(--bg-accent);color:var(--text-accent)">' + ic('warn') + '</span><div style="flex:1"><div class="t">Warn while navigating</div><div class="s">Heads-up in the ahead card</div></div><span class="tg"></span></div>' +
+      '<div class="row"><span class="rt" style="background:var(--bg-accent);color:var(--text-accent)">' + ic('tri-down') + '</span><div style="flex:1"><div class="t">Include steep descents</div><div class="s">Braking and safety</div></div><span class="tg"></span></div></div>' +
+      '<div class="sec">Thresholds</div>' +
+      '<div class="grp"><div style="padding:10px 0 8px"><div class="t">Preset</div><div class="s">Auto follows the route\'s bike type</div><div class="pills" style="margin-top:8px"><span class="p pt">Auto</span><span class="p">Road</span><span class="p">Gravel</span><span class="p">MTB</span><span class="p">Walk</span></div></div>' +
+      sliderRow('up', 'Steep climb from', 'Road preset: 8 %', '8 %', 28) +
+      sliderRow('up', 'Very steep climb from', 'Road preset: 12 %', '12 %', 46) +
+      sliderRow('down', 'Steep descent from', 'Road preset: 10 %', '10 %', 36) +
+      sliderRow('dist', 'Minimum length', 'Shorter ramps are ignored', '150 m', 30) + '</div>' +
+      '<div class="sec">Navigation</div>' +
+      '<div class="grp">' + sliderRow('nav', 'Warn me this far ahead', 'At least 30 s at your current speed', '300 m', 35) + '</div>' +
+      '<div class="card"><div class="s">Grades are computed from the elevation model over about 150 m, so a short wall reads lower than it rides. Bridges and tunnels follow the terrain under them and can show as steep.</div></div></div>';
+  }
+  function einkFrame() {
+    return '<div class="map" style="height:0"></div><div class="sh" style="border-radius:0">' +
+      '<div class="hd"><div class="tl">' + ic('bike') + '</div><div style="flex:1"><div class="t">Col de la Madeleine loop</div><div class="s">Road bike route · saved</div></div></div>' +
+      tiles(true) +
+      '<div class="pills"><span class="p pa">' + ic('nav') + 'Navigate</span><span class="p" style="border-width:2px;font-weight:700">Steep 3</span></div>' +
+      '<div class="capr"><span>Elevation</span><span style="font-weight:400">tap or drag</span></div>' + chart({ eink: true, h: 112, cursor: 8.5 }) + legend(true) + '</div>' +
+      '<div class="map" style="margin-top:8px">' + map({ eink: true, h: 230, me: 5 }) + '</div>';
+  }
+
+  var FRAMES = {
+    header: [['Route header, tile row', header]],
+    profile: [['Profile with steep spans, point selected', profileFrame]],
+    map: [['Map, route selected', mapFrame]],
+    list: [['Chart zoomed on a span + list card', listFrame]],
+    nav: [['Approaching a steep climb', function (e) { return navFrame('appr', e); }], ['Inside the very steep part', function (e) { return navFrame('inside', e); }], ['Steep descent ahead', function (e) { return navFrame('down', e); }]],
+    settings: [['Settings', settingsFrame]]
+  };
+
+  document.querySelectorAll('.pair').forEach(function (pair) {
+    var key = pair.getAttribute('data-pair');
+    if (key === 'eink') {
+      pair.innerHTML = '<div class="cell"><div class="cap">E-ink: tile, profile, map</div><div class="phone ek">' + einkFrame() + '</div></div>';
+      return;
+    }
+    FRAMES[key].forEach(function (f) {
+      ['light', 'dark'].forEach(function (mode) {
+        var cell = document.createElement('div');
+        cell.className = 'cell' + (mode === 'dark' ? ' dark' : '');
+        cell.innerHTML = '<div class="cap">' + f[0] + ' (' + mode + ')</div><div class="phone">' + f[1](false) + '</div>';
+        pair.appendChild(cell);
+      });
+    });
+  });
+  placeMarkers(document);
+})();
+</script>
+</body>
+</html>

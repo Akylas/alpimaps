@@ -71,8 +71,8 @@
     import type { IItem, Item, RouteInstruction } from '~/models/Item';
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
-    import { isNavigating, navigationDetour, navigationItem, navigationPageIds, navigationScale } from '~/stores/navigationStore';
-    import { lazyComponents, routeFeatureChanges, routeFeatures, routeNavBanners, routeNavPages } from '~/routeFeatures/registry';
+    import { isNavigating, navigationDockPages, navigationScale } from '~/stores/navigationStore';
+    import { lazyComponents, routeFeatures, routeNavBanners } from '~/routeFeatures/registry';
     import { MANEUVER_VIEW_HEIGHT, NAVRAIL_BUTTON_SIZE, navigationSheetSteps } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
@@ -169,9 +169,7 @@
     let routeSimulatorPanelComponent = null;
     let navigationStepIndex = 0;
     // no 0 step: the dock is the only way out of navigation, so it can never be dismissed
-    // the `>= 0` only makes the statements depend on the features' changes
-    $: hasNavigationPages = $routeFeatureChanges >= 0 && routeNavPages($routeFeatures, { item: $navigationItem, detour: !!$navigationDetour }, $navigationPageIds).length > 0;
-    $: navigationSteps = navigationSheetSteps($navigationScale, hasNavigationPages);
+    $: navigationSteps = navigationSheetSteps($navigationScale, $navigationDockPages.length > 0);
 
     // cards a feature floats under the maneuver card, loaded once navigation starts
     const navBannerComponents = lazyComponents();
@@ -185,7 +183,7 @@
             return;
         }
         const [navigationView, maneuverView, navigationRail] = await Promise.all([
-            import('~/components/navigation/NavigationView.svelte'),
+            import('~/components/navigation/NavigationDock.svelte'),
             import('~/components/navigation/ManeuverView.svelte'),
             import('~/components/navigation/NavigationRail.svelte')
         ]);

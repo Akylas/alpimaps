@@ -8,9 +8,9 @@
     import { isEInk } from '~/helpers/theme';
     import { categoryLabel, readClimbs } from '~/routeFeatures/climbs/data';
     import { climbNow, steepNow } from '~/routeFeatures/climbs/dock';
+    import { dockLens, nextDockLens, progressFollower } from '~/routeFeatures/lens/dockLens';
     import { profileAhead } from '~/routeFeatures/profile/ahead';
-    import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import { nextLens, resolveLens, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { routeFeatureChanges } from '~/routeFeatures/registry';
     import { navigationGradeLookAhead, navigationItem, navigationProgress, navigationScale } from '~/stores/navigationStore';
     import { gradeAhead, gradeColor } from '~/utils/grade';
     import { colors } from '~/variables';
@@ -60,41 +60,11 @@
     $: steepText = steep ? (steep.inside ? lc('navigation_steep_left', `${Math.abs(steep.grade).toFixed(0)} %`, formatDistance(steep.distance)) : lc('navigation_value_in', `${Math.abs(steep.grade).toFixed(0)} %`, formatDistance(steep.distance))) : '';
 
     // the profile is read in the lens the map is in; a tap goes to the next one
-    $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item: $navigationItem }) : [];
-    $: activeLens = lenses.find((lens) => lens.id === resolveLens($routeLensStore, lenses));
-    $: profileOptions = activeLens?.profile?.({ item: $navigationItem });
-    $: fill = profileOptions?.fill ?? null;
-    $: fade = profileOptions?.fade ?? false;
-    $: overlay = profileOptions?.overlay ?? null;
-    function onLensTap() {
-        const next = nextLens(lenses, activeLens?.id);
-        if (next) {
-            selectLens(next);
-        }
-    }
+    $: ({ fade, fill, overlay } = $dockLens);
 
     let elevationChart: ElevationChart;
-    let highlightedIndex = -2;
-    $: highlightIfMoved($navigationProgress, !!data?.length);
-
-    function highlightIfMoved(progress, chartAvailable: boolean) {
-        if (!progress || !chartAvailable || progress.onPathIndex === highlightedIndex) {
-            return;
-        }
-        highlightedIndex = progress.onPathIndex;
-        elevationChart?.hilghlightPathIndex(
-            {
-                onPathIndex: progress.onPathIndex,
-                remainingDistance: progress.remainingDistance,
-                remainingDistanceToStep: progress.remainingDistanceToStep,
-                remainingTime: progress.remainingTime,
-                dplus: profile?.dplus,
-                dmin: profile?.dmin
-            },
-            undefined,
-            false
-        );
-    }
+    const followProgress = progressFollower();
+    $: followProgress(elevationChart, $navigationProgress, profile, !!data?.length);
 </script>
 
 {#if data?.length}
@@ -122,7 +92,7 @@
                 showProfileGrades={true}
                 showWaypoints={false} />
             <!-- over the chart, which a tap would not reach: the lens changes -->
-            <gridlayout col={1} on:tap={onLensTap} />
+            <gridlayout col={1} on:tap={nextDockLens} />
         </gridlayout>
     </gridlayout>
 {/if}

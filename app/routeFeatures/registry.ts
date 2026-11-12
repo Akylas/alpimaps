@@ -223,6 +223,8 @@ export interface ProfileLegendEntry {
 export interface LensProfile {
     /** What the fill's colours mean, in the line under the chart: the grade legend is there when none. */
     legend?: ProfileLegendEntry[];
+    /** The fill is the grade's: its legend is there, when the user shows the grade colours and the lens has no `legend` of its own. */
+    gradeLegend?: boolean;
     brackets?: ProfileBracket[];
     /** The grade fill steps back, for what the lens lays over it to read. */
     fade?: boolean;
@@ -232,7 +234,6 @@ export interface LensProfile {
     fill?: ProfileFillStop[];
 }
 
-/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
 /** One line of a lens' legend: a swatch and what it says. */
 export interface LensLegendItem {
     id: string;
@@ -262,6 +263,7 @@ export interface LensLegendContext {
     translate: (key: string) => string;
 }
 
+/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
 export interface RouteLens {
     id: LensId;
     icon: string;
@@ -536,6 +538,9 @@ export const routeFeatureChanges: Readable<number> = derived(
     0
 );
 
+/** The enabled features, emitted again whenever one says its contributions changed: what reads them follows both. */
+export const liveRouteFeatures: Readable<RouteFeature[]> = derived([routeFeatures, routeFeatureChanges], ([features]) => features);
+
 export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[] {
     return features.flatMap((feature) => feature.tiles?.(ctx) ?? []);
 }
@@ -597,6 +602,17 @@ export function routeStatViews(features: RouteFeature[], ctx: RouteCtx): RouteSt
 /** The banners the enabled features float over the map while navigating. */
 export function routeNavBanners(features: RouteFeature[]): RouteNavBanner[] {
     return features.flatMap((feature) => feature.navBanners ?? []);
+}
+
+const visitResets: (() => void)[] = [];
+/** A store for what the user opened on a route's page: it starts over with every visit, `endVisit` being where one ends. */
+export function visitStore<T>(initial: T) {
+    const store = writable(initial);
+    visitResets.push(() => store.set(initial));
+    return store;
+}
+export function endVisit() {
+    visitResets.forEach((reset) => reset());
 }
 
 /** Lazy components, loaded once and kept. A store, so the view renders a component when it arrives. */

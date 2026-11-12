@@ -64,7 +64,7 @@
     } from '~/utils/constants';
     import { chartShowWaypoints, itemLock, showAscents, showGradeColors } from '~/stores/mapStore';
     import { elevationProfileFilterStep, elevationProfileSmoothWindow } from '~/routeFeatures/profile/settings';
-    import { type RouteSheetCardLayout, lazyComponents, routeFeatureChanges, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
+    import { type RouteSheetCardLayout, lazyComponents, liveRouteFeatures, routeFeatures, routeSheetCards } from '~/routeFeatures/registry';
     import { screenWidthDips } from '~/variables';
 
     $: ({ colorAccentContainer, colorBackground, colorError, colorHairline, colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorOutlineSoft, colorPanel, colorPrimary } = $colors);
@@ -274,7 +274,7 @@
     }
     $: updateSelectedItem(item);
     // a feature switched, or one whose card height moved. After the item's own update: the statements run in order
-    $: if ($routeFeatures && $routeFeatureChanges >= 0) {
+    $: if ($liveRouteFeatures) {
         updateSteps();
     }
     $: cards.forEach((layout) => layout.card.watch?.({ item, shown: layout.height > 0 && stepIndex >= cardStepIndex(layout.id) }));

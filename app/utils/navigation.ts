@@ -54,6 +54,43 @@ export function splitDistance(meters: number): [number, string] {
 export function splitElevation(meters: number): [number, string] {
     return convertValueToUnit(meters, UNITS.Meters);
 }
+/** The dock's third figure: how far off the route, how long it moved, or when it ends. */
+export type DockThird = { kind: 'off_route'; distance: number } | { kind: 'moving'; seconds: number } | { kind: 'arrival'; at: number } | null;
+
+export interface DockFiguresInput {
+    progress: { onPathIndex: number; offRoute?: boolean; distanceFromRoute?: number; remainingDistance?: number; remainingTime?: number } | null;
+    stats: { distance?: number; altitudeGain?: number; duration?: number } | null;
+    /** `dp` is the ascent accumulated up to each point */
+    profile: { dplus?: number; data?: { d: number; dp?: number }[] } | null | undefined;
+    /** the figures say what is done, not what is left */
+    done: boolean;
+    paused: boolean;
+    now: number;
+}
+
+/** What the dock's summary row says, in meters and seconds: the unit and the words are the row's. */
+export function dockFigures({ done, now, paused, profile, progress, stats }: DockFiguresInput): { distance: number | null; ascent: number | null; third: DockThird } {
+    const point = profile?.data?.[progress?.onPathIndex];
+    const onRoute = !!point && !isNaN(point.dp);
+    const left = progress?.remainingDistance;
+    const leftAscent = profile && onRoute ? Math.max(profile.dplus - point.dp, 0) : null;
+    // what is done: along the route when it is known, else what was travelled
+    const doneDistance = point ? point.d : stats?.distance;
+    const doneAscent = onRoute ? point.dp : stats?.altitudeGain;
+    const distance = done ? doneDistance : left;
+    const ascent = done ? doneAscent : leftAscent;
+    let third: DockThird = null;
+    if (progress?.offRoute && progress.distanceFromRoute >= 1) {
+        // under a meter is on the route, whatever the detector says
+        third = { kind: 'off_route', distance: progress.distanceFromRoute };
+    } else if (paused || done) {
+        third = { kind: 'moving', seconds: (stats?.duration || 0) / 1000 };
+    } else if (progress?.remainingTime > 0) {
+        third = { kind: 'arrival', at: now + progress.remainingTime * 1000 };
+    }
+    return { distance: distance > 0 ? distance : null, ascent: typeof ascent === 'number' && ascent >= 0 ? ascent : null, third };
+}
+
 /** takes km/h, the unit Session stores speeds in */
 export function splitSpeed(speedKmh: number): [number, string] {
     return convertValueToUnit(speedKmh, UNITS.SpeedKm);

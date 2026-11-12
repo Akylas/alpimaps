@@ -40,14 +40,18 @@
     $: contacts = osmContacts(item);
     $: facts = layout.facts ? osmFacts(item) : [];
     $: fetchedAt = details?.fetchedAt;
-    $: statusText = details?.loading
-        ? lc('osm_checking')
-        : fetchedAt !== undefined
-          ? capitalize(Date.now() - fetchedAt < 60000 ? lc('osm_updated_now') : lc('osm_updated', dayjs(fetchedAt).fromNow()))
-          : $networkOnline
-            ? lc('osm_look_up')
-            : capitalize(lc('offline'));
+    $: statusText = osmStatusText(details?.loading, fetchedAt, $networkOnline);
     $: bannerText = fetchedAt !== undefined ? lc('osm_offline_saved', dayjs(fetchedAt).fromNow(true)) : null;
+
+    function osmStatusText(loading: boolean, fetched: number | undefined, online: boolean) {
+        if (loading) {
+            return lc('osm_checking');
+        }
+        if (fetched !== undefined) {
+            return capitalize(Date.now() - fetched < 60000 ? lc('osm_updated_now') : lc('osm_updated', dayjs(fetched).fromNow()));
+        }
+        return online ? lc('osm_look_up') : capitalize(lc('offline'));
+    }
 
     async function refresh() {
         try {
@@ -81,76 +85,78 @@
     }
 </script>
 
-<gridlayout class="panel" {...$$restProps}>
-    <stacklayout padding={`${CARD_PADDING_TOP} 14 ${CARD_PADDING_BOTTOM} 14`}>
-        <gridlayout columns="*,auto" height={CARD_HEADER_HEIGHT}>
-            <label color={colorOnSurface} fontSize={15 * $fontScaleMaxed} fontWeight="bold" lineBreak="end" maxLines={1} text={lc('osm_details')} verticalAlignment="middle" />
-            <gridlayout
-                borderColor={isEInk ? colorOnSurface : colorOutlineSoft}
-                borderRadius={14}
-                borderWidth={1}
-                col={1}
-                rippleColor={$networkOnline ? colorPrimary : 'transparent'}
-                verticalAlignment="middle"
-                visibility={layout.lookup ? 'visible' : 'collapse'}
-                on:tap={onStatusTap}>
-                <stacklayout orientation="horizontal" padding="4 10 4 8">
-                    {#if details?.loading}
-                        <activityindicator busy={true} color={colorOnSurfaceVariant} height={14} marginRight={6} verticalAlignment="middle" width={14} />
-                    {:else}
-                        <label
-                            color={$networkOnline ? colorPrimary : colorOnSurfaceVariant}
-                            fontFamily={$fonts.mdi}
-                            fontSize={16 * $fontScaleMaxed}
-                            marginRight={6}
-                            text={$networkOnline ? 'mdi-refresh' : 'mdi-wifi-off'}
-                            verticalAlignment="middle" />
-                    {/if}
-                    <label color={colorOnSurfaceVariant} fontSize={12 * $fontScaleMaxed} fontWeight="500" maxLines={1} text={statusText} verticalAlignment="middle" />
-                </stacklayout>
-            </gridlayout>
+<stacklayout class="panel" padding={`${CARD_PADDING_TOP} 14 ${CARD_PADDING_BOTTOM} 14`} {...$$restProps}>
+    <gridlayout columns="*,auto" height={CARD_HEADER_HEIGHT}>
+        <label color={colorOnSurface} fontSize={15 * $fontScaleMaxed} fontWeight="bold" lineBreak="end" maxLines={1} text={lc('osm_details')} verticalAlignment="middle" />
+        <gridlayout
+            borderColor={isEInk ? colorOnSurface : colorOutlineSoft}
+            borderRadius={14}
+            borderWidth={1}
+            col={1}
+            rippleColor={$networkOnline ? colorPrimary : 'transparent'}
+            verticalAlignment="middle"
+            visibility={layout.lookup ? 'visible' : 'collapse'}
+            on:tap={onStatusTap}>
+            <stacklayout orientation="horizontal" padding="4 10 4 8">
+                {#if details?.loading}
+                    <activityindicator busy={true} color={colorOnSurfaceVariant} height={14} marginRight={6} verticalAlignment="middle" width={14} />
+                {:else}
+                    <label
+                        color={$networkOnline ? colorPrimary : colorOnSurfaceVariant}
+                        fontFamily={$fonts.mdi}
+                        fontSize={16 * $fontScaleMaxed}
+                        marginRight={6}
+                        text={$networkOnline ? 'mdi-refresh' : 'mdi-wifi-off'}
+                        verticalAlignment="middle" />
+                {/if}
+                <label color={colorOnSurfaceVariant} fontSize={12 * $fontScaleMaxed} fontWeight="500" maxLines={1} text={statusText} verticalAlignment="middle" />
+            </stacklayout>
         </gridlayout>
+    </gridlayout>
 
-        {#if layout.banner}
-            <gridlayout
-                backgroundColor={isEInk ? null : colorAccentContainer}
-                borderColor={colorOnSurface}
-                borderRadius={12}
-                borderWidth={isEInk ? 1 : 0}
-                columns="auto,*"
-                height={BANNER_HEIGHT - 6}
-                marginTop={6}
-                padding="0 10">
-                <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={18} marginRight={8} text="mdi-information-outline" verticalAlignment="middle" />
-                <label col={1} color={colorOnSurface} fontSize={12 * $fontScaleMaxed} maxLines={2} text={bannerText} verticalAlignment="middle" />
-            </gridlayout>
-        {/if}
+    {#if layout.banner}
+        <!-- always the same two spans -->
+        <label
+            backgroundColor={isEInk ? null : colorAccentContainer}
+            borderColor={colorOnSurface}
+            borderRadius={12}
+            borderWidth={isEInk ? 1 : 0}
+            color={colorOnSurface}
+            fontSize={12 * $fontScaleMaxed}
+            height={BANNER_HEIGHT - 6}
+            marginTop={6}
+            maxLines={2}
+            padding="0 10"
+            verticalTextAlignment="middle">
+            <span color={colorPrimary} fontFamily={$fonts.mdi} fontSize={18} text="mdi-information-outline" />
+            <span text={' ' + (bannerText ?? '')} />
+        </label>
+    {/if}
 
-        {#if hoursData}
-            <OpenStateChip checkable={false} {item} marginBottom={2} marginTop={8} />
-            <OpeningHoursTable openingHours={hoursData.oh} padding={`${TABLE_PADDING} 0 0 0`} />
-        {/if}
-        {#if layout.message}
-            <label color={colorOnSurfaceVariant} fontSize={13 * $fontScaleMaxed} marginTop={10} text={lc(layout.message)} textWrap={true} />
-        {/if}
-        {#if facts.length}
-            <scrollview height={FACTS_HEIGHT} marginTop={4} orientation="horizontal" scrollBarIndicatorVisible={false}>
-                <stacklayout orientation="horizontal" verticalAlignment="middle">
-                    {#each facts as fact}
-                        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16 * $fontScaleMaxed} marginRight={4} text={fact.icon} verticalAlignment="middle" />
-                        <label color={colorOnSurface} fontSize={13 * $fontScaleMaxed} marginRight={14} maxLines={1} text={fact.text} verticalAlignment="middle" />
-                    {/each}
-                </stacklayout>
-            </scrollview>
-        {/if}
-        {#if contacts.length}
-            <scrollview marginTop={4} orientation="horizontal" scrollBarIndicatorVisible={false}>
-                <stacklayout orientation="horizontal">
-                    {#each contacts as contact (contact.id)}
-                        <Pill icon={contact.icon} on:longPress={() => copyTextToClipboard(contact.value)} on:tap={() => onContactTap(contact)} />
-                    {/each}
-                </stacklayout>
-            </scrollview>
-        {/if}
-    </stacklayout>
-</gridlayout>
+    {#if hoursData}
+        <OpenStateChip checkable={false} {item} marginBottom={2} marginTop={8} />
+        <OpeningHoursTable openingHours={hoursData.oh} padding={`${TABLE_PADDING} 0 0 0`} />
+    {/if}
+    {#if layout.message}
+        <label color={colorOnSurfaceVariant} fontSize={13 * $fontScaleMaxed} marginTop={10} text={lc(layout.message)} textWrap={true} />
+    {/if}
+    {#if facts.length}
+        <scrollview height={FACTS_HEIGHT} marginTop={4} orientation="horizontal" scrollBarIndicatorVisible={false}>
+            <stacklayout orientation="horizontal" verticalAlignment="middle">
+                {#each facts as fact}
+                    <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16 * $fontScaleMaxed} marginRight={4} text={fact.icon} verticalAlignment="middle" />
+                    <label color={colorOnSurface} fontSize={13 * $fontScaleMaxed} marginRight={14} maxLines={1} text={fact.text} verticalAlignment="middle" />
+                {/each}
+            </stacklayout>
+        </scrollview>
+    {/if}
+    {#if contacts.length}
+        <scrollview marginTop={4} orientation="horizontal" scrollBarIndicatorVisible={false}>
+            <stacklayout orientation="horizontal">
+                {#each contacts as contact (contact.id)}
+                    <Pill icon={contact.icon} on:longPress={() => copyTextToClipboard(contact.value)} on:tap={() => onContactTap(contact)} />
+                {/each}
+            </stacklayout>
+        </scrollview>
+    {/if}
+</stacklayout>

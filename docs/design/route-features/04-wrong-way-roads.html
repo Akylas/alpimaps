@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpi Maps: wrong-way roads (mockup)</title>
+<style>
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);
+--bg-accent:rgba(41,182,246,.12);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.6);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--text-danger:#d32f2f;--border-danger:rgba(211,47,47,.5);
+--map-bg:#f3efe8;--bld:#e6e0d6;--road:#ffffff;--road-case:#bdb7ac;--ink:#2a2f34;--chev-edge:#ffffff;--ctl:rgba(255,255,255,.82);
+--ok:#0288d1;--no:#d32f2f;--hatch-ln:#d32f2f;--hatch-bg:#ffffff;--route:rgba(41,182,246,.5);--usr:#0288d1}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);
+--bg-accent:rgba(41,182,246,.16);--text-accent:#7fd3fa;--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--text-danger:#ef9a9a;
+--map-bg:#1b1e21;--bld:#24282c;--road:#3a3f45;--road-case:#14161a;--ink:#e8eaed;--chev-edge:#14161a;--ctl:rgba(35,39,43,.82);
+--ok:#7fd3fa;--no:#ef9a9a;--hatch-ln:#ef9a9a;--hatch-bg:#23272b;--route:rgba(127,211,250,.5);--usr:#7fd3fa}
+.ek{--surface-0:#fff;--surface-1:#fff;--surface-2:#fff;--border:#000;--border-strong:#000;--bg-accent:#fff;--text-accent:#000;--fill-accent:#000;--on-accent:#fff;--border-accent:#000;
+--text-primary:#000;--text-secondary:#000;--text-muted:#000;--text-danger:#000;--border-danger:#000;
+--map-bg:#fff;--bld:#fff;--road:#fff;--road-case:#000;--ink:#000;--chev-edge:#fff;--ctl:#fff;--ok:#000;--no:#000;--hatch-ln:#000;--hatch-bg:#fff;--route:#000;--usr:#000}
+body{margin:0;padding:16px;font-family:Roboto,system-ui,sans-serif;background:#d9dcdf;color:#1b1c1d}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:28px 0 4px}p.note{font-size:12px;color:#444;margin:0 0 8px;max-width:900px}
+.badge-mock{display:inline-block;background:#1b1c1d;color:#fff;font-size:11px;border-radius:99px;padding:2px 10px;margin-left:8px;vertical-align:middle}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:.5rem 0}
+.ph{background:var(--surface-1);border-radius:16px;padding:8px;color:var(--text-primary)}
+.cp{font-size:11px;color:var(--text-secondary);margin:0 0 6px 4px}
+.sc{background:var(--surface-0);border-radius:12px;overflow:hidden;font-size:12px;color:var(--text-primary);position:relative}
+.ek .sc{border:1px solid #000}
+.t{font-size:13px;font-weight:500;line-height:1.3}.s{font-size:11px;color:var(--text-secondary);line-height:1.35}
+.mapwrap{position:relative}
+.scn{display:block}
+.bg{fill:var(--map-bg)}.bld{fill:var(--bld)}
+.rcase{stroke:var(--road-case);stroke-width:13;stroke-linecap:butt}
+.rfill{stroke:var(--road);stroke-width:10;stroke-linecap:butt}
+.ek .bld{stroke:#000;stroke-width:.6;fill:#fff}
+.ow-old{fill:none;stroke:#8a8f94;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.ow-edge{fill:none;stroke:var(--chev-edge);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.ow-new{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.owband{stroke:var(--ink);stroke-opacity:.16;stroke-width:10}
+.ek .owband{stroke-opacity:0}
+.rte{stroke:var(--route);stroke-width:6;stroke-linecap:round}
+.ek .rte{stroke-width:3;stroke-dasharray:2 5}
+.usr-edge{fill:var(--chev-edge);stroke:var(--chev-edge);stroke-width:5;stroke-linejoin:round}.usr{fill:var(--usr)}
+.st-ok{stroke:var(--ok);stroke-width:7;stroke-linecap:round}.st-ok-edge{stroke:var(--chev-edge);stroke-width:11;stroke-linecap:round}
+.st-ok-head{fill:var(--ok);stroke:var(--chev-edge);stroke-width:2;paint-order:stroke}
+.st-no{fill:url(#hatch);stroke:var(--no);stroke-width:1.6}
+.st-bar{stroke:var(--no);stroke-width:3.5;stroke-linecap:butt}.st-bar-edge{stroke:var(--chev-edge);stroke-width:7}
+.hatch-bg{fill:var(--hatch-bg)}.hatch-ln{stroke:var(--hatch-ln);stroke-width:1.6}
+.badge{fill:var(--surface-2);stroke:var(--ok);stroke-width:1.4}.badge-i{color:var(--ok)}
+.hud{position:absolute;left:8px;right:8px;top:123px;display:flex;justify-content:space-between;align-items:center}
+.hud.top{top:12px}
+.chip-hud{height:40px;min-width:48px;padding:0 14px;border-radius:20px;background:var(--ctl);border:.5px solid var(--border-strong);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;color:var(--text-primary);box-sizing:border-box}
+.chip-hud b{font-weight:600;white-space:nowrap}
+.chip-hud.none{color:var(--text-muted);border-style:dashed}
+.chip-hud.mode{padding:0 11px;color:var(--text-accent)}
+.ek .chip-hud{border:1.5px solid #000}.ek .chip-hud.none{border-style:dashed}
+.banner{position:absolute;left:8px;right:8px;top:8px;background:var(--surface-2);border:.5px solid var(--border);border-radius:14px;padding:8px 10px;display:flex;gap:10px;align-items:center;font-size:13px}
+.ek .banner{border:1.5px solid #000}
+.bn-icon{width:36px;height:36px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center}
+.ek .bn-icon{border:1px solid #000}
+.lgd{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 10px;background:var(--surface-2);border-top:.5px solid var(--border);font-size:11px;color:var(--text-primary)}
+.ek .lgd{border-top:1px solid #000}
+.lgd span{display:inline-flex;align-items:center;gap:6px}
+.sw-ok,.sw-no,.sw-ow{display:inline-block}
+.sh{background:var(--surface-2);border:.5px solid var(--border);border-radius:16px 16px 0 0;padding:10px 12px 12px}
+.ek .sh{border:1px solid #000}
+.hd{display:flex;align-items:center;gap:10px;min-height:40px}
+.tl{width:33px;height:33px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;flex:none}
+.ek .tl{border:1px solid #000}
+.cap{font-size:11px;color:var(--text-accent);margin:12px 0 4px;font-weight:500}
+.row{display:flex;align-items:center;gap:10px;min-height:46px}
+.row+.row{border-top:.5px solid var(--border)}
+.pills{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.p{height:33px;border:.5px solid var(--border-strong);border-radius:99px;padding:0 12px;font-size:12px;white-space:nowrap;display:flex;gap:5px;align-items:center;flex:none;box-sizing:border-box}
+.pt{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.ek .pt{border-width:2px;font-weight:600}
+.sw{width:43px;height:26px;border-radius:13px;background:var(--fill-accent);position:relative;flex:none}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--on-accent)}
+.sw.off{background:var(--border-strong)}.sw.off:after{right:auto;left:3px}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:12px 0 6px}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2)}
+.note-box{font-size:11px;color:var(--text-secondary);padding:6px 12px 10px}
+.ann{position:absolute;font-size:10px;background:var(--surface-2);color:var(--text-primary);border:.5px solid var(--border-strong);border-radius:8px;padding:2px 6px;white-space:nowrap}
+.ek .ann{border:1px solid #000}
+.state{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:8px 10px}.state+.state{border-top:.5px solid var(--border)}
+.state .lbl{font-size:11px;color:var(--text-secondary)}
+table{border-collapse:collapse;font-size:12px;background:#fff;color:#1b1c1d}td,th{border:1px solid #ccc;padding:4px 8px;text-align:left;vertical-align:top}
+</style>
+</head>
+<body>
+<h1>Alpi Maps: wrong-way roads<span class="badge-mock">MOCKUP, fake data</span></h1>
+<p class="note">Companion of <code>04-wrong-way-roads.md</code>. Visual language and tokens follow <code>docs/design/mockups.html</code> (round semi-transparent map controls, pills, hairlines). Every frame is shown light, dark and e-ink: colour is never the only signal, entry state is also shape (arrowhead vs bar) and fill (solid vs hatch). Scene: a cyclist heads north (map rotated heading-up) on a main road with three junctions ahead.</p>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="M18 19V13a4 4 0 0 0-4-4H6M10 5L6 9l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="M6 19V13a4 4 0 0 1 4-4h8M14 5l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-bike" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17" r="3.5"/><circle cx="18.5" cy="17" r="3.5"/><path d="M5.5 17L9 9h6l3.5 8M9 9L12 17M15 9l-1-3h-2"/></g></symbol>
+<symbol id="i-walk" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="1.2"/><path d="M12 21l1-6-3-3 1-5 3 1 2 3M10 12l-2 3"/></g></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 17H3v-5l2-5h14l2 5v5h-2M5 12h14"/></g></symbol>
+<symbol id="i-nav" viewBox="0 0 24 24"><path d="M12 3L5 20l7-4 7 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+<h2>1. Follow mode, a junction: today vs a style-only restyle</h2>
+<p class="note">Left: today, one small arrow per street at z16+ (10 to 16 px, 200 px spacing, 80% opacity). Right: slice 1, denser larger chevrons in an edged band from z15, still direction-agnostic: the style cannot know your heading or the way's far end, so it says "one-way, this way" but not "you may not enter".</p>
+<div class="grid">
+<div class="ph light"><p class="cp">Today (light)</p><div class="sc light"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<path class="ow-old" transform="translate(69.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(69.0,172) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,92) scale(-0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div></div></div>
+<div class="ph light"><p class="cp">Slice 1: bolder one-way chevrons (light)</p><div class="sc light"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span></div></div></div>
+<div class="ph dark"><p class="cp">Today (dark)</p><div class="sc dark"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<path class="ow-old" transform="translate(69.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(69.0,172) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,92) scale(-0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div></div></div>
+<div class="ph dark"><p class="cp">Slice 1: bolder one-way chevrons (dark)</p><div class="sc dark"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span></div></div></div>
+<div class="ph ek"><p class="cp">Today (ek)</p><div class="sc ek"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<path class="ow-old" transform="translate(69.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,252) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(69.0,172) scale(0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-old" transform="translate(231.0,92) scale(-0.75,0.75)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div></div></div>
+<div class="ph ek"><p class="cp">Slice 1: bolder one-way chevrons (ek)</p><div class="sc ek"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span></div></div></div>
+</div>
+<h2>2. Navigation mode: enterable and forbidden exits at the next junctions (overlay)</h2>
+<p class="note">Slice 3. For each of the next junctions on the route, one stub per exit, drawn in the exit's own direction: solid accent stub + arrowhead = you may enter now, hatched red-outlined stub + bar = wrong way for your travel mode. Bike mode: the north-east one-way carries a contraflow badge (valhalla says bicycles may go both ways).</p>
+<div class="grid">
+<div class="ph light"><p class="cp">Bike, route ahead (light)</p><div class="sc light"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="rte" x1="150" y1="300" x2="150" y2="-4"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="banner"><div class="bn-icon"><svg width="22" height="22" style="flex:none;" aria-hidden="true"><use href="#i-up"/></svg></div><div><b>400 m</b><div class="s">then straight on, Rue de la Paix</div></div></div><div class="hud"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span><span><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg>Entry allowed</span><span><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg>Entry forbidden</span><span><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg>Contraflow allowed</span></div></div></div>
+<div class="ph dark"><p class="cp">Bike, route ahead (dark)</p><div class="sc dark"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="rte" x1="150" y1="300" x2="150" y2="-4"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="banner"><div class="bn-icon"><svg width="22" height="22" style="flex:none;" aria-hidden="true"><use href="#i-up"/></svg></div><div><b>400 m</b><div class="s">then straight on, Rue de la Paix</div></div></div><div class="hud"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span><span><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg>Entry allowed</span><span><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg>Entry forbidden</span><span><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg>Contraflow allowed</span></div></div></div>
+<div class="ph ek"><p class="cp">Bike, route ahead (ek)</p><div class="sc ek"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="rte" x1="150" y1="300" x2="150" y2="-4"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="banner"><div class="bn-icon"><svg width="22" height="22" style="flex:none;" aria-hidden="true"><use href="#i-up"/></svg></div><div><b>400 m</b><div class="s">then straight on, Rue de la Paix</div></div></div><div class="hud"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span><span><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg>Entry allowed</span><span><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg>Entry forbidden</span><span><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg>Contraflow allowed</span></div></div></div>
+<div class="ph light"><p class="cp">Same junctions, mode = car (contraflow badge gone, 2 more exits forbidden)</p><div class="sc light"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="rte" x1="150" y1="300" x2="150" y2="-4"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<rect class="st-no" x="160" y="87" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="189" y1="82" x2="189" y2="102"/>
+<line class="st-bar" x1="189" y1="82" x2="189" y2="102"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="banner"><div class="bn-icon"><svg width="22" height="22" style="flex:none;" aria-hidden="true"><use href="#i-up"/></svg></div><div><b>400 m</b><div class="s">then straight on, Rue de la Paix</div></div></div><div class="hud"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div><div class="lgd"><span><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>One-way street</span><span><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg>Entry allowed</span><span><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg>Entry forbidden</span></div></div></div>
+</div>
+<h2>3. Follow mode (no route): "next left / next right" chips</h2>
+<p class="note">Two round chips, one on each side of the screen so the side they talk about is the side they sit on, same recipe as the map buttons (<code>colorMapControl</code>, hairline, 40 dp). Left chip: distance to the first junction ahead with an enterable left exit; right chip likewise. The middle chip is the travel mode (tap cycles walk, bike, car; long press opens the map option). Chip states below.</p>
+<div class="grid">
+<div class="ph light"><p class="cp">Follow mode, bike (light)</p><div class="sc light"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="hud top"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div>
+<div class="ph dark"><p class="cp">Follow mode, bike (dark)</p><div class="sc dark"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="hud top"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div>
+<div class="ph ek"><p class="cp">Follow mode, bike (ek)</p><div class="sc ek"><div class="mapwrap"><svg viewBox="0 0 300 340" width="100%" role="img" class="scn">
+
+<defs>
+<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" class="hatch-bg"/><line x1="0" y1="0" x2="0" y2="4" class="hatch-ln"/></pattern>
+</defs>
+<rect class="bg" width="300" height="340"/>
+<rect class="bld" x="14" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="14" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="14" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="14" y="262" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="100" width="112" height="64" rx="3"/>
+<rect class="bld" x="174" y="14" width="112" height="70" rx="3"/>
+<rect class="bld" x="174" y="182" width="112" height="62" rx="3"/>
+<rect class="bld" x="174" y="262" width="112" height="64" rx="3"/>
+<line class="rcase" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rcase" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rcase" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rcase" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rcase" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rcase" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rcase" x1="150" y1="92" x2="300" y2="92"/>
+<line class="rfill" x1="150" y1="0" x2="150" y2="340"/>
+<line class="rfill" x1="0" y1="252" x2="150" y2="252"/>
+<line class="rfill" x1="150" y1="252" x2="300" y2="252"/>
+<line class="rfill" x1="0" y1="172" x2="150" y2="172"/>
+<line class="rfill" x1="150" y1="172" x2="300" y2="172"/>
+<line class="rfill" x1="0" y1="92" x2="150" y2="92"/>
+<line class="rfill" x1="150" y1="92" x2="300" y2="92"/>
+<line class="owband" x1="4" y1="252" x2="134" y2="252"/>
+<path class="ow-edge" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="252" x2="296" y2="252"/>
+<path class="ow-edge" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,252) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="4" y1="172" x2="134" y2="172"/>
+<path class="ow-edge" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(12,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(32,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(52,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(72,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(92,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(112,172) scale(1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<line class="owband" x1="166" y1="92" x2="296" y2="92"/>
+<path class="ow-edge" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(174,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(194,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(214,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(234,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(254,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-edge" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<path class="ow-new" transform="translate(274,92) scale(-1.15,1.15)" d="M-3.2,-4.2 L2.6,0 L-3.2,4.2"/>
+<rect class="st-no" x="114" y="247" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-bar" x1="111" y1="242" x2="111" y2="262"/>
+<line class="st-ok-edge" x1="160" y1="252" x2="184" y2="252"/>
+<line class="st-ok" x1="160" y1="252" x2="184" y2="252"/>
+<path class="st-ok-head" d="M184,246 L193,252 L184,258 Z"/>
+<rect class="st-no" x="114" y="167" width="26" height="10" rx="2"/>
+<line class="st-bar-edge" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-bar" x1="111" y1="162" x2="111" y2="182"/>
+<line class="st-ok-edge" x1="160" y1="172" x2="184" y2="172"/>
+<line class="st-ok" x1="160" y1="172" x2="184" y2="172"/>
+<path class="st-ok-head" d="M184,166 L193,172 L184,178 Z"/>
+<line class="st-ok-edge" x1="140" y1="92" x2="116" y2="92"/>
+<line class="st-ok" x1="140" y1="92" x2="116" y2="92"/>
+<path class="st-ok-head" d="M116,86 L107,92 L116,98 Z"/>
+<line class="st-ok-edge" x1="160" y1="92" x2="184" y2="92"/>
+<line class="st-ok" x1="160" y1="92" x2="184" y2="92"/>
+<path class="st-ok-head" d="M184,86 L193,92 L184,98 Z"/>
+<circle class="badge" cx="208" cy="79" r="8"/><use href="#i-bike" x="202" y="73" width="12" height="12" class="badge-i"/>
+<g transform="translate(150,298)"><path class="usr-edge" d="M0,-14 L10,12 L0,6 L-10,12 Z"/><path class="usr" d="M0,-14 L10,12 L0,6 L-10,12 Z"/></g>
+
+</svg><div class="hud top"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div>
+<div class="ph light"><p class="cp">Chip states (light)</p><div class="sc light"><div style="background:var(--surface-2)"><div class="state"><span class="lbl">Normal: both options ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Nothing enterable on the right within the look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud none "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>—</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Pedestrian: one-ways rarely matter, chips usually show the next crossing</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>40 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>40 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg></span></div></div><div class="state"><span class="lbl">Car: more forbidden exits, longer look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>320 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>320 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg></span></div></div><div class="state"><span class="lbl">Stale: no fix for 10 s or the lookup is running, chips fade to 50 %, no text change</span><div style="display:flex;gap:6px;opacity:.5"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div></div>
+<div class="ph dark"><p class="cp">Chip states (dark)</p><div class="sc dark"><div style="background:var(--surface-2)"><div class="state"><span class="lbl">Normal: both options ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Nothing enterable on the right within the look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud none "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>—</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Pedestrian: one-ways rarely matter, chips usually show the next crossing</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>40 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>40 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg></span></div></div><div class="state"><span class="lbl">Car: more forbidden exits, longer look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>320 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>320 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg></span></div></div><div class="state"><span class="lbl">Stale: no fix for 10 s or the lookup is running, chips fade to 50 %, no text change</span><div style="display:flex;gap:6px;opacity:.5"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div></div>
+<div class="ph ek"><p class="cp">Chip states (ek)</p><div class="sc ek"><div style="background:var(--surface-2)"><div class="state"><span class="lbl">Normal: both options ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Nothing enterable on the right within the look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud none "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>—</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg></span></div></div><div class="state"><span class="lbl">Pedestrian: one-ways rarely matter, chips usually show the next crossing</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>40 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>40 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg></span></div></div><div class="state"><span class="lbl">Car: more forbidden exits, longer look-ahead</span><div style="display:flex;gap:6px"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>320 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>320 m</b></span><span class="chip-hud mode"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg></span></div></div><div class="state"><span class="lbl">Stale: no fix for 10 s or the lookup is running, chips fade to 50 %, no text change</span><div style="display:flex;gap:6px;opacity:.5"><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-left"/></svg><b>190 m</b></span><span class="chip-hud ok "><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg><b>60 m</b></span></div></div></div></div></div>
+</div>
+<h2>4. Map option and settings</h2>
+<p class="note">Sits in the map options list next to "Hiking and cycling routes" (listed only when the style declares the parameter, via <code>styleHasParameter</code>), plus the navigation settings section for the overlay. A long press on the travel-mode chip would open the same sheet, so it is a gestures-tutorial item.</p>
+<div class="grid">
+<div class="ph light"><p class="cp">Map option (light)</p><div class="sc light"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg></div><div style="flex:1"><div class="t">One-way streets</div><div class="s">Map option</div></div></div>
+<div class="cap">Look of one-way streets (style)</div>
+<div class="pills"><span class="p">Standard</span><span class="p pt"><svg width="14" height="14" style="flex:none;" aria-hidden="true"><use href="#i-check"/></svg>Bold</span><span class="p">Bold + band</span></div>
+<div class="cap">Entries ahead (overlay)</div>
+<div class="row"><div style="flex:1"><div>Show entries I may take</div><div class="s">Follow mode and navigation. Needs offline routing data.</div></div><span class="sw"></span></div>
+<div class="row"><div style="flex:1"><div>Next left / right chips</div><div class="s">Distance to the first enterable exit</div></div><span class="sw"></span></div>
+<div class="cap">Travel mode</div>
+<div class="pills"><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg>Walk</span><span class="p pt"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg>Bike</span><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg>Car</span><span class="p">Auto (route profile)</span></div>
+<div class="cap">Look ahead</div>
+<div style="display:flex;justify-content:space-between"><span>Junctions</span><span class="s">6, about 600 m by bike</span></div><div class="trk"><i style="width:40%"></i><u style="left:36%"></u></div>
+</div></div></div>
+<div class="ph dark"><p class="cp">Map option (dark)</p><div class="sc dark"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg></div><div style="flex:1"><div class="t">One-way streets</div><div class="s">Map option</div></div></div>
+<div class="cap">Look of one-way streets (style)</div>
+<div class="pills"><span class="p">Standard</span><span class="p pt"><svg width="14" height="14" style="flex:none;" aria-hidden="true"><use href="#i-check"/></svg>Bold</span><span class="p">Bold + band</span></div>
+<div class="cap">Entries ahead (overlay)</div>
+<div class="row"><div style="flex:1"><div>Show entries I may take</div><div class="s">Follow mode and navigation. Needs offline routing data.</div></div><span class="sw"></span></div>
+<div class="row"><div style="flex:1"><div>Next left / right chips</div><div class="s">Distance to the first enterable exit</div></div><span class="sw"></span></div>
+<div class="cap">Travel mode</div>
+<div class="pills"><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg>Walk</span><span class="p pt"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg>Bike</span><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg>Car</span><span class="p">Auto (route profile)</span></div>
+<div class="cap">Look ahead</div>
+<div style="display:flex;justify-content:space-between"><span>Junctions</span><span class="s">6, about 600 m by bike</span></div><div class="trk"><i style="width:40%"></i><u style="left:36%"></u></div>
+</div></div></div>
+<div class="ph ek"><p class="cp">Map option (ek)</p><div class="sc ek"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-right"/></svg></div><div style="flex:1"><div class="t">One-way streets</div><div class="s">Map option</div></div></div>
+<div class="cap">Look of one-way streets (style)</div>
+<div class="pills"><span class="p">Standard</span><span class="p pt"><svg width="14" height="14" style="flex:none;" aria-hidden="true"><use href="#i-check"/></svg>Bold</span><span class="p">Bold + band</span></div>
+<div class="cap">Entries ahead (overlay)</div>
+<div class="row"><div style="flex:1"><div>Show entries I may take</div><div class="s">Follow mode and navigation. Needs offline routing data.</div></div><span class="sw"></span></div>
+<div class="row"><div style="flex:1"><div>Next left / right chips</div><div class="s">Distance to the first enterable exit</div></div><span class="sw"></span></div>
+<div class="cap">Travel mode</div>
+<div class="pills"><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-walk"/></svg>Walk</span><span class="p pt"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-bike"/></svg>Bike</span><span class="p"><svg width="16" height="16" style="flex:none;" aria-hidden="true"><use href="#i-car"/></svg>Car</span><span class="p">Auto (route profile)</span></div>
+<div class="cap">Look ahead</div>
+<div style="display:flex;justify-content:space-between"><span>Junctions</span><span class="s">6, about 600 m by bike</span></div><div class="trk"><i style="width:40%"></i><u style="left:36%"></u></div>
+</div></div></div>
+<div class="ph light"><p class="cp">Legend entries (light)</p><div class="sc light"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-chev"/></svg></div><div class="t" style="flex:1">Legend, Roads</div></div>
+<div class="row"><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg><div style="flex:1">One-way street</div></div>
+<div class="row"><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg><div style="flex:1">Entry allowed (overlay)</div></div>
+<div class="row"><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg><div style="flex:1">Entry forbidden (overlay)</div></div>
+<div class="row"><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg><div style="flex:1">Bicycles may ride both ways</div></div>
+</div></div></div>
+<div class="ph dark"><p class="cp">Legend entries (dark)</p><div class="sc dark"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-chev"/></svg></div><div class="t" style="flex:1">Legend, Roads</div></div>
+<div class="row"><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg><div style="flex:1">One-way street</div></div>
+<div class="row"><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg><div style="flex:1">Entry allowed (overlay)</div></div>
+<div class="row"><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg><div style="flex:1">Entry forbidden (overlay)</div></div>
+<div class="row"><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg><div style="flex:1">Bicycles may ride both ways</div></div>
+</div></div></div>
+<div class="ph ek"><p class="cp">Legend entries (ek)</p><div class="sc ek"><div class="sh" style="border-radius:16px">
+<div class="hd"><div class="tl"><svg width="18" height="18" style="flex:none;" aria-hidden="true"><use href="#i-chev"/></svg></div><div class="t" style="flex:1">Legend, Roads</div></div>
+<div class="row"><svg width="34" height="14"><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road-case)" stroke-width="13"/><line x1="0" y1="7" x2="34" y2="7" stroke="var(--road)" stroke-width="10"/><g transform="translate(9,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g><g transform="translate(25,7)"><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--chev-edge)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M-3.2,-4.2 L2.6,0 L-3.2,4.2" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg><div style="flex:1">One-way street</div></div>
+<div class="row"><svg width="34" height="14"><line x1="2" y1="7" x2="22" y2="7" stroke="var(--chev-edge)" stroke-width="11" stroke-linecap="round"/><line x1="2" y1="7" x2="22" y2="7" stroke="var(--ok)" stroke-width="7" stroke-linecap="round"/><path d="M22,1 L32,7 L22,13 Z" fill="var(--ok)" stroke="var(--chev-edge)" stroke-width="2" paint-order="stroke"/></svg><div style="flex:1">Entry allowed (overlay)</div></div>
+<div class="row"><svg width="34" height="14"><defs><pattern id="hatch2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="4" fill="var(--hatch-bg)"/><line x1="0" y1="0" x2="0" y2="4" stroke="var(--hatch-ln)" stroke-width="1.6"/></pattern></defs><rect x="2" y="2" width="24" height="10" rx="2" fill="url(#hatch2)" stroke="var(--no)" stroke-width="1.6"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--chev-edge)" stroke-width="7"/><line x1="30" y1="0" x2="30" y2="14" stroke="var(--no)" stroke-width="3.5"/></svg><div style="flex:1">Entry forbidden (overlay)</div></div>
+<div class="row"><svg width="34" height="18"><circle cx="17" cy="9" r="8" fill="var(--surface-2)" stroke="var(--ok)" stroke-width="1.4"/><use href="#i-bike" x="11" y="3" width="12" height="12" style="color:var(--ok)"/></svg><div style="flex:1">Bicycles may ride both ways</div></div>
+</div></div></div>
+</div>
+<p class="note" style="margin-top:20px">Sizes: stubs are 26 px long and 7 px wide at z17 on this 300 px canvas, about 12 dp in the app, always at least 6 m on the ground (as <code>ARROW_MIN_LENGTH</code> in NavigationRouteModule); chips are 40 dp high, 48 dp minimum width.</p>
+</body>
+</html>

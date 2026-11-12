@@ -61,7 +61,7 @@ const climbsLens: RouteLens = {
         const read = readClimbs(item);
         return read?.climbs.length || read?.steep.length ? () => showClimbsSection(item) : undefined;
     },
-    profile: ({ item }) => ({ brackets: readClimbs(item)?.brackets }),
+    profile: ({ item }) => ({ brackets: readClimbs(item)?.brackets, gradeLegend: true }),
     sections: ({ item }) => readClimbs(item)?.sections ?? [],
     slices: ({ item }) => readClimbs(item)?.slices ?? [],
     symbols: ({ item }) => readClimbs(item)?.symbols ?? [],

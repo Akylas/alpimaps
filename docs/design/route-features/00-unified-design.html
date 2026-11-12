@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Alpi Maps: unified route design (mockup)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* tokens: app/variables.ts equivalents, as in docs/design/mockups.html; theme = class on <body>: (none) light, dark, ink */
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);
+--bg-accent:rgba(41,182,246,.12);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.6);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--text-danger:#d32f2f;--border-danger:rgba(211,47,47,.5);--text-warn:#a15c00;--border-warn:rgba(200,120,0,.55);
+--map-control:rgba(255,255,255,.86);--map-bg:#e9ecef;--map-water:#b9d9ee;--road:#fff;--road2:#d6dadf;--route:#287bda;--casing:#fff;
+--g0:#1B4E9B;--g1:#3B7DD8;--g2:#7FB2E8;--g3:#7BC96F;--g4:#F2D14B;--g5:#F0902B;--g6:#E34A33;--g7:#9E1B18;
+--sev1:#F2A900;--sev2:#D93025;--sev3:#7A0C0C;--down:#7E57C2;
+--sunc:#F5B82E;--shade:#7C93B0;--cloud:#B0B7BF;--dark:#243049;
+--w1:#B39DDB;--w2:#7E57C2;--w3:#4527A0;--prof-line:#1b1c1d;--prof-bg:rgba(41,182,246,.08)}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);
+--bg-accent:rgba(41,182,246,.16);--text-accent:#7fd3fa;--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--text-danger:#ef9a9a;--border-danger:rgba(239,154,154,.5);--text-warn:#ffcc80;--border-warn:rgba(255,204,128,.5);
+--map-control:rgba(35,39,43,.86);--map-bg:#1a1d20;--map-water:#27465c;--road:#2c3136;--road2:#33383e;--route:#5aa2ee;--casing:#23272b;
+--shade:#5f7a9c;--cloud:#7d8791;--dark:#0d1830;--prof-line:#e8eaed;--prof-bg:rgba(127,211,250,.1)}
+.ink{--surface-0:#fff;--surface-1:#fff;--surface-2:#fff;--border:#000;--border-strong:#000;--bg-accent:#fff;--text-accent:#000;--fill-accent:#000;--on-accent:#fff;--border-accent:#000;
+--text-primary:#000;--text-secondary:#000;--text-muted:#000;--text-danger:#000;--border-danger:#000;--text-warn:#000;--border-warn:#000;--map-control:#fff;--map-bg:#fff;--map-water:#fff;--road:#fff;--road2:#999;--route:#000;--casing:#fff;
+--prof-line:#000;--prof-bg:rgba(0,0,0,.05)}
+*{box-sizing:border-box}
+body{margin:0;padding:16px 16px 60px;font-family:Roboto,system-ui,sans-serif;background:var(--surface-0);color:var(--text-primary)}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;margin:30px 0 4px;padding-top:6px;border-top:1px solid var(--border)}p.note{font-size:12px;color:var(--text-secondary);margin:2px 0 8px;max-width:960px;line-height:1.45}
+code{font-size:11px;background:var(--surface-1);padding:0 4px;border-radius:4px}
+.bar{position:sticky;top:0;z-index:50;background:var(--surface-0);padding:6px 0 8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.bar button{font:inherit;font-size:12px;padding:5px 14px;border-radius:99px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);cursor:pointer}
+.bar button.on{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.mock{font-size:10px;border:1px dashed #888;border-radius:6px;padding:1px 6px;margin-left:6px;color:var(--text-secondary);vertical-align:middle}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(318px,340px));gap:14px;padding:.5rem 0;align-items:start}
+.ph{background:var(--surface-1);border-radius:16px;padding:8px}
+.cp{font-size:11px;color:var(--text-secondary);margin:0 0 6px 4px;line-height:1.35}
+.sc{background:var(--surface-0);border-radius:12px;overflow:hidden;font-size:12px;color:var(--text-primary);position:relative}
+.ph.wide{grid-column:span 2}
+.map{height:56px;background:var(--surface-1);position:relative}
+.sh{background:var(--surface-2);border:.5px solid var(--border);border-radius:16px 16px 0 0;padding:10px 12px 12px}
+.card{background:var(--surface-2);border:.5px solid var(--border);border-radius:14px;padding:8px 10px;margin:6px 6px 0}
+.hd{display:flex;align-items:center;gap:10px;min-height:40px}
+.tl{width:33px;height:33px;border-radius:10px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;flex:none}
+.t{font-size:13px;font-weight:500;line-height:1.3}.s{font-size:11px;color:var(--text-secondary);line-height:1.35}
+.cap{font-size:11px;color:var(--text-secondary);margin:10px 0 5px;display:flex;justify-content:space-between;align-items:center}
+.ib{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);flex:none}
+svg.i{width:18px;height:18px;flex:none}.sm svg.i,svg.i.sm{width:14px;height:14px}.lg svg.i,svg.i.lg{width:22px;height:22px}
+.tiles{display:grid;gap:5px;margin:8px -6px 0}
+.tile{background:var(--surface-1);border-radius:10px;height:40px;padding:0 5px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.tile .r{display:flex;align-items:center;gap:2px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.tile .r svg{color:var(--text-secondary);width:12px;height:12px;flex:none}
+.tile .f{display:flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--text-accent);margin-top:-1px}.tile .f svg{width:11px;height:11px}
+.tile.warn{border:1px solid var(--border-danger);background:transparent}.tile.warn .r{color:var(--text-danger)}.tile.warn .r svg{color:var(--text-danger)}
+.tile small{font-weight:400;font-size:10px;color:var(--text-secondary)}
+.pills{display:flex;gap:6px;margin-top:10px;overflow:hidden}
+.p{height:33px;border:.5px solid var(--border-strong);border-radius:99px;padding:0 12px;font-size:12px;white-space:nowrap;display:flex;gap:5px;align-items:center;flex:none;background:transparent;color:var(--text-primary)}
+.p.round{width:33px;padding:0;justify-content:center}.pa{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.pt{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}.pd{color:var(--text-danger);border-color:var(--border-danger)}.p.sm{height:26px;font-size:11px;padding:0 8px}
+.chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;font-size:10.5px;border:.5px solid var(--border-strong);color:var(--text-secondary);white-space:nowrap;flex:none}
+.chip.age{color:var(--text-secondary)}.chip.stale{color:var(--text-warn);border-color:var(--border-warn)}.chip.off{color:var(--text-secondary);border-style:dashed}.chip.bad{color:var(--text-danger);border-color:var(--border-danger)}.chip.ok{color:var(--text-accent);border-color:var(--border-accent)}
+.chip svg{width:12px;height:12px}.chip.val{height:26px;font-size:11.5px;color:var(--text-primary);background:var(--surface-1);border-color:transparent}
+.ink .chip.stale{border-width:2px;font-weight:700}.ink .chip.val{border:1px solid #000;background:#fff}
+.row{display:flex;align-items:center;gap:10px;min-height:42px}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:12px 0 8px}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2);margin-left:-8px;text-decoration:none}
+.ink .trk u{border-color:#fff;outline:1px solid #000}
+.grp{background:var(--surface-2);border:.5px solid var(--border);border-radius:14px;padding:0 12px;margin-top:6px}.grp .row+.row{border-top:.5px solid var(--border)}
+.sw{width:43px;height:26px;border-radius:13px;background:var(--fill-accent);position:relative;flex:none}.sw:after{content:"";position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:var(--on-accent)}
+.sw.off{background:var(--border-strong)}.sw.off:after{right:auto;left:3px}.ink .sw{border:1px solid #000;background:#fff}.ink .sw:after{background:#000}.ink .sw.off:after{background:#fff;border:1px solid #000}
+.sec{background:var(--surface-2);border:.5px solid var(--border);border-radius:16px;margin:6px 6px 0;overflow:hidden}
+.sec>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;min-height:52px}.sec>summary::-webkit-details-marker{display:none}
+.sec .chev{transition:transform .15s;margin-left:2px}.sec[open] .chev{transform:rotate(90deg)}
+.sec .body{padding:2px 12px 12px;border-top:.5px solid var(--border)}
+.sec .sum{flex:1;min-width:0}.sec .sum .t{display:flex;align-items:center;gap:6px}.sec .sum .s{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.kv>div{background:var(--surface-1);border-radius:10px;padding:6px 8px}.kv b{display:block;font-size:13px;font-weight:500}
+.ink .kv>div,.ink .tile{border:1px solid #000}.ink .tile.warn{border-width:2px}
+.lrow{display:flex;align-items:center;gap:8px;min-height:40px;border-top:.5px solid var(--border)}.lrow:first-child{border-top:0}
+.lrow .n{width:22px;height:22px;border-radius:7px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex:none}
+.cat{font-size:10px;font-weight:700;border:1px solid var(--border-strong);border-radius:6px;padding:0 5px;height:18px;display:inline-flex;align-items:center}
+.q{background:var(--border-strong)}.ink .q{background:#fff}.ink .stack{outline:1px solid #000;border-radius:0}.stack{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:8px 0 6px}.stack span{display:block}
+.lg2{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin:4px 0}.lg2 span{display:flex;align-items:center;gap:6px;font-size:11px}.lg2 b{margin-left:auto;font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+.tbl{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}.tbl td,.tbl th{padding:4px 3px;text-align:left;border-top:.5px solid var(--border);font-weight:400}.tbl th{color:var(--text-secondary);font-size:10px;border-top:0}
+.tbl tr.chg td:first-child{box-shadow:inset 3px 0 0 var(--text-accent)}
+.ban{display:flex;align-items:center;gap:8px;border:1px solid var(--border-warn);color:var(--text-warn);border-radius:12px;padding:6px 10px;font-size:11.5px;margin-top:8px}
+.ban.danger{border-color:var(--border-danger);color:var(--text-danger)}.ban .grow{flex:1}.ink .ban{border-width:2px}
+.note2{font-size:10.5px;color:var(--text-secondary);margin-top:6px;line-height:1.4}
+.pop{background:var(--surface-2);border:.5px solid var(--border);border-radius:20px;padding:8px 12px}
+.mc{width:40px;height:40px;border-radius:50%;background:var(--map-control);border:.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;color:var(--text-primary)}
+.mc.sel{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+svg text{font-family:Roboto,system-ui,sans-serif}
+/* semantic fills, light = colour, ink = patterns (shared grammar with the map ticks) */
+.f-g0{fill:var(--g0)}.f-g1{fill:var(--g1)}.f-g2{fill:var(--g2)}.f-g3{fill:var(--g3)}.f-g4{fill:var(--g4)}.f-g5{fill:var(--g5)}.f-g6{fill:var(--g6)}.f-g7{fill:var(--g7)}
+.f-s1{fill:var(--sev1)}.f-s2{fill:var(--sev2)}.f-s3{fill:var(--sev3)}.f-sd{fill:var(--down)}
+.f-sun{fill:var(--sunc)}.f-shade{fill:var(--shade)}.f-cloud{fill:var(--cloud)}.f-dark{fill:var(--dark)}
+.f-w0{fill:transparent}.f-w1{fill:var(--w1)}.f-w2{fill:var(--w2)}.f-w3{fill:var(--w3)}
+.ink .f-g0,.ink .f-g1,.ink .f-g2,.ink .f-g3,.ink .f-g4{fill:#fff}.ink .f-g5{fill:url(#hSparse)}.ink .f-g6{fill:url(#hDense)}.ink .f-g7{fill:url(#hCross)}
+.ink .f-s1{fill:url(#hSparse)}.ink .f-s2{fill:url(#hDense)}.ink .f-s3{fill:#000}.ink .f-sd{fill:url(#hCross)}
+.ink .f-sun{fill:#fff}.ink .f-shade{fill:url(#hDense)}.ink .f-cloud{fill:url(#dots)}.ink .f-dark{fill:#000}
+.ink .f-w0{fill:#fff}.ink .f-w1{fill:url(#dots)}.ink .f-w2{fill:url(#hSparse)}.ink .f-w3{fill:url(#hDense)}
+.ink .ribbon-stroke{stroke:#000;stroke-width:.6}
+.legend{display:grid;gap:5px;margin-top:6px}.legend span{display:flex;align-items:center;gap:8px;font-size:11px}
+.sw2{width:34px;height:10px;border-radius:3px;flex:none;border:.5px solid var(--border-strong)}
+.ink .sw2{border:1px solid #000}
+.sw-g0{background:var(--g0)}.sw-g1{background:var(--g1)}.sw-g2{background:var(--g2)}.sw-g3{background:var(--g3)}.sw-g4{background:var(--g4)}.sw-g5{background:var(--g5)}.sw-g6{background:var(--g6)}.sw-g7{background:var(--g7)}
+.sw-s1{background:var(--sev1)}.sw-s2{background:var(--sev2)}.sw-s3{background:var(--sev3)}.sw-sd{background:var(--down)}
+.sw-sun{background:var(--sunc)}.sw-shade{background:var(--shade)}.sw-cloud{background:var(--cloud)}.sw-dark{background:var(--dark)}
+.sw-w0{background:var(--route)}.sw-w1{background:var(--w1)}.sw-w2{background:var(--w2)}.sw-w3{background:var(--w3)}
+.ink [class*="sw-"]{background:#fff}
+.ink .sw-g5,.ink .sw-s1,.ink .sw-w2{background:repeating-linear-gradient(135deg,#000 0 1px,#fff 1px 5px)}
+.ink .sw-g6,.ink .sw-s2,.ink .sw-w3,.ink .sw-shade{background:repeating-linear-gradient(135deg,#000 0 1.5px,#fff 1.5px 3.5px)}
+.ink .sw-g7,.ink .sw-sd{background:repeating-linear-gradient(45deg,#000 0 1px,transparent 1px 4px),repeating-linear-gradient(135deg,#000 0 1px,#fff 1px 4px)}
+.ink .sw-s3,.ink .sw-dark{background:#000}.ink .sw-cloud,.ink .sw-w1{background:radial-gradient(#000 1px,#fff 1.2px) 0 0/4px 4px}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;align-items:stretch}
+.box{background:var(--surface-2);border:1px solid var(--border-strong);border-radius:12px;padding:8px 10px;font-size:11.5px;line-height:1.4}.box b{display:block;font-size:12.5px;margin-bottom:2px}
+.box.core{background:var(--bg-accent);border-color:var(--border-accent)}
+table.rm{border-collapse:collapse;font-size:12px;width:100%;max-width:1000px}table.rm td,table.rm th{border-top:1px solid var(--border);padding:6px 8px;text-align:left;vertical-align:top}table.rm th{font-size:11px;color:var(--text-secondary)}
+.badge{font-size:10px;font-weight:700;border:1px solid var(--border-strong);border-radius:6px;padding:0 5px}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<pattern id="hSparse" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6L6 0" stroke="#000" stroke-width=".8"/></pattern>
+<pattern id="hDense" width="3.4" height="3.4" patternUnits="userSpaceOnUse"><path d="M0 3.4L3.4 0" stroke="#000" stroke-width="1"/></pattern>
+<pattern id="hCross" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 4L4 0M0 0L4 4" stroke="#000" stroke-width=".8"/></pattern>
+<pattern id="dots" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".9" fill="#000"/></pattern></defs></svg>
+
+<h1>Alpi Maps: unified route design <span class="mock">MOCKUP, fake data, icons are placeholders (the app uses mdi)</span></h1>
+<p class="note">Companion to <code>00-unified-design.md</code>. Same tokens and idioms as <code>docs/design/mockups.html</code> (stat tiles, pills, outlined warnings, panel header, round map controls, grouped rows). Use the buttons to switch the whole page between light, dark and e-ink. Sections in the route page frames are real <code>&lt;details&gt;</code>: click to collapse. Example route: <b>Col du Granier loop</b>, road bike, 62.4 km, leaves Sat 2 Nov 14:00, "now" is Sat 12:10.</p>
+<div class="bar"><b style="font-size:12px">Theme</b>
+<button id="b-light" class="on">Light</button><button id="b-dark">Dark</button><button id="b-ink">E-ink</button>
+<span style="width:12px"></span>
+<a href="#ia" class="s">1 IA</a><a href="#sheet" class="s">2 Sheet</a><a href="#page" class="s">3 Page</a><a href="#fresh" class="s">4 Freshness</a><a href="#done" class="s">5 Done ride</a><a href="#map" class="s">6 Map</a><a href="#profile" class="s">7 Profile</a><a href="#nav" class="s">8 Navigation</a><a href="#gps" class="s">9 GPS button</a><a href="#settings" class="s">10 Settings</a><a href="#roadmap" class="s">11 Roadmap</a></div>
+
+<!-- ============ 1 IA ============ -->
+<h2 id="ia">1. Information architecture</h2>
+<p class="note">Three surfaces read one stored <code>RouteAnalysis</code>. The sheet is a glance, the page is where depth and planning live, the map shows one dimension at a time.</p>
+<div class="flow">
+<div class="box"><b>Entry points</b>sheet Insights chip or tile tap, <i data-i="chart" class="sm"></i> action, routes list row menu, directions result, "Ride saved" sheet, navigation start line</div>
+<div class="box core"><b>Route sheet (glance)</b>5 tiles, profile + ribbon chips, Insights card, actions. Never grows a card per feature.</div>
+<div class="box core"><b>Route page (plan + analyse)</b>Plan card (activity, departure, pace), pinned profile, 6 collapsible sections, saved data, Done mode.</div>
+<div class="box core"><b>Map</b>one colour mode (Plain, Surface, Grade, Steep, Risk, Sun, Weather) + that mode's symbols. Same mode in navigation.</div>
+<div class="box"><b>Navigation</b>remaining route only: risk banner, "Next 2 h" outlook, ETA from the re-anchored timeline.</div>
+</div>
+<div class="flow" style="margin-top:8px">
+<div class="box"><b>RouteAnalysis (on the Item, offline)</b>inputs: activity, departure, pace, geometryKey. Layers with provenance: terrain, risk, weather, sun. Derived on read: steep, climbs, risk level, sun state, wind, best departure.</div>
+<div class="box"><b>RouteTimeline</b>vertex index &rarr; seconds since departure. The only ETA source for weather, sun, navigation.</div>
+<div class="box"><b>Freshness</b>fresh / aging / stale / inputs-changed / offline-cached / failed / pinned. Outlined chip, one refresh affordance, never blocks.</div>
+<div class="box"><b>Providers</b>Valhalla (risk, surfaces), Open-Meteo behind WeatherProvider (forecast, past), SDK route sun API (terrain), suncalc (astronomy).</div>
+</div>
+
+<!-- ============ 2 SHEET ============ -->
+<h2 id="sheet">2. Route sheet: five tiles + Insights card</h2>
+<p class="note">Tiles: Distance, Time, <b>Elevation (D+ / D- merged)</b>, <b>Steep</b>, <b>Risk</b> (bike, computed route). Weather and sun are chips in the Insights card, not tiles. Tapping a tile or chip opens the route page at that section; long press keeps the tooltip. Third frame: narrow screen / large font, tiles that do not fit spill into chips.</p>
+<div class="grid">
+<div class="ph"><p class="cp">Bike route, everything computed (320 dp: Distance and Time lose their icon, Steep and Risk their unit)</p><div class="sc">
+<div class="map"><div data-map='{"w":320,"h":56,"mode":"plain","mini":1}'></div></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i data-i="bike"></i></div><div style="flex:1"><div class="t">Col du Granier loop</div><div class="s">Cycling route · road · saved</div></div><span class="ib"><i data-i="dots"></i></span></div>
+<div class="tiles" style="grid-template-columns:.95fr .9fr 1.9fr .8fr .9fr">
+<div class="tile"><div class="r">62.4<small>km</small></div></div>
+<div class="tile"><div class="r">3 h 41</div><div class="f"><i data-i="flag"></i>17:41</div></div>
+<div class="tile"><div class="r"><i data-i="up"></i>1180<i data-i="down"></i>1175</div></div>
+<div class="tile"><div class="r"><i data-i="slope"></i>3.4</div></div>
+<div class="tile warn"><div class="r"><i data-i="warn"></i>9.8</div></div></div>
+<div class="pills"><span class="p pa"><i data-i="nav"></i>Start</span><span class="p pt"><i data-i="edit"></i>Edit</span><span class="p round"><i data-i="chart"></i></span><span class="p round"><i data-i="route"></i></span><span class="p round"><i data-i="dots"></i></span></div>
+<div class="note2" style="margin-top:4px">&uarr; the round chart-timeline action opens the route page</div>
+</div>
+<div class="card" style="margin-top:4px"><div class="cap" style="margin:0 0 4px"><span>Elevation profile</span><span data-chips></span></div>
+<div data-chart='{"w":296,"h":64,"ribbons":[],"cursor":null,"chips":["Steep 4","Risk 3","Rain","Sun 62 %"]}'></div></div>
+<div class="card" style="padding:8px 8px 8px 10px"><div style="display:flex;gap:6px;overflow:hidden;align-items:center">
+<span class="chip val"><i data-i="rain"></i>3.1 mm</span><span class="chip val"><i data-i="sun"></i>62 % sun</span><span class="chip val"><i data-i="moon"></i>dark 34 m</span><span class="chip val"><i data-i="mountain"></i>5 climbs</span><span class="chip ok" style="height:26px">Plan ›</span></div>
+<div class="note2" style="margin:4px 0 0">Insights card: one row of chips, only for layers that exist, stale ones dimmed.</div></div>
+<div style="height:8px"></div></div></div>
+
+<div class="ph"><p class="cp">Hiking route: no Risk tile, Elevation takes the width</p><div class="sc">
+<div class="map"><div data-map='{"w":320,"h":56,"mode":"plain","mini":1}'></div></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i data-i="walk"></i></div><div style="flex:1"><div class="t">Chamechaude from the Col</div><div class="s">Hiking route · saved</div></div><span class="ib"><i data-i="dots"></i></span></div>
+<div class="tiles" style="grid-template-columns:1fr 1fr 1.8fr 1fr">
+<div class="tile"><div class="r">11.2<small>km</small></div></div>
+<div class="tile"><div class="r">4 h 50</div></div>
+<div class="tile"><div class="r"><i data-i="up"></i>1020<i data-i="down"></i>1018</div></div>
+<div class="tile"><div class="r"><i data-i="slope"></i>1.9</div></div></div>
+<div class="pills"><span class="p pa"><i data-i="nav"></i>Start</span><span class="p pt"><i data-i="edit"></i>Edit</span><span class="p round"><i data-i="chart"></i></span><span class="p round"><i data-i="dots"></i></span></div></div>
+<div class="card" style="padding:8px 8px 8px 10px"><div style="display:flex;gap:6px;overflow:hidden"><span class="chip val"><i data-i="mountain"></i>3 climbs</span><span class="chip val"><i data-i="clock"></i>weather 6 h old</span><span class="chip ok" style="height:26px">Plan ›</span></div></div>
+<div style="height:90px"></div></div></div>
+
+<div class="ph"><p class="cp">Narrow / large font: Risk and Steep spill into chips</p><div class="sc">
+<div class="map"><div data-map='{"w":320,"h":56,"mode":"plain","mini":1}'></div></div>
+<div class="sh">
+<div class="hd"><div class="tl"><i data-i="bike"></i></div><div style="flex:1"><div class="t">Col du Granier loop</div><div class="s">Cycling route · road · saved</div></div><span class="ib"><i data-i="dots"></i></span></div>
+<div class="tiles" style="grid-template-columns:1fr 1fr 1.6fr"><div class="tile"><div class="r"><i data-i="ruler"></i>62.4<small>km</small></div></div><div class="tile"><div class="r"><i data-i="clock"></i>3 h 41</div></div><div class="tile"><div class="r"><i data-i="up"></i>1180<i data-i="down"></i>1175</div></div></div>
+<div class="pills"><span class="p pa"><i data-i="nav"></i>Start</span><span class="p round"><i data-i="chart"></i></span></div></div>
+<div class="card" style="padding:8px 8px 8px 10px"><div style="display:flex;gap:6px;overflow:hidden"><span class="chip val" style="border:1px solid var(--border-danger);color:var(--text-danger);background:transparent"><i data-i="warn"></i>9.8 km</span><span class="chip val"><i data-i="slope"></i>3.4 km</span><span class="chip val"><i data-i="rain"></i>3.1 mm</span></div></div>
+<div style="height:90px"></div></div></div>
+</div>
+
+<!-- ============ 3 PAGE ============ -->
+<h2 id="page">3. Route page: plan, pinned profile, collapsible sections</h2>
+<p class="note">Full page. One pinned chart; tapping a row in any section moves the scrubber and zooms the chart. Sections collapse and keep their summary line; each header carries a freshness chip. Left: top of the page. Right: lower sections (road safety, weather with shift slider, sun and shade, saved data).</p>
+<div class="grid">
+<div class="ph"><p class="cp">Top: header, plan, pinned profile, elevation, climbs</p><div class="sc">
+<div class="hd" style="padding:8px 10px;background:var(--surface-2);border-bottom:.5px solid var(--border)"><i data-i="back" class="lg"></i><div class="tl"><i data-i="bike"></i></div><div style="flex:1"><div class="t">Col du Granier loop</div><div class="s">Cycling · road · saved</div></div><span class="ib"><i data-i="refresh"></i></span><span class="ib"><i data-i="dots"></i></span></div>
+<div class="card" style="margin-top:8px">
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span class="p sm pt"><i data-i="bike" class="sm"></i>Cycling · road</span><span class="p sm"><i data-i="clock" class="sm"></i>Sat 2 Nov 14:00</span><span class="p sm"><i data-i="map" class="sm"></i>Show on map</span></div>
+<div class="cap" style="margin:8px 0 0"><span>Pace</span><span>x1.0 · flat 18 km/h</span></div><div class="trk"><i style="width:43%"></i><u style="left:43%"></u></div>
+<div class="cap" style="margin:0"><span>Stops</span><span>5 min / h</span></div><div class="trk"><i style="width:20%"></i><u style="left:20%"></u></div>
+<div style="display:flex;align-items:center;gap:8px"><div class="s" style="flex:1"><b style="color:var(--text-primary);font-size:12px">Arrive 17:41 · 3 h 41</b><br>sunset 17:07 · dark for 34 min</div><span class="p pa" style="height:34px"><i data-i="refresh"></i>Compute all</span></div>
+<div class="s" style="margin-top:6px">Updated 09:05 · terrain, risk, sun fresh · weather 3 h old</div></div>
+<div class="card"><div class="cap" style="margin:0 0 4px"><span><b style="color:var(--text-primary)">At 26.2 km</b> · 15:12 · 612 m · 6.8 % · 8–11 °C · sun</span></div>
+<div data-chart='{"w":296,"h":70,"ribbons":["steep","risk"],"cursor":42,"chips":["Steep 4","Risk 3","Rain","Sun 62 %"],"on":["steep","risk"]}'></div></div>
+<details class="sec" open><summary><div class="tl"><i data-i="mountain"></i></div><div class="sum"><div class="t">Elevation</div><div class="s">↗ 1 180 ↘ 1 175 · 214–1 420 m</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="kv"><div><span class="s">Ascent</span><b>1 180 m</b></div><div><span class="s">Descent</span><b>1 175 m</b></div><div><span class="s">Highest</span><b>1 420 m</b></div></div><div class="note2">Grade colours on the chart; ascents marked. Profile from Mapterhorn DEM, grade smoothing 60 m / baseline 100 m.</div></div></details>
+<details class="sec" open><summary><div class="tl"><i data-i="slope"></i></div><div class="sum"><div class="t">Climbs &amp; steep</div><div class="s">5 climbs · 3.4 km steep · max 16 %</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="cap" style="margin-top:6px"><span>Climbs</span><span class="p sm pt">Road preset</span></div>
+<div class="lrow"><span class="n">1</span><div style="flex:1"><div class="t">km 12.4 – 19.0</div><div class="s">6.6 km · 5.8 % · +382 m</div></div><span class="cat">Cat 2</span></div>
+<div class="lrow"><span class="n">2</span><div style="flex:1"><div class="t">km 31.0 – 34.2</div><div class="s">3.2 km · 7.4 % · +237 m</div></div><span class="cat">Cat 3</span></div>
+<div class="lrow"><span class="n">3</span><div style="flex:1"><div class="t">km 44.8 – 46.0</div><div class="s">1.2 km · 9.1 % · +109 m</div></div><span class="cat">Cat 4</span></div>
+<details style="margin-top:6px"><summary class="s" style="cursor:pointer;display:flex;align-items:center;gap:6px;list-style:none;min-height:34px"><i data-i="chev" class="sm"></i><b style="color:var(--text-primary);font-size:12px">Steep sections</b> · 4 · 3.4 km (collapsed)</summary>
+<div class="lrow"><i data-i="up" class="sm"></i><div style="flex:1" class="s">km 13.9 – 14.7 · 800 m · avg 9.8 % · max 12 %</div><span class="cat">▲▲</span></div>
+<div class="lrow"><i data-i="up" class="sm"></i><div style="flex:1" class="s">km 31.6 – 32.1 · 500 m · avg 13 % · max 16 %</div><span class="cat">▲▲▲</span></div></details>
+<div class="note2">Steep: 8 % / 12 % up, 10 % / 14 % down (road). No warning while riding.</div></div></details>
+<div style="height:8px"></div></div></div>
+
+<div class="ph"><p class="cp">Lower: road safety, weather, sun &amp; shade, saved data</p><div class="sc">
+<details class="sec" open style="margin-top:8px"><summary><div class="tl" style="color:var(--text-danger)"><i data-i="warn"></i></div><div class="sum"><div class="t">Road safety <span class="chip age"><i data-i="lock"></i>tagged</span></div><div class="s">3 fast sections · 9.8 km</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="stack"><span class="f-s2" style="flex:4;background:var(--sev2)"></span><span style="flex:6;background:var(--sev1)"></span><span class="q" style="flex:90"></span></div>
+<div class="lg2"><span><i class="dot" style="background:var(--sev2)"></i>No lane<b>4.2 km</b></span><span><i class="dot" style="background:var(--sev1)"></i>Painted lane<b>5.6 km</b></span></div>
+<div class="lrow"><i data-i="warn" class="sm"></i><div style="flex:1"><div class="t">km 5.0 – 8.1</div><div class="s">3.1 km · 80 km/h · no separation</div></div><span class="cat">80</span></div>
+<div class="lrow"><i data-i="warn" class="sm"></i><div style="flex:1"><div class="t">km 22.3 – 22.5</div><div class="s">180 m · 70 km/h · painted lane</div></div><span class="cat">70</span></div>
+<div class="note2">Based on OpenStreetMap maxspeed in the offline tiles and lane separation. Not a guarantee. Fast from ≥ 70 km/h, shortest section 30 m. Untagged roads are not evaluated (6.2 km).</div></div></details>
+
+<details class="sec" open><summary><div class="tl"><i data-i="rain"></i></div><div class="sum"><div class="t">Weather <span class="chip stale"><i data-i="refresh"></i>Outdated · 3 h</span></div><div class="s">6–11 °C · 3.1 mm at km 38 · best: 45 min earlier</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="cap" style="margin-top:6px"><span>Shift departure</span><b style="color:var(--text-primary);font-size:12px">14:00  (−45 min → 13:15)</b></div>
+<div class="trk"><i style="width:34%"></i><u style="left:34%"></u></div><div class="cap" style="margin:0"><span>−3 h</span><span>now</span><span>+3 h</span></div>
+<table class="tbl"><tr><th>km · ETA</th><th>−1 h</th><th>on time</th><th>+1 h</th></tr>
+<tr><td>0 · 14:00</td><td>☁ 9°</td><td>☁ 9°</td><td>☂ 8° 0.5</td></tr>
+<tr class="chg"><td>38 · 16:05</td><td>☁ 7° 0.4</td><td>☂ 7° <b>3.1</b></td><td>☂ 6° 2.2</td></tr>
+<tr><td>62 · 17:41</td><td>☁ 6°</td><td>☁ 6°</td><td>☁ 5°</td></tr></table>
+<div class="ban" style="border-color:var(--border-accent);color:var(--text-accent)"><i data-i="clock"></i><span class="grow">Leave 45 min earlier: 0.4 mm instead of 3.1 mm of rain</span><span class="p sm">Use</span></div>
+<div class="note2">Open-Meteo best available model · fetched 09:05 · positions sent rounded to 2 decimals · Weather data by Open-Meteo.com (CC BY 4.0)</div></div></details>
+
+<details class="sec" open><summary><div class="tl"><i data-i="sun"></i></div><div class="sum"><div class="t">Sun &amp; shade <span class="chip age"><i data-i="clock"></i>clouds 09:05</span></div><div class="s">62 % sun · dark 34 min · glare 4 km</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="stack"><span style="flex:62;background:var(--sunc)" class="sunb"></span><span style="flex:18;background:var(--shade)"></span><span style="flex:10;background:var(--cloud)"></span><span style="flex:10;background:var(--dark)"></span></div>
+<div class="lg2"><span><i class="dot" style="background:var(--sunc)"></i>Sun<b>62 %</b></span><span><i class="dot" style="background:var(--shade)"></i>Shade<b>18 %</b></span><span><i class="dot" style="background:var(--cloud)"></i>Overcast<b>10 %</b></span><span><i class="dot" style="background:var(--dark)"></i>Dark<b>34 min</b></span></div>
+<div class="kv"><div><span class="s">Sunset</span><b>17:07</b><span class="s">km 52</span></div><div><span class="s">Glare</span><b>4.0 km</b></div><div><span class="s">Sun side</span><b>R 58 %</b></div></div>
+<div class="ban" style="border-color:var(--border-strong);color:var(--text-secondary);margin-top:8px"><i data-i="moon"></i><span class="grow">Terrain only. Forest and buildings are not counted.</span><span class="p sm"><i data-i="cube" class="sm"></i>3D sun</span></div></div></details>
+
+<details class="sec"><summary><div class="tl"><i data-i="route"></i></div><div class="sum"><div class="t">Road &amp; surface</div><div class="s">80 % paved · 14 % gravel</div></div><i data-i="chev" class="chev"></i></summary><div class="body"><div class="note2">existing RouteStatsView</div></div></details>
+
+<details class="sec" open><summary><div class="tl"><i data-i="save"></i></div><div class="sum"><div class="t">Saved with this route</div><div class="s">weather 38 KB · sun 2 KB · risk 4 KB</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="lrow"><i data-i="rain" class="sm"></i><div class="s" style="flex:1">Weather snapshot, 09:05, window Sat 11:00 – Sun 02:00</div><span class="p sm"><i data-i="pin" class="sm"></i>Pin</span></div>
+<div class="lrow"><i data-i="sun" class="sm"></i><div class="s" style="flex:1">Sun, terrain basis 14:00 · x1.0</div></div>
+<div style="display:flex;gap:6px;margin-top:6px"><span class="p sm pd"><i data-i="trash" class="sm"></i>Remove data</span><span class="p sm"><i data-i="share" class="sm"></i>Share with data</span></div></div></details>
+<div class="note2" style="margin:8px 12px 12px">Weather by Open-Meteo.com (CC BY 4.0) · Map data © OpenStreetMap contributors · Elevation: Mapterhorn</div></div></div>
+</div>
+
+<!-- ============ 4 FRESHNESS ============ -->
+<h2 id="fresh">4. Freshness and staleness</h2>
+<p class="note">Same slot in every section header. Outlined chips, never filled red; in e-ink the stale chip gets a 2 px outline and the word "Outdated". Data stays visible in every state. Re-timing (shift slider, "now" departure, navigation) re-reads the stored hourly series without a request while the ride stays inside the fetched window.</p>
+<div class="grid">
+<div class="ph"><p class="cp">Weather header in each state</p><div class="sc" style="padding:6px 0 10px">
+<div class="card" style="margin-top:4px"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">6–11 °C · 3.1 mm · 14:05</div></div><span class="s">fresh</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">6–11 °C · 3.1 mm</div></div><span class="chip age"><i data-i="clock"></i>2 h old</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">6–11 °C · 3.1 mm</div></div><span class="chip stale"><i data-i="refresh"></i>Outdated · 7 h</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">departure shifted outside the fetched window</div></div><span class="chip stale"><i data-i="refresh"></i>Update for 20:00</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">showing the saved snapshot</div></div><span class="chip off"><i data-i="cloudoff"></i>Offline · 14:05</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">kept the previous data</div></div><span class="chip bad"><i data-i="warn"></i>Couldn't update · Retry</span></div></div>
+<div class="card"><div class="hd"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div class="t">Weather</div><div class="s">old data shown while updating</div></div><span class="chip ok"><i data-i="refresh"></i>Updating…</span></div></div>
+</div></div>
+
+<div class="ph"><p class="cp">Plan card: departure passed (page level)</p><div class="sc" style="padding-bottom:10px">
+<div class="card" style="margin-top:8px"><div style="display:flex;gap:6px"><span class="p sm pt"><i data-i="bike" class="sm"></i>Cycling · road</span><span class="p sm stale" style="border-color:var(--border-warn);color:var(--text-warn)"><i data-i="clock" class="sm"></i>Sat 2 Nov 08:30</span></div>
+<div class="ban"><i data-i="clock"></i><span class="grow">Departure passed (08:30). Shift to now?</span></div>
+<div style="display:flex;gap:6px;margin-top:8px"><span class="p sm pa">Shift to now</span><span class="p sm">Keep</span><span class="p sm">Pick time</span></div>
+<div class="note2">If the ride is already over (now &gt; departure + duration) "Keep" switches the page to Done mode.</div></div>
+<p class="cp" style="margin-top:10px">Header "refresh all": only stale layers are refreshed</p>
+<div class="card"><div class="hd"><span class="ib"><i data-i="back"></i></span><div style="flex:1"><div class="t">Col du Granier loop</div><div class="s">1 outdated · 1 offline</div></div><span class="ib" style="color:var(--text-accent)"><i data-i="refresh"></i></span></div>
+<div class="note2">also: pull-to-refresh on the page; tapping a chip refreshes that layer; auto-refresh when online and visible (after the first manual fetch).</div></div></div></div>
+
+<div class="ph"><p class="cp">Freshness rules (summary)</p><div class="sc" style="padding:10px 12px;font-size:11.5px;line-height:1.5">
+<b>Deterministic</b> (terrain, steep, climbs, risk classification, sun astronomy): never old; recomputed silently if geometry / options change.<br>
+<b>Static until change</b> (risk candidates, surfaces): no age; "map data of &lt;date&gt;" in details.<br>
+<b>Recomputable offline</b> (sun terrain): auto-recompute when the timeline changes (native, debounced).<br>
+<b>Fetched</b> (weather, sun clouds): TTL by lead time:
+<table class="tbl"><tr><th>lead to ride</th><th>aging</th><th>stale</th></tr><tr><td>in progress</td><td>30 min</td><td>60 min</td></tr><tr><td>≤ 24 h</td><td>1 h</td><td>3 h</td></tr><tr><td>24–72 h</td><td>3 h</td><td>6 h</td></tr><tr><td>&gt; 72 h</td><td>6 h</td><td>12 h</td></tr></table>
+<b>Past / pinned</b>: frozen, source named ("Reconstructed · ERA5 25 km").</div></div>
+</div>
+
+<!-- ============ 5 DONE ============ -->
+<h2 id="done">5. Done ride: save with data, past weather</h2>
+<p class="note">After a recording ends (or on an imported GPX with times) the page opens in Done mode: recorded timeline, past weather from Open-Meteo's Historical Forecast API (2021–2022 onward, ~1–5 km models) or ERA5 reanalysis (since 1940, ~25 km, 5-day delay), sun by astronomy + terrain. Everything is labelled as reconstructed, pinned, and never ages.</p>
+<div class="grid">
+<div class="ph"><p class="cp">"Ride saved" sheet after a recording</p><div class="sc"><div class="map" style="height:70px"><div data-map='{"w":320,"h":70,"mode":"plain","mini":1}'></div></div>
+<div class="sh"><div class="hd"><div class="tl"><i data-i="flag"></i></div><div style="flex:1"><div class="t">Ride finished</div><div class="s">Sat 2 Nov · 54.1 km · 3 h 18 moving</div></div></div>
+<div class="grp" style="margin-top:8px"><div class="row"><i data-i="rain"></i><div style="flex:1">Attach weather (reconstructed)</div><span class="sw"></span></div><div class="row"><i data-i="sun"></i><div style="flex:1">Attach sun &amp; shade</div><span class="sw"></span></div><div class="row"><i data-i="mountain"></i><div style="flex:1">Climbs &amp; steep</div><span class="sw"></span></div></div>
+<div class="pills"><span class="p pa"><i data-i="save"></i>Save ride</span><span class="p">Discard</span></div></div></div></div>
+
+<div class="ph"><p class="cp">Route page in Done mode</p><div class="sc">
+<div class="card" style="margin-top:8px"><div style="display:flex;gap:6px;flex-wrap:wrap"><span class="p sm pt"><i data-i="bike" class="sm"></i>Cycling · road</span><span class="p sm"><i data-i="clock" class="sm"></i>Sat 2 Nov 09:12 – 12:41</span><span class="p sm" style="border-style:dashed">recorded</span></div>
+<div class="s" style="margin-top:6px">Done ride · timeline from the recording (avg 16.4 km/h) · nothing to refresh</div></div>
+<details class="sec" open><summary><div class="tl"><i data-i="rain"></i></div><div class="sum"><div class="t">Weather <span class="chip ok"><i data-i="pin" ></i>Reconstructed</span></div><div class="s">5–9 °C · 1.2 mm total · wind 14 km/h head</div></div><i data-i="chev" class="chev"></i></summary>
+<div class="body"><div class="ban" style="border-color:var(--border-strong);color:var(--text-secondary)"><i data-i="clock"></i><span class="grow">From model data (Open-Meteo Historical Forecast, AROME 1.5 km), not measured.</span></div>
+<table class="tbl"><tr><th>km · time</th><th>conditions</th></tr><tr><td>0 · 09:12</td><td>☁ 5° wind 11 head</td></tr><tr class="chg"><td>31 · 11:02</td><td>☂ 7° 1.2 mm</td></tr><tr><td>54 · 12:41</td><td>☁ 9°</td></tr></table>
+<div class="note2">Older than 2021–2022: ERA5 reanalysis, ~25 km, labelled "Reconstructed · ERA5". Same privacy rules (2 decimals, explicit tap).</div></div></details>
+<details class="sec"><summary><div class="tl"><i data-i="sun"></i></div><div class="sum"><div class="t">Sun &amp; shade <span class="chip ok"><i data-i="pin"></i>Pinned</span></div><div class="s">71 % sun · cloud factor from archived irradiance</div></div><i data-i="chev" class="chev"></i></summary><div class="body"></div></details>
+<div style="height:10px"></div></div></div>
+</div>
+
+<!-- ============ 6 MAP ============ -->
+<h2 id="map">6. Map: one colour mode at a time, per-mode symbols</h2>
+<p class="note">Line channel = exactly one mode (casing constant, dash reserved for status). Symbol channel = marks belonging to the active mode. Warning modes (Steep, Risk) share an amber-to-red ramp; descriptive modes use their own palettes; the app accent is never a mode colour. E-ink: black slice with white ticks (none / sparse / dense / solid) = severity, plus the same symbols. Click the mode pills in the first frame.</p>
+<div class="grid">
+<div class="ph wide" style="grid-column:span 1"><p class="cp">Interactive: mode selector + inline legend (map control opens this popover)</p><div class="sc" style="height:430px">
+<div id="mapMain" style="position:absolute;inset:0"></div>
+<div class="mc" style="position:absolute;left:10px;top:10px"><i data-i="back"></i></div>
+<div class="mc sel" style="position:absolute;right:10px;bottom:232px"><i data-i="swatch" class="lg"></i></div>
+<div class="mc" style="position:absolute;right:10px;bottom:282px"><i data-i="layers"></i></div>
+<div class="pop" style="position:absolute;left:10px;right:10px;bottom:10px"><div class="hd" style="min-height:34px"><div class="tl"><i data-i="swatch"></i></div><div class="t" style="flex:1">Route colours</div><span class="s" id="legTitle"></span></div>
+<div style="display:flex;gap:5px;flex-wrap:wrap" id="modePills"></div><div class="legend" id="legendBox"></div></div></div></div>
+
+<div class="ph"><p class="cp">Gallery: the same route in each mode (follows the theme)</p><div class="sc" style="padding:6px;display:grid;gap:8px" id="gallery"></div></div>
+</div>
+
+<div class="grid" style="margin-top:6px">
+<div class="ph"><p class="cp">Z-order, bottom to top (navigating)</p><div class="sc" style="padding:12px;font-size:11.5px;line-height:1.7">
+9 &nbsp;user position / selection<br>8 &nbsp;<b>poi</b>: km shields, waypoints, summits, <b>mode symbols</b> (badges, wx, chevrons)<br>7 &nbsp;stops<br>6 &nbsp;<b>junctions</b> (wrong-way entry stubs)<br>6 &nbsp;maneuver arrows<br>5 &nbsp;<b>navigation</b>: route &rarr; <b>rt colour slices</b> &rarr; detour / original<br>4 &nbsp;directions preview<br>3 &nbsp;items (saved routes, selected casing)<br>2 &nbsp;routes network<br>1 &nbsp;base map + one-way chevrons<br>
+<div class="note2">Not navigating, rt slices sit in poi sub-layer 2 (items data source). While navigating they move to the navigation layer so maneuver arrows stay on top.</div></div></div>
+<div class="ph"><p class="cp">Feature contract the style reads</p><div class="sc" style="padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:10px;line-height:1.5;white-space:pre;overflow-x:auto">LineString  class='rt'
+  rt : surface|grade|steep|risk|sun|weather
+  k  : colour key in the mode
+  s  : severity 0..3  (e-ink ticks)
+  i0,i1 : vertex range   dir : 1|-1  gl : 0|1
+Point  class = speedbadge | wx | steeplabel | sunmark
+  v, est, icon, t, p, wd
+style: shared/routemodes.mss  (voyager+eink)
+  #poi[...][class='rt'], #navigation[...][class='rt']
+  @rt_* variables live in voyager/ and eink/ style.mss</div></div>
+</div>
+
+<!-- ============ 7 PROFILE ============ -->
+<h2 id="profile">7. Profile with stacked ribbons and the scrubber</h2>
+<p class="note">Collapsed by default: the chart looks as today. Chips with counts under it are the ribbon toggles (max 3 on at once). Each ribbon has a gutter glyph. One scrubber links the chart, the map marker and the weather and sun rows. The strip above shows contextual cells.</p>
+<div class="grid">
+<div class="ph"><p class="cp">Default: grade fill only, ribbon chips collapsed</p><div class="sc"><div class="card" style="margin-top:6px"><div class="cap" style="margin:0 0 4px"><span>Elevation profile</span><span>tap or drag</span></div>
+<div data-chart='{"w":296,"h":74,"ribbons":[],"cursor":null,"chips":["Steep 4","Risk 3","Rain","Sun 62 %"],"on":[]}'></div></div><div style="height:6px"></div></div></div>
+<div class="ph"><p class="cp">Steep + Risk + Weather on, scrubber at km 26 (contextual strip)</p><div class="sc"><div class="card" style="margin-top:6px">
+<div style="display:flex;align-items:center;gap:6px;background:var(--bg-accent);border:.5px solid var(--border-accent);border-radius:12px;padding:5px 6px 5px 8px;color:var(--text-accent)"><i data-i="pin"></i>
+<div style="flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;text-align:center;font-size:10px"><div><i data-i="ruler" class="sm"></i><div class="t">26.2</div></div><div><i data-i="mountain" class="sm"></i><div class="t">612</div></div><div><i data-i="slope" class="sm"></i><div class="t">6.8 %</div></div><div><i data-i="clock" class="sm"></i><div class="t">15:12</div></div><div><i data-i="warn" class="sm"></i><div class="t">80</div></div><div><i data-i="rain" class="sm"></i><div class="t">9°</div></div></div></div>
+<div data-chart='{"w":296,"h":74,"ribbons":["steep","risk","weather"],"cursor":42,"chips":["Steep 4","Risk 3","Rain","Sun 62 %"],"on":["steep","risk","weather"]}'></div></div><div style="height:6px"></div></div></div>
+<div class="ph"><p class="cp">Sun ribbon + weather ribbon expanded (tap)</p><div class="sc"><div class="card" style="margin-top:6px">
+<div data-chart='{"w":296,"h":74,"ribbons":["weather","sun"],"cursor":70,"chips":["Steep 4","Risk 3","Rain","Sun 62 %"],"on":["weather","sun"],"expandWeather":1}'></div></div><div style="height:6px"></div></div></div>
+</div>
+
+<!-- ============ 8 NAV ============ -->
+<h2 id="nav">8. Navigation: the remaining route, re-anchored</h2>
+<p class="note">Computed at 09:05, left at 14:00: data is shown with its age, the timeline is re-anchored on the position (t' = now + (t(i) − t(here)) / pace factor), samples behind the rider are dropped. Road risk = banner only. Steep = never live. The outlook is a time axis (15 min cells), not distance. Right frame: e-ink.</p>
+<div class="grid">
+<div class="ph"><p class="cp">Following a bike route (light/dark follow the toggle)</p><div class="sc" style="height:610px;background:var(--surface-0)">
+<div style="position:absolute;left:0;right:0;top:0;height:330px"><div data-map='{"w":320,"h":330,"mode":"risk","nav":1}'></div></div>
+<div class="ban danger" style="position:absolute;left:10px;right:10px;top:10px;background:var(--surface-2);height:46px"><i data-i="warn"></i><span class="grow"><b>Fast road in 400 m</b><br><span style="font-size:10.5px">80 km/h · no cycle lane · 2.3 km</span></span><i data-i="x"></i></div>
+<div style="position:absolute;left:8px;right:8px;top:340px">
+<div class="card" style="margin:0 0 6px;padding:6px 12px 4px"><div style="width:32px;height:4px;border-radius:2px;background:var(--border-strong);margin:0 auto 4px"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center"><div><div class="s">Remaining</div><div style="font-size:24px;font-weight:700">38.2<small style="font-size:12px;font-weight:400"> km</small></div></div><div><div class="s">Ascent</div><div style="font-size:24px;font-weight:700">+420<small style="font-size:12px;font-weight:400"> m</small></div></div><span class="p pa round" style="width:44px;height:44px"><i data-i="pause"></i></span></div>
+<div style="display:flex;justify-content:space-between;border-top:.5px solid var(--border);padding-top:4px;margin-top:4px" class="s"><span>2 h 10 left · pace x0.93</span><span>Arrival <b style="color:var(--text-primary)">17:48</b></span></div></div>
+<div class="card" style="margin:0 0 6px;padding:6px 8px">
+<div style="display:flex;align-items:center;justify-content:space-between"><span class="s"><b style="color:var(--text-primary)">Next 2 h</b> · rain mm shown</span><span class="chip stale"><i data-i="refresh"></i>as of 09:05 · 3 h</span></div>
+<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin-top:4px;text-align:center;font-size:10px" id="outlook"></div>
+<div id="outRib"></div></div>
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:6px"><div class="card" style="margin:0;padding:6px 10px;height:66px"><div class="s">Grade · elevation ahead</div><div style="font-size:20px;font-weight:700">+6.4 <small style="font-size:11px;font-weight:400">%</small></div></div><div class="card" style="margin:0;padding:6px 10px;height:66px"><div class="s">Surface ahead</div><div class="stack" style="margin:8px 0"><span style="flex:3;background:var(--border-strong)"></span><span style="flex:1;background:var(--sev1)"></span></div></div></div>
+</div></div></div>
+
+<div class="ph"><p class="cp">E-ink navigation (forced ink)</p><div class="sc ink" style="height:610px;--surface-0:#fff;--surface-1:#fff;--surface-2:#fff;--border:#000;--border-strong:#000;--bg-accent:#fff;--text-accent:#000;--fill-accent:#000;--on-accent:#fff;--border-accent:#000;--text-primary:#000;--text-secondary:#000;--text-danger:#000;--border-danger:#000;--text-warn:#000;--border-warn:#000;--map-bg:#fff;--route:#000;--road2:#999;--map-water:#fff;--prof-line:#000;background:#fff">
+<div style="position:absolute;left:0;right:0;top:0;height:330px"><div data-map='{"w":320,"h":330,"mode":"risk","nav":1,"forceInk":1}'></div></div>
+<div class="ban danger" style="position:absolute;left:10px;right:10px;top:10px;background:#fff;height:46px;border:2px solid #000"><i data-i="warn"></i><span class="grow"><b>Fast road in 400 m</b><br><span style="font-size:10.5px">80 km/h · no cycle lane · 2.3 km</span></span><i data-i="x"></i></div>
+<div style="position:absolute;left:8px;right:8px;top:340px">
+<div class="card" style="margin:0 0 6px;border:1px solid #000;padding:6px 12px 4px"><div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center"><div><div class="s">Remaining</div><div style="font-size:24px;font-weight:700">38.2<small style="font-size:12px;font-weight:400"> km</small></div></div><div><div class="s">Ascent</div><div style="font-size:24px;font-weight:700">+420<small style="font-size:12px;font-weight:400"> m</small></div></div><span class="p pa round" style="width:44px;height:44px"><i data-i="pause"></i></span></div>
+<div style="display:flex;justify-content:space-between;border-top:1px solid #000;padding-top:4px;margin-top:4px" class="s"><span>2 h 10 left</span><span>Arrival <b>17:48</b></span></div></div>
+<div class="card" style="margin:0;border:1px solid #000;padding:6px 8px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="s"><b>Next 2 h</b></span><span class="chip stale">Outdated · as of 09:05</span></div>
+<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin-top:4px;text-align:center;font-size:10px" id="outlookInk"></div></div></div></div></div>
+</div>
+
+<!-- ============ 9 GPS ============ -->
+<h2 id="gps">9. GPS follow button with the travel-mode tab</h2>
+<p class="note">Tap and long press on the round button keep their meaning (go to me and follow; keep watching). A half-pill <b>tab</b> docks on its top edge while following: tap cycles Walk &rarr; Bike &rarr; Car &rarr; From route, long press opens the options. Adds a tutorial zone <code>travel_mode</code> (map page) and strings in en + fr in the same change.</p>
+<div class="grid">
+<div class="ph"><p class="cp">States (left to right): idle · following, bike · from route · navigating (locked)</p><div class="sc" style="height:240px;background:var(--map-bg)">
+<div style="position:absolute;inset:0" data-map='{"w":320,"h":240,"mode":"bg"}'></div>
+<!-- idle -->
+<div style="position:absolute;left:14px;bottom:14px;width:52px;display:flex;flex-direction:column;align-items:center"><div class="mc" style="width:48px;height:48px"><i data-i="gps" class="lg"></i></div><div class="s" style="margin-top:3px;background:var(--surface-2);padding:0 4px;border-radius:6px">idle</div></div>
+<!-- following bike -->
+<div style="position:absolute;left:84px;bottom:14px;width:60px;display:flex;flex-direction:column;align-items:center"><div class="mc" style="width:40px;height:26px;border-radius:13px 13px 6px 6px;margin-bottom:-4px;z-index:2"><i data-i="bike" class="sm"></i></div><div class="mc sel" style="width:48px;height:48px;background:var(--fill-accent);color:var(--on-accent)"><i data-i="gps" class="lg"></i></div><div class="s" style="margin-top:3px;background:var(--surface-2);padding:0 4px;border-radius:6px">bike</div></div>
+<!-- from route -->
+<div style="position:absolute;left:164px;bottom:14px;width:60px;display:flex;flex-direction:column;align-items:center"><div class="mc" style="width:40px;height:26px;border-radius:13px 13px 6px 6px;margin-bottom:-4px;z-index:2;position:relative"><i data-i="walk" class="sm"></i><span style="position:absolute;right:2px;top:1px;font-size:8px;font-weight:700;background:var(--fill-accent);color:var(--on-accent);border-radius:6px;padding:0 3px">A</span></div><div class="mc sel" style="width:48px;height:48px;background:var(--fill-accent);color:var(--on-accent)"><i data-i="gps" class="lg"></i></div><div class="s" style="margin-top:3px;background:var(--surface-2);padding:0 4px;border-radius:6px">from route</div></div>
+<!-- navigating -->
+<div style="position:absolute;right:12px;bottom:14px;width:60px;display:flex;flex-direction:column;align-items:center"><div class="mc" style="width:44px;height:44px;opacity:.5"><i data-i="gps"></i></div><div class="s" style="margin-top:3px;background:var(--surface-2);padding:0 4px;border-radius:6px;text-align:center">nav rail,<br>no tab</div></div>
+</div></div>
+
+<div class="ph"><p class="cp">Long press on the tab: options popover</p><div class="sc" style="height:300px;background:var(--map-bg)"><div style="position:absolute;inset:0" data-map='{"w":320,"h":300,"mode":"bg"}'></div>
+<div class="pop" style="position:absolute;left:10px;right:76px;bottom:12px"><div class="hd" style="min-height:36px"><div class="tl"><i data-i="bike"></i></div><div class="t" style="flex:1">Travel mode</div></div>
+<div style="display:flex;gap:4px;flex-wrap:wrap"><span class="p sm"><i data-i="walk" class="sm"></i>Walk</span><span class="p sm pt"><i data-i="bike" class="sm"></i>Bike</span><span class="p sm"><i data-i="car" class="sm"></i>Car</span><span class="p sm">From route</span></div>
+<div class="row" style="min-height:36px"><span style="flex:1">Show turn options</span><span class="sw"></span></div><div class="row" style="min-height:36px"><span style="flex:1">One-way look</span><span class="s">Bold + band</span></div><div class="s" style="padding:0 0 4px">Look ahead 500 m</div></div>
+<div style="position:absolute;right:14px;bottom:14px;width:60px;display:flex;flex-direction:column;align-items:center"><div class="mc" style="width:40px;height:26px;border-radius:13px 13px 6px 6px;margin-bottom:-4px;z-index:2;border-color:var(--border-accent)"><i data-i="bike" class="sm"></i></div><div class="mc sel" style="width:48px;height:48px;background:var(--fill-accent);color:var(--on-accent)"><i data-i="gps" class="lg"></i></div></div></div></div>
+
+<div class="ph"><p class="cp">Following with the junction chips (chips only; mode chip in the middle)</p><div class="sc" style="height:300px;background:var(--map-bg)"><div style="position:absolute;inset:0" data-map='{"w":320,"h":300,"mode":"junction"}'></div>
+<div style="position:absolute;left:8px;top:120px" class="mc"><span style="font-size:10px;font-weight:700;text-align:center;line-height:1.1"><i data-i="turnl" class="sm"></i><br>190 m</span></div>
+<div style="position:absolute;right:8px;top:120px" class="mc"><span style="font-size:10px;font-weight:700;text-align:center;line-height:1.1"><i data-i="turnr" class="sm"></i><br>60 m</span></div>
+<div style="position:absolute;left:50%;margin-left:-20px;top:10px" class="mc sel"><i data-i="bike"></i></div></div></div>
+</div>
+
+<!-- ============ 10 SETTINGS ============ -->
+<h2 id="settings">10. Settings: "Route analysis" sub-page (Routing section)</h2>
+<div class="grid"><div class="ph"><p class="cp">Settings &gt; Routing &gt; Route analysis</p><div class="sc" style="padding-bottom:10px">
+<div class="hd" style="padding:10px 12px;min-height:53px;background:var(--surface-2);border-bottom:.5px solid var(--border)"><i data-i="back" class="lg"></i><div style="flex:1;font-size:16px;font-weight:500">Route analysis</div><i data-i="search"></i></div>
+<div style="padding:0 12px">
+<div class="cap" style="color:var(--text-accent)">Climbs and steep</div><div class="grp">
+<div class="row"><div class="tl"><i data-i="slope"></i></div><div style="flex:1"><div>Preset</div><div class="s">Auto (from activity)</div></div><i data-i="chevr" class="sm"></i></div>
+<div class="row"><div class="tl"><i data-i="up"></i></div><div style="flex:1"><div>Steep from</div><div class="s">road 8 % · very steep 12 %</div></div><i data-i="chevr" class="sm"></i></div></div>
+<div class="cap" style="color:var(--text-accent)">Road safety (cycling)</div><div class="grp">
+<div class="row"><div class="tl"><i data-i="warn"></i></div><div style="flex:1">Show on routes</div><span class="sw"></span></div>
+<div style="padding:4px 0 2px"><div style="display:flex;justify-content:space-between"><span>Fast from</span><span class="s">70 km/h</span></div><div class="trk"><i style="width:33%"></i><u style="left:33%"></u></div></div>
+<div style="padding:4px 0 2px"><div style="display:flex;justify-content:space-between"><span>Shortest section</span><span class="s">30 m</span></div><div class="trk"><i style="width:6%"></i><u style="left:6%"></u></div></div></div>
+<div class="cap" style="color:var(--text-accent)">Weather</div><div class="grp">
+<div class="row"><div class="tl"><i data-i="refresh"></i></div><div style="flex:1"><div>Keep up to date</div><div class="s">after the first fetch for a route</div></div><span class="sw"></span></div>
+<div class="row"><div class="tl"><i data-i="lock"></i></div><div style="flex:1"><div>Location precision</div><div class="s">2 decimals (~1 km)</div></div><i data-i="chevr" class="sm"></i></div>
+<div class="row"><div class="tl"><i data-i="rain"></i></div><div style="flex:1"><div>Open-Meteo</div><div class="s">Attribution · terms · donation</div></div><i data-i="chevr" class="sm"></i></div></div>
+<div class="cap" style="color:var(--text-accent)">Plan and sun</div><div class="grp">
+<div class="row"><div class="tl"><i data-i="clock"></i></div><div style="flex:1"><div>Pace and stops</div><div class="s">x1.0 · 0 min / h</div></div><i data-i="chevr" class="sm"></i></div>
+<div class="row"><div class="tl"><i data-i="sun"></i></div><div style="flex:1">Count terrain shade</div><span class="sw"></span></div></div>
+<div class="note2" style="margin-top:8px">Navigation toggles (risk banner, outlook strip, rain alert) live in the navigation settings list.</div></div></div></div>
+</div>
+
+<!-- ============ 11 ROADMAP ============ -->
+<h2 id="roadmap">11. Roadmap</h2>
+<p class="note">Effort S / M / L. Foundations (F0 pure modules, F1 storage + status, F2 DeparturePill + stats-fetch fixes) are inside R1 and R2. External lead items start early: cairn PR (R4), SDK route sun API (R7), SDK lookahead (R8c).</p>
+<table class="rm"><tr><th>Release</th><th>Ships</th><th>Effort</th><th>Depends on</th></tr>
+<tr><td><b>R1 Climbs</b></td><td>steep.ts, 5-tile row (Elevation merged, Steep), Climbs card (collapsible), climb categories, GPX activity ask, presets + settings, analysis column + migration, e-ink hatch on the profile</td><td><span class="badge">S–M</span></td><td>F0, F1</td></tr>
+<tr><td><b>R2 Route page + timeline</b></td><td>RouteTimeline, DeparturePill, page shell + Plan card + existing sections, Insights card, entry points, sun tier 0, freshness machinery, tutorial page</td><td><span class="badge">L</span></td><td>R1, F2</td></tr>
+<tr><td><b>R3 Weather</b></td><td>WeatherProvider (Open-Meteo), cache, section, shift slider, best departure, chips, multi-day, privacy setting</td><td><span class="badge">L</span></td><td>R2</td></tr>
+<tr><td><b>R4 Road risk</b></td><td>tiles maxspeed + cairn lane data, roadRisk.ts, Risk tile, Road safety section</td><td><span class="badge">M</span> + cairn PR</td><td>F1, F2</td></tr>
+<tr><td><b>R5 Map colour modes</b></td><td>routemodes.mss (voyager + eink), modeFeatures builder, selector, legend, badges, weather markers</td><td><span class="badge">L</span></td><td>R1; R3, R4, R7 feed their modes</td></tr>
+<tr><td><b>R6 Navigation outlook</b></td><td>re-anchored timeline and ETA, Next 2 h, risk banner, stale chip</td><td><span class="badge">M</span></td><td>R2, R3, R4</td></tr>
+<tr><td><b>R7 Terrain sun</b></td><td>SDK route sun API, Sun bands, Sun mode on map, route sun mode in 3D</td><td><span class="badge">M</span> + SDK</td><td>R2</td></tr>
+<tr><td><b>R8 Wrong-way / travel mode</b></td><td>a: bolder chevrons (S, any time) · b: mode tab + chips on a route (M) · c: free ride (L, SDK)</td><td><span class="badge">S / M / L</span></td><td>a none; b R2 + spike; c SDK</td></tr>
+<tr><td><b>R9 Done rides</b></td><td>recorded timeline, GPX times, past weather (Historical Forecast / ERA5), pinning, "Ride saved" sheet</td><td><span class="badge">M</span></td><td>R2, R3</td></tr></table>
+
+<script>
+/* ---------- icons (stroke, 24 grid) ---------- */
+const IC={
+walk:'<circle cx="13" cy="4.5" r="1.8"/><path d="M11 21l1.6-6-2.6-2.6.8-5.4L8 11M12.8 7.5l3 2.4 3 .3M13.6 15l3.4 2 1 4"/>',
+bike:'<circle cx="5.5" cy="16.5" r="3.5"/><circle cx="18.5" cy="16.5" r="3.5"/><path d="M5.5 16.5L9 8h6l3.5 8.5M9 8l3.5 8.5M7.5 5.5H10"/>',
+car:'<path d="M4 16v-4l2-5h12l2 5v4zM3 16h18M7 19v-3M17 19v-3"/><circle cx="8" cy="13" r=".6"/><circle cx="16" cy="13" r=".6"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+rain:'<path d="M7 15a4 4 0 0 1-.5-7.9A5.5 5.5 0 0 1 17 6.5a4.5 4.5 0 0 1 .5 8.5z"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3"/>',
+cloudoff:'<path d="M7 18a4 4 0 0 1-.5-7.9A5.5 5.5 0 0 1 14 6M17.5 10A4.5 4.5 0 0 1 18 18H8M3 3l18 18"/>',
+cloud:'<path d="M7 18a4 4 0 0 1-.5-7.9A5.5 5.5 0 0 1 17 9.5a4.5 4.5 0 0 1 .5 8.5z"/>',
+moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+warn:'<path d="M12 3l10 17H2zM12 10v4.5M12 17.2v.3"/>',
+refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+mountain:'<path d="M2.5 20L9 9l4 6 2.5-3.5L21.5 20z"/>',
+slope:'<path d="M3 18l7-7 4 4 7-8M15 7h6v6"/>',
+up:'<path d="M5 17L17 7M9 7h8v8"/>',down:'<path d="M5 7l12 10M17 9v8H9"/>',
+ruler:'<path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4" />',
+flag:'<path d="M5 21V4h12l-2 4 2 4H5"/>',
+nav:'<path d="M12 2l7 19-7-4-7 4z"/>',
+edit:'<path d="M4 20l1-4L16 5l3 3L8 19zM14 7l3 3"/>',
+dots:'<circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/>',
+chart:'<path d="M4 20V4M4 20h16M8 16l4-5 3 3 5-7"/>',
+route:'<circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
+back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+chev:'<path d="M9 6l6 6-6 6"/>',chevr:'<path d="M9 6l6 6-6 6"/>',
+layers:'<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',
+swatch:'<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><path d="M13 17h8"/>',
+map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/>',
+gps:'<circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+x:'<path d="M6 6l12 12M18 6L6 18"/>',
+pause:'<path d="M8 5v14M16 5v14"/>',
+save:'<path d="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>',
+pin:'<path d="M12 21v-7M8 14h8l-1-6 2-3H7l2 3z"/>',
+lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+trash:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',
+share:'<circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 11l8-4M8 13l8 4"/>',
+cube:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+turnl:'<path d="M18 20v-8a4 4 0 0 0-4-4H6M10 4L6 8l4 4"/>',turnr:'<path d="M6 20v-8a4 4 0 0 1 4-4h8M14 4l4 4-4 4"/>'};
+function ic(n,cls){return '<svg class="i '+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(IC[n]||'')+'</svg>'}
+function icons(root){(root||document).querySelectorAll('i[data-i]').forEach(e=>{const t=document.createElement('span');t.style.display='inline-flex';t.innerHTML=ic(e.dataset.i,(e.className||''));e.replaceWith(t.firstChild)})}
+
+const isInk=()=>document.body.classList.contains('ink');
+/* ---------- elevation profile ---------- */
+const ELEV=[[0,250],[8,262],[14,330],[22,420],[28,500],[36,480],[44,430],[50,640],[56,700],[62,660],[70,540],[74,690],[80,760],[85,600],[92,420],[100,300]];
+function elevAt(x){for(let i=1;i<ELEV.length;i++){if(x<=ELEV[i][0]){const a=ELEV[i-1],b=ELEV[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])}}return 300}
+function gradeClass(g){return g<-9?0:g<-6?1:g<-3?2:g<3?3:g<6?4:g<9?5:g<12?6:7}
+const SUNSEG=[[0,14,'sun'],[14,30,'shade'],[30,44,'sun'],[44,58,'cloud'],[58,70,'sun'],[70,82,'shade'],[82,100,'dark']];
+const WXSEG=[[0,30,0],[30,48,1],[48,62,3],[62,80,2],[80,100,0]];
+const STEEP=[[22,27,'s1'],[48,52,'s2'],[71,74,'s1'],[81,83,'sd']];
+const RISK=[[8,13,'s2','80'],[36,40,'s1','70'],[88,91,'s2','90']];
+const XL=22; /* left gutter for ribbon glyphs */
+function chart(o){
+  const W=o.w||296,H=o.h||70,L=22,R=W-4,pw=R-L,top=6,bot=H-12;
+  const emin=200,emax=800,y=e=>bot-(e-emin)/(emax-emin)*(bot-top),x=p=>L+p/100*pw;
+  let s='<svg viewBox="0 0 '+W+' '+(H+((o.ribbons||[]).length*13)+(o.expandWeather?26:0)+8)+'" width="100%" role="img">';
+  s+='<text class="ts" x="0" y="'+(top+3)+'" style="font-size:8px;fill:var(--text-secondary)">800</text><text x="0" y="'+(y(500)+3)+'" style="font-size:8px;fill:var(--text-secondary)">500</text>';
+  s+='<line x1="'+L+'" y1="'+top+'" x2="'+R+'" y2="'+top+'" stroke="var(--border)" stroke-width=".5"/><line x1="'+L+'" y1="'+y(500)+'" x2="'+R+'" y2="'+y(500)+'" stroke="var(--border)" stroke-width=".5"/>';
+  let line='';const step=2;
+  for(let p=0;p<100;p+=step){const e0=elevAt(p),e1=elevAt(p+step),g=(e1-e0)/(step/100*62400)*100;s+='<path class="f-g'+gradeClass(g)+'" d="M'+x(p)+' '+y(e0)+' L'+x(p+step)+' '+y(e1)+' L'+x(p+step)+' '+bot+' L'+x(p)+' '+bot+'Z"/>';line+=(p?'L':'M')+x(p)+' '+y(e0)+' '}
+  s+='<path d="'+line+'L'+R+' '+y(elevAt(100))+'" fill="none" stroke="var(--prof-line)" stroke-width="1.2"/>';
+  /* ascent summits */
+  s+='<path d="M'+x(56)+' '+(y(700)-2)+' l-3 -5 h6z" fill="var(--text-primary)"/>';
+  if(o.cursor!=null){const cx=x(o.cursor);s+='<line x1="'+cx+'" y1="0" x2="'+cx+'" y2="'+(H+((o.ribbons||[]).length*13)+(o.expandWeather?26:0))+'" stroke="var(--text-accent)" stroke-width="1.2"/><circle cx="'+cx+'" cy="'+y(elevAt(o.cursor))+'" r="4" fill="var(--text-accent)" stroke="var(--surface-2)" stroke-width="1.5"/>'}
+  s+='<text x="'+L+'" y="'+(H-1)+'" style="font-size:8px;fill:var(--text-secondary)">0</text><text x="'+R+'" text-anchor="end" y="'+(H-1)+'" style="font-size:8px;fill:var(--text-secondary)">62.4 km</text>';
+  let ry=H+3;
+  (o.ribbons||[]).forEach(r=>{
+    s+='<g transform="translate(0 '+ry+')">';
+    const gl={steep:'slope',risk:'warn',weather:'rain',sun:'sun'}[r];
+    s+='<g transform="translate(3 -1) scale(.5)" style="color:var(--text-secondary)">'+svgIconInner(gl)+'</g>';
+    const h=(r==='weather'&&o.expandWeather)?36:10;
+    s+='<rect x="'+L+'" y="0" width="'+pw+'" height="'+h+'" rx="2" fill="none" stroke="var(--border)" stroke-width=".5"/>';
+    if(r==='steep'){STEEP.forEach(([a,b,c])=>{s+='<rect class="f-'+c+' ribbon-stroke" x="'+x(a)+'" y="0" width="'+(x(b)-x(a))+'" height="10" stroke="rgba(0,0,0,.25)" stroke-width=".4"/><text x="'+(x(a)+x(b))/2+'" y="8" text-anchor="middle" style="font-size:7px;fill:'+(isInk()&&c!=='sd'?'#fff':'#000')+';paint-order:stroke;'+(isInk()?'stroke:#000;stroke-width:1.5px':'')+'">'+(c==='sd'?'▽':'▲')+'</text>'})}
+    if(r==='risk'){RISK.forEach(([a,b,c,v])=>{s+='<rect class="f-'+c+'" x="'+x(a)+'" y="0" width="'+(x(b)-x(a))+'" height="10" stroke="rgba(0,0,0,.25)" stroke-width=".4"/><text x="'+(x(a)+x(b))/2+'" y="8" text-anchor="middle" style="font-size:7px;font-weight:700;fill:'+(isInk()?'#fff':'#000')+';paint-order:stroke;'+(isInk()?'stroke:#000;stroke-width:1.6px':'stroke:#fff;stroke-width:1.2px')+'">'+v+'</text>'})}
+    if(r==='sun'){SUNSEG.forEach(([a,b,c])=>{s+='<rect class="f-'+c+'" x="'+x(a)+'" y="0" width="'+(x(b)-x(a))+'" height="10" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>'});s+='<path d="M'+x(82)+' -2 v14" stroke="var(--text-primary)" stroke-width="1"/>'}
+    if(r==='weather'){if(o.expandWeather){WXSEG.forEach(([a,b,c])=>{const hh=[0,6,16,30][c];s+='<rect class="f-w'+(c||0)+'" x="'+x(a)+'" y="'+(36-hh)+'" width="'+(x(b)-x(a))+'" height="'+hh+'" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>'});
+        s+='<path d="M'+x(0)+' 10 L'+x(30)+' 12 L'+x(48)+' 6 L'+x(62)+' 8 L'+x(80)+' 14 L'+x(100)+' 16" fill="none" stroke="var(--text-primary)" stroke-width="1"/><text x="'+x(51)+'" y="30" style="font-size:7px;font-weight:700;fill:var(--text-primary)">3.1 mm</text><text x="'+(x(0)+2)+'" y="8" style="font-size:7px;fill:var(--text-secondary)">9°</text><text x="'+(x(100)-14)+'" y="22" style="font-size:7px;fill:var(--text-secondary)">6°</text>'}
+      else{WXSEG.forEach(([a,b,c])=>{s+='<rect class="f-w'+c+'" x="'+x(a)+'" y="0" width="'+(x(b)-x(a))+'" height="10" stroke="rgba(0,0,0,.2)" stroke-width=".4"/>'});s+='<text x="'+x(51)+'" y="8" text-anchor="middle" style="font-size:7px;font-weight:700;fill:'+(isInk()?'#fff':'#fff')+';paint-order:stroke;stroke:#000;stroke-width:1.4px">3.1</text>'}}
+    s+='</g>';ry+=(r==='weather'&&o.expandWeather)?42:13;
+  });
+  s+='</svg>';
+  if(o.chips){s+='<div style="display:flex;gap:4px;margin-top:2px;overflow:hidden">'+o.chips.map(c=>{const key=c.toLowerCase().split(' ')[0];const k={steep:'steep',risk:'risk',rain:'weather',sun:'sun'}[key];const on=(o.on||[]).includes(k);return '<span class="p sm'+(on?' pt':'')+'" style="height:24px;padding:0 6px;gap:3px;'+(on&&isInk()?'border-width:2px;font-weight:700':'')+'">'+ic({steep:'slope',risk:'warn',weather:'rain',sun:'sun'}[k],'sm')+c+'</span>'}).join('')+'</div>'}
+  return s}
+function svgIconInner(n){return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(IC[n]||'')+'</svg>'}
+
+/* ---------- map ---------- */
+const PTS=[[18,0.82],[50,0.7],[80,0.62],[104,0.44],[140,0.5],[170,0.34],[200,0.3],[226,0.46],[250,0.42],[272,0.28],[296,0.2]];
+function mapSvg(o){
+  const W=o.w||300,H=o.h||180,mini=o.mini;
+  const ink=o.forceInk||isInk();
+  const ry=o.ry||[0,1];const P=PTS.map(([px,py])=>[px/300*W,(ry[0]+py*ry[1])*H]);
+  const seg=[];let tot=0;for(let i=1;i<P.length;i++){const d=Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);seg.push(d);tot+=d}
+  const at=pct=>{let t=pct/100*tot,i=0;while(i<seg.length-1&&t>seg[i]){t-=seg[i];i++}const f=t/seg[i];return [P[i][0]+(P[i+1][0]-P[i][0])*f,P[i][1]+(P[i+1][1]-P[i][1])*f]};
+  const d='M'+P.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+  const rw=mini?2.4:4.2;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block"><rect width="'+W+'" height="'+H+'" fill="var(--map-bg)"/>';
+  if(!ink)s+='<path d="M0 '+(H*.18)+' C '+(W*.3)+' '+(H*.05)+' '+(W*.5)+' '+(H*.3)+' '+W+' '+(H*.12)+' L'+W+' 0 L0 0Z" fill="var(--map-water)" opacity=".8"/>';
+  const roads=[[[0,.55],[.3,.5],[.55,.7],[1,.6]],[[.2,1],[.35,.7],[.45,.3],[.6,0]],[[.7,1],[.75,.6],[.9,.35],[1,.3]],[[0,.9],[.5,.85],[1,.9]]];
+  roads.forEach(r=>{const dd='M'+r.map(p=>(p[0]*W).toFixed(1)+' '+(p[1]*H).toFixed(1)).join(' L');s+='<path d="'+dd+'" fill="none" stroke="var(--road2)" stroke-width="'+(mini?3:5)+'" stroke-linecap="round" stroke-linejoin="round"/><path d="'+dd+'" fill="none" stroke="var(--road)" stroke-width="'+(mini?2:3.4)+'" stroke-linecap="round" stroke-linejoin="round"/>'});
+  if(ink&&!mini&&o.mode!=='bg')s+='<path d="M0 '+(H*.18)+' C '+(W*.3)+' '+(H*.05)+' '+(W*.5)+' '+(H*.3)+' '+W+' '+(H*.12)+'" fill="none" stroke="#000" stroke-width="1" stroke-dasharray="1 3"/>';
+  if(o.mode==='bg')return s+'</svg>';
+  if(o.mode==='junction'){return junction(s,W,H,ink)}
+  s+='<path d="'+d+'" fill="none" stroke="var(--casing)" stroke-width="'+(rw+3)+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  s+='<path d="'+d+'" fill="none" stroke="var(--route)" stroke-width="'+rw+'" stroke-linecap="round" stroke-linejoin="round"/>';
+  const mode=o.mode;
+  const slice=(a,b,col,sev,extra)=>{ /* a,b in pct */
+    const dash='0 '+a+' '+(b-a)+' 200';
+    let t='<path d="'+d+'" pathLength="100" fill="none" stroke="'+(ink?'#000':col)+'" stroke-width="'+(rw+(ink?1.6:0))+'" stroke-dasharray="'+dash+'" stroke-linejoin="round" '+(extra||'')+'/>';
+    if(ink&&sev>=1&&sev<3){const g=sev===1?2.6:1.1;let da='0 '+a;for(let p=a;p<b-.4;p+=.6+g){da+=' .6 '+g}t+='<path d="'+d+'" pathLength="100" fill="none" stroke="#fff" stroke-width="'+(rw-1.6)+'" stroke-dasharray="'+da+'"/>'}
+    return t};
+  let sym='';
+  if(mode==='grade'){const cols=['--g0','--g1','--g2','--g3','--g4','--g5','--g6','--g7'];for(let p=0;p<100;p+=4){const e0=elevAt(p),e1=elevAt(p+4),g=(e1-e0)/(4/100*62400)*100,k=gradeClass(g);const sev=g<3?0:g<6?1:g<12?2:3;s+=slice(p,p+4,'var('+cols[k]+')',sev)}}
+  if(mode==='steep'){STEEP.forEach(([a,b,c])=>{const col=c==='s1'?'var(--sev1)':c==='s2'?'var(--sev2)':'var(--down)';s+=slice(a,b,col,c==='s2'?3:c==='sd'?2:1);const m=at((a+b)/2);if(c!=='sd')sym+='<path d="M'+(m[0]-4)+' '+(m[1]+3)+' l4 -6 l4 6" fill="none" stroke="#fff" stroke-width="1.6"/>';});const m=at(50);if(!mini)sym+=label(m[0],m[1]-13,'16 %',ink)}
+  if(mode==='risk'){RISK.forEach(([a,b,c,v])=>{s+=slice(a,b,c==='s2'?'var(--sev2)':'var(--sev1)',c==='s2'?3:2);if(!mini){const m=at((a+b)/2);sym+=badge(m[0],m[1]-14,v,ink)}})}
+  if(mode==='sun'){SUNSEG.forEach(([a,b,c])=>{const col={sun:'var(--sunc)',shade:'var(--shade)',cloud:'var(--cloud)',dark:'var(--dark)'}[c];s+=slice(a,b,col,{sun:0,cloud:1,shade:2,dark:3}[c])});if(!mini){const m=at(82);sym+='<g transform="translate('+(m[0]-8)+' '+(m[1]-20)+')"><rect width="42" height="14" rx="7" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width=".6"/><g transform="translate(3 1.5) scale(.45)" style="color:var(--text-primary)">'+svgIconInner('sun')+'</g><text x="17" y="10" style="font-size:8px;font-weight:700;fill:var(--text-primary)">17:07</text></g>'}}
+  if(mode==='weather'){WXSEG.forEach(([a,b,c])=>{const col=['var(--route)','var(--w1)','var(--w2)','var(--w3)'][c];if(c>0)s+=slice(a,b,col,c)});if(!mini){[[8,'9°','sun'],[39,'7°','rain'],[55,'6°','rain'],[90,'6°','cloud']].forEach(([p,t,g])=>{const m=at(p);sym+=wx(m[0],m[1]-16,t,g)})}}
+  if(mode==='surface'){[[0,30,'--g3',0],[30,52,'--g5',2],[52,100,'--g3',0]].forEach(([a,b,c,sv])=>{if(sv)s+=slice(a,b,'#9b7e4c',sv)})}
+  if(o.nav){const m=at(44);sym+='<g transform="translate('+m[0]+' '+m[1]+') rotate(35)"><path d="M0 -12 L9 10 L0 5 L-9 10Z" fill="var(--fill-accent)" stroke="var(--casing)" stroke-width="2"/></g>';const mm=at(54);sym+='<path d="M'+mm[0]+' '+mm[1]+' l16 -6" stroke="'+(ink?'#000':'#fff')+'" stroke-width="3" opacity=".001"/>'}
+  s+=sym+'</svg>';return s}
+function badge(x,y,v,ink){return '<g transform="translate('+x+' '+y+')"><circle r="9" fill="#fff" stroke="'+(ink?'#000':'#d32f2f')+'" stroke-width="'+(ink?2.4:2)+'"/><text y="3" text-anchor="middle" style="font-size:9px;font-weight:700;fill:#000">'+v+'</text></g>'}
+function label(x,y,t,ink){return '<g transform="translate('+x+' '+y+')"><rect x="-14" y="-7" width="28" height="13" rx="6" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width=".6"/><text y="3" text-anchor="middle" style="font-size:8.5px;font-weight:700;fill:var(--text-primary)">'+t+'</text></g>'}
+function wx(x,y,t,g){return '<g transform="translate('+(x-17)+' '+(y-7)+')"><rect width="34" height="15" rx="7.5" fill="var(--surface-2)" stroke="var(--border-strong)" stroke-width=".6"/><g transform="translate(3 2) scale(.45)" style="color:var(--text-primary)">'+svgIconInner(g)+'</g><text x="17" y="11" style="font-size:8.5px;font-weight:700;fill:var(--text-primary)">'+t+'</text></g>'}
+function junction(s,W,H,ink){
+  const cx=W*.5,cy=H*.56;
+  s+='<path d="M'+cx+' '+H+' L'+cx+' '+(cy-80)+'" stroke="var(--road2)" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M'+cx+' '+H+' L'+cx+' '+(cy-80)+'" stroke="var(--road)" stroke-width="7" fill="none"/>';
+  s+='<path d="M0 '+cy+' L'+W+' '+cy+'" stroke="var(--road2)" stroke-width="9" fill="none"/><path d="M0 '+cy+' L'+W+' '+cy+'" stroke="var(--road)" stroke-width="7" fill="none"/>';
+  for(let i=0;i<6;i++){const yy=H*.9-i*36;s+='<path d="M'+(cx-3)+' '+yy+' l3 -4 l3 4" stroke="#999" fill="none" stroke-width="1.2"/>'}
+  s+='<path d="M'+cx+' '+H+' L'+cx+' '+(cy-80)+'" stroke="var(--route)" stroke-width="4" fill="none" opacity=".9"/>';
+  const acc=ink?'#000':'var(--fill-accent)';
+  s+='<path d="M'+(cx-4)+' '+cy+' L'+(cx-48)+' '+cy+'" stroke="'+acc+'" stroke-width="4" fill="none"/><path d="M'+(cx-48)+' '+(cy-6)+' l-9 6 l9 6z" fill="'+acc+'"/>';
+  s+='<path d="M'+(cx+4)+' '+cy+' L'+(cx+48)+' '+cy+'" stroke="'+acc+'" stroke-width="4" stroke-dasharray="3 3" fill="none"/><path d="M'+(cx+47)+' '+(cy-8)+' v16" stroke="'+(ink?'#000':'var(--text-danger)')+'" stroke-width="3"/>';
+  s+='<g transform="translate('+cx+' '+(H-34)+')"><path d="M0 -12 L9 10 L0 5 L-9 10Z" fill="var(--fill-accent)" stroke="var(--casing)" stroke-width="2"/></g>';
+  s+='<text x="'+(cx-40)+'" y="'+(cy+20)+'" style="font-size:9px;fill:var(--text-primary)">enterable</text><text x="'+(cx+10)+'" y="'+(cy+20)+'" style="font-size:9px;fill:var(--text-primary)">no entry (bike)</text></svg>';return s}
+
+const MODES=[['plain','Plain',null],['surface','Surface','route'],['grade','Grade','mountain'],['steep','Steep','slope'],['risk','Risk','warn'],['sun','Sun','sun'],['weather','Weather','rain']];
+const LEG={plain:[['sw-w0','Route colour']],
+ surface:[['sw-g3','Paved'],['sw-s1','Gravel / unpaved']],
+ grade:[['sw-g0','< −9 %'],['sw-g1','−9 … −6'],['sw-g2','−6 … −3'],['sw-g3','−3 … 3'],['sw-g4','3 … 6'],['sw-g5','6 … 9'],['sw-g6','9 … 12'],['sw-g7','> 12 %']],
+ steep:[['sw-s1','Steep up ≥ 8 %'],['sw-s2','Very steep ≥ 12 %'],['sw-sd','Steep down ≥ 10 %']],
+ risk:[['sw-s2','Fast road, no separation ≥ 70 km/h'],['sw-s1','Fast road, painted lane'],['sw-w0','Quiet or separated']],
+ sun:[['sw-sun','Sun'],['sw-shade','Shade'],['sw-cloud','Overcast'],['sw-dark','Dark']],
+ weather:[['sw-w0','Dry'],['sw-w1','Light rain < 1 mm/h'],['sw-w2','Rain'],['sw-w3','Heavy / thunder']]};
+function legendHTML(m){return (LEG[m]||[]).map(([c,t])=>'<span><i class="sw2 '+c+'"></i>'+t+'</span>').join('')}
+let curMode='risk';
+function renderMain(){document.getElementById('mapMain').innerHTML=mapSvg({w:320,h:430,mode:curMode,ry:[.04,.5]});
+  document.getElementById('modePills').innerHTML=MODES.map(([k,t,g])=>'<span class="p sm'+(k===curMode?' pt':'')+'" data-m="'+k+'" style="cursor:pointer;'+(k===curMode&&isInk()?'border-width:2px;font-weight:700':'')+'">'+(g?ic(g,'sm'):'')+t+'</span>').join('');
+  document.getElementById('legTitle').textContent=MODES.find(m=>m[0]===curMode)[1];document.getElementById('legendBox').innerHTML=legendHTML(curMode);
+  document.querySelectorAll('#modePills .p').forEach(e=>e.onclick=()=>{curMode=e.dataset.m;renderMain()})}
+function renderGallery(){const g=document.getElementById('gallery');g.innerHTML=['grade','steep','risk','sun','weather','surface'].map(m=>'<div><div class="s" style="margin:0 0 2px 2px"><b style="color:var(--text-primary)">'+MODES.find(x=>x[0]===m)[1]+'</b></div><div style="border-radius:10px;overflow:hidden;border:.5px solid var(--border)">'+mapSvg({w:300,h:150,mode:m})+'</div></div>').join('')}
+function renderOutlook(){
+  const cells=[['sun','9°',''],['sun','9°',''],['cloud','8°',''],['rain','7°','0.8'],['rain','7°','3.1'],['rain','6°','2.2'],['cloud','6°',''],['cloud','5°','']];
+  const sunr=['sun','sun','shade','shade','cloud','cloud','sun','shade'];
+  const build=ink=>cells.map(c=>'<div>'+ic(c[0],'sm')+'<div style="font-weight:700">'+c[1]+'</div><div style="color:var(--text-secondary);height:12px">'+(c[2]?c[2]:'')+'</div></div>').join('');
+  const o=document.getElementById('outlook');if(o)o.innerHTML=build();
+  const oi=document.getElementById('outlookInk');if(oi)oi.innerHTML=build();
+  const rb=document.getElementById('outRib');if(rb)rb.innerHTML='<div style="display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin-top:2px">'+sunr.map(k=>'<span style="height:6px;border-radius:2px;background:var(--'+({sun:'sunc',shade:'shade',cloud:'cloud'})[k]+')"></span>').join('')+'</div><div class="s" style="display:flex;justify-content:space-between;margin-top:2px"><span>now 12:10</span><span>+1 h</span><span>+2 h</span></div>'}
+function renderAll(){
+  document.querySelectorAll('[data-chart]').forEach(e=>{e.innerHTML=chart(JSON.parse(e.dataset.chart))});
+  document.querySelectorAll('[data-map]').forEach(e=>{const o=JSON.parse(e.dataset.map);e.innerHTML=mapSvg(o)});
+  renderMain();renderGallery();renderOutlook();
+  document.querySelectorAll('i[data-i]').forEach(e=>{const t=document.createElement('span');t.style.display='inline-flex';t.innerHTML=ic(e.dataset.i,e.className||'');e.replaceWith(t.firstChild)});
+  /* tint the sun stack bar in ink */
+  document.querySelectorAll('.stack span').forEach(s=>{if(isInk()){const bg=s.style.background||'';if(bg.includes('sunc'))s.style.background='#fff';else if(bg.includes('shade'))s.style.background='repeating-linear-gradient(135deg,#000 0 1.5px,#fff 1.5px 3.5px)';else if(bg.includes('cloud'))s.style.background='radial-gradient(#000 1px,#fff 1.2px) 0 0/4px 4px';else if(bg.includes('dark'))s.style.background='#000';else if(bg.includes('sev2'))s.style.background='repeating-linear-gradient(135deg,#000 0 1.5px,#fff 1.5px 3.5px)';else if(bg.includes('sev1'))s.style.background='repeating-linear-gradient(135deg,#000 0 1px,#fff 1px 5px)'}});
+  document.querySelectorAll('.dot').forEach(e=>{if(isInk()){const bg=e.style.background||'';e.style.background=bg.includes('sunc')?'#fff':bg.includes('dark')?'#000':'#fff';e.style.border='1px solid #000'}});
+}
+['light','dark','ink'].forEach(k=>document.getElementById('b-'+k).onclick=()=>{location.href=location.pathname+'?t='+k+location.hash});
+const qp=new URLSearchParams(location.search).get('t')||'light';
+document.body.classList.remove('dark','ink');if(qp!=='light')document.body.classList.add(qp);
+['light','dark','ink'].forEach(k=>document.getElementById('b-'+k).classList.toggle('on',k===qp));
+renderAll();
+</script>
+</body></html>

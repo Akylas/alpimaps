@@ -1,29 +1,36 @@
 <script lang="ts">
     import { lc } from '@nativescript-community/l';
     import { Template } from '@nativescript-community/svelte-native/components';
+    import { DismissReasons } from '@nativescript-community/ui-snackbar';
+    import type { EventData } from '@nativescript/core';
     import { onDestroy } from 'svelte';
     import NavigationCard from '~/components/navigation/NavigationCard.svelte';
     import NavigationControls from '~/components/navigation/NavigationControls.svelte';
     import NavigationInfo from '~/components/navigation/NavigationInfo.svelte';
     import { formatTime } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
-    import { type RouteNavPage, lazyComponents, routeFeatureChanges, routeFeatures, routeNavPages } from '~/routeFeatures/registry';
-    import { NavigationState, navigationDetour, navigationItem, navigationPage, navigationPageIds, navigationPageShown, navigationProgress, navigationScale, navigationState, navigationStats, navigationSummaryDone } from '~/stores/navigationStore';
-    import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, formatNavigationDuration, splitDistance, splitElevation } from '~/utils/navigation';
+    import { lazyComponents } from '~/routeFeatures/registry';
+    import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
+    import { NavigationState, navigationDockPages, navigationItem, navigationPage, navigationPageShown, navigationProgress, navigationScale, navigationState, navigationStats, navigationSummaryDone } from '~/stores/navigationStore';
+    import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, dockFigures, formatNavigationDuration, splitDistance, splitElevation } from '~/utils/navigation';
+    import { showSnack } from '~/utils/ui';
     import { colors } from '~/variables';
 
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorOutline, colorPrimary } = $colors);
 
-    $: profile = $navigationItem?.profile;
-    let pages: RouteNavPage[] = [];
-    // the pager goes back to its first page when its items are replaced: the same pages are kept as they are
-    // the `>= 0` only makes the statement depend on the features' changes
-    $: {
-        const next = $routeFeatureChanges >= 0 ? routeNavPages($routeFeatures, { item: $navigationItem, detour: !!$navigationDetour }, $navigationPageIds) : [];
-        if (next.map((page) => page.id).join() !== pages.map((page) => page.id).join()) {
-            pages = next;
+    async function onRerouted(event: EventData & { data?: { auto: boolean } }) {
+        if (!event.data?.auto) {
+            return;
+        }
+        const result = await showSnack({ message: lc('navigation_rerouted'), actionText: lc('navigation_undo_reroute'), hideDelay: 10000 });
+        if (result?.reason === DismissReasons.ACTION) {
+            navigationService.undoReroute();
         }
     }
+    navigationService.on(NavigationReroutedEvent, onRerouted);
+    onDestroy(() => navigationService.off(NavigationReroutedEvent, onRerouted));
+
+    $: pages = $navigationDockPages;
     // the pages' components load the first time they are in the dock
     const pageComponents = lazyComponents();
     $: pages.forEach((page) => pageComponents.load(page.id, page.component));
@@ -39,35 +46,26 @@
 
     // the pager also says its page when the pages change under it: only the user's swipe is remembered
     function onPageChange(event: { value?: number }) {
-        const page: RouteNavPage | undefined = pages[event['value']];
+        const page = pages[event['value']];
         if (page && event['value'] !== selectedIndex) {
             navigationPage.set(page.id);
         }
     }
 
-    $: paused = $navigationState === NavigationState.PAUSED;
-    $: offRoute = !!$navigationProgress?.offRoute;
-    $: remainingDistance = $navigationProgress?.remainingDistance;
-    $: remainingTime = $navigationProgress?.remainingTime;
-    $: eta = remainingTime > 0 ? formatTime(Date.now() + remainingTime * 1000) : null;
-
-    // profile dp is the ascent accumulated up to each point
-    $: pointData = profile?.data?.[$navigationProgress?.onPathIndex];
-    $: remainingAscent = profile && pointData && !isNaN(pointData.dp) ? Math.max(profile.dplus - pointData.dp, 0) : null;
-
-    // what is done: along the route when it is known, else what was travelled
-    $: doneDistance = pointData ? pointData.d : $navigationStats?.distance;
-    $: doneAscent = pointData && !isNaN(pointData.dp) ? pointData.dp : $navigationStats?.altitudeGain;
-    $: shownDistance = $navigationSummaryDone ? doneDistance : remainingDistance;
-    $: shownAscent = $navigationSummaryDone ? doneAscent : remainingAscent;
-    $: distanceParts = shownDistance > 0 ? splitDistance(shownDistance) : null;
-    $: ascentParts = typeof shownAscent === 'number' && shownAscent >= 0 ? splitElevation(shownAscent) : null;
+    $: figures = dockFigures({
+        progress: $navigationProgress,
+        stats: $navigationStats,
+        profile: $navigationItem?.profile,
+        done: $navigationSummaryDone,
+        paused: $navigationState === NavigationState.PAUSED,
+        now: Date.now()
+    });
+    $: distanceParts = figures.distance === null ? null : splitDistance(figures.distance);
+    $: ascentParts = figures.ascent === null ? null : splitElevation(figures.ascent);
     // the third figure: off the route says how far, paused (or done) says how long it moved, else the arrival
-    $: thirdLabel = offRouteParts ? '' : paused || $navigationSummaryDone ? lc('navigation_moving') : eta ? lc('navigation_arrival') : '';
-    $: thirdValue = offRouteParts ? lc('navigation_off_route_by', offRouteParts[0] + ' ' + offRouteParts[1]) : paused || $navigationSummaryDone ? movingTime : (eta ?? '');
-    // under a meter is on the route, whatever the detector says
-    $: offRouteParts = offRoute && $navigationProgress?.distanceFromRoute >= 1 ? splitDistance($navigationProgress.distanceFromRoute) : null;
-    $: movingTime = formatNavigationDuration(($navigationStats?.duration || 0) / 1000);
+    $: third = figures.third;
+    $: thirdLabel = third?.kind === 'moving' ? lc('navigation_moving') : third?.kind === 'arrival' ? lc('navigation_arrival') : '';
+    $: thirdValue = !third ? '' : third.kind === 'off_route' ? lc('navigation_off_route_by', splitDistance(third.distance).join(' ')) : third.kind === 'moving' ? formatNavigationDuration(third.seconds) : formatTime(third.at);
 
     $: scale = $navigationScale;
     $: pageHeight = Math.round(DOCK_PAGE_HEIGHT * scale);
@@ -92,10 +90,10 @@
             unit={ascentParts?.[1]}
             value={ascentParts ? '+' + ascentParts[0] : '-'}
             valueFontSize={19} />
-        <stacklayout col={2} verticalAlignment="center">
-            <label color={colorOnSurfaceVariant} fontSize={10 * scale} lineBreak="end" maxLines={1} text={thirdLabel} visibility={thirdLabel ? 'visible' : 'collapse'} />
-            <label color={offRouteParts && !isEInk ? colorError : colorOnSurface} fontSize={(offRouteParts ? 15 : 19) * scale} fontWeight="bold" lineBreak="end" maxLines={1} text={thirdValue} />
-        </stacklayout>
+        <label col={2} lineBreak="end" maxLines={2} verticalAlignment="center">
+            <cspan color={colorOnSurfaceVariant} fontSize={10 * scale} text={thirdLabel ? thirdLabel + '\n' : ''} />
+            <cspan color={third?.kind === 'off_route' && !isEInk ? colorError : colorOnSurface} fontSize={(third?.kind === 'off_route' ? 15 : 19) * scale} fontWeight="bold" text={thirdValue} />
+        </label>
         <NavigationControls col={3} verticalAlignment="center" />
     </gridlayout>
 

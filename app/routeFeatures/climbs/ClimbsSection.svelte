@@ -10,12 +10,15 @@
     import ClimbsRow from '~/routeFeatures/climbs/ClimbsRow.svelte';
     import { type ClimbsRowData, climbsRows, readClimbs } from '~/routeFeatures/climbs/data';
     import { climbsSteepOpen } from '~/routeFeatures/climbs/settings';
-    import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
-    import { selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import type { LensSection } from '~/routeFeatures/registry';
+    import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
+    import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
+    import { type LensSection, endVisit } from '~/routeFeatures/registry';
+    import { onDestroy } from 'svelte';
     import { windowInset } from '~/variables';
 
     export let item: IItem;
+    // the steep list is folded again the next time
+    onDestroy(endVisit);
 
     $: rows = climbsRows(readClimbs(item), $climbsSteepOpen);
     function itemTemplateSelector(row: ClimbsRowData) {
@@ -26,8 +29,7 @@
         if (!section) {
             return;
         }
-        selectLens('climbs');
-        focusSection(focusKeyOf(item), { ...section, lens: 'climbs' });
+        focusLensSection(focusKeyOf(item), 'climbs', section);
         // the map is behind the sheet, and that is where the section is shown
         closeBottomSheet();
     }
