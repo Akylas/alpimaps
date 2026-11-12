@@ -8,10 +8,13 @@
     import { isEInk } from '~/helpers/theme';
     import { getMapContext } from '~/mapModules/MapModule';
     import type { Item } from '~/models/Item';
-    import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+    import { leaveNow, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { type LensId, routeFeatures, routeLenses, routeTiles } from '~/routeFeatures/registry';
+    import { DismissReasons } from '@nativescript-community/ui-snackbar';
+    import { showSnack } from '@shared/utils/ui';
+    import { lc } from '~/helpers/locale';
     import { showToolTip } from '~/utils/ui';
     import { colors, fonts } from '~/variables';
 
@@ -56,9 +59,30 @@
         remaining = null;
     }
 
+    // the clock moves a departure on: one that was ahead may have gone
+    let now = Date.now();
+    const clockTimer = setInterval(() => (now = Date.now()), 60000);
+    onDestroy(() => clearInterval(clockTimer));
     // `>= 0` is always true: it reruns this when the analysis changed in place, the arrival under the time follows
-    $: tiles = $routeAnalysisChanges >= 0 ? routeTiles($routeFeatures, { item }) : [];
+    $: tiles = $routeAnalysisChanges >= 0 && now > 0 ? routeTiles($routeFeatures, { item }) : [];
     $: narrow = sheetWidth < NARROW_WIDTH;
+
+    // the red outline alone does not say why: the snackbar does, and offers leaving now; a long press plans another time
+    async function explainStale(tile: (typeof tiles)[number]) {
+        const result = await showSnack({ message: `${tile.label}. ${lc('when_departure_hint')}`, actionText: lc('when_use_now'), hideDelay: 10000 });
+        if (result?.reason === DismissReasons.ACTION) {
+            leaveNow(item);
+        }
+    }
+    function onTileTap(tile: (typeof tiles)[number]) {
+        if (tile.stale) {
+            explainStale(tile);
+        } else if (tile.opensWhen) {
+            dispatch('when');
+        } else if (tile.lens) {
+            showLens(tile.lens);
+        }
+    }
 
     // a tile with a lens reads the route in it, and the sheet shows the card that has it
     function showLens(id: LensId) {
@@ -86,8 +110,8 @@
             padding="0 6"
             rippleColor={tile.lens || tile.opensWhen ? colorPrimary : null}
             rows="*,auto,auto,*"
-            on:tap={() => (tile.opensWhen ? dispatch('when') : tile.lens && showLens(tile.lens))}
-            on:longPress={(event) => event.object instanceof View && showToolTip(tile.label, event.object)}>
+            on:tap={() => onTileTap(tile)}
+            on:longPress={(event) => (tile.stale ? dispatch('when') : event.object instanceof View && showToolTip(tile.label, event.object))}>
             <!-- the value and the line under it, centred together -->
             <canvaslabel fontSize={14} height={18} row={1}>
                 <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={14} text={hideIcon ? '' : tile.icon} verticalAlignment="middle" />

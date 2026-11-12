@@ -6,6 +6,7 @@
 export const ITEM_ACTION_ORDER: Record<string, number> = {
     information: 0,
     plan: 5,
+    edit: 6,
     save: 10,
     navigate: 20,
     directions: 30,
@@ -13,7 +14,6 @@ export const ITEM_ACTION_ORDER: Record<string, number> = {
     instructions: 50,
     profile: 60,
     stats: 70,
-    edit: 80,
     hide: 90,
     wikipedia: 120,
     weather: 130,

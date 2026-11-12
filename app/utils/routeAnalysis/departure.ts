@@ -52,6 +52,11 @@ export function departurePassed(departure: Departure, now: number): boolean {
     return departure.mode === 'planned' && departure.at !== undefined && departure.at < now && !departure.keepPast;
 }
 
+/** A departure the Route page offers to move to now: a plan whose time went by, or a now whose data has aged. */
+export function departureStale(departure: Departure, now: number): boolean {
+    return departurePassed(departure, now) || snapshotOutdated(departure, now);
+}
+
 /** The zone the ride's clock times are shown in: the route's own once known with its offset, else the phone's clock, flagged. */
 export function routeTimeZone(departure: Departure): { tz?: string; offset?: number; fromPhone: boolean } {
     return departure.tz && departure.utcOffset !== undefined ? { tz: departure.tz, offset: departure.utcOffset, fromPhone: false } : { fromPhone: true };

@@ -31,6 +31,8 @@ export interface RouteTile {
     opensWhen?: boolean;
     /** The figure is a warning: the tile is outlined in the error colour. */
     alert?: boolean;
+    /** The departure went by: a tap on the tile explains it and offers to leave now, instead of opening the When panel. */
+    stale?: boolean;
 }
 
 /**

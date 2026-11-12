@@ -1,6 +1,7 @@
 import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
 import { formatTime, lc } from '~/helpers/locale';
 import { arrivalOf } from '~/routeFeatures/basics/arrival';
+import { departureStale, routeTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
@@ -27,13 +28,18 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
             // the tile only loses its second line: the sheet's header does not depend on it
             DEV_LOG && console.error('arrival', error);
         }
+        // a departure that went by says so in the tile, where the sheet has no room for a banner: the time it left, a tap leaves now
+        const departure = item.analysis?.inputs.departure;
+        const stale = !!departure && departureStale(departure, Date.now());
+        const left = stale && departure.at !== undefined ? formatTime(departure.at, 'LT', routeTimeZone(departure).offset) : undefined;
         tiles.push({
             key: 'time',
             opensWhen: true,
             icon: 'mdi-timer-outline',
-            label: lc('duration'),
+            label: stale ? lc('when_departure_passed', left ?? '') : lc('duration'),
             value: convertDurationSeconds(route.totalTime),
-            sub: arrival ? { icon: 'mdi-arrow-right', text: formatTime(arrival.at, 'LT', arrival.offset) } : undefined
+            sub: stale ? { icon: 'mdi-history', text: left ?? lc('now') } : arrival ? { icon: 'mdi-arrow-right', text: formatTime(arrival.at, 'LT', arrival.offset) } : undefined,
+            ...(stale ? { alert: true, stale: true } : {})
         });
     }
     // a pure descent still gets its elevation tile

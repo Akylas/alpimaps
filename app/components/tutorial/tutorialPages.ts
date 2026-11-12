@@ -162,7 +162,8 @@ export const tutorialPages: TutorialPage[] = [
         parts: [
             ...mapBackground,
             card(4, 150, 292, 276, 20),
-            text(24, 160, 200, 'routes', { key: true, bold: true }),
+            icon(14, 158, 'mdi-routes', 20),
+            text(42, 160, 200, 'routes', { key: true, bold: true }),
             card(12, 192, 84, 34, 10),
             icon(18, 200, 'mdi-arrow-left-right', 16),
             text(36, 198, 60, () => formatDistance(27100), { bold: true, size: 11 }),
@@ -181,7 +182,7 @@ export const tutorialPages: TutorialPage[] = [
             card(12, 308, 276, 110),
             { kind: 'bars', x: 24, y: 320, width: 252, height: 86, values: [20, 26, 34, 44, 56, 70, 86, 96, 80, 62, 48, 40, 52, 66, 60, 44, 32, 28, 36, 30] }
         ],
-        zones: [zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_menu', 'longPress', 102, 236, 84, 28), zone('lens_more', 'tap', 10, 270, 280, 34)]
+        zones: [zone('route_icon', 'tap', 8, 152, 284, 34), zone('time_tile', 'tap', 100, 190, 88, 38), zone('elevation_tile', 'tap', 190, 190, 100, 38), zone('lens_menu', 'longPress', 102, 236, 84, 28), zone('lens_more', 'tap', 10, 270, 280, 34)]
     },
     {
         id: 'route_page',
