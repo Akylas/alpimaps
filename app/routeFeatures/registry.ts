@@ -536,6 +536,9 @@ export const routeFeatureChanges: Readable<number> = derived(
     0
 );
 
+/** The enabled features, emitted again whenever one says its contributions changed: what reads them follows both. */
+export const liveRouteFeatures: Readable<RouteFeature[]> = derived([routeFeatures, routeFeatureChanges], ([features]) => features);
+
 export function routeTiles(features: RouteFeature[], ctx: RouteCtx): RouteTile[] {
     return features.flatMap((feature) => feature.tiles?.(ctx) ?? []);
 }

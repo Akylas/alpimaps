@@ -15,7 +15,7 @@
     import { clearCursor, clearFocus, clearSection, focusKeyOf, focusSection, routeFocus, setCursor } from '~/routeFeatures/lens/routeFocusStore';
     import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { isLensFeature, paddedRange, routeCoordinates, sectionAt, stepSection, tappedVertex } from '~/routeFeatures/lens/sections';
-    import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, liveRouteFeatures, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { packageService } from '~/services/PackageService';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { routeTimeZone } from '~/utils/routeAnalysis/departure';
@@ -51,8 +51,7 @@
         clearSection();
     }
 
-    // `$routeFeatureChanges >= 0` is always true: it reruns these when a feature's contributions change
-    $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item }) : [];
+    $: lenses = routeLenses($liveRouteFeatures, { item });
     $: active = resolveLens($routeLensStore, lenses);
     $: activeLens = lenses.find((lens) => lens.id === active);
     $: entries = lenses.map((lens) => ({ id: lens.id, icon: lens.icon, label: lens.label(), chip: lens.chip({ item }) }));
@@ -82,7 +81,7 @@
 
     // what needs attention is marked whatever the lens. The same array until it changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
-    $: attention = $routeFeatureChanges >= 0 ? routeAttention($routeFeatures, { item }) : [];
+    $: attention = routeAttention($liveRouteFeatures, { item });
     let marks = NO_MARKS;
     let marksKey = '';
     $: {

@@ -30,7 +30,7 @@
     import IconButton from '~/components/common/IconButton.svelte';
     import { shadeGrey } from '~/routeFeatures/lens/shades';
     import { STATS_LEGEND_ROW, STATS_LEGEND_TOP, surfaceShade } from '~/routeFeatures/stats/surfaces';
-    import { routeFeatureChanges, routeFeatures, routeStatViews } from '~/routeFeatures/registry';
+    import { liveRouteFeatures, routeStatViews } from '~/routeFeatures/registry';
 
     export let item: IItem;
 
@@ -39,8 +39,8 @@
     let statsCanvas: NativeViewElementNode<CanvasView>;
     let savedKey = ApplicationSettings.getString('stats_key', 'waytypes');
 
-    // the way types and the surfaces, then what the features have to say of the route; `>= 0` makes it follow their changes
-    $: extraViews = $routeFeatureChanges >= 0 ? routeStatViews($routeFeatures, { item }) : [];
+    // the way types and the surfaces, then what the features have to say of the route
+    $: extraViews = routeStatViews($liveRouteFeatures, { item });
     $: viewIds = ['waytypes', 'surfaces', ...extraViews.map((view) => view.id)];
     // a view that is gone (another route, a feature switched off) leaves the first one
     $: statsKey = viewIds.includes(savedKey) ? savedKey : 'waytypes';

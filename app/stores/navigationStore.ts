@@ -5,7 +5,7 @@ import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/fo
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
-import { migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices } from '~/routeFeatures/registry';
+import { type RouteNavPage, liveRouteFeatures, migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices, routeNavPages } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
@@ -179,6 +179,22 @@ ApplicationSettings.remove(LEGACY_SHOW_SURFACE);
 /** the dock pages that are on, comma separated, in order */
 export const navigationPages = settingsStore(SETTINGS_NAVIGATION_PAGES, DEFAULT_NAVIGATION_PAGES);
 export const navigationPageIds = derived(navigationPages, parseNavPages);
+/**
+ * the pages the dock shows: the ones turned on that the route has something for. The same array while the ids
+ * do not change, as the pager goes back to its first page when its items are replaced
+ */
+let dockPages: RouteNavPage[] = [];
+export const navigationDockPages = derived(
+    [liveRouteFeatures, navigationItem, navigationDetour, navigationPageIds],
+    ([features, item, detour, ids], set) => {
+        const next = routeNavPages(features, { item, detour: !!detour }, ids);
+        if (next.map((page) => page.id).join() !== dockPages.map((page) => page.id).join()) {
+            dockPages = next;
+            set(dockPages);
+        }
+    },
+    dockPages
+);
 /** the page the dock showed last, brought back on the next ride */
 export const navigationPage = settingsStore(SETTINGS_NAVIGATION_PAGE, DEFAULT_NAVIGATION_PAGE);
 /** the summary row says what is done, not what is left: a tap on it swaps them */

@@ -5,9 +5,9 @@
     import NavigationPageHeader from '~/components/navigation/NavigationPageHeader.svelte';
     import { convertElevation, formatDistance } from '~/helpers/formatter';
     import { isEInk } from '~/helpers/theme';
+    import { dockLens, nextDockLens, progressFollower } from '~/routeFeatures/lens/dockLens';
     import { PROFILE_AHEAD_SPAN, profileAhead } from '~/routeFeatures/profile/ahead';
-    import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
-    import { type ProfileMark, nextLens, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { type ProfileMark, liveRouteFeatures, routeAttention } from '~/routeFeatures/registry';
     import { navigationItem, navigationProgress } from '~/stores/navigationStore';
 
     export let height: number = null;
@@ -36,31 +36,20 @@
     }
 
     // the profile is read in the lens the map is in; a tap goes to the next one
-    $: lenses = $routeFeatureChanges >= 0 ? routeLenses($routeFeatures, { item: $navigationItem }) : [];
-    $: activeLens = lenses.find((lens) => lens.id === resolveLens($routeLensStore, lenses));
-    $: profileOptions = activeLens?.profile?.({ item: $navigationItem });
-    $: fill = profileOptions?.fill ?? null;
-    $: fade = profileOptions?.fade ?? false;
-    $: overlay = profileOptions?.overlay ?? null;
-    function onLensTap() {
-        const next = nextLens(lenses, activeLens?.id);
-        if (next) {
-            selectLens(next);
-        }
-    }
+    $: ({ activeLens, fade, fill, overlay } = $dockLens);
 
-    // the marks, the same array until they change: the chart redraws for a new one
+    // the marks, the same array until what is marked changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
-    $: attention = $routeFeatureChanges >= 0 ? routeAttention($routeFeatures, { item: $navigationItem }) : [];
+    $: attention = routeAttention($liveRouteFeatures, { item: $navigationItem });
+    $: marksKey = `${profile?.data?.length}|` + attention.map(({ color, kind, section }) => `${kind}:${color}:${section.i0}:${section.i1}`).join();
     let marks = NO_MARKS;
-    let marksKey = '';
-    $: {
-        const key = attention.map(({ color, kind, section }) => `${kind}:${color}:${section.i0}:${section.i1}`).join();
-        if (key !== marksKey) {
-            marksKey = key;
-            const data = profile?.data;
-            marks = data && attention.length ? attention.map(({ color, kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color })) : NO_MARKS;
-        }
+    // reads `attention` and `profile` untracked: only the key says they changed
+    $: if (marksKey) {
+        marks = cutMarks();
+    }
+    function cutMarks() {
+        const data = profile?.data;
+        return data && attention.length ? attention.map(({ color, kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color })) : NO_MARKS;
     }
 
     // the first thing to watch in the stretch
@@ -76,29 +65,8 @@
               .join(' · ')
         : '';
 
-    // the service already walked the polyline for this fix, so the chart just follows its result. The
-    // marker only moves with the index, so a fix that lands on the same vertex is not worth a redraw
-    let highlightedIndex = -2;
-    $: highlightIfMoved($navigationProgress, available);
-
-    function highlightIfMoved(progress, chartAvailable: boolean) {
-        if (!progress || !chartAvailable || progress.onPathIndex === highlightedIndex) {
-            return;
-        }
-        highlightedIndex = progress.onPathIndex;
-        elevationChart?.hilghlightPathIndex(
-            {
-                onPathIndex: progress.onPathIndex,
-                remainingDistance: progress.remainingDistance,
-                remainingDistanceToStep: progress.remainingDistanceToStep,
-                remainingTime: progress.remainingTime,
-                dplus: profile?.dplus,
-                dmin: profile?.dmin
-            },
-            undefined,
-            false
-        );
-    }
+    const followProgress = progressFollower();
+    $: followProgress(elevationChart, $navigationProgress, profile, available);
 </script>
 
 {#if available}
@@ -119,6 +87,6 @@
             showProfileGrades={true}
             showWaypoints={false} />
         <!-- over the chart, which a tap would not reach: the lens changes -->
-        <gridlayout row={1} on:tap={onLensTap} />
+        <gridlayout row={1} on:tap={nextDockLens} />
     </gridlayout>
 {/if}
