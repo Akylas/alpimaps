@@ -253,18 +253,22 @@ export const tutorialPages: TutorialPage[] = [
             fab(250, 116, 'mdi-navigation', false, 40),
             fab(250, 164, 'mdi-crosshairs-gps', false, 40),
             fab(250, 212, 'mdi-dots-vertical', false, 40),
+            // the dock: the summary row with the pause button, then a page of data to swipe, then its dots
             card(8, 314, 284, 108),
-            { kind: 'meter', x: 134, y: 322, width: 32, height: 4, value: 1 },
-            text(22, 334, 100, 'remaining_distance', { key: true, muted: true, size: 11 }),
-            text(22, 352, 100, () => formatDistance(8400), { bold: true, size: 20 }),
-            text(122, 334, 90, 'remaining_ascent', { key: true, muted: true, size: 11 }),
-            text(122, 352, 90, () => `+${convertElevation(320)}`, { bold: true, size: 20 }),
-            fab(228, 338, 'mdi-pause', true, 52),
-            divider(8, 392, 284),
-            text(22, 398, 70, 'navigation_arrival', { key: true, muted: true, size: 11 }),
-            text(80, 398, 60, '14:32', { bold: true, size: 11 })
+            { kind: 'meter', x: 134, y: 320, width: 32, height: 4, value: 1 },
+            text(22, 330, 70, () => formatDistance(8400), { bold: true, size: 18 }),
+            text(100, 330, 70, () => `+${convertElevation(320)}`, { bold: true, size: 18 }),
+            text(176, 336, 60, '14:32', { bold: true, size: 13 }),
+            fab(244, 326, 'mdi-pause', true, 40),
+            divider(8, 372, 284),
+            text(22, 378, 120, 'navigation_page_profile', { key: true, muted: true, size: 11 }),
+            text(150, 378, 130, () => formatDistance(15000), { bold: true, size: 11 }),
+            { kind: 'bars', x: 22, y: 392, width: 258, height: 20, values: [30, 40, 55, 70, 80, 60, 40, 35, 50, 65] },
+            { kind: 'meter', x: 122, y: 414, width: 18, height: 4, value: 1 },
+            { kind: 'meter', x: 146, y: 414, width: 6, height: 4, value: 0 },
+            { kind: 'meter', x: 158, y: 414, width: 6, height: 4, value: 0 }
         ],
-        zones: [zone('end_navigation', 'longPress', 222, 332, 64, 64)]
+        zones: [zone('nav_summary', 'tap', 8, 322, 222, 48), zone('nav_pages', 'swipe', 8, 374, 284, 48), zone('nav_lens', 'tap', 20, 390, 262, 22), zone('end_navigation', 'longPress', 238, 322, 52, 48)]
     },
     {
         id: 'lists',

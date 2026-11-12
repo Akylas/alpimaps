@@ -51,11 +51,11 @@ export const SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED = 'navigation_auto_pause_speed
 export const SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY = 'navigation_auto_pause_delay';
 export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
 export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
-export const SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
-export const SETTINGS_NAVIGATION_SHOW_SURFACE = 'navigation_show_surface';
+export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
+export const SETTINGS_NAVIGATION_PAGE = 'navigation_page';
+export const SETTINGS_NAVIGATION_SUMMARY_DONE = 'navigation_summary_done';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
 export const SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD = 'navigation_grade_look_ahead';
-export const SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT = 'navigation_chart_current_ascent';
 export const SETTINGS_NAVIGATION_ARROW_MARKER = 'navigation_arrow_marker';
 export const SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE = 'navigation_off_route_distance';
 export const SETTINGS_NAVIGATION_OFF_ROUTE_FIXES = 'navigation_off_route_fixes';
@@ -123,14 +123,15 @@ export const DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED = 0.5;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY = 120;
 export const DEFAULT_NAVIGATION_RECORD_STATS = true;
 export const DEFAULT_NAVIGATION_RECORD_TRACK = false;
-export const DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART = true;
-export const DEFAULT_NAVIGATION_SHOW_SURFACE = true;
+/** the dock pages that are on, in order: ids of the route features' `navPages` */
+export const DEFAULT_NAVIGATION_PAGES = 'climb,profile,ahead,trip';
+export const DEFAULT_NAVIGATION_PAGE = '';
+export const DEFAULT_NAVIGATION_SUMMARY_DONE = false;
 /** meters of road ahead the surface widget covers, so the bar has a readable scale */
 export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
 /** meters of road the live grade averages over: the single point value is too twitchy to read */
 export const DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD = 100;
 /** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
-export const DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT = true;
 export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
 /**
  * meters from the route past which a fix counts as off route. The gps accuracy is added on top, so

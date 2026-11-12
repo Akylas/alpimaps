@@ -326,5 +326,13 @@ registerRouteFeature({
     lensPalette: rainPalette,
     lenses: [weatherLens],
     pageSections: [weatherPageSection],
+    navPages: [
+        {
+            id: 'ahead',
+            label: () => lc('navigation_page_ahead'),
+            component: () => import('~/routeFeatures/weather/ui/AheadPage.svelte'),
+            available: ({ item }) => !!item?.analysis?.layers.weather
+        }
+    ],
     compute: weatherStage
 });

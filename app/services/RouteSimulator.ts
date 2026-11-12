@@ -46,6 +46,7 @@ function loadPath() {
     }
     maneuvers = (item?.instructions ?? []).map((instruction) => cumulative[instruction.index]).filter((distance) => distance !== undefined);
     travelled = 0;
+    DEV_LOG && console.log('[RouteSimulator] path of', path.length, 'points,', Math.round(cumulative[cumulative.length - 1] ?? 0), 'm, item', item?.id, 'first', JSON.stringify(path[0]), 'last', JSON.stringify(path[path.length - 1]));
 }
 
 function routeLength() {
@@ -78,6 +79,7 @@ function emit(simulation: RouteSimulation) {
         timestamp: Date.now(),
         provider: SIMULATED_PROVIDER
     };
+    DEV_LOG && console.log('[RouteSimulator] emit', Math.round(travelled), 'm of', Math.round(routeLength()), 'index', index, 'off route offset', simulation.offRoute, 'paused', simulation.paused, 'at', position.lat.toFixed(5), position.lon.toFixed(5));
     getBGServiceInstance().geoHandler.onLocation(location);
 }
 
@@ -136,7 +138,9 @@ export function toggleSimulatedOffRoute() {
 /** Lands MANEUVER_LEAD before the next maneuver, or before the one before the current approach. */
 export function jumpToManeuver(direction: 1 | -1) {
     const target = direction > 0 ? maneuvers.find((distance) => distance - MANEUVER_LEAD > travelled + 1) : [...maneuvers].reverse().find((distance) => distance - MANEUVER_LEAD < travelled - 1);
+    const previous = travelled;
     travelled = target === undefined ? (direction > 0 ? Math.max(routeLength() - MANEUVER_LEAD, 0) : 0) : Math.max(target - MANEUVER_LEAD, 0);
+    DEV_LOG && console.log('[RouteSimulator] jump', direction > 0 ? 'forward' : 'back', Math.round(previous), '->', Math.round(travelled), 'm');
     emitNow();
 }
 

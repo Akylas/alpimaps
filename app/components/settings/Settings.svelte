@@ -1061,6 +1061,12 @@
                     await showGesturesTutorial();
                     break;
                 }
+                case 'navigation_pages': {
+                    const DockPagesSheet = (await import('~/components/navigation/DockPagesSheet.svelte')).default;
+                    await showBottomSheet({ view: DockPagesSheet });
+                    updateItem(item, 'id');
+                    break;
+                }
                 case 'third_party': {
                     const ThirdPartySoftwareBottomSheet = (await import('~/components/settings/ThirdPartySoftwareBottomSheet.svelte')).default;
                     showBottomSheet({

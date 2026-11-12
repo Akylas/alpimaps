@@ -66,4 +66,10 @@ function overviewHeadline({ item }: RouteCtx): LensHeadline {
 
 const overview: RouteLens = { id: 'overview', icon: 'mdi-routes', label: () => lc('lens_overview'), available: () => true, chip: () => ({}), headline: overviewHeadline };
 
-registerRouteFeature({ id: 'basics', order: 0, tiles: basicsTiles, lenses: [overview] });
+registerRouteFeature({
+    id: 'basics',
+    order: 0,
+    tiles: basicsTiles,
+    lenses: [overview],
+    navPages: [{ id: 'trip', label: () => lc('navigation_page_trip'), component: () => import('~/routeFeatures/basics/TripPage.svelte'), available: () => true }]
+});

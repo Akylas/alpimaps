@@ -10,6 +10,8 @@ import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
 /** What every contribution is asked about. */
 export interface RouteCtx {
     item: IItem;
+    /** Navigating a leg that takes the user back to the route: the position is not on `item`, so what is read off its indexes is wrong. */
+    detour?: boolean;
 }
 
 /** A compact stat of the sheet's header. */
@@ -285,23 +287,19 @@ export interface RouteLens {
     legend?: (ctx: LensLegendContext) => LensLegendSection | null;
 }
 
-/** A block of the navigation sheet: `details` cards get `item` and their card look, `ahead` widgets their `height`. */
-export interface RouteNavSection {
+/**
+ * A page of the navigation dock: the one the user swipes to, under the summary. The component gets its `height` and
+ * draws its own title line; the user's setting `navigationPages` says which pages are shown and in what order.
+ */
+export interface RouteNavPage {
+    /** Stable: it is what the setting and the remembered page hold. */
     id: string;
-    /** `ahead`: a widget of the one row above the actions; `details`: a card of its own under them. */
-    slot: 'ahead' | 'details';
-    /** Loaded the first time the section has a height, the navigation ui is not part of the startup graph. */
+    /** In the settings list. */
+    label: () => string;
+    /** Loaded the first time the page is shown, the navigation ui is not part of the startup graph. */
     component: () => Promise<{ default: ComponentType }>;
-    /** dp at the navigation scale. 0: nothing to show, so no row. */
-    height: (scale: number, ctx: RouteCtx) => number;
-    /** The share of the ahead row's width. */
-    weight?: number;
-}
-
-export interface RouteNavSectionLayout {
-    id: string;
-    section: RouteNavSection;
-    height: number;
+    /** False: the route has nothing for this page, so it is not in the dots. */
+    available: (ctx: RouteCtx) => boolean;
 }
 
 /** A card floating over the map under the maneuver card while navigating: it hides itself when it has nothing to say. */
@@ -475,8 +473,8 @@ export interface RouteFeature {
     attention?: (ctx: RouteCtx) => AttentionMark[];
     /** A card under the sheet's actions. */
     sheetCard?: RouteSheetCard;
-    /** Blocks of the navigation sheet. */
-    navSections?: RouteNavSection[];
+    /** Pages of the navigation dock. */
+    navPages?: RouteNavPage[];
     /** Views of the stats card, read in turn with the way types and the surfaces. */
     statViews?: RouteStatView[];
     /** Cards floating over the map while navigating. */
@@ -558,12 +556,37 @@ export function routeSheetCards(features: RouteFeature[], ctx: RouteCtx, gap: nu
     return features.filter((feature) => feature.sheetCard).map((feature) => ({ id: feature.id, card: feature.sheetCard, height: feature.sheetCard.height(ctx, gap) }));
 }
 
-/** The navigation sections that have something to show, in feature order. */
-export function routeNavSections(features: RouteFeature[], ctx: RouteCtx, scale: number): RouteNavSectionLayout[] {
-    return features
-        .flatMap((feature) => feature.navSections ?? [])
-        .map((section) => ({ id: section.id, section, height: section.height(scale, ctx) }))
-        .filter((layout) => layout.height > 0);
+/** The dock pages the user turned on that have something to show, in the user's order. An id nobody registers is skipped. */
+export function routeNavPages(features: RouteFeature[], ctx: RouteCtx, enabled: string[]): RouteNavPage[] {
+    const pages = features.flatMap((feature) => feature.navPages ?? []);
+    return enabled.flatMap((id) => {
+        const page = pages.find((candidate) => candidate.id === id);
+        return page?.available(ctx) ? [page] : [];
+    });
+}
+
+/** What the `navigationPages` setting holds, as the ids of the pages in order. */
+export function parseNavPages(value: string): string[] {
+    return (value ?? '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id, index, ids) => id && ids.indexOf(id) === index);
+}
+
+/** The pages of someone who had set the two switches the pages replaced: the elevation chart (`profile`) and the surface bar. */
+export function migrateNavPages(defaults: string[], legacy: { chart?: boolean; surface?: boolean }): string[] {
+    const pages = defaults.filter((id) => legacy.chart !== false || id !== 'profile');
+    if (legacy.surface && !pages.includes('surface')) {
+        pages.splice(pages.indexOf('profile') + 1, 0, 'surface');
+    }
+    return pages;
+}
+
+/** Every dock page the enabled features register, the ones in `enabled` first in their order, then the rest in feature order: the settings list. */
+export function routeNavPageChoices(features: RouteFeature[], enabled: string[]): RouteNavPage[] {
+    const pages = features.flatMap((feature) => feature.navPages ?? []);
+    const first = enabled.flatMap((id) => pages.filter((page) => page.id === id));
+    return [...first, ...pages.filter((page) => !enabled.includes(page.id))];
 }
 
 /** The stats views the enabled features add that have something to say of this route. */
@@ -624,6 +647,11 @@ export function routeAttention(features: RouteFeature[], ctx: RouteCtx): Attenti
 /** The lens to show: the one asked for, or the overview when this route cannot show it. */
 export function resolveLens(requested: LensId, lenses: RouteLens[]): LensId {
     return lenses.some((lens) => lens.id === requested) ? requested : 'overview';
+}
+
+/** The lens after the active one, round to the first: what a tap on a profile that has no bar to pick from goes to. */
+export function nextLens(lenses: RouteLens[], active: LensId): LensId | undefined {
+    return lenses.length ? lenses[(lenses.findIndex((lens) => lens.id === active) + 1) % lenses.length].id : undefined;
 }
 
 /** The cards the enabled features add to the route page, in feature order. */

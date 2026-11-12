@@ -145,7 +145,8 @@
     }
     function drawOverlay(canvas: Canvas) {
         const chartView = chart?.nativeView;
-        if (!chartView || mini) {
+        // the widget draws the marks and what the lens lays over the plot, and nothing else of the overlay
+        if (!chartView || (mini && !marks.length && !overlay)) {
             return;
         }
         const { contentBottom, contentLeft, contentRight, contentTop } = chartView.viewPortHandler;
@@ -953,10 +954,9 @@
                 chartView.clipDataToContent = true;
 
                 chartView.minOffset = 0;
-                // the mini chart is drawn under the widget's own labels — the summit elevation sits in
-                // its top right corner — so the curve needs headroom rather than the whole card
+                // the mini chart sits under the widget's own title line, so it needs little headroom, and just the room for the marks under it
                 // with the readout above, the highlight needs no room of its own
-                chartView.setExtraOffsets(0, mini ? 14 : inCard ? BRACKET_ROOM : 24, mini ? 4 : 10, mini ? 2 : inCard ? 0 : 10);
+                chartView.setExtraOffsets(0, mini ? 6 : inCard ? BRACKET_ROOM : 24, mini ? 4 : 10, mini ? 6 : inCard ? 0 : 10);
                 if (mini) {
                     chartView.legend.enabled = false;
                     [leftAxis, xAxis].forEach((axis) => {
@@ -1180,7 +1180,9 @@
 
             if (mini) {
                 // limit lines, ascent callouts and waypoint pins all carry labels that have nowhere to
-                // go at this size, so the widget stops here
+                // go at this size, so the widget stops here: but for the marks, which the overlay draws
+                leftAxis.removeAllLimitLines();
+                leftAxis.addLimitLine(new OverlayLimitLine(profile.max[1]));
                 set.drawFilledEnabled = filled;
                 applyRange(range);
                 onChartDataUpdateCallbacks.forEach((c) => c());

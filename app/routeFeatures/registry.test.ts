@@ -4,11 +4,16 @@ import {
     type LensId,
     type RouteFeature,
     type RouteLens,
+    migrateNavPages,
+    nextLens,
+    parseNavPages,
     registerRouteFeature,
     resolveLens,
     routeFeatures,
     routeLenses,
     routeNavBanners,
+    routeNavPageChoices,
+    routeNavPages,
     routeStages,
     routeStatViews,
     routeTrip,
@@ -163,5 +168,47 @@ describe('tellDeparture', () => {
         ];
         tellDeparture(features, ctx, 'restamped');
         expect(heard).toEqual(['one taken', 'two restamped']);
+    });
+});
+
+describe('dock pages', () => {
+    const page = (id: string, available = true) => ({ id, label: () => id, component: () => Promise.resolve({ default: null }), available: () => available });
+    const features: RouteFeature[] = [
+        { id: 'one', order: 1, navPages: [page('climb'), page('profile', false)] },
+        { id: 'two', order: 2, navPages: [page('trip'), page('surface')] },
+        { id: 'none', order: 3 }
+    ];
+
+    it('shows the pages that are on, available, in the order of the setting', () => {
+        expect(routeNavPages(features, { item: null }, ['trip', 'profile', 'climb', 'gone']).map(({ id }) => id)).toEqual(['trip', 'climb']);
+    });
+
+    it('lists every page for the settings: the ones on first, in order, then the rest', () => {
+        expect(routeNavPageChoices(features, ['trip', 'climb']).map(({ id }) => id)).toEqual(['trip', 'climb', 'profile', 'surface']);
+    });
+
+    it('reads the setting, dropping blanks and doubles', () => {
+        expect(parseNavPages('climb, trip,,climb')).toEqual(['climb', 'trip']);
+        expect(parseNavPages('')).toEqual([]);
+    });
+
+    it('keeps what was chosen with the switches the pages replaced', () => {
+        const defaults = ['climb', 'profile', 'ahead', 'trip'];
+        expect(migrateNavPages(defaults, { chart: false })).toEqual(['climb', 'ahead', 'trip']);
+        expect(migrateNavPages(defaults, { surface: true })).toEqual(['climb', 'profile', 'surface', 'ahead', 'trip']);
+        expect(migrateNavPages(defaults, { chart: false, surface: true })).toEqual(['surface', 'climb', 'ahead', 'trip']);
+        expect(migrateNavPages(defaults, { chart: true, surface: false })).toEqual(defaults);
+    });
+});
+
+describe('nextLens', () => {
+    const lenses = ['overview', 'climbs', 'weather'].map((id) => ({ id }) as RouteLens);
+    it('goes to the lens after the active one, round to the first', () => {
+        expect(nextLens(lenses, 'overview')).toBe('climbs');
+        expect(nextLens(lenses, 'weather')).toBe('overview');
+    });
+    it('starts from the first when the active lens is not offered, and says nothing without lenses', () => {
+        expect(nextLens(lenses, 'sun')).toBe('overview');
+        expect(nextLens([], 'overview')).toBeUndefined();
     });
 });

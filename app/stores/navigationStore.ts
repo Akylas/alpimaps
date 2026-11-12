@@ -1,9 +1,11 @@
+import { ApplicationSettings } from '@nativescript/core';
 import { derived, get, writable } from 'svelte/store';
 import type { GeoLocation } from '~/handlers/GeoHandler';
 import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
+import { migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
     DEFAULT_NAVIGATION_ARROW_MARKER,
@@ -15,19 +17,19 @@ import {
     DEFAULT_NAVIGATION_AUTO_ZOOM,
     DEFAULT_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     DEFAULT_NAVIGATION_BEARING_REFRESH_ANGLE,
-    DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
     DEFAULT_NAVIGATION_GPS_UPDATE_DISTANCE,
     DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD,
     DEFAULT_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
     DEFAULT_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     DEFAULT_NAVIGATION_OFF_ROUTE_DISTANCE,
     DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
+    DEFAULT_NAVIGATION_PAGE,
+    DEFAULT_NAVIGATION_PAGES,
+    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
-    DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART,
-    DEFAULT_NAVIGATION_SHOW_SURFACE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
     DEFAULT_NAVIGATION_SURFACE_SPAN,
@@ -53,19 +55,19 @@ import {
     SETTINGS_NAVIGATION_AUTO_ZOOM,
     SETTINGS_NAVIGATION_BACKGROUND_UPDATE_INTERVAL,
     SETTINGS_NAVIGATION_BEARING_REFRESH_ANGLE,
-    SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
     SETTINGS_NAVIGATION_GPS_UPDATE_DISTANCE,
     SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
     SETTINGS_NAVIGATION_MANEUVER_REFRESH_DISTANCE,
     SETTINGS_NAVIGATION_MANEUVER_WAKE_DISTANCE,
     SETTINGS_NAVIGATION_OFF_ROUTE_DISTANCE,
     SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
+    SETTINGS_NAVIGATION_PAGE,
+    SETTINGS_NAVIGATION_PAGES,
+    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_POSITION_OFFSET,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
-    SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART,
-    SETTINGS_NAVIGATION_SHOW_SURFACE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
     SETTINGS_NAVIGATION_SURFACE_SPAN,
@@ -160,11 +162,31 @@ export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_P
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
 export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
-export const navigationShowElevationChart = settingsStore(SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART, DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART);
-export const navigationShowSurface = settingsStore(SETTINGS_NAVIGATION_SHOW_SURFACE, DEFAULT_NAVIGATION_SHOW_SURFACE);
+
+const LEGACY_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
+const LEGACY_SHOW_SURFACE = 'navigation_show_surface';
+// the dock's pages replace the two switches: whoever set one keeps what they chose
+if (!ApplicationSettings.hasKey(SETTINGS_NAVIGATION_PAGES) && (ApplicationSettings.hasKey(LEGACY_SHOW_ELEVATION_CHART) || ApplicationSettings.hasKey(LEGACY_SHOW_SURFACE))) {
+    const pages = migrateNavPages(parseNavPages(DEFAULT_NAVIGATION_PAGES), {
+        chart: ApplicationSettings.hasKey(LEGACY_SHOW_ELEVATION_CHART) ? ApplicationSettings.getBoolean(LEGACY_SHOW_ELEVATION_CHART) : undefined,
+        surface: ApplicationSettings.hasKey(LEGACY_SHOW_SURFACE) ? ApplicationSettings.getBoolean(LEGACY_SHOW_SURFACE) : undefined
+    });
+    ApplicationSettings.setString(SETTINGS_NAVIGATION_PAGES, pages.join(','));
+}
+ApplicationSettings.remove(LEGACY_SHOW_ELEVATION_CHART);
+ApplicationSettings.remove(LEGACY_SHOW_SURFACE);
+
+/** the dock pages that are on, comma separated, in order */
+export const navigationPages = settingsStore(SETTINGS_NAVIGATION_PAGES, DEFAULT_NAVIGATION_PAGES);
+export const navigationPageIds = derived(navigationPages, parseNavPages);
+/** the page the dock showed last, brought back on the next ride */
+export const navigationPage = settingsStore(SETTINGS_NAVIGATION_PAGE, DEFAULT_NAVIGATION_PAGE);
+/** the summary row says what is done, not what is left: a tap on it swaps them */
+export const navigationSummaryDone = settingsStore(SETTINGS_NAVIGATION_SUMMARY_DONE, DEFAULT_NAVIGATION_SUMMARY_DONE);
+/** the page the dock shows now, null when there is none: a page that costs something to read waits for it */
+export const navigationPageShown = writable<string | null>(null);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
 export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD, DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD);
-export const navigationChartCurrentAscent = settingsStore(SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT, DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT);
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
 export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET);
 
@@ -617,26 +639,6 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         description: () => lc('navigation_record_track_desc')
     },
     {
-        key: SETTINGS_NAVIGATION_SHOW_ELEVATION_CHART,
-        section: NavigationSection.Display,
-        store: navigationShowElevationChart,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_SHOW_ELEVATION_CHART,
-        title: () => lc('navigation_show_elevation_chart'),
-        description: () => lc('navigation_show_elevation_chart_desc'),
-        quick: true
-    },
-    {
-        key: SETTINGS_NAVIGATION_CHART_CURRENT_ASCENT,
-        section: NavigationSection.Display,
-        store: navigationChartCurrentAscent,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_CHART_CURRENT_ASCENT,
-        title: () => lc('navigation_chart_current_ascent'),
-        description: () => lc('navigation_chart_current_ascent_desc'),
-        quick: true
-    },
-    {
         key: SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
         section: NavigationSection.Display,
         store: navigationGradeLookAhead,
@@ -657,16 +659,6 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         default: DEFAULT_NAVIGATION_ARROW_MARKER,
         title: () => lc('navigation_arrow_marker'),
         description: () => lc('navigation_arrow_marker_desc'),
-        quick: true
-    },
-    {
-        key: SETTINGS_NAVIGATION_SHOW_SURFACE,
-        section: NavigationSection.Display,
-        store: navigationShowSurface,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_SHOW_SURFACE,
-        title: () => lc('navigation_show_surface'),
-        description: () => lc('navigation_show_surface_desc'),
         quick: true
     },
     {
@@ -699,6 +691,18 @@ export function getNavigationSettingsOptions() {
             return options;
         }
         options.push({ type: 'sectionheader', title: NAVIGATION_SECTION_TITLES[section]() });
+        if (section === NavigationSection.Display) {
+            // opens the list of the dock's pages: which are on, in what order
+            options.push({
+                id: 'navigation_pages',
+                title: lc('navigation_pages'),
+                description: () =>
+                    routeNavPageChoices(get(routeFeatures), parseNavPages(get(navigationPages)))
+                        .filter((page) => parseNavPages(get(navigationPages)).includes(page.id))
+                        .map((page) => page.label())
+                        .join(' · ') || lc('navigation_pages_none')
+            });
+        }
         sectionParams.forEach((param) =>
             options.push(
                 param.type === 'boolean'
