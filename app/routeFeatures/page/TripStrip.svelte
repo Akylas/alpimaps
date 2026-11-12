@@ -5,15 +5,14 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
+    import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { dayFormat, tripTimes } from '~/routeFeatures/page/trip';
-    import { routeFeatureChanges, routeFeatures, routeTrip } from '~/routeFeatures/registry';
+    import { liveRouteFeatures, routeTrip } from '~/routeFeatures/registry';
     import { showSnack } from '~/utils/ui';
     import { utcOffsetAt } from '~/utils/timezone';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
-    /** bumped when the item's analysis changed in place: the times and the figures follow */
-    export let version = 0;
 
     // no payload: the listener gets `undefined`
     interface $$Events {
@@ -26,8 +25,9 @@
     let { colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorError, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
-    $: times = version >= 0 ? tripTimes(item, Date.now(), utcOffsetAt) : null;
-    $: figures = version >= 0 && $routeFeatureChanges >= 0 ? routeTrip($routeFeatures, { item }) : { chips: [], note: '' };
+    // `>= 0` is always true: it reruns these when the analysis changed in place
+    $: times = $routeAnalysisChanges >= 0 ? tripTimes(item, Date.now(), utcOffsetAt) : null;
+    $: figures = $routeAnalysisChanges >= 0 ? routeTrip($liveRouteFeatures, { item }) : { chips: [], note: '' };
 
     // a ride for another day says which; one that goes on past midnight says how many days
     const clock = (at: number) => formatTime(at, 'LT', times.offsetAt(at));

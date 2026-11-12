@@ -16,7 +16,7 @@
     import { formatTime, lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
-    import { routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
+    import { lookingBase, routeAnalysisChanges } from '~/routeFeatures/analysisRunner';
     import { routeCoordinates } from '~/routeFeatures/lens/sections';
     import { type DepartureAssessor, type StripCell, departureStrip, stripScroll } from '~/routeFeatures/page/departureStrip';
     import { routeFeatures, tellDeparture } from '~/routeFeatures/registry';
@@ -28,10 +28,6 @@
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
-    /** the page bumps it when it changed the item's analysis in place */
-    export let version = 0;
-    /** while a departure is looked at, what the route had before: the departure the strip is read from. `undefined`: the item's */
-    export let committed: RouteAnalysis | null | undefined;
     /** changes each time the panel is opened: the list keeps the panel's view when it is closed, so it is not made again */
     export let opened = 0;
 
@@ -69,8 +65,11 @@
     const clockTimer = setInterval(() => (now = Date.now()), 60000);
     onDestroy(() => clearInterval(clockTimer));
 
-    // `version >= 0` is always true: it reruns this when the page changed the analysis in place
-    $: analysis = version >= 0 ? (committed !== undefined ? committed : (item?.analysis ?? null)) : null;
+    // while a departure is looked at, the strip is read from what the route had before; `>= 0` is always true: it reruns this when the
+    // analysis changed in place
+    $: lookedFrom = $routeAnalysisChanges >= 0 ? lookingBase(item) : undefined;
+    $: committed = lookedFrom ? lookedFrom.analysis : undefined;
+    $: analysis = $routeAnalysisChanges >= 0 ? (committed !== undefined ? committed : (item?.analysis ?? null)) : null;
     // an imported track has no routing profile to tell what it is: the user says. A computed route is what it was routed for
     $: imported = !!item?.properties?.imported;
     $: inputs = (analysis ?? createAnalysis(item.geometry)).inputs;

@@ -161,13 +161,10 @@
             massifMap.camera().fitBounds(toBounds(bounds), { screen, resetRotation: true, duration: isEInk ? 0 : 200 });
         }
     }
-    let sectionKey = '';
-    $: {
-        const key = section ? `${section.i0}:${section.i1}` : '';
-        if (key !== sectionKey) {
-            sectionKey = key;
-            frame();
-        }
+    // only another stretch moves the camera: `frame` reads the rest untracked
+    $: sectionKey = section ? `${section.i0}:${section.i1}` : '';
+    $: if (sectionKey !== undefined) {
+        frame();
     }
 
     /** The whole route again, the focused section left. */

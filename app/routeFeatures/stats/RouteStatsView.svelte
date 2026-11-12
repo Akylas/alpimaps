@@ -1,6 +1,5 @@
 <script context="module" lang="ts">
     import { Align, Canvas, CanvasView, Direction, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-    import { ApplicationSettings } from '@nativescript/core';
 
     const barPaint = new Paint();
     barPaint.strokeWidth = 2;
@@ -25,6 +24,7 @@
     import { lc } from '~/helpers/locale';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
+    import { settingsStore } from '~/stores/settingsStore';
     import { surfaceColors } from '~/utils/routing';
     import { colors } from '~/variables';
     import IconButton from '~/components/common/IconButton.svelte';
@@ -37,13 +37,13 @@
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     let statsCanvas: NativeViewElementNode<CanvasView>;
-    let savedKey = ApplicationSettings.getString('stats_key', 'waytypes');
+    const statsViewKey = settingsStore('stats_key', 'waytypes');
 
     // the way types and the surfaces, then what the features have to say of the route
     $: extraViews = routeStatViews($liveRouteFeatures, { item });
     $: viewIds = ['waytypes', 'surfaces', ...extraViews.map((view) => view.id)];
     // a view that is gone (another route, a feature switched off) leaves the first one
-    $: statsKey = viewIds.includes(savedKey) ? savedKey : 'waytypes';
+    $: statsKey = viewIds.includes($statsViewKey) ? $statsViewKey : 'waytypes';
     $: viewIndex = viewIds.indexOf(statsKey);
 
     $: if (item || extraViews) {
@@ -52,9 +52,7 @@
     onThemeChanged(() => statsCanvas?.nativeView?.invalidate());
 
     function setStatsKey(value: string) {
-        savedKey = value;
-        statsKey = value;
-        ApplicationSettings.setString('stats_key', value);
+        statsViewKey.set(value);
         statsCanvas?.nativeView?.invalidate();
     }
 

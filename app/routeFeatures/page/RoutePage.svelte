@@ -24,7 +24,7 @@
     import Chip from '~/components/common/Chip.svelte';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
-    import { analysisChanged, keepLook, lookAt, lookingBase, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
+    import { analysisChanged, keepLook, lookAt, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
@@ -216,8 +216,8 @@
     onDestroy(() => clearInterval(clockTimer));
     // a departure looked at and not taken is not the route's
     onDestroy(giveBackLook);
-    // always true: it reruns this when the analysis changed in place
-    $: analysis = analysisVersion >= 0 ? item?.analysis : null;
+    // `>= 0` is always true: it reruns this when the analysis changed in place
+    $: analysis = $routeAnalysisChanges >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };
     $: trip = analysis ? tripTimes(item, now, utcOffsetAt) : null;
     $: arrivalAt = trip ? trip.end : item?.route?.totalTime ? resolveStart(departure, now) + item.route.totalTime * 1000 : NaN;
@@ -241,23 +241,7 @@
     $: if (whenOpen) {
         whenOpened++;
     }
-    $: setRow({ type: 'when', key: 'when', version: analysisVersion, opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
-    // the tiles and the When panel are drawn by templates, which do not follow what the page changes: what they show of the analysis is in
-    // their items, set again with each change of it
-    function refreshAnalysisRows(version: number, look: { analysis: RouteAnalysis | null } | undefined, _tick: number) {
-        ['tiles', 'trip', 'when'].forEach((key) => {
-            const index = indexOfKey(key);
-            if (index >= 0) {
-                const row = listItems.getItem(index);
-                if (row.type === 'when') {
-                    listItems.setItem(index, { ...row, version, committed: look ? look.analysis : undefined });
-                } else if (row.type === 'tiles' || row.type === 'trip') {
-                    listItems.setItem(index, { ...row, version });
-                }
-            }
-        });
-    }
-    $: refreshAnalysisRows(analysisVersion, committed, $routeAnalysisChanges);
+    $: setRow({ type: 'when', key: 'when', opened: whenOpened }, whenOpen, indexOfKey('trip') >= 0 ? 'trip' : 'tiles');
     $: offsetAt = offsetAtFor(departure, utcOffsetAt);
     function clock(at: number) {
         return formatTime(at, 'LT', offsetAt(at));
@@ -269,11 +253,9 @@
     }
     $: whenLabel = `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
-    // the times change in place: only what shows them follows. The activity changes what the whole page reads
-    let analysisVersion = 0;
-    // a departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
+    // the times change in place: what shows them follows the analysis' changes. The activity changes what the whole page reads.
+    // A departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
     // back. Nothing of it is saved until the departure is taken
-    $: committed = analysisVersion >= 0 && $routeAnalysisChanges >= 0 ? lookingBase(item) : undefined;
     function onAnalysisChange({ analysis, full, preview }: { analysis: RouteAnalysis; full?: boolean; preview?: boolean }) {
         if (preview) {
             lookAt(item, analysis);
@@ -282,7 +264,6 @@
             item.analysis = analysis;
             saveAnalysis(item, analysis);
         }
-        analysisVersion++;
         analysisChanged();
         if (full) {
             item = item;
@@ -290,7 +271,6 @@
     }
     function giveBackLook() {
         revertLook(item);
-        analysisVersion++;
     }
     // an unsaved route keeps its analysis on the item until it is saved with it
     function isSaved(route: Item) {
@@ -423,20 +403,20 @@
             <Template key="when" let:item={row}>
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <WhenPanel committed={row.committed} {item} opened={row.opened ?? 0} version={row.version ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
+                        <WhenPanel {item} opened={row.opened ?? 0} on:change={onAnalysisChange} on:revert={giveBackLook} />
                     </gridlayout>
                 </gridlayout>
             </Template>
-            <Template key="tiles" let:item={row}>
+            <Template key="tiles">
                 <!-- the tiles keep their own 40 high: the row around them does not follow what they show -->
                 <gridlayout backgroundColor={colorCanvas} height={48} paddingTop={8}>
-                    <RouteStatTiles {item} sheetWidth={screenWidthDips} version={row.version ?? 0} on:when={toggleWhen} />
+                    <RouteStatTiles {item} sheetWidth={screenWidthDips} on:when={toggleWhen} />
                 </gridlayout>
             </Template>
-            <Template key="trip" let:item={row}>
+            <Template key="trip">
                 <gridlayout backgroundColor={colorCanvas} padding="8 6 0 6">
                     <gridlayout backgroundColor={colorCard} borderRadius={CARD_RADIUS}>
-                        <TripStrip {item} version={row.version ?? 0} on:when={toggleWhen} />
+                        <TripStrip {item} on:when={toggleWhen} />
                     </gridlayout>
                 </gridlayout>
             </Template>
