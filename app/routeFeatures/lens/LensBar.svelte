@@ -51,8 +51,10 @@
         const middle = chip.getLocationRelativeTo(scrollView.content).x + chip.getActualSize().width / 2;
         scrollView.scrollToHorizontalOffset(Math.max(0, middle - scrollView.getActualSize().width / 2), false);
     }
-    // a lens that comes or goes moves the chips too
-    $: if (selected && scroller && entries) {
+    // `entries` is a new array on every refresh of the card, and would bring the chip back after the user scrolled the row:
+    // a lens that comes or goes moves the chips
+    $: ids = entries.map(({ id }) => id).join();
+    $: if (selected && scroller && ids) {
         revealSelected();
     }
 </script>

@@ -46,6 +46,16 @@ describe('sunTrip', () => {
         expect(trip.moon).toBeUndefined();
     });
 
+    it('says how long before the start or after the end an event is, in ms', () => {
+        // 12:00 to 15:00 in Grenoble: the sunrise at 06:03 is 5.9 h before, the sunset at 21:49 is 6.5 h after
+        const [sunrise, sunset] = tripOf(Date.UTC(2026, 5, 21, 10, 0)).events;
+        expect(sunrise.ms).toBeGreaterThan(5.5 * 3600000);
+        expect(sunrise.ms).toBeLessThan(6.5 * 3600000);
+        expect(sunset.ms).toBeGreaterThan(6 * 3600000);
+        expect(sunset.ms).toBeLessThan(7 * 3600000);
+        expect(tripOf(Date.UTC(2026, 5, 21, 17, 30)).events[0].ms).toBeUndefined();
+    });
+
     it('has the moonset for a ride in the night by the light of the moon, and no sun', () => {
         // 00:00 to 03:00 in Grenoble in the night of the full moon: it sets at 05:46
         const trip = tripOf(Date.UTC(2026, 6, 28, 22));

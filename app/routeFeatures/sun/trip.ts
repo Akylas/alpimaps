@@ -10,6 +10,8 @@ export interface TripEvent {
     relation: 'during' | 'before' | 'after';
     /** m from the start, for an event during the ride */
     distance?: number;
+    /** ms before the start or after the end, for an event out of the ride */
+    ms?: number;
 }
 
 export interface SunTrip {
@@ -27,8 +29,12 @@ export function sunTrip(read: SunRead): SunTrip {
     const { darkMs, moonlitMs } = read.summary;
     const days = daysOf(read).map((at) => sunEvents(at, read.place, read.offsetAt(at)));
     const during = (at: number | null) => at !== null && at >= read.start && at <= read.end;
-    const eventOf = (id: TripEvent['id'], at: number): TripEvent =>
-        during(at) ? { id, at, relation: 'during', distance: read.distanceAt(at) } : { id, at, relation: at < read.start ? 'before' : 'after' };
+    const eventOf = (id: TripEvent['id'], at: number): TripEvent => {
+        if (during(at)) {
+            return { id, at, relation: 'during', distance: read.distanceAt(at) };
+        }
+        return at < read.start ? { id, at, relation: 'before', ms: read.start - at } : { id, at, relation: 'after', ms: at - read.end };
+    };
 
     const rise = aroundRide(
         read,

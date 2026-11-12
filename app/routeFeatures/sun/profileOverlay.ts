@@ -4,16 +4,12 @@
  */
 import { Align, DashPathEffect, Paint, Style } from '@nativescript-community/ui-canvas';
 import type { ProfileOverlay } from '~/routeFeatures/registry';
-import { SUN_COLORS } from '~/routeFeatures/sun/colors';
+import { SUN_EVENTS } from '~/routeFeatures/sun/colors';
 import type { SunRead } from '~/routeFeatures/sun/read';
 import { rideMoonEvents } from '~/routeFeatures/sun/symbols';
 
 const RIBBON_HEIGHT = 4;
 const GLYPH_ROW = 12;
-const MDI_SUNSET_DOWN = String.fromCodePoint(0xf059b);
-const MDI_SUNSET_UP = String.fromCodePoint(0xf059c);
-const MDI_MOON_WAXING_CRESCENT = String.fromCodePoint(0xf0f67);
-const MDI_MOON_WANING_CRESCENT = String.fromCodePoint(0xf0f65);
 
 const fillPaint = new Paint();
 fillPaint.setStyle(Style.FILL);
@@ -33,9 +29,9 @@ export function sunProfileOverlay(read: SunRead, colors: (isEInk: boolean) => Re
     const moon = rideMoonEvents(read);
     // where each is on the ride, in metres, as the lines are drawn
     const marks = [
-        { distance: sunrise?.distance, glyph: MDI_SUNSET_UP, color: SUN_COLORS.sunrise },
-        { distance: sunset?.distance, glyph: MDI_SUNSET_DOWN, color: SUN_COLORS.sunset },
-        ...moon.map(({ distance, id }) => ({ distance, glyph: id === 'moonrise' ? MDI_MOON_WAXING_CRESCENT : MDI_MOON_WANING_CRESCENT, color: SUN_COLORS.moon }))
+        { distance: sunrise?.distance, glyph: SUN_EVENTS.sunrise.glyph, color: SUN_EVENTS.sunrise.color },
+        { distance: sunset?.distance, glyph: SUN_EVENTS.sunset.glyph, color: SUN_EVENTS.sunset.color },
+        ...moon.map(({ distance, id }) => ({ distance, glyph: SUN_EVENTS[id].glyph, color: SUN_EVENTS[id].color }))
     ];
     return {
         draw(canvas, view) {
@@ -54,6 +50,8 @@ export function sunProfileOverlay(read: SunRead, colors: (isEInk: boolean) => Re
                 outlinePaint.color = '#000000';
                 canvas.drawRect(contentLeft, contentBottom - height, contentRight, contentBottom, outlinePaint);
             }
+            glyphPaint.fontFamily = view.iconFontFamily;
+            glyphPaint.setTextSize(14 * fontScale);
             marks.forEach(({ color, distance, glyph }) => {
                 if (distance === undefined) {
                     return;
@@ -66,8 +64,6 @@ export function sunProfileOverlay(read: SunRead, colors: (isEInk: boolean) => Re
                 const stroke = isEInk ? '#000000' : color;
                 linePaint.color = stroke;
                 canvas.drawLine(pointX, contentTop + GLYPH_ROW * fontScale, pointX, contentBottom - height, linePaint);
-                glyphPaint.fontFamily = view.iconFontFamily;
-                glyphPaint.setTextSize(14 * fontScale);
                 glyphPaint.color = stroke;
                 canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + GLYPH_ROW * fontScale, glyphPaint);
             });

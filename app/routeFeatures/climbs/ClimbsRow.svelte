@@ -1,18 +1,37 @@
+<script context="module" lang="ts">
+    import { Color } from '@nativescript/core';
+    import { isEInk } from '~/helpers/theme';
+    import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
+
+    // the profile's own look: the fill is the grade's colour, as it is under the chart, and a thin line draws the shape
+    const GRADE_FILL_ALPHA = 225;
+    const colorFills = new Map<number, string>();
+    const einkFills = new Map<number, string>();
+    // the grade's colour, and on e-ink its shade of black, as under the chart: one per bucket, not one per segment drawn
+    function gradeFill(grade: number) {
+        const bucket = gradeBucketIndex(grade);
+        const fills = isEInk ? einkFills : colorFills;
+        let fill = fills.get(bucket);
+        if (!fill) {
+            fill = isEInk ? new Color('#000000').setAlpha(gradeShades[bucket]).hex : new Color(gradeColor(grade)).setAlpha(GRADE_FILL_ALPHA).hex;
+            fills.set(bucket, fill);
+        }
+        return fill;
+    }
+</script>
+
 <script lang="ts">
     // one row of the climbs list, in the climbs sheet and on the route page: a climb with its sparkline, the steep
     // sections' header, or a steep section. A tap on a climb or a section asks to focus it
     import { Canvas, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-    import { Color } from '@nativescript/core';
     import { createEventDispatcher } from '@shared/utils/svelte/ui';
     import { convertElevation, formatDistance } from '~/helpers/formatter';
     import { lc } from '~/helpers/locale';
-    import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { type ClimbsRowData, type SteepScale, categoryLabel, readClimbs, steepTitle } from '~/routeFeatures/climbs/data';
     import { climbsSteepOpen } from '~/routeFeatures/climbs/settings';
     import type { Climb, SteepSection } from '~/routeFeatures/climbs/steep';
     import type { LensSection } from '~/routeFeatures/registry';
-    import { gradeBucketIndex, gradeColor, gradeShades } from '~/utils/grade';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
@@ -27,8 +46,6 @@
     $: ({ colorBackground, colorOnSurface, colorOnSurfaceVariant, colorOutlineVariant, colorPrimary } = $colors);
 
     const SPARKLINE_POINTS = 40;
-    // the profile's own look: the fill is the grade's colour, as it is under the chart, and a thin line draws the shape
-    const GRADE_FILL_ALPHA = 225;
     const strokePaint = new Paint();
     strokePaint.setStyle(Style.STROKE);
     strokePaint.setStrokeWidth(1.5);
@@ -72,8 +89,7 @@
             quad.lineTo(point.x, height);
             quad.lineTo(previous.x, height);
             quad.close();
-            // the grade's colour, and on e-ink its shade of black, as under the chart
-            fillPaint.color = isEInk ? new Color('#000000').setAlpha(gradeShades[gradeBucketIndex(point.grade)]).hex : new Color(gradeColor(point.grade)).setAlpha(GRADE_FILL_ALPHA).hex;
+            fillPaint.color = gradeFill(point.grade);
             canvas.drawPath(quad, fillPaint);
         });
         strokePaint.color = isEInk ? colorOnSurface : colorOnSurfaceVariant;

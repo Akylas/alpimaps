@@ -10,8 +10,8 @@
     import ClimbsRow from '~/routeFeatures/climbs/ClimbsRow.svelte';
     import { type ClimbsRowData, climbsRows, readClimbs } from '~/routeFeatures/climbs/data';
     import { climbsSteepOpen } from '~/routeFeatures/climbs/settings';
-    import { focusKeyOf, focusSection } from '~/routeFeatures/lens/routeFocusStore';
-    import { selectLens } from '~/routeFeatures/lens/routeLensStore';
+    import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
+    import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
     import type { LensSection } from '~/routeFeatures/registry';
     import { windowInset } from '~/variables';
 
@@ -26,8 +26,7 @@
         if (!section) {
             return;
         }
-        selectLens('climbs');
-        focusSection(focusKeyOf(item), { ...section, lens: 'climbs' });
+        focusLensSection(focusKeyOf(item), 'climbs', section);
         // the map is behind the sheet, and that is where the section is shown
         closeBottomSheet();
     }

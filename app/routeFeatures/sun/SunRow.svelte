@@ -4,15 +4,13 @@
     // left out. The shade is in the bar's legend. A tap on a chip says what it is and where it falls
     import { showError } from '@shared/utils/showError';
     import Chip from '~/components/common/Chip.svelte';
-    import { formatDistance, formatDuration } from '~/helpers/formatter';
+    import { formatDistance } from '~/helpers/formatter';
     import { formatTime, lc } from '~/helpers/locale';
-    import { explainChip } from '~/routeFeatures/sun/explain';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
     import { barGradient } from '~/routeFeatures/lens/barGradient';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
-    import type { LensFact } from '~/routeFeatures/registry';
-    import { SUN_COLORS } from '~/routeFeatures/sun/colors';
+    import { type SunChip, eventChip, figureChip } from '~/routeFeatures/sun/chips';
     import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
     import { startRouteSunMode } from '~/routeFeatures/sun/sunMode';
     import { showSnack } from '~/utils/ui';
@@ -26,39 +24,21 @@
     let { colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
-    const EVENT_CHIPS = {
-        sunrise: { icon: 'mdi-weather-sunset-up', color: SUN_COLORS.sunrise },
-        sunset: { icon: 'mdi-weather-sunset-down', color: SUN_COLORS.sunset },
-        dusk: { icon: 'mdi-weather-sunset', color: SUN_COLORS.dusk },
-        moonrise: { icon: 'mdi-moon-waxing-crescent', color: SUN_COLORS.moon },
-        moonset: { icon: 'mdi-moon-waning-crescent', color: SUN_COLORS.moon }
-    };
     const SIDES: SunSide[] = ['left', 'ahead', 'right', 'behind'];
     const palette = currentLensPalette(isEInk ? 'eink' : 'light');
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
 
-    // the icon says what it is, the time or the length is all the chip says; a tap says the rest (`help`)
     $: chips = data.type === 'chips' ? chipsOf(data) : [];
-    type SunChip = LensFact & { key: string; help: string };
-    function whereOf(event: Extract<SunRowData, { type: 'chips' }>['events'][number]) {
-        return event.relation === 'during' ? formatDistance(event.distance) : formatDuration(event.ms / 1000);
-    }
     function chipsOf(row: Extract<SunRowData, { type: 'chips' }>): SunChip[] {
-        const result: SunChip[] = row.events.map((event) => {
-            const time = formatTime(event.at, 'LT', event.offset);
-            return { key: event.id, ...EVENT_CHIPS[event.id], text: time, help: explainChip({ kind: event.id, time, relation: event.relation, where: whereOf(event) }, lc) };
-        });
+        const result = row.events.map((event) => eventChip(event, (at) => formatTime(at, 'LT', event.offset)));
         if (row.darkMs > 0) {
-            const length = formatDuration(row.darkMs / 1000);
-            result.push({ key: 'dark', icon: 'mdi-weather-night', text: length, color: SUN_COLORS.dark, help: explainChip({ kind: 'dark', length }, lc) });
+            result.push(figureChip('dark', row.darkMs));
         }
         if (row.moonlitMs > 0) {
-            const length = formatDuration(row.moonlitMs / 1000);
-            result.push({ key: 'moonlit', icon: 'mdi-moon-waning-crescent', text: length, color: SUN_COLORS.moon, help: explainChip({ kind: 'moonlit', length }, lc) });
+            result.push(figureChip('moonlit', row.moonlitMs));
         }
         if (row.glareMeters > 0) {
-            const length = formatDistance(row.glareMeters);
-            result.push({ key: 'glare', icon: 'mdi-white-balance-sunny', text: length, alert: true, help: explainChip({ kind: 'glare', length }, lc) });
+            result.push(figureChip('glare', row.glareMeters));
         }
         return result;
     }

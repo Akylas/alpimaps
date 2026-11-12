@@ -1,7 +1,7 @@
 import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
 import { formatTime, lc } from '~/helpers/locale';
 import { arrivalOf } from '~/routeFeatures/basics/arrival';
-import { type LensFact, type LensHeadline, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
+import { type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
     const route = item?.route;
@@ -64,7 +64,17 @@ function overviewHeadline({ item }: RouteCtx): LensHeadline {
     return { facts };
 }
 
-const overview: RouteLens = { id: 'overview', icon: 'mdi-routes', label: () => lc('lens_overview'), available: () => true, chip: () => ({}), headline: overviewHeadline };
+const GRADE_PROFILE: LensProfile = { gradeLegend: true };
+
+const overview: RouteLens = {
+    id: 'overview',
+    icon: 'mdi-routes',
+    label: () => lc('lens_overview'),
+    available: () => true,
+    chip: () => ({}),
+    headline: overviewHeadline,
+    profile: () => GRADE_PROFILE
+};
 
 registerRouteFeature({
     id: 'basics',

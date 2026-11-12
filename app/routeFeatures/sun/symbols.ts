@@ -1,6 +1,7 @@
 /** The markers of the sun lens on the map. Pure: nothing here may import NativeScript. */
 import type { LensSymbol } from '~/routeFeatures/registry';
 import { moonAround } from '~/routeFeatures/sun/around';
+import { SUN_EVENTS } from '~/routeFeatures/sun/colors';
 import type { SunRead } from '~/routeFeatures/sun/read';
 import { sunLevel } from '~/utils/astronomy/sun';
 
@@ -9,12 +10,6 @@ export const SUN_EVENT_PALETTE_KEYS = { sunrise: 'sun_sunrise', sunset: 'sun_sun
 
 type EventId = keyof typeof SUN_EVENT_PALETTE_KEYS;
 
-const EVENT_GLYPHS: Record<EventId, string> = {
-    sunrise: 'mdi-weather-sunset-up',
-    sunset: 'mdi-weather-sunset-down',
-    moonrise: 'mdi-moon-waxing-crescent',
-    moonset: 'mdi-moon-waning-crescent'
-};
 /** over the map's own labels, which a small marker must not lose its place to */
 const MARKER_PRIORITY = 30;
 
@@ -65,7 +60,7 @@ export function sunSymbols(read: SunRead, clock: (at: number) => string): LensSy
                 shape: 'marker',
                 vertex,
                 label: clock(at),
-                glyph: EVENT_GLYPHS[id],
+                glyph: SUN_EVENTS[id].icon,
                 severity: 0,
                 tint: SUN_EVENT_PALETTE_KEYS[id],
                 priority: MARKER_PRIORITY

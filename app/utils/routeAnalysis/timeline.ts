@@ -1,6 +1,8 @@
 import type { Geometry } from 'geojson';
-import { resolveStart } from './departure';
+import { activityOf } from './activity';
+import { resolveStart, routeTimeZone } from './departure';
 import { gradeSpeedKmh } from './speeds';
+import { createAnalysis } from './storage';
 import type { AnalysisInputs, Departure, Pace, RouteAnalysis } from './types';
 
 export interface RouteTimeline {
@@ -63,6 +65,39 @@ export function timeAtDistance(distances: ArrayLike<number>, timeline: Pick<Rout
     const span = distances[low] - distances[low - 1];
     const share = span > 0 ? (meters - distances[low - 1]) / span : 0;
     return timeline.at(low - 1) + share * (timeline.at(low) - timeline.at(low - 1));
+}
+
+/** The clock time of a distance of the route, in meters from its start: epoch ms, with the offset of the route's zone when it has one. */
+export interface RouteClock {
+    at: (meters: number) => number;
+    offset?: number;
+}
+
+type ClockRoute = Parameters<typeof timelineSource>[0] & Parameters<typeof activityOf>[0];
+
+function buildClock(item: ClockRoute): RouteClock | null {
+    const source = timelineSource(item);
+    if (source.distances.length < 2) {
+        return null;
+    }
+    const { inputs } = item.analysis ?? createAnalysis(item.geometry, activityOf(item, null));
+    const timeline = buildTimeline(source, inputs, Date.now());
+    return { at: (meters) => timeAtDistance(source.distances, timeline, meters), offset: routeTimeZone(inputs.departure).offset };
+}
+
+// the analysis is replaced, never edited, when what the times hang on changes: it keys the clock. `weakMemo` hands its
+// builder the key alone, and the route is needed too
+const clocks = new WeakMap<RouteAnalysis, RouteClock | null>();
+
+export function clockAtDistance(item: ClockRoute): RouteClock | null {
+    const { analysis } = item;
+    if (!analysis) {
+        return buildClock(item);
+    }
+    if (!clocks.has(analysis)) {
+        clocks.set(analysis, buildClock(item));
+    }
+    return clocks.get(analysis);
 }
 
 export function cumulativeDistances(coordinates: number[][]): Float64Array {

@@ -13,14 +13,11 @@
     import LensBar from '~/routeFeatures/lens/LensBar.svelte';
     import LensInsight from '~/routeFeatures/lens/LensInsight.svelte';
     import { clearCursor, clearFocus, clearSection, focusKeyOf, focusSection, routeFocus, setCursor } from '~/routeFeatures/lens/routeFocusStore';
-    import { routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
+    import { focusLensSection, routeLensStore, selectLens } from '~/routeFeatures/lens/routeLensStore';
     import { isLensFeature, paddedRange, routeCoordinates, sectionAt, stepSection, tappedVertex } from '~/routeFeatures/lens/sections';
-    import { type LensId, type LensSection, type ProfileBracket, type ProfileMark, resolveLens, liveRouteFeatures, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
+    import { type LensId, type LensProfile, type LensSection, type ProfileBracket, type ProfileMark, liveRouteFeatures, resolveLens, routeAttention, routeFeatureChanges, routeFeatures, routeLenses } from '~/routeFeatures/registry';
     import { packageService } from '~/services/PackageService';
-    import { activityOf } from '~/utils/routeAnalysis/activity';
-    import { routeTimeZone } from '~/utils/routeAnalysis/departure';
-    import { createAnalysis } from '~/utils/routeAnalysis/storage';
-    import { buildTimeline, timeAtDistance, timelineSource } from '~/utils/routeAnalysis/timeline';
+    import { clockAtDistance } from '~/utils/routeAnalysis/timeline';
     import { computeRouteProgress, isLocationOnRoute, isNavigableRoute } from '~/utils/navigation';
     import { showAscents, showGradeColors } from '~/stores/mapStore';
     import { showPopoverMenu, showSettings } from '~/utils/ui';
@@ -43,10 +40,8 @@
     }
 
     $: itemKey = focusKeyOf(item);
-    // a point picked, a section focused on another route mean nothing here
-    let shownKey: string;
-    $: if (itemKey !== shownKey) {
-        shownKey = itemKey;
+    // a point picked, a section focused on another route mean nothing here: runs when the key changes, and once at the start
+    $: if (itemKey !== undefined) {
         clearCursor();
         clearSection();
     }
@@ -60,37 +55,25 @@
     // the same arrays for the lens' whole stay, so the chart is not rebuilt for nothing
     const NO_BRACKETS: ProfileBracket[] = [];
     const NO_SECTIONS: LensSection[] = [];
-    $: profileOptions = activeLens?.profile?.({ item });
-    $: brackets = profileOptions?.brackets ?? NO_BRACKETS;
-    $: fill = profileOptions?.fill ?? null;
-    $: legend = profileOptions?.legend;
-    $: fade = profileOptions?.fade ?? false;
+    const NO_PROFILE: LensProfile = {};
+    $: ({ brackets = NO_BRACKETS, fill = null, legend, fade = false, overlay = null, gradeLegend = false } = activeLens?.profile?.({ item }) ?? NO_PROFILE);
     // the clock time of each distance of the axis, when the route has a time
-    $: clockAt = $routeFeatureChanges >= 0 && item ? clockFor(item) : null;
-    function clockFor(route: Item): ((meters: number) => string) | null {
-        const source = timelineSource(route);
-        if (source.distances.length < 2) {
-            return null;
-        }
-        const inputs = (route.analysis ?? createAnalysis(route.geometry, activityOf(route, null))).inputs;
-        const timeline = buildTimeline(source, inputs, Date.now());
-        const zone = routeTimeZone(inputs.departure);
-        return (meters) => formatTime(timeAtDistance(source.distances, timeline, meters), 'LT', zone.offset);
-    }
-    $: overlay = profileOptions?.overlay ?? null;
+    $: clock = $routeFeatureChanges >= 0 && item ? clockAtDistance(item) : null;
+    $: clockAt = clock && ((meters: number) => formatTime(clock.at(meters), 'LT', clock.offset));
 
     // what needs attention is marked whatever the lens. The same array until it changes: the chart redraws for a new one
     const NO_MARKS: ProfileMark[] = [];
-    $: attention = routeAttention($liveRouteFeatures, { item });
     let marks = NO_MARKS;
-    let marksKey = '';
-    $: {
-        const key = attention.map(({ color, kind, section }) => `${kind}:${color}:${section.i0}:${section.i1}`).join();
-        if (key !== marksKey) {
-            marksKey = key;
-            const data = item?.profile?.data;
-            marks = data && attention.length ? attention.map(({ color, kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color })) : NO_MARKS;
-        }
+    $: attention = routeAttention($liveRouteFeatures, { item });
+    // the marks hold distances: they go stale with the profile as well as with the sections
+    $: marksKey = `${item?.profile?.data?.length ?? 0}|${attention.map(({ color, kind, section }) => `${kind}:${color}:${section.i0}:${section.i1}`).join()}`;
+    // `buildMarks` reads `attention` and the profile untracked: only a new key rebuilds
+    $: if (marksKey) {
+        marks = buildMarks();
+    }
+    function buildMarks() {
+        const data = item?.profile?.data;
+        return data && attention.length ? attention.map(({ color, kind, section }) => ({ from: data[section.i0].d, to: data[section.i1].d, kind, color })) : NO_MARKS;
     }
 
     // a section of the lens in use, focused on this route
@@ -98,15 +81,15 @@
     $: focused = $routeFocus?.itemKey === itemKey && $routeFocus.section?.lens === active ? $routeFocus.section : null;
     // the chart zooms to the section and the map follows it once: not on every update of the route, nor of the cursor, which also
     // replaces `focused` and would give the chart a new range each time
-    let fittedKey = '';
     let range: { fromIndex: number; toIndex: number } = null;
     $: sectionKey = focused ? `${focused.lens}:${focused.i0}:${focused.i1}` : '';
-    $: if (sectionKey !== fittedKey) {
-        fittedKey = sectionKey;
+    $: onSectionChange(sectionKey);
+    // reads `focused`, the item and the chart untracked: only a new key moves the chart and the map
+    function onSectionChange(key: string) {
         // the cursor was for the route as it was: a section focused or left starts from none
         chart?.clearHighlight();
-        range = focused ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
-        if (focused && besideMap) {
+        range = key ? paddedRange(focused, item?.profile?.data?.length ?? 0) : null;
+        if (key && besideMap) {
             fitSection(focused);
         }
     }
@@ -135,8 +118,7 @@
     function onMark({ index }: { index: number }) {
         const mark = attention[index];
         if (mark) {
-            selectLens(mark.lens);
-            focusSection(itemKey, { ...mark.section, lens: mark.lens });
+            focusLensSection(itemKey, mark.lens, mark.section);
         }
     }
     function onSelect({ id }: { id: LensId }) {
@@ -232,7 +214,7 @@
         on:highlight={onChartHighlight} />
     {#if legend?.length}
         <ProfileLegend entries={legend} row={3} />
-    {:else if $showGradeColors && (active === 'overview' || active === 'climbs' || active === 'weather')}
+    {:else if $showGradeColors && gradeLegend}
         <GradeLegend row={3} verticalAlignment="center" />
     {/if}
 </gridlayout>

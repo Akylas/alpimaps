@@ -18,6 +18,7 @@
     import NavigationPageHeader from '~/components/navigation/NavigationPageHeader.svelte';
     import { formatDistance } from '~/helpers/formatter';
     import { isEInk, onThemeChanged } from '~/helpers/theme';
+    import { indexAtDistance } from '~/routeFeatures/profile/ahead';
     import { navigationItem, navigationProgress, navigationScale, navigationSurfaceSpan } from '~/stores/navigationStore';
     import { surfaceColors } from '~/utils/routing';
     import { drawSurfaceBand } from '~/utils/surfacePattern';
@@ -74,28 +75,6 @@
         });
     }
 
-    /** first profile index at or past `distance` meters, -1 when the route ends before it */
-    function indexAtDistance(distance: number) {
-        const data = profile?.data;
-        if (!data?.length) {
-            return -1;
-        }
-        let low = 0;
-        let high = data.length - 1;
-        if (data[high].d < distance) {
-            return -1;
-        }
-        while (low < high) {
-            const middle = (low + high) >> 1;
-            if (data[middle].d < distance) {
-                low = middle + 1;
-            } else {
-                high = middle;
-            }
-        }
-        return low;
-    }
-
     function computeWindow(routeEnd: number) {
         const data = profile?.data;
         const position = Math.min(Math.max(onPathIndex, 0), routeEnd);
@@ -104,11 +83,9 @@
         }
         const span = $navigationSurfaceSpan;
         const currentDistance = data[Math.min(position, data.length - 1)].d;
-        const fromIndex = indexAtDistance(currentDistance - span * BEHIND_RATIO);
-        const toIndex = indexAtDistance(currentDistance + span);
         return {
-            from: Math.max(fromIndex < 0 ? 0 : fromIndex, 0),
-            to: Math.min(toIndex < 0 ? routeEnd : toIndex, routeEnd)
+            from: indexAtDistance(data, currentDistance - span * BEHIND_RATIO),
+            to: Math.min(indexAtDistance(data, currentDistance + span), routeEnd)
         };
     }
 

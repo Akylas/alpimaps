@@ -3,8 +3,8 @@ import { activityFromRoute } from './activity';
 import { departurePassed, offsetAtFor, resolveStart, routeTimeZone, withRouteTimeZone } from './departure';
 import { flatSpeedKmh, gradeSpeedKmh } from './speeds';
 import { DEFAULT_PACE } from './storage';
-import { buildTimeline, cumulativeDistances, timeAtDistance, timelineSource } from './timeline';
-import type { Activity, AnalysisInputs } from './types';
+import { buildTimeline, clockAtDistance, cumulativeDistances, timeAtDistance, timelineSource } from './timeline';
+import type { Activity, AnalysisInputs, RouteAnalysis } from './types';
 
 const NOW = Date.UTC(2026, 5, 1, 12, 0, 0);
 const HOUR = 3600;
@@ -319,6 +319,42 @@ describe('timeAtDistance', () => {
 
     it('has the start of a ride of no distance', () => {
         expect(timeAtDistance([0], buildTimeline({ distances: [0] }, inputs(), NOW), 100)).toBe(NOW);
+    });
+});
+
+describe('clockAtDistance', () => {
+    // far in the future: a plan in the past would be read as now
+    const LEAVES = Date.UTC(2100, 0, 1, 8, 0, 0);
+    // 3 vertexes along the equator, routed in 2 h
+    const geometry = { type: 'LineString' as const, coordinates: [[0, 0], [0.1, 0], [0.3, 0]] };
+    const analysisOf = (departure: AnalysisInputs['departure']): RouteAnalysis => ({ v: 1, inputs: inputs({ departure }), layers: {} }) as RouteAnalysis;
+    const routeOf = (analysis?: RouteAnalysis) => ({ geometry, route: { totalTime: 2 * HOUR }, analysis });
+
+    it('tells the time of a distance, from the departure', () => {
+        const clock = clockAtDistance(routeOf(analysisOf({ mode: 'planned', at: LEAVES })));
+        expect(clock.at(0)).toBe(LEAVES);
+        expect(clock.at(Infinity)).toBe(LEAVES + 2 * HOUR * 1000);
+    });
+
+    it('gives the zone offset the route has, none else', () => {
+        expect(clockAtDistance(routeOf(analysisOf({ mode: 'planned', at: LEAVES, tz: 'Europe/Paris', utcOffset: 120 }))).offset).toBe(120);
+        expect(clockAtDistance(routeOf(analysisOf({ mode: 'planned', at: LEAVES }))).offset).toBeUndefined();
+    });
+
+    it('has no clock for a route of no length', () => {
+        expect(clockAtDistance({ geometry: { type: 'LineString', coordinates: [[0, 0]] }, analysis: analysisOf({ mode: 'now' }) })).toBeNull();
+    });
+
+    it('rides now when the route has no analysis yet', () => {
+        const before = Date.now();
+        expect(clockAtDistance(routeOf()).at(0)).toBeGreaterThanOrEqual(before);
+    });
+
+    it('builds the clock once for an analysis, again for the next', () => {
+        const analysis = analysisOf({ mode: 'planned', at: LEAVES });
+        const route = routeOf(analysis);
+        expect(clockAtDistance(route)).toBe(clockAtDistance(route));
+        expect(clockAtDistance(routeOf(analysisOf({ mode: 'planned', at: LEAVES })))).not.toBe(clockAtDistance(route));
     });
 });
 

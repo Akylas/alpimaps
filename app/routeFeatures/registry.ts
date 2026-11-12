@@ -223,6 +223,8 @@ export interface ProfileLegendEntry {
 export interface LensProfile {
     /** What the fill's colours mean, in the line under the chart: the grade legend is there when none. */
     legend?: ProfileLegendEntry[];
+    /** The fill is the grade's: its legend is there, when the user shows the grade colours and the lens has no `legend` of its own. */
+    gradeLegend?: boolean;
     brackets?: ProfileBracket[];
     /** The grade fill steps back, for what the lens lays over it to read. */
     fade?: boolean;
@@ -232,7 +234,6 @@ export interface LensProfile {
     fill?: ProfileFillStop[];
 }
 
-/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
 /** One line of a lens' legend: a swatch and what it says. */
 export interface LensLegendItem {
     id: string;
@@ -262,6 +263,7 @@ export interface LensLegendContext {
     translate: (key: string) => string;
 }
 
+/** One way of reading the route: it colours the line and fills the profile, see `routeLensStore`. */
 export interface RouteLens {
     id: LensId;
     icon: string;
