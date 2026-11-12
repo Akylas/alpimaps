@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SNAPSHOT_OLD_MS, STAMP_REUSE_MS, TIME_LAYERS, departurePassed, fixedStart, floatsWithClock, isSnapshot, resolveStart, snapshotOutdated, stampNow } from './departure';
+import { SNAPSHOT_OLD_MS, STAMP_REUSE_MS, TIME_LAYERS, departurePassed, departureStale, fixedStart, floatsWithClock, isSnapshot, resolveStart, snapshotOutdated, stampNow } from './departure';
 import { changedInputs, layerInputsHash } from './freshness';
 import { DEFAULT_PACE, withDeparture, withNowStamp } from './storage';
 import type { AnalysisInputs, Departure } from './types';
@@ -105,5 +105,22 @@ describe('a plan that went by and was kept', () => {
         const geometry = { type: 'LineString' as const, coordinates: [] };
         expect(withDeparture(analysis, geometry, kept).inputs.departure.keepPast).toBe(true);
         expect(withDeparture(withDeparture(analysis, geometry, kept), geometry, { mode: 'planned', at: NOW + 7200000 }).inputs.departure.keepPast).toBeUndefined();
+    });
+});
+
+describe('a departure gone stale', () => {
+    it('is a plan whose time went by', () => {
+        expect(departureStale({ mode: 'planned', at: NOW - MINUTE }, NOW)).toBe(true);
+        expect(departureStale({ mode: 'planned', at: NOW + MINUTE }, NOW)).toBe(false);
+    });
+
+    it('is not a plan that was kept at its past time', () => {
+        expect(departureStale({ mode: 'planned', at: NOW - MINUTE, keepPast: true }, NOW)).toBe(false);
+    });
+
+    it('is a now whose data has aged, not one that floats with the clock', () => {
+        expect(departureStale({ mode: 'now', at: NOW - SNAPSHOT_OLD_MS }, NOW)).toBe(true);
+        expect(departureStale({ mode: 'now', at: NOW - MINUTE }, NOW)).toBe(false);
+        expect(departureStale({ mode: 'now' }, NOW)).toBe(false);
     });
 });

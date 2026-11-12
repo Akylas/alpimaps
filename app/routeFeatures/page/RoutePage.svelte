@@ -10,7 +10,7 @@
     import TripStrip from '~/routeFeatures/page/TripStrip.svelte';
     import { dayFormat, daysFrom, tripTimes } from '~/routeFeatures/page/trip';
     import WhenPanel from '~/routeFeatures/page/WhenPanel.svelte';
-    import { departurePassed, fixedStart, offsetAtFor, resolveStart, snapshotOutdated, stampNow } from '~/utils/routeAnalysis/departure';
+    import { departureStale, fixedStart, offsetAtFor, resolveStart } from '~/utils/routeAnalysis/departure';
     import { withDeparture } from '~/utils/routeAnalysis/storage';
     import type { RouteAnalysis } from '~/utils/routeAnalysis/types';
     import { onDestroy, onMount, tick } from 'svelte';
@@ -24,7 +24,7 @@
     import Chip from '~/components/common/Chip.svelte';
     import RouteLensCard from '~/routeFeatures/lens/RouteLensCard.svelte';
     import RouteHeroMap from '~/routeFeatures/page/RouteHeroMap.svelte';
-    import { analysisChanged, keepLook, lookAt, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
+    import { analysisChanged, keepLook, leaveNow, lookAt, revertLook, routeAnalysisChanges, saveAnalysis } from '~/routeFeatures/analysisRunner';
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
@@ -210,7 +210,7 @@
     $: arrivalAt = trip ? trip.end : item?.route?.totalTime ? resolveStart(departure, now) + item.route.totalTime * 1000 : NaN;
     // a plan that has gone by, or a now whose data is old: the banner offers to move it to the clock. "keep" keeps a plan at its own time, the
     // route read then; a now is only put away for this visit
-    $: passed = departurePassed(departure, now) || snapshotOutdated(departure, now);
+    $: passed = departureStale(departure, now);
     let keptAt: number | undefined;
     function keepDeparture() {
         if (departure.mode === 'planned') {
@@ -263,11 +263,7 @@
     function isSaved(route: Item) {
         return route?.id !== undefined && route.id !== null;
     }
-    function departNow() {
-        onAnalysisChange({ analysis: withDeparture(item.analysis, item.geometry, stampNow({ mode: 'now' }, Date.now())) });
-        // the data that is read at a time is read again
-        tellDeparture($routeFeatures, { item }, 'restamped');
-    }
+    const departNow = () => leaveNow(item);
 
     // a body is its section's own component: one template for each, whose views are only reused by rows of the same section
     function itemTemplateSelector(row: ListRow) {
@@ -446,8 +442,9 @@
                                         alert={row.facts?.[slot]?.alert ?? false}
                                         bar={row.facts?.[slot]?.bar ?? null}
                                         color={row.facts?.[slot]?.color}
-                                        height={20}
+                                        height={24}
                                         icon={row.facts?.[slot]?.icon}
+                                        iconColor={row.facts?.[slot]?.iconColor}
                                         label={row.facts?.[slot]?.label}
                                         marginTop={2}
                                         note={row.facts?.[slot]?.note}

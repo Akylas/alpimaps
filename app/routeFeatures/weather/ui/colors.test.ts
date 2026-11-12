@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HEADWIND_HARD_COLOR, SUN_COLOR, cloudBand, cloudTint, rainBarHeight, rainBarTint, rainColor, rainTint, skyBand, sunTint, tempColor, tint, windColor, windWash } from './colors';
+import { HEADWIND_HARD_COLOR, SUN_COLOR, cloudBand, cloudTint, rainBarHeight, rainBarOpacity, rainBarTint, rainBarWeight, rainColor, rainTint, skyBand, sunTint, tempColor, tint, windColor, windWash } from './colors';
 
 describe('tempColor', () => {
     it('says only the cold and the heat: the rest is neutral', () => {
@@ -92,15 +92,23 @@ describe('the rain bar of a sample', () => {
         expect(alpha(rainBarTint(0))).toBeGreaterThan(0);
     });
 
-    it('is half sure when the forecast does not say how likely', () => {
-        expect(rainBarTint(undefined)).toBe(rainBarTint(55));
+    it('is never opaque, a sure rain included: the figures read over it', () => {
+        expect(alpha(rainBarTint(100))).toBeLessThanOrEqual(Math.round(0.45 * 255));
+        expect(rainBarOpacity(5)).toBe(rainBarOpacity(1));
     });
 
-    it('is as high as the rain, from 14 for a drizzle to 42 from 5 mm/h', () => {
-        expect(rainBarHeight(0.1)).toBeGreaterThanOrEqual(14);
+    it('is half sure when the forecast does not say how likely', () => {
+        expect(rainBarTint(undefined)).toBe(rainBarTint(50));
+    });
+
+    it('is as high as the rain, from the room of its figure to the most from 5 mm/h, a downpour not crushing a drizzle', () => {
+        expect(rainBarHeight(0.1)).toBeGreaterThanOrEqual(18);
         expect(rainBarHeight(1)).toBeGreaterThan(rainBarHeight(0.1));
-        expect(rainBarHeight(2.5)).toBeCloseTo(28, 5);
-        expect(rainBarHeight(50)).toBe(42);
+        expect(rainBarHeight(5)).toBeCloseTo(52, 5);
+        expect(rainBarHeight(50)).toBe(rainBarHeight(5));
+        // by the square root over 1 mm/h: 4 mm/h weighs twice 1 mm/h
+        expect(rainBarWeight(4)).toBeCloseTo(2 * rainBarWeight(1), 5);
+        expect(rainBarWeight(0.5)).toBe(0.5);
     });
 });
 

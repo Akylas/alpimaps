@@ -31,6 +31,8 @@ export interface RouteTile {
     opensWhen?: boolean;
     /** The figure is a warning: the tile is outlined in the error colour. */
     alert?: boolean;
+    /** The departure went by: a tap on the tile explains it and offers to leave now, instead of opening the When panel. */
+    stale?: boolean;
 }
 
 /**
@@ -84,8 +86,10 @@ export interface LensFact {
     tint?: string;
     /** 0..1: a thin bar under the figure */
     bar?: number;
-    /** The icon's colour, eg the surface it stands for. */
+    /** The colour of the icon and of the figure, eg the surface it stands for. */
     color?: string;
+    /** The colour of the icon and of the bar alone, the figure keeping the text colour: the rain, the surface. */
+    iconColor?: string;
     /** The figure is a warning: the icon takes the error colour. */
     alert?: boolean;
 }
@@ -197,6 +201,8 @@ export interface ProfileView {
     contentBottom: number;
     pixelX: (distance: number) => number;
     pixelY: (elevation: number) => number;
+    /** The distances the x axis has a label at, the furthest right included when the chart gives it. */
+    xTicks: number[];
     fontScale: number;
     isEInk: boolean;
     /** The colours of the theme: text, and the ground it is read on. */

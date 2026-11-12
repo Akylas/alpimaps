@@ -3,13 +3,13 @@ import { get, writable } from 'svelte/store';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { IItem } from '~/models/Item';
 import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
-import { routeFeatures, routeStages } from '~/routeFeatures/registry';
+import { routeFeatures, routeStages, tellDeparture } from '~/routeFeatures/registry';
 import { networkService } from '~/services/NetworkService';
 import { activityOf } from '~/utils/routeAnalysis/activity';
-import { TIME_LAYERS, withRouteTimeZone } from '~/utils/routeAnalysis/departure';
+import { TIME_LAYERS, stampNow, withRouteTimeZone } from '~/utils/routeAnalysis/departure';
 import { type LayerExtra, type LayerStatus, type StatusKey, evaluateAnalysis } from '~/utils/routeAnalysis/freshness';
 import { createPipeline } from '~/utils/routeAnalysis/pipeline';
-import { createAnalysis, reconcileAnalysis, withActivity, withNowStamp } from '~/utils/routeAnalysis/storage';
+import { createAnalysis, reconcileAnalysis, withActivity, withDeparture, withNowStamp } from '~/utils/routeAnalysis/storage';
 import { buildTimeline, timelineSource } from '~/utils/routeAnalysis/timeline';
 import type { Layer, LayerId, RouteAnalysis } from '~/utils/routeAnalysis/types';
 
@@ -23,6 +23,15 @@ const notify = () => changes.update((count) => count + 1);
 
 /** The route's inputs changed in place (a new departure, a new pace): what is read from its layers reads them again. */
 export const analysisChanged = notify;
+
+/** The route leaves now, stamped: what is read at a time of the ride is read again. */
+export function leaveNow(item: IItem) {
+    keepLook(item);
+    item.analysis = withDeparture(item.analysis, item.geometry, stampNow({ mode: 'now' }, Date.now()));
+    saveAnalysis(item, item.analysis);
+    notify();
+    tellDeparture(get(routeFeatures), { item }, 'restamped');
+}
 
 function isSaved(item: IItem) {
     return item?.id !== undefined && item.id !== null;

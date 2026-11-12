@@ -104,6 +104,30 @@ const PLATE_TEMP_CHANGE = 2;
 const RAIN_MIN = 0.1;
 const HOUR_MS = 3600000;
 
+/** The rain a distance of the ride is in: the first stretch that has it, none where it is dry. */
+export function rainAtDistance(rain: ProfileWeather['rain'], distance: number): ProfileWeather['rain'][number] | undefined {
+    return rain.find(({ from, to }) => distance >= from && distance <= to);
+}
+
+/** The sky of a distance of the ride: the temperature on the line between the two samples round it, the glyph of the nearest. None without samples. */
+export function skyAtDistance(temp: ProfileWeather['temp'], distance: number): { value: number; glyph: string } | undefined {
+    if (!temp.length) {
+        return undefined;
+    }
+    const after = temp.findIndex(({ d }) => d >= distance);
+    if (after === 0) {
+        return { value: temp[0].value, glyph: temp[0].glyph };
+    }
+    if (after === -1) {
+        const { glyph, value } = temp[temp.length - 1];
+        return { value, glyph };
+    }
+    const before = temp[after - 1];
+    const next = temp[after];
+    const share = (distance - before.d) / (next.d - before.d);
+    return { value: before.value + (next.value - before.value) * share, glyph: share < 0.5 ? before.glyph : next.glyph };
+}
+
 /** What the weather lays over the profile, meters from the start: rain as bars from the foot, the temperature as a line, the wind along the way. */
 export interface ProfileWeather {
     /** A bar over a stretch: as high as the rain, as plain as the chance of it. */

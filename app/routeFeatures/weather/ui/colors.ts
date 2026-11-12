@@ -51,14 +51,33 @@ export function windWash(head: number | undefined, gust: number | undefined, gus
     return color ? tint(color, 0.18) : undefined;
 }
 
-/** The rain bar of a sample is as plain as the chance of it, as oss-weather draws it: half sure when the forecast does not say. */
-export function rainBarTint(probabilityPercent: number | undefined): string {
-    return tint(RAIN_BLUE, Math.max(0.25, (probabilityPercent ?? 55) / 100));
+/** The blue of a rain bar, as oss-weather fills its precipitation. */
+export const RAIN_BAR_BLUE = '#378ADD';
+/** Most opaque a rain bar gets, a sure rain: light enough for the figures and the lines to read over it, as oss-weather draws it. */
+const RAIN_BAR_OPACITY_MAX = 0.45;
+const RAIN_BAR_OPACITY_MIN = 0.12;
+/** dp of a rain bar of a sample: the room of its figure for a drizzle, then up to the most the row has for it from 5 mm/h */
+const RAIN_BAR_MIN_HEIGHT = 18;
+const RAIN_BAR_HEIGHT_RANGE = 34;
+
+/** The opacity of a rain bar, as plain as the chance of the rain (0..1), never opaque. */
+export function rainBarOpacity(probability: number): number {
+    return Math.max(RAIN_BAR_OPACITY_MIN, Math.min(1, probability) * RAIN_BAR_OPACITY_MAX);
 }
 
-/** dp high of the rain bar of a sample, as high as the rain as oss-weather draws it: 14 for a drizzle, 42 from 5 mm/h */
+/** How much a rain weighs on a bar, as oss-weather scales it: as it is up to 1 mm/h, then its square root, so a downpour does not crush a drizzle. */
+export function rainBarWeight(mmPerHour: number): number {
+    return mmPerHour > 1 ? Math.sqrt(mmPerHour) : Math.max(0, mmPerHour);
+}
+
+/** The rain bar of a sample, half sure when the forecast does not say. */
+export function rainBarTint(probabilityPercent: number | undefined): string {
+    return tint(RAIN_BAR_BLUE, rainBarOpacity((probabilityPercent ?? 50) / 100));
+}
+
+/** dp high of the rain bar of a sample, as high as the rain: from the room of its figure for a drizzle to the most from 5 mm/h */
 export function rainBarHeight(mmPerHour: number): number {
-    return 14 + 28 * Math.max(0, Math.min(1, mmPerHour / RAIN_BAR_MAX));
+    return RAIN_BAR_MIN_HEIGHT + RAIN_BAR_HEIGHT_RANGE * Math.min(1, rainBarWeight(mmPerHour) / Math.sqrt(RAIN_BAR_MAX));
 }
 
 /** The wash of a sun chip: the yellow of the sun, the stronger the clearer the sky. */

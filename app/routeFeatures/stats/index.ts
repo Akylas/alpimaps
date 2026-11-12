@@ -73,7 +73,11 @@ const surfaceLens: RouteLens = {
     chip: ({ item }) => ({ value: `${percent(pavedShare(item.stats.surfaces))} ${lc('paved')}` }),
     // each surface with the colour it has on the profile, which makes the headline its legend
     headline: ({ item }) => ({
-        facts: topSurfaces(item.stats.surfaces, 3).map(({ id, perc }) => ({ icon: 'mdi-square-rounded', color: surfaceColors[id] ?? UNKNOWN_SURFACE_COLOR, text: `${percent(perc)} ${lc(id)}` }))
+        facts: topSurfaces(item.stats.surfaces, 3).map(({ id, perc }) => {
+            const color = surfaceColors[id] ?? UNKNOWN_SURFACE_COLOR;
+            // the colour of the surface in the dot and the wash, the text staying readable
+            return { icon: 'mdi-circle', iconColor: color, text: `${percent(perc)} ${lc(id)}` };
+        })
     }),
     readout: ({ index, item }) => {
         const segment = item.stats?.surfaceSegments?.find(({ end, start }) => index >= start && index <= end);

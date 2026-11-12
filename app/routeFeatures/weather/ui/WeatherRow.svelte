@@ -65,6 +65,8 @@
     const LINE_PAD = 5;
     /** mm/h of rain from which a sample shows it */
     const RAIN_SHOWN = 0.1;
+    // the room of a rain bar's figure, under its chance
+    const RAIN_FIGURE_HEIGHT = 12;
 
     // the samples with the ones around them (the line of the temperatures runs through the cells), the wind of each when it is shown,
     // and the rows they need
@@ -209,24 +211,34 @@
                     text={row.temp === undefined ? '–' : weatherFormat.temperature(row.temp)}
                     textAlignment="center"
                     verticalAlignment="top" />
-                <!-- the rain, as oss-weather draws an hour of it: its chance above, a bar as plain as the chance and as high as the rain, its figure in it -->
+                <!-- the rain, as oss-weather draws an hour of it: a light bar as high as the rain, its figure at the foot and its chance over it,
+                     both where they are whatever the bar's height -->
                 {#if rainRow && row.precip >= RAIN_SHOWN}
-                    <stacklayout row={4} verticalAlignment="bottom">
-                        <label color={colorOnSurfaceVariant} fontSize={10} text={row.probability === undefined ? '' : Math.round(row.probability) + ' %'} textAlignment="center" />
-                        <label
+                    <gridlayout row={4}>
+                        <gridlayout
                             backgroundColor={isEInk ? null : rainBarTint(row.probability)}
                             borderColor={isEInk ? colorOnSurface : null}
                             borderRadius={6}
                             borderWidth={isEInk ? 1 : 0}
+                            height={rainBarHeight(row.precip)}
+                            margin="0 3 3 3"
+                            verticalAlignment="bottom" />
+                        <label
+                            color={colorOnSurfaceVariant}
+                            fontSize={10}
+                            marginBottom={RAIN_FIGURE_HEIGHT + 8}
+                            text={row.probability === undefined ? '' : Math.round(row.probability) + ' %'}
+                            textAlignment="center"
+                            verticalAlignment="bottom" />
+                        <label
                             color={colorOnSurface}
                             fontSize={11}
                             fontWeight="bold"
-                            height={rainBarHeight(row.precip)}
-                            margin="0 5 3 5"
+                            marginBottom={5}
                             text={weatherFormat.rainNumber(row.precip)}
                             textAlignment="center"
-                            verticalTextAlignment="middle" />
-                    </stacklayout>
+                            verticalAlignment="bottom" />
+                    </gridlayout>
                 {/if}
             </gridlayout>
         </Template>

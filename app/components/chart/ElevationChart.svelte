@@ -165,7 +165,7 @@
         overlayTextPaint.setTextSize(9 * $fontScale);
         const metrics = overlayTextPaint.getFontMetrics();
         const textHeight = metrics.descent - metrics.ascent;
-        overlay?.draw(canvas, { contentBottom, contentLeft, contentRight, contentTop, pixelX, pixelY, fontScale: $fontScale, isEInk, ink: colorOnSurface, background: colorBackground, iconFontFamily: $fonts.mdi });
+        overlay?.draw(canvas, { contentBottom, contentLeft, contentRight, contentTop, pixelX, pixelY, xTicks: chartView.xAxis.mEntries.slice(0, chartView.xAxis.mEntryCount), fontScale: $fontScale, isEInk, ink: colorOnSurface, background: colorBackground, iconFontFamily: $fonts.mdi });
         for (const { from, label, to, top } of brackets) {
             const start = Math.max(contentLeft, pixelX(from));
             const end = Math.min(contentRight, pixelX(to));

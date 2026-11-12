@@ -3,7 +3,7 @@ import { DEFAULT_PACE } from '~/utils/routeAnalysis/storage';
 import type { Departure, RouteAnalysis, WeatherData } from '~/utils/routeAnalysis/types';
 import { type WeatherVar, quantise } from '~/routeFeatures/weather/data/series';
 import { METRIC_FORMAT, type WeatherFormat } from '~/routeFeatures/weather/data/format';
-import { type WeatherThresholds, readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
+import { type WeatherThresholds, rainAtDistance, skyAtDistance, readWeather, wxGlyph } from '~/routeFeatures/weather/data/read';
 import { MOON_GLYPHS, moonPhaseGlyph } from '~/utils/astronomy/moon';
 
 const HOUR = 3600;
@@ -513,5 +513,54 @@ describe('wxGlyph', () => {
     it('is cloudy when the code is not known', () => {
         expect(wxGlyph(undefined).codePointAt(0)).toBe(0xf0590);
         expect(wxGlyph(1234).codePointAt(0)).toBe(0xf0590);
+    });
+});
+
+describe('rainAtDistance', () => {
+    const rain = [
+        { from: 0, to: 4000, mmPerHour: 0.4, probability: 1 },
+        { from: 4000, to: 8000, mmPerHour: 0.9, probability: 0.5 }
+    ];
+
+    it('is the rain of the stretch the distance is in', () => {
+        expect(rainAtDistance(rain, 1000)).toBe(rain[0]);
+        expect(rainAtDistance(rain, 6000)).toBe(rain[1]);
+    });
+
+    it('is the first stretch where two meet, and holds to both ends of the ride', () => {
+        expect(rainAtDistance(rain, 4000)).toBe(rain[0]);
+        expect(rainAtDistance(rain, 0)).toBe(rain[0]);
+        expect(rainAtDistance(rain, 8000)).toBe(rain[1]);
+    });
+
+    it('is none where it is dry', () => {
+        expect(rainAtDistance(rain, 9000)).toBeUndefined();
+        expect(rainAtDistance([], 10)).toBeUndefined();
+    });
+});
+
+describe('skyAtDistance', () => {
+    const temp = [
+        { d: 0, value: 10, glyph: 'a' },
+        { d: 4000, value: 14, glyph: 'b' },
+        { d: 8000, value: 6, glyph: 'c' }
+    ];
+
+    it('is the temperature between two samples, on the line that joins them', () => {
+        expect(skyAtDistance(temp, 1000)?.value).toBeCloseTo(11, 5);
+        expect(skyAtDistance(temp, 6000)?.value).toBeCloseTo(10, 5);
+        expect(skyAtDistance(temp, 4000)?.value).toBe(14);
+    });
+
+    it('is the glyph of the nearest sample', () => {
+        expect(skyAtDistance(temp, 1000)?.glyph).toBe('a');
+        expect(skyAtDistance(temp, 3000)?.glyph).toBe('b');
+        expect(skyAtDistance(temp, 7000)?.glyph).toBe('c');
+    });
+
+    it('holds to the first and last sample beyond them, and is none without any', () => {
+        expect(skyAtDistance(temp, -500)).toEqual({ value: 10, glyph: 'a' });
+        expect(skyAtDistance(temp, 9000)).toEqual({ value: 6, glyph: 'c' });
+        expect(skyAtDistance([], 10)).toBeUndefined();
     });
 });

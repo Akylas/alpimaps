@@ -1,32 +1,38 @@
 /**
- * What the weather draws over the profile, in the manner of a weather chart: rain as rounded bars from the foot, as high as the rain and as
- * plain as the chance of it (a bar full height at 4 mm/h); the temperature as a line with a ringed dot at each sample and its figure above
- * a peak, below a dip; over the plot, a row of the sky and a row of the wind: an arrow of the way it pushes, the ride going to the right,
+ * What the weather draws over the profile, in the manner of a weather chart: rain as light rounded bars from the foot, one at each label of the x axis, as high as the rain (its square root over 1 mm/h) and as
+ * plain as the chance of it, never wider than a cap; the sky and the temperature as a line with a ringed dot, at each label of the x axis and its figure above
+ * a peak, below a dip; the sky, in the room the chart leaves over the plot, and over the plot a row of the wind: an arrow of the way it pushes, the ride going to the right,
  * and its speed under it, a burst on a line of its own.
  */
 import { Align, type Canvas, Cap, Join, Paint, Path, Style } from '@nativescript-community/ui-canvas';
-import { Color } from '@nativescript/core';
 import type { ProfileOverlay, ProfileView } from '~/routeFeatures/registry';
 import type { WeatherFormat } from '~/routeFeatures/weather/data/format';
-import type { ProfileWeather } from '~/routeFeatures/weather/data/read';
-import { CLOUD_GRAY, RAIN_BLUE, SUN_COLOR, TEMP_LINE, tint, windColor } from '~/routeFeatures/weather/ui/colors';
+import { type ProfileWeather, rainAtDistance, skyAtDistance } from '~/routeFeatures/weather/data/read';
+import { CLOUD_GRAY, RAIN_BAR_BLUE, SUN_COLOR, TEMP_LINE, rainBarOpacity, rainBarWeight, tint, windColor } from '~/routeFeatures/weather/ui/colors';
 
 /** the sky is a band from the top of the plot: as deep as a share of it */
 const CLOUD_BAND_SHARE = 0.18;
 const CLOUD_BAND_OPACITY = 0.28;
 const SUN_BAND_OPACITY = 0.3;
 const RAIN_FULL_MM = 4;
-const RAIN_BAR_SHARE = 0.25;
-const RAIN_BAR_MIN = 3;
-const RAIN_BAR_GAP = 1;
-const RAIN_BAR_RADIUS = 2;
-const RAIN_BAR_MIN_OPACITY = 0.25;
+const RAIN_BAR_SHARE = 0.35;
+const RAIN_BAR_MIN = 6;
+/** dp: a bar never gets wider, however short the stretch of the ride it stands for */
+const RAIN_BAR_MAX_WIDTH = 22;
+const RAIN_BAR_RADIUS = 4;
 const TEMP_BAND_TOP = 0.5;
 const TEMP_BAND_BOTTOM = 0.74;
 const TEMP_MIN_RANGE = 6;
 const SAMPLE_LABEL_GAP = 34;
+/** px: a label at the very edge of the plot is on it, whatever the rounding */
+const EDGE_TOLERANCE = 0.5;
 const SKY_ROW = 12;
 const WIND_ARROW_ROW = 30;
+/** dp of room over the plot from which the sky is drawn there, in the room the chart leaves for its brackets */
+const SKY_HEADROOM_MIN = 18;
+const SKY_HEADROOM_GAP = 2;
+/** the wind starts at the top of the plot when the sky is over it */
+const WIND_ARROW_ROW_UNDER_SKY = 12;
 const MDI_ARROW_RIGHT = String.fromCodePoint(0xf0054);
 const MDI_BURST = String.fromCodePoint(0xf059e);
 const BURST_COLOR = '#D7263D';
@@ -56,14 +62,23 @@ function drawText(canvas: Canvas, text: string, pointX: number, pointY: number) 
     canvas.drawText(text, pointX, pointY, textPaint);
 }
 
-// the sky as a soft band from the top of the plot, a gauge of it: the cloud as deep as the sky is covered, the sun in the colour of the sun
+// where the sky is: in the room over the plot when the chart leaves some, as the plot is then the ride's alone, else a band from the top of the plot
+function skyRoom({ contentBottom, contentTop, fontScale }: ProfileView) {
+    const headroom = contentTop >= SKY_HEADROOM_MIN * fontScale;
+    return headroom
+        ? { headroom, top: SKY_HEADROOM_GAP, bottom: contentTop - SKY_HEADROOM_GAP }
+        : { headroom, top: contentTop, bottom: contentTop + (contentBottom - contentTop) * CLOUD_BAND_SHARE };
+}
+
+// the sky as a soft band, a gauge of it: the cloud as deep as the sky is covered, the sun in the colour of the sun
 // under it, as deep as it is clear, as oss-weather fills its cloud cover. Under the rest
 function drawSky(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
     if (view.isEInk || !profile.cloud.length) {
         return;
     }
-    const { contentLeft, contentRight, contentTop, pixelX } = view;
-    const maxDepth = (view.contentBottom - contentTop) * CLOUD_BAND_SHARE;
+    const { contentLeft, contentRight, pixelX } = view;
+    const { bottom, top } = skyRoom(view);
+    const maxDepth = bottom - top;
     const share = (value: number) => Math.max(0, Math.min(100, value)) / 100;
     const points = [
         { pointX: contentLeft, value: profile.cloud[0].value },
@@ -72,48 +87,72 @@ function drawSky(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
     ];
     // the cloud: from the top down to its depth
     cloudPath.reset();
-    cloudPath.moveTo(contentLeft, contentTop);
-    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, contentTop + share(value) * maxDepth));
-    cloudPath.lineTo(contentRight, contentTop);
+    cloudPath.moveTo(contentLeft, top);
+    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, top + share(value) * maxDepth));
+    cloudPath.lineTo(contentRight, top);
     cloudPath.close();
     fillPaint.color = tint(CLOUD_GRAY, CLOUD_BAND_OPACITY);
     canvas.drawPath(cloudPath, fillPaint);
     // the sun: from the cloud's depth down to the foot of the band
     cloudPath.reset();
-    cloudPath.moveTo(contentLeft, contentTop + maxDepth);
-    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, contentTop + share(value) * maxDepth));
-    cloudPath.lineTo(contentRight, contentTop + maxDepth);
+    cloudPath.moveTo(contentLeft, top + maxDepth);
+    points.forEach(({ pointX, value }) => cloudPath.lineTo(pointX, top + share(value) * maxDepth));
+    cloudPath.lineTo(contentRight, top + maxDepth);
     cloudPath.close();
     fillPaint.color = tint(SUN_COLOR, SUN_BAND_OPACITY);
     canvas.drawPath(cloudPath, fillPaint);
 }
 
+// a bar at each label of the x axis, as oss-weather has one for each of its hours: the rain at that distance. Without labels, one in the
+// middle of each stretch of rain
 function drawRain(canvas: Canvas, profile: ProfileWeather, view: ProfileView) {
-    const plotHeight = view.contentBottom - view.contentTop;
-    for (const { from, mmPerHour, probability, to } of profile.rain) {
-        const left = Math.max(view.contentLeft, view.pixelX(from));
-        const right = Math.min(view.contentRight, view.pixelX(to));
-        if (right - RAIN_BAR_GAP <= left) {
-            continue;
-        }
-        const height = Math.max(RAIN_BAR_MIN, Math.min(1, mmPerHour / RAIN_FULL_MM) * plotHeight * RAIN_BAR_SHARE);
+    const { contentBottom, contentLeft, contentRight, contentTop, isEInk, pixelX, xTicks } = view;
+    const plotHeight = contentBottom - contentTop;
+    const width = RAIN_BAR_MAX_WIDTH * view.fontScale;
+    const bars = xTicks.length
+        ? xTicks.flatMap((distance) => {
+              const stretch = rainAtDistance(profile.rain, distance);
+              return stretch ? [{ ...stretch, center: pixelX(distance) }] : [];
+          })
+        : profile.rain.map((stretch) => ({ ...stretch, center: (pixelX(stretch.from) + pixelX(stretch.to)) / 2 }));
+    for (const { center, mmPerHour, probability } of bars) {
+        // kept in the plot: the bars of its two ends are whole
+        const left = Math.max(contentLeft, Math.min(contentRight - width, center - width / 2));
+        const height = Math.max(RAIN_BAR_MIN, Math.min(1, rainBarWeight(mmPerHour) / Math.sqrt(RAIN_FULL_MM)) * plotHeight * RAIN_BAR_SHARE);
         // the chance is the opacity; e-ink has no opacity to give: its bars are black
-        fillPaint.color = view.isEInk ? '#000000' : new Color(RAIN_BLUE).setAlpha(Math.round(255 * Math.max(RAIN_BAR_MIN_OPACITY, probability))).hex;
-        canvas.drawRoundRect(left, view.contentBottom - height, right - RAIN_BAR_GAP, view.contentBottom, RAIN_BAR_RADIUS, RAIN_BAR_RADIUS, fillPaint);
+        fillPaint.color = isEInk ? '#000000' : tint(RAIN_BAR_BLUE, rainBarOpacity(probability));
+        canvas.drawRoundRect(left, contentBottom - height, left + width, contentBottom, RAIN_BAR_RADIUS, RAIN_BAR_RADIUS, fillPaint);
     }
 }
 
+type SkyPoint = { d: number; value: number; glyph: string };
+
+// the sky at each label of the x axis, as oss-weather has one for each of its hours: the temperature on the line between the samples round
+// it, the glyph of the nearest. Without labels, the samples
+function skyPoints(profile: ProfileWeather, view: ProfileView): SkyPoint[] {
+    if (!view.xTicks.length) {
+        return profile.temp;
+    }
+    return view.xTicks.flatMap((distance) => {
+        const sky = skyAtDistance(profile.temp, distance);
+        return sky ? [{ d: distance, ...sky }] : [];
+    });
+}
+
 // a row of the sky then a row of the wind at each sample while there is room for it
-function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number, format: WeatherFormat) {
+function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, skies: SkyPoint[], view: ProfileView, fontSize: number, format: WeatherFormat) {
     const { contentLeft, contentRight, contentTop, fontScale, ink, isEInk, pixelX } = view;
+    const room = skyRoom(view);
+    const glyphSize = 15 * fontScale;
+    const glyphBaseline = room.headroom ? (room.top + room.bottom) / 2 + glyphSize * 0.35 : contentTop + SKY_ROW * fontScale;
     let lastSky = -Infinity;
-    profile.temp.forEach(({ d: distance, glyph }) => {
+    skies.forEach(({ d: distance, glyph }) => {
         const pointX = pixelX(distance);
-        if (pointX >= contentLeft && pointX <= contentRight && pointX - lastSky >= SAMPLE_LABEL_GAP * fontScale) {
+        if (pointX >= contentLeft - EDGE_TOLERANCE && pointX <= contentRight + EDGE_TOLERANCE && pointX - lastSky >= SAMPLE_LABEL_GAP * fontScale) {
             lastSky = pointX;
-            glyphPaint.setTextSize(15 * fontScale);
+            glyphPaint.setTextSize(glyphSize);
             glyphPaint.color = ink;
-            canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), contentTop + SKY_ROW * fontScale, glyphPaint);
+            canvas.drawText(glyph, Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8), glyphBaseline, glyphPaint);
         }
     });
     let lastWind = -Infinity;
@@ -125,7 +164,7 @@ function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileVi
         lastWind = pointX;
         const color = isEInk ? '#000000' : (windColor(head) ?? ink);
         const centerX = Math.min(Math.max(pointX, contentLeft + 8), contentRight - 8);
-        const centerY = contentTop + WIND_ARROW_ROW * fontScale;
+        const centerY = contentTop + (room.headroom ? WIND_ARROW_ROW_UNDER_SKY : WIND_ARROW_ROW) * fontScale;
         const arrowSize = 14 * fontScale;
         // an arrow of the way the wind pushes, the ride going to the right: right is with it, left against it, down to the rider's right
         canvas.save();
@@ -152,37 +191,34 @@ function drawSkyAndWind(canvas: Canvas, profile: ProfileWeather, view: ProfileVi
     });
 }
 
-function drawTemperature(canvas: Canvas, profile: ProfileWeather, view: ProfileView, fontSize: number, format: WeatherFormat) {
-    if (!profile.temp.length) {
+function drawTemperature(canvas: Canvas, skies: SkyPoint[], view: ProfileView, fontSize: number, format: WeatherFormat) {
+    if (!skies.length) {
         return;
     }
     const { contentBottom, contentLeft, contentRight, contentTop, fontScale, ink, isEInk, pixelX } = view;
     const plotHeight = contentBottom - contentTop;
-    const values = profile.temp.map(({ value }) => value);
+    const values = skies.map(({ value }) => value);
     const lowest = Math.min(...values);
     const range = Math.max(TEMP_MIN_RANGE, Math.max(...values) - lowest);
     const bandTop = contentTop + plotHeight * TEMP_BAND_TOP;
     const bandBottom = contentTop + plotHeight * TEMP_BAND_BOTTOM;
-    const points = profile.temp.map(({ d: distance, value }) => ({ pointX: pixelX(distance), pointY: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
+    const points = skies.map(({ d: distance, value }) => ({ pointX: pixelX(distance), pointY: bandBottom - ((value - lowest) / range) * (bandBottom - bandTop), value }));
     linePaint.color = isEInk ? '#000000' : TEMP_LINE;
     for (let index = 1; index < points.length; index++) {
         canvas.drawLine(points[index - 1].pointX, points[index - 1].pointY, points[index].pointX, points[index].pointY, linePaint);
     }
     let lastLabel = -Infinity;
-    let lastText = '';
     points.forEach(({ pointX, pointY, value }, index) => {
-        if (pointX < contentLeft || pointX > contentRight) {
+        if (pointX < contentLeft - EDGE_TOLERANCE || pointX > contentRight + EDGE_TOLERANCE) {
             return;
         }
         fillPaint.color = '#ffffff';
         canvas.drawCircle(pointX, pointY, 5, fillPaint);
         fillPaint.color = isEInk ? '#000000' : TEMP_LINE;
         canvas.drawCircle(pointX, pointY, 3.5, fillPaint);
-        // only what changes is said: a figure that is the one before is left out, the dot says it
         const text = format.temperature(value);
-        if (text !== lastText && pointX - lastLabel >= SAMPLE_LABEL_GAP * fontScale) {
+        if (pointX - lastLabel >= SAMPLE_LABEL_GAP * fontScale) {
             lastLabel = pointX;
-            lastText = text;
             // above a peak, below a dip
             const dip = index > 0 && index < points.length - 1 && value < points[index - 1].value && value < points[index + 1].value;
             textPaint.color = ink;
@@ -202,8 +238,9 @@ export function weatherProfileOverlay(profile: ProfileWeather, format: WeatherFo
             glyphPaint.fontFamily = view.iconFontFamily;
             drawSky(canvas, profile, view);
             drawRain(canvas, profile, view);
-            drawSkyAndWind(canvas, profile, view, fontSize, format);
-            drawTemperature(canvas, profile, view, fontSize, format);
+            const skies = skyPoints(profile, view);
+            drawSkyAndWind(canvas, profile, skies, view, fontSize, format);
+            drawTemperature(canvas, skies, view, fontSize, format);
         }
     };
 }

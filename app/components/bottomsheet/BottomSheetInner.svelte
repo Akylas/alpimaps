@@ -314,7 +314,7 @@
     $: featureActions = featureItemActions(item);
     let builtInActions: SheetAction[];
     $: builtInActions = [
-        { id: 'information', when: !!item, text: 'mdi-information-outline', tooltip: lc('information') },
+        { id: 'information', when: !!item && !itemIsRoute, text: 'mdi-information-outline', tooltip: lc('information') },
         { id: 'plan', when: itemIsRoute, text: 'mdi-calendar-clock', tooltip: lc('plan') },
         {
             id: 'save',
@@ -980,6 +980,7 @@
                         propsBottom={30}
                         showStats={!itemIsRoute}
                         on:fetch={fetchHours}
+                        on:tap={() => itemIsRoute && zoomToItem()}
                     >
                         <activityindicator slot="above" busy={true} height={20} horizontalAlignment="right" verticalAlignment="top" visibility={updatingItem ? 'visible' : 'hidden'} width={20} />
                     </BottomSheetInfoView>
