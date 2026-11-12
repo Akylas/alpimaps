@@ -79,20 +79,23 @@
                 {/each}
             </stacklayout>
             {#if headline.action}
-                <gridlayout
+                <label
                     backgroundColor={isEInk ? null : colorAccentContainer}
                     borderColor={accent}
                     borderRadius={16}
                     borderWidth={isEInk ? 1 : 0}
                     col={1}
+                    color={accent}
+                    fontSize={13}
+                    fontWeight="bold"
                     height={32}
                     marginLeft={8}
                     padding="0 14"
                     rippleColor={colorPrimary}
+                    text={headline.action.label}
                     verticalAlignment="middle"
-                    on:tap={headline.action.run}>
-                    <label color={accent} fontSize={13} fontWeight="bold" text={headline.action.label} verticalAlignment="middle" />
-                </gridlayout>
+                    verticalTextAlignment="middle"
+                    on:tap={headline.action.run} />
             {:else if more}
                 <label col={1} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={22} text="mdi-chevron-right" verticalAlignment="middle" />
             {/if}

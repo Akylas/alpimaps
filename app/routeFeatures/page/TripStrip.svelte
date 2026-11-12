@@ -37,32 +37,28 @@
 </script>
 
 {#if times}
-    <stacklayout padding="8 14" rippleColor={colorPrimary} on:tap={() => dispatch('when')}>
-        <gridlayout columns="auto,*">
-            <stacklayout orientation="horizontal" verticalAlignment="middle">
-                <stacklayout>
-                    <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
-                    <label color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
-                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_leave')} />
+    <gridlayout columns="auto,auto,auto,*" padding="8 14" rippleColor={colorPrimary} rows="auto,auto" on:tap={() => dispatch('when')} {...$$restProps}>
+        <!-- the start of a snapshot that has aged is in the colour of the banner that offers to move it -->
+        <label verticalAlignment="middle">
+            <cspan color={times.outdated ? colorError : colorOnSurface} fontSize={16} fontWeight="bold" text={leave} />
+            <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + lc('trip_leave')} />
+        </label>
+        <label col={1} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
+        <label col={2} verticalAlignment="middle">
+            <cspan color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
+            <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + lc('trip_arrive')} />
+        </label>
+        <!-- right of the times, one over the other: a week day or a date does not squeeze them. A tap says what a chip is -->
+        <stacklayout col={3} horizontalAlignment="right" verticalAlignment="middle">
+            {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
+                <stacklayout horizontalAlignment="right" marginLeft={10} orientation="horizontal" on:tap={() => chip.help && showSnack({ message: chip.help })}>
+                    <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={16} text={chip.icon} verticalAlignment="middle" />
+                    <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
                 </stacklayout>
-                <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} margin="0 8" text="mdi-arrow-right" verticalAlignment="middle" />
-                <stacklayout>
-                    <label color={colorOnSurface} fontSize={16} fontWeight="bold" text={arrive} />
-                    <label color={colorOnSurfaceVariant} fontSize={11} text={lc('trip_arrive')} />
-                </stacklayout>
-            </stacklayout>
-            <!-- right of the times, one over the other: a week day or a date does not squeeze them. A tap says what a chip is -->
-            <stacklayout col={1} horizontalAlignment="right" verticalAlignment="middle">
-                {#each figures.chips.slice(0, MAX_CHIPS) as chip (chip.key)}
-                    <stacklayout horizontalAlignment="right" marginLeft={10} orientation="horizontal" on:tap={() => chip.help && showSnack({ message: chip.help })}>
-                        <label color={isEInk ? colorOnSurface : (chip.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={16} text={chip.icon} verticalAlignment="middle" />
-                        <label color={colorOnSurface} fontSize={13} marginLeft={3} text={chip.text} verticalAlignment="middle" />
-                    </stacklayout>
-                {/each}
-            </stacklayout>
-        </gridlayout>
+            {/each}
+        </stacklayout>
         {#if figures.note}
-            <label color={colorOnSurfaceVariant} fontSize={11} marginTop={4} text={figures.note} textWrap={true} />
+            <label color={colorOnSurfaceVariant} colSpan={4} fontSize={11} marginTop={4} row={1} text={figures.note} textWrap={true} />
         {/if}
-    </stacklayout>
+    </gridlayout>
 {/if}

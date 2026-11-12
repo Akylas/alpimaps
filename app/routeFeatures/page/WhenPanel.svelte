@@ -121,8 +121,6 @@
     $: selected = cells.find((cell) => cell.at === selectedAt) ?? chosen;
     // what a cell shows is in the list's items: the template does not follow the panel's own variables
     $: listCells = cells.map((cell) => ({ ...cell, selected: cell.at === selectedAt, marks: cell.indicators.flatMap((id) => (marks[id] ? [marks[id]] : [])) }));
-    // the cell's template has the same views for every cell, whatever it shows: the slots it has for the marks and the figure
-    const MARK_SLOTS = [0, 1];
     // tapping a departure shows the page as it would be: everything read for it, kept only by `leaveAt`
     function look(cell: StripCell) {
         if (cell.past) {
@@ -286,7 +284,7 @@
     function fillOf(cell: StripCell & { selected: boolean }) {
         return cell.selected ? colorSurfaceFill : cell.best && !isEInk ? new Color(colorPrimary).setAlpha(28).hex : null;
     }
-    const share = (value: number) => Math.max(0.001, Math.min(1, value));
+    const levelPercent = (level: StripCell['level']) => Math.round(LEVEL_SHARE[level] * 100);
     const multiplierText = (value: number) => '×' + value.toFixed(2);
 </script>
 
@@ -339,17 +337,12 @@
                 on:tap={() => look(cell)}>
                 <label color={colorOnSurface} fontSize={11.5} fontWeight={cell.selected || cell.chosen ? 'bold' : 'normal'} text={clock(cell.at)} textAlignment="center" />
                 <!-- what the ride is worth a mark for: the best one's star, then the features' marks, the dark, a feature knowing nothing of it -->
-                <stacklayout horizontalAlignment="center" marginTop={4} orientation="horizontal" row={1}>
-                    <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text="mdi-star" visibility={cell.best ? 'visible' : 'collapse'} />
-                    {#each MARK_SLOTS as slot}
-                        <label
-                            color={isEInk ? colorOnSurface : (cell.marks[slot]?.color ?? colorOnSurfaceVariant)}
-                            fontFamily={$fonts.mdi}
-                            fontSize={15}
-                            text={cell.marks[slot]?.icon ?? ''}
-                            visibility={cell.marks[slot] ? 'visible' : 'collapse'} />
-                    {/each}
-                </stacklayout>
+                <!-- always the same three spans: a label's children that come and go break the recycled cell -->
+                <label fontSize={15} horizontalAlignment="center" marginTop={4} row={1} visibility={cell.best || cell.marks.length ? 'visible' : 'collapse'}>
+                    <span color={colorPrimary} fontFamily={$fonts.mdi} fontSize={15} text={cell.best ? 'mdi-star' : ''} />
+                    <span color={isEInk ? colorOnSurface : (cell.marks[0]?.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={cell.marks[0]?.icon ?? ''} />
+                    <span color={isEInk ? colorOnSurface : (cell.marks[1]?.color ?? colorOnSurfaceVariant)} fontFamily={$fonts.mdi} fontSize={15} text={cell.marks[1]?.icon ?? ''} />
+                </label>
                 <!-- what a feature says of the ride in a figure, as a chip with its bar when it has a share: as oss-weather shows the rain of an hour -->
                 <Chip
                     bar={cell.figure?.share > 0 ? cell.figure.share : null}
@@ -372,9 +365,12 @@
                     verticalAlignment="middle"
                     visibility={cell.figure && !(cell.figure.share > 0) ? 'visible' : 'collapse'} />
                 <!-- the score, longer the better: the star says which is best, the colours stay the weather's -->
-                <gridlayout backgroundColor={colorOutlineVariant} borderRadius={1.5} columns={`${share(LEVEL_SHARE[cell.level])}*,${share(1 - LEVEL_SHARE[cell.level])}*`} margin="0 12" row={3}>
-                    <gridlayout backgroundColor={colorOnSurfaceVariant} borderRadius={1.5} opacity={cell.level === 'unknown' ? 0 : 1} />
-                </gridlayout>
+                <gridlayout
+                    backgroundColor={colorOutlineVariant}
+                    backgroundImage={`linear-gradient(to right, ${colorOnSurfaceVariant} ${levelPercent(cell.level)}%, transparent ${levelPercent(cell.level)}%)`}
+                    borderRadius={1.5}
+                    margin="0 12"
+                    row={3} />
             </gridlayout>
         </Template>
     </collectionview>
@@ -385,7 +381,7 @@
         <label col={1} color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={paceOpen ? 'mdi-chevron-up' : 'mdi-chevron-down'} verticalAlignment="middle" />
     </gridlayout>
     {#if paceOpen}
-        <gridlayout columns="auto,*,auto">
+        <gridlayout columns="auto,*,auto" rows="auto,auto">
             <label color={colorOnSurface} fontSize={13} text={lc('when_pace')} verticalAlignment="middle" />
             <slider
                 col={1}
@@ -395,41 +391,36 @@
                 value={inputs.pace.multiplier * 100}
                 on:valueChange={(event) => setPace({ multiplier: Math.round(event.value) / 100 })} />
             <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={multiplierText(multiplier)} verticalAlignment="middle" />
-        </gridlayout>
-        <gridlayout columns="auto,*,auto">
-            <label color={colorOnSurface} fontSize={13} text={lc('when_stops')} verticalAlignment="middle" />
-            <slider col={1} maxValue={STOPS_MAX} minValue={0} stepSize={1} value={inputs.pace.stopsMinPerHour} on:valueChange={(event) => setPace({ stopsMinPerHour: Math.round(event.value) })} />
-            <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={lc('when_stops_value', stops)} verticalAlignment="middle" />
+            <label color={colorOnSurface} fontSize={13} row={1} text={lc('when_stops')} verticalAlignment="middle" />
+            <slider col={1} maxValue={STOPS_MAX} minValue={0} row={1} stepSize={1} value={inputs.pace.stopsMinPerHour} on:valueChange={(event) => setPace({ stopsMinPerHour: Math.round(event.value) })} />
+            <label col={2} color={colorOnSurfaceVariant} fontSize={13} row={1} text={lc('when_stops_value', stops)} verticalAlignment="middle" />
         </gridlayout>
     {/if}
     {#if selected}
         <!-- the ride of the departure looked at, as oss-weather tops its page: the figure, then what goes with it -->
-        <gridlayout borderTopColor={colorOutlineVariant} borderTopWidth={0.5} columns="*,auto" marginTop={8} paddingTop={8}>
+        <gridlayout borderTopColor={colorOutlineVariant} borderTopWidth={0.5} columns="*,auto" marginTop={8} paddingTop={8} rows="auto,auto">
             <label color={colorOnSurface} fontSize={20} fontWeight="bold" text={`${clock(selected.at)} → ${clock(selected.arrival)}`} verticalAlignment="bottom" />
             {#if updatedAt}
                 <label col={1} color={colorOnSurfaceVariant} fontSize={11.5} text={lc('when_updated', clock(updatedAt))} verticalAlignment="bottom" />
             {/if}
+            <!-- always the same spans, empty when there is nothing to say: the gaps are spaces -->
+            <label
+                color={colorOnSurface}
+                colSpan={2}
+                fontSize={13}
+                marginTop={4}
+                row={1}
+                verticalAlignment="middle"
+                visibility={!isNaN(sunset) || selected.darkMinutes > 0 || moon ? 'visible' : 'collapse'}>
+                <span color={isEInk ? colorOnSurface : SUNSET_COLOR} fontFamily={$fonts.mdi} fontSize={17} text={isNaN(sunset) ? '' : 'mdi-weather-sunset-down'} />
+                <span text={isNaN(sunset) ? '' : ' ' + clock(sunset) + '    '} />
+                <span color={isEInk ? colorOnSurface : DARK_COLOR} fontFamily={$fonts.mdi} fontSize={17} text={selected.darkMinutes > 0 ? 'mdi-weather-night' : ''} />
+                <span text={selected.darkMinutes > 0 ? ' ' + lc('when_dark', Math.round(selected.darkMinutes)) : ''} />
+                <span text={moon ? '    ' : ''} />
+                <span color={isEInk ? colorOnSurface : MOON_COLOR} fontFamily={$fonts.mdi} fontSize={17} text={moon ? moon.glyph : ''} />
+                <span text={moon ? ' ' + moon.illumination + ' %' + (moon.moonlitMinutes > 0 ? ' · ' + lc('when_moon_up', moon.moonlitMinutes) : '') : ''} />
+            </label>
         </gridlayout>
-        <stacklayout marginTop={4} orientation="horizontal">
-            {#if !isNaN(sunset)}
-                <label color={colorOnSurface} fontSize={13} marginRight={14} verticalAlignment="middle">
-                    <span color={isEInk ? colorOnSurface : SUNSET_COLOR} fontFamily={$fonts.mdi} fontSize={17} text="mdi-weather-sunset-down" />
-                    <span text={' ' + clock(sunset)} />
-                </label>
-            {/if}
-            {#if selected.darkMinutes > 0}
-                <label color={colorOnSurface} fontSize={13} verticalAlignment="middle">
-                    <span color={isEInk ? colorOnSurface : DARK_COLOR} fontFamily={$fonts.mdi} fontSize={17} text="mdi-weather-night" />
-                    <span text={' ' + lc('when_dark', Math.round(selected.darkMinutes))} />
-                </label>
-            {/if}
-            {#if moon}
-                <label color={colorOnSurface} fontSize={13} marginLeft={14} verticalAlignment="middle">
-                    <span color={isEInk ? colorOnSurface : MOON_COLOR} fontFamily={$fonts.mdi} fontSize={17} text={moon.glyph} />
-                    <span text={' ' + moon.illumination + ' %' + (moon.moonlitMinutes > 0 ? ' · ' + lc('when_moon_up', moon.moonlitMinutes) : '')} />
-                </label>
-            {/if}
-        </stacklayout>
     {/if}
     {#if previewAt !== null}
         <stacklayout marginTop={4} orientation="horizontal">

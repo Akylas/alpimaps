@@ -70,6 +70,7 @@
                 borderColor={active ? (isEInk ? colorOnSurface : colorPrimary) : outdated ? OUTDATED_COLOR : colorOutlineSoft}
                 borderRadius={CHIP_HEIGHT / 2}
                 borderWidth={active && isEInk ? 2.5 : 1}
+                columns="10,auto,auto,10"
                 height={CHIP_HEIGHT}
                 marginRight={6}
                 opacity={missing ? 0.7 : 1}
@@ -77,25 +78,23 @@
                 verticalAlignment="middle"
                 on:tap={() => dispatch('select', { id })}
                 on:longPress={(event) => onLongPress(id, event)}>
-                <stacklayout orientation="horizontal" padding="0 10" verticalAlignment="middle">
-                    <!-- always the same spans: a formatted string whose children come and go breaks the update -->
-                    <label color={contentColor} fontSize={13} maxLines={1} verticalAlignment="middle">
-                        <span color={chip.alert && !isEInk ? colorError : contentColor} fontFamily={$fonts.mdi} fontSize={16} text={icon} />
-                        <span fontWeight={active && isEInk ? 'bold' : 'normal'} text={'  ' + label} />
-                        <span fontWeight="bold" text={!missing && chip.value ? '  ' + chip.value : ''} />
-                        <span color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} text={missing ? '  mdi-plus' : ''} />
-                        <span
-                            color={outdated ? OUTDATED_COLOR : colorOnSurfaceVariant}
-                            fontFamily={$fonts.mdi}
-                            fontSize={14}
-                            text={outdated ? '  mdi-refresh' : chip.state === 'offline' ? '  mdi-cloud-off-outline' : ''} />
-                    </label>
-                    {#if chip.state === 'running'}
-                        <activityindicator busy={true} height={14} marginLeft={6} verticalAlignment="middle" width={14} />
-                    {/if}
-                </stacklayout>
+                <!-- always the same spans: a formatted string whose children come and go breaks the update -->
+                <label col={1} color={contentColor} fontSize={13} maxLines={1} verticalAlignment="middle">
+                    <span color={chip.alert && !isEInk ? colorError : contentColor} fontFamily={$fonts.mdi} fontSize={16} text={icon} />
+                    <span fontWeight={active && isEInk ? 'bold' : 'normal'} text={'  ' + label} />
+                    <span fontWeight="bold" text={!missing && chip.value ? '  ' + chip.value : ''} />
+                    <span color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={16} text={missing ? '  mdi-plus' : ''} />
+                    <span
+                        color={outdated ? OUTDATED_COLOR : colorOnSurfaceVariant}
+                        fontFamily={$fonts.mdi}
+                        fontSize={14}
+                        text={outdated ? '  mdi-refresh' : chip.state === 'offline' ? '  mdi-cloud-off-outline' : ''} />
+                </label>
+                {#if chip.state === 'running'}
+                    <activityindicator busy={true} col={2} height={14} marginLeft={6} verticalAlignment="middle" width={14} />
+                {/if}
                 {#if chip.alert && isEInk}
-                    <gridlayout backgroundColor={colorOnSurface} borderRadius={3} height={6} horizontalAlignment="right" margin="4 6 0 0" verticalAlignment="top" width={6} />
+                    <gridlayout backgroundColor={colorOnSurface} borderRadius={3} colSpan={4} height={6} horizontalAlignment="right" margin="4 6 0 0" verticalAlignment="top" width={6} />
                 {/if}
             </gridlayout>
         {/each}

@@ -41,6 +41,9 @@
     // where a wind blows to, the ride going up
     const WIND_ARROWS = { head: 'mdi-arrow-down', tail: 'mdi-arrow-up', cross_left: 'mdi-arrow-left', cross_right: 'mdi-arrow-right', calm: '' };
 
+    // the line of a fetch by its state; "absent" says how many points would be sent
+    const FETCH_STATE_KEYS: Record<string, string> = { running: 'weather_fetching', offline: 'weather_offline', failed: 'weather_error' };
+
     // e-ink has no colour to give a figure
     const tone = (color: string | undefined) => (isEInk || !color ? colorOnSurface : color);
     // the sky: neutral when it does not rain, as e-ink has no colour to give it
@@ -60,24 +63,33 @@
     const LINE_HEIGHT = 30;
     const RAIN_ROW = 58;
     const LINE_PAD = 5;
+    /** mm/h of rain from which a sample shows it */
+    const RAIN_SHOWN = 0.1;
 
-    // a sample with the ones around it: the line of the temperatures runs through the cells
-    $: stripItems =
+    // the samples with the ones around them (the line of the temperatures runs through the cells), the wind of each when it is shown,
+    // and the rows they need
+    $: strip =
         data.type === 'strip'
             ? (() => {
                   const temps = data.rows.flatMap(({ temp }) => (temp === undefined ? [] : [temp]));
                   const low = Math.min(...temps);
                   const high = Math.max(...temps);
-                  return data.rows.map((row, index) => ({ row, previous: data.rows[index - 1]?.temp, next: data.rows[index + 1]?.temp, low, high }));
+                  const items = data.rows.map((row, index) => {
+                      const wind = windLabel(row.wind, row.head, row.cross);
+                      return {
+                          row,
+                          wind: wind && wind.kind !== 'calm' && wind.value >= WIND_SHOWN ? wind : undefined,
+                          previous: data.rows[index - 1]?.temp,
+                          next: data.rows[index + 1]?.temp,
+                          low,
+                          high
+                      };
+                  });
+                  const windRow = items.some(({ wind }) => wind) ? WIND_ROW : 0;
+                  const rainRow = items.some(({ row }) => row.precip >= RAIN_SHOWN) ? RAIN_ROW : 0;
+                  return { items, windRow, rainRow, height: HEADER_ROW + SKY_ROW + windRow + LINE_TOP + LINE_HEIGHT + rainRow };
               })()
-            : [];
-    const isWindy = (row: RideRow) => {
-        const wind = windLabel(row.wind, row.head, row.cross);
-        return !!wind && wind.kind !== 'calm' && wind.value >= WIND_SHOWN;
-    };
-    $: windRow = data.type === 'strip' && data.rows.some(isWindy) ? WIND_ROW : 0;
-    $: rainRow = data.type === 'strip' && data.rows.some(({ precip }) => precip >= 0.1) ? RAIN_ROW : 0;
-    $: stripHeight = HEADER_ROW + SKY_ROW + windRow + LINE_TOP + LINE_HEIGHT + rainRow;
+            : null;
 
     const factsWords: FactsWords = { format: weatherFormat, t: lc, distance: formatDistance };
 
@@ -93,7 +105,7 @@
     const dotPaint = new Paint();
     dotPaint.setStyle(Style.FILL);
     // the line of the temperatures through the cell: half way to each neighbour, so the cells' halves meet
-    function drawLine({ canvas }: { canvas: Canvas }, { high, low, next, previous, row }: (typeof stripItems)[number]) {
+    function drawLine({ canvas }: { canvas: Canvas }, { high, low, next, previous, row }: (typeof strip.items)[number]) {
         if (row.temp === undefined) {
             return;
         }
@@ -147,10 +159,11 @@
         <label color={colorOnSurfaceVariant} fontSize={12} marginTop={4} text={lc('weather_wind_share', percent(summary.headShare), percent(across), percent(summary.tailShare))} />
     </stacklayout>
 {:else if data.type === 'strip'}
-    <collectionview colWidth={STRIP_COLUMN} height={stripHeight} items={stripItems} orientation="horizontal">
+    {@const { items, windRow, rainRow, height } = strip}
+    <collectionview colWidth={STRIP_COLUMN} {height} {items} orientation="horizontal">
         <Template let:item={cell}>
             {@const row = cell.row}
-            {@const wind = windLabel(row.wind, row.head, row.cross)}
+            {@const wind = cell.wind}
             {@const wash = windWash(row.head, row.gust, $weatherGust)}
             <gridlayout
                 borderRightColor={colorOutlineVariant}
@@ -158,85 +171,84 @@
                 rippleColor={colorPrimary}
                 rows={`${HEADER_ROW},${SKY_ROW},${windRow},${LINE_TOP + LINE_HEIGHT},${rainRow}`}
                 on:tap={() => focusRow(row)}>
-                <stacklayout horizontalAlignment="center" paddingTop={4}>
-                    <label color={colorOnSurface} fontSize={12} fontWeight="bold" text={formatDistance(row.distance)} textAlignment="center" />
-                    <label color={colorOnSurfaceVariant} fontSize={11} text={clock(row.at)} textAlignment="center" />
-                </stacklayout>
+                <label horizontalAlignment="center" paddingTop={4} textAlignment="center" verticalAlignment="top">
+                    <cspan color={colorOnSurface} fontSize={12} fontWeight="bold" text={formatDistance(row.distance)} />
+                    <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + clock(row.at)} />
+                </label>
                 <!-- the sky as a strip over the samples, as oss-weather draws the phase of the day over its hours: the sun when it is clear, the cloud -->
                 <gridlayout backgroundColor={isEInk || row.cloud === undefined ? null : skyBand(row.cloud)} height={4} verticalAlignment="top" />
                 <!-- the sky, in the colour of the rain -->
                 <label color={rowSkyTone(row)} fontFamily={$fonts.mdi} fontSize={24} row={1} text={wxGlyph(row.code, row.cloud, row.moon)} textAlignment="center" verticalTextAlignment="middle" />
                 <!-- the wind under the sky, as oss-weather puts it: an arrow of the way it blows, its speed, on a wash when it is strong or bursts -->
-                {#if windRow && wind && wind.kind !== 'calm' && wind.value >= WIND_SHOWN}
-                    <gridlayout
+                {#if wind}
+                    <label
                         backgroundColor={isEInk ? null : wash}
                         borderColor={isEInk && wash ? colorOnSurface : null}
                         borderRadius={9}
                         borderWidth={isEInk && wash ? 1 : 0}
+                        color={windTone(row.head)}
+                        fontSize={11}
                         height={18}
                         horizontalAlignment="center"
                         padding="0 6"
                         row={2}
-                        verticalAlignment="middle">
-                        <label color={windTone(row.head)} fontSize={11} verticalAlignment="middle">
-                            <span fontFamily={$fonts.mdi} fontSize={13} text={WIND_ARROWS[wind.kind === 'cross' ? `cross_${wind.side}` : wind.kind]} />
-                            <span fontWeight="bold" text={' ' + weatherFormat.speedNumber(wind.value)} />
-                            <span color={colorError} fontFamily={$fonts.mdi} fontSize={13} text={row.gust !== undefined && row.gust >= $weatherGust && !isEInk ? ' mdi-weather-windy-variant' : ''} />
-                        </label>
-                    </gridlayout>
+                        verticalAlignment="middle"
+                        verticalTextAlignment="middle">
+                        <span fontFamily={$fonts.mdi} fontSize={13} text={WIND_ARROWS[wind.kind === 'cross' ? `cross_${wind.side}` : wind.kind]} />
+                        <span fontWeight="bold" text={' ' + weatherFormat.speedNumber(wind.value)} />
+                        <span color={colorError} fontFamily={$fonts.mdi} fontSize={13} text={row.gust !== undefined && row.gust >= $weatherGust && !isEInk ? ' mdi-weather-windy-variant' : ''} />
+                    </label>
                 {/if}
-                <gridlayout row={3}>
-                    <canvasview marginTop={LINE_TOP} on:draw={(event) => drawLine(event, cell)} />
-                    <label
-                        color={tone(row.temp === undefined ? undefined : tempColor(row.temp))}
-                        fontSize={15}
-                        fontWeight="bold"
-                        marginTop={row.temp === undefined ? 0 : LINE_TOP + lineY(row.temp, cell.low, cell.high) - 24}
-                        text={row.temp === undefined ? '–' : weatherFormat.temperature(row.temp)}
-                        textAlignment="center"
-                        verticalAlignment="top" />
-                </gridlayout>
+                <canvasview marginTop={LINE_TOP} row={3} on:draw={(event) => drawLine(event, cell)} />
+                <label
+                    color={tone(row.temp === undefined ? undefined : tempColor(row.temp))}
+                    fontSize={15}
+                    fontWeight="bold"
+                    marginTop={row.temp === undefined ? 0 : LINE_TOP + lineY(row.temp, cell.low, cell.high) - 24}
+                    row={3}
+                    text={row.temp === undefined ? '–' : weatherFormat.temperature(row.temp)}
+                    textAlignment="center"
+                    verticalAlignment="top" />
                 <!-- the rain, as oss-weather draws an hour of it: its chance above, a bar as plain as the chance and as high as the rain, its figure in it -->
-                {#if rainRow && row.precip >= 0.1}
+                {#if rainRow && row.precip >= RAIN_SHOWN}
                     <stacklayout row={4} verticalAlignment="bottom">
                         <label color={colorOnSurfaceVariant} fontSize={10} text={row.probability === undefined ? '' : Math.round(row.probability) + ' %'} textAlignment="center" />
-                        <gridlayout
+                        <label
                             backgroundColor={isEInk ? null : rainBarTint(row.probability)}
                             borderColor={isEInk ? colorOnSurface : null}
                             borderRadius={6}
                             borderWidth={isEInk ? 1 : 0}
+                            color={colorOnSurface}
+                            fontSize={11}
+                            fontWeight="bold"
                             height={rainBarHeight(row.precip)}
-                            margin="0 5 3 5">
-                            <label color={colorOnSurface} fontSize={11} fontWeight="bold" text={weatherFormat.rainNumber(row.precip)} textAlignment="center" verticalAlignment="middle" />
-                        </gridlayout>
+                            margin="0 5 3 5"
+                            text={weatherFormat.rainNumber(row.precip)}
+                            textAlignment="center"
+                            verticalTextAlignment="middle" />
                     </stacklayout>
                 {/if}
             </gridlayout>
         </Template>
     </collectionview>
 {:else if data.type === 'footer'}
-    <stacklayout padding="12 16 14 16">
-        <gridlayout columns="*,auto">
-            <label color={data.outdated && !isEInk ? colorError : colorOnSurfaceVariant} fontSize={12} text={lc('when_updated', clock(data.updatedAt))} textWrap={true} verticalAlignment="middle" />
-            {#if data.canUpdate}
-                <Pill col={1} height={32} icon="mdi-cloud-refresh-outline" label={lc('weather_update')} on:tap={() => computeLayers(item, ['weather'])} />
-            {/if}
-        </gridlayout>
-        <label color={colorOnSurfaceVariant} fontSize={12} marginTop={4} text={`${data.attribution.text} (${data.attribution.license})`} textWrap={true} />
-        <label color={colorOnSurfaceVariant} fontSize={11} marginTop={4} text={lc('weather_disclaimer')} textWrap={true} />
-    </stacklayout>
+    <gridlayout columns="*,auto" padding="12 16 14 16" rows="auto,auto">
+        <label color={data.outdated && !isEInk ? colorError : colorOnSurfaceVariant} fontSize={12} text={lc('when_updated', clock(data.updatedAt))} textWrap={true} verticalAlignment="middle" />
+        {#if data.canUpdate}
+            <Pill col={1} height={32} icon="mdi-cloud-refresh-outline" label={lc('weather_update')} on:tap={() => computeLayers(item, ['weather'])} />
+        {/if}
+        <label colSpan={2} marginTop={4} row={1} textWrap={true}>
+            <cspan color={colorOnSurfaceVariant} fontSize={12} text={`${data.attribution.text} (${data.attribution.license})`} />
+            <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + lc('weather_disclaimer')} />
+        </label>
+    </gridlayout>
 {:else}
+    {@const stateKey = FETCH_STATE_KEYS[data.state]}
     <gridlayout columns="*,auto" padding="12 16">
         <label
             color={colorOnSurfaceVariant}
             fontSize={13}
-            text={data.state === 'running'
-                ? lc('weather_fetching')
-                : data.state === 'offline'
-                  ? lc('weather_offline')
-                  : data.state === 'failed'
-                    ? lc('weather_error')
-                    : lc('weather_send_points', data.points, data.decimals, data.provider)}
+            text={stateKey ? lc(stateKey) : lc('weather_send_points', data.points, data.decimals, data.provider)}
             textWrap={true}
             verticalAlignment="middle" />
         {#if data.state === 'absent' || data.state === 'failed'}

@@ -137,6 +137,7 @@
 </script>
 
 {#if data.type === 'climb'}
+    {@const climb = data.climb}
     <gridlayout
         borderBottomColor={colorOutlineVariant}
         borderBottomWidth={1}
@@ -146,17 +147,23 @@
         rippleColor={colorPrimary}
         on:tap={() => dispatch('focus', readClimbs(item)?.sections[data.id])}>
         <!-- the category on a plate, the way the profile's brackets carry it -->
-        <gridlayout backgroundColor={isEInk ? '#000000' : colorOnSurface} borderRadius={6} height={24} horizontalAlignment="left" padding="0 7" verticalAlignment="middle">
-            <label color={isEInk ? '#ffffff' : colorBackground} fontSize={12} fontWeight="bold" text={data.climb.category ? categoryLabel(data.climb.category) : '–'} verticalAlignment="middle" />
-        </gridlayout>
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={15} fontWeight="bold" text={`${formatDistance(data.climb.length)} · ${grade(data.climb.avgGrade)}`} />
-            <label
-                color={colorOnSurfaceVariant}
-                fontSize={12}
-                text={`+${convertElevation(data.climb.gain)} · ${formatDistance(data.climb.startDistance)} → ${formatDistance(data.climb.endDistance)}`} />
-        </stacklayout>
-        <canvasview col={2} height={40} margin="0 0 0 10" verticalAlignment="middle" on:draw={(event) => data.type === 'climb' && drawSparkline(event, data.climb)} />
+        <label
+            backgroundColor={isEInk ? '#000000' : colorOnSurface}
+            borderRadius={6}
+            color={isEInk ? '#ffffff' : colorBackground}
+            fontSize={12}
+            fontWeight="bold"
+            height={24}
+            horizontalAlignment="left"
+            padding="0 7"
+            text={climb.category ? categoryLabel(climb.category) : '–'}
+            verticalAlignment="middle"
+            verticalTextAlignment="middle" />
+        <label col={1} verticalAlignment="middle">
+            <cspan color={colorOnSurface} fontSize={15} fontWeight="bold" text={`${formatDistance(climb.length)} · ${grade(climb.avgGrade)}`} />
+            <cspan color={colorOnSurfaceVariant} fontSize={12} text={`\n+${convertElevation(climb.gain)} · ${formatDistance(climb.startDistance)} → ${formatDistance(climb.endDistance)}`} />
+        </label>
+        <canvasview col={2} height={40} margin="0 0 0 10" verticalAlignment="middle" on:draw={(event) => drawSparkline(event, climb)} />
     </gridlayout>
 {:else if data.type === 'header'}
     <gridlayout columns="24,*,auto" height={44} padding="0 16" rippleColor={colorPrimary} on:tap={() => climbsSteepOpen.set(!$climbsSteepOpen)}>
@@ -166,29 +173,28 @@
     </gridlayout>
 {:else}
     {@const section = data.section}
-    {@const solid = !isEInk || data.chevrons > 1}
-    <gridlayout columns="72,*,90" height={56} padding="0 16" rippleColor={colorPrimary} on:tap={() => data.type === 'steep' && dispatch('focus', steepSection(data.section, data.id))}>
+    {@const { id, scale, chevrons } = data}
+    {@const solid = !isEInk || chevrons > 1}
+    <gridlayout columns="72,*,90" height={56} padding="0 16" rippleColor={colorPrimary} on:tap={() => dispatch('focus', steepSection(section, id))}>
         <!-- the average grade, and how far past steep it is in chevrons -->
-        <gridlayout
+        <label
             backgroundColor={isEInk ? (solid ? '#000000' : '#ffffff') : gradeColor(section.avgGrade)}
             borderColor="#000000"
             borderRadius={6}
             borderWidth={isEInk ? 1.5 : 0}
+            color={isEInk && !solid ? '#000000' : '#ffffff'}
+            fontSize={12}
+            fontWeight="bold"
             height={24}
             horizontalAlignment="left"
             padding="0 6"
-            verticalAlignment="middle">
-            <label
-                color={isEInk && !solid ? '#000000' : '#ffffff'}
-                fontSize={12}
-                fontWeight="bold"
-                text={`${section.direction === 'down' ? '↘ ' : ''}${Math.abs(section.avgGrade).toFixed(0)} % ${chevronText(data.chevrons)}`}
-                verticalAlignment="middle" />
-        </gridlayout>
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(section.length)} · ${section.gain > 0 ? '+' : '−'}${convertElevation(Math.abs(section.gain))}`} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={`${formatDistance(section.startDistance)} → ${formatDistance(section.endDistance)} · max ${grade(section.maxGrade)}`} />
-        </stacklayout>
-        <canvasview col={2} height={32} verticalAlignment="middle" on:draw={(event) => data.type === 'steep' && drawSteep(event, data.section, data.scale)} />
+            text={`${section.direction === 'down' ? '↘ ' : ''}${Math.abs(section.avgGrade).toFixed(0)} % ${chevronText(chevrons)}`}
+            verticalAlignment="middle"
+            verticalTextAlignment="middle" />
+        <label col={1} verticalAlignment="middle">
+            <cspan color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(section.length)} · ${section.gain > 0 ? '+' : '−'}${convertElevation(Math.abs(section.gain))}`} />
+            <cspan color={colorOnSurfaceVariant} fontSize={12} text={`\n${formatDistance(section.startDistance)} → ${formatDistance(section.endDistance)} · max ${grade(section.maxGrade)}`} />
+        </label>
+        <canvasview col={2} height={32} verticalAlignment="middle" on:draw={(event) => drawSteep(event, section, scale)} />
     </gridlayout>
 {/if}

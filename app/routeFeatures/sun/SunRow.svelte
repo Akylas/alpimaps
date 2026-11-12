@@ -9,6 +9,7 @@
     import { explainChip } from '~/routeFeatures/sun/explain';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
+    import { barGradient } from '~/routeFeatures/lens/barGradient';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
     import type { LensFact } from '~/routeFeatures/registry';
     import { SUN_COLORS } from '~/routeFeatures/sun/colors';
@@ -79,20 +80,16 @@
 </script>
 
 {#if data.type === 'bar'}
-    <stacklayout padding="8 16">
-        <gridlayout borderRadius={5} columns={data.shares.map((share) => share.meters + '*').join(',') || '*'} height={10}>
-            {#each data.shares as share, index}
-                <absolutelayout backgroundColor={swatch(share.k)} col={index} />
-            {/each}
-        </gridlayout>
-        {#each data.shares as share}
-            <gridlayout columns="22,*,auto" height={26}>
-                <label color={swatch(share.k)} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" verticalAlignment="middle" />
-                <label col={1} color={colorOnSurface} fontSize={13} text={lc(`legend_sun_${share.k}`)} verticalAlignment="middle" />
-                <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={formatDistance(share.meters)} verticalAlignment="middle" />
-            </gridlayout>
+    <gridlayout columns="*,auto" padding="8 16" rows={['10', ...data.shares.map(() => '26')].join(',')}>
+        <gridlayout backgroundImage={barGradient(data.shares.map((share) => ({ color: swatch(share.k), size: share.meters })))} borderRadius={5} colSpan={2} />
+        {#each data.shares as share, index}
+            <label color={colorOnSurface} fontSize={13} row={index + 1} verticalTextAlignment="middle">
+                <cspan color={swatch(share.k)} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" />
+                <cspan text={'\u2002' + lc(`legend_sun_${share.k}`)} />
+            </label>
+            <label col={1} color={colorOnSurfaceVariant} fontSize={13} row={index + 1} text={formatDistance(share.meters)} verticalTextAlignment="middle" />
         {/each}
-    </stacklayout>
+    </gridlayout>
 {:else if data.type === 'chips'}
     <wraplayout padding="6 12 2 12">
         {#each chips as chip (chip.key)}
@@ -100,17 +97,17 @@
         {/each}
     </wraplayout>
 {:else if data.type === 'side'}
-    <gridlayout columns="32,*" height={30} padding="0 16">
-        <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={18} text={data.body === 'moon' ? 'mdi-moon-waning-crescent' : 'mdi-white-balance-sunny'} verticalAlignment="middle" />
-        <label col={1} color={colorOnSurface} fontSize={13} maxLines={1} text={sideText} verticalAlignment="middle" />
-    </gridlayout>
+    <label color={colorOnSurface} fontSize={13} height={30} maxLines={1} padding="0 16" verticalTextAlignment="middle">
+        <cspan color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={18} text={data.body === 'moon' ? 'mdi-moon-waning-crescent' : 'mdi-white-balance-sunny'} />
+        <cspan text={'\u2003' + sideText} />
+    </label>
 {:else if data.type === 'preview'}
     <gridlayout columns="32,*" height={48} padding="0 16" rippleColor={colorPrimary} on:tap={preview}>
         <label color={colorPrimary} fontFamily={$fonts.mdi} fontSize={20} text="mdi-video-3d" verticalAlignment="middle" />
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc('sun_mode_preview')} />
-            <label color={colorOnSurfaceVariant} fontSize={12} text={lc('sun_mode_preview_desc')} />
-        </stacklayout>
+        <label col={1} verticalAlignment="middle">
+            <cspan color={colorOnSurface} fontSize={14} fontWeight="bold" text={lc('sun_mode_preview')} />
+            <cspan color={colorOnSurfaceVariant} fontSize={12} text={'\n' + lc('sun_mode_preview_desc')} />
+        </label>
     </gridlayout>
 {:else}
     <label color={colorOnSurfaceVariant} fontSize={12} padding="8 16 12 16" text={lc(data.terrain ? 'sun_note_terrain' : 'sun_note')} textWrap={true} />

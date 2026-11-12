@@ -6,11 +6,13 @@
     import { lc } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import type { IItem } from '~/models/Item';
+    import { barGradient } from '~/routeFeatures/lens/barGradient';
     import type { LensSection } from '~/routeFeatures/registry';
     import { ROAD_SHARE_COLORS, ROAD_SHARE_EINK } from '~/routeFeatures/road/palette';
     import { readRoad, roadWords } from '~/routeFeatures/road/read';
     import { ROAD_SHARE_LABELS, type RoadRowData, type RoadShareId } from '~/routeFeatures/road/rows';
     import { roadSectionsOpen } from '~/routeFeatures/road/settings';
+    import SpeedSign from '~/routeFeatures/road/SpeedSign.svelte';
     import { colors, fonts } from '~/variables';
 
     export let item: IItem;
@@ -25,24 +27,19 @@
     $: ({ colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
 
     const swatch = (id: RoadShareId) => (isEInk ? ROAD_SHARE_EINK[id] : ROAD_SHARE_COLORS[id]);
-    $: shares = data.type === 'bar' ? data.shares : [];
 </script>
 
 {#if data.type === 'bar'}
-    <stacklayout padding="8 16">
-        <gridlayout borderRadius={5} columns={shares.map((share) => share.meters + '*').join(',') || '*'} height={10}>
-            {#each shares as share, index}
-                <absolutelayout backgroundColor={swatch(share.id)} col={index} />
-            {/each}
-        </gridlayout>
-        {#each shares as share}
-            <gridlayout columns="22,*,auto" height={26}>
-                <label color={swatch(share.id)} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" verticalAlignment="middle" />
-                <label col={1} color={colorOnSurface} fontSize={13} text={lc(ROAD_SHARE_LABELS[share.id])} verticalAlignment="middle" />
-                <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={formatDistance(share.meters)} verticalAlignment="middle" />
-            </gridlayout>
+    <gridlayout columns="*,auto" padding="8 16" rows={['10', ...data.shares.map(() => '26')].join(',')}>
+        <gridlayout backgroundImage={barGradient(data.shares.map((share) => ({ color: swatch(share.id), size: share.meters })))} borderRadius={5} colSpan={2} />
+        {#each data.shares as share, index}
+            <label color={colorOnSurface} fontSize={13} row={index + 1} verticalTextAlignment="middle">
+                <cspan color={swatch(share.id)} fontFamily={$fonts.mdi} fontSize={14} text="mdi-square-rounded" />
+                <cspan text={'\u2002' + lc(ROAD_SHARE_LABELS[share.id])} />
+            </label>
+            <label col={1} color={colorOnSurfaceVariant} fontSize={13} row={index + 1} text={formatDistance(share.meters)} verticalTextAlignment="middle" />
         {/each}
-    </stacklayout>
+    </gridlayout>
 {:else if data.type === 'header'}
     <gridlayout columns="24,*,auto" height={44} padding="0 16" rippleColor={colorPrimary} on:tap={() => roadSectionsOpen.set(!$roadSectionsOpen)}>
         <label color={colorOnSurfaceVariant} fontFamily={$fonts.mdi} fontSize={20} text={data.open ? 'mdi-chevron-down' : 'mdi-chevron-right'} verticalAlignment="middle" />
@@ -50,18 +47,13 @@
         <label col={2} color={colorOnSurfaceVariant} fontSize={13} text={String(data.count)} verticalAlignment="middle" />
     </gridlayout>
 {:else if data.type === 'section'}
+    {@const section = data.run.section}
     <gridlayout columns="46,*" height={56} padding="0 16" rippleColor={colorPrimary} on:tap={() => dispatch('focus', readRoad(item)?.sections[data.id])}>
-        <!-- the speed sign: a white disc in a ring -->
-        <gridlayout backgroundColor="#ffffff" borderColor={isEInk ? '#000000' : '#D7263D'} borderRadius={16} borderWidth={3} height={32} horizontalAlignment="left" verticalAlignment="middle" width={32}>
-            <label color="#1b1c1d" fontSize={11} fontWeight="bold" horizontalAlignment="center" text={roadWords.speedNumber(data.run.section.speed)} verticalAlignment="middle" />
-        </gridlayout>
-        <stacklayout col={1} verticalAlignment="middle">
-            <label color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(data.run.section.length)} · ${lc(data.run.section.level === 3 ? 'road_level_high' : 'road_level_medium')}`} />
-            <label
-                color={colorOnSurfaceVariant}
-                fontSize={12}
-                text={`${formatDistance(data.run.section.startDist)} → ${formatDistance(data.run.section.startDist + data.run.section.length)} · ${roadWords.speed(data.run.section.speed)}`} />
-        </stacklayout>
+        <SpeedSign fontSize={11} horizontalAlignment="left" ringColor="#D7263D" size={32} text={roadWords.speedNumber(section.speed)} />
+        <label col={1} verticalAlignment="middle">
+            <cspan color={colorOnSurface} fontSize={14} fontWeight="bold" text={`${formatDistance(section.length)} · ${lc(section.level === 3 ? 'road_level_high' : 'road_level_medium')}`} />
+            <cspan color={colorOnSurfaceVariant} fontSize={12} text={`\n${formatDistance(section.startDist)} → ${formatDistance(section.startDist + section.length)} · ${roadWords.speed(section.speed)}`} />
+        </label>
     </gridlayout>
 {:else}
     <label color={colorOnSurfaceVariant} fontSize={12} padding="8 16 12 16" text={lc('road_note') + (data.unknown > 0 ? ' ' + lc('road_unknown', formatDistance(data.unknown)) : '')} textWrap={true} />
