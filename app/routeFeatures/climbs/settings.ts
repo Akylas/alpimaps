@@ -2,13 +2,13 @@ import { derived } from 'svelte/store';
 import { formatDistance } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import { DEFAULT_STEEP_MIN_LENGTH } from '~/routeFeatures/climbs/steep';
-import type { RouteSettingRow } from '~/routeFeatures/registry';
+import { type RouteSettingRow, visitStore } from '~/routeFeatures/registry';
 import { settingsStore } from '~/stores/settingsStore';
 
 export const routeFeatureClimbs = settingsStore('route_feature_climbs', true);
 
-/** The steep list is folded away until asked for: the climbs come first. */
-export const climbsSteepOpen = settingsStore('climbs_steep_open', false);
+/** The steep list is folded away until asked for, on every visit: the climbs come first. */
+export const climbsSteepOpen = visitStore(false);
 
 /** `auto`: the route's activity picks the preset, see `presetForActivity`. Else a `SteepPreset`. */
 export const climbsPreset = settingsStore<string>('climbs_preset', 'auto');

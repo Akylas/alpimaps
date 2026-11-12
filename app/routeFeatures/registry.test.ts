@@ -4,6 +4,7 @@ import {
     type LensId,
     type RouteFeature,
     type RouteLens,
+    endVisit,
     migrateNavPages,
     nextLens,
     parseNavPages,
@@ -17,7 +18,8 @@ import {
     routeStages,
     routeStatViews,
     routeTrip,
-    tellDeparture
+    tellDeparture,
+    visitStore
 } from './registry';
 
 describe('routeStages', () => {
@@ -210,5 +212,17 @@ describe('nextLens', () => {
     it('starts from the first when the active lens is not offered, and says nothing without lenses', () => {
         expect(nextLens(lenses, 'sun')).toBe('overview');
         expect(nextLens([], 'overview')).toBeUndefined();
+    });
+});
+
+describe('visitStore', () => {
+    it('is back to its start when the visit ends, for every such store', () => {
+        const folded = visitStore(false);
+        const level = visitStore(2);
+        folded.set(true);
+        level.set(5);
+        endVisit();
+        expect(get(folded)).toBe(false);
+        expect(get(level)).toBe(2);
     });
 });

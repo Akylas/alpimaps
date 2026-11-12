@@ -28,7 +28,7 @@
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
     import { type ListRow, type PageRow, type StoredSections, bodyRows, isSectionOpen, pageRows } from '~/routeFeatures/page/rows';
-    import { type LensId, type LensSection, type RoutePageSection, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
+    import { type LensId, type LensSection, type RoutePageSection, endVisit, lazyComponents, routeFeatureChanges, routeFeatures, routePageSections, tellDeparture } from '~/routeFeatures/registry';
     import { ROUTE_LENS_CARD_HEIGHT } from '~/utils/navigation';
     import { shareItem } from '~/mapModules/itemActions';
     import { showPopoverMenu } from '~/utils/ui/index.common';
@@ -201,6 +201,8 @@
     onDestroy(() => clearInterval(clockTimer));
     // a departure looked at and not taken is not the route's
     onDestroy(giveBackLook);
+    // what the sections had open, as the climbs' steep list, is not kept for the next route
+    onDestroy(endVisit);
     // `>= 0` is always true: it reruns this when the analysis changed in place
     $: analysis = $routeAnalysisChanges >= 0 ? item?.analysis : null;
     $: departure = analysis?.inputs.departure ?? { mode: 'now' as const };

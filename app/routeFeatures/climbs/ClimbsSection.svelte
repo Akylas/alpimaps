@@ -12,10 +12,13 @@
     import { climbsSteepOpen } from '~/routeFeatures/climbs/settings';
     import { focusKeyOf } from '~/routeFeatures/lens/routeFocusStore';
     import { focusLensSection } from '~/routeFeatures/lens/routeLensStore';
-    import type { LensSection } from '~/routeFeatures/registry';
+    import { type LensSection, endVisit } from '~/routeFeatures/registry';
+    import { onDestroy } from 'svelte';
     import { windowInset } from '~/variables';
 
     export let item: IItem;
+    // the steep list is folded again the next time
+    onDestroy(endVisit);
 
     $: rows = climbsRows(readClimbs(item), $climbsSteepOpen);
     function itemTemplateSelector(row: ClimbsRowData) {

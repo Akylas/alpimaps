@@ -604,6 +604,17 @@ export function routeNavBanners(features: RouteFeature[]): RouteNavBanner[] {
     return features.flatMap((feature) => feature.navBanners ?? []);
 }
 
+const visitResets: (() => void)[] = [];
+/** A store for what the user opened on a route's page: it starts over with every visit, `endVisit` being where one ends. */
+export function visitStore<T>(initial: T) {
+    const store = writable(initial);
+    visitResets.push(() => store.set(initial));
+    return store;
+}
+export function endVisit() {
+    visitResets.forEach((reset) => reset());
+}
+
 /** Lazy components, loaded once and kept. A store, so the view renders a component when it arrives. */
 export function lazyComponents() {
     const { subscribe, update } = writable<Record<string, ComponentType>>({});
