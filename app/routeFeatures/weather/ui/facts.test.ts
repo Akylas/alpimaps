@@ -33,6 +33,12 @@ describe('summaryFacts', () => {
         expect(facts[0].label).toBeUndefined();
     });
 
+    it('colours the icon and the bar of the rain, the figure keeping the text colour', () => {
+        const [rain] = summaryFacts({ ...summary, rainTotal: 2.5, rainPeak: { mmPerHour: 2.1, distance: 6000, probability: 70 } }, words);
+        expect(rain.iconColor).toBeDefined();
+        expect(rain.color).toBeUndefined();
+    });
+
     it('has no bar when the forecast does not say how likely the rain is', () => {
         const [rain] = summaryFacts({ ...summary, rainTotal: 1, rainPeak: { mmPerHour: 1, distance: 6000 } }, words);
         expect(rain.bar).toBeUndefined();

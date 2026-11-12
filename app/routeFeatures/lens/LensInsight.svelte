@@ -69,6 +69,7 @@
                         bar={fact.bar ?? null}
                         color={fact.color}
                         icon={fact.icon}
+                        iconColor={fact.iconColor}
                         label={fact.label}
                         marginTop={0}
                         note={fact.note}

@@ -36,7 +36,7 @@ export function summaryFacts(summary: WeatherSummary, { format, t }: FactsWords)
             text: `${value} ${unit}`,
             value,
             unit,
-            color: rainColor(rainPeak.mmPerHour),
+            iconColor: rainColor(rainPeak.mmPerHour),
             tint: rainTint(rainPeak.mmPerHour),
             ...(rainPeak.probability === undefined ? {} : { bar: rainPeak.probability / 100 })
         });

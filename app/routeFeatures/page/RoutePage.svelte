@@ -446,8 +446,9 @@
                                         alert={row.facts?.[slot]?.alert ?? false}
                                         bar={row.facts?.[slot]?.bar ?? null}
                                         color={row.facts?.[slot]?.color}
-                                        height={20}
+                                        height={24}
                                         icon={row.facts?.[slot]?.icon}
+                                        iconColor={row.facts?.[slot]?.iconColor}
                                         label={row.facts?.[slot]?.label}
                                         marginTop={2}
                                         note={row.facts?.[slot]?.note}
