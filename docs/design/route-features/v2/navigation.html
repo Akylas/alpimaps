@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alpi Maps v2 — navigation and follow</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>/* tokens: docs/design/mockups.html + app/variables.ts names in comments */
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--panel:rgba(255,255,255,.97);--mapctl:rgba(255,255,255,.80);
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);--fill:rgba(0,0,0,.045);
+--bg-accent:rgba(41,182,246,.14);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.65);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--danger:#d32f2f;--border-danger:rgba(211,47,47,.6);
+--warn:#a35f00;--border-warn:rgba(226,140,0,.75);--good:#00897b;
+--map-land:#f3f1ea;--map-forest:#d5e5c4;--map-water:#b5d3ec;--map-road:#ffffff;--map-road-case:#d2cbbd;--map-major:#fbe0a0;--map-major-case:#d6b464;
+--map-contour:rgba(140,110,70,.20);--map-label:#5b5f64;--map-halo:rgba(255,255,255,.9);--map-shadow:rgba(60,50,40,.09);--map-light:rgba(255,255,255,.35)}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--panel:rgba(30,33,37,.97);--mapctl:rgba(35,39,43,.82);
+--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);--fill:rgba(255,255,255,.06);
+--bg-accent:rgba(41,182,246,.18);--text-accent:#7fd3fa;--border-accent:rgba(127,211,250,.6);
+--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--danger:#ef9a9a;--border-danger:rgba(239,154,154,.6);
+--warn:#ffcc80;--border-warn:rgba(255,204,128,.65);--good:#80cbc4;
+--map-land:#1c2024;--map-forest:#1d2a22;--map-water:#16324a;--map-road:#3a4148;--map-road-case:#2a2f34;--map-major:#5a4f36;--map-major-case:#3c3526;
+--map-contour:rgba(200,190,170,.10);--map-label:#a5abb1;--map-halo:rgba(20,23,26,.85);--map-shadow:rgba(0,0,0,.25);--map-light:rgba(255,255,255,.04)}
+.eink{--surface-0:#fff;--surface-1:#fff;--surface-2:#fff;--panel:#fff;--mapctl:#fff;--border:#000;--border-strong:#000;--fill:#fff;
+--bg-accent:#fff;--text-accent:#000;--fill-accent:#000;--on-accent:#fff;--border-accent:#000;--text-primary:#000;--text-secondary:#000;--text-muted:#000;
+--danger:#000;--border-danger:#000;--warn:#000;--border-warn:#000;--good:#000;
+--map-land:#fff;--map-forest:#fff;--map-water:#fff;--map-road:#fff;--map-road-case:#000;--map-major:#fff;--map-major-case:#000;
+--map-contour:rgba(0,0,0,.35);--map-label:#000;--map-halo:#fff;--map-shadow:rgba(0,0,0,0);--map-light:rgba(0,0,0,0)}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 24px 60px;font-family:Roboto,"Helvetica Neue",system-ui,sans-serif;background:var(--surface-0);color:var(--text-primary)}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;margin:34px 0 4px;padding-top:14px;border-top:0.5px solid var(--border)}
+p.note{font-size:12.5px;color:var(--text-secondary);margin:0 0 12px;max-width:1100px;line-height:1.45}
+a{color:var(--text-accent)}
+code{font-size:11.5px;background:var(--fill);padding:1px 4px;border-radius:4px}
+.badge{display:inline-block;font-size:11px;border:1px dashed var(--border-strong);border-radius:6px;padding:1px 6px;margin-left:8px;color:var(--text-secondary);vertical-align:middle}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 6px;font-size:12px}
+.toolbar button{font:inherit;padding:6px 14px;border-radius:99px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);cursor:pointer}
+.toolbar button.on{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.toolbar a{color:var(--text-accent);margin-left:6px}
+.row{display:flex;flex-wrap:wrap;gap:30px 30px;align-items:flex-start;margin-top:10px}
+.frame{width:360px;flex:none}
+.frame.wide{width:auto}
+.cap{font-size:12.5px;font-weight:600;margin:0 0 2px 4px}
+.capn{font-size:11.5px;color:var(--text-secondary);margin:0 0 10px 4px;line-height:1.4;min-height:32px}
+.phone{position:relative;width:360px;height:760px;border-radius:30px;overflow:hidden;background:var(--map-land);box-shadow:0 0 0 7px #202326,0 10px 26px rgba(0,0,0,.22);margin:7px;flex:none}
+.phone.short{height:640px}.phone.narrow{width:320px}
+.eink .phone{box-shadow:0 0 0 7px #000}
+.tablet{position:relative;width:1024px;height:700px;border-radius:22px;overflow:hidden;background:var(--map-land);box-shadow:0 0 0 9px #202326,0 10px 26px rgba(0,0,0,.22);margin:9px}
+.map{position:absolute;left:0;top:0}
+.sb{position:absolute;top:0;left:0;right:0;height:24px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:11.5px;font-weight:600;z-index:6;color:var(--text-primary)}
+.sb i{font-size:13px;margin-left:3px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-radius:20px 20px 0 0;border:0.5px solid var(--border);border-bottom:0;overflow:hidden;z-index:4;display:flex;flex-direction:column}
+.eink .sheet{border:1px solid #000;border-bottom:0}
+.handle{width:32px;height:4px;border-radius:2px;background:var(--text-muted);opacity:.6;margin:6px auto 0;flex:none}
+.eink .handle{opacity:1;background:#000}
+.tband{display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;height:60px;flex:none}
+.tband.compact{height:48px;padding-top:0}
+.itile{width:40px;height:40px;border-radius:12px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.compact .itile{width:32px;height:32px;border-radius:10px;font-size:18px}
+.eink .itile{border:1px solid #000}
+.ttl{font-size:16.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact .ttl{font-size:15px}
+.sub{font-size:12.5px;color:var(--text-secondary);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:21px;color:var(--text-secondary);flex:none}
+.tiles{display:flex;gap:4px;padding:0 8px;height:48px;align-items:flex-start;flex:none}
+.tile{position:relative;height:40px;border-radius:10px;background:var(--fill);display:flex;flex-direction:column;justify-content:center;padding:0 5px;min-width:0;overflow:hidden}
+.eink .tile{border:1px solid #000}
+.tile .v{font-size:13px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px;line-height:1.15;letter-spacing:-.1px}
+.tile .v i{font-size:13px;color:var(--text-secondary);font-weight:400}
+.tile .l2{font-size:10.5px;color:var(--text-secondary);white-space:nowrap;line-height:1.2;margin-top:1px}
+.tile .l2.acc{color:var(--text-accent);font-weight:700}
+.tile.risk{background:transparent;border:1.5px solid var(--border-danger)}
+.tile.risk .v,.tile.risk .v i{color:var(--danger)}
+.eink .tile.risk{border:2px solid #000}
+.fp{position:absolute;left:6px;right:6px;bottom:4px;height:3px;border-radius:1.5px;display:flex;overflow:hidden;gap:1px}
+.eink .fp{height:4px;border:0.5px solid #000}
+.actions{display:flex;gap:8px;padding:0 12px;height:60px;flex:none;align-items:center}
+.btn{height:36px;border-radius:18px;display:flex;align-items:center;gap:6px;padding:0 14px;font-size:13.5px;font-weight:600;white-space:nowrap;flex:none}
+.btn i{font-size:18px}
+.btn.f{background:var(--fill-accent);color:var(--on-accent)}
+.btn.t{background:var(--bg-accent);color:var(--text-accent)}
+.eink .btn.t{border:1px solid #000}
+.rb{width:36px;height:36px;border-radius:18px;border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary);flex:none}
+.eink .rb{border:1px solid #000}
+.card{margin:4px 6px 0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:20px;overflow:hidden;flex:none}
+.eink .card{border:1px solid #000}
+.lensbar{height:44px;display:flex;align-items:center;overflow:hidden;flex:none;position:relative}
+.lensbar .in{display:flex;gap:6px;padding:0 10px;white-space:nowrap}
+.chip{position:relative;height:32px;border-radius:16px;border:0.5px solid var(--border-strong);display:inline-flex;align-items:center;gap:5px;padding:0 11px 0 9px;font-size:12.5px;color:var(--text-primary);flex:none;background:var(--surface-2)}
+.chip i{font-size:16px;color:var(--text-secondary)}
+.chip b{font-weight:700}
+.chip.sel{background:var(--bg-accent);border:1px solid var(--fill-accent);color:var(--text-accent)}
+.chip.sel i{color:var(--text-accent)}
+.eink .chip.sel{border:2.5px solid #000;font-weight:700;background:#fff;color:#000}
+.chip.dash{border:1px dashed var(--border-strong);color:var(--text-secondary)}
+.chip.stale{border:1px solid var(--border-warn)}
+.chip.stale .st{color:var(--warn);font-size:13px}
+.eink .chip.stale{border:2px dashed #000}
+.chip .dot{position:absolute;top:2px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:1.5px solid var(--surface-2)}
+.chip .run{position:absolute;left:10px;right:10px;bottom:2px;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent,var(--fill-accent),transparent)}
+.insight{height:40px;display:flex;align-items:center;gap:6px;padding:0 6px 0 14px;font-size:13.5px;flex:none;border-top:0.5px solid var(--border)}
+.insight .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insight .tx b{font-weight:700}
+.insight .nav{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--text-primary);flex:none}
+.insight .mini{height:30px;border-radius:15px;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;background:var(--bg-accent);color:var(--text-accent);flex:none}
+.eink .insight .mini{border:1px solid #000}
+.insight.focus{background:var(--bg-accent)}
+.eink .insight.focus{background:#fff;border-top:2px solid #000}
+.strip{position:absolute;left:8px;right:8px;top:4px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--fill-accent) 14%,var(--surface-2));border:0.5px solid var(--border-accent);color:var(--text-accent);display:flex;align-items:center;padding:0 6px 0 10px;gap:4px;backdrop-filter:blur(4px)}
+.dark .strip{background:rgba(20,40,52,.92)}
+.eink .strip{background:#fff;border:1.5px solid #000;color:#000}
+.strip .c{flex:1;text-align:center;min-width:0}
+.strip .c i{font-size:14px;display:block;line-height:1}
+.strip .c b{font-size:12.5px;display:block;white-space:nowrap}
+.pc{position:relative}
+.ask{margin:6px 10px;border-radius:14px;border:1px solid var(--border-accent);background:var(--bg-accent);padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+.eink .ask{border:2px solid #000;background:#fff}
+.pill{height:32px;border-radius:16px;border:0.5px solid var(--border-strong);display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12.5px;font-weight:600;background:var(--surface-2);flex:none;white-space:nowrap}
+.pill i{font-size:16px}
+.pill.sel{background:var(--bg-accent);border:1px solid var(--fill-accent);color:var(--text-accent)}
+.pill.warn{border:1px solid var(--border-warn);color:var(--warn)}
+.eink .pill{border:1px solid #000}.eink .pill.sel,.eink .pill.warn{border:2.5px solid #000}
+.scroll{flex:1;min-height:0;overflow:hidden;position:relative}
+.scroll .in{position:absolute;left:0;right:0;top:0}
+.sec{margin:8px 6px 0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.eink .sec{border:1px solid #000}
+.sech{display:flex;align-items:center;gap:10px;height:56px;padding:0 6px 0 10px}
+.sech .itile{width:36px;height:36px;font-size:19px;border-radius:11px}
+.sech .ttl{font-size:14.5px}
+.sech .sub{font-size:12px}
+.fchip{height:22px;border-radius:11px;padding:0 7px;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;flex:none;white-space:nowrap}
+.fchip.o{border:1px solid var(--border-warn);color:var(--warn)}
+.fchip.u{border:1px solid var(--border-strong);color:var(--text-secondary)}
+.eink .fchip.o{border:2px dashed #000}.eink .fchip.u{border:1px solid #000}
+.secb{padding:0 12px 12px;font-size:12.5px}
+.secb .note{font-size:11.5px;color:var(--text-secondary);line-height:1.4;margin-top:8px}
+.lr{display:flex;align-items:center;gap:10px;min-height:54px;border-top:0.5px solid var(--border)}
+.lr:first-child{border-top:0}
+.lr .m{flex:1;min-width:0}
+.lr .m b{font-size:13.5px;display:block}
+.lr .m span{font-size:12px;color:var(--text-secondary)}
+.lr.foc{background:var(--bg-accent);margin:0 -12px;padding:0 12px}
+.eink .lr.foc{background:#fff;outline:2px solid #000;outline-offset:-2px}
+.cat{height:22px;min-width:40px;border-radius:5px;background:#2b2f33;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex:none}
+.dark .cat{background:#e8eaed;color:#1b1c1d}.eink .cat{background:#000;color:#fff}
+.sign{width:30px;height:30px;border-radius:50%;background:#fff;border:3.5px solid #D7263D;color:#1b1c1d;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.eink .sign{border-color:#000}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:10px 0 6px}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.lg span{display:flex;align-items:center;gap:6px;font-size:11.5px}
+.lg span b{margin-left:auto}
+.sw{width:10px;height:10px;border-radius:50%;flex:none}
+.eink .sw{border:1px solid #000}
+.mctl{position:absolute;width:40px;height:40px;border-radius:20px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-primary);z-index:3}
+.eink .mctl{border:1px solid #000}
+.lchip{position:absolute;height:28px;border-radius:14px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;gap:6px;padding:0 10px 0 8px;font-size:11.5px;z-index:3;white-space:nowrap}
+.eink .lchip{border:1px solid #000}
+.lchip .sws{display:flex;gap:2px}.lchip .sws u{width:14px;height:5px;border-radius:2px;display:block}
+.ann{position:absolute;right:0;left:0;border-top:1.5px dashed #e91e63;z-index:8;pointer-events:none}
+.ann span{position:absolute;right:6px;top:-18px;background:#e91e63;color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px}
+.eink .ann{border-color:#000}.eink .ann span{background:#000}
+.mkr{position:absolute;z-index:9;width:20px;height:20px;border-radius:50%;background:#e91e63;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
+.eink .mkr{background:#000}
+.legend-box{font-size:12px;color:var(--text-secondary);max-width:360px;line-height:1.45}
+.legend-box ol{padding-left:18px;margin:4px 0}
+.wn{margin:0 6px;font-size:11px;color:var(--text-secondary)}
+.dstrip{display:flex;gap:4px;overflow:hidden;padding:2px 0}
+.dc{width:46px;height:66px;border-radius:12px;border:0.5px solid var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 0 6px;flex:none;font-size:11.5px;position:relative}
+.dc b{font-size:12px}
+.dc i{font-size:15px;color:var(--text-secondary)}
+.dc u{display:block;width:30px;height:6px;border-radius:3px}
+.dc.sel{border:2px solid var(--fill-accent);background:var(--bg-accent)}
+.dc.out{border:1px dashed var(--border-strong);opacity:.75}
+.dc .star{position:absolute;top:-1px;right:1px;font-size:11px;color:#f5a623}
+.eink .dc{border:1px solid #000}.eink .dc.sel{border:3px solid #000;background:#fff}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:12px 0 8px}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2)}
+.sw2{width:40px;height:24px;border-radius:12px;background:var(--border-strong);position:relative;flex:none}
+.sw2:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.banner{margin:8px 6px 0;border-radius:14px;border:1px solid var(--border-warn);padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+.eink .banner{border:2px dashed #000}
+
+.insight.readout{background:color-mix(in srgb,var(--fill-accent) 12%,var(--surface-2));color:var(--text-accent);gap:8px;padding-left:12px}
+.insight.readout .tx{color:var(--text-primary)}
+.eink .insight.readout{background:#fff;border-top:2px solid #000}
+
+.lightv{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--panel:rgba(255,255,255,.97);--mapctl:rgba(255,255,255,.80);
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);--fill:rgba(0,0,0,.045);
+--bg-accent:rgba(41,182,246,.14);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.65);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--danger:#d32f2f;--border-danger:rgba(211,47,47,.6);
+--warn:#a35f00;--border-warn:rgba(226,140,0,.75);--good:#00897b;
+--map-land:#f3f1ea;--map-forest:#d5e5c4;--map-water:#b5d3ec;--map-road:#ffffff;--map-road-case:#d2cbbd;--map-major:#fbe0a0;--map-major-case:#d6b464;
+--map-contour:rgba(140,110,70,.20);--map-label:#5b5f64;--map-halo:rgba(255,255,255,.9);--map-shadow:rgba(60,50,40,.09);--map-light:rgba(255,255,255,.35);color:var(--text-primary)}
+.mcard{position:absolute;left:8px;right:8px;top:30px;border-radius:20px;background:var(--panel);border:0.5px solid var(--border);z-index:5;overflow:hidden}
+.eink .mcard{border:1.5px solid #000}
+.mrow{display:flex;align-items:center;gap:12px;padding:10px 12px 8px}
+.mblk{width:52px;height:52px;border-radius:14px;background:var(--fill-accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:34px;flex:none}
+.mdist{font-size:24px;font-weight:800;line-height:1}
+.mstreet{font-size:14px;color:var(--text-secondary);margin-top:3px}
+.mthen{display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--border);padding:5px 14px;font-size:12px;color:var(--text-secondary)}
+.rbanner{position:absolute;left:8px;right:8px;border-radius:16px;background:var(--panel);border:2px solid var(--border-danger);display:flex;align-items:center;gap:10px;padding:0 6px 0 10px;height:58px;z-index:5}
+.rbanner .sign{width:38px;height:38px;font-size:14px;border-width:4.5px}
+.rbanner b{font-size:15px;display:block}.rbanner span{font-size:12.5px;color:var(--text-secondary)}
+.jrow{position:absolute;left:8px;right:8px;display:flex;justify-content:space-between;gap:6px;z-index:5}
+.jc{white-space:nowrap;flex:none;height:36px;border-radius:18px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;gap:5px;padding:0 12px;font-size:13px;font-weight:700;backdrop-filter:blur(3px)}
+.jc i{font-size:18px;color:var(--text-accent)}
+.jc.no{border:1.5px solid var(--border-danger);color:var(--danger)}.jc.no i{color:var(--danger)}
+.eink .jc{border:1px solid #000}.eink .jc.no{border:2.5px solid #000}
+.rail{position:absolute;right:8px;display:flex;flex-direction:column;gap:8px;z-index:5;align-items:center}
+.fab{width:48px;height:48px;border-radius:24px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-accent)}
+.eink .fab{border:1px solid #000}
+.cap2{width:56px;border-radius:28px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.eink .cap2{border:1.5px solid #000}
+.cap2 .seg{width:56px;height:46px;display:flex;align-items:center;justify-content:center;font-size:23px;position:relative;color:var(--text-primary)}
+.cap2 .seg+.seg{border-top:0.5px solid var(--border-strong);height:54px}
+.cap2 .seg.on{color:var(--text-accent)}
+.cap2 .watch{background:var(--fill-accent);color:var(--on-accent)}
+.cap2 .a{position:absolute;right:9px;bottom:7px;font-size:9px;font-weight:800;background:var(--text-secondary);color:var(--surface-2);border-radius:5px;padding:0 3px;line-height:12px}
+.cap2 .lock{position:absolute;right:8px;bottom:6px;font-size:12px;color:var(--text-secondary)}
+.dial{position:absolute;right:8px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;z-index:6}
+.dial .o{display:flex;align-items:center;gap:8px}
+.dial .o span{font-size:12.5px;font-weight:700;background:var(--panel);border:0.5px solid var(--border);border-radius:8px;padding:3px 8px}
+.dial .o u{width:44px;height:44px;border-radius:22px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:21px;text-decoration:none;color:var(--text-primary);margin-right:6px}
+.dial .o.on u{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.eink .dial .o u{border:1px solid #000}.eink .dial .o.on u{background:#000;color:#fff}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.18);z-index:5}
+.eink .scrim{background:transparent}
+.nsheet{position:absolute;left:0;right:0;bottom:0;z-index:5;padding-bottom:8px}
+.ncard{margin:0 8px 8px;border-radius:20px;background:var(--panel);border:0.5px solid var(--border);overflow:hidden}
+.eink .ncard{border:1.5px solid #000}
+.ninfo{display:flex;align-items:flex-end;padding:8px 10px 6px 14px;gap:10px}
+.ninfo .f{flex:1}.ninfo .f span{font-size:11px;color:var(--text-secondary);display:block}.ninfo .f b{font-size:24px;font-weight:800}.ninfo .f small{font-size:13px;font-weight:600;margin-left:2px}
+.pause{width:52px;height:52px;border-radius:26px;background:var(--fill-accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:26px}
+.live{display:flex;justify-content:space-between;border-top:0.5px solid var(--border);height:30px;align-items:center;padding:0 14px;font-size:13px;color:var(--text-secondary)}
+.live b{color:var(--text-primary)}
+.ahead{display:flex;gap:8px;margin:0 8px 0}
+.aw{border-radius:16px;background:var(--panel);border:0.5px solid var(--border);height:84px;overflow:hidden;position:relative}
+.eink .aw{border:1.5px solid #000}
+.aw .hd{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:700;color:var(--text-secondary);padding:4px 8px 0;height:18px}
+.ol{display:flex}
+.ol .c{flex:1;display:flex;flex-direction:column;align-items:center;font-size:11px;line-height:1.12}
+.ol .c i{font-size:14px}
+.ol .c b{font-size:12px}
+.ol .c em{font-style:normal;font-size:9.5px;color:var(--text-secondary)}
+.sunr{position:absolute;left:8px;right:8px;bottom:6px;height:6px;border-radius:3px;display:flex;overflow:hidden}
+.snack{position:absolute;left:12px;right:80px;border-radius:10px;background:#323232;color:#fff;font-size:12.5px;padding:10px 12px;z-index:7}
+.eink .snack{background:#000}
+.big{transform:scale(1.6);transform-origin:top left;margin-bottom:60px}
+.dock{position:absolute;left:8px;right:8px;bottom:8px;border-radius:20px;background:var(--panel);border:0.5px solid var(--border);overflow:hidden;z-index:5}
+.eink .dock{border:1.5px solid #000}
+.dsum{display:flex;align-items:center;height:46px;padding:0 4px 0 12px;gap:0;border-bottom:0.5px solid var(--border)}
+.dsum .f{flex:1;white-space:nowrap}.dsum .f b{font-size:19px;font-weight:800}.dsum .f small{font-size:12px;font-weight:600;color:var(--text-secondary);margin-left:2px}
+.dsum .f+.f{border-left:0.5px solid var(--border);padding-left:10px}
+.dsum .pz{width:40px;height:40px;border-radius:20px;background:var(--fill-accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:21px;flex:none}
+.dpg{height:108px;position:relative;padding:6px 12px 0}
+.dpg .pt{display:flex;justify-content:space-between;font-size:10.5px;font-weight:800;letter-spacing:.3px;color:var(--text-secondary);text-transform:uppercase;height:16px}
+.dpg .pt span:last-child{text-transform:none;letter-spacing:0;font-weight:700}
+.dots{display:flex;justify-content:center;gap:5px;height:14px;align-items:center}
+.dots u{width:6px;height:6px;border-radius:3px;background:var(--border-strong);display:block}.dots u.on{width:16px;background:var(--fill-accent)}
+.eink .dots u.on{background:#000}
+.grade{font-size:30px;font-weight:900;line-height:1}
+.trip4{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px}.trip4 div+div{border-left:0.5px solid var(--border);padding-left:8px}
+.trip4 span{font-size:10.5px;color:var(--text-secondary);display:block}.trip4 b{font-size:19px;font-weight:800}.trip4 small{font-size:11px;font-weight:600;margin-left:1px}
+.cmp{display:flex;gap:18px;align-items:flex-end}.cmp .col{width:150px}.cmp .blk{border-radius:10px;margin-top:4px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text-primary)}
+</style>
+</head>
+<body>
+<h1>Navigation and follow <span class="badge">MOCKUP · fake data · icons are Tabler placeholders (the app uses MDI)</span></h1>
+<p class="note">README-v2 section 7. Navigating: the map always marks <b>steep</b> (chevrons + grade plate) and <b>fast roads</b> (red outer casing + speed sign) on the route, whatever the lens; weather shows on the map only in the Weather lens. The bottom becomes a <b>dock</b>: one 40 dp summary row and one <b>swipeable data page</b> (Climb, Profile, Ahead, Trip), like a GPS computer, with the map still visible. A rail button opens the <b>Route page</b> on the remaining route (update weather, read everything). Road risk: outlined banner only. Following without a route: travel-mode capsule + junction chips.</p>
+<div id="tb"></div>
+<h2>1. Navigating a bike route</h2>
+<div class="row" id="r1"></div>
+<div class="row" id="r1b" style="margin-top:24px"></div>
+<h2>2. Following without a route: the travel-mode capsule</h2>
+<div class="row" id="r2"></div>
+<h2>3. Pieces</h2>
+<div class="row" id="r3"></div>
+<script>// Alpi Maps v2 mockup kit: fake route data, map + profile renderers, sheet components. Fake data.
+const KM = 62.4, DEP = 14 * 60, DUR = 221;
+const theme = () => window.THEME_OVERRIDE || (document.body.classList.contains('eink') ? 'eink' : document.body.classList.contains('dark') ? 'dark' : 'light');
+const clock = (m) => { m = Math.round(m); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(((m % 60) + 60) % 60).padStart(2, '0'); };
+const etaMin = (km) => DEP + (DUR * km) / KM;
+let UID = 0;
+
+// ---------- palettes (the lens_pal table, app/utils/routeAnalysis/lensPalette.ts in the design) ----------
+const PAL = {
+  light: { g0: '#1B4E9B', g1: '#3B7DD8', g2: '#7FB2E8', g3: '#7BC96F', g4: '#F2D14B', g5: '#F0902B', g6: '#E34A33', g7: '#9E1B18',
+    r0: '#8D96A3', r2: '#F29D38', r3: '#D7263D', w0: '#8D96A3', w1: '#B39DDB', w2: '#7E57C2', w3: '#4527A0',
+    s0: '#7C93B0', s1: '#F5B82E', s2: '#B0B7BF', s3: '#243049', f_paved: '#8B939E', f_gravel: '#A89070', f_path: '#6E9A5C',
+    sign: '#D7263D', plate: '#2B2F33', item: '#287bda', accent: '#60A5F4', case: '#ffffff', cycle: '#4BA79C', fast: '#E0533F' },
+  dark: { g0: '#4F7FD0', g1: '#5C98E8', g2: '#93C1F0', g3: '#8CD680', g4: '#F5DA63', g5: '#F4A24A', g6: '#EE6A52', g7: '#D9453F',
+    r0: '#5C6570', r2: '#F4AE57', r3: '#EF4A5E', w0: '#5C6570', w1: '#C4B3E6', w2: '#9C7BE0', w3: '#7C5CD6',
+    s0: '#7F98B8', s1: '#F7C64F', s2: '#8E969F', s3: '#8FA3D9', f_paved: '#9AA3AE', f_gravel: '#C2A57E', f_path: '#86B272',
+    sign: '#EF4A5E', plate: '#E8EAED', item: '#5B9CF0', accent: '#7FD3FA', case: '#101316', cycle: '#5FC2B5', fast: '#F06A55' },
+  eink: {}
+};
+['g0','g1','g2','g3','g4','g5','g6','g7','r0','r2','r3','w0','w1','w2','w3','s0','s1','s2','s3','f_paved','f_gravel','f_path','sign','plate','item','accent','cycle','fast'].forEach((k) => (PAL.eink[k] = '#000'));
+PAL.eink.case = '#ffffff';
+const pal = () => PAL[theme()];
+const GB = [-Infinity, -9, -6, -3, 3, 6, 9, 12];
+const gbi = (g) => { for (let i = GB.length - 1; i > 0; i--) if (g >= GB[i]) return i; return 0; };
+
+// ---------- the route: elevation, grade, lens data ----------
+const KP = [[0, 240], [6, 270], [12.4, 330], [19, 712], [23, 600], [28, 540], [31, 560], [34.2, 797], [38, 700], [44.8, 780], [46, 889], [49, 1050], [52.5, 1180], [56, 800], [60, 420], [62.4, 240]];
+function interp(km) { for (let i = 1; i < KP.length; i++) if (km <= KP[i][0]) { const [a, ea] = KP[i - 1], [b, eb] = KP[i]; const t = (km - a) / (b - a); return ea + (eb - ea) * (0.5 - Math.cos(Math.PI * t) / 2) * 0.35 + (eb - ea) * t * 0.65; } return 240; }
+const STEP = 0.2, N = Math.round(KM / STEP);
+const ELE = [], GR = [];
+for (let i = 0; i <= N; i++) { const km = i * STEP; const ramp = km > 45 && km < 45.6 ? 35 * Math.sin(((km - 45) / 0.6) * Math.PI / 2) : km >= 45.6 ? 35 : 0; ELE.push(interp(km) + 4 * Math.sin(km * 1.1) + 1.5 * Math.sin(km * 2.9 + 1) + ramp - (km > 46 ? 35 * Math.min(1, (km - 46) / 3) : 0)); }
+for (let i = 0; i <= N; i++) { const a = ELE[Math.max(0, i - 1)], b = ELE[Math.min(N, i + 1)]; GR.push(((b - a) / ((Math.min(N, i + 1) - Math.max(0, i - 1)) * STEP * 1000)) * 100); }
+const GRS = GR.map((g, i) => { let t = 0, n = 0; for (let k = -2; k <= 2; k++) { const v = GR[i + k]; if (v != null) { t += v; n++; } } return t / n; });
+const eleAt = (km) => ELE[Math.max(0, Math.min(N, Math.round(km / STEP)))];
+const CLIMBS = [
+  { id: 1, a: 12.4, b: 19.0, cat: 'Cat 2', gain: 382, avg: 5.8, max: 8.9, top: 712, name: 'Montée de la Ruchère' },
+  { id: 2, a: 31.0, b: 34.2, cat: 'Cat 3', gain: 237, avg: 7.4, max: 10.6, top: 797, name: 'Côte du Désert' },
+  { id: 3, a: 44.8, b: 52.5, cat: 'Cat 1', gain: 400, avg: 5.2, max: 15.9, top: 1180, name: 'Col du Granier' },
+  { id: 4, a: 0.0, b: 6.0, cat: 'Cat 4', gain: 64, avg: 1.1, max: 3.2, top: 270, name: 'Les Échelles exit' }
+];
+const RISK = [
+  { id: 1, a: 5.0, b: 8.1, v: 80, k: 'r3', s: 3, infra: 'no separation' },
+  { id: 2, a: 22.3, b: 22.5, v: 70, k: 'r2', s: 2, infra: 'painted lane, no separation' },
+  { id: 3, a: 55.8, b: 62.3, v: 80, k: 'r3', s: 3, infra: 'no separation · descent' }
+];
+const WX = [];
+for (let j = 0; j <= 10; j++) {
+  const km = Math.min(KM, j * 6.24), eta = etaMin(km), e = eleAt(km);
+  const rain = km > 34 && km < 45 ? (km > 36 && km < 41 ? 1.2 : 0.5) : 0;
+  WX.push({ km, eta, temp: Math.round(17 - (e - 240) / 160 - ((eta - DEP) / 60) * 0.7), rain, cloud: km > 33 && km < 45 ? 'rain' : eta > 17 * 60 + 7 ? 'moon' : km > 9 && km < 13 ? 'cloud' : 'sun', wind: 18 });
+}
+const RAIN = [[34, 36, 'w1', 1], [36, 41, 'w2', 2], [41, 45, 'w1', 1]];
+const SUNSET_KM = ((17 * 60 + 7 - DEP) / DUR) * KM;
+const SUN = [[0, 9, 's1', 0], [9, 12.4, 's0', 0], [12.4, 23, 's1', 0], [23, 26.5, 's0', 0], [26.5, 33.5, 's1', 0], [33.5, 44, 's2', 1], [44, SUNSET_KM, 's1', 0], [SUNSET_KM, KM, 's3', 3]];
+const SURF = [[0, 20.5, 'f_paved', 0], [20.5, 29.2, 'f_gravel', 1], [29.2, 46.2, 'f_paved', 0], [46.2, 49.9, 'f_path', 2], [49.9, KM, 'f_paved', 0]];
+function gradeRuns() {
+  const runs = []; let cur = null;
+  for (let i = 0; i < N; i++) { const k = 'g' + gbi(GRS[i]); const s = GRS[i] >= 12 ? 3 : GRS[i] >= 9 ? 2 : GRS[i] >= 3 ? 1 : 0;
+    if (cur && cur[2] === k) cur[1] = (i + 1) * STEP; else { cur = [i * STEP, (i + 1) * STEP, k, s]; runs.push(cur); } }
+  return runs;
+}
+const GRUNS = gradeRuns();
+function lensRuns(lens) {
+  if (lens === 'climbs') return GRUNS;
+  if (lens === 'road') { const out = []; let p = 0; RISK.forEach((r) => { if (r.a > p) out.push([p, r.a, 'r0', 0]); out.push([r.a, r.b, r.k, r.s, r.id]); p = r.b; }); out.push([p, KM, 'r0', 0]); return out; }
+  if (lens === 'weather') { const out = [[0, 34, 'w0', 0]]; RAIN.forEach((r) => out.push(r)); out.push([45, KM, 'w0', 0]); return out; }
+  if (lens === 'sun') return SUN;
+  if (lens === 'surface') return SURF;
+  return [[0, KM, 'item', 0]];
+}
+const ATTN = [...RISK.map((r) => [r.a, r.b, 'r3', 'road']), [36, 41, 'w2', 'weather'], [45.0, 45.6, 'g7', 'climbs'], [SUNSET_KM, KM, 's3', 'sun']];
+
+// ---------- world geometry ----------
+const WP = [];
+for (let i = 0; i <= 480; i++) { const a = (2 * Math.PI * i) / 480 + 2.4;
+  WP.push([480 + 320 * Math.cos(a) + 70 * Math.cos(3 * a + 0.6) + 16 * Math.sin(17 * a), 470 + 235 * Math.sin(a) + 60 * Math.sin(2 * a + 1.1) + 12 * Math.cos(13 * a)]); }
+const WL = [0]; for (let i = 1; i < WP.length; i++) WL.push(WL[i - 1] + Math.hypot(WP[i][0] - WP[i - 1][0], WP[i][1] - WP[i - 1][1]));
+const WT = WL[WL.length - 1];
+const idxKm = (km) => { const L = (km / KM) * WT; let lo = 0, hi = WL.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (WL[m] < L) lo = m; else hi = m; } return hi; };
+function wAt(km) { const L = (km / KM) * WT; const i = Math.max(1, idxKm(km)); const t = (L - WL[i - 1]) / (WL[i] - WL[i - 1] || 1); return [WP[i - 1][0] + (WP[i][0] - WP[i - 1][0]) * t, WP[i - 1][1] + (WP[i][1] - WP[i - 1][1]) * t]; }
+function wSub(a, b) { const out = [wAt(a)]; for (let i = idxKm(a); i < idxKm(b); i++) out.push(WP[i]); out.push(wAt(b)); return out; }
+const bearing = (km) => { const p = wAt(Math.max(0, km - 0.3)), q = wAt(Math.min(KM, km + 0.3)); return Math.atan2(q[1] - p[1], q[0] - p[0]); };
+const PEAKS = [[wAt(52.5), 1.0], [wAt(19), 0.7], [wAt(34.2), 0.6]];
+const FORESTS = [[640, 260, 70], [300, 330, 60], [760, 560, 80], [420, 640, 50], [180, 520, 55], [560, 420, 40], [860, 380, 45]];
+const LAKE = [530, 500, 46];
+let SEED = 7; const rnd = () => ((SEED = (SEED * 16807) % 2147483647) / 2147483647);
+for (let i = 0; i < 26; i++) FORESTS.push([rnd() * 1100 - 50, rnd() * 1000 - 40, 18 + rnd() * 40]);
+const LANES = []; for (let i = 0; i < 34; i++) { const x = rnd() * 1100 - 50, y = rnd() * 1000 - 40, a = rnd() * Math.PI, l = 40 + rnd() * 120; LANES.push([[x, y], [x + Math.cos(a) * l * 0.5 + rnd() * 20, y + Math.sin(a) * l * 0.5 + rnd() * 20], [x + Math.cos(a) * l, y + Math.sin(a) * l]]); }
+const HAMLETS = []; for (let i = 0; i < 14; i++) HAMLETS.push([rnd() * 1000, rnd() * 940, ['Le Mollard', 'Les Gandys', 'La Plagne', 'Le Cozon', 'Les Teppaz', 'Le Planolet', 'La Coche', 'Le Mas', 'Bellecombe', 'Les Rivaux', 'Le Frou', 'La Diat', 'Le Grand Som', 'Les Bruyères'][i]]);
+const ROADS = [
+  { c: 'major', pts: [[-200, 720], [150, 650], [330, 690], [520, 640], [760, 700], [1200, 640]] },
+  { c: 'major', pts: [[860, -200], [820, 200], [870, 420], [800, 700], [860, 1200]] },
+  { c: 'minor', pts: [[100, 80], [260, 230], [380, 300], [500, 330], [640, 300]] },
+  { c: 'minor', pts: [[150, 900], [260, 760], [330, 690]] },
+  { c: 'minor', pts: [[620, 900], [600, 760], [640, 690]] }
+];
+const TOWNS = [[0, 'Les Échelles', -8, 24], [19, 'La Ruchère', 14, -10], [34.2, 'St-Pierre-d’Entremont', 12, 18], [52.5, 'Col du Granier', 14, -14], [26, 'Corbel', -10, 22]];
+
+// ---------- helpers ----------
+function fitT(pts, r, pad) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  const rw = r[2] - r[0] - 2 * pad, rh = r[3] - r[1] - 2 * pad; const s = Math.min(rw / (x1 - x0 || 1), rh / (y1 - y0 || 1));
+  const ox = r[0] + pad + (rw - (x1 - x0) * s) / 2 - x0 * s, oy = r[1] + pad + (rh - (y1 - y0) * s) / 2 - y0 * s;
+  return { s, P: ([x, y]) => [x * s + ox, y * s + oy] };
+}
+const pth = (pts) => 'M' + pts.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
+function blob(cx, cy, r, P, s, seed) { const pts = []; for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; const rr = r * (1 + 0.22 * Math.sin(a * 3 + seed) + 0.12 * Math.cos(a * 5 + seed * 2)); pts.push(P([cx + rr * Math.cos(a), cy + rr * Math.sin(a)])); } return pth(pts) + 'Z'; }
+function along(pts, spacing, fn, offset) { let acc = offset ?? spacing / 2; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; const d = Math.hypot(x1 - x0, y1 - y0); while (acc <= d) { const t = acc / d; fn(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, Math.atan2(y1 - y0, x1 - x0)); acc += spacing; } acc -= d; } }
+function glyph(kind, x, y, r, col) {
+  r = r || 6; col = col || '#5f6368';
+  if (kind === 'sun') { let g = `<circle cx="${x}" cy="${y}" r="${r * 0.48}" fill="${theme() === 'eink' ? '#000' : '#F5B82E'}"/>`; for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; g += `<line x1="${x + Math.cos(a) * r * 0.68}" y1="${y + Math.sin(a) * r * 0.68}" x2="${x + Math.cos(a) * r}" y2="${y + Math.sin(a) * r}" stroke="${theme() === 'eink' ? '#000' : '#F5B82E'}" stroke-width="1.3" stroke-linecap="round"/>`; } return g; }
+  if (kind === 'moon') return `<path d="M${x + r * 0.3} ${y - r * 0.8}a${r * 0.85} ${r * 0.85} 0 1 0 ${r * 0.55} ${r * 1.35}a${r * 0.7} ${r * 0.7} 0 0 1 -${r * 0.55} -${r * 1.35}Z" fill="${theme() === 'eink' ? '#000' : '#8FA3D9'}"/>`;
+  const cloud = `<path d="M${x - r} ${y + r * 0.35}a${r * 0.45} ${r * 0.45} 0 0 1 ${r * 0.2} -${r * 0.85}a${r * 0.6} ${r * 0.6} 0 0 1 ${r * 1.1} -${r * 0.15}a${r * 0.45} ${r * 0.45} 0 0 1 ${r * 0.62} ${r}Z" fill="${theme() === 'eink' ? '#fff' : theme() === 'dark' ? '#9aa3ad' : '#9aa0a6'}" stroke="${theme() === 'eink' ? '#000' : 'none'}" stroke-width="1"/>`;
+  if (kind === 'cloud') return cloud;
+  if (kind === 'rain') return cloud.replace(new RegExp(`y \\+`, 'g'), 'y +') + [-0.5, 0, 0.5].map((d) => `<line x1="${x + d * r}" y1="${y + r * 0.6}" x2="${x + d * r - r * 0.2}" y2="${y + r * 1.05}" stroke="${theme() === 'eink' ? '#000' : '#7E57C2'}" stroke-width="1.3" stroke-linecap="round"/>`).join('');
+  return '';
+}
+function plate(x, y, text, o) {
+  o = o || {}; const fs = o.fs || 10, padx = o.padx ?? 5, h = o.h || fs + 7; const w = o.w || text.length * fs * 0.58 + padx * 2 + (o.icon ? h - 2 : 0);
+  const fill = o.fill || '#fff', stroke = o.stroke || 'none', sw = o.sw || 0, col = o.col || '#1b1c1d', r = o.r ?? h / 2, op = o.op ?? 1;
+  let g = `<g opacity="${op}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${o.dash ? 'stroke-dasharray="3 2"' : ''}/>`;
+  if (o.icon) g += glyph(o.icon, x - w / 2 + h / 2 + 1, y - 0.5, h * 0.32);
+  g += `<text x="${x + (o.icon ? (h - 2) / 2 : 0)}" y="${y + fs * 0.36}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${col}">${text}</text></g>`;
+  return g;
+}
+function sign(x, y, v, big) { const r = big ? 13 : 10; const p = pal(); return `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${p.sign}" stroke-width="${big ? 4 : 3.2}"/><text x="${x}" y="${y + (big ? 4.3 : 3.4)}" text-anchor="middle" font-size="${big ? 12 : 9.5}" font-weight="800" fill="#1b1c1d">${v}</text>`; }
+function climbPlate(x, y, c) { const p = pal(), ek = theme() === 'eink'; const fill = ek ? '#000' : p.plate, col = theme() === 'dark' ? '#1b1c1d' : '#fff';
+  return `<g><path d="M${x} ${y} l-4 -6 h8z" fill="${fill}"/><rect x="${x - 25}" y="${y - 32}" width="50" height="26" rx="5" fill="${fill}"/><text x="${x}" y="${y - 21}" text-anchor="middle" font-size="10" font-weight="800" fill="${col}">${c.cat}</text><text x="${x}" y="${y - 10.5}" text-anchor="middle" font-size="8.5" fill="${col}" opacity=".9">+${c.gain} m</text></g>`; }
+
+// ---------- map renderer ----------
+// o: { w, h, rect:[x0,y0,x1,y1] where the route is framed, fitKm:[a,b], lens, focus:{lens,a,b}, cursorKm, sym:bool, net:bool, routeFocus, fast, oneway, cyc, zoom:'fit'|'near', arrows }
+function mapSVG(o) {
+  const w = o.w || 360, h = o.h || 760, lens = o.lens || 'overview', p = pal(), ek = theme() === 'eink', dk = theme() === 'dark';
+  const fitPts = o.fitKm ? wSub(o.fitKm[0], o.fitKm[1]) : WP; const T = fitT(fitPts, o.rect || [0, 24, w, h], o.pad ?? 26); const P = T.P, s = T.s;
+  const id = 'm' + ++UID;
+  let g = `<svg class="map" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Roboto,Helvetica Neue,sans-serif"><defs>`;
+  g += `<radialGradient id="${id}h"><stop offset="0" stop-color="var(--map-shadow)" stop-opacity="1"/><stop offset="1" stop-color="var(--map-shadow)" stop-opacity="0"/></radialGradient>`;
+  g += `<radialGradient id="${id}l"><stop offset="0" stop-color="var(--map-light)"/><stop offset="1" stop-color="var(--map-light)" stop-opacity="0"/></radialGradient>`;
+  g += `<pattern id="${id}fp" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.9" fill="#000"/></pattern><pattern id="${id}wp" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5" stroke="#000" stroke-width="0.6"/></pattern></defs>`;
+  g += `<rect width="${w}" height="${h}" fill="var(--map-land)"/>`;
+  PEAKS.forEach(([pk, k]) => { const [x, y] = P(pk); g += `<ellipse cx="${x + 30 * k * s * 3}" cy="${y + 26 * k * s * 3}" rx="${210 * k * s}" ry="${170 * k * s}" fill="url(#${id}h)"/><ellipse cx="${x - 24 * k * s * 3}" cy="${y - 22 * k * s * 3}" rx="${150 * k * s}" ry="${120 * k * s}" fill="url(#${id}l)"/>`; });
+  FORESTS.forEach(([x, y, r], i) => (g += `<path d="${blob(x, y, r, P, s, i)}" fill="${ek ? `url(#${id}fp)` : 'var(--map-forest)'}"/>`));
+  PEAKS.forEach(([pk, k], j) => { for (let r = 30; r < 260 * k; r += 26) g += `<path d="${blob(pk[0] + 8, pk[1] + 4, r, P, s, j * 3 + r / 40)}" fill="none" stroke="var(--map-contour)" stroke-width="${r % 104 < 26 ? 1 : 0.6}"/>`; });
+  g += `<path d="${blob(LAKE[0], LAKE[1], LAKE[2], P, s, 2)}" fill="${ek ? `url(#${id}wp)` : 'var(--map-water)'}" stroke="${ek ? '#000' : 'none'}" stroke-width="0.8"/>`;
+  // base roads (fast-road context on majors when o.fast)
+  ROADS.forEach((r) => { const pts = r.pts.map(P), maj = r.c === 'major';
+    if (o.fast && maj) g += `<path d="${pth(pts)}" fill="none" stroke="${p.fast}" stroke-width="${ek ? 9 : 10}" ${ek ? `stroke-dasharray="1 3"` : ``} stroke-linejoin="round" opacity="${ek ? 1 : 0.9}"/>`;
+    g += `<path d="${pth(pts)}" fill="none" stroke="var(${maj ? '--map-major-case' : '--map-road-case'})" stroke-width="${maj ? 5.5 : 4}" stroke-linejoin="round"/><path d="${pth(pts)}" fill="none" stroke="var(${maj ? '--map-major' : '--map-road'})" stroke-width="${maj ? 3.6 : 2.4}" stroke-linejoin="round"/>`; });
+  LANES.forEach((l) => { const pts = l.map(P); g += `<path d="${pth(pts)}" fill="none" stroke="var(--map-road-case)" stroke-width="${s > 1 ? 3.2 : 1.6}"/><path d="${pth(pts)}" fill="none" stroke="var(--map-road)" stroke-width="${s > 1 ? 2 : 0.8}"/>`; });
+  HAMLETS.forEach(([x0, y0, n]) => { const [x, y] = P([x0, y0]); if (x < 10 || x > w - 10 || y < 30 || y > h) return; g += `<circle cx="${x}" cy="${y}" r="1.8" fill="var(--map-label)"/>` + (s > 0.5 ? `<text x="${x + 4}" y="${y + 3}" font-size="8.5" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="2.5" paint-order="stroke" opacity=".85">${n}</text>` : ''); });
+  // the road the route follows (base map)
+  g += `<path d="${pth(WP.map(P))}" fill="none" stroke="var(--map-road-case)" stroke-width="4.2"/><path d="${pth(WP.map(P))}" fill="none" stroke="var(--map-road)" stroke-width="2.6"/>`;
+  // hiking / biking network overlay (inner routes layer) — dimmed by route focus (B1)
+  if (o.net !== false) { const net = [[120, 140], [300, 260], [520, 210], [700, 150], [900, 120]].map(P), net2 = [[200, 860], [380, 700], [560, 560], [760, 470], [960, 420]].map(P); const op = o.routeFocus ? 0.3 : 0.9;
+    g += `<path d="${pth(net)}" fill="none" stroke="${ek ? '#000' : '#c70000'}" stroke-width="2" stroke-dasharray="${ek ? '3 3' : '8 5'}" opacity="${op}"/><path d="${pth(net2)}" fill="none" stroke="${ek ? '#000' : '#8800ff'}" stroke-width="2" stroke-dasharray="${ek ? '6 6' : '8 5'}" opacity="${op}"/>`;
+    if (!o.routeFocus) { const [lx, ly] = net[2]; g += `<text x="${lx}" y="${ly - 6}" font-size="9" font-weight="700" fill="${ek ? '#000' : '#c70000'}" stroke="var(--map-halo)" stroke-width="2.5" paint-order="stroke">GR 9</text>`; } }
+  TOWNS.forEach(([km, name, dx, dy]) => { const [x, y] = P(wAt(km)); if (x < -40 || x > w + 40 || y < 0 || y > h) return; const big = km === 52.5;
+    g += `<text x="${x + dx}" y="${y + dy}" font-size="${big ? 10.5 : 10}" font-weight="${big ? 700 : 500}" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke" text-anchor="${dx < 0 ? 'end' : 'start'}">${name}</text>`; });
+  // ---- the route ----
+  const full = WP.map(P), runs = lensRuns(lens), f = o.focus;
+  const inF = (a, b) => !f || (b > f.a + 0.01 && a < f.b - 0.01);
+  const baseW = o.navW || 5, caseW = baseW + (o.navW ? 5 : 3.4);
+  if (f) g += `<path d="${pth(wSub(f.a, f.b).map(P))}" fill="none" stroke="${ek ? '#000' : p.accent}" stroke-opacity="${ek ? 1 : 0.45}" stroke-width="${baseW + 11}" stroke-linecap="round" stroke-linejoin="round" ${ek ? 'stroke-dasharray="1 4"' : ''}/>`;
+  if (o.passedKm) { g += `<path d="${pth(wSub(0, o.passedKm).map(P))}" fill="none" stroke="${ek ? '#000' : '#9AA0A6'}" stroke-width="${baseW}" stroke-linecap="round" opacity="${ek ? 1 : 0.6}" ${ek ? 'stroke-dasharray="2 4"' : ''}/>`; }
+  const r0 = o.passedKm || 0;
+  if (o.alerts) RISK.forEach((r) => { const a = Math.max(r.a, r0); if (r.b <= a) return; g += `<path d="${pth(wSub(a, r.b).map(P))}" fill="none" stroke="${ek ? '#000' : p.r3}" stroke-width="${caseW + 5}" stroke-linecap="round" stroke-linejoin="round" ${ek ? 'stroke-dasharray="2 2"' : ''}/>`; });
+  g += `<path d="${pth(wSub(r0, KM).map(P))}" fill="none" stroke="${p.case}" stroke-width="${caseW + (ek ? 1.5 : 0)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  runs.forEach(([a, b, k, sv]) => { a = Math.max(a, r0); if (b <= a) return; const pts = wSub(a, b).map(P); const col = lens === 'overview' ? (o.navW ? p.accent : p.item) : p[k];
+    g += `<path d="${pth(pts)}" fill="none" stroke="${ek ? '#000' : col}" stroke-width="${baseW + (sv === 3 && lens !== 'overview' ? 1.5 : 0) + (ek ? (inF(a, b) ? 1.5 : -1.5) : 0)}" stroke-linecap="round" stroke-linejoin="round" opacity="${inF(a, b) || ek ? 1 : 0.35}"/>`;
+    if (ek && lens !== 'overview' && sv >= 1 && inF(a, b)) g += `<path d="${pth(pts)}" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="${sv === 1 ? '2 7' : sv === 2 ? '2 3' : '6 2'}" opacity="${inF(a, b) ? 1 : 0.4}"/>`; });
+  if (o.arrows) along(wSub(r0, KM).map(P), 46, (x, y, a) => (g += `<path d="M-3.2 -2.6L1.8 0L-3.2 2.6" transform="translate(${x} ${y}) rotate(${(a * 180) / Math.PI})" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`));
+  if (lens === 'climbs' || o.alerts) GRUNS.forEach(([a, b, k, sv]) => { if (sv < 2 || b <= r0) return; along(wSub(a, b).map(P), sv === 3 ? 11 : 20, (x, y, an) => (g += `<path d="M-2.6 -2.6L1.6 0L-2.6 2.6" transform="translate(${x} ${y}) rotate(${(an * 180) / Math.PI})" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="${inF(a, b) ? 1 : 0.4}"/>`), 3); });
+  // start / finish
+  const [sx, sy] = P(wAt(0)); g += `<circle cx="${sx}" cy="${sy}" r="7" fill="${ek ? '#000' : '#2e7d32'}" stroke="#fff" stroke-width="2"/><path d="M${sx - 2.4} ${sy - 3.4}v6.8M${sx - 2.4} ${sy - 3.4}h5l-1.2 1.7l1.2 1.7h-5" stroke="#fff" stroke-width="1.2" fill="#fff"/>`;
+  // ---- symbols ----
+  if (o.sym !== false) {
+    const bike = o.bike !== false;
+    if ((lens === 'overview' && bike && !o.noRiskSym) || lens === 'road') RISK.forEach((r) => { const [x, y] = P(wAt((r.a + r.b) / 2)); g += `<g opacity="${inF(r.a, r.b) ? 1 : 0.45}">${sign(x, y - (o.navW ? 0 : 0), r.v, !!o.navW)}</g>`; });
+    if (lens === 'overview' && !o.navW) [10, 20, 30, 40, 50, 60].forEach((km) => { const [x, y] = P(wAt(km)); g += `<text x="${x}" y="${y + 3}" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" stroke="#000" stroke-width="2.6" paint-order="stroke">${km}</text>`; });
+    if (lens === 'climbs') CLIMBS.filter((c) => c.id !== 4).forEach((c) => { const [x, y] = P(wAt(c.b)); g += `<g opacity="${inF(c.a, c.b) ? 1 : 0.45}">${climbPlate(x, y - 4, c)}</g>`; });
+    if (lens === 'weather') WX.forEach((wx, j) => { if (j % 2 && !o.allWx) return; const [x, y] = P(wAt(wx.km)); const st = !!o.stale; const ico = wx.cloud === 'rain' ? 'rain' : wx.cloud;
+      g += plate(x, y - 16, wx.temp + '°' + (wx.rain ? ' ' + wx.rain + '' : ''), { icon: ico, fs: 10, h: 20, fill: ek ? '#fff' : dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : ek ? '#000' : '#1b1c1d', stroke: ek ? '#000' : st ? '#9aa0a6' : dk ? '#4a5056' : '#cfd3d7', sw: ek ? 1.5 : 1, op: st && !ek ? 0.5 : 1, dash: st });
+      const rel = Math.PI / 4 - bearing(wx.km); const ax = x + 0, ay = y + 2; // wind blowing to NE; arrow relative shown
+      g += `<g transform="translate(${x + (j % 4 ? 22 : -22)} ${y - 16}) rotate(${-45})" opacity="${st ? 0.5 : 1}"><path d="M0 6V-5M-3.5 -1.5L0 -5.5L3.5 -1.5" stroke="${ek ? '#000' : dk ? '#e8eaed' : '#1b1c1d'}" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`; });
+    if (lens === 'sun') { const [x, y] = P(wAt(SUNSET_KM)); g += plate(x + 4, y - 16, 'Sunset 17:07', { fs: 9.5, h: 19, fill: dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : '#1b1c1d', stroke: ek ? '#000' : '#F5B82E', sw: 2, icon: 'sun' }); }
+  }
+  if (o.cursorKm != null) { const [x, y] = P(wAt(o.cursorKm)); g += `<circle cx="${x}" cy="${y}" r="7.5" fill="${ek ? '#000' : p.accent}" stroke="#fff" stroke-width="2.5"/>`; }
+  if (o.user) { const [x, y] = P(wAt(o.user)); const a = (bearing(o.user) * 180) / Math.PI + 90; g += `<circle cx="${x}" cy="${y}" r="20" fill="${ek ? 'none' : p.accent}" opacity=".18"/><g transform="translate(${x} ${y}) rotate(${a})"><path d="M0 -11L8 9L0 4.5L-8 9Z" fill="${ek ? '#000' : '#1a73e8'}" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></g>`; }
+  return g + (o.extra ? o.extra(P, s) : '') + '</svg>';
+}
+
+// ---------- profile renderer ----------
+// o: { w, h, lens, cursorKm, focus:{a,b}, zoom:[a,b], clock, attn, brackets, mini }
+function profileSVG(o) {
+  const w = o.w || 348, h = o.h || 150, lens = o.lens || 'overview', p = pal(), ek = theme() === 'eink', dk = theme() === 'dark';
+  const z0 = o.zoom ? o.zoom[0] : 0, z1 = o.zoom ? o.zoom[1] : KM, mini = !!o.mini;
+  const gl = mini ? 4 : 28, gr = mini ? 4 : 8, top = mini ? 3 : o.brackets !== false && lens === 'climbs' ? 30 : 10;
+  const axisH = mini ? 0 : o.clock ? 26 : 15, attnH = !mini && o.attn !== false ? 10 : 0, bandH = mini ? 4 : 0;
+  const pb = h - axisH - attnH - bandH; const emin = 150, emax = 1260;
+  const X = (km) => gl + ((km - z0) / (z1 - z0)) * (w - gl - gr), Y = (e) => top + (1 - (e - emin) / (emax - emin)) * (pb - top);
+  const id = 'p' + ++UID;
+  let g = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Roboto,Helvetica Neue,sans-serif" style="display:block"><defs>`;
+  [['h1', 'M0 5L5 0', 0.7, 5], ['h2', 'M0 3L3 0', 0.9, 3], ['h3', 'M0 2L2 0', 1.1, 2], ['hx', 'M0 0L4 4M0 4L4 0', 0.6, 4], ['hd', 'M0 2h4', 0.6, 4]].forEach(([n, d, sw, sz]) => (g += `<pattern id="${id}${n}" width="${sz}" height="${sz}" patternUnits="userSpaceOnUse"><path d="${d}" stroke="#000" stroke-width="${sw}"/></pattern>`));
+  g += `</defs>`;
+  if (!mini) { [400, 800, 1200].forEach((e) => { g += `<line x1="${gl}" x2="${w - gr}" y1="${Y(e)}" y2="${Y(e)}" stroke="var(--border)" stroke-width="0.6"/><text x="${gl - 4}" y="${Y(e) + 3}" text-anchor="end" font-size="8.5" fill="var(--text-muted)">${e}</text>`; }); }
+  // sun lens: background bands
+  if (lens === 'sun' && !mini) SUN.forEach(([a, b, k]) => { if (b < z0 || a > z1) return; const x0 = X(Math.max(a, z0)), x1 = X(Math.min(b, z1));
+    g += `<rect x="${x0}" y="${top - 4}" width="${x1 - x0}" height="${pb - top + 4}" fill="${ek ? (k === 's3' ? `url(#${id}h3)` : k === 's0' ? `url(#${id}h1)` : k === 's2' ? `url(#${id}hd)` : '#fff') : p[k]}" opacity="${ek ? 0.6 : k === 's3' ? 0.28 : 0.2}"/>`; });
+  // fill
+  const ii0 = Math.max(0, Math.floor(z0 / STEP)), ii1 = Math.min(N, Math.ceil(z1 / STEP));
+  const keyAt = (km) => { if (lens === 'overview' || lens === 'climbs') return 'g' + gbi(GRS[Math.round(km / STEP)]); const runs = lensRuns(lens); const r = runs.find((r) => km >= r[0] && km < r[1]) || runs[runs.length - 1]; return r[2]; };
+  const sevAt = (km) => { const gg = GRS[Math.round(km / STEP)]; return gg >= 12 ? 3 : gg >= 9 ? 2 : gg >= 5 ? 1 : gg <= -6 ? -1 : 0; };
+  for (let i = ii0; i < ii1; i++) { const a = i * STEP, b = (i + 1) * STEP; const x0 = X(a), x1 = X(b) + 0.4; const y0 = Y(ELE[i]), y1 = Y(ELE[i + 1]);
+    let fill; const k = keyAt(a + STEP / 2);
+    if (ek) { if (lens === 'overview' || lens === 'climbs') { const sv = sevAt(a); fill = sv === 3 ? `url(#${id}h3)` : sv === 2 ? `url(#${id}h2)` : sv === 1 ? `url(#${id}h1)` : sv === -1 ? `url(#${id}hx)` : '#fff'; }
+      else if (lens === 'road') fill = k === 'r3' ? `url(#${id}h3)` : k === 'r2' ? `url(#${id}h2)` : '#fff';
+      else if (lens === 'surface') fill = k === 'f_gravel' ? `url(#${id}h1)` : k === 'f_path' ? `url(#${id}hx)` : '#fff';
+      else fill = '#fff'; }
+    else if (lens === 'overview' || lens === 'climbs' || lens === 'surface') fill = p[k];
+    else if (lens === 'road') fill = k === 'r0' ? (dk ? '#3a4047' : '#d5d9de') : p[k];
+    else fill = p['g' + gbi(GRS[Math.round((a + STEP / 2) / STEP)])];
+    const op = (o.focus && !ek && (b <= o.focus.a || a >= o.focus.b) ? 0.3 : 1) * (!ek && (lens === 'weather' || lens === 'sun') ? 0.38 : 1);
+    g += `<path d="M${x0} ${pb}L${x0} ${y0}L${x1} ${y1}L${x1} ${pb}Z" fill="${fill}" opacity="${op}"/>`; }
+  const line = []; for (let i = ii0; i <= ii1; i++) line.push([X(i * STEP), Y(ELE[i])]);
+  g += `<path d="${pth(line)}" fill="none" stroke="${ek ? '#000' : 'var(--text-primary)'}" stroke-width="${mini ? 1.4 : 1.3}"/>`;
+  if (!mini) {
+    if (lens === 'road') RISK.forEach((r) => { if (r.b < z0 || r.a > z1) return; const xm = X((Math.max(r.a, z0) + Math.min(r.b, z1)) / 2); g += `<g transform="translate(0 0)">${sign(xm, top + 4, r.v)}</g>`; });
+    if (lens === 'weather') { WX.forEach((wx) => { if (wx.km < z0 || wx.km > z1) return; const x = X(wx.km); if (wx.rain) { const bh = wx.rain * 14; g += `<rect x="${x - 4}" y="${pb - bh}" width="8" height="${bh}" rx="2" fill="${ek ? '#000' : p.w2}"/>`; } g += glyph(wx.cloud === 'rain' ? 'rain' : wx.cloud, x, top + 2, 5.5); });
+      const tl = WX.filter((wx) => wx.km >= z0 && wx.km <= z1).map((wx) => [X(wx.km), top + 18 + (17 - wx.temp) * 3.2]); g += `<path d="${pth(tl)}" fill="none" stroke="${ek ? '#000' : '#E8743B'}" stroke-width="1.6" stroke-dasharray="${ek ? '3 2' : 'none'}"/>`;
+      tl.forEach(([x, y], j) => { if (j % 3) return; g += `<text x="${x}" y="${y - 4}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${ek ? '#000' : '#E8743B'}" stroke="var(--surface-2)" stroke-width="2.5" paint-order="stroke">${WX.filter((wx) => wx.km >= z0 && wx.km <= z1)[j].temp}°</text>`; }); }
+    if (lens === 'sun') { const x = X(SUNSET_KM); if (SUNSET_KM > z0 && SUNSET_KM < z1) g += `<line x1="${x}" x2="${x}" y1="${top - 4}" y2="${pb}" stroke="${ek ? '#000' : '#E09400'}" stroke-width="1.3" stroke-dasharray="3 2"/><text x="${x - 3}" y="${top + 6}" text-anchor="end" font-size="8.5" font-weight="700" fill="${ek ? '#000' : '#B07300'}">sunset 17:07</text>`; }
+    if (lens === 'climbs' && o.brackets !== false) CLIMBS.filter((c) => c.id !== 4).forEach((c) => { if (c.b < z0 || c.a > z1) return; const x0 = X(Math.max(c.a, z0)), x1 = X(Math.min(c.b, z1)), yb = Y(c.top) - 8; const foc = o.focus && o.focus.a === c.a;
+      g += `<path d="M${x0} ${yb + 4}V${yb}H${x1}V${yb + 4}" fill="none" stroke="${ek ? '#000' : 'var(--text-secondary)'}" stroke-width="${foc ? 2 : 1}"/>`;
+      g += `<rect x="${(x0 + x1) / 2 - 17}" y="${yb - 15}" width="34" height="13" rx="3" fill="${ek ? '#000' : dk ? '#e8eaed' : '#2b2f33'}"/><text x="${(x0 + x1) / 2}" y="${yb - 5.5}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${dk ? '#1b1c1d' : '#fff'}">${c.cat}</text>`; });
+    if (o.focus) { g += `<line x1="${X(o.focus.a)}" x2="${X(o.focus.a)}" y1="${top - 6}" y2="${pb}" stroke="var(--text-accent)" stroke-width="1"/><line x1="${X(o.focus.b)}" x2="${X(o.focus.b)}" y1="${top - 6}" y2="${pb}" stroke="var(--text-accent)" stroke-width="1"/>`; }
+    // attention track
+    if (attnH) ATTN.forEach(([a, b, k, l]) => { if (b < z0 || a > z1) return; const x0 = X(Math.max(a, z0)), x1 = Math.max(X(Math.min(b, z1)), x0 + 5); g += `<rect x="${x0}" y="${pb + 3}" width="${x1 - x0}" height="6" rx="2" fill="${ek ? '#000' : p[k]}"/>`; });
+    // axis
+    const ay = pb + attnH + 10; const stepKm = z1 - z0 > 30 ? 10 : z1 - z0 > 12 ? 5 : 2;
+    for (let km = Math.ceil(z0 / stepKm) * stepKm; km <= z1 + 0.01; km += stepKm) { const x = X(km); g += `<text x="${x}" y="${ay}" text-anchor="middle" font-size="8.5" fill="var(--text-muted)">${km}${km === 0 ? '' : ''}</text>`;
+      if (o.clock && Math.round(km / stepKm) % 2 === 0) g += `<text x="${x}" y="${ay + 11}" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--text-secondary)">${clock(etaMin(km))}</text>`; }
+    g += `<text x="${w - gr}" y="${ay}" text-anchor="end" font-size="8.5" fill="var(--text-muted)">km</text>`;
+  } else {
+    // silhouette: lens band
+    const runs = lens === 'overview' || lens === 'climbs' ? GRUNS : lensRuns(lens); runs.forEach(([a, b, k]) => { if (b < z0 || a > z1) return; g += `<rect x="${X(Math.max(a, z0))}" y="${h - 4}" width="${X(Math.min(b, z1)) - X(Math.max(a, z0)) + 0.4}" height="4" fill="${ek ? (k.endsWith('3') || k === 'g7' || k === 'g6' ? '#000' : '#fff') : lens === 'overview' ? p.item : p[k]}"/>`; });
+    if (ek) g += `<rect x="${gl}" y="${h - 4}" width="${w - gl - gr}" height="4" fill="none" stroke="#000" stroke-width="0.6"/>`;
+  }
+  if (o.cursorKm != null) { const x = X(o.cursorKm), y = Y(eleAt(o.cursorKm)); g += `<line x1="${x}" x2="${x}" y1="${mini ? 0 : top - 8}" y2="${pb}" stroke="${ek ? '#000' : 'var(--text-accent)'}" stroke-width="1.3"/><circle cx="${x}" cy="${y}" r="${mini ? 3.5 : 4.5}" fill="${ek ? '#000' : 'var(--fill-accent)'}" stroke="var(--surface-2)" stroke-width="1.8"/>`; }
+  return g + '</svg>';
+}
+
+// ---------- sheet components ----------
+const LENS = {
+  overview: { ic: 'ti-route', label: 'Overview', head: '<b>62.4 km</b> · 3 h 41 · 4 climbs · 3 fast sections' },
+  climbs: { ic: 'ti-mountain', label: 'Climbs', val: '4', head: '<b>4 climbs</b> · Cat 1 to the col at km 52 · max 16 %' },
+  road: { ic: 'ti-alert-triangle', label: 'Road', val: '9.8 km', alert: 1, head: '<b>9.8 km</b> on fast roads without a separated lane' },
+  weather: { ic: 'ti-cloud-rain', label: 'Weather', val: '3 mm', head: '<b>8–17 °C</b> · rain 3 mm around km 38 · headwind 40 %' },
+  sun: { ic: 'ti-sun', label: 'Sun', val: '62 %', head: '<b>Sun 62 %</b> · sunset 17:07 at km 53 · 34 min dark' },
+  surface: { ic: 'ti-road', label: 'Surface', val: '80 % paved', head: '<b>80 % paved</b> · 14 % gravel · 6 % path' }
+};
+const ORDER = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface'];
+function lensBar(o) {
+  o = o || {}; const sel = o.sel || 'overview', st = o.st || {}, list = (o.list || ORDER).filter((l) => !(o.hide || []).includes(l));
+  const chips = list.map((l) => { const L = LENS[l], s = st[l]; let cls = 'chip' + (l === sel ? ' sel' : '') + (s === 'dash' ? ' dash' : '') + (s === 'stale' ? ' stale' : '');
+    let val = s === 'dash' ? '<i class="ti ti-plus" style="font-size:14px"></i>' : L.val ? `<b>${L.val}</b>` : '';
+    if (s === 'stale') val += '<span class="st"><i class="ti ti-refresh" style="font-size:13px;color:var(--warn)"></i></span>';
+    if (s === 'off') val += '<i class="ti ti-cloud-off" style="font-size:13px"></i>';
+    return `<span class="${cls}"><i class="ti ${L.ic}"></i>${L.label}${val ? ' ' + val : ''}${L.alert && s !== 'dash' ? '<span class="dot"></span>' : ''}${s === 'run' ? '<span class="run"></span>' : ''}</span>`; }).join('');
+  return `<div class="lensbar"><div class="in" style="transform:translateX(-${o.off || 0}px)">${chips}</div></div>`;
+}
+function insight(o) {
+  if (o.focus) return `<div class="insight focus"><span class="nav"><i class="ti ti-chevron-left"></i></span><span class="tx" style="text-align:center">${o.focus}</span><span class="nav"><i class="ti ti-chevron-right"></i></span><span class="nav" style="width:32px"><i class="ti ti-x" style="font-size:17px"></i></span></div>`;
+  const ctrl = o.btn ? `<span class="mini">${o.btnIc ? `<i class="ti ${o.btnIc}" style="font-size:15px"></i>` : ''}${o.btn}</span>` : `<span class="nav"><i class="ti ti-chevron-right" style="color:var(--text-secondary)"></i></span>`;
+  return `<div class="insight" ${o.style ? `style="${o.style}"` : ''}><span class="tx">${o.text}</span>${ctrl}</div>`;
+}
+function titleBand(o) {
+  o = o || {}; const ic = o.ic || 'ti-bike';
+  if (o.compact) return `<div class="tband compact"><div class="itile"><i class="ti ${ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.name || 'Col du Granier loop'}</div></div>${o.when || ''}<span class="ib" style="width:34px"><i class="ti ti-dots-vertical"></i></span></div>`;
+  return `<div class="tband"><div class="itile"><i class="ti ${ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.name || 'Col du Granier loop'}</div><div class="sub">${o.sub || 'Cycling · road · loop · saved'}</div></div><span class="ib"><i class="ti ti-dots-vertical"></i></span></div>`;
+}
+function fingerprint() { const p = pal(); const c = [0, 0, 0, 0, 0, 0, 0, 0]; GRS.forEach((g) => c[gbi(g)]++); const cls = [[0, 1, 2], [3], [4], [5], [6, 7]].map((ix) => [ix.reduce((s, i) => s + c[i], 0), p['g' + ix[ix.length > 1 ? 1 : 0]]]);
+  return `<div class="fp">${cls.map(([n, col], j) => `<u style="flex:${n};background:${theme() === 'eink' ? (j === 4 ? '#000' : j === 3 ? '#666' : '#fff') : col}"></u>`).join('')}</div>`; }
+function tiles(o) {
+  o = o || {}; const hike = o.hike;
+  const rem = o.remaining;
+  let t = `<div class="tile" style="flex:1"><span class="v">${o.narrow ? '' : '<i class="ti ti-arrows-horizontal"></i>'}${hike ? '11.2' : '62.4'} km</span>${rem ? `<span class="l2 acc">⚑ ${rem[0]}</span>` : ''}</div>`;
+  t += `<div class="tile" style="flex:1"><span class="v">${o.narrow ? '' : '<i class="ti ti-clock"></i>'}${hike ? '4 h 50' : '3 h 41'}</span>${rem ? `<span class="l2 acc">⚑ ${rem[1]}</span>` : o.arrive ? `<span class="l2">→ ${o.arrive}</span>` : ''}</div>`;
+  t += `<div class="tile" style="flex:${hike ? 1.5 : 1.15}"><span class="v"><i class="ti ti-trending-up"></i>${hike ? '1 020' : '1 180'} m</span>${rem ? `<span class="l2 acc">⚑ +${rem[2] || '612'} m</span>` : `<span class="l2"><i class="ti ti-trending-down" style="font-size:11px;vertical-align:-1px"></i> ${hike ? '1 018' : '1 175'} m</span>`}</div>`;
+  if (!hike && !o.noRisk) t += `<div class="tile risk" style="flex:1"><span class="v"><i class="ti ti-alert-triangle"></i>9.8 km</span><span class="l2" style="color:var(--danger)">3 sections</span></div>`;
+  return `<div class="tiles">${t}</div>`;
+}
+function actions(o) { o = o || {}; return `<div class="actions"><span class="btn f"><i class="ti ti-navigation"></i>Start</span><span class="btn t"><i class="ti ti-calendar-time"></i>Plan</span><span class="rb"><i class="ti ti-pencil"></i></span><span class="rb"><i class="ti ti-share"></i></span>${o.narrow ? '' : '<span class="rb"><i class="ti ti-dots"></i></span>'}</div>`; }
+function pointStrip(km, extra) { const e = Math.round(eleAt(km)), g = GRS[Math.round(km / STEP)].toFixed(1);
+  return `<div class="strip"><i class="ti ti-map-pin" style="font-size:17px"></i><div class="c"><i class="ti ti-arrows-horizontal"></i><b>${km.toFixed(1)} km</b></div><div class="c"><i class="ti ti-mountain"></i><b>${e} m</b></div><div class="c"><i class="ti ti-angle"></i><b>${g} %</b></div><div class="c"><i class="ti ti-clock"></i><b>${clock(etaMin(km))}</b></div>${extra || ''}</div>`; }
+function readout(km, extra) { const e = Math.round(eleAt(km)), g = GRS[Math.round(km / STEP)].toFixed(1);
+  return `<div class="insight readout"><i class="ti ti-map-pin" style="font-size:17px;color:var(--text-accent)"></i><span class="tx"><b>${km.toFixed(1)} km</b> · ${e} m · ${g} % · <b>${clock(etaMin(km))}</b>${extra ? ' · ' + extra : ''}</span><span class="nav" style="width:32px"><i class="ti ti-x" style="font-size:17px"></i></span></div>`; }
+function profileCard(o) {
+  o = o || {}; const w = o.w || 348;
+  return `<div class="card" ${o.style ? `style="${o.style}"` : ''}>${o.noBar ? '' : lensBar(o.bar || { sel: o.lens })}${o.ask || (o.cursorKm != null && o.strip !== false ? readout(o.cursorKm, o.stripExtra) : insight(o.ins || { text: LENS[o.lens || 'overview'].head }))}<div class="pc" style="padding:2px 0 6px">${profileSVG({ w, h: o.h || 152, lens: o.lens, cursorKm: o.cursorKm, focus: o.focus, zoom: o.zoom, clock: o.clock !== false })}</div></div>`;
+}
+function whenPill(t, cls) { return `<span class="pill ${cls || 'sel'}" style="margin-right:2px"><i class="ti ti-clock"></i>${t || 'Sat 14:00 → 17:41'}</span>`; }
+function sec(o) {
+  return `<div class="sec"><div class="sech"><div class="itile"><i class="ti ${o.ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.title}</div><div class="sub">${o.sum}</div></div>${o.chip || ''}<span class="ib" style="width:30px"><i class="ti ti-chevron-${o.open ? 'up' : 'down'}"></i></span></div>${o.open ? `<div class="secb">${o.body || ''}</div>` : ''}</div>`;
+}
+function phone(o) {
+  // o: { h, w, map:{...}, sheetH, sheet:html, over:html, cls, sb }
+  const w = o.w || 360, h = o.h || 760; const sheetTop = h - (o.sheetH || 0);
+  const mapO = Object.assign({ w, h, rect: [0, 24, w, o.heroH ? o.heroH : sheetTop] }, o.map || {});
+  return `<div class="phone ${o.cls || ''}" style="width:${w}px;height:${h}px">${o.map === null ? '' : mapSVG(mapO)}<div class="sb"><span>${o.time || '14:02'}</span><span><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi${o.offline ? '-off' : ''}"></i><i class="ti ti-battery-3"></i></span></div>${o.over || ''}${o.sheetH ? `<div class="sheet" style="height:${o.sheetH}px">${o.sheet || ''}</div>` : ''}${o.after || ''}</div>`;
+}
+function frame(cap, note, inner, wide) { return `<div class="frame${wide ? ' wide' : ''}"><div class="cap">${cap}</div><div class="capn">${note || ''}</div>${inner}</div>`; }
+function setTheme(t) { document.body.classList.remove('dark', 'eink'); if (t !== 'light') document.body.classList.add(t); document.querySelectorAll('.toolbar button[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === t)); renderAll(); }
+function toolbar(links) { const t = theme(); return `<div class="toolbar"><b style="margin-right:4px">Theme</b>${[['light', 'Light'], ['dark', 'Dark'], ['eink', 'E-ink']].map(([k, l]) => `<button data-t="${k}" class="${k === t ? 'on' : ''}" onclick="setTheme('${k}')">${l}</button>`).join('')}${links || ''}</div>`; }
+{ const hs = location.hash.slice(1).split('&'); hs.forEach((h0) => { if (h0 === 'dark' || h0 === 'eink') document.body.classList.add(h0); });
+  // #only=<id>: show one section (its heading, note and row) - used to export images
+  const only = (hs.find((h0) => h0.startsWith('only=')) || '').slice(5);
+  if (only) window.addEventListener('load', () => { const target = document.getElementById(only); if (!target) return; Array.from(document.body.children).forEach((el) => { if (el.tagName !== 'SCRIPT') el.style.display = 'none'; });
+    target.style.display = ''; let el = target.previousElementSibling; while (el && !el.classList.contains('row')) { el.style.display = ''; if (el.tagName === 'H2') break; el = el.previousElementSibling; } }); }
+</script>
+<script>
+// street-level, heading-up navigation map (fake geometry)
+function navMap(o) {
+  const w = 360, h = 760, ek = theme() === 'eink', dk = theme() === 'dark', p = pal();
+  let g = `<svg class="map" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg" font-family="Roboto,sans-serif"><rect width="${w}" height="${h}" fill="var(--map-land)"/>`;
+  const bld = ek ? '#fff' : dk ? '#2a2f34' : '#e6e0d4';
+  [[20, 120, 90, 120], [236, 120, 110, 110], [20, 380, 70, 70], [250, 470, 100, 90], [20, 520, 100, 150], [236, 590, 110, 160], [120, 40, 60, 60]].forEach(([x, y, ww, hh]) => (g += `<rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="3" fill="${bld}" stroke="${ek ? '#000' : 'none'}" stroke-width="0.6"/>`));
+  g += `<path d="M200 0 C220 60 260 80 360 90" fill="none" stroke="var(--map-forest)" stroke-width="60" opacity=".7"/>`;
+  const road = (d, wd, maj) => `<path d="${d}" fill="none" stroke="var(${maj ? '--map-major-case' : '--map-road-case'})" stroke-width="${wd + 3}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="var(${maj ? '--map-major' : '--map-road'})" stroke-width="${wd}" stroke-linecap="round"/>`;
+  const D520 = 'M150 330 C220 326 280 320 380 312';
+  if (o.fast) g += `<path d="${D520}" fill="none" stroke="${p.fast}" stroke-width="34" ${ek ? 'stroke-dasharray="1 3"' : ''} opacity="${ek ? 1 : 0.85}"/><path d="M-20 330 H150" fill="none" stroke="${p.fast}" stroke-width="34" opacity="${ek ? 1 : 0.85}" ${ek ? 'stroke-dasharray="1 3"' : ''}/>`;
+  g += road('M-20 330 H150 ' + D520.slice(8), 26, true);
+  g += road('M150 800 V330', 18) + road('M150 330 V-20', 14) + road('M-20 470 H150', 14) + road('M150 500 H380', 14) + road('M150 420 H380', 12) + road('M-20 610 H150', 12);
+  if (o.cyc) g += `<path d="M150 352 C220 348 280 342 380 334" fill="none" stroke="var(--map-road-case)" stroke-width="7.5"/><path d="M150 352 C220 348 280 342 380 334" fill="none" stroke="${ek ? '#000' : p.cycle}" stroke-width="5" ${ek ? 'stroke-dasharray="4 2"' : ''}/>`;
+  // one-way chevrons (B3 look): street at y 420 one-way towards the main street (entering forbidden), y 610 one-way away
+  const chev = (x, y, rot) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(1.7)"><path d="M-5 -4 L3 0 L-5 4 L-2.5 0 Z" fill="${ek ? '#000' : dk ? '#e8eaed' : '#3c4043'}" stroke="var(--map-road)" stroke-width="1"/></g>`;
+  [210, 270, 330].forEach((x) => (g += chev(x, 420, 180))); [40, 100].forEach((x) => (g += chev(x, 610, 180)));
+  g += `<text x="300" y="304" font-size="10" font-weight="700" fill="var(--map-label)" text-anchor="middle" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke">D 520</text><text x="60" y="462" font-size="9.5" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke">Chemin du Mollard</text><text x="250" y="492" font-size="9.5" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke">Rue des Écoles</text><text x="250" y="412" font-size="9.5" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke">Impasse du Lac</text>`;
+  // junction stubs (04): enterable = accent stub, forbidden = hatched stub + bar
+  if (o.stubs) { const acc = ek ? '#000' : p.accent;
+    g += `<path d="M150 470 H112" stroke="${acc}" stroke-width="7" stroke-linecap="round"/><path d="M150 500 H190" stroke="${acc}" stroke-width="7" stroke-linecap="round"/>`;
+    g += `<path d="M150 420 H190" stroke="${ek ? '#000' : p.r3}" stroke-width="7" stroke-dasharray="3 3"/><path d="M193 411 V429" stroke="${ek ? '#000' : p.r3}" stroke-width="4" stroke-linecap="round"/>`; }
+  // route
+  const uy0 = o.uy || 560;
+  if (o.route) { const lens = o.lens || 'overview'; const main = lens === 'road' ? (ek ? '#000' : p.r3) : ek ? '#000' : p.accent; const before = lens === 'road' ? (ek ? '#000' : p.r0) : main;
+    g += `<path d="M150 800 V${uy0}" stroke="${ek ? '#000' : '#9AA0A6'}" stroke-width="12" stroke-linecap="round" opacity="${ek ? 1 : 0.6}" ${ek ? 'stroke-dasharray="2 5"' : ''}/>`;
+    g += `<path d="M150 330 ${D520.slice(8)}" fill="none" stroke="${ek ? '#000' : p.r3}" stroke-width="24" stroke-linecap="round" ${ek ? 'stroke-dasharray="3 3"' : ''}/>`;
+    g += `<path d="M150 ${uy0} V330 ${D520.slice(8)}" fill="none" stroke="${p.case}" stroke-width="${ek ? 19 : 17}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (lens === 'climbs') { [[uy0, 520, p.g4], [520, 380, p.g6], [380, 336, p.g5]].forEach(([y0, y1, c]) => { if (y1 >= y0) return; g += `<path d="M150 ${y0} V${y1}" stroke="${ek ? '#000' : c}" stroke-width="${ek ? 13 : 11}"/>`; }); }
+    else g += `<path d="M150 ${uy0} V${o.onFast ? uy0 : 336}" fill="none" stroke="${before}" stroke-width="${ek ? 13 : 11}" stroke-linecap="round"/>`;
+    g += `<path d="M150 ${o.onFast ? uy0 : 336} V330 ${D520.slice(8)}" fill="none" stroke="${main}" stroke-width="${ek ? 14 : 12.5}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (ek && lens === 'road') g += `<path d="M150 336 V330 ${D520.slice(8)}" fill="none" stroke="#fff" stroke-width="1.8" stroke-dasharray="6 2"/>`;
+    for (let y = Math.min(uy0, 520) - 8; y > 384; y -= 13) g += `<path d="M145.5 ${y + 3} l4.5 -4.5 l4.5 4.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
+    if (lens === 'weather') g += plate(196, 470, '13° 0.5', { icon: 'rain', h: 20, fs: 10, fill: dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : ek ? '#000' : '#1b1c1d', stroke: ek ? '#000' : '#cfd3d7', sw: 1 }) + plate(312, 286, '12°', { icon: 'cloud', h: 20, fs: 10, fill: dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : ek ? '#000' : '#1b1c1d', stroke: ek ? '#000' : '#cfd3d7', sw: 1 });
+    if (!o.onFast) { const mc = ek ? '#000' : '#287bda'; g += `<path d="M150 400 V334 Q150 330 160 330 H196" fill="none" stroke="${mc}" stroke-width="21" stroke-linejoin="round"/><path d="M196 316 L218 330 L196 344 Z" fill="${mc}"/><path d="M150 400 V334 Q150 330 160 330 H198" fill="none" stroke="#fff" stroke-width="13" stroke-linejoin="round"/><path d="M198 321 L212 330 L198 339 Z" fill="#fff"/>`; }
+    g += sign(o.onFast ? 290 : 300, o.onFast ? 336 : 290, 80, true) + (o.onFast ? '' : `<g transform="translate(174 452)">${plate(0, 0, '11 %', { fs: 10, h: 19, fill: ek ? '#000' : p.g6, col: '#fff', r: 5 })}</g>`); }
+  // user
+  const uy = o.uy || 560; g += `<circle cx="150" cy="${uy}" r="26" fill="${ek ? 'none' : p.accent}" opacity=".18"/><path d="M150 ${uy - 13} L160 ${uy + 11} L150 ${uy + 5} L140 ${uy + 11} Z" fill="${ek ? '#000' : '#1a73e8'}" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>`;
+  return g + '</svg>';
+}
+function outlook(o) {
+  o = o || {}; const n = o.n || 4, ek = theme() === 'eink', p = pal();
+  const cells = []; for (let k = 0; k < n; k++) { const m = 14 * 60 + 2 + k * (120 / n); const km = ((m - DEP) / DUR) * KM + 4; const wx = WX[Math.min(10, Math.round(km / 6.24))]; const rain = km > 34 && km < 45 ? 1.2 : 0;
+    const head = k % 2 === 0; cells.push(`<div class="c"><em>${clock(m)}</em><i class="ti ${rain ? 'ti-cloud-rain' : km > 9 && km < 13 ? 'ti-cloud' : 'ti-sun'}" style="color:${ek ? '#000' : rain ? p.w2 : km > 9 && km < 13 ? '#9aa0a6' : '#F5B82E'}"></i><b>${wx.temp}°</b><em><i class="ti ti-arrow-narrow-${head ? 'down' : 'right'}" style="font-size:12px"></i>${head ? '18' : '12'}</em></div>`); }
+  const fr = o.state === 'old' ? `<span style="color:var(--warn);border:1px solid var(--border-warn);border-radius:8px;padding:0 5px"><i class="ti ti-refresh" style="font-size:10px"></i> 5 h old</span>` : o.state === 'off' ? `<span><i class="ti ti-cloud-off" style="font-size:11px"></i> 09:05</span>` : o.state === 'changed' ? `<span style="border:1px solid var(--border-strong);border-radius:8px;padding:0 5px">Route changed</span>` : `<span>as of 13:40</span>`;
+  const sun = [[0, 30, 's1'], [30, 52, 's0'], [52, 100, 's1']].map(([a, b, k]) => `<u style="flex:${b - a};background:${ek ? (k === 's0' ? 'repeating-linear-gradient(45deg,#000 0 1px,#fff 1px 3px)' : '#fff') : p[k]};display:block"></u>`).join('');
+  return `<div class="aw" style="flex:${o.flex || 2};${o.state === 'old' ? 'opacity:.92' : ''}"><div class="hd"><span>Next 2 h</span>${fr}</div><div class="ol" style="${o.state === 'old' ? 'opacity:.55' : ''}">${cells.join('')}</div><div class="sunr" style="${ek ? 'border:0.5px solid #000' : ''}">${sun}</div></div>`;
+}
+const PAGES = ['climb', 'profile', 'ahead', 'trip'];
+function dpage(kind, o) {
+  o = o || {}; const p = pal(), ek = theme() === 'eink';
+  if (kind === 'climb') return `<div class="pt"><span>Climb · Cat 3 · Côte du Désert</span><span>1.8 km · +142 m to the top</span></div><div style="display:flex;gap:10px;align-items:center;margin-top:4px"><div style="width:74px;flex:none"><div class="grade" style="color:${ek ? '#000' : '#E8743B'}">7.4<small style="font-size:15px">%</small></div><div style="font-size:10.5px;color:var(--text-secondary);margin-top:3px">grade now</div><div style="font-size:11px;font-weight:700;margin-top:6px;color:${ek ? '#000' : p.g6}">11 % in 300 m</div></div><div style="flex:1">${profileSVG({ w: 248, h: 78, mini: 1, lens: 'climbs', zoom: [30.4, 34.6], cursorKm: 32.4 })}</div></div>`;
+  if (kind === 'profile') return `<div class="pt"><span>Next 15 km</span><span>↗ 455 m · 2 climbs · fast road at km 55.8</span></div>${profileSVG({ w: 320, h: 88, lens: 'overview', zoom: [26.2, 41.2], cursorKm: 26.4, clock: false })}`;
+  if (kind === 'ahead') { const fr = o.old ? `<span style="color:var(--warn)"><i class="ti ti-refresh" style="font-size:11px"></i> 5 h old · tap to update</span>` : `<span>as of 13:40</span>`;
+    return `<div class="pt"><span>Next 2 h · weather & sun</span>${fr}</div><div style="margin:4px -4px 0">${outlook({ n: 6, flex: 1, state: o.old ? 'old' : 'fresh', bare: 1 })}</div>`; }
+  return `<div class="pt"><span>Trip</span><span>since 14:00</span></div><div class="trip4"><div><span>Moving</span><b>1:28</b></div><div><span>Done</span><b>26.2</b><small>km</small></div><div><span>Avg</span><b>17.9</b><small>km/h</small></div><div><span>Climbed</span><b>+568</b><small>m</small></div></div>`;
+}
+function dock(o) { const i = PAGES.indexOf(o.page || 'climb');
+  return `<div class="dock"><div class="handle" style="margin-top:5px"></div><div class="dsum" style="height:40px"><div class="f"><b>36.2</b><small>km</small></div><div class="f"><b>+612</b><small>m</small></div><div class="f"><b>17:41</b><small>${o.etaNote || 'arr.'}</small></div><span class="pz"><i class="ti ti-player-pause"></i></span></div><div class="dpg">${dpage(o.page || 'climb', o)}</div><div class="dots">${PAGES.map((k, j) => `<u class="${j === i ? 'on' : ''}"></u>`).join('')}</div></div>`; }
+function outlook(o) {
+  o = o || {}; const n = o.n || 4, ek = theme() === 'eink', p = pal();
+  const cells = []; for (let k = 0; k < n; k++) { const m = 14 * 60 + 2 + k * (120 / n); const km = ((m - DEP) / DUR) * KM + 26; const wx = WX[Math.min(10, Math.round(km / 6.24))]; const rain = km > 34 && km < 45;
+    const head = k % 2 === 0; cells.push(`<div class="c"><em>${clock(m)}</em><i class="ti ${rain ? 'ti-cloud-rain' : 'ti-sun'}" style="color:${ek ? '#000' : rain ? p.w2 : '#F5B82E'}"></i><b>${wx.temp}°</b><em><i class="ti ti-arrow-narrow-${head ? 'down' : 'right'}" style="font-size:12px"></i>${head ? '18' : '12'}${rain ? ' · 1.2' : ''}</em></div>`); }
+  const fr = o.state === 'old' ? `<span style="color:var(--warn);border:1px solid var(--border-warn);border-radius:8px;padding:0 5px"><i class="ti ti-refresh" style="font-size:10px"></i> 5 h old</span>` : o.state === 'off' ? `<span><i class="ti ti-cloud-off" style="font-size:11px"></i> 09:05</span>` : o.state === 'changed' ? `<span style="border:1px solid var(--border-strong);border-radius:8px;padding:0 5px">Route changed</span>` : `<span>as of 13:40</span>`;
+  const sun = [[0, 40, 's1'], [40, 75, 's2'], [75, 100, 's1']].map(([a, b, k]) => `<u style="flex:${b - a};background:${ek ? (k === 's2' ? 'repeating-linear-gradient(0deg,#000 0 1px,#fff 1px 3px)' : '#fff') : p[k]};display:block"></u>`).join('');
+  return `<div class="aw" style="flex:${o.flex || 2};${o.bare ? 'border:0;background:transparent;height:80px' : ''}">${o.bare ? '' : `<div class="hd"><span>Next 2 h</span>${fr}</div>`}<div class="ol" style="${o.state === 'old' ? 'opacity:.55' : ''}">${cells.join('')}</div><div class="sunr" style="${ek ? 'border:0.5px solid #000' : ''}">${sun}</div></div>`;
+}
+const mcard = (o) => `<div class="mcard"><div class="mrow"><span class="mblk"><i class="ti ti-corner-up-right"></i></span><div style="flex:1"><div class="mdist">${o.d || '200 m'}</div><div class="mstreet">${o.s || 'Turn right onto D 520'}</div></div><div style="text-align:right"><div style="font-size:20px;font-weight:800">${o.v || '14'}</div><div style="font-size:10.5px;color:var(--text-secondary)">km/h</div></div></div><div class="mthen">then <i class="ti ti-arrow-up" style="font-size:14px"></i><b style="color:var(--text-primary)">3.1 km</b> on D 520</div></div>`;
+const banner = (top, t, s, v) => `<div class="rbanner" style="top:${top}px"><span class="sign">${v || 80}</span><div style="flex:1;min-width:0"><b>${t}</b><span>${s}</span></div><span class="ib" style="width:36px"><i class="ti ti-x"></i></span></div>`;
+const chips = (top, list) => `<div class="jrow" style="top:${top}px">${list.map((c) => (c ? `<span class="jc ${c.no ? 'no' : ''}">${c.l ? `<i class="ti ti-${c.no ? 'hand-stop' : 'arrow-left'}"></i>` : ''}${c.t}${c.r ? '<i class="ti ti-arrow-right"></i>' : ''}</span>` : '<span></span>')).join('')}</div>`;
+const capsule = (state) => { const mode = { bike: 'ti-bike', walk: 'ti-walk', car: 'ti-car' }[state.mode || 'bike'];
+  if (state.off) return `<div class="cap2"><div class="seg on"><i class="ti ti-current-location"></i></div></div>`;
+  return `<div class="cap2"><div class="seg"><i class="ti ${mode}"></i>${state.auto ? '<span class="a">A</span>' : ''}${state.lock ? '<i class="ti ti-lock lock"></i>' : ''}</div><div class="seg watch"><i class="ti ti-current-location"></i></div></div>`; };
+const routeBtn = `<span class="fab" style="width:44px;height:44px;font-size:20px;color:var(--text-primary)" title="Route page"><i class="ti ti-timeline"></i></span>`;
+const rail = (bottom, cap, nav) => `<div class="rail" style="bottom:${bottom}px">${nav ? routeBtn : ''}<span class="fab" style="width:44px;height:44px;font-size:20px;color:var(--text-primary)"><i class="ti ti-navigation"></i></span>${cap}</div>`;
+const dial = (bottom, sel) => `<div class="dial" style="bottom:${bottom}px">${[['walk', 'ti-walk', 'Walk'], ['bike', 'ti-bike', 'Bike'], ['car', 'ti-car', 'Car'], ['auto', 'ti-route', 'Auto · from route']].map(([k, ic, t]) => `<div class="o ${k === sel ? 'on' : ''}"><span>${t}</span><u><i class="ti ${ic}"></i></u></div>`).join('')}<div class="o"><span style="display:flex;align-items:center;gap:8px">Show turn options <i class="sw2" style="background:var(--fill-accent);display:inline-block;width:34px;height:20px"></i></span></div></div>`;
+function renderAll() {
+  UID = 0;
+  document.getElementById('tb').innerHTML = toolbar('<a href="bottom-sheet.html">bottom-sheet</a><a href="route-page.html">route-page</a><a href="map-styles.html">map-styles</a><a href="README-v2.md">README</a>');
+  const ann = (y, n) => `<div class="mkr" style="left:${y[0] - 10}px;top:${y[1] - 10}px">${n}</div>`;
+  document.getElementById('r1').innerHTML =
+    frame('1.1 Climbing: the Climb page', 'Dock = one 40 dp summary row (left, ascent left, arrival, pause) + one swipeable data page. Climb page: grade now, the climb with your position, what is left (pages change only when you swipe). Map: steep chevrons + grade plate and the fast-road red casing ahead, whatever the lens. ① Route page.',
+      phone({ map: null, over: navMap({ route: 1 }) + mcard({}) + rail(196, capsule({ lock: 1 }), 1) + ann([292, 384], 1), after: dock({ page: 'climb' }) })) +
+    frame('1.2 Fast road ahead: banner + Profile page', 'Outlined banner 400 m before the run (banner only, no sound). The Profile page shows the next 15 km with grade colours and the attention marks (red = fast road, dark red = very steep).',
+      phone({ map: null, over: navMap({ route: 1 }) + mcard({}) + banner(146, 'Fast road in 400 m', '80 km/h · no cycle lane · 3.1 km') + rail(196, capsule({ lock: 1 }), 1), after: dock({ page: 'profile' }) })) +
+    frame('1.3 On the fast road, forecast 5 h old', 'Banner counts down. Swiped to the Ahead page: the age is on the page title, tap = refetch the remaining samples (online). Overview lens: no weather on the map.',
+      phone({ map: null, over: navMap({ route: 1, onFast: 1, uy: 380 }) + mcard({ d: '2.6 km', s: 'Continue on D 520', v: '27' }) + banner(146, 'On a fast road', '80 km/h · no cycle lane · 1.2 km left') + rail(196, capsule({ lock: 1 }), 1), after: dock({ page: 'ahead', old: 1 }) })) +
+    frame('1.4 Weather lens chosen', 'The navigation lens is the planning lens. With Weather on, plates show on the route; steep and fast-road marks stay. Trip page = the old trip card.',
+      phone({ map: null, over: navMap({ route: 1, lens: 'weather' }) + mcard({}) + rail(196, capsule({ lock: 1 }), 1), after: dock({ page: 'trip' }) }));
+  const today = [['bar 112', 112, 'var(--bg-accent)'], ['trip 72', 72, 'var(--fill)'], ['ahead 80', 80, 'var(--fill)']];
+  document.getElementById('r1b').innerHTML = frame('Space: today vs v2', 'Today with bar + trip + ahead open: 264 dp. v2 dock: 168 dp and it shows the grade, the climb and one more page. About 96 dp of map back.',
+    `<div class="cmp"><div class="col"><div class="cap" style="margin:0">Today</div>${today.map(([l, h, c]) => `<div class="blk" style="height:${h * 0.8}px;background:${c};border:0.5px solid var(--border)">${l}</div>`).join('')}<div style="font-size:11px;margin-top:4px">264 dp</div></div><div class="col"><div class="cap" style="margin:0">v2 dock</div><div class="blk" style="height:${46 * 0.8}px;background:var(--bg-accent);border:0.5px solid var(--border)">summary 46</div><div class="blk" style="height:${122 * 0.8}px;background:var(--fill);border:0.5px solid var(--border)">data page 108 + dots</div><div style="font-size:11px;margin-top:4px">168 dp</div></div></div>`, true) +
+    frame('Data pages (swipe, or tap the dots)', 'Order and on/off in navigation settings (replaces navigationShowElevationChart / navigationShowSurface; Surface can be a 5th page). Manual only for now: the last page is remembered.',
+      `<div style="display:grid;grid-template-columns:repeat(2,344px);gap:10px">${PAGES.map((k) => `<div class="dock" style="position:relative;left:0;right:0;bottom:0;width:344px"><div class="dpg">${dpage(k, {})}</div><div class="dots">${PAGES.map((q) => `<u class="${q === k ? 'on' : ''}"></u>`).join('')}</div></div>`).join('')}</div>`, true);
+  document.getElementById('r2').innerHTML =
+    frame('2.1 Free follow, bike', 'Watching: the GPS button grows a mode segment on top (capsule). Junction chips: next legal left / right for this mode. Bike mode can turn on fast-road context (optional) and separated cycleways.',
+      phone({ map: null, over: navMap({ stubs: 1, fast: 1, cyc: 1 }) + chips(34, [{ l: 1, t: '90 m' }, null, { r: 1, t: '60 m' }]) + rail(40, capsule({ mode: 'bike' })) }) ) +
+    frame('2.2 Exception chip: no entry ahead', 'The “straight-on” case from 04, made useful: shown only when the way ahead becomes one-way against you or ends. Forbidden stub hatched with a bar.',
+      phone({ map: null, over: navMap({ stubs: 1, fast: 1 }) + chips(34, [{ l: 1, t: '90 m' }, { no: 1, l: 1, t: 'No entry · 140 m' }, { r: 1, t: '60 m' }]) + rail(40, capsule({ mode: 'bike' })) })) +
+    frame('2.3 Tap the mode segment: speed dial', 'Four 44 dp options with labels; current one filled; tap selects and closes. Two taps to any mode, no long press.',
+      phone({ map: null, over: navMap({ stubs: 1 }) + `<div class="scrim"></div>` + dial(146, 'bike') + rail(40, capsule({ mode: 'bike' })) })) +
+    frame('2.4 Auto = from the route', 'A route is selected (not navigating): Auto resolves to its profile, “A” badge. Without a route, Auto = last directions profile.',
+      phone({ map: null, over: navMap({ stubs: 1 }) + chips(34, [{ l: 1, t: '90 m' }, null, { r: 1, t: '60 m' }]) + rail(40, capsule({ mode: 'bike', auto: 1 })) }));
+  document.getElementById('r3').innerHTML =
+    frame('Capsule states', 'Not watching · watching (bike) · auto · navigating (locked).', `<div class="big" style="display:flex;gap:12px;align-items:flex-end;padding:10px;transform:scale(1.3)">${capsule({ off: 1 })}${capsule({ mode: 'bike' })}${capsule({ mode: 'walk', auto: 1 })}${capsule({ mode: 'bike', lock: 1 })}</div>`) +
+    frame('Risk banner and chips', '', `<div style="position:relative;width:360px;height:220px">${banner(0, 'Fast road in 400 m', '80 km/h · no cycle lane · 3.1 km')}${banner(70, 'On a fast road', '70 km/h · painted lane only · 180 m', 70)}${chips(150, [{ l: 1, t: '190 m' }, { no: 1, l: 1, t: 'No entry · 140 m' }, { r: 1, t: '60 m' }])}</div>`);
+}
+renderAll();
+</script>
+</body>
+</html>

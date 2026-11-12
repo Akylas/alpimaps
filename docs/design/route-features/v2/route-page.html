@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alpi Maps v2 — route page (page mode)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>/* tokens: docs/design/mockups.html + app/variables.ts names in comments */
+:root{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--panel:rgba(255,255,255,.97);--mapctl:rgba(255,255,255,.80);
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);--fill:rgba(0,0,0,.045);
+--bg-accent:rgba(41,182,246,.14);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.65);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--danger:#d32f2f;--border-danger:rgba(211,47,47,.6);
+--warn:#a35f00;--border-warn:rgba(226,140,0,.75);--good:#00897b;
+--map-land:#f3f1ea;--map-forest:#d5e5c4;--map-water:#b5d3ec;--map-road:#ffffff;--map-road-case:#d2cbbd;--map-major:#fbe0a0;--map-major-case:#d6b464;
+--map-contour:rgba(140,110,70,.20);--map-label:#5b5f64;--map-halo:rgba(255,255,255,.9);--map-shadow:rgba(60,50,40,.09);--map-light:rgba(255,255,255,.35)}
+.dark{--surface-0:#121416;--surface-1:#1c1f22;--surface-2:#23272b;--panel:rgba(30,33,37,.97);--mapctl:rgba(35,39,43,.82);
+--border:rgba(255,255,255,.12);--border-strong:rgba(255,255,255,.3);--fill:rgba(255,255,255,.06);
+--bg-accent:rgba(41,182,246,.18);--text-accent:#7fd3fa;--border-accent:rgba(127,211,250,.6);
+--text-primary:#e8eaed;--text-secondary:#a8adb3;--text-muted:#6f757b;--danger:#ef9a9a;--border-danger:rgba(239,154,154,.6);
+--warn:#ffcc80;--border-warn:rgba(255,204,128,.65);--good:#80cbc4;
+--map-land:#1c2024;--map-forest:#1d2a22;--map-water:#16324a;--map-road:#3a4148;--map-road-case:#2a2f34;--map-major:#5a4f36;--map-major-case:#3c3526;
+--map-contour:rgba(200,190,170,.10);--map-label:#a5abb1;--map-halo:rgba(20,23,26,.85);--map-shadow:rgba(0,0,0,.25);--map-light:rgba(255,255,255,.04)}
+.eink{--surface-0:#fff;--surface-1:#fff;--surface-2:#fff;--panel:#fff;--mapctl:#fff;--border:#000;--border-strong:#000;--fill:#fff;
+--bg-accent:#fff;--text-accent:#000;--fill-accent:#000;--on-accent:#fff;--border-accent:#000;--text-primary:#000;--text-secondary:#000;--text-muted:#000;
+--danger:#000;--border-danger:#000;--warn:#000;--border-warn:#000;--good:#000;
+--map-land:#fff;--map-forest:#fff;--map-water:#fff;--map-road:#fff;--map-road-case:#000;--map-major:#fff;--map-major-case:#000;
+--map-contour:rgba(0,0,0,.35);--map-label:#000;--map-halo:#fff;--map-shadow:rgba(0,0,0,0);--map-light:rgba(0,0,0,0)}
+*{box-sizing:border-box}
+body{margin:0;padding:20px 24px 60px;font-family:Roboto,"Helvetica Neue",system-ui,sans-serif;background:var(--surface-0);color:var(--text-primary)}
+h1{font-size:21px;margin:0 0 4px}h2{font-size:16px;margin:34px 0 4px;padding-top:14px;border-top:0.5px solid var(--border)}
+p.note{font-size:12.5px;color:var(--text-secondary);margin:0 0 12px;max-width:1100px;line-height:1.45}
+a{color:var(--text-accent)}
+code{font-size:11.5px;background:var(--fill);padding:1px 4px;border-radius:4px}
+.badge{display:inline-block;font-size:11px;border:1px dashed var(--border-strong);border-radius:6px;padding:1px 6px;margin-left:8px;color:var(--text-secondary);vertical-align:middle}
+.toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 6px;font-size:12px}
+.toolbar button{font:inherit;padding:6px 14px;border-radius:99px;border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);cursor:pointer}
+.toolbar button.on{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.toolbar a{color:var(--text-accent);margin-left:6px}
+.row{display:flex;flex-wrap:wrap;gap:30px 30px;align-items:flex-start;margin-top:10px}
+.frame{width:360px;flex:none}
+.frame.wide{width:auto}
+.cap{font-size:12.5px;font-weight:600;margin:0 0 2px 4px}
+.capn{font-size:11.5px;color:var(--text-secondary);margin:0 0 10px 4px;line-height:1.4;min-height:32px}
+.phone{position:relative;width:360px;height:760px;border-radius:30px;overflow:hidden;background:var(--map-land);box-shadow:0 0 0 7px #202326,0 10px 26px rgba(0,0,0,.22);margin:7px;flex:none}
+.phone.short{height:640px}.phone.narrow{width:320px}
+.eink .phone{box-shadow:0 0 0 7px #000}
+.tablet{position:relative;width:1024px;height:700px;border-radius:22px;overflow:hidden;background:var(--map-land);box-shadow:0 0 0 9px #202326,0 10px 26px rgba(0,0,0,.22);margin:9px}
+.map{position:absolute;left:0;top:0}
+.sb{position:absolute;top:0;left:0;right:0;height:24px;display:flex;justify-content:space-between;align-items:center;padding:0 18px;font-size:11.5px;font-weight:600;z-index:6;color:var(--text-primary)}
+.sb i{font-size:13px;margin-left:3px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-radius:20px 20px 0 0;border:0.5px solid var(--border);border-bottom:0;overflow:hidden;z-index:4;display:flex;flex-direction:column}
+.eink .sheet{border:1px solid #000;border-bottom:0}
+.handle{width:32px;height:4px;border-radius:2px;background:var(--text-muted);opacity:.6;margin:6px auto 0;flex:none}
+.eink .handle{opacity:1;background:#000}
+.tband{display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;height:60px;flex:none}
+.tband.compact{height:48px;padding-top:0}
+.itile{width:40px;height:40px;border-radius:12px;background:var(--bg-accent);color:var(--text-accent);display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+.compact .itile{width:32px;height:32px;border-radius:10px;font-size:18px}
+.eink .itile{border:1px solid #000}
+.ttl{font-size:16.5px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.compact .ttl{font-size:15px}
+.sub{font-size:12.5px;color:var(--text-secondary);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:21px;color:var(--text-secondary);flex:none}
+.tiles{display:flex;gap:4px;padding:0 8px;height:48px;align-items:flex-start;flex:none}
+.tile{position:relative;height:40px;border-radius:10px;background:var(--fill);display:flex;flex-direction:column;justify-content:center;padding:0 5px;min-width:0;overflow:hidden}
+.eink .tile{border:1px solid #000}
+.tile .v{font-size:13px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:2px;line-height:1.15;letter-spacing:-.1px}
+.tile .v i{font-size:13px;color:var(--text-secondary);font-weight:400}
+.tile .l2{font-size:10.5px;color:var(--text-secondary);white-space:nowrap;line-height:1.2;margin-top:1px}
+.tile .l2.acc{color:var(--text-accent);font-weight:700}
+.tile.risk{background:transparent;border:1.5px solid var(--border-danger)}
+.tile.risk .v,.tile.risk .v i{color:var(--danger)}
+.eink .tile.risk{border:2px solid #000}
+.fp{position:absolute;left:6px;right:6px;bottom:4px;height:3px;border-radius:1.5px;display:flex;overflow:hidden;gap:1px}
+.eink .fp{height:4px;border:0.5px solid #000}
+.actions{display:flex;gap:8px;padding:0 12px;height:60px;flex:none;align-items:center}
+.btn{height:36px;border-radius:18px;display:flex;align-items:center;gap:6px;padding:0 14px;font-size:13.5px;font-weight:600;white-space:nowrap;flex:none}
+.btn i{font-size:18px}
+.btn.f{background:var(--fill-accent);color:var(--on-accent)}
+.btn.t{background:var(--bg-accent);color:var(--text-accent)}
+.eink .btn.t{border:1px solid #000}
+.rb{width:36px;height:36px;border-radius:18px;border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text-secondary);flex:none}
+.eink .rb{border:1px solid #000}
+.card{margin:4px 6px 0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:20px;overflow:hidden;flex:none}
+.eink .card{border:1px solid #000}
+.lensbar{height:44px;display:flex;align-items:center;overflow:hidden;flex:none;position:relative}
+.lensbar .in{display:flex;gap:6px;padding:0 10px;white-space:nowrap}
+.chip{position:relative;height:32px;border-radius:16px;border:0.5px solid var(--border-strong);display:inline-flex;align-items:center;gap:5px;padding:0 11px 0 9px;font-size:12.5px;color:var(--text-primary);flex:none;background:var(--surface-2)}
+.chip i{font-size:16px;color:var(--text-secondary)}
+.chip b{font-weight:700}
+.chip.sel{background:var(--bg-accent);border:1px solid var(--fill-accent);color:var(--text-accent)}
+.chip.sel i{color:var(--text-accent)}
+.eink .chip.sel{border:2.5px solid #000;font-weight:700;background:#fff;color:#000}
+.chip.dash{border:1px dashed var(--border-strong);color:var(--text-secondary)}
+.chip.stale{border:1px solid var(--border-warn)}
+.chip.stale .st{color:var(--warn);font-size:13px}
+.eink .chip.stale{border:2px dashed #000}
+.chip .dot{position:absolute;top:2px;right:3px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:1.5px solid var(--surface-2)}
+.chip .run{position:absolute;left:10px;right:10px;bottom:2px;height:2px;border-radius:1px;background:linear-gradient(90deg,transparent,var(--fill-accent),transparent)}
+.insight{height:40px;display:flex;align-items:center;gap:6px;padding:0 6px 0 14px;font-size:13.5px;flex:none;border-top:0.5px solid var(--border)}
+.insight .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insight .tx b{font-weight:700}
+.insight .nav{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--text-primary);flex:none}
+.insight .mini{height:30px;border-radius:15px;padding:0 12px;display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;background:var(--bg-accent);color:var(--text-accent);flex:none}
+.eink .insight .mini{border:1px solid #000}
+.insight.focus{background:var(--bg-accent)}
+.eink .insight.focus{background:#fff;border-top:2px solid #000}
+.strip{position:absolute;left:8px;right:8px;top:4px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--fill-accent) 14%,var(--surface-2));border:0.5px solid var(--border-accent);color:var(--text-accent);display:flex;align-items:center;padding:0 6px 0 10px;gap:4px;backdrop-filter:blur(4px)}
+.dark .strip{background:rgba(20,40,52,.92)}
+.eink .strip{background:#fff;border:1.5px solid #000;color:#000}
+.strip .c{flex:1;text-align:center;min-width:0}
+.strip .c i{font-size:14px;display:block;line-height:1}
+.strip .c b{font-size:12.5px;display:block;white-space:nowrap}
+.pc{position:relative}
+.ask{margin:6px 10px;border-radius:14px;border:1px solid var(--border-accent);background:var(--bg-accent);padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+.eink .ask{border:2px solid #000;background:#fff}
+.pill{height:32px;border-radius:16px;border:0.5px solid var(--border-strong);display:inline-flex;align-items:center;gap:5px;padding:0 12px;font-size:12.5px;font-weight:600;background:var(--surface-2);flex:none;white-space:nowrap}
+.pill i{font-size:16px}
+.pill.sel{background:var(--bg-accent);border:1px solid var(--fill-accent);color:var(--text-accent)}
+.pill.warn{border:1px solid var(--border-warn);color:var(--warn)}
+.eink .pill{border:1px solid #000}.eink .pill.sel,.eink .pill.warn{border:2.5px solid #000}
+.scroll{flex:1;min-height:0;overflow:hidden;position:relative}
+.scroll .in{position:absolute;left:0;right:0;top:0}
+.sec{margin:8px 6px 0;background:var(--surface-2);border:0.5px solid var(--border);border-radius:16px;overflow:hidden}
+.eink .sec{border:1px solid #000}
+.sech{display:flex;align-items:center;gap:10px;height:56px;padding:0 6px 0 10px}
+.sech .itile{width:36px;height:36px;font-size:19px;border-radius:11px}
+.sech .ttl{font-size:14.5px}
+.sech .sub{font-size:12px}
+.fchip{height:22px;border-radius:11px;padding:0 7px;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;flex:none;white-space:nowrap}
+.fchip.o{border:1px solid var(--border-warn);color:var(--warn)}
+.fchip.u{border:1px solid var(--border-strong);color:var(--text-secondary)}
+.eink .fchip.o{border:2px dashed #000}.eink .fchip.u{border:1px solid #000}
+.secb{padding:0 12px 12px;font-size:12.5px}
+.secb .note{font-size:11.5px;color:var(--text-secondary);line-height:1.4;margin-top:8px}
+.lr{display:flex;align-items:center;gap:10px;min-height:54px;border-top:0.5px solid var(--border)}
+.lr:first-child{border-top:0}
+.lr .m{flex:1;min-width:0}
+.lr .m b{font-size:13.5px;display:block}
+.lr .m span{font-size:12px;color:var(--text-secondary)}
+.lr.foc{background:var(--bg-accent);margin:0 -12px;padding:0 12px}
+.eink .lr.foc{background:#fff;outline:2px solid #000;outline-offset:-2px}
+.cat{height:22px;min-width:40px;border-radius:5px;background:#2b2f33;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px;flex:none}
+.dark .cat{background:#e8eaed;color:#1b1c1d}.eink .cat{background:#000;color:#fff}
+.sign{width:30px;height:30px;border-radius:50%;background:#fff;border:3.5px solid #D7263D;color:#1b1c1d;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.eink .sign{border-color:#000}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:10px 0 6px}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.lg span{display:flex;align-items:center;gap:6px;font-size:11.5px}
+.lg span b{margin-left:auto}
+.sw{width:10px;height:10px;border-radius:50%;flex:none}
+.eink .sw{border:1px solid #000}
+.mctl{position:absolute;width:40px;height:40px;border-radius:20px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-primary);z-index:3}
+.eink .mctl{border:1px solid #000}
+.lchip{position:absolute;height:28px;border-radius:14px;background:var(--mapctl);border:0.5px solid var(--border-strong);display:flex;align-items:center;gap:6px;padding:0 10px 0 8px;font-size:11.5px;z-index:3;white-space:nowrap}
+.eink .lchip{border:1px solid #000}
+.lchip .sws{display:flex;gap:2px}.lchip .sws u{width:14px;height:5px;border-radius:2px;display:block}
+.ann{position:absolute;right:0;left:0;border-top:1.5px dashed #e91e63;z-index:8;pointer-events:none}
+.ann span{position:absolute;right:6px;top:-18px;background:#e91e63;color:#fff;font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:6px}
+.eink .ann{border-color:#000}.eink .ann span{background:#000}
+.mkr{position:absolute;z-index:9;width:20px;height:20px;border-radius:50%;background:#e91e63;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff}
+.eink .mkr{background:#000}
+.legend-box{font-size:12px;color:var(--text-secondary);max-width:360px;line-height:1.45}
+.legend-box ol{padding-left:18px;margin:4px 0}
+.wn{margin:0 6px;font-size:11px;color:var(--text-secondary)}
+.dstrip{display:flex;gap:4px;overflow:hidden;padding:2px 0}
+.dc{width:46px;height:66px;border-radius:12px;border:0.5px solid var(--border-strong);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 0 6px;flex:none;font-size:11.5px;position:relative}
+.dc b{font-size:12px}
+.dc i{font-size:15px;color:var(--text-secondary)}
+.dc u{display:block;width:30px;height:6px;border-radius:3px}
+.dc.sel{border:2px solid var(--fill-accent);background:var(--bg-accent)}
+.dc.out{border:1px dashed var(--border-strong);opacity:.75}
+.dc .star{position:absolute;top:-1px;right:1px;font-size:11px;color:#f5a623}
+.eink .dc{border:1px solid #000}.eink .dc.sel{border:3px solid #000;background:#fff}
+.trk{height:3px;border-radius:2px;background:var(--border-strong);position:relative;margin:12px 0 8px}
+.trk i{position:absolute;left:0;top:0;bottom:0;background:var(--fill-accent);border-radius:2px}
+.trk u{position:absolute;top:-7px;width:17px;height:17px;border-radius:50%;background:var(--fill-accent);border:2px solid var(--surface-2)}
+.sw2{width:40px;height:24px;border-radius:12px;background:var(--border-strong);position:relative;flex:none}
+.sw2:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.banner{margin:8px 6px 0;border-radius:14px;border:1px solid var(--border-warn);padding:8px 10px;display:flex;align-items:center;gap:8px;font-size:12.5px}
+.eink .banner{border:2px dashed #000}
+
+.insight.readout{background:color-mix(in srgb,var(--fill-accent) 12%,var(--surface-2));color:var(--text-accent);gap:8px;padding-left:12px}
+.insight.readout .tx{color:var(--text-primary)}
+.eink .insight.readout{background:#fff;border-top:2px solid #000}
+
+.lightv{--surface-0:#eef0f2;--surface-1:#e4e7ea;--surface-2:#ffffff;--panel:rgba(255,255,255,.97);--mapctl:rgba(255,255,255,.80);
+--border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.28);--fill:rgba(0,0,0,.045);
+--bg-accent:rgba(41,182,246,.14);--text-accent:#0288d1;--fill-accent:#29b6f6;--on-accent:#fff;--border-accent:rgba(41,182,246,.65);
+--text-primary:#1b1c1d;--text-secondary:#5f6368;--text-muted:#9aa0a6;--danger:#d32f2f;--border-danger:rgba(211,47,47,.6);
+--warn:#a35f00;--border-warn:rgba(226,140,0,.75);--good:#00897b;
+--map-land:#f3f1ea;--map-forest:#d5e5c4;--map-water:#b5d3ec;--map-road:#ffffff;--map-road-case:#d2cbbd;--map-major:#fbe0a0;--map-major-case:#d6b464;
+--map-contour:rgba(140,110,70,.20);--map-label:#5b5f64;--map-halo:rgba(255,255,255,.9);--map-shadow:rgba(60,50,40,.09);--map-light:rgba(255,255,255,.35);color:var(--text-primary)}
+.spk{display:block}
+.wxr{display:grid;grid-template-columns:30px 40px 22px 32px 50px 1fr;align-items:center;gap:2px;min-height:34px;border-top:0.5px solid var(--border);font-size:12px}
+.wxr.h{font-size:10.5px;color:var(--text-secondary);min-height:24px;border-top:0}
+.wxr i{font-size:16px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.facts div{background:var(--fill);border-radius:10px;padding:6px 8px}
+.eink .facts div{border:1px solid #000}
+.facts span{font-size:10.5px;color:var(--text-secondary);display:block}.facts b{font-size:13px}
+.silh{height:28px;flex:none;border-bottom:0.5px solid var(--border);padding:0 6px}
+.when{border-bottom:0.5px solid var(--border);padding:8px 12px 10px;flex:none;background:var(--surface-2)}
+.when .lab{font-size:11px;font-weight:700;color:var(--text-secondary);margin:8px 0 4px;display:flex;justify-content:space-between}
+.tabl .tband.compact{padding-left:14px}
+.abar{position:absolute;left:0;right:0;top:24px;height:56px;display:flex;align-items:center;gap:6px;padding:0 4px 0 6px;background:var(--surface-2);border-bottom:0.5px solid var(--border);z-index:6}
+.abar .tt{flex:1;min-width:0}.abar .tt b{font-size:15.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.abar .tt span{font-size:11.5px;color:var(--text-secondary);white-space:nowrap}
+.hero{position:absolute;left:0;right:0;overflow:hidden;z-index:2;border-bottom:0.5px solid var(--border)}
+.pbody{position:absolute;left:0;right:0;bottom:0;background:var(--surface-0);display:flex;flex-direction:column;z-index:3}
+.pbody .lensbar{background:var(--surface-2);border-bottom:0.5px solid var(--border)}
+.pbody .silh{background:var(--surface-2)}
+.pbody .card{margin-top:8px}
+.eink .pbody{background:#fff}
+</style>
+</head>
+<body>
+<h1>Route page <span class="badge">MOCKUP · fake data · icons are Tabler placeholders (the app uses MDI)</span></h1>
+<p class="note">README-v2 sections 3 and 5. A <b>page of its own</b> (decision: it opens from the items list too, and from navigation). Top: app bar with the <b>When</b> pill. Under it a <b>hero map</b>: a second, lightweight map view (offline base + the route only), coloured by the active lens, with the scrub cursor and the focused section. The hero is 240 dp and <b>collapses to 120 dp</b> while scrolling, so the map always shows what you focus. Sticky under it: the lens bar, then a 28 dp silhouette scrubber once the profile has scrolled away. Tap ⤢ for a full-screen map of the route.</p>
+<div id="tb"></div>
+<h2>1. Scroll states</h2>
+<div class="row" id="r1"></div>
+<h2>2. One section per lens (tap a lens chip: the page scrolls to it and opens it)</h2>
+<div class="row" id="r2"></div>
+<h2>3. Time and context: departure passed, opened from navigation, done ride</h2>
+<div class="row" id="r3"></div>
+<h2>4. Tablet / wide window (≥ 600 dp): two panes, the main map is the hero</h2>
+<p class="note">On a wide window the page opens as a 400 dp pane next to the main map (no second map view): the route is framed in the map pane. Same components, same order.</p>
+<div class="row" id="r4"></div>
+
+<script>// Alpi Maps v2 mockup kit: fake route data, map + profile renderers, sheet components. Fake data.
+const KM = 62.4, DEP = 14 * 60, DUR = 221;
+const theme = () => window.THEME_OVERRIDE || (document.body.classList.contains('eink') ? 'eink' : document.body.classList.contains('dark') ? 'dark' : 'light');
+const clock = (m) => { m = Math.round(m); return String(Math.floor(m / 60) % 24).padStart(2, '0') + ':' + String(((m % 60) + 60) % 60).padStart(2, '0'); };
+const etaMin = (km) => DEP + (DUR * km) / KM;
+let UID = 0;
+
+// ---------- palettes (the lens_pal table, app/utils/routeAnalysis/lensPalette.ts in the design) ----------
+const PAL = {
+  light: { g0: '#1B4E9B', g1: '#3B7DD8', g2: '#7FB2E8', g3: '#7BC96F', g4: '#F2D14B', g5: '#F0902B', g6: '#E34A33', g7: '#9E1B18',
+    r0: '#8D96A3', r2: '#F29D38', r3: '#D7263D', w0: '#8D96A3', w1: '#B39DDB', w2: '#7E57C2', w3: '#4527A0',
+    s0: '#7C93B0', s1: '#F5B82E', s2: '#B0B7BF', s3: '#243049', f_paved: '#8B939E', f_gravel: '#A89070', f_path: '#6E9A5C',
+    sign: '#D7263D', plate: '#2B2F33', item: '#287bda', accent: '#60A5F4', case: '#ffffff', cycle: '#4BA79C', fast: '#E0533F' },
+  dark: { g0: '#4F7FD0', g1: '#5C98E8', g2: '#93C1F0', g3: '#8CD680', g4: '#F5DA63', g5: '#F4A24A', g6: '#EE6A52', g7: '#D9453F',
+    r0: '#5C6570', r2: '#F4AE57', r3: '#EF4A5E', w0: '#5C6570', w1: '#C4B3E6', w2: '#9C7BE0', w3: '#7C5CD6',
+    s0: '#7F98B8', s1: '#F7C64F', s2: '#8E969F', s3: '#8FA3D9', f_paved: '#9AA3AE', f_gravel: '#C2A57E', f_path: '#86B272',
+    sign: '#EF4A5E', plate: '#E8EAED', item: '#5B9CF0', accent: '#7FD3FA', case: '#101316', cycle: '#5FC2B5', fast: '#F06A55' },
+  eink: {}
+};
+['g0','g1','g2','g3','g4','g5','g6','g7','r0','r2','r3','w0','w1','w2','w3','s0','s1','s2','s3','f_paved','f_gravel','f_path','sign','plate','item','accent','cycle','fast'].forEach((k) => (PAL.eink[k] = '#000'));
+PAL.eink.case = '#ffffff';
+const pal = () => PAL[theme()];
+const GB = [-Infinity, -9, -6, -3, 3, 6, 9, 12];
+const gbi = (g) => { for (let i = GB.length - 1; i > 0; i--) if (g >= GB[i]) return i; return 0; };
+
+// ---------- the route: elevation, grade, lens data ----------
+const KP = [[0, 240], [6, 270], [12.4, 330], [19, 712], [23, 600], [28, 540], [31, 560], [34.2, 797], [38, 700], [44.8, 780], [46, 889], [49, 1050], [52.5, 1180], [56, 800], [60, 420], [62.4, 240]];
+function interp(km) { for (let i = 1; i < KP.length; i++) if (km <= KP[i][0]) { const [a, ea] = KP[i - 1], [b, eb] = KP[i]; const t = (km - a) / (b - a); return ea + (eb - ea) * (0.5 - Math.cos(Math.PI * t) / 2) * 0.35 + (eb - ea) * t * 0.65; } return 240; }
+const STEP = 0.2, N = Math.round(KM / STEP);
+const ELE = [], GR = [];
+for (let i = 0; i <= N; i++) { const km = i * STEP; const ramp = km > 45 && km < 45.6 ? 35 * Math.sin(((km - 45) / 0.6) * Math.PI / 2) : km >= 45.6 ? 35 : 0; ELE.push(interp(km) + 4 * Math.sin(km * 1.1) + 1.5 * Math.sin(km * 2.9 + 1) + ramp - (km > 46 ? 35 * Math.min(1, (km - 46) / 3) : 0)); }
+for (let i = 0; i <= N; i++) { const a = ELE[Math.max(0, i - 1)], b = ELE[Math.min(N, i + 1)]; GR.push(((b - a) / ((Math.min(N, i + 1) - Math.max(0, i - 1)) * STEP * 1000)) * 100); }
+const GRS = GR.map((g, i) => { let t = 0, n = 0; for (let k = -2; k <= 2; k++) { const v = GR[i + k]; if (v != null) { t += v; n++; } } return t / n; });
+const eleAt = (km) => ELE[Math.max(0, Math.min(N, Math.round(km / STEP)))];
+const CLIMBS = [
+  { id: 1, a: 12.4, b: 19.0, cat: 'Cat 2', gain: 382, avg: 5.8, max: 8.9, top: 712, name: 'Montée de la Ruchère' },
+  { id: 2, a: 31.0, b: 34.2, cat: 'Cat 3', gain: 237, avg: 7.4, max: 10.6, top: 797, name: 'Côte du Désert' },
+  { id: 3, a: 44.8, b: 52.5, cat: 'Cat 1', gain: 400, avg: 5.2, max: 15.9, top: 1180, name: 'Col du Granier' },
+  { id: 4, a: 0.0, b: 6.0, cat: 'Cat 4', gain: 64, avg: 1.1, max: 3.2, top: 270, name: 'Les Échelles exit' }
+];
+const RISK = [
+  { id: 1, a: 5.0, b: 8.1, v: 80, k: 'r3', s: 3, infra: 'no separation' },
+  { id: 2, a: 22.3, b: 22.5, v: 70, k: 'r2', s: 2, infra: 'painted lane, no separation' },
+  { id: 3, a: 55.8, b: 62.3, v: 80, k: 'r3', s: 3, infra: 'no separation · descent' }
+];
+const WX = [];
+for (let j = 0; j <= 10; j++) {
+  const km = Math.min(KM, j * 6.24), eta = etaMin(km), e = eleAt(km);
+  const rain = km > 34 && km < 45 ? (km > 36 && km < 41 ? 1.2 : 0.5) : 0;
+  WX.push({ km, eta, temp: Math.round(17 - (e - 240) / 160 - ((eta - DEP) / 60) * 0.7), rain, cloud: km > 33 && km < 45 ? 'rain' : eta > 17 * 60 + 7 ? 'moon' : km > 9 && km < 13 ? 'cloud' : 'sun', wind: 18 });
+}
+const RAIN = [[34, 36, 'w1', 1], [36, 41, 'w2', 2], [41, 45, 'w1', 1]];
+const SUNSET_KM = ((17 * 60 + 7 - DEP) / DUR) * KM;
+const SUN = [[0, 9, 's1', 0], [9, 12.4, 's0', 0], [12.4, 23, 's1', 0], [23, 26.5, 's0', 0], [26.5, 33.5, 's1', 0], [33.5, 44, 's2', 1], [44, SUNSET_KM, 's1', 0], [SUNSET_KM, KM, 's3', 3]];
+const SURF = [[0, 20.5, 'f_paved', 0], [20.5, 29.2, 'f_gravel', 1], [29.2, 46.2, 'f_paved', 0], [46.2, 49.9, 'f_path', 2], [49.9, KM, 'f_paved', 0]];
+function gradeRuns() {
+  const runs = []; let cur = null;
+  for (let i = 0; i < N; i++) { const k = 'g' + gbi(GRS[i]); const s = GRS[i] >= 12 ? 3 : GRS[i] >= 9 ? 2 : GRS[i] >= 3 ? 1 : 0;
+    if (cur && cur[2] === k) cur[1] = (i + 1) * STEP; else { cur = [i * STEP, (i + 1) * STEP, k, s]; runs.push(cur); } }
+  return runs;
+}
+const GRUNS = gradeRuns();
+function lensRuns(lens) {
+  if (lens === 'climbs') return GRUNS;
+  if (lens === 'road') { const out = []; let p = 0; RISK.forEach((r) => { if (r.a > p) out.push([p, r.a, 'r0', 0]); out.push([r.a, r.b, r.k, r.s, r.id]); p = r.b; }); out.push([p, KM, 'r0', 0]); return out; }
+  if (lens === 'weather') { const out = [[0, 34, 'w0', 0]]; RAIN.forEach((r) => out.push(r)); out.push([45, KM, 'w0', 0]); return out; }
+  if (lens === 'sun') return SUN;
+  if (lens === 'surface') return SURF;
+  return [[0, KM, 'item', 0]];
+}
+const ATTN = [...RISK.map((r) => [r.a, r.b, 'r3', 'road']), [36, 41, 'w2', 'weather'], [45.0, 45.6, 'g7', 'climbs'], [SUNSET_KM, KM, 's3', 'sun']];
+
+// ---------- world geometry ----------
+const WP = [];
+for (let i = 0; i <= 480; i++) { const a = (2 * Math.PI * i) / 480 + 2.4;
+  WP.push([480 + 320 * Math.cos(a) + 70 * Math.cos(3 * a + 0.6) + 16 * Math.sin(17 * a), 470 + 235 * Math.sin(a) + 60 * Math.sin(2 * a + 1.1) + 12 * Math.cos(13 * a)]); }
+const WL = [0]; for (let i = 1; i < WP.length; i++) WL.push(WL[i - 1] + Math.hypot(WP[i][0] - WP[i - 1][0], WP[i][1] - WP[i - 1][1]));
+const WT = WL[WL.length - 1];
+const idxKm = (km) => { const L = (km / KM) * WT; let lo = 0, hi = WL.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (WL[m] < L) lo = m; else hi = m; } return hi; };
+function wAt(km) { const L = (km / KM) * WT; const i = Math.max(1, idxKm(km)); const t = (L - WL[i - 1]) / (WL[i] - WL[i - 1] || 1); return [WP[i - 1][0] + (WP[i][0] - WP[i - 1][0]) * t, WP[i - 1][1] + (WP[i][1] - WP[i - 1][1]) * t]; }
+function wSub(a, b) { const out = [wAt(a)]; for (let i = idxKm(a); i < idxKm(b); i++) out.push(WP[i]); out.push(wAt(b)); return out; }
+const bearing = (km) => { const p = wAt(Math.max(0, km - 0.3)), q = wAt(Math.min(KM, km + 0.3)); return Math.atan2(q[1] - p[1], q[0] - p[0]); };
+const PEAKS = [[wAt(52.5), 1.0], [wAt(19), 0.7], [wAt(34.2), 0.6]];
+const FORESTS = [[640, 260, 70], [300, 330, 60], [760, 560, 80], [420, 640, 50], [180, 520, 55], [560, 420, 40], [860, 380, 45]];
+const LAKE = [530, 500, 46];
+let SEED = 7; const rnd = () => ((SEED = (SEED * 16807) % 2147483647) / 2147483647);
+for (let i = 0; i < 26; i++) FORESTS.push([rnd() * 1100 - 50, rnd() * 1000 - 40, 18 + rnd() * 40]);
+const LANES = []; for (let i = 0; i < 34; i++) { const x = rnd() * 1100 - 50, y = rnd() * 1000 - 40, a = rnd() * Math.PI, l = 40 + rnd() * 120; LANES.push([[x, y], [x + Math.cos(a) * l * 0.5 + rnd() * 20, y + Math.sin(a) * l * 0.5 + rnd() * 20], [x + Math.cos(a) * l, y + Math.sin(a) * l]]); }
+const HAMLETS = []; for (let i = 0; i < 14; i++) HAMLETS.push([rnd() * 1000, rnd() * 940, ['Le Mollard', 'Les Gandys', 'La Plagne', 'Le Cozon', 'Les Teppaz', 'Le Planolet', 'La Coche', 'Le Mas', 'Bellecombe', 'Les Rivaux', 'Le Frou', 'La Diat', 'Le Grand Som', 'Les Bruyères'][i]]);
+const ROADS = [
+  { c: 'major', pts: [[-200, 720], [150, 650], [330, 690], [520, 640], [760, 700], [1200, 640]] },
+  { c: 'major', pts: [[860, -200], [820, 200], [870, 420], [800, 700], [860, 1200]] },
+  { c: 'minor', pts: [[100, 80], [260, 230], [380, 300], [500, 330], [640, 300]] },
+  { c: 'minor', pts: [[150, 900], [260, 760], [330, 690]] },
+  { c: 'minor', pts: [[620, 900], [600, 760], [640, 690]] }
+];
+const TOWNS = [[0, 'Les Échelles', -8, 24], [19, 'La Ruchère', 14, -10], [34.2, 'St-Pierre-d’Entremont', 12, 18], [52.5, 'Col du Granier', 14, -14], [26, 'Corbel', -10, 22]];
+
+// ---------- helpers ----------
+function fitT(pts, r, pad) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; pts.forEach(([x, y]) => { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); });
+  const rw = r[2] - r[0] - 2 * pad, rh = r[3] - r[1] - 2 * pad; const s = Math.min(rw / (x1 - x0 || 1), rh / (y1 - y0 || 1));
+  const ox = r[0] + pad + (rw - (x1 - x0) * s) / 2 - x0 * s, oy = r[1] + pad + (rh - (y1 - y0) * s) / 2 - y0 * s;
+  return { s, P: ([x, y]) => [x * s + ox, y * s + oy] };
+}
+const pth = (pts) => 'M' + pts.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L');
+function blob(cx, cy, r, P, s, seed) { const pts = []; for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; const rr = r * (1 + 0.22 * Math.sin(a * 3 + seed) + 0.12 * Math.cos(a * 5 + seed * 2)); pts.push(P([cx + rr * Math.cos(a), cy + rr * Math.sin(a)])); } return pth(pts) + 'Z'; }
+function along(pts, spacing, fn, offset) { let acc = offset ?? spacing / 2; for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; const d = Math.hypot(x1 - x0, y1 - y0); while (acc <= d) { const t = acc / d; fn(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, Math.atan2(y1 - y0, x1 - x0)); acc += spacing; } acc -= d; } }
+function glyph(kind, x, y, r, col) {
+  r = r || 6; col = col || '#5f6368';
+  if (kind === 'sun') { let g = `<circle cx="${x}" cy="${y}" r="${r * 0.48}" fill="${theme() === 'eink' ? '#000' : '#F5B82E'}"/>`; for (let i = 0; i < 8; i++) { const a = (i * Math.PI) / 4; g += `<line x1="${x + Math.cos(a) * r * 0.68}" y1="${y + Math.sin(a) * r * 0.68}" x2="${x + Math.cos(a) * r}" y2="${y + Math.sin(a) * r}" stroke="${theme() === 'eink' ? '#000' : '#F5B82E'}" stroke-width="1.3" stroke-linecap="round"/>`; } return g; }
+  if (kind === 'moon') return `<path d="M${x + r * 0.3} ${y - r * 0.8}a${r * 0.85} ${r * 0.85} 0 1 0 ${r * 0.55} ${r * 1.35}a${r * 0.7} ${r * 0.7} 0 0 1 -${r * 0.55} -${r * 1.35}Z" fill="${theme() === 'eink' ? '#000' : '#8FA3D9'}"/>`;
+  const cloud = `<path d="M${x - r} ${y + r * 0.35}a${r * 0.45} ${r * 0.45} 0 0 1 ${r * 0.2} -${r * 0.85}a${r * 0.6} ${r * 0.6} 0 0 1 ${r * 1.1} -${r * 0.15}a${r * 0.45} ${r * 0.45} 0 0 1 ${r * 0.62} ${r}Z" fill="${theme() === 'eink' ? '#fff' : theme() === 'dark' ? '#9aa3ad' : '#9aa0a6'}" stroke="${theme() === 'eink' ? '#000' : 'none'}" stroke-width="1"/>`;
+  if (kind === 'cloud') return cloud;
+  if (kind === 'rain') return cloud.replace(new RegExp(`y \\+`, 'g'), 'y +') + [-0.5, 0, 0.5].map((d) => `<line x1="${x + d * r}" y1="${y + r * 0.6}" x2="${x + d * r - r * 0.2}" y2="${y + r * 1.05}" stroke="${theme() === 'eink' ? '#000' : '#7E57C2'}" stroke-width="1.3" stroke-linecap="round"/>`).join('');
+  return '';
+}
+function plate(x, y, text, o) {
+  o = o || {}; const fs = o.fs || 10, padx = o.padx ?? 5, h = o.h || fs + 7; const w = o.w || text.length * fs * 0.58 + padx * 2 + (o.icon ? h - 2 : 0);
+  const fill = o.fill || '#fff', stroke = o.stroke || 'none', sw = o.sw || 0, col = o.col || '#1b1c1d', r = o.r ?? h / 2, op = o.op ?? 1;
+  let g = `<g opacity="${op}"><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${o.dash ? 'stroke-dasharray="3 2"' : ''}/>`;
+  if (o.icon) g += glyph(o.icon, x - w / 2 + h / 2 + 1, y - 0.5, h * 0.32);
+  g += `<text x="${x + (o.icon ? (h - 2) / 2 : 0)}" y="${y + fs * 0.36}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="${col}">${text}</text></g>`;
+  return g;
+}
+function sign(x, y, v, big) { const r = big ? 13 : 10; const p = pal(); return `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${p.sign}" stroke-width="${big ? 4 : 3.2}"/><text x="${x}" y="${y + (big ? 4.3 : 3.4)}" text-anchor="middle" font-size="${big ? 12 : 9.5}" font-weight="800" fill="#1b1c1d">${v}</text>`; }
+function climbPlate(x, y, c) { const p = pal(), ek = theme() === 'eink'; const fill = ek ? '#000' : p.plate, col = theme() === 'dark' ? '#1b1c1d' : '#fff';
+  return `<g><path d="M${x} ${y} l-4 -6 h8z" fill="${fill}"/><rect x="${x - 25}" y="${y - 32}" width="50" height="26" rx="5" fill="${fill}"/><text x="${x}" y="${y - 21}" text-anchor="middle" font-size="10" font-weight="800" fill="${col}">${c.cat}</text><text x="${x}" y="${y - 10.5}" text-anchor="middle" font-size="8.5" fill="${col}" opacity=".9">+${c.gain} m</text></g>`; }
+
+// ---------- map renderer ----------
+// o: { w, h, rect:[x0,y0,x1,y1] where the route is framed, fitKm:[a,b], lens, focus:{lens,a,b}, cursorKm, sym:bool, net:bool, routeFocus, fast, oneway, cyc, zoom:'fit'|'near', arrows }
+function mapSVG(o) {
+  const w = o.w || 360, h = o.h || 760, lens = o.lens || 'overview', p = pal(), ek = theme() === 'eink', dk = theme() === 'dark';
+  const fitPts = o.fitKm ? wSub(o.fitKm[0], o.fitKm[1]) : WP; const T = fitT(fitPts, o.rect || [0, 24, w, h], o.pad ?? 26); const P = T.P, s = T.s;
+  const id = 'm' + ++UID;
+  let g = `<svg class="map" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Roboto,Helvetica Neue,sans-serif"><defs>`;
+  g += `<radialGradient id="${id}h"><stop offset="0" stop-color="var(--map-shadow)" stop-opacity="1"/><stop offset="1" stop-color="var(--map-shadow)" stop-opacity="0"/></radialGradient>`;
+  g += `<radialGradient id="${id}l"><stop offset="0" stop-color="var(--map-light)"/><stop offset="1" stop-color="var(--map-light)" stop-opacity="0"/></radialGradient>`;
+  g += `<pattern id="${id}fp" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="0.9" fill="#000"/></pattern><pattern id="${id}wp" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 2.5h5" stroke="#000" stroke-width="0.6"/></pattern></defs>`;
+  g += `<rect width="${w}" height="${h}" fill="var(--map-land)"/>`;
+  PEAKS.forEach(([pk, k]) => { const [x, y] = P(pk); g += `<ellipse cx="${x + 30 * k * s * 3}" cy="${y + 26 * k * s * 3}" rx="${210 * k * s}" ry="${170 * k * s}" fill="url(#${id}h)"/><ellipse cx="${x - 24 * k * s * 3}" cy="${y - 22 * k * s * 3}" rx="${150 * k * s}" ry="${120 * k * s}" fill="url(#${id}l)"/>`; });
+  FORESTS.forEach(([x, y, r], i) => (g += `<path d="${blob(x, y, r, P, s, i)}" fill="${ek ? `url(#${id}fp)` : 'var(--map-forest)'}"/>`));
+  PEAKS.forEach(([pk, k], j) => { for (let r = 30; r < 260 * k; r += 26) g += `<path d="${blob(pk[0] + 8, pk[1] + 4, r, P, s, j * 3 + r / 40)}" fill="none" stroke="var(--map-contour)" stroke-width="${r % 104 < 26 ? 1 : 0.6}"/>`; });
+  g += `<path d="${blob(LAKE[0], LAKE[1], LAKE[2], P, s, 2)}" fill="${ek ? `url(#${id}wp)` : 'var(--map-water)'}" stroke="${ek ? '#000' : 'none'}" stroke-width="0.8"/>`;
+  // base roads (fast-road context on majors when o.fast)
+  ROADS.forEach((r) => { const pts = r.pts.map(P), maj = r.c === 'major';
+    if (o.fast && maj) g += `<path d="${pth(pts)}" fill="none" stroke="${p.fast}" stroke-width="${ek ? 9 : 10}" ${ek ? `stroke-dasharray="1 3"` : ``} stroke-linejoin="round" opacity="${ek ? 1 : 0.9}"/>`;
+    g += `<path d="${pth(pts)}" fill="none" stroke="var(${maj ? '--map-major-case' : '--map-road-case'})" stroke-width="${maj ? 5.5 : 4}" stroke-linejoin="round"/><path d="${pth(pts)}" fill="none" stroke="var(${maj ? '--map-major' : '--map-road'})" stroke-width="${maj ? 3.6 : 2.4}" stroke-linejoin="round"/>`; });
+  LANES.forEach((l) => { const pts = l.map(P); g += `<path d="${pth(pts)}" fill="none" stroke="var(--map-road-case)" stroke-width="${s > 1 ? 3.2 : 1.6}"/><path d="${pth(pts)}" fill="none" stroke="var(--map-road)" stroke-width="${s > 1 ? 2 : 0.8}"/>`; });
+  HAMLETS.forEach(([x0, y0, n]) => { const [x, y] = P([x0, y0]); if (x < 10 || x > w - 10 || y < 30 || y > h) return; g += `<circle cx="${x}" cy="${y}" r="1.8" fill="var(--map-label)"/>` + (s > 0.5 ? `<text x="${x + 4}" y="${y + 3}" font-size="8.5" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="2.5" paint-order="stroke" opacity=".85">${n}</text>` : ''); });
+  // the road the route follows (base map)
+  g += `<path d="${pth(WP.map(P))}" fill="none" stroke="var(--map-road-case)" stroke-width="4.2"/><path d="${pth(WP.map(P))}" fill="none" stroke="var(--map-road)" stroke-width="2.6"/>`;
+  // hiking / biking network overlay (inner routes layer) — dimmed by route focus (B1)
+  if (o.net !== false) { const net = [[120, 140], [300, 260], [520, 210], [700, 150], [900, 120]].map(P), net2 = [[200, 860], [380, 700], [560, 560], [760, 470], [960, 420]].map(P); const op = o.routeFocus ? 0.3 : 0.9;
+    g += `<path d="${pth(net)}" fill="none" stroke="${ek ? '#000' : '#c70000'}" stroke-width="2" stroke-dasharray="${ek ? '3 3' : '8 5'}" opacity="${op}"/><path d="${pth(net2)}" fill="none" stroke="${ek ? '#000' : '#8800ff'}" stroke-width="2" stroke-dasharray="${ek ? '6 6' : '8 5'}" opacity="${op}"/>`;
+    if (!o.routeFocus) { const [lx, ly] = net[2]; g += `<text x="${lx}" y="${ly - 6}" font-size="9" font-weight="700" fill="${ek ? '#000' : '#c70000'}" stroke="var(--map-halo)" stroke-width="2.5" paint-order="stroke">GR 9</text>`; } }
+  TOWNS.forEach(([km, name, dx, dy]) => { const [x, y] = P(wAt(km)); if (x < -40 || x > w + 40 || y < 0 || y > h) return; const big = km === 52.5;
+    g += `<text x="${x + dx}" y="${y + dy}" font-size="${big ? 10.5 : 10}" font-weight="${big ? 700 : 500}" fill="var(--map-label)" stroke="var(--map-halo)" stroke-width="3" paint-order="stroke" text-anchor="${dx < 0 ? 'end' : 'start'}">${name}</text>`; });
+  // ---- the route ----
+  const full = WP.map(P), runs = lensRuns(lens), f = o.focus;
+  const inF = (a, b) => !f || (b > f.a + 0.01 && a < f.b - 0.01);
+  const baseW = o.navW || 5, caseW = baseW + (o.navW ? 5 : 3.4);
+  if (f) g += `<path d="${pth(wSub(f.a, f.b).map(P))}" fill="none" stroke="${ek ? '#000' : p.accent}" stroke-opacity="${ek ? 1 : 0.45}" stroke-width="${baseW + 11}" stroke-linecap="round" stroke-linejoin="round" ${ek ? 'stroke-dasharray="1 4"' : ''}/>`;
+  if (o.passedKm) { g += `<path d="${pth(wSub(0, o.passedKm).map(P))}" fill="none" stroke="${ek ? '#000' : '#9AA0A6'}" stroke-width="${baseW}" stroke-linecap="round" opacity="${ek ? 1 : 0.6}" ${ek ? 'stroke-dasharray="2 4"' : ''}/>`; }
+  const r0 = o.passedKm || 0;
+  if (o.alerts) RISK.forEach((r) => { const a = Math.max(r.a, r0); if (r.b <= a) return; g += `<path d="${pth(wSub(a, r.b).map(P))}" fill="none" stroke="${ek ? '#000' : p.r3}" stroke-width="${caseW + 5}" stroke-linecap="round" stroke-linejoin="round" ${ek ? 'stroke-dasharray="2 2"' : ''}/>`; });
+  g += `<path d="${pth(wSub(r0, KM).map(P))}" fill="none" stroke="${p.case}" stroke-width="${caseW + (ek ? 1.5 : 0)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  runs.forEach(([a, b, k, sv]) => { a = Math.max(a, r0); if (b <= a) return; const pts = wSub(a, b).map(P); const col = lens === 'overview' ? (o.navW ? p.accent : p.item) : p[k];
+    g += `<path d="${pth(pts)}" fill="none" stroke="${ek ? '#000' : col}" stroke-width="${baseW + (sv === 3 && lens !== 'overview' ? 1.5 : 0) + (ek ? (inF(a, b) ? 1.5 : -1.5) : 0)}" stroke-linecap="round" stroke-linejoin="round" opacity="${inF(a, b) || ek ? 1 : 0.35}"/>`;
+    if (ek && lens !== 'overview' && sv >= 1 && inF(a, b)) g += `<path d="${pth(pts)}" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="${sv === 1 ? '2 7' : sv === 2 ? '2 3' : '6 2'}" opacity="${inF(a, b) ? 1 : 0.4}"/>`; });
+  if (o.arrows) along(wSub(r0, KM).map(P), 46, (x, y, a) => (g += `<path d="M-3.2 -2.6L1.8 0L-3.2 2.6" transform="translate(${x} ${y}) rotate(${(a * 180) / Math.PI})" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>`));
+  if (lens === 'climbs' || o.alerts) GRUNS.forEach(([a, b, k, sv]) => { if (sv < 2 || b <= r0) return; along(wSub(a, b).map(P), sv === 3 ? 11 : 20, (x, y, an) => (g += `<path d="M-2.6 -2.6L1.6 0L-2.6 2.6" transform="translate(${x} ${y}) rotate(${(an * 180) / Math.PI})" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="${inF(a, b) ? 1 : 0.4}"/>`), 3); });
+  // start / finish
+  const [sx, sy] = P(wAt(0)); g += `<circle cx="${sx}" cy="${sy}" r="7" fill="${ek ? '#000' : '#2e7d32'}" stroke="#fff" stroke-width="2"/><path d="M${sx - 2.4} ${sy - 3.4}v6.8M${sx - 2.4} ${sy - 3.4}h5l-1.2 1.7l1.2 1.7h-5" stroke="#fff" stroke-width="1.2" fill="#fff"/>`;
+  // ---- symbols ----
+  if (o.sym !== false) {
+    const bike = o.bike !== false;
+    if ((lens === 'overview' && bike && !o.noRiskSym) || lens === 'road') RISK.forEach((r) => { const [x, y] = P(wAt((r.a + r.b) / 2)); g += `<g opacity="${inF(r.a, r.b) ? 1 : 0.45}">${sign(x, y - (o.navW ? 0 : 0), r.v, !!o.navW)}</g>`; });
+    if (lens === 'overview' && !o.navW) [10, 20, 30, 40, 50, 60].forEach((km) => { const [x, y] = P(wAt(km)); g += `<text x="${x}" y="${y + 3}" text-anchor="middle" font-size="8" font-weight="800" fill="#fff" stroke="#000" stroke-width="2.6" paint-order="stroke">${km}</text>`; });
+    if (lens === 'climbs') CLIMBS.filter((c) => c.id !== 4).forEach((c) => { const [x, y] = P(wAt(c.b)); g += `<g opacity="${inF(c.a, c.b) ? 1 : 0.45}">${climbPlate(x, y - 4, c)}</g>`; });
+    if (lens === 'weather') WX.forEach((wx, j) => { if (j % 2 && !o.allWx) return; const [x, y] = P(wAt(wx.km)); const st = !!o.stale; const ico = wx.cloud === 'rain' ? 'rain' : wx.cloud;
+      g += plate(x, y - 16, wx.temp + '°' + (wx.rain ? ' ' + wx.rain + '' : ''), { icon: ico, fs: 10, h: 20, fill: ek ? '#fff' : dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : ek ? '#000' : '#1b1c1d', stroke: ek ? '#000' : st ? '#9aa0a6' : dk ? '#4a5056' : '#cfd3d7', sw: ek ? 1.5 : 1, op: st && !ek ? 0.5 : 1, dash: st });
+      const rel = Math.PI / 4 - bearing(wx.km); const ax = x + 0, ay = y + 2; // wind blowing to NE; arrow relative shown
+      g += `<g transform="translate(${x + (j % 4 ? 22 : -22)} ${y - 16}) rotate(${-45})" opacity="${st ? 0.5 : 1}"><path d="M0 6V-5M-3.5 -1.5L0 -5.5L3.5 -1.5" stroke="${ek ? '#000' : dk ? '#e8eaed' : '#1b1c1d'}" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`; });
+    if (lens === 'sun') { const [x, y] = P(wAt(SUNSET_KM)); g += plate(x + 4, y - 16, 'Sunset 17:07', { fs: 9.5, h: 19, fill: dk ? '#2a2f34' : '#fff', col: dk ? '#e8eaed' : '#1b1c1d', stroke: ek ? '#000' : '#F5B82E', sw: 2, icon: 'sun' }); }
+  }
+  if (o.cursorKm != null) { const [x, y] = P(wAt(o.cursorKm)); g += `<circle cx="${x}" cy="${y}" r="7.5" fill="${ek ? '#000' : p.accent}" stroke="#fff" stroke-width="2.5"/>`; }
+  if (o.user) { const [x, y] = P(wAt(o.user)); const a = (bearing(o.user) * 180) / Math.PI + 90; g += `<circle cx="${x}" cy="${y}" r="20" fill="${ek ? 'none' : p.accent}" opacity=".18"/><g transform="translate(${x} ${y}) rotate(${a})"><path d="M0 -11L8 9L0 4.5L-8 9Z" fill="${ek ? '#000' : '#1a73e8'}" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/></g>`; }
+  return g + (o.extra ? o.extra(P, s) : '') + '</svg>';
+}
+
+// ---------- profile renderer ----------
+// o: { w, h, lens, cursorKm, focus:{a,b}, zoom:[a,b], clock, attn, brackets, mini }
+function profileSVG(o) {
+  const w = o.w || 348, h = o.h || 150, lens = o.lens || 'overview', p = pal(), ek = theme() === 'eink', dk = theme() === 'dark';
+  const z0 = o.zoom ? o.zoom[0] : 0, z1 = o.zoom ? o.zoom[1] : KM, mini = !!o.mini;
+  const gl = mini ? 4 : 28, gr = mini ? 4 : 8, top = mini ? 3 : o.brackets !== false && lens === 'climbs' ? 30 : 10;
+  const axisH = mini ? 0 : o.clock ? 26 : 15, attnH = !mini && o.attn !== false ? 10 : 0, bandH = mini ? 4 : 0;
+  const pb = h - axisH - attnH - bandH; const emin = 150, emax = 1260;
+  const X = (km) => gl + ((km - z0) / (z1 - z0)) * (w - gl - gr), Y = (e) => top + (1 - (e - emin) / (emax - emin)) * (pb - top);
+  const id = 'p' + ++UID;
+  let g = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" font-family="Roboto,Helvetica Neue,sans-serif" style="display:block"><defs>`;
+  [['h1', 'M0 5L5 0', 0.7, 5], ['h2', 'M0 3L3 0', 0.9, 3], ['h3', 'M0 2L2 0', 1.1, 2], ['hx', 'M0 0L4 4M0 4L4 0', 0.6, 4], ['hd', 'M0 2h4', 0.6, 4]].forEach(([n, d, sw, sz]) => (g += `<pattern id="${id}${n}" width="${sz}" height="${sz}" patternUnits="userSpaceOnUse"><path d="${d}" stroke="#000" stroke-width="${sw}"/></pattern>`));
+  g += `</defs>`;
+  if (!mini) { [400, 800, 1200].forEach((e) => { g += `<line x1="${gl}" x2="${w - gr}" y1="${Y(e)}" y2="${Y(e)}" stroke="var(--border)" stroke-width="0.6"/><text x="${gl - 4}" y="${Y(e) + 3}" text-anchor="end" font-size="8.5" fill="var(--text-muted)">${e}</text>`; }); }
+  // sun lens: background bands
+  if (lens === 'sun' && !mini) SUN.forEach(([a, b, k]) => { if (b < z0 || a > z1) return; const x0 = X(Math.max(a, z0)), x1 = X(Math.min(b, z1));
+    g += `<rect x="${x0}" y="${top - 4}" width="${x1 - x0}" height="${pb - top + 4}" fill="${ek ? (k === 's3' ? `url(#${id}h3)` : k === 's0' ? `url(#${id}h1)` : k === 's2' ? `url(#${id}hd)` : '#fff') : p[k]}" opacity="${ek ? 0.6 : k === 's3' ? 0.28 : 0.2}"/>`; });
+  // fill
+  const ii0 = Math.max(0, Math.floor(z0 / STEP)), ii1 = Math.min(N, Math.ceil(z1 / STEP));
+  const keyAt = (km) => { if (lens === 'overview' || lens === 'climbs') return 'g' + gbi(GRS[Math.round(km / STEP)]); const runs = lensRuns(lens); const r = runs.find((r) => km >= r[0] && km < r[1]) || runs[runs.length - 1]; return r[2]; };
+  const sevAt = (km) => { const gg = GRS[Math.round(km / STEP)]; return gg >= 12 ? 3 : gg >= 9 ? 2 : gg >= 5 ? 1 : gg <= -6 ? -1 : 0; };
+  for (let i = ii0; i < ii1; i++) { const a = i * STEP, b = (i + 1) * STEP; const x0 = X(a), x1 = X(b) + 0.4; const y0 = Y(ELE[i]), y1 = Y(ELE[i + 1]);
+    let fill; const k = keyAt(a + STEP / 2);
+    if (ek) { if (lens === 'overview' || lens === 'climbs') { const sv = sevAt(a); fill = sv === 3 ? `url(#${id}h3)` : sv === 2 ? `url(#${id}h2)` : sv === 1 ? `url(#${id}h1)` : sv === -1 ? `url(#${id}hx)` : '#fff'; }
+      else if (lens === 'road') fill = k === 'r3' ? `url(#${id}h3)` : k === 'r2' ? `url(#${id}h2)` : '#fff';
+      else if (lens === 'surface') fill = k === 'f_gravel' ? `url(#${id}h1)` : k === 'f_path' ? `url(#${id}hx)` : '#fff';
+      else fill = '#fff'; }
+    else if (lens === 'overview' || lens === 'climbs' || lens === 'surface') fill = p[k];
+    else if (lens === 'road') fill = k === 'r0' ? (dk ? '#3a4047' : '#d5d9de') : p[k];
+    else fill = p['g' + gbi(GRS[Math.round((a + STEP / 2) / STEP)])];
+    const op = (o.focus && !ek && (b <= o.focus.a || a >= o.focus.b) ? 0.3 : 1) * (!ek && (lens === 'weather' || lens === 'sun') ? 0.38 : 1);
+    g += `<path d="M${x0} ${pb}L${x0} ${y0}L${x1} ${y1}L${x1} ${pb}Z" fill="${fill}" opacity="${op}"/>`; }
+  const line = []; for (let i = ii0; i <= ii1; i++) line.push([X(i * STEP), Y(ELE[i])]);
+  g += `<path d="${pth(line)}" fill="none" stroke="${ek ? '#000' : 'var(--text-primary)'}" stroke-width="${mini ? 1.4 : 1.3}"/>`;
+  if (!mini) {
+    if (lens === 'road') RISK.forEach((r) => { if (r.b < z0 || r.a > z1) return; const xm = X((Math.max(r.a, z0) + Math.min(r.b, z1)) / 2); g += `<g transform="translate(0 0)">${sign(xm, top + 4, r.v)}</g>`; });
+    if (lens === 'weather') { WX.forEach((wx) => { if (wx.km < z0 || wx.km > z1) return; const x = X(wx.km); if (wx.rain) { const bh = wx.rain * 14; g += `<rect x="${x - 4}" y="${pb - bh}" width="8" height="${bh}" rx="2" fill="${ek ? '#000' : p.w2}"/>`; } g += glyph(wx.cloud === 'rain' ? 'rain' : wx.cloud, x, top + 2, 5.5); });
+      const tl = WX.filter((wx) => wx.km >= z0 && wx.km <= z1).map((wx) => [X(wx.km), top + 18 + (17 - wx.temp) * 3.2]); g += `<path d="${pth(tl)}" fill="none" stroke="${ek ? '#000' : '#E8743B'}" stroke-width="1.6" stroke-dasharray="${ek ? '3 2' : 'none'}"/>`;
+      tl.forEach(([x, y], j) => { if (j % 3) return; g += `<text x="${x}" y="${y - 4}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${ek ? '#000' : '#E8743B'}" stroke="var(--surface-2)" stroke-width="2.5" paint-order="stroke">${WX.filter((wx) => wx.km >= z0 && wx.km <= z1)[j].temp}°</text>`; }); }
+    if (lens === 'sun') { const x = X(SUNSET_KM); if (SUNSET_KM > z0 && SUNSET_KM < z1) g += `<line x1="${x}" x2="${x}" y1="${top - 4}" y2="${pb}" stroke="${ek ? '#000' : '#E09400'}" stroke-width="1.3" stroke-dasharray="3 2"/><text x="${x - 3}" y="${top + 6}" text-anchor="end" font-size="8.5" font-weight="700" fill="${ek ? '#000' : '#B07300'}">sunset 17:07</text>`; }
+    if (lens === 'climbs' && o.brackets !== false) CLIMBS.filter((c) => c.id !== 4).forEach((c) => { if (c.b < z0 || c.a > z1) return; const x0 = X(Math.max(c.a, z0)), x1 = X(Math.min(c.b, z1)), yb = Y(c.top) - 8; const foc = o.focus && o.focus.a === c.a;
+      g += `<path d="M${x0} ${yb + 4}V${yb}H${x1}V${yb + 4}" fill="none" stroke="${ek ? '#000' : 'var(--text-secondary)'}" stroke-width="${foc ? 2 : 1}"/>`;
+      g += `<rect x="${(x0 + x1) / 2 - 17}" y="${yb - 15}" width="34" height="13" rx="3" fill="${ek ? '#000' : dk ? '#e8eaed' : '#2b2f33'}"/><text x="${(x0 + x1) / 2}" y="${yb - 5.5}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${dk ? '#1b1c1d' : '#fff'}">${c.cat}</text>`; });
+    if (o.focus) { g += `<line x1="${X(o.focus.a)}" x2="${X(o.focus.a)}" y1="${top - 6}" y2="${pb}" stroke="var(--text-accent)" stroke-width="1"/><line x1="${X(o.focus.b)}" x2="${X(o.focus.b)}" y1="${top - 6}" y2="${pb}" stroke="var(--text-accent)" stroke-width="1"/>`; }
+    // attention track
+    if (attnH) ATTN.forEach(([a, b, k, l]) => { if (b < z0 || a > z1) return; const x0 = X(Math.max(a, z0)), x1 = Math.max(X(Math.min(b, z1)), x0 + 5); g += `<rect x="${x0}" y="${pb + 3}" width="${x1 - x0}" height="6" rx="2" fill="${ek ? '#000' : p[k]}"/>`; });
+    // axis
+    const ay = pb + attnH + 10; const stepKm = z1 - z0 > 30 ? 10 : z1 - z0 > 12 ? 5 : 2;
+    for (let km = Math.ceil(z0 / stepKm) * stepKm; km <= z1 + 0.01; km += stepKm) { const x = X(km); g += `<text x="${x}" y="${ay}" text-anchor="middle" font-size="8.5" fill="var(--text-muted)">${km}${km === 0 ? '' : ''}</text>`;
+      if (o.clock && Math.round(km / stepKm) % 2 === 0) g += `<text x="${x}" y="${ay + 11}" text-anchor="middle" font-size="8.5" font-weight="700" fill="var(--text-secondary)">${clock(etaMin(km))}</text>`; }
+    g += `<text x="${w - gr}" y="${ay}" text-anchor="end" font-size="8.5" fill="var(--text-muted)">km</text>`;
+  } else {
+    // silhouette: lens band
+    const runs = lens === 'overview' || lens === 'climbs' ? GRUNS : lensRuns(lens); runs.forEach(([a, b, k]) => { if (b < z0 || a > z1) return; g += `<rect x="${X(Math.max(a, z0))}" y="${h - 4}" width="${X(Math.min(b, z1)) - X(Math.max(a, z0)) + 0.4}" height="4" fill="${ek ? (k.endsWith('3') || k === 'g7' || k === 'g6' ? '#000' : '#fff') : lens === 'overview' ? p.item : p[k]}"/>`; });
+    if (ek) g += `<rect x="${gl}" y="${h - 4}" width="${w - gl - gr}" height="4" fill="none" stroke="#000" stroke-width="0.6"/>`;
+  }
+  if (o.cursorKm != null) { const x = X(o.cursorKm), y = Y(eleAt(o.cursorKm)); g += `<line x1="${x}" x2="${x}" y1="${mini ? 0 : top - 8}" y2="${pb}" stroke="${ek ? '#000' : 'var(--text-accent)'}" stroke-width="1.3"/><circle cx="${x}" cy="${y}" r="${mini ? 3.5 : 4.5}" fill="${ek ? '#000' : 'var(--fill-accent)'}" stroke="var(--surface-2)" stroke-width="1.8"/>`; }
+  return g + '</svg>';
+}
+
+// ---------- sheet components ----------
+const LENS = {
+  overview: { ic: 'ti-route', label: 'Overview', head: '<b>62.4 km</b> · 3 h 41 · 4 climbs · 3 fast sections' },
+  climbs: { ic: 'ti-mountain', label: 'Climbs', val: '4', head: '<b>4 climbs</b> · Cat 1 to the col at km 52 · max 16 %' },
+  road: { ic: 'ti-alert-triangle', label: 'Road', val: '9.8 km', alert: 1, head: '<b>9.8 km</b> on fast roads without a separated lane' },
+  weather: { ic: 'ti-cloud-rain', label: 'Weather', val: '3 mm', head: '<b>8–17 °C</b> · rain 3 mm around km 38 · headwind 40 %' },
+  sun: { ic: 'ti-sun', label: 'Sun', val: '62 %', head: '<b>Sun 62 %</b> · sunset 17:07 at km 53 · 34 min dark' },
+  surface: { ic: 'ti-road', label: 'Surface', val: '80 % paved', head: '<b>80 % paved</b> · 14 % gravel · 6 % path' }
+};
+const ORDER = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface'];
+function lensBar(o) {
+  o = o || {}; const sel = o.sel || 'overview', st = o.st || {}, list = (o.list || ORDER).filter((l) => !(o.hide || []).includes(l));
+  const chips = list.map((l) => { const L = LENS[l], s = st[l]; let cls = 'chip' + (l === sel ? ' sel' : '') + (s === 'dash' ? ' dash' : '') + (s === 'stale' ? ' stale' : '');
+    let val = s === 'dash' ? '<i class="ti ti-plus" style="font-size:14px"></i>' : L.val ? `<b>${L.val}</b>` : '';
+    if (s === 'stale') val += '<span class="st"><i class="ti ti-refresh" style="font-size:13px;color:var(--warn)"></i></span>';
+    if (s === 'off') val += '<i class="ti ti-cloud-off" style="font-size:13px"></i>';
+    return `<span class="${cls}"><i class="ti ${L.ic}"></i>${L.label}${val ? ' ' + val : ''}${L.alert && s !== 'dash' ? '<span class="dot"></span>' : ''}${s === 'run' ? '<span class="run"></span>' : ''}</span>`; }).join('');
+  return `<div class="lensbar"><div class="in" style="transform:translateX(-${o.off || 0}px)">${chips}</div></div>`;
+}
+function insight(o) {
+  if (o.focus) return `<div class="insight focus"><span class="nav"><i class="ti ti-chevron-left"></i></span><span class="tx" style="text-align:center">${o.focus}</span><span class="nav"><i class="ti ti-chevron-right"></i></span><span class="nav" style="width:32px"><i class="ti ti-x" style="font-size:17px"></i></span></div>`;
+  const ctrl = o.btn ? `<span class="mini">${o.btnIc ? `<i class="ti ${o.btnIc}" style="font-size:15px"></i>` : ''}${o.btn}</span>` : `<span class="nav"><i class="ti ti-chevron-right" style="color:var(--text-secondary)"></i></span>`;
+  return `<div class="insight" ${o.style ? `style="${o.style}"` : ''}><span class="tx">${o.text}</span>${ctrl}</div>`;
+}
+function titleBand(o) {
+  o = o || {}; const ic = o.ic || 'ti-bike';
+  if (o.compact) return `<div class="tband compact"><div class="itile"><i class="ti ${ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.name || 'Col du Granier loop'}</div></div>${o.when || ''}<span class="ib" style="width:34px"><i class="ti ti-dots-vertical"></i></span></div>`;
+  return `<div class="tband"><div class="itile"><i class="ti ${ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.name || 'Col du Granier loop'}</div><div class="sub">${o.sub || 'Cycling · road · loop · saved'}</div></div><span class="ib"><i class="ti ti-dots-vertical"></i></span></div>`;
+}
+function fingerprint() { const p = pal(); const c = [0, 0, 0, 0, 0, 0, 0, 0]; GRS.forEach((g) => c[gbi(g)]++); const cls = [[0, 1, 2], [3], [4], [5], [6, 7]].map((ix) => [ix.reduce((s, i) => s + c[i], 0), p['g' + ix[ix.length > 1 ? 1 : 0]]]);
+  return `<div class="fp">${cls.map(([n, col], j) => `<u style="flex:${n};background:${theme() === 'eink' ? (j === 4 ? '#000' : j === 3 ? '#666' : '#fff') : col}"></u>`).join('')}</div>`; }
+function tiles(o) {
+  o = o || {}; const hike = o.hike;
+  const rem = o.remaining;
+  let t = `<div class="tile" style="flex:1"><span class="v">${o.narrow ? '' : '<i class="ti ti-arrows-horizontal"></i>'}${hike ? '11.2' : '62.4'} km</span>${rem ? `<span class="l2 acc">⚑ ${rem[0]}</span>` : ''}</div>`;
+  t += `<div class="tile" style="flex:1"><span class="v">${o.narrow ? '' : '<i class="ti ti-clock"></i>'}${hike ? '4 h 50' : '3 h 41'}</span>${rem ? `<span class="l2 acc">⚑ ${rem[1]}</span>` : o.arrive ? `<span class="l2">→ ${o.arrive}</span>` : ''}</div>`;
+  t += `<div class="tile" style="flex:${hike ? 1.5 : 1.15}"><span class="v"><i class="ti ti-trending-up"></i>${hike ? '1 020' : '1 180'} m</span>${rem ? `<span class="l2 acc">⚑ +${rem[2] || '612'} m</span>` : `<span class="l2"><i class="ti ti-trending-down" style="font-size:11px;vertical-align:-1px"></i> ${hike ? '1 018' : '1 175'} m</span>`}</div>`;
+  if (!hike && !o.noRisk) t += `<div class="tile risk" style="flex:1"><span class="v"><i class="ti ti-alert-triangle"></i>9.8 km</span><span class="l2" style="color:var(--danger)">3 sections</span></div>`;
+  return `<div class="tiles">${t}</div>`;
+}
+function actions(o) { o = o || {}; return `<div class="actions"><span class="btn f"><i class="ti ti-navigation"></i>Start</span><span class="btn t"><i class="ti ti-calendar-time"></i>Plan</span><span class="rb"><i class="ti ti-pencil"></i></span><span class="rb"><i class="ti ti-share"></i></span>${o.narrow ? '' : '<span class="rb"><i class="ti ti-dots"></i></span>'}</div>`; }
+function pointStrip(km, extra) { const e = Math.round(eleAt(km)), g = GRS[Math.round(km / STEP)].toFixed(1);
+  return `<div class="strip"><i class="ti ti-map-pin" style="font-size:17px"></i><div class="c"><i class="ti ti-arrows-horizontal"></i><b>${km.toFixed(1)} km</b></div><div class="c"><i class="ti ti-mountain"></i><b>${e} m</b></div><div class="c"><i class="ti ti-angle"></i><b>${g} %</b></div><div class="c"><i class="ti ti-clock"></i><b>${clock(etaMin(km))}</b></div>${extra || ''}</div>`; }
+function readout(km, extra) { const e = Math.round(eleAt(km)), g = GRS[Math.round(km / STEP)].toFixed(1);
+  return `<div class="insight readout"><i class="ti ti-map-pin" style="font-size:17px;color:var(--text-accent)"></i><span class="tx"><b>${km.toFixed(1)} km</b> · ${e} m · ${g} % · <b>${clock(etaMin(km))}</b>${extra ? ' · ' + extra : ''}</span><span class="nav" style="width:32px"><i class="ti ti-x" style="font-size:17px"></i></span></div>`; }
+function profileCard(o) {
+  o = o || {}; const w = o.w || 348;
+  return `<div class="card" ${o.style ? `style="${o.style}"` : ''}>${o.noBar ? '' : lensBar(o.bar || { sel: o.lens })}${o.ask || (o.cursorKm != null && o.strip !== false ? readout(o.cursorKm, o.stripExtra) : insight(o.ins || { text: LENS[o.lens || 'overview'].head }))}<div class="pc" style="padding:2px 0 6px">${profileSVG({ w, h: o.h || 152, lens: o.lens, cursorKm: o.cursorKm, focus: o.focus, zoom: o.zoom, clock: o.clock !== false })}</div></div>`;
+}
+function whenPill(t, cls) { return `<span class="pill ${cls || 'sel'}" style="margin-right:2px"><i class="ti ti-clock"></i>${t || 'Sat 14:00 → 17:41'}</span>`; }
+function sec(o) {
+  return `<div class="sec"><div class="sech"><div class="itile"><i class="ti ${o.ic}"></i></div><div style="flex:1;min-width:0"><div class="ttl">${o.title}</div><div class="sub">${o.sum}</div></div>${o.chip || ''}<span class="ib" style="width:30px"><i class="ti ti-chevron-${o.open ? 'up' : 'down'}"></i></span></div>${o.open ? `<div class="secb">${o.body || ''}</div>` : ''}</div>`;
+}
+function phone(o) {
+  // o: { h, w, map:{...}, sheetH, sheet:html, over:html, cls, sb }
+  const w = o.w || 360, h = o.h || 760; const sheetTop = h - (o.sheetH || 0);
+  const mapO = Object.assign({ w, h, rect: [0, 24, w, o.heroH ? o.heroH : sheetTop] }, o.map || {});
+  return `<div class="phone ${o.cls || ''}" style="width:${w}px;height:${h}px">${o.map === null ? '' : mapSVG(mapO)}<div class="sb"><span>${o.time || '14:02'}</span><span><i class="ti ti-antenna-bars-5"></i><i class="ti ti-wifi${o.offline ? '-off' : ''}"></i><i class="ti ti-battery-3"></i></span></div>${o.over || ''}${o.sheetH ? `<div class="sheet" style="height:${o.sheetH}px">${o.sheet || ''}</div>` : ''}${o.after || ''}</div>`;
+}
+function frame(cap, note, inner, wide) { return `<div class="frame${wide ? ' wide' : ''}"><div class="cap">${cap}</div><div class="capn">${note || ''}</div>${inner}</div>`; }
+function setTheme(t) { document.body.classList.remove('dark', 'eink'); if (t !== 'light') document.body.classList.add(t); document.querySelectorAll('.toolbar button[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === t)); renderAll(); }
+function toolbar(links) { const t = theme(); return `<div class="toolbar"><b style="margin-right:4px">Theme</b>${[['light', 'Light'], ['dark', 'Dark'], ['eink', 'E-ink']].map(([k, l]) => `<button data-t="${k}" class="${k === t ? 'on' : ''}" onclick="setTheme('${k}')">${l}</button>`).join('')}${links || ''}</div>`; }
+{ const hs = location.hash.slice(1).split('&'); hs.forEach((h0) => { if (h0 === 'dark' || h0 === 'eink') document.body.classList.add(h0); });
+  // #only=<id>: show one section (its heading, note and row) - used to export images
+  const only = (hs.find((h0) => h0.startsWith('only=')) || '').slice(5);
+  if (only) window.addEventListener('load', () => { const target = document.getElementById(only); if (!target) return; Array.from(document.body.children).forEach((el) => { if (el.tagName !== 'SCRIPT') el.style.display = 'none'; });
+    target.style.display = ''; let el = target.previousElementSibling; while (el && !el.classList.contains('row')) { el.style.display = ''; if (el.tagName === 'H2') break; el = el.previousElementSibling; } }); }
+</script>
+<script>
+const H = 760;
+const spark = (a, b, w, h) => { const p = pal(), ek = theme() === 'eink'; let g = `<svg class="spk" width="${w}" height="${h}">`; const i0 = Math.round(a / STEP), i1 = Math.round(b / STEP); let e0 = 1e9, e1 = -1e9; for (let i = i0; i <= i1; i++) { e0 = Math.min(e0, ELE[i]); e1 = Math.max(e1, ELE[i]); }
+  for (let i = i0; i < i1; i++) { const x0 = ((i - i0) / (i1 - i0)) * w, x1 = ((i + 1 - i0) / (i1 - i0)) * w + 0.5; const y0 = h - ((ELE[i] - e0) / (e1 - e0 || 1)) * (h - 2), y1 = h - ((ELE[i + 1] - e0) / (e1 - e0 || 1)) * (h - 2); const k = gbi(GRS[i]);
+    g += `<path d="M${x0} ${h}L${x0} ${y0}L${x1} ${y1}L${x1} ${h}Z" fill="${ek ? (k >= 6 ? '#000' : k >= 5 ? '#777' : '#fff') : p['g' + k]}"/>`; } return g + `<rect x="0.5" y="0.5" width="${w - 1}" height="${h - 1}" fill="none" stroke="${ek ? '#000' : 'none'}"/></svg>`; };
+const silhouette = (lens, cursorKm, focus) => `<div class="silh">${profileSVG({ w: 348, h: 28, mini: 1, lens, cursorKm, focus })}</div>`;
+const fresh = (t) => `<span class="fchip o"><i class="ti ti-refresh"></i>${t}</span>`;
+const grey = (t, ic) => `<span class="fchip u">${ic ? `<i class="ti ${ic}"></i>` : ''}${t}</span>`;
+function appbar(o) { o = o || {}; const when = o.whenHTML ?? whenPill(o.when || '14:00 → 17:41', o.whenCls);
+  return `<div class="abar"><span class="ib" style="color:var(--text-primary)"><i class="ti ti-arrow-left"></i></span><div class="tt"><b>${o.name || 'Col du Granier loop'}</b><span>${o.sub || 'Cycling · road · saved'}</span></div>${when}<span class="ib" style="width:32px"><i class="ti ti-dots-vertical"></i></span></div>`; }
+// a pushed page: app bar, hero map (second map view), sticky lens bar (+ silhouette), scrolling content
+function page(o) {
+  const hh = o.heroH || 240, top = 80; const mo = Object.assign({ w: 360, h: hh, rect: [0, 0, 360, hh], pad: hh > 150 ? 22 : 12 }, o.map || {});
+  const tools = `<span class="mctl" style="right:10px;top:8px"><i class="ti ti-arrows-maximize"></i></span>${o.three ? `<span class="mctl" style="right:10px;top:56px;font-size:13px;font-weight:800">3D</span>` : ''}${o.legend ? `<span class="lchip" style="left:10px;bottom:8px">${o.legend}</span>` : ''}`;
+  const heroDiv = `<div class="hero" style="top:${top}px;height:${hh}px">${mapSVG(mo)}${tools}</div>`;
+  const bodyDiv = `<div class="pbody" style="top:${top + hh}px">${lensBar({ sel: o.lens, off: o.off || 0, st: o.st })}${o.silh ? silhouette(o.lens, o.cursorKm, o.focus) : ''}${o.panel || ''}<div class="scroll"><div class="in" style="top:-${o.scroll || 0}px">${o.content}</div></div></div>`;
+  return phone({ map: null, over: appbar(o.bar) + heroDiv + bodyDiv });
+}
+const legend = (keys, label) => sws(keys) + label;
+const sws = (keys) => `<span class="sws">${keys.map((k) => `<u style="background:${theme() === 'eink' ? '#000' : pal()[k]}"></u>`).join('')}</span>`;
+function climbsBody(focus) {
+  return `<div style="display:flex;gap:6px;align-items:center;margin:0 0 4px"><span class="pill sel" style="height:30px"><i class="ti ti-bike"></i>Road preset <i class="ti ti-chevron-down" style="font-size:13px"></i></span><span class="sub" style="font-size:11.5px">steep ≥ 8 %, very steep ≥ 12 %</span></div>` +
+    CLIMBS.map((c) => `<div class="lr${focus === c.id ? ' foc' : ''}"><span class="cat">${c.cat.replace('Cat ', 'Cat ')}</span><div class="m"><b>${c.name} <span style="font-weight:400;font-size:11px;color:var(--text-muted)">km ${c.a.toFixed(0)}</span></b><span>${(c.b - c.a).toFixed(1)} km · ${c.avg} % avg · +${c.gain} m</span></div>${spark(c.a, c.b, 56, 18)}</div>`).join('') +
+    `<div class="lr" style="min-height:44px"><i class="ti ti-chevron-right" style="font-size:16px;color:var(--text-secondary)"></i><div class="m"><b style="font-size:12.5px">Steep sections · 5</b><span>3.4 km over 8 % · steepest 15.9 % at km 45.2</span></div></div>
+    <div class="note">Climb categories as on Strava (length × grade). Descents are listed, never warned. Steep lists stay collapsed until opened (decision 02.6).</div>`;
+}
+function roadBody(focus) {
+  const p = pal(), ek = theme() === 'eink';
+  return `<div class="bar">${[[9.6, ek ? '#000' : p.r3], [0.2, ek ? '#666' : p.r2], [8.1, ek ? '#fff' : p.cycle], [44.5, ek ? '#fff' : 'var(--border-strong)']].map(([f, c]) => `<span style="flex:${f};background:${c};${ek ? 'border:0.5px solid #000' : ''}"></span>`).join('')}</div>
+  <div class="lg"><span><i class="sw" style="background:${ek ? '#000' : p.r3}"></i>Fast, no lane<b>9.6 km</b></span><span><i class="sw" style="background:${ek ? '#666' : p.r2}"></i>Fast, painted lane<b>0.2 km</b></span><span><i class="sw" style="background:${ek ? '#fff' : p.cycle}"></i>Separated<b>8.1 km</b></span><span><i class="sw" style="background:var(--border-strong)"></i>Slower roads<b>44.5 km</b></span></div>` +
+    RISK.map((r) => `<div class="lr${focus === r.id ? ' foc' : ''}"><span class="sign">${r.v}</span><div class="m"><b>km ${r.a.toFixed(1)}–${r.b.toFixed(1)}</b><span>${(r.b - r.a) >= 1 ? (r.b - r.a).toFixed(1) + ' km' : Math.round((r.b - r.a) * 1000) + ' m'} · ${r.infra}</span></div><i class="ti ti-chevron-right" style="color:var(--text-muted)"></i></div>`).join('') +
+    `<div class="note">Based on the tagged max speed in the offline map. Fast from 70 km/h, sections from 30 m (settings). Untagged roads are not counted (6.2 km). Not a guarantee of safety.</div>`;
+}
+function weatherBody() {
+  const rel = (km) => { const b = bearing(km), wto = -Math.PI / 4; let d = wto - b; d = Math.atan2(Math.sin(d), Math.cos(d)); const c = Math.cos(d); return c > 0.45 ? ['tail', 'ti-arrow-narrow-up'] : c < -0.45 ? ['head', 'ti-arrow-narrow-down'] : ['cross', 'ti-arrow-narrow-right']; };
+  const ic = (k) => ({ sun: 'ti-sun', cloud: 'ti-cloud', rain: 'ti-cloud-rain', moon: 'ti-moon' })[k];
+  return `<div class="wxr h"><span>km</span><span>at</span><span></span><span>°C</span><span>rain</span><span>wind (to you)</span></div>` +
+    WX.filter((x, j) => j % 2 === 0 || (x.km > 34 && x.km < 45)).map((x) => { const [r, ri] = rel(x.km); return `<div class="wxr" ${x.km > 36 && x.km < 41 ? 'style="background:var(--bg-accent);margin:0 -12px;padding:0 12px"' : ''}><b>${x.km.toFixed(0)}</b><span>${clock(x.eta)}</span><i class="ti ${ic(x.cloud)}"></i><b>${x.temp}°</b><span>${x.rain ? x.rain + ' mm' : '–'}</span><span><i class="ti ${ri}" style="font-size:14px;vertical-align:-2px"></i> ${r} ${x.wind}</span></div>`; }).join('') +
+    `<div class="lab" style="font-size:11px;font-weight:700;color:var(--text-secondary);margin:10px 0 2px">Wind along the ride</div><div class="bar" style="margin-top:4px"><span style="flex:40;background:${theme() === 'eink' ? '#000' : '#E8743B'}"></span><span style="flex:35;background:var(--border-strong)"></span><span style="flex:25;background:${theme() === 'eink' ? '#fff;border:0.5px solid #000' : pal().cycle}"></span></div><div class="lg"><span>Headwind<b>40 %</b></span><span>Crosswind<b>35 %</b></span><span>Tailwind<b>25 %</b></span></div>
+    <div class="note">Open-Meteo best match · fetched 09:05 · 20 positions rounded to 2 decimals. Weather data by Open-Meteo.com (CC BY 4.0).</div>`;
+}
+function sunBody() {
+  const p = pal(), ek = theme() === 'eink';
+  return `<div class="bar">${SUN.map(([a, b, k]) => `<span style="flex:${b - a};background:${ek ? (k === 's3' ? '#000' : k === 's0' ? 'repeating-linear-gradient(45deg,#000 0 1px,#fff 1px 4px)' : k === 's2' ? 'repeating-linear-gradient(0deg,#000 0 1px,#fff 1px 4px)' : '#fff') : p[k]};${ek ? 'border:0.5px solid #000' : ''}"></span>`).join('')}</div>
+  <div class="lg"><span><i class="sw" style="background:${p.s1}"></i>Sun<b>62 %</b></span><span><i class="sw" style="background:${p.s0}"></i>Terrain shade<b>11 %</b></span><span><i class="sw" style="background:${p.s2}"></i>Overcast<b>12 %</b></span><span><i class="sw" style="background:${p.s3}"></i>Dark<b>34 min</b></span></div>
+  <div class="facts"><div><span>Sunset</span><b>17:07</b><span>at km 53</span></div><div><span>Glare</span><b>4.0 km</b><span>low sun ahead</span></div><div><span>Sun on</span><b>right 58 %</b><span>side</span></div></div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:10px"><span class="note" style="flex:1;margin:0">Terrain shadows from the offline elevation; forests and buildings not counted. Clouds from the 09:05 forecast set the shadow strength.</span><span class="pill sel"><i class="ti ti-box"></i>See it in 3D</span></div>`;
+}
+function surfaceBody() {
+  return `<div class="cap" style="margin:4px 0 0;font-size:11px;color:var(--text-secondary);font-weight:600">Surfaces</div><div class="bar">${[[49.9, '#8B939E'], [8.7, '#A89070'], [3.8, '#A6AF8F']].map(([f, c]) => `<span style="flex:${f};background:${theme() === 'eink' ? '#fff;border:0.5px solid #000' : c}"></span>`).join('')}</div><div class="lg"><span><i class="sw" style="background:#8B939E"></i>Paved<b>49.9 km</b></span><span><i class="sw" style="background:#A89070"></i>Gravel<b>8.7 km</b></span><span><i class="sw" style="background:#A6AF8F"></i>Path<b>3.8 km</b></span></div><div class="note">The existing RouteStatsView (way types / surfaces), unchanged.</div>`;
+}
+const SECS = {
+  climbs: (open, f) => sec({ ic: 'ti-mountain', title: 'Climbs', sum: '4 climbs · Cat 1 to the col · max 16 %', open, body: climbsBody(f) }),
+  road: (open, f, chip) => sec({ ic: 'ti-alert-triangle', title: 'Road safety', sum: '3 fast sections · 9.8 km · tagged speeds', open, body: roadBody(f), chip }),
+  weather: (open, chip) => sec({ ic: 'ti-cloud-rain', title: 'Weather', sum: '8–17 °C · 3 mm at km 38 · headwind 40 %', open, body: weatherBody(), chip }),
+  sun: (open, chip) => sec({ ic: 'ti-sun', title: 'Sun & shade', sum: '62 % sun · sunset 17:07 · 34 min dark', open, body: sunBody(), chip }),
+  surface: (open) => sec({ ic: 'ti-road', title: 'Road & surface', sum: '80 % paved · 14 % gravel', open, body: surfaceBody() }),
+  data: () => sec({ ic: 'ti-database', title: 'Saved with this route', sum: 'weather 12 KB · sun 4 KB · risk 3 KB' })
+};
+const allCollapsed = (except) => ['climbs', 'road', 'weather', 'sun', 'surface'].filter((k) => k !== except).map((k) => SECS[k](false)).join('') + SECS.data();
+function renderAll() {
+  UID = 0;
+  document.getElementById('tb').innerHTML = toolbar('<a href="bottom-sheet.html">bottom-sheet</a><a href="map-styles.html">map-styles</a><a href="navigation.html">navigation</a><a href="README-v2.md">README</a>');
+  const top = tiles({ arrive: '17:41' }) + profileCard({ lens: 'overview', noBar: 1, h: 150 });
+  const topL = (lens, km) => tiles({ arrive: '17:41' }) + profileCard({ lens, noBar: 1, h: 150, cursorKm: km });
+  document.getElementById('r1').innerHTML =
+    frame('1.1 Top of the page', 'Hero 240 dp: route framed, coloured by the lens. Tiles + profile scroll with the content; sections collapsed to their summary line (a section with a critical item opens by default).',
+      page({ lens: 'overview', map: { lens: 'overview' }, legend: legend(['item'], 'Overview · legend'), content: top + allCollapsed() })) +
+    frame('1.2 Scrolled, Climbs open, climb 3 focused', 'Hero collapsed to 120 dp and still framing the focused climb; the silhouette pins under the lens bar (drag it to scrub).',
+      page({ lens: 'climbs', heroH: 120, silh: 1, focus: { a: 44.8, b: 52.5 }, cursorKm: 48, scroll: 222, map: { lens: 'climbs', focus: { a: 44.8, b: 52.5 }, fitKm: [43.5, 54], arrows: 1, routeFocus: 1 }, content: top + SECS.climbs(true, 3) + SECS.road(false) })) +
+    frame('1.3 When panel open', 'Tap the When pill: activity, day, the <b>departure strip</b> (13 half-hour cells scored for this ride: rain, headwind, darkness; ★ best), pace, stops, multi-day. Long press on the pill = back to now.',
+      page({ lens: 'weather', off: 150, heroH: 120, bar: { whenHTML: whenPill('14:00 → 17:41').replace('pill sel', 'pill sel" style="border-width:2px') }, map: { lens: 'weather', routeFocus: 1 }, panel: whenPanel(), content: top }));
+  document.getElementById('r2').innerHTML =
+    frame('2.1 Weather', 'Plates per sample (glyph + temp + mm) and wind arrows on the hero only in this lens. Section: along-the-ride rows, wind relative to travel, provenance + attribution.',
+      page({ lens: 'weather', off: 150, heroH: 120, silh: 1, cursorKm: 38, scroll: 222, map: { lens: 'weather', routeFocus: 1, cursorKm: 38 }, content: top + SECS.weather(true) + SECS.sun(false) })) +
+    frame('2.2 Road safety (bike, computed)', 'Grey core, fast runs red with speed signs. Fast-road context on the base map is an option (legend chip toggle), here on.',
+      page({ lens: 'road', off: 90, heroH: 120, silh: 1, focus: { a: 5, b: 8.1 }, scroll: 222, legend: legend(['r0', 'r2', 'r3'], 'Fast ≥ 70 · context on'), map: { lens: 'road', routeFocus: 1, fast: 1, focus: { a: 5, b: 8.1 } }, content: top + SECS.road(true, 1) + SECS.weather(false) })) +
+    frame('2.3 Sun & shade', 'Sun / shade / overcast / dark, sunset plate where it happens. 3D = route sun mode (light from the scrub time, shadow strength from clouds).',
+      page({ lens: 'sun', off: 210, three: 1, heroH: 120, silh: 1, cursorKm: 52.8, scroll: 222, map: { lens: 'sun', routeFocus: 1, cursorKm: 52.8 }, content: top + SECS.sun(true) + SECS.surface(false) }));
+  document.getElementById('r3').innerHTML =
+    frame('3.1 Departure passed, weather outdated', 'Planned 08:00, now 14:02: amber When pill, one banner (Use now / Keep); outdated layers show their age. Pull down = update all outdated layers.',
+      page({ lens: 'overview', st: { weather: 'stale', sun: 'stale' }, bar: { when: '08:00 · passed', whenCls: 'warn' }, map: { lens: 'overview' }, content: tiles({ arrive: '11:41' }) +
+        `<div class="banner"><i class="ti ti-clock-exclamation" style="font-size:20px;color:var(--warn)"></i><span style="flex:1;line-height:1.3">Planned departure passed (08:00). Weather and sun are for 08:00.</span><span class="pill sel">Use now</span><span class="pill">Keep</span></div>` +
+        SECS.climbs(false) + SECS.road(false) + SECS.weather(false, fresh('5 h old')) + SECS.sun(false, fresh('departure changed')) + SECS.surface(false) })) +
+    frame('3.2 Opened from navigation', 'Rail button while navigating. Remaining route only: done part grey on the hero, your position, figures “left”. Departure = now, re-anchored. One tap updates the outdated forecast for what is left. Back returns to navigation (it never stops).',
+      page({ lens: 'weather', off: 150, st: { weather: 'stale' }, bar: { sub: 'Navigating · 26.2 km done', whenHTML: `<span class="pill sel" style="margin-right:2px"><i class="ti ti-navigation"></i>now → 17:41</span>` }, map: { lens: 'weather', passedKm: 26.2, user: 26.2, routeFocus: 1, stale: 1, fitKm: [26.2, KM] }, content: tiles({ remaining: ['36.2 km', '2 h 13', '612'] }) +
+        `<div class="banner" style="border-color:var(--border-accent)"><i class="ti ti-route" style="font-size:20px;color:var(--text-accent)"></i><span style="flex:1;line-height:1.3"><b>Remaining route</b> from km 26.2 · forecast from 09:05 (5 h)</span><span class="pill sel"><i class="ti ti-refresh"></i>Update</span></div>` +
+        profileCard({ lens: 'weather', noBar: 1, h: 130, zoom: [26.2, KM] }) + SECS.weather(false, fresh('5 h old')) })) +
+    frame('3.3 Done ride (recorded)', 'Opened from “Ride saved” or the items list. Recorded times drive the timeline; the When pill shows Recorded. Past weather fetched once, pinned, labelled as reconstructed.',
+      page({ lens: 'weather', off: 150, bar: { name: 'Granier ride · Sat 2 Nov', sub: 'Ridden · 08:12 – 12:03', whenHTML: `<span class="pill" style="margin-right:2px"><i class="ti ti-history"></i>Recorded</span>` }, map: { lens: 'weather', routeFocus: 1 }, legend: legend(['w0', 'w1', 'w2'], 'Past weather'),
+        content: `<div class="tiles"><div class="tile" style="flex:1"><span class="v"><i class="ti ti-arrows-horizontal"></i>63.1 km</span></div><div class="tile" style="flex:1"><span class="v"><i class="ti ti-clock"></i>3 h 51</span><span class="l2">08:12–12:03</span></div><div class="tile" style="flex:1.15"><span class="v"><i class="ti ti-trending-up"></i>1 192 m</span><span class="l2"><i class="ti ti-trending-down" style="font-size:11px"></i> 1 190 m</span></div><div class="tile" style="flex:1"><span class="v"><i class="ti ti-gauge"></i>19.6</span><span class="l2">km/h avg</span></div></div>` +
+          sec({ ic: 'ti-cloud-rain', title: 'Weather you had', sum: '6–14 °C · 0.4 mm · headwind 30 %', chip: grey('reconstructed', 'ti-pin'), open: true, body: `<div class="note" style="margin-top:0">Reconstructed from model data (historical forecast, ~2 km), not measured. Pinned: never refreshed.</div>` + weatherBody().split('<div class="lab"')[0] }) + SECS.climbs(false) }));
+  const panel = `<div class="tabl" style="position:absolute;left:0;top:0;bottom:0;width:400px;background:var(--surface-0);border-right:0.5px solid var(--border);display:flex;flex-direction:column;z-index:4"><div style="position:relative;height:56px;flex:none">${appbar({}).replace('top:24px', 'top:0')}</div>${lensBar({ sel: 'road', off: 0 })}<div class="scroll"><div class="in">${tiles({ arrive: '17:41' })}${profileCard({ lens: 'road', noBar: 1, w: 388, h: 170, focus: { a: 55.8, b: 62.3 }, cursorKm: 58 })}${SECS.road(true, 3)}${SECS.weather(false)}</div></div></div>`;
+  document.getElementById('r4').innerHTML = `<div class="tablet">${mapSVG({ w: 1024, h: 700, rect: [400, 0, 1024, 700], lens: 'road', fast: 1, routeFocus: 1, focus: { a: 55.8, b: 62.3 }, cursorKm: 58, pad: 50 })}${panel}<span class="mctl" style="right:14px;top:14px"><i class="ti ti-stack-2"></i></span><span class="mctl" style="right:14px;top:62px"><i class="ti ti-current-location"></i></span><span class="lchip" style="left:414px;bottom:14px">${sws(['r0', 'r2', 'r3'])}Fast ≥ 70 km/h · fast-road context on</span></div>`;
+}
+function whenPanel() {
+  const cells = []; for (let k = -6; k <= 6; k++) { const m = DEP + k * 30; const rainy = k >= -1 && k <= 3, dark = k >= 2; const q = k === -2 ? 'good' : rainy && dark ? 'poor' : rainy || dark ? 'fair' : 'good'; const col = theme() === 'eink' ? (q === 'poor' ? '#000' : q === 'fair' ? 'repeating-linear-gradient(45deg,#000 0 1px,#fff 1px 3px)' : '#fff') : q === 'good' ? '#26A69A' : q === 'fair' ? '#F2A33A' : '#D7263D';
+    cells.push(`<div class="dc${k === 0 ? ' sel' : ''}${k === 6 ? ' out' : ''}">${k === -2 ? '<span class="star">★</span>' : ''}<b>${clock(m)}</b><u style="background:${col};${theme() === 'eink' ? 'border:0.5px solid #000' : ''}"></u><i class="ti ${k === 6 ? 'ti-refresh' : rainy ? 'ti-cloud-rain' : dark ? 'ti-moon' : 'ti-sun'}"></i></div>`); }
+  return `<div class="when"><div style="display:flex;gap:6px"><span class="pill">Hike</span><span class="pill sel"><i class="ti ti-bike"></i>Road</span><span class="pill">Gravel</span><span class="pill">MTB</span></div>
+  <div class="lab"><span>Departure · Sat 2 Nov <i class="ti ti-chevron-down" style="font-size:11px"></i></span><span style="color:var(--text-accent)">Now · best 13:00 ★</span></div>
+  <div class="dstrip" style="margin-left:-${46 * 3 + 12}px">${cells.join('')}</div>
+  <div class="lab" style="margin-top:6px"><span>Pace ×1.0 (18 km/h flat)</span><span>Stops 5 min/h</span></div>
+  <div style="display:flex;gap:16px"><div class="trk" style="flex:1"><i style="width:40%"></i><u style="left:36%"></u></div><div class="trk" style="flex:1"><i style="width:25%"></i><u style="left:21%"></u></div></div>
+  <div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><span style="flex:1"><b>Arrive 17:41</b> · sunset 17:07 · <span style="color:var(--warn)">34 min dark</span></span><span class="sub" style="font-size:11.5px">Split days</span><span class="sw2"></span></div></div>`;
+}
+renderAll();
+</script>
+</body>
+</html>
