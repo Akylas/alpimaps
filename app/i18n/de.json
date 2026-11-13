@@ -964,5 +964,7 @@
     "user_location": "mein Standort",
     "menu_location": "Standort",
     "max_field_of_view": "max. Sichtfeld",
-    "missing_camera_permission": "fehlende Kameraberechtigung"
+    "missing_camera_permission": "fehlende Kameraberechtigung",
+    "gesture_time_tile_title": "Jetzt verlassen",
+    "arrivals": "Ankünfte"
 }
