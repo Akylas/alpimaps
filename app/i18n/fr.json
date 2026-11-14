@@ -610,6 +610,8 @@
     "travel_mode_auto": "Auto · selon l'itinéraire",
     "travel_mode_locked": "Le mode de déplacement suit l'itinéraire (%s)",
     "show_turn_options": "Afficher les options de virage",
+    "junction_no_entry": "Sens interdit",
+    "junction_road_ends": "Fin de route",
     "road_stats": "statistiques routières",
     "roadblock": "barrage routier",
     "rock_pattern_zoom": "motif rocheux zoom min",

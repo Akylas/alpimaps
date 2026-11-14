@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Junction, exitSide, parseLookAhead, roadAheadChip, turnOptions } from './junctions';
+import { type Junction, destinationPoint, exitSide, parseLookAhead, roadAheadChip, turnOptions } from './junctions';
 
 const junction = (distance: number, exits: Junction['exits'], arrival = 0): Junction => ({ distance, lat: 45, lon: 6, arrival, exits });
 
@@ -119,5 +119,19 @@ describe('parseLookAhead', () => {
         expect(parseLookAhead('{}')).toEqual({ junctions: [] });
         expect(parseLookAhead('not json')).toEqual({ junctions: [] });
         expect(parseLookAhead(undefined)).toEqual({ junctions: [] });
+    });
+});
+
+describe('destinationPoint', () => {
+    it('goes north, east and south by the meters asked', () => {
+        const north = destinationPoint(45, 6, 0, 111.195);
+        expect(north.lat).toBeCloseTo(45.001, 5);
+        expect(north.lon).toBeCloseTo(6, 6);
+        expect(destinationPoint(0, 6, 90, 111.195).lon).toBeCloseTo(6.001, 5);
+        expect(destinationPoint(45, 6, 180, 111.195).lat).toBeCloseTo(44.999, 5);
+    });
+
+    it('covers less longitude per meter away from the equator', () => {
+        expect(destinationPoint(60, 6, 90, 111.195).lon - 6).toBeCloseTo(0.002, 4);
     });
 });

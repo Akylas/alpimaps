@@ -14,6 +14,9 @@ const toLngLat = (positions: MapPos[]): [number, number][] => positions.map((p) 
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
 import { type RawInstruction, type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
+import { type Junction } from '~/routeFeatures/junctions/junctions';
+import { TRACE_JUNCTION_ATTRIBUTES, junctionsFromTrace } from '~/routeFeatures/junctions/traceJunctions';
+import type { TravelProfile } from '~/routeFeatures/junctions/travelMode';
 import { statsProfile } from '~/utils/routeAnalysis/activity';
 import { getDataFolder, getSavedMBTilesDir, listFolder } from '~/utils/utils';
 import type { LocalArchive } from '~/mapModules/localData/archives';
@@ -830,6 +833,16 @@ class PackageService extends Observable {
         });
         DEV_LOG && console.log('getStats done', Date.now() - startTime, 'ms');
         return webResult.edges;
+    }
+
+    /** The side streets along a route. Offline graph only: the web fallback of `getStats` would ship the positions. */
+    async getRouteJunctions({ item, profile }: { item: Item; profile: TravelProfile }): Promise<Junction[]> {
+        const points = this.offlineRoutingSearchService() ? this.getRouteItemPoses(item) : null;
+        if (!points?.length) {
+            return [];
+        }
+        const edges = await this.getStats({ points, profile, attributes: TRACE_JUNCTION_ATTRIBUTES, shape_match: 'edge_walk' });
+        return junctionsFromTrace(edges ?? [], profile, points);
     }
 
     async fetchStats({ item, positions, profile, route }: { positions?: MapPos[]; item?; route?: Route; profile?: ValhallaProfile }) {

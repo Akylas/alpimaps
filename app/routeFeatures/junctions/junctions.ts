@@ -121,3 +121,16 @@ export function parseLookAhead(json: string | undefined): LookAhead {
     }
     return result;
 }
+
+const EARTH_RADIUS = 6371000;
+
+/** The position `meters` away from a point along a heading. */
+export function destinationPoint(lat: number, lon: number, heading: number, meters: number): { lat: number; lon: number } {
+    const toRadians = Math.PI / 180;
+    const angular = meters / EARTH_RADIUS;
+    const theta = heading * toRadians;
+    const phi = lat * toRadians;
+    const phiAhead = Math.asin(Math.sin(phi) * Math.cos(angular) + Math.cos(phi) * Math.sin(angular) * Math.cos(theta));
+    const lambdaAhead = lon * toRadians + Math.atan2(Math.sin(theta) * Math.sin(angular) * Math.cos(phi), Math.cos(angular) - Math.sin(phi) * Math.sin(phiAhead));
+    return { lat: phiAhead / toRadians, lon: lambdaAhead / toRadians };
+}

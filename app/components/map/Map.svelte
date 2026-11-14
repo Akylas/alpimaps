@@ -34,6 +34,8 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
+    import JunctionChips from '~/components/navigation/JunctionChips.svelte';
+    import { registerJunctionOptionsModule } from '~/mapModules/JunctionOptionsModule';
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
@@ -470,6 +472,7 @@
         registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
         // draws the route being navigated, which is never the selected item
         registerNavigationRouteModule();
+        registerJunctionOptionsModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
@@ -2257,6 +2260,18 @@
                             ios:marginTop={10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8} />
                     {/if}
                 {/each}
+                <!-- under the banner slot: a banner is 58 tall -->
+                <JunctionChips
+                    style="z-index:1001;"
+                    horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
+                    marginRight={landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8}
+                    opacity={landscapeNavigation ? scrollingWidgetsOpacity : 1}
+                    verticalAlignment="top"
+                    width={landscapeNavigation ? navigationColumnWidth - 20 : 'auto'}
+                    android:marginLeft={(landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10}
+                    ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
+                    android:marginTop={windowInsetTop + 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8}
+                    ios:marginTop={10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8} />
                 {#if navigationRailComponent}
                     <svelte:component
                         this={navigationRailComponent}

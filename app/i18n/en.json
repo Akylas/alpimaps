@@ -860,6 +860,8 @@
     "travel_mode_auto": "Auto · from route",
     "travel_mode_locked": "Travel mode follows the route (%s)",
     "show_turn_options": "Show turn options",
+    "junction_no_entry": "No entry",
+    "junction_road_ends": "Road ends",
     "road_stats": "road statistics",
     "roadblock": "roadblock",
     "rock_pattern_zoom": "rock pattern min zoom",
