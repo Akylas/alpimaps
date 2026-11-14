@@ -52,6 +52,8 @@ export const SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY = 'navigation_auto_pause_delay
 export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
 export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
 export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
+/** the routing profile the directions panel last used */
+export const SETTINGS_DEFAULT_DIRECTION_PROFILE = 'default_direction_profile';
 export const SETTINGS_NAVIGATION_PAGE = 'navigation_page';
 export const SETTINGS_NAVIGATION_SUMMARY_DONE = 'navigation_summary_done';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';

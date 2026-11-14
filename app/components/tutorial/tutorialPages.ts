@@ -85,6 +85,7 @@ export const tutorialPages: TutorialPage[] = [
             icon(17, 168, 'mdi-routes', 24),
             fab(10, 300, 'mdi-format-list-checkbox'),
             fab(10, 342, 'mdi-layers'),
+            fab(254, 300, 'mdi-bike'),
             fab(254, 342, 'mdi-crosshairs-gps'),
             card(60, 372, 180, 44, 14),
             icon(72, 384, 'mdi-speedometer', 20),

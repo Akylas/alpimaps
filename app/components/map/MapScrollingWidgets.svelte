@@ -2,6 +2,8 @@
     import { lc } from '@nativescript-community/l';
     import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
+    import { showPopover } from '@nativescript-community/ui-popover/svelte';
     import { alert } from '@nativescript-community/ui-dialogs';
     import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
@@ -16,7 +18,9 @@
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { isNavigating, isNavigationRunning } from '~/stores/navigationStore';
-    import { openLink } from '~/utils/ui';
+    import { activeTravelProfile, travelModeLocked } from '~/stores/travelModeStore';
+    import { Profiles } from '~/utils/routing';
+    import { openLink, showSnack } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
     let { colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
@@ -104,6 +108,18 @@
     }
     function onWatchLocation() {
         return userLocationModule?.onWatchLocation();
+    }
+    async function onTravelModeTap(event) {
+        try {
+            if ($travelModeLocked) {
+                showSnack({ message: lc('travel_mode_locked', lc($activeTravelProfile === 'bicycle' ? 'bicycle' : $activeTravelProfile === 'pedestrian' ? 'walk' : 'car')) });
+                return;
+            }
+            const TravelModeDial = (await import('~/components/map/TravelModeDial.svelte')).default;
+            await showPopover({ view: TravelModeDial, anchor: event.object, vertPos: VerticalPosition.ABOVE, horizPos: HorizontalPosition.LEFT });
+        } catch (error) {
+            showError(error);
+        }
     }
     function startDirections() {
         if (selectedItem) {
@@ -223,6 +239,25 @@
             text="mdi-directions"
             visibility={!$isNavigating && selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
+        <mdcardview id="travelMode" class="buttontext floating-btn" visibility={watchingLocationActive ? 'visible' : 'collapse'} on:tap={onTravelModeTap}>
+            <gridlayout>
+                <label
+                    color={colorPrimary}
+                    fontFamily={Profiles[$activeTravelProfile].fontFamily ? $fonts[Profiles[$activeTravelProfile].fontFamily] : $fonts.mdi}
+                    fontSize={24 * $fontScaleMaxed}
+                    text={Profiles[$activeTravelProfile].icon}
+                    textAlignment="center"
+                    verticalAlignment="middle" />
+                <label
+                    class="mdi"
+                    color={colorOnSurfaceVariant}
+                    fontSize={12}
+                    horizontalAlignment="right"
+                    text="mdi-lock"
+                    verticalAlignment="bottom"
+                    visibility={$travelModeLocked ? 'visible' : 'collapse'} />
+            </gridlayout>
+        </mdcardview>
         <mdcardview
             id="location"
             class={`${locationButtonClass} floating-btn`}
