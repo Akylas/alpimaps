@@ -166,6 +166,8 @@
     "packageManager": "yarn@4.18.1",
     "resolutions": {
         "@massif-maps/styles": "portal:../../massif/massif-sdk/styles/massif/dist/npm",
+        "@massif-maps/typings": "portal:../../massif/massif-sdk/bindings/typings",
+        "@nativescript-community/ui-core": "portal:../ui-native-components/packages/ui-core",
         "@nativescript-community/ui-massifmaps": "portal:../../massif/massif-sdk/integrations/nativescript/packages/ui-massifmaps",
         "@akylas/nativescript": "portal:../Nativescript/dist/packages/core",
         "@akylas/nativescript-webpack": "file:/Volumes/dev/nativescript/NativeScript/packages/webpack5/akylas-nativescript-webpack-5.0.41.tgz"
