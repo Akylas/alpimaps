@@ -2260,18 +2260,17 @@
                             ios:marginTop={10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8} />
                     {/if}
                 {/each}
-                <!-- under the banner slot: a banner is 58 tall -->
+                <!-- navigating: under the banner slot (a banner is 58 tall); free ride: beside the map buttons, under the search bar -->
                 <JunctionChips
-                    style="z-index:1001;"
-                    horizontalAlignment={landscapeNavigation ? 'left' : 'stretch'}
-                    marginRight={landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8}
-                    opacity={landscapeNavigation ? scrollingWidgetsOpacity : 1}
+                    horizontalAlignment={landscapeNavigation && $isNavigating ? 'left' : 'stretch'}
+                    marginRight={$isNavigating ? (landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8) : 76}
+                    opacity={landscapeNavigation && $isNavigating ? scrollingWidgetsOpacity : 1}
                     verticalAlignment="top"
-                    width={landscapeNavigation ? navigationColumnWidth - 20 : 'auto'}
-                    android:marginLeft={(landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10}
-                    ios:marginLeft={(landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10}
-                    android:marginTop={windowInsetTop + 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8}
-                    ios:marginTop={10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8} />
+                    width={landscapeNavigation && $isNavigating ? navigationColumnWidth - 20 : 'auto'}
+                    android:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10 : windowInsetLeft + 60}
+                    ios:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10 : 60}
+                    android:marginTop={windowInsetTop + ($isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60)}
+                    ios:marginTop={$isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60} />
                 {#if navigationRailComponent}
                     <svelte:component
                         this={navigationRailComponent}

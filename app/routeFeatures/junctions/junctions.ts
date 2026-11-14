@@ -134,3 +134,39 @@ export function destinationPoint(lat: number, lon: number, heading: number, mete
     const lambdaAhead = lon * toRadians + Math.atan2(Math.sin(theta) * Math.sin(angular) * Math.cos(phi), Math.cos(angular) - Math.sin(phi) * Math.sin(phiAhead));
     return { lat: phiAhead / toRadians, lon: lambdaAhead / toRadians };
 }
+
+export function distanceMeters(from: { lat: number; lon: number }, to: { lat: number; lon: number }): number {
+    const toRadians = Math.PI / 180;
+    const dLat = (to.lat - from.lat) * toRadians;
+    const dLon = (to.lon - from.lon) * toRadians;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(from.lat * toRadians) * Math.cos(to.lat * toRadians) * Math.sin(dLon / 2) ** 2;
+    return 2 * EARTH_RADIUS * Math.asin(Math.sqrt(a));
+}
+
+export interface Fix {
+    lat: number;
+    lon: number;
+    /** degrees, negative when unknown */
+    bearing: number;
+    /** ms */
+    time: number;
+}
+
+/** Whether a free ride asks the graph again: it has moved or turned enough since the last time, and not too often. */
+export function lookAheadDue(last: Fix | null, now: Fix, { minMeters = 20, minMillis = 1500, minTurn = 25 } = {}): boolean {
+    if (now.bearing < 0) {
+        return false;
+    }
+    if (!last) {
+        return true;
+    }
+    if (now.time - last.time < minMillis) {
+        return false;
+    }
+    return distanceMeters(last, now) >= minMeters || (last.bearing >= 0 && angleDelta(last.bearing, now.bearing) >= minTurn);
+}
+
+function angleDelta(first: number, second: number) {
+    const delta = Math.abs((first - second) % 360);
+    return delta > 180 ? 360 - delta : delta;
+}

@@ -8,6 +8,7 @@ import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
 import { type RouteNavPage, liveRouteFeatures, migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices, routeNavPages } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
+    DEFAULT_JUNCTION_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_AUTO_PAUSE,
     DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY,
@@ -25,13 +26,13 @@ import {
     DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
     DEFAULT_NAVIGATION_PAGE,
     DEFAULT_NAVIGATION_PAGES,
-    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
     DEFAULT_NAVIGATION_RECORD_STATS,
     DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_SURFACE_SPAN,
     DEFAULT_NAVIGATION_TILT,
     DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
@@ -46,6 +47,9 @@ import {
     DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ZOOM_MIN,
     DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
+    DEFAULT_SHOW_NO_ENTRY,
+    DEFAULT_SHOW_TURN_OPTIONS,
+    SETTINGS_JUNCTION_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ARROW_MARKER,
     SETTINGS_NAVIGATION_AUTO_PAUSE,
     SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY,
@@ -63,13 +67,13 @@ import {
     SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
     SETTINGS_NAVIGATION_PAGE,
     SETTINGS_NAVIGATION_PAGES,
-    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_POSITION_OFFSET,
     SETTINGS_NAVIGATION_RECORD_STATS,
     SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_SURFACE_SPAN,
     SETTINGS_NAVIGATION_TILT,
     SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
@@ -83,7 +87,9 @@ import {
     SETTINGS_NAVIGATION_ZOOM_MAX,
     SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ZOOM_MIN,
-    SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD
+    SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
+    SETTINGS_SHOW_NO_ENTRY,
+    SETTINGS_SHOW_TURN_OPTIONS
 } from '~/utils/constants';
 import type { RejoinTarget, RouteProgress } from '~/utils/navigation';
 import { fontScaleMaxed } from '~/variables';
@@ -203,6 +209,12 @@ export const navigationSummaryDone = settingsStore(SETTINGS_NAVIGATION_SUMMARY_D
 export const navigationPageShown = writable<string | null>(null);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
 export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD, DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD);
+/** the next left and right turns the travel mode may take: chips, and the stubs of the streets it may enter */
+export const showTurnOptions = settingsStore(SETTINGS_SHOW_TURN_OPTIONS, DEFAULT_SHOW_TURN_OPTIONS);
+/** the streets the travel mode may not enter (dashed stubs) and a no-entry or dead end ahead (chip) */
+export const showNoEntry = settingsStore(SETTINGS_SHOW_NO_ENTRY, DEFAULT_SHOW_NO_ENTRY);
+/** meters ahead the junction chips and stubs look */
+export const junctionLookAhead = settingsStore(SETTINGS_JUNCTION_LOOK_AHEAD, DEFAULT_JUNCTION_LOOK_AHEAD);
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
 export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET);
 
@@ -665,6 +677,39 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         min: 20,
         max: 1000,
         step: 20,
+        formatter: formatDistance
+    },
+    {
+        key: SETTINGS_SHOW_NO_ENTRY,
+        section: NavigationSection.Display,
+        store: showNoEntry,
+        type: 'boolean',
+        default: DEFAULT_SHOW_NO_ENTRY,
+        title: () => lc('show_no_entry'),
+        description: () => lc('show_no_entry_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_SHOW_TURN_OPTIONS,
+        section: NavigationSection.Display,
+        store: showTurnOptions,
+        type: 'boolean',
+        default: DEFAULT_SHOW_TURN_OPTIONS,
+        title: () => lc('show_turn_options'),
+        description: () => lc('show_turn_options_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_JUNCTION_LOOK_AHEAD,
+        section: NavigationSection.Display,
+        store: junctionLookAhead,
+        type: 'number',
+        default: DEFAULT_JUNCTION_LOOK_AHEAD,
+        title: () => lc('junction_look_ahead'),
+        description: () => lc('junction_look_ahead_desc'),
+        min: 100,
+        max: 1000,
+        step: 50,
         formatter: formatDistance
     },
     {

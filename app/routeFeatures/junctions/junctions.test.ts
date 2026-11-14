@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type Junction, destinationPoint, exitSide, parseLookAhead, roadAheadChip, turnOptions } from './junctions';
+import { type Fix, type Junction, destinationPoint, exitSide, lookAheadDue, parseLookAhead, roadAheadChip, turnOptions } from './junctions';
 
 const junction = (distance: number, exits: Junction['exits'], arrival = 0): Junction => ({ distance, lat: 45, lon: 6, arrival, exits });
 
@@ -133,5 +133,29 @@ describe('destinationPoint', () => {
 
     it('covers less longitude per meter away from the equator', () => {
         expect(destinationPoint(60, 6, 90, 111.195).lon - 6).toBeCloseTo(0.002, 4);
+    });
+});
+
+describe('lookAheadDue', () => {
+    const fix = (overrides: Partial<Fix> = {}): Fix => ({ lat: 45, lon: 6, bearing: 90, time: 10000, ...overrides });
+    const metersNorth = (meters: number) => 45 + meters / 111195;
+
+    it('asks the first time the heading is known, never without one', () => {
+        expect(lookAheadDue(null, fix())).toBe(true);
+        expect(lookAheadDue(null, fix({ bearing: -1 }))).toBe(false);
+        expect(lookAheadDue(fix(), fix({ bearing: -1, time: 20000 }))).toBe(false);
+    });
+
+    it('waits for enough movement or a turn', () => {
+        expect(lookAheadDue(fix(), fix({ lat: metersNorth(10), time: 20000 }))).toBe(false);
+        expect(lookAheadDue(fix(), fix({ lat: metersNorth(25), time: 20000 }))).toBe(true);
+        expect(lookAheadDue(fix(), fix({ bearing: 100, time: 20000 }))).toBe(false);
+        expect(lookAheadDue(fix(), fix({ bearing: 130, time: 20000 }))).toBe(true);
+        expect(lookAheadDue(fix({ bearing: 350 }), fix({ bearing: 20, time: 20000 }))).toBe(true);
+    });
+
+    it('is not due again within the interval', () => {
+        expect(lookAheadDue(fix(), fix({ lat: metersNorth(60), time: 10500 }))).toBe(false);
+        expect(lookAheadDue(fix(), fix({ lat: metersNorth(60), time: 11600 }))).toBe(true);
     });
 });

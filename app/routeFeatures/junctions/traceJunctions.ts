@@ -1,5 +1,5 @@
 /** Side streets along a known route, from the routing graph's trace attributes. Pure: nothing here may import NativeScript. */
-import type { Junction } from './junctions';
+import { type Junction, distanceMeters } from './junctions';
 import type { TravelProfile } from './travelMode';
 
 export interface TraceEdge {
@@ -19,24 +19,13 @@ export const TRACE_JUNCTION_ATTRIBUTES = [
 ];
 
 const ACCESS_KEY = { pedestrian: 'walkability', bicycle: 'cyclability', auto: 'driveability' } as const;
-const EARTH_RADIUS = 6371000;
-
-const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
-
-function haversine(from: { lat: number; lon: number }, to: { lat: number; lon: number }) {
-    const dLat = toRadians(to.lat - from.lat);
-    const dLon = toRadians(to.lon - from.lon);
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRadians(from.lat)) * Math.cos(toRadians(to.lat)) * Math.sin(dLon / 2) ** 2;
-    return 2 * EARTH_RADIUS * Math.asin(Math.sqrt(a));
-}
-
 /** Meters from the first point to each point. */
 export function cumulativeDistances(points: { lat: number; lon: number }[]): number[] {
     const distances: number[] = [];
     let total = 0;
     points.forEach((point, index) => {
         if (index > 0) {
-            total += haversine(points[index - 1], point);
+            total += distanceMeters(points[index - 1], point);
         }
         distances.push(total);
     });

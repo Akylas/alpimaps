@@ -11,8 +11,6 @@ import { SETTINGS_DEFAULT_DIRECTION_PROFILE } from '~/utils/constants';
  * as `travel_mode`: the style parameter of that name is a map option, saved under it.
  */
 export const travelMode = settingsStore<TravelMode>('travel_mode_choice', 'auto');
-/** The junction chips and stubs of the way ahead. */
-export const showTurnOptions = settingsStore('show_turn_options', false);
 
 /** The routing profile the travel mode comes to now. */
 export const activeTravelProfile = derived([travelMode, navigationItem], ([mode, item]) =>

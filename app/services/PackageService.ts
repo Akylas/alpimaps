@@ -14,7 +14,7 @@ const toLngLat = (positions: MapPos[]): [number, number][] => positions.map((p) 
 import { type GradeOptions, buildGradeSections, computeGrades } from '~/utils/grade';
 import { projectOnRoute } from '~/utils/navigation';
 import { type RawInstruction, type ValhallaProfile, instructionsFromResult } from '~/utils/routing';
-import { type Junction } from '~/routeFeatures/junctions/junctions';
+import { type Junction, type LookAhead, parseLookAhead } from '~/routeFeatures/junctions/junctions';
 import { TRACE_JUNCTION_ATTRIBUTES, junctionsFromTrace } from '~/routeFeatures/junctions/traceJunctions';
 import type { TravelProfile } from '~/routeFeatures/junctions/travelMode';
 import { statsProfile } from '~/utils/routeAnalysis/activity';
@@ -843,6 +843,15 @@ class PackageService extends Observable {
         }
         const edges = await this.getStats({ points, profile, attributes: TRACE_JUNCTION_ATTRIBUTES, shape_match: 'edge_walk' });
         return junctionsFromTrace(edges ?? [], profile, points);
+    }
+
+    /** The SDK's `lookAhead`: the junctions and the end of the road ahead of a position, offline only. */
+    async lookAhead({ bearing, lat, length, lon, profile }: { lat: number; lon: number; bearing: number; length: number; profile: TravelProfile }): Promise<LookAhead | null> {
+        const service = this.offlineRoutingSearchService();
+        if (!service) {
+            return null;
+        }
+        return parseLookAhead(await service.callAsync('lookAhead', [lat, lon, bearing, length, profile]));
     }
 
     async fetchStats({ item, positions, profile, route }: { positions?: MapPos[]; item?; route?: Route; profile?: ValhallaProfile }) {
