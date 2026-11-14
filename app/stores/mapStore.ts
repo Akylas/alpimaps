@@ -204,6 +204,24 @@ const nutiParams = {
         max: 200,
         step: 1
     },
+    oneway_emphasis: {
+        icon: 'mdi-arrow-right-bold-outline',
+        title: lc('oneway_emphasis'),
+        description: lc('oneway_emphasis_desc'),
+        settingsOptionsType: 'number',
+        defaultValue: 0,
+        min: 0,
+        max: 2,
+        step: 1,
+        nutiTransform: (value) => value.toFixed(0)
+    },
+    // set from the travel mode (travelModeStore), not a map option
+    travel_mode: {
+        settingsOptionsType: 'number',
+        defaultValue: 0,
+        visible: () => false,
+        nutiTransform: (value) => value.toFixed(0)
+    },
     routes_dash_min_zoom: {
         icon: 'mdi-plus-minus-variant',
         title: lc('routes_dash_min_zoom'),

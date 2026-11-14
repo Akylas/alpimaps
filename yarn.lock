@@ -1265,12 +1265,11 @@ __metadata:
   languageName: node
   linkType: soft
 
-"@massif-maps/typings@npm:^6.5.0":
-  version: 6.5.0
-  resolution: "@massif-maps/typings@npm:6.5.0"
-  checksum: 10/d78c714d0d41f4ecaeba8e79a4adc6f01f7645afb6c90429cef9a5bd6fa6a0647dca6cc38524623516f7b2cea7814ebce71b6baf6c1ca47f0151a9f95c133cfe
+"@massif-maps/typings@portal:../../massif/massif-sdk/bindings/typings::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@massif-maps/typings@portal:../../massif/massif-sdk/bindings/typings::locator=root-workspace-0b6124%40workspace%3A."
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@mdi/font@npm:7.4.47":
   version: 7.4.47
@@ -1687,9 +1686,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nativescript-community/ui-core@npm:1.6.0, @nativescript-community/ui-core@npm:^1.6.0":
-  version: 1.6.0
-  resolution: "@nativescript-community/ui-core@npm:1.6.0"
+"@nativescript-community/ui-core@portal:../ui-native-components/packages/ui-core::locator=root-workspace-0b6124%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@nativescript-community/ui-core@portal:../ui-native-components/packages/ui-core::locator=root-workspace-0b6124%40workspace%3A."
   dependencies:
     "@nativescript-community/text": "npm:^1.6.25"
   peerDependencies:
@@ -1697,9 +1696,8 @@ __metadata:
   peerDependenciesMeta:
     "@nativescript-community/text":
       optional: true
-  checksum: 10/fd9aabedd6cf8fbb374379ef72c5a110400ec4075902803d2eb896901c956f3681e2320cded2999a996725f89edc8e2f93dd84ce9f70ba1bd220b51ecaf41a01
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@nativescript-community/ui-datetimepicker@npm:1.6.0":
   version: 1.6.0

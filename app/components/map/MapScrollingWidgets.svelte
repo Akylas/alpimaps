@@ -2,25 +2,31 @@
     import { lc } from '@nativescript-community/l';
     import { Label } from '@nativescript-community/ui-label';
     import { showBottomSheet } from '@nativescript-community/ui-bottomsheet/svelte';
+    import { HorizontalPosition, VerticalPosition } from '@nativescript-community/ui-popover';
     import { alert } from '@nativescript-community/ui-dialogs';
-    import { ApplicationSettings, GridLayout, Utils } from '@nativescript/core';
+    import { ApplicationSettings, GridLayout, Utils, View } from '@nativescript/core';
     import { showError } from '@shared/utils/showError';
     import { navigate } from '@shared/utils/svelte/ui';
     import type { Point } from 'geojson';
     import { onDestroy } from 'svelte';
     import { NativeViewElementNode } from '@nativescript-community/svelte-native/dom';
     import IconButton from '~/components/common/IconButton.svelte';
+    import { isEInk } from '~/helpers/theme';
     import ScaleView from '~/components/map/ScaleView.svelte';
     import { getMapContext } from '~/mapModules/MapModule';
     import UserLocationModule, { navigationModeStore, userFollowStore } from '~/mapModules/UserLocationModule';
     import type { IItem } from '~/models/Item';
     import { queryingLocation, watchingLocation } from '~/stores/mapStore';
     import { isNavigating, isNavigationRunning } from '~/stores/navigationStore';
-    import { openLink } from '~/utils/ui';
+    import { showNoEntry, showTurnOptions } from '~/stores/navigationStore';
+    import { activeTravelProfile, travelMode, travelModeLocked } from '~/stores/travelModeStore';
+    import type { TravelMode } from '~/routeFeatures/junctions/travelMode';
+    import { Profiles } from '~/utils/routing';
+    import { openLink, showPopoverMenu, showSnack } from '~/utils/ui';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
 
-    let { colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors;
-    $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary } = $colors);
+    let { colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface } = $colors;
+    $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface } = $colors);
 
     // const currentMapZoom = 0;
     let totalDownloadProgress = 0;
@@ -39,7 +45,6 @@
     // let lastSuggestionKey: string;
     let gridLayout: NativeViewElementNode<GridLayout>;
 
-    let locationButtonClass = 'buttontext';
     let locationButtonLabelClass: string = '';
     let selectedItemHasPosition = false;
 
@@ -57,11 +62,8 @@
         // userLocationModule.on('location', onNewLocation);
     });
     $: watchingLocationActive = !$queryingLocation && $watchingLocation;
-    // filled while following: a tint is too close to the idle button
-    $: locationButtonClass = watchingLocationActive ? 'buttonthemed' : 'buttontext';
     $: locationButtonLabelClass = $queryingLocation ? 'fade-blink' : '';
     $: selectedItemHasPosition = selectedItem && !selectedItem.route && selectedItem.geometry.type === 'Point';
-    // $: DEV_LOG && console.log('locationButtonClass', locationButtonClass);
     export function onSelectedItem(item: IItem, oldItem: IItem) {
         selectedItem = item;
     }
@@ -94,6 +96,28 @@
     // while navigating, only needed to bring the camera back after a pan
     $: locationButtonVisible = !$isNavigating || !$userFollowStore;
 
+    const SEGMENT_HEIGHT = 54;
+    let capsule: NativeViewElementNode<View>;
+    let modeSegment: NativeViewElementNode<GridLayout>;
+    let modeShown: boolean = null;
+    // the capsule grows upwards while watching, and while navigating, where it shows the route's mode: the location button stays at its foot
+    $: if (capsule && modeSegment) {
+        showModeSegment(watchingLocationActive || $isNavigating);
+    }
+    function showModeSegment(show: boolean) {
+        const height = show ? SEGMENT_HEIGHT * 2 : SEGMENT_HEIGHT;
+        const opacity = show ? 1 : 0;
+        const first = modeShown === null;
+        modeShown = show;
+        if (first || isEInk) {
+            capsule.nativeView.height = height;
+            modeSegment.nativeView.opacity = opacity;
+        } else {
+            void capsule.nativeView.animate({ height, duration: 180 });
+            void modeSegment.nativeView.animate({ opacity, duration: 180 });
+        }
+    }
+
     function askUserLocation() {
         if ($isNavigationRunning) {
             // plain follow would lose the navigation tilt and offset, so re-engage the whole camera mode
@@ -104,6 +128,43 @@
     }
     function onWatchLocation() {
         return userLocationModule?.onWatchLocation();
+    }
+    async function onTravelModeTap(event) {
+        try {
+            if ($travelModeLocked) {
+                showSnack({ message: lc('travel_mode_locked', lc($activeTravelProfile === 'bicycle' ? 'bicycle' : $activeTravelProfile === 'pedestrian' ? 'walk' : 'car')) });
+                return;
+            }
+            const modes: { mode: TravelMode; title: string; icon: string }[] = [
+                { mode: 'walk', title: lc('walk'), icon: 'mdi-walk' },
+                { mode: 'bike', title: lc('bicycle'), icon: 'mdi-bike' },
+                { mode: 'car', title: lc('car'), icon: 'mdi-car' },
+                { mode: 'auto', title: lc('travel_mode_auto'), icon: 'mdi-routes' }
+            ];
+            await showPopoverMenu({
+                anchor: event.object,
+                vertPos: VerticalPosition.ABOVE,
+                horizPos: HorizontalPosition.LEFT,
+                // the mode in use is the accent one
+                options: modes.map((option) => ({ ...option, color: option.mode === $travelMode ? colorPrimary : undefined })),
+                props: {
+                    autoSizeListItem: true,
+                    rowHeight: 52,
+                    toggles: [
+                        { id: 'turns', icon: 'mdi-arrow-split-vertical', label: lc('junction_turns'), selected: $showTurnOptions },
+                        { id: 'noEntry', icon: 'mdi-hand-back-right', label: lc('junction_no_entry'), selected: $showNoEntry }
+                    ],
+                    onToggle: (toggle) => (toggle.id === 'turns' ? showTurnOptions : showNoEntry).set(toggle.selected)
+                },
+                onClose: (item) => {
+                    if (item?.mode) {
+                        $travelMode = item.mode;
+                    }
+                }
+            });
+        } catch (error) {
+            showError(error);
+        }
     }
     function startDirections() {
         if (selectedItem) {
@@ -223,20 +284,53 @@
             text="mdi-directions"
             visibility={!$isNavigating && selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <mdcardview
-            id="location"
-            class={`${locationButtonClass} floating-btn`}
-            visibility={!$isNavigating && locationButtonVisible ? 'visible' : 'collapse'}
-            on:tap={askUserLocation}
-            on:longPress={onWatchLocation}>
-            <label
-                ios:iosAccessibilityAdjustsFontSize={false}
-                class={`mdi ${locationButtonLabelClass}`}
-                color={watchingLocationActive ? colorOnPrimary : colorPrimary}
-                fontSize={24 * $fontScaleMaxed}
-                text="mdi-crosshairs-gps"
-                textAlignment="center"
-                verticalAlignment="middle" />
+        <!-- one capsule: the mode segment grows above the location button while watching, which fills with the accent -->
+        <mdcardview bind:this={capsule} id="location" class="buttontext floating-btn" visibility={locationButtonVisible ? 'visible' : 'collapse'}>
+            <!-- a grid, not a stack: a stack is measured within the card's height, which pushes the location button out of view -->
+            <gridlayout>
+                <gridlayout bind:this={modeSegment} id="travelMode" height={SEGMENT_HEIGHT} marginBottom={SEGMENT_HEIGHT} opacity={0} verticalAlignment="bottom" width={54} on:tap={onTravelModeTap}>
+                    <label
+                        color={colorOnSurface}
+                        fontFamily={Profiles[$activeTravelProfile].fontFamily ? $fonts[Profiles[$activeTravelProfile].fontFamily] : $fonts.mdi}
+                        fontSize={24 * $fontScaleMaxed}
+                        text={Profiles[$activeTravelProfile].icon}
+                        textAlignment="center"
+                        verticalAlignment="middle" />
+                    {#if $travelModeLocked}
+                        <label class="mdi" color={colorOnSurfaceVariant} fontSize={13} horizontalAlignment="right" margin="0 8 6 0" text="mdi-lock" verticalAlignment="bottom" />
+                    {:else if $travelMode === 'auto'}
+                        <label
+                            backgroundColor={colorOnSurfaceVariant}
+                            borderRadius={8}
+                            color={colorSurface}
+                            fontSize={10}
+                            fontWeight="bold"
+                            height={16}
+                            horizontalAlignment="right"
+                            margin="0 6 6 0"
+                            text="A"
+                            textAlignment="center"
+                            verticalAlignment="bottom"
+                            width={16} />
+                    {/if}
+                </gridlayout>
+                <gridlayout
+                    backgroundColor={watchingLocationActive ? colorPrimary : 'transparent'}
+                    height={SEGMENT_HEIGHT}
+                    verticalAlignment="bottom"
+                    width={54}
+                    on:tap={askUserLocation}
+                    on:longPress={onWatchLocation}>
+                    <label
+                        ios:iosAccessibilityAdjustsFontSize={false}
+                        class={`mdi ${locationButtonLabelClass}`}
+                        color={watchingLocationActive ? colorOnPrimary : colorPrimary}
+                        fontSize={24 * $fontScaleMaxed}
+                        text="mdi-crosshairs-gps"
+                        textAlignment="center"
+                        verticalAlignment="middle" />
+                </gridlayout>
+            </gridlayout>
         </mdcardview>
     </stacklayout>
     <IconButton

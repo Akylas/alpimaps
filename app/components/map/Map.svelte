@@ -34,6 +34,8 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
+    import JunctionChips from '~/components/navigation/JunctionChips.svelte';
+    import { registerJunctionOptionsModule } from '~/mapModules/JunctionOptionsModule';
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
@@ -470,6 +472,7 @@
         registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
         // draws the route being navigated, which is never the selected item
         registerNavigationRouteModule();
+        registerJunctionOptionsModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
@@ -2257,6 +2260,17 @@
                             ios:marginTop={10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8} />
                     {/if}
                 {/each}
+                <!-- navigating: under the banner slot (a banner is 58 tall); free ride: beside the map buttons, under the search bar -->
+                <JunctionChips
+                    horizontalAlignment={landscapeNavigation && $isNavigating ? 'left' : 'stretch'}
+                    marginRight={$isNavigating ? (landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8) : 76}
+                    opacity={landscapeNavigation && $isNavigating ? scrollingWidgetsOpacity : 1}
+                    verticalAlignment="top"
+                    width={landscapeNavigation && $isNavigating ? navigationColumnWidth - 20 : 'auto'}
+                    android:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10 : windowInsetLeft + 60}
+                    ios:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10 : 60}
+                    android:marginTop={windowInsetTop + ($isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60)}
+                    ios:marginTop={$isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60} />
                 {#if navigationRailComponent}
                     <svelte:component
                         this={navigationRailComponent}
