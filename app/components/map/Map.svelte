@@ -1119,6 +1119,9 @@
                 setStyleParameter(event.key, value);
             }
         }
+        if (event.key === 'travel_mode' || event.key === 'oneway_emphasis') {
+            applyOnewayEmphasis();
+        }
         styleParametersChanged();
     });
     innerNutiProps.on('change', (event: any) => {
@@ -1396,6 +1399,15 @@
         // });
     }
 
+    /** The user's one-way arrow emphasis, for the bike's arrows (app-rules.mss); Massif's own follow it, or are hidden in bike mode (`styleValue`). */
+    function applyOnewayEmphasis() {
+        const emphasis = nutiProps.getNutiValue('oneway_emphasis');
+        if (emphasis != null) {
+            setStyleParameter('app_oneway_emphasis', emphasis);
+            setStyleParameter('oneway_emphasis', styleValue('oneway_emphasis', emphasis));
+        }
+    }
+
     function setStyleParameter(key: string, value: string | number, decoder?) {
         decoder = decoder || mapContext.mapDecoder;
         // DEV_LOG && console.log('setStyleParameter', key, value);
@@ -1456,6 +1468,7 @@
                 if (isMassifStyle(layerStyle)) {
                     const variant = mapStyleVariant(layerStyle);
                     Object.assign(nutiPropsToApply, massifParameters(layerStyle, variant));
+                    nutiPropsToApply['app_oneway_emphasis'] = nutiProps.getNutiValue('oneway_emphasis');
                     if (variant === 'eink') {
                         mapContext.setInnerStyle('eink', mapStyle);
                     }
@@ -1510,6 +1523,10 @@
     function styleValue(key: string, value: string) {
         if (value === '-1' && isNutiKey(key) && nutiProps.getProps(key)?.settingsOptionsType === 'zoom') {
             return styleDefaults[key] ?? null;
+        }
+        // a bike has its own arrows (app-rules.mss): none of Massif's layers is gated on 3, so they are not drawn
+        if (key === 'oneway_emphasis' && value != null && nutiProps.getNutiValue('travel_mode') === '1') {
+            return '3';
         }
         return value;
     }

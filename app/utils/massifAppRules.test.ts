@@ -26,9 +26,7 @@ function styleBlock(doc: string, name: string) {
 }
 
 function styleBlocks(doc: string, pattern: RegExp) {
-    return [...doc.matchAll(/<Style name="([^"]+)"/g)]
-        .filter((m) => pattern.test(m[1]))
-        .map((m) => styleBlock(doc, m[1]));
+    return [...doc.matchAll(/<Style name="([^"]+)"/g)].filter((m) => pattern.test(m[1])).map((m) => styleBlock(doc, m[1]));
 }
 
 // the compiler hoists a repeated expression into <Define id>, and keeps `a ? a : a` where Massif's table has no variant
@@ -71,9 +69,7 @@ describe('the fast-road casing of app-rules.mss', () => {
                     const rule = styleBlock(xml[project], `transportation::app_fast_road_${cls}`);
                     expect(rule, `no app_fast_road_${cls} in the compiled ${project}`).not.toBe('');
                     // Massif's own casing of that class is drawn at the road's width
-                    const own = styleBlocks(xml[project], /transportation::road_casing_b\d+$/).find((b) =>
-                        b.includes(`[{'class'}]='${cls}'`)
-                    );
+                    const own = styleBlocks(xml[project], /transportation::road_casing_b\d+$/).find((b) => b.includes(`[{'class'}]='${cls}'`));
                     const width = gapWidth(xml[project], own ?? '');
                     expect(width, `no road_casing for ${cls} in ${project}`).toBeTruthy();
                     const gap = gapWidth(xml[project], rule);
@@ -87,6 +83,40 @@ describe('the fast-road casing of app-rules.mss', () => {
                 }
                 expect(styleBlock(xml[project], 'transportation::app_fast_road_motorway')).toBe('');
             });
+        });
+    }
+});
+
+describe('the bike arrows of app-rules.mss', () => {
+    // a style name is the attachment; the compiled rules name the icon and the parameter gates. One per oneway_emphasis, like Massif's own
+    const arrows: [string, string][] = [
+        ['app_bike_oneway', 'bike-oneway-warn.png'],
+        ['app_bike_oneway_reverse', 'bike-oneway-reverse-warn.png'],
+        ['app_bike_oneway_both', 'bike-oneway-both-accent.png']
+    ];
+    const EMPHASIS = [0, 1, 2];
+
+    for (const project of PROJECTS) {
+        for (const [name, icon] of arrows) {
+            for (const emphasis of EMPHASIS) {
+                it(`${project}: ${name}_e${emphasis} draws ${icon} only in bike mode, for every class but the motorway`, () => {
+                    const rule = styleBlock(xml[project], `transportation::${name}_e${emphasis}`);
+                    expect(rule, `no ${name}_e${emphasis} in the compiled ${project}`).not.toBe('');
+                    expect(rule).toContain("[{'param::travel_mode'}]=1");
+                    expect(rule).toContain(`[{'param::app_oneway_emphasis'}]=${emphasis}`);
+                    expect(rule).toContain(icon);
+                    for (const cls of CLASSES) {
+                        expect(rule).toContain(`[{'class'}]='${cls}'`);
+                    }
+                    expect(rule).not.toContain("='motorway'");
+                });
+            }
+        }
+
+        it(`${project}: every arrow icon is in the style folder`, () => {
+            for (const [, icon] of arrows) {
+                expect(existsSync(join(ROOT, 'dev_assets/styles/massif/icons', icon)), `${icon} missing`).toBe(true);
+            }
         });
     }
 });

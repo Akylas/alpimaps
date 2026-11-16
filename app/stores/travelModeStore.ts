@@ -20,7 +20,7 @@ export const activeTravelProfile = derived([travelMode, navigationItem], ([mode,
 /** The mode is fixed by the route while navigating: `isNavigating`. */
 export const travelModeLocked = isNavigating;
 
-// the base map draws the bike contraflow arrows only for a bike
+// the bike's one-way arrows (app-rules.mss) are drawn only for a bike, and Massif's own then hidden (Map.svelte)
 activeTravelProfile.subscribe((profile) => {
     nutiProps['travel_mode'] = profile === 'bicycle' ? 1 : 0;
 });
