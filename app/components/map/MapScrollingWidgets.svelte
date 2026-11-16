@@ -23,7 +23,7 @@
     import type { TravelMode } from '~/routeFeatures/junctions/travelMode';
     import { Profiles } from '~/utils/routing';
     import { openLink, showPopoverMenu, showSnack } from '~/utils/ui';
-    import { colors, fontScaleMaxed, fonts } from '~/variables';
+    import { colors, fontScaleMaxed, fonts, screenHeightDips, screenWidthDips } from '~/variables';
 
     let { colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface } = $colors;
     $: ({ colorOnPrimary, colorOnSurface, colorOnSurfaceVariant, colorPrimary, colorSurface } = $colors);
@@ -149,12 +149,15 @@
             await showPopoverMenu({
                 anchor: event.object,
                 vertPos: VerticalPosition.ABOVE,
-                horizPos: HorizontalPosition.LEFT,
+                horizPos: HorizontalPosition.ALIGN_RIGHT,
                 // the mode in use is the accent one
                 options: modes.map((option) => ({ ...option, color: option.mode === $travelMode ? colorPrimary : undefined })),
                 props: {
                     autoSizeListItem: true,
-                    rowHeight: 52,
+                    // wide enough for the toggle labels, and tall enough for the whole list: rows grow with their text
+                    width: Math.min(270, screenWidthDips * 0.9),
+                    maxHeight: screenHeightDips * 0.7,
+                    rowHeight: 60,
                     toggles: [
                         { id: 'turns', icon: 'mdi-arrow-split-vertical', label: lc('junction_turns'), selected: $showTurnOptions },
                         { id: 'noEntry', icon: 'mdi-hand-back-right', label: lc('junction_no_entry'), selected: $showNoEntry }
