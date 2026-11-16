@@ -1288,7 +1288,7 @@
     "gesture_follow_title": "Follow your position",
     "gesture_follow_desc": "Tap the location button to find yourself. Long-press it to keep following you, and again to stop.",
     "gesture_travel_mode_title": "Pick how you travel",
-    "gesture_travel_mode_desc": "Tap the bike above the location button, while it follows you, to choose walk, bike, car or auto (from the route), and to show or hide the side streets and the no-entry warnings.",
+    "gesture_travel_mode_desc": "Tap the bike above the location button to choose walk, bike, car or auto (from the route), and to show or hide the side streets and the no-entry warnings.",
     "gesture_end_navigation_title": "End navigation",
     "gesture_end_navigation_desc": "While navigating, long-press the pause button to stop. You will be asked to confirm.",
     "gesture_nav_pages_title": "Dock pages",

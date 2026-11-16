@@ -96,25 +96,30 @@
     // while navigating, only needed to bring the camera back after a pan
     $: locationButtonVisible = !$isNavigating || !$userFollowStore;
 
-    const SEGMENT_HEIGHT = 54;
+    // the mode half is small until watching starts, then grows and the location half fills with the accent
+    const COMPACT = { width: 54, height: 82, iconScale: 0.65 };
+    const FULL = { width: 54, height: 108, iconScale: 1 };
     let capsule: NativeViewElementNode<View>;
-    let modeSegment: NativeViewElementNode<GridLayout>;
-    let modeShown: boolean = null;
-    // the capsule grows upwards while watching, and while navigating, where it shows the route's mode: the location button stays at its foot
-    $: if (capsule && modeSegment) {
-        showModeSegment(watchingLocationActive || $isNavigating);
+    let locationFill: NativeViewElementNode<GridLayout>;
+    let modeContent: NativeViewElementNode<GridLayout>;
+    let capsuleFull: boolean = null;
+    $: if (capsule && locationFill && modeContent) {
+        growCapsule(watchingLocationActive);
     }
-    function showModeSegment(show: boolean) {
-        const height = show ? SEGMENT_HEIGHT * 2 : SEGMENT_HEIGHT;
-        const opacity = show ? 1 : 0;
-        const first = modeShown === null;
-        modeShown = show;
+    function growCapsule(full: boolean) {
+        const size = full ? FULL : COMPACT;
+        const opacity = full ? 1 : 0;
+        const first = capsuleFull === null;
+        capsuleFull = full;
         if (first || isEInk) {
-            capsule.nativeView.height = height;
-            modeSegment.nativeView.opacity = opacity;
+            capsule.nativeView.width = size.width;
+            capsule.nativeView.height = size.height;
+            locationFill.nativeView.opacity = opacity;
+            modeContent.nativeView.scaleX = modeContent.nativeView.scaleY = size.iconScale;
         } else {
-            void capsule.nativeView.animate({ height, duration: 180 });
-            void modeSegment.nativeView.animate({ opacity, duration: 180 });
+            void capsule.nativeView.animate({ width: size.width, height: size.height, duration: 200 });
+            void locationFill.nativeView.animate({ opacity, duration: 200 });
+            void modeContent.nativeView.animate({ scale: { x: size.iconScale, y: size.iconScale }, duration: 200 });
         }
     }
 
@@ -284,43 +289,39 @@
             text="mdi-directions"
             visibility={!$isNavigating && selectedItemHasPosition ? 'visible' : 'hidden'}
             on:tap={startDirections} />
-        <!-- one capsule: the mode segment grows above the location button while watching, which fills with the accent -->
+        <!-- one capsule: the mode half above the location half, which fills with the accent while watching -->
         <mdcardview bind:this={capsule} id="location" class="buttontext floating-btn" visibility={locationButtonVisible ? 'visible' : 'collapse'}>
-            <!-- a grid, not a stack: a stack is measured within the card's height, which pushes the location button out of view -->
-            <gridlayout>
-                <gridlayout bind:this={modeSegment} id="travelMode" height={SEGMENT_HEIGHT} marginBottom={SEGMENT_HEIGHT} opacity={0} verticalAlignment="bottom" width={54} on:tap={onTravelModeTap}>
-                    <label
-                        color={colorOnSurface}
-                        fontFamily={Profiles[$activeTravelProfile].fontFamily ? $fonts[Profiles[$activeTravelProfile].fontFamily] : $fonts.mdi}
-                        fontSize={24 * $fontScaleMaxed}
-                        text={Profiles[$activeTravelProfile].icon}
-                        textAlignment="center"
-                        verticalAlignment="middle" />
-                    {#if $travelModeLocked}
-                        <label class="mdi" color={colorOnSurfaceVariant} fontSize={13} horizontalAlignment="right" margin="0 8 6 0" text="mdi-lock" verticalAlignment="bottom" />
-                    {:else if $travelMode === 'auto'}
+            <gridlayout rows="*,54">
+                <gridlayout id="travelMode" on:tap={onTravelModeTap}>
+                    <gridlayout bind:this={modeContent}>
                         <label
-                            backgroundColor={colorOnSurfaceVariant}
-                            borderRadius={8}
-                            color={colorSurface}
-                            fontSize={10}
-                            fontWeight="bold"
-                            height={16}
-                            horizontalAlignment="right"
-                            margin="0 6 6 0"
-                            text="A"
+                            color={colorOnSurface}
+                            fontFamily={Profiles[$activeTravelProfile].fontFamily ? $fonts[Profiles[$activeTravelProfile].fontFamily] : $fonts.mdi}
+                            fontSize={24 * $fontScaleMaxed}
+                            text={Profiles[$activeTravelProfile].icon}
                             textAlignment="center"
-                            verticalAlignment="bottom"
-                            width={16} />
-                    {/if}
+                            verticalAlignment="middle" />
+                        {#if $travelModeLocked}
+                            <label class="mdi" color={colorOnSurfaceVariant} fontSize={13} horizontalAlignment="right" margin="0 6 4 0" text="mdi-lock" verticalAlignment="bottom" />
+                        {:else if $travelMode === 'auto'}
+                            <label
+                                backgroundColor={colorOnSurfaceVariant}
+                                borderRadius={8}
+                                color={colorSurface}
+                                fontSize={10}
+                                fontWeight="bold"
+                                height={16}
+                                horizontalAlignment="right"
+                                margin="0 4 4 0"
+                                text="A"
+                                textAlignment="center"
+                                verticalAlignment="bottom"
+                                width={16} />
+                        {/if}
+                    </gridlayout>
                 </gridlayout>
-                <gridlayout
-                    backgroundColor={watchingLocationActive ? colorPrimary : 'transparent'}
-                    height={SEGMENT_HEIGHT}
-                    verticalAlignment="bottom"
-                    width={54}
-                    on:tap={askUserLocation}
-                    on:longPress={onWatchLocation}>
+                <gridlayout row={1} on:tap={askUserLocation} on:longPress={onWatchLocation}>
+                    <gridlayout bind:this={locationFill} backgroundColor={colorPrimary} opacity={0} />
                     <label
                         ios:iosAccessibilityAdjustsFontSize={false}
                         class={`mdi ${locationButtonLabelClass}`}
