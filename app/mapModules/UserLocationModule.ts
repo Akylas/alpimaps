@@ -463,6 +463,10 @@ export default class UserLocationModule extends MapModule {
             this.startWatchLocation();
         } else {
             this.stopWatchLocation();
+            // no fixes come any more to redraw the marker: the arrow is for following, not for a navigation in progress
+            if (!get(isNavigating)) {
+                this.navigationMode = false;
+            }
         }
     }
 }

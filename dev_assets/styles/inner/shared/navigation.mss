@@ -113,3 +113,22 @@
 	line-dasharray: @nav_connector_dash;
 	line-cap: round;
 }
+
+// the side streets at the next junctions, for the travel mode: a street that may be entered is drawn like a
+// maneuver arrow (solid, accent casing), one that may not is a dashed grey stub, which black and white shows too
+#junctions['mapnik::geometry_type'=2] {
+	[class='enter'] {
+		casing/line-color: @nav_maneuver_casing_color;
+		casing/line-width: 7;
+		casing/line-cap: round;
+		line-color: @nav_maneuver_color;
+		line-width: 4;
+		line-cap: round;
+	}
+	[class='forbid'] {
+		line-color: @nav_original_color;
+		line-width: 3;
+		line-dasharray: 3, 3;
+		line-cap: butt;
+	}
+}

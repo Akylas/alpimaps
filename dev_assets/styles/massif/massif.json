@@ -10,6 +10,8 @@
   "styleparameters": {
     "app_fast_roads": 0,
     "app_fast_speed": 70,
+    "travel_mode": 0,
+    "app_oneway_emphasis": 0,
     "ranking": {
       "default": "default",
       "values": {

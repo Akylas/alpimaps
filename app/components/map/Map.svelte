@@ -34,6 +34,8 @@
     import watcher from '~/helpers/watcher';
     import CustomLayersModule, { mapCapabilities } from '~/mapModules/CustomLayersModule';
     import ItemsModule from '~/mapModules/ItemsModule';
+    import JunctionChips from '~/components/navigation/JunctionChips.svelte';
+    import { registerJunctionOptionsModule } from '~/mapModules/JunctionOptionsModule';
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
@@ -470,6 +472,7 @@
         registerMapModule('mapScrollingWidgets', mapScrollingWidgets);
         // draws the route being navigated, which is never the selected item
         registerNavigationRouteModule();
+        registerJunctionOptionsModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
@@ -1116,6 +1119,9 @@
                 setStyleParameter(event.key, value);
             }
         }
+        if (event.key === 'travel_mode' || event.key === 'oneway_emphasis') {
+            applyOnewayEmphasis();
+        }
         styleParametersChanged();
     });
     innerNutiProps.on('change', (event: any) => {
@@ -1393,6 +1399,15 @@
         // });
     }
 
+    /** The user's one-way arrow emphasis, for the bike's arrows (app-rules.mss); Massif's own follow it, or are hidden in bike mode (`styleValue`). */
+    function applyOnewayEmphasis() {
+        const emphasis = nutiProps.getNutiValue('oneway_emphasis');
+        if (emphasis != null) {
+            setStyleParameter('app_oneway_emphasis', emphasis);
+            setStyleParameter('oneway_emphasis', styleValue('oneway_emphasis', emphasis));
+        }
+    }
+
     function setStyleParameter(key: string, value: string | number, decoder?) {
         decoder = decoder || mapContext.mapDecoder;
         // DEV_LOG && console.log('setStyleParameter', key, value);
@@ -1453,6 +1468,7 @@
                 if (isMassifStyle(layerStyle)) {
                     const variant = mapStyleVariant(layerStyle);
                     Object.assign(nutiPropsToApply, massifParameters(layerStyle, variant));
+                    nutiPropsToApply['app_oneway_emphasis'] = nutiProps.getNutiValue('oneway_emphasis');
                     if (variant === 'eink') {
                         mapContext.setInnerStyle('eink', mapStyle);
                     }
@@ -1507,6 +1523,10 @@
     function styleValue(key: string, value: string) {
         if (value === '-1' && isNutiKey(key) && nutiProps.getProps(key)?.settingsOptionsType === 'zoom') {
             return styleDefaults[key] ?? null;
+        }
+        // a bike has its own arrows (app-rules.mss): none of Massif's layers is gated on 3, so they are not drawn
+        if (key === 'oneway_emphasis' && value != null && nutiProps.getNutiValue('travel_mode') === '1') {
+            return '3';
         }
         return value;
     }
@@ -2257,6 +2277,17 @@
                             ios:marginTop={10 + Math.round(MANEUVER_VIEW_HEIGHT * $navigationScale) + 8} />
                     {/if}
                 {/each}
+                <!-- navigating: under the banner slot (a banner is 58 tall); free ride: beside the map buttons, under the search bar -->
+                <JunctionChips
+                    horizontalAlignment={landscapeNavigation && $isNavigating ? 'left' : 'stretch'}
+                    marginRight={$isNavigating ? (landscapeNavigation ? 10 : 10 + Math.round(NAVRAIL_BUTTON_SIZE * $navigationScale) + 8) : 76}
+                    opacity={landscapeNavigation && $isNavigating ? scrollingWidgetsOpacity : 1}
+                    verticalAlignment="top"
+                    width={landscapeNavigation && $isNavigating ? navigationColumnWidth - 20 : 'auto'}
+                    android:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft : windowInsetLeft) + 10 : windowInsetLeft + 60}
+                    ios:marginLeft={$isNavigating ? (landscapeNavigation ? navigationColumnLeft - windowInsetLeft : 0) + 10 : 60}
+                    android:marginTop={windowInsetTop + ($isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60)}
+                    ios:marginTop={$isNavigating ? 10 + Math.round((MANEUVER_VIEW_HEIGHT + 66) * $navigationScale) + 8 : 60} />
                 {#if navigationRailComponent}
                     <svelte:component
                         this={navigationRailComponent}

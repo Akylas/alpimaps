@@ -52,6 +52,11 @@ export const SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY = 'navigation_auto_pause_delay
 export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
 export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
 export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
+/** the routing profile the directions panel last used */
+export const SETTINGS_DEFAULT_DIRECTION_PROFILE = 'default_direction_profile';
+export const SETTINGS_SHOW_TURN_OPTIONS = 'show_turn_options';
+export const SETTINGS_SHOW_NO_ENTRY = 'show_no_entry';
+export const SETTINGS_JUNCTION_LOOK_AHEAD = 'junction_look_ahead';
 export const SETTINGS_NAVIGATION_PAGE = 'navigation_page';
 export const SETTINGS_NAVIGATION_SUMMARY_DONE = 'navigation_summary_done';
 export const SETTINGS_NAVIGATION_SURFACE_SPAN = 'navigation_surface_span';
@@ -131,6 +136,12 @@ export const DEFAULT_NAVIGATION_SUMMARY_DONE = false;
 export const DEFAULT_NAVIGATION_SURFACE_SPAN = 2000;
 /** meters of road the live grade averages over: the single point value is too twitchy to read */
 export const DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD = 100;
+/** the next left and right turns the travel mode may take, as chips and stubs: off until asked for */
+export const DEFAULT_SHOW_TURN_OPTIONS = false;
+/** the streets the travel mode may not enter, and a no-entry ahead: on, it is a warning */
+export const DEFAULT_SHOW_NO_ENTRY = true;
+/** meters of road ahead the junction chips and stubs look at */
+export const DEFAULT_JUNCTION_LOOK_AHEAD = 400;
 /** while climbing, scope the mini chart to the ascent being climbed rather than the whole route */
 export const DEFAULT_NAVIGATION_ARROW_MARKER = true;
 /**

@@ -9,7 +9,8 @@
         "navigation_hint",
         "maneuver",
         "stops",
-        "search"
+        "search",
+        "junctions"
     ],
     "styles": [
         "voyager/style.mss",

@@ -75,3 +75,145 @@
   line-gap-width: (@road_width_service + 2 * exponential(1.5, [view::zoom], (13, 0), (14, 1), (22, 2)));
   line-emissive-strength: (([param::lighting] = 0) ? 1 : 0);
 }
+
+/* Bike arrows. Params: `travel_mode` (0/1, off), 1 while the rider is on a bike (travelModeStore), and `app_oneway_emphasis` (0-2), the user's
+   `oneway_emphasis` (Map.svelte sets both). In bike mode Massif's own arrows are hidden (the app passes it `oneway_emphasis` = 3, which none
+   of its layers is gated on) and these draw instead, with a ring on the tail, at Massif's own spacing, size and zoom for each emphasis:
+   orange where a bike may only follow the traffic (against the cars would be wrong), one blue double-headed arrow where the tiles carry
+   `oneway_bicycle` = no (cairn `transportation_cycleway`): bikes may ride both ways. `oneway_bicycle` is only set on one-way ways.
+   Drawings: icons-src/. */
+#transportation[zoom >= 16][class = 'trunk'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0,
+#transportation[zoom >= 16][class = 'primary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0,
+#transportation[zoom >= 16][class = 'secondary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0,
+#transportation[zoom >= 16][class = 'tertiary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0,
+#transportation[zoom >= 16][class = 'minor'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0,
+#transportation[zoom >= 16][class = 'service'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_e0 {
+  marker-file: url('icons/bike-oneway-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 200;
+  marker-width: (linear([view::zoom], (16, 0.6), (18, 1)) * 16);
+  marker-opacity: 0.8;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 16][class = 'trunk'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0,
+#transportation[zoom >= 16][class = 'primary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0,
+#transportation[zoom >= 16][class = 'secondary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0,
+#transportation[zoom >= 16][class = 'tertiary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0,
+#transportation[zoom >= 16][class = 'minor'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0,
+#transportation[zoom >= 16][class = 'service'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_reverse_e0 {
+  marker-file: url('icons/bike-oneway-reverse-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 200;
+  marker-width: (linear([view::zoom], (16, 0.6), (18, 1)) * 16);
+  marker-opacity: 0.8;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 16][class = 'trunk'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0,
+#transportation[zoom >= 16][class = 'primary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0,
+#transportation[zoom >= 16][class = 'secondary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0,
+#transportation[zoom >= 16][class = 'tertiary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0,
+#transportation[zoom >= 16][class = 'minor'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0,
+#transportation[zoom >= 16][class = 'service'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 0]['param::travel_mode' = 1]::app_bike_oneway_both_e0 {
+  marker-file: url('icons/bike-oneway-both-accent.png');
+  marker-placement: 'line';
+  marker-spacing: 200;
+  marker-width: (linear([view::zoom], (16, 0.6), (18, 1)) * 20);
+  marker-opacity: 0.8;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1,
+#transportation[zoom >= 15][class = 'primary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1,
+#transportation[zoom >= 15][class = 'secondary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1,
+#transportation[zoom >= 15][class = 'tertiary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1,
+#transportation[zoom >= 15][class = 'minor'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1,
+#transportation[zoom >= 15][class = 'service'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_e1 {
+  marker-file: url('icons/bike-oneway-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 160;
+  marker-width: (linear([view::zoom], (15, 0.45), (16, 0.6), (18, 1)) * 16);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1,
+#transportation[zoom >= 15][class = 'primary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1,
+#transportation[zoom >= 15][class = 'secondary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1,
+#transportation[zoom >= 15][class = 'tertiary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1,
+#transportation[zoom >= 15][class = 'minor'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1,
+#transportation[zoom >= 15][class = 'service'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_reverse_e1 {
+  marker-file: url('icons/bike-oneway-reverse-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 160;
+  marker-width: (linear([view::zoom], (15, 0.45), (16, 0.6), (18, 1)) * 16);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1,
+#transportation[zoom >= 15][class = 'primary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1,
+#transportation[zoom >= 15][class = 'secondary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1,
+#transportation[zoom >= 15][class = 'tertiary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1,
+#transportation[zoom >= 15][class = 'minor'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1,
+#transportation[zoom >= 15][class = 'service'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 1]['param::travel_mode' = 1]::app_bike_oneway_both_e1 {
+  marker-file: url('icons/bike-oneway-both-accent.png');
+  marker-placement: 'line';
+  marker-spacing: 160;
+  marker-width: (linear([view::zoom], (15, 0.45), (16, 0.6), (18, 1)) * 20);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2,
+#transportation[zoom >= 15][class = 'primary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2,
+#transportation[zoom >= 15][class = 'secondary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2,
+#transportation[zoom >= 15][class = 'tertiary'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2,
+#transportation[zoom >= 15][class = 'minor'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2,
+#transportation[zoom >= 15][class = 'service'][oneway = 1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_e2 {
+  marker-file: url('icons/bike-oneway-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 145;
+  marker-width: (linear([view::zoom], (15, 0.6), (16, 0.8), (18, 1.3)) * 16);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2,
+#transportation[zoom >= 15][class = 'primary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2,
+#transportation[zoom >= 15][class = 'secondary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2,
+#transportation[zoom >= 15][class = 'tertiary'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2,
+#transportation[zoom >= 15][class = 'minor'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2,
+#transportation[zoom >= 15][class = 'service'][oneway = -1][oneway_bicycle != 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_reverse_e2 {
+  marker-file: url('icons/bike-oneway-reverse-warn.png');
+  marker-placement: 'line';
+  marker-spacing: 145;
+  marker-width: (linear([view::zoom], (15, 0.6), (16, 0.8), (18, 1.3)) * 16);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
+#transportation[zoom >= 15][class = 'trunk'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2,
+#transportation[zoom >= 15][class = 'primary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2,
+#transportation[zoom >= 15][class = 'secondary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2,
+#transportation[zoom >= 15][class = 'tertiary'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2,
+#transportation[zoom >= 15][class = 'minor'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2,
+#transportation[zoom >= 15][class = 'service'][oneway_bicycle = 'no']['param::app_oneway_emphasis' = 2]['param::travel_mode' = 1]::app_bike_oneway_both_e2 {
+  marker-file: url('icons/bike-oneway-both-accent.png');
+  marker-placement: 'line';
+  marker-spacing: 145;
+  marker-width: (linear([view::zoom], (15, 0.6), (16, 0.8), (18, 1.3)) * 20);
+  marker-opacity: 1;
+  marker-allow-overlap: true;
+  marker-clip: false;
+  marker-emissive-strength: 1;
+}
