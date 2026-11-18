@@ -2,7 +2,7 @@ import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
-import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace } from './storage';
+import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording, withRidden, withoutRecording } from './storage';
 import type { Layer } from './types';
 
 function line(vertexCount: number): LineString {
@@ -194,5 +194,78 @@ describe('withPace', () => {
     it('keeps the departure', () => {
         const base = withDeparture(null, geometry, { mode: 'planned', at: 1000 });
         expect(withPace(base, geometry, { multiplier: 0.9 }).inputs.departure).toEqual({ mode: 'planned', at: 1000 });
+    });
+});
+
+describe('withRecording', () => {
+    const geometry = line(3);
+    const recorded = { t: [0, 10, 30], startedAt: 1_700_000_000_000 };
+    it('makes the ride a recorded one: the recording, its start, its model', () => {
+        const analysis = withRecording(null, geometry, recorded);
+        expect(analysis.recorded).toEqual(recorded);
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: recorded.startedAt });
+        expect(analysis.inputs.pace.model).toBe('recorded');
+        expect(analysis.inputs.geometryKey).toBe(geometryKey(geometry));
+    });
+    it('keeps what the route knows of itself: the activity, the zone of its start', () => {
+        const base = withDeparture(withActivity(null, geometry, { kind: 'bike', origin: 'user' }), geometry, { mode: 'now', tz: 'Europe/Paris', utcOffset: 60 });
+        const analysis = withRecording(base, geometry, recorded);
+        expect(analysis.inputs.activity).toEqual({ kind: 'bike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: recorded.startedAt, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops the layers of another geometry', () => {
+        const base = { ...createAnalysis(line(5)), layers: { weather: weatherLayer } };
+        expect(withRecording(base, geometry, recorded).layers).toEqual({});
+    });
+});
+
+describe('withoutRecording', () => {
+    const geometry = line(3);
+    const recorded = { t: [0, 10, 30], startedAt: 1_700_000_000_000 };
+    const pinnedWeather = { ...weatherLayer, pinned: true };
+    const done = () => ({ ...withRecording(withActivity(null, geometry, { kind: 'bike', origin: 'user' }), geometry, recorded), layers: { weather: pinnedWeather, terrain: weatherLayer } });
+
+    it('takes the ride back to a route that leaves now, at the usual pace', () => {
+        const analysis = withoutRecording(done(), geometry);
+        expect(analysis.recorded).toBeUndefined();
+        expect(analysis.inputs.departure).toEqual({ mode: 'now' });
+        expect(analysis.inputs.pace.model).toBe(DEFAULT_PACE.model);
+    });
+    it('keeps what the route knows of itself, and its zone', () => {
+        const base = done();
+        base.inputs.departure = { ...base.inputs.departure, tz: 'Europe/Paris', utcOffset: 60 };
+        const analysis = withoutRecording(base, geometry);
+        expect(analysis.inputs.activity).toEqual({ kind: 'bike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'now', tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops what was pinned for the day it was ridden, keeps the rest', () => {
+        expect(Object.keys(withoutRecording(done(), geometry).layers)).toEqual(['terrain']);
+    });
+});
+
+describe('withRidden', () => {
+    const geometry = line(3);
+    const ridden = 1_700_000_000_000;
+    it('makes the route a ride that was done at that time, with no recording to say how it went', () => {
+        const analysis = withRidden(null, geometry, ridden);
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: ridden });
+        expect(analysis.recorded).toBeUndefined();
+        expect(analysis.inputs.pace).toEqual(DEFAULT_PACE);
+    });
+    it('keeps what the route knows of itself, and its zone', () => {
+        const base = withDeparture(withActivity(null, geometry, { kind: 'hike', origin: 'user' }), geometry, { mode: 'now', tz: 'Europe/Paris', utcOffset: 60 });
+        const analysis = withRidden(base, geometry, ridden);
+        expect(analysis.inputs.activity).toEqual({ kind: 'hike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: ridden, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops a forecast it had, which says nothing of the day it was ridden, and keeps the rest', () => {
+        const base = { ...createAnalysis(geometry), layers: { weather: weatherLayer, terrain: weatherLayer } };
+        expect(Object.keys(withRidden(base, geometry, ridden).layers)).toEqual(['terrain']);
+        const pinned = { ...createAnalysis(geometry), layers: { weather: { ...weatherLayer, pinned: true } } };
+        expect(Object.keys(withRidden(pinned, geometry, ridden).layers)).toEqual(['weather']);
+    });
+    it('is the date changed on a ride already ridden', () => {
+        const again = withRidden(withRidden(null, geometry, ridden), geometry, ridden + 86_400_000);
+        expect(again.inputs.departure.at).toBe(ridden + 86_400_000);
     });
 });

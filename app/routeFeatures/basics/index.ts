@@ -1,7 +1,9 @@
-import { convertDurationSeconds, convertElevation, formatDistance } from '~/helpers/formatter';
+import { convertDurationSeconds, convertElevation, formatDistance, formatFamilyValue } from '~/helpers/formatter';
+import { UNITS, UNIT_FAMILIES } from '~/helpers/units';
 import { formatTime, lc } from '~/helpers/locale';
 import { arrivalOf } from '~/routeFeatures/basics/arrival';
 import { departureStale, routeTimeZone } from '~/utils/routeAnalysis/departure';
+import { doneRide } from '~/utils/routeAnalysis/recorded';
 import { type LensFact, type LensHeadline, type LensProfile, type RouteCtx, type RouteLens, type RouteTile, registerRouteFeature } from '~/routeFeatures/registry';
 
 function basicsTiles({ item }: RouteCtx): RouteTile[] {
@@ -19,7 +21,19 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
     if (distance > 0) {
         tiles.push({ key: 'distance', icon: 'mdi-arrow-left-right', label: lc('distance'), value: formatDistance(distance) });
     }
-    if (route.totalTime > 0) {
+    // a ride that was done: the time it took moving, from when to when, and how fast
+    const ride = doneRide(item);
+    if (ride) {
+        const offset = routeTimeZone(item.analysis.inputs.departure).offset;
+        tiles.push({
+            key: 'time',
+            opensWhen: true,
+            icon: 'mdi-timer-outline',
+            label: lc('ride_moving_time'),
+            value: convertDurationSeconds(ride.movingSec),
+            sub: { icon: 'mdi-history', text: `${formatTime(ride.startedAt, 'LT', offset)} – ${formatTime(ride.endAt, 'LT', offset)}` }
+        });
+    } else if (route.totalTime > 0) {
         // when it ends, if it leaves at a time that is known
         let arrival: ReturnType<typeof arrivalOf>;
         try {
@@ -53,6 +67,9 @@ function basicsTiles({ item }: RouteCtx): RouteTile[] {
             value: convertElevation(ascent > 0 ? ascent : 0),
             sub: descent > 0 ? { icon: 'mdi-arrow-bottom-right', text: convertElevation(descent) } : undefined
         });
+    }
+    if (ride?.avgSpeed > 0) {
+        tiles.push({ key: 'speed', icon: 'mdi-speedometer', label: lc('ride_avg_speed'), value: formatFamilyValue(ride.avgSpeed, UNIT_FAMILIES.Speed, UNITS.SpeedKm) });
     }
     return tiles;
 }

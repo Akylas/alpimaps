@@ -5,6 +5,8 @@ import { toXML } from 'jstoxml';
 import { DOMParser } from '@xmldom/xmldom';
 import { getBoundsAndDistance } from '~/helpers/geolib';
 import { IItem } from '~/models/Item';
+import { recordedFromGpx } from '~/utils/routeAnalysis/recorded';
+import { withRecording } from '~/utils/routeAnalysis/storage';
 
 export function importGPXToGeojson(filePath: string) {
     const str = File.fromPath(filePath).readTextSync();
@@ -16,10 +18,15 @@ export function importGPXToGeojson(filePath: string) {
         if (feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString') {
             const profile = feature.properties.type || 'pedestrian';
             const data = getBoundsAndDistance(feature.geometry.coordinates);
+            // the times of the points are kept as the recording, not as a property of the item
+            const { coordinateProperties, ...properties } = feature.properties;
+            const vertexCount = feature.geometry.type === 'LineString' ? feature.geometry.coordinates.length : feature.geometry.coordinates.flat().length;
+            const recorded = recordedFromGpx({ coordinateProperties }, vertexCount, Date.now());
             return {
                 type: 'Feature',
+                ...(recorded ? { analysis: withRecording(null, feature.geometry, recorded) } : {}),
                 properties: {
-                    ...feature.properties,
+                    ...properties,
                     class: profile,
                     zoomBounds: data.bounds,
                     route: {

@@ -1,13 +1,15 @@
 import { ApplicationSettings } from '@nativescript/core';
 import { derived, get, writable } from 'svelte/store';
-import type { GeoLocation } from '~/handlers/GeoHandler';
+import type { GeoLocation, Session } from '~/handlers/GeoHandler';
 import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
+import { RIDE_RECORD_MODES, type RideRecordMode, migrateRecordMode } from '~/routeFeatures/ride/mode';
 import { type RouteNavPage, liveRouteFeatures, migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices, routeNavPages } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
+    DEFAULT_JUNCTION_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ARROW_MARKER,
     DEFAULT_NAVIGATION_AUTO_PAUSE,
     DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY,
@@ -25,13 +27,13 @@ import {
     DEFAULT_NAVIGATION_OFF_ROUTE_FIXES,
     DEFAULT_NAVIGATION_PAGE,
     DEFAULT_NAVIGATION_PAGES,
-    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
+    DEFAULT_NAVIGATION_RECORD_MODE,
     DEFAULT_NAVIGATION_RECORD_STATS,
-    DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    DEFAULT_NAVIGATION_SUMMARY_DONE,
     DEFAULT_NAVIGATION_SURFACE_SPAN,
     DEFAULT_NAVIGATION_TILT,
     DEFAULT_NAVIGATION_TURN_REFRESH_ANGLE,
@@ -46,6 +48,10 @@ import {
     DEFAULT_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     DEFAULT_NAVIGATION_ZOOM_MIN,
     DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
+    DEFAULT_SHOW_NO_ENTRY,
+    DEFAULT_SHOW_TURN_OPTIONS,
+    LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK,
+    SETTINGS_JUNCTION_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ARROW_MARKER,
     SETTINGS_NAVIGATION_AUTO_PAUSE,
     SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY,
@@ -63,13 +69,13 @@ import {
     SETTINGS_NAVIGATION_OFF_ROUTE_FIXES,
     SETTINGS_NAVIGATION_PAGE,
     SETTINGS_NAVIGATION_PAGES,
-    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_POSITION_OFFSET,
+    SETTINGS_NAVIGATION_RECORD_MODE,
     SETTINGS_NAVIGATION_RECORD_STATS,
-    SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
+    SETTINGS_NAVIGATION_SUMMARY_DONE,
     SETTINGS_NAVIGATION_SURFACE_SPAN,
     SETTINGS_NAVIGATION_TILT,
     SETTINGS_NAVIGATION_TURN_REFRESH_ANGLE,
@@ -83,7 +89,9 @@ import {
     SETTINGS_NAVIGATION_ZOOM_MAX,
     SETTINGS_NAVIGATION_ZOOM_MAX_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ZOOM_MIN,
-    SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD
+    SETTINGS_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
+    SETTINGS_SHOW_NO_ENTRY,
+    SETTINGS_SHOW_TURN_OPTIONS
 } from '~/utils/constants';
 import type { RejoinTarget, RouteProgress } from '~/utils/navigation';
 import { fontScaleMaxed } from '~/variables';
@@ -122,6 +130,12 @@ export const navigationRerouting = writable(false);
 export const navigationProgress = writable<RouteProgress>(null);
 /** last fix received while navigating, for the live speed and elevation readouts */
 export const navigationLocation = writable<GeoLocation>(null);
+export interface FinishedRide {
+    session: Session;
+    route?: IItem;
+}
+/** The session of the navigation that just ended, with the route that was navigated: the app saves its track as a ride, then clears it. */
+export const navigationFinishedRide = writable<FinishedRide | null>(null);
 /** null unless navigation_record_stats is on */
 export const navigationStats = writable<NavigationStats>(null);
 
@@ -161,7 +175,17 @@ export const navigationAutoPause = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE,
 export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED, DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED);
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
-export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
+
+// the on / off switch became a mode: whoever set it keeps what they chose
+if (!ApplicationSettings.hasKey(SETTINGS_NAVIGATION_RECORD_MODE) && ApplicationSettings.hasKey(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK)) {
+    const migrated = migrateRecordMode(ApplicationSettings.getBoolean(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK));
+    if (migrated && migrated !== DEFAULT_NAVIGATION_RECORD_MODE) {
+        ApplicationSettings.setString(SETTINGS_NAVIGATION_RECORD_MODE, migrated);
+    }
+}
+ApplicationSettings.remove(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK);
+/** what a navigation does about recording its ride */
+export const navigationRecordMode = settingsStore<RideRecordMode>(SETTINGS_NAVIGATION_RECORD_MODE, DEFAULT_NAVIGATION_RECORD_MODE);
 
 const LEGACY_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
 const LEGACY_SHOW_SURFACE = 'navigation_show_surface';
@@ -203,6 +227,12 @@ export const navigationSummaryDone = settingsStore(SETTINGS_NAVIGATION_SUMMARY_D
 export const navigationPageShown = writable<string | null>(null);
 export const navigationSurfaceSpan = settingsStore(SETTINGS_NAVIGATION_SURFACE_SPAN, DEFAULT_NAVIGATION_SURFACE_SPAN);
 export const navigationGradeLookAhead = settingsStore(SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD, DEFAULT_NAVIGATION_GRADE_LOOK_AHEAD);
+/** the next left and right turns the travel mode may take: chips, and the stubs of the streets it may enter */
+export const showTurnOptions = settingsStore(SETTINGS_SHOW_TURN_OPTIONS, DEFAULT_SHOW_TURN_OPTIONS);
+/** the streets the travel mode may not enter (dashed stubs) and a no-entry or dead end ahead (chip) */
+export const showNoEntry = settingsStore(SETTINGS_SHOW_NO_ENTRY, DEFAULT_SHOW_NO_ENTRY);
+/** meters ahead the junction chips and stubs look */
+export const junctionLookAhead = settingsStore(SETTINGS_JUNCTION_LOOK_AHEAD, DEFAULT_JUNCTION_LOOK_AHEAD);
 export const navigationTilt = settingsStore(SETTINGS_NAVIGATION_TILT, DEFAULT_NAVIGATION_TILT);
 export const navigationPositionOffset = settingsStore(SETTINGS_NAVIGATION_POSITION_OFFSET, DEFAULT_NAVIGATION_POSITION_OFFSET);
 
@@ -230,12 +260,14 @@ const NAVIGATION_SECTION_TITLES: Record<NavigationSection, () => string> = {
 export interface NavigationParam {
     key: string;
     store: SettingsStore<any>;
-    type: 'boolean' | 'number';
+    type: 'boolean' | 'number' | 'choice';
     default: any;
     section: NavigationSection;
     /** lazy so the label follows a language change */
     title: () => string;
     description?: () => string;
+    /** for a `choice`: what can be picked, lazy so the titles follow a language change */
+    choices?: () => { value: string; title: string }[];
     min?: number;
     max?: number;
     step?: number;
@@ -646,13 +678,14 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         quick: true
     },
     {
-        key: SETTINGS_NAVIGATION_RECORD_TRACK,
+        key: SETTINGS_NAVIGATION_RECORD_MODE,
         section: NavigationSection.Recording,
-        store: navigationRecordTrack,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_RECORD_TRACK,
-        title: () => lc('navigation_record_track'),
-        description: () => lc('navigation_record_track_desc')
+        store: navigationRecordMode,
+        type: 'choice',
+        default: DEFAULT_NAVIGATION_RECORD_MODE,
+        title: () => lc('navigation_record_mode'),
+        description: () => lc('navigation_record_mode_desc'),
+        choices: () => RIDE_RECORD_MODES.map((mode) => ({ value: mode, title: lc(`navigation_record_mode_${mode}`) }))
     },
     {
         key: SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
@@ -665,6 +698,39 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         min: 20,
         max: 1000,
         step: 20,
+        formatter: formatDistance
+    },
+    {
+        key: SETTINGS_SHOW_NO_ENTRY,
+        section: NavigationSection.Display,
+        store: showNoEntry,
+        type: 'boolean',
+        default: DEFAULT_SHOW_NO_ENTRY,
+        title: () => lc('show_no_entry'),
+        description: () => lc('show_no_entry_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_SHOW_TURN_OPTIONS,
+        section: NavigationSection.Display,
+        store: showTurnOptions,
+        type: 'boolean',
+        default: DEFAULT_SHOW_TURN_OPTIONS,
+        title: () => lc('show_turn_options'),
+        description: () => lc('show_turn_options_desc'),
+        quick: true
+    },
+    {
+        key: SETTINGS_JUNCTION_LOOK_AHEAD,
+        section: NavigationSection.Display,
+        store: junctionLookAhead,
+        type: 'number',
+        default: DEFAULT_JUNCTION_LOOK_AHEAD,
+        title: () => lc('junction_look_ahead'),
+        description: () => lc('junction_look_ahead_desc'),
+        min: 100,
+        max: 1000,
+        step: 50,
         formatter: formatDistance
     },
     {
@@ -719,7 +785,21 @@ export function getNavigationSettingsOptions() {
                         .join(' · ') || lc('navigation_pages_none')
             });
         }
-        sectionParams.forEach((param) =>
+        sectionParams.forEach((param) => {
+            if (param.type === 'choice') {
+                options.push({
+                    id: 'setting',
+                    key: param.key,
+                    title: param.title(),
+                    description: param.description?.(),
+                    store: param.store,
+                    valueType: 'string',
+                    currentValue: () => getStoreValue(param),
+                    rightValue: () => param.choices().find((choice) => choice.value === getStoreValue(param))?.title ?? getStoreValue(param),
+                    values: param.choices()
+                });
+                return;
+            }
             options.push(
                 param.type === 'boolean'
                     ? {
@@ -746,8 +826,8 @@ export function getNavigationSettingsOptions() {
                           // without this the slider popover shows the raw number while being dragged
                           valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
                       }
-            )
-        );
+            );
+        });
         return options;
     }, [] as any[]);
 }

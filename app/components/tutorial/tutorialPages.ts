@@ -85,7 +85,9 @@ export const tutorialPages: TutorialPage[] = [
             icon(17, 168, 'mdi-routes', 24),
             fab(10, 300, 'mdi-format-list-checkbox'),
             fab(10, 342, 'mdi-layers'),
-            fab(254, 342, 'mdi-crosshairs-gps'),
+            card(250, 296, 44, 90, 22),
+            icon(254, 305, 'mdi-bike', 36),
+            fab(254, 342, 'mdi-crosshairs-gps', true),
             card(60, 372, 180, 44, 14),
             icon(72, 384, 'mdi-speedometer', 20),
             text(96, 386, 60, 'speed', { key: true, muted: true }),
@@ -96,6 +98,7 @@ export const tutorialPages: TutorialPage[] = [
             zone('menu', 'longPress', 248, 8, 44, 42),
             zone('side_buttons', 'longPress', 6, 54, 44, 152),
             zone('follow', 'longPress', 250, 338, 44, 44),
+            zone('travel_mode', 'tap', 250, 296, 44, 44),
             zone('style', 'longPress', 6, 338, 44, 44),
             zone('speed_panel', 'swipe', 56, 368, 188, 52)
         ]
@@ -150,6 +153,7 @@ export const tutorialPages: TutorialPage[] = [
         zones: [
             zone('place_swipe', 'swipe', 10, 178, 280, 56),
             zone('info', 'longPress', 10, 238, 45, 44),
+            zone('navigate', 'longPress', 104, 238, 45, 44),
             zone('elevation', 'longPress', 151, 238, 45, 44),
             zone('web', 'longPress', 198, 238, 45, 44),
             zone('weather', 'longPress', 245, 238, 45, 44, () => __ANDROID__),

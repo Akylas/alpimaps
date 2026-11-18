@@ -113,3 +113,41 @@
 	line-dasharray: @nav_connector_dash;
 	line-cap: round;
 }
+
+// the ride being recorded, as far as it went. Two parts with one look: the tail is redrawn on every position,
+// the rest only now and then (see RideTraceModule). The casings are layers of their own, drawn under both
+// lines (the first layer of voyager.json is the top one, so they come last there): a casing in the line's layer would cut a notch in the end of the part under it. Named `recording*` on purpose: the terrain's no-drape filter
+// (`recording.*`, whole name) keeps it live in 3D, where a baked layer would not follow the ride
+#recording_case['mapnik::geometry_type'=2],
+#recording_tail_case['mapnik::geometry_type'=2] {
+	line-color: @rec_casing_color;
+	line-width: @rec_case_width;
+	line-join: round;
+	line-cap: round;
+}
+#recording['mapnik::geometry_type'=2],
+#recording_tail['mapnik::geometry_type'=2] {
+	line-color: @rec_color;
+	line-width: @rec_width;
+	line-join: round;
+	line-cap: round;
+}
+
+// the side streets at the next junctions, for the travel mode: a street that may be entered is drawn like a
+// maneuver arrow (solid, accent casing), one that may not is a dashed grey stub, which black and white shows too
+#junctions['mapnik::geometry_type'=2] {
+	[class='enter'] {
+		casing/line-color: @nav_maneuver_casing_color;
+		casing/line-width: 7;
+		casing/line-cap: round;
+		line-color: @nav_maneuver_color;
+		line-width: 4;
+		line-cap: round;
+	}
+	[class='forbid'] {
+		line-color: @nav_original_color;
+		line-width: 3;
+		line-dasharray: 3, 3;
+		line-cap: butt;
+	}
+}

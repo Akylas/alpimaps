@@ -36,6 +36,13 @@ export const ROUTE_LENS_CARD_HEIGHT = 242;
 export const DOCK_SUMMARY_HEIGHT = 44;
 export const DOCK_PAGE_HEIGHT = 92;
 export const DOCK_DOTS_HEIGHT = 12;
+/** the strip over the dock's summary row that says a ride is being recorded */
+export const RECORDING_STRIP_HEIGHT = 14;
+
+/** What the recording bar takes at the bottom of the map: the dock's summary row under its strip, and the 8 of gap under the card. */
+export function recordingBarHeight(scale: number) {
+    return Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT) * scale) + 8;
+}
 
 /**
  * The sheet: closed, or the dock, with its pages when there is one. Lives here so the map can size

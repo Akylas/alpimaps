@@ -15,11 +15,12 @@ export function weatherExtras(providerId: string, decimals: number): LayerExtra 
     return { provider: providerId, decimals };
 }
 
-export type WeatherFetcher = (query: WeatherQuery) => Promise<{ provider: Pick<WeatherProvider, 'id' | 'source'>; response: WeatherResponse }>;
+/** `past`: the ride was done, what is wanted is the weather there was. */
+export type WeatherFetcher = (query: WeatherQuery, options: { past: boolean }) => Promise<{ provider: Pick<WeatherProvider, 'id' | 'source'>; response: WeatherResponse }>;
 
 /**
  * Samples the route, asks the provider for the hours the ride is under way and 3 h either side, and keeps
- * them. The provider's coordinates are rounded: the route never leaves the phone more exactly than that.
+ * them. A ride that was done (its timeline is the recording) is asked the past instead, and the layer is pinned: it never ages. The provider's coordinates are rounded: the route never leaves the phone more exactly than that.
  */
 export async function computeWeatherLayer({
     decimals,
@@ -44,7 +45,10 @@ export async function computeWeatherLayer({
     const samples = sampleRoute({ distances: source.distances, altitudes: source.altitudes });
     const points = samples.map(({ alt, i: index }) => ({ lat: roundCoordinate(coordinates[index][1], decimals), lon: roundCoordinate(coordinates[index][0], decimals), alt }));
 
-    const { provider, response } = await fetch({ points, from: window.from, to: window.to });
+    // done at a date, with its own times or not: what was is asked, not a forecast
+    const past = inputs.departure.mode === 'recorded';
+    const { provider, response } = await fetch({ points, from: window.from, to: window.to }, { past });
+    const weatherSource = past ? (response.source ?? 'historical-forecast') : 'forecast';
 
     const coverage = { from: response.t0, to: response.t0 + (response.n - 1) * HOUR };
     const rideFrom = timeline.startAt / 1000;
@@ -53,11 +57,13 @@ export async function computeWeatherLayer({
         prov: {
             computedAt: now,
             inputsHash: layerInputsHash('weather', inputs, weatherExtras(provider.id, decimals)),
-            provider: provider.source,
-            source: 'forecast',
+            provider: past ? `${provider.id}/${weatherSource}` : provider.source,
+            source: weatherSource,
             coverage,
-            quality: complete ? 'ok' : 'partial'
+            // a reanalysis is a coarse model of the day, not the forecast that was made for it
+            quality: !complete ? 'partial' : weatherSource === 'archive-era5' ? 'estimated' : 'ok'
         },
+        ...(past ? { pinned: true } : {}),
         data: {
             // an altitude the route did not have is not known: 0 stands for it, the provider used its own terrain
             samples: samples.map(({ alt, d, i: index }) => ({ i: index, d, alt: Number.isFinite(alt) ? alt : 0 })),

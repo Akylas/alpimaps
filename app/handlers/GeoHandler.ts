@@ -4,13 +4,14 @@ import { confirm } from '@nativescript-community/ui-dialogs';
 import { AndroidActivityResultEventData, AndroidApplication, Application, ApplicationEventData, ApplicationSettings, CoreTypes, EventData, Utils } from '@nativescript/core';
 import { SDK_VERSION } from '@nativescript/core/utils';
 import { bind } from 'helpful-decorators/dist-src/bind';
+import { writable } from 'svelte/store';
 import { formatDistance, formatDuration } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { BgService as AndroidBgService } from '~/services/android/BgService';
 import { BgServiceCommon } from '~/services/BgService.common';
-import { DEFAULT_NAVIGATION_RECORD_TRACK, SETTINGS_NAVIGATION_RECORD_TRACK } from '~/utils/constants';
 import { Handler } from './Handler';
 import { navigationService } from '~/services/NavigationService';
+import { navigationFinishedRide } from '~/stores/navigationStore';
 import { getBGServiceInstance } from '~/services/BgService';
 
 // The iOS settings URL opens nothing useful on a Mac: the privacy pane is addressed by its own scheme. The first is
@@ -89,6 +90,9 @@ export enum SessionState {
     PAUSED = 'paused'
 }
 
+/** The state of the session that records its track, none when no session does: what the record buttons show. */
+export const recordingState = writable<SessionState | null>(null);
+
 // export type GeoLocation = GeoLocation;
 
 export const SessionStateEvent = 'sessionState';
@@ -142,9 +146,8 @@ export class GeoHandler extends Handler {
     get stopGpsBackground() {
         return ApplicationSettings.getBoolean('stop_gps_background', true);
     }
-    get recordTrack() {
-        return ApplicationSettings.getBoolean(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
-    }
+    /** whether the running session keeps the fixes of its track: a ride is made of them */
+    recordTrack = false;
     gpsEnabled = true;
 
     constructor(service: BgServiceCommon) {
@@ -250,7 +253,8 @@ export class GeoHandler extends Handler {
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
-            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            // the fixes of a long ride are megabytes, which do not belong in a setting
+            ApplicationSettings.setString('pausedSession', JSON.stringify({ ...this.currentSession, locs: [] }));
             this.currentSession = null; // to prevent storing in history
         }
         this.stopSession();
@@ -260,10 +264,13 @@ export class GeoHandler extends Handler {
             return;
         }
         this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
+        // taken once: it stays paused in memory, and is not found again by a start that follows a clean exit
+        ApplicationSettings.remove('pausedSession');
         if (this.currentSession) {
             this.currentSession.startTime = new Date(this.currentSession.startTime);
             this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
             this.sessionState = SessionState.PAUSED;
+            this.restoredSession = true;
             this.onUpdateSessionChrono();
         }
         DEV_LOG && console.log(TAG, 'start');
@@ -281,7 +288,12 @@ export class GeoHandler extends Handler {
         DEV_LOG && console.log('GPS state change', e.data);
         const enabled = (this.gpsEnabled = e.data.enabled);
         if (!enabled) {
-            this.stopSession();
+            const ended = this.stopSession();
+            // a navigation ends its own session when it stops: a recording of the position has nobody else to save it
+            if (ended?.locs.length && !navigationService.isNavigating) {
+                this.takeEndedSession();
+                navigationFinishedRide.set({ session: ended });
+            }
         }
         this.notify({
             eventName: GPSStatusChangedEvent,
@@ -418,6 +430,10 @@ export class GeoHandler extends Handler {
         }
         if (loc) {
             this.currentWatcher && this.currentWatcher(null, loc);
+            // a navigation feeds its own session, once it has measured the fix against its route
+            if (this.currentSession && !navigationService.isNavigating) {
+                this.updateSessionWithLoc(loc);
+            }
             this.notify({
                 eventName: UserLocationdEvent,
                 object: this,
@@ -684,12 +700,16 @@ export class GeoHandler extends Handler {
     waitingForLocation() {
         return this.currentSession && this.currentSession.lastLoc === null;
     }
-    startSession(onUpdate?: Function) {
+    /** @param recordTrack keep the fixes, for the ride the session is */
+    startSession(onUpdate?: Function, { recordTrack = false } = {}) {
         // remove('pausedSession');
         if (this.currentSession) {
             return Promise.reject('already_running');
         }
         return this.enableLocation().then((r) => {
+            this.endedSession = undefined;
+            this.restoredSession = false;
+            this.recordTrack = recordTrack;
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
@@ -734,6 +754,7 @@ export class GeoHandler extends Handler {
     }
     setSessionState(state: SessionState) {
         this.sessionState = this.currentSession.state = state;
+        recordingState.set(this.recordTrack && state !== SessionState.STOPPED ? state : null);
         this.notify({
             eventName: SessionStateEvent,
             object: this,
@@ -750,22 +771,58 @@ export class GeoHandler extends Handler {
         }
         session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
     }
-    stopSession() {
+    /** The session `start` restored from a paused one the app was killed with: nobody is running it. */
+    private restoredSession = false;
+    /**
+     * Drops the session restored paused after the app was killed, if that is the one there is: a navigation that starts would otherwise take
+     * it for its own and never record into it. The watch and the history are left alone, and a session someone is running stays.
+     */
+    discardRestoredSession() {
+        if (this.restoredSession) {
+            this.restoredSession = false;
+            this.currentSession = null;
+            this.onUpdatedSession = null;
+            this.sessionState = SessionState.STOPPED;
+            this.stopChronoTimer();
+        }
+    }
+    /** The last session that ended and was not taken: it can end on its own (the gps was turned off), with nobody to hand it to. */
+    private endedSession: Session | undefined;
+    takeEndedSession() {
+        const ended = this.endedSession;
+        this.endedSession = undefined;
+        return ended;
+    }
+    /**
+     * The session as it ended, with its fixes when the track is recorded; none when there was no session, or it neither moved nor recorded.
+     * @param keepWatching leave the gps running, for a session started while following the position
+     */
+    stopSession(keepWatching = false): Session | undefined {
+        let ended: Session;
         if (this.currentSession) {
             // remove('pausedSession');
-            this.stopWatch();
+            if (!keepWatching) {
+                this.stopWatch();
+            }
 
-            if (this.currentSession.distance > 0) {
+            // a recording that never moved is still handed over: the ride says why it is not kept
+            if (this.currentSession.distance > 0 || this.currentSession.locs.length) {
                 this.prepareSessionForStoring(this.currentSession);
-                this.sessionsHistory.push(this.currentSession);
-                ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
+                ended = this.endedSession = this.currentSession;
+                if (ended.distance > 0) {
+                    // the fixes of a long ride are megabytes, which do not belong in a setting: the track is saved as a ride
+                    this.sessionsHistory.push({ ...ended, locs: [] });
+                    ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
+                }
             }
             this.setSessionState(SessionState.STOPPED);
+            this.recordTrack = false;
 
             this.currentSession = null;
             this.onUpdatedSession = null;
         }
         this.stopChronoTimer();
+        return ended;
     }
     pauseSession() {
         if (this.currentSession && this.sessionState !== SessionState.PAUSED) {

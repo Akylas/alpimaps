@@ -7,7 +7,7 @@ vi.mock('~/helpers/formatter', () => ({ UNITS: {}, convertDurationSeconds: () =>
 vi.mock('~/helpers/geolib', () => ({ getRhumbLineBearing: (from: { lat: number; lon: number }, to: { lat: number; lon: number }) => (Math.atan2(to.lon - from.lon, to.lat - from.lat) * 180) / Math.PI }));
 vi.mock('~/models/Item', () => ({ RoutingAction: {} }));
 
-import { OffRouteDetector, dockFigures, findClosestOnRoute } from './navigation';
+import { DOCK_SUMMARY_HEIGHT, OffRouteDetector, RECORDING_STRIP_HEIGHT, dockFigures, findClosestOnRoute, recordingBarHeight } from './navigation';
 
 const TEN_METERS = 0.00009;
 const SECOND_MS = 1000;
@@ -101,7 +101,22 @@ describe('dockFigures', () => {
         expect(dockFigures({ ...base, progress: { ...progress, distanceFromRoute: 0.4 } }).third).toEqual({ kind: 'arrival', at: NOW + 600_000 });
     });
 
+    it('says what a recording did, with no route to follow', () => {
+        const figures = dockFigures({ stats, profile: undefined, done: true, paused: false, now: NOW, progress: null });
+        expect(figures).toEqual({ distance: 1234, ascent: 56, third: { kind: 'moving', seconds: 600 } });
+    });
+
     it('has nothing to say of a route that is not there', () => {
         expect(dockFigures({ stats: null, profile: undefined, done: false, paused: false, now: NOW, progress: null })).toEqual({ distance: null, ascent: null, third: null });
+    });
+});
+
+describe('recordingBarHeight', () => {
+    it('is the summary row, the strip saying it records, and the gap under the card', () => {
+        expect(recordingBarHeight(1)).toBe(DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT + 8);
+    });
+    it('follows the navigation scale, as the dock does', () => {
+        // the dock card margin stays a fixed 8, only the card scales
+        expect(recordingBarHeight(1.5)).toBe(Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT) * 1.5) + 8);
     });
 });

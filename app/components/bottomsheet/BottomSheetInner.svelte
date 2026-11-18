@@ -19,6 +19,7 @@
     import BottomSheetInfoView from '~/components/bottomsheet/BottomSheetInfoView.svelte';
     import RouteStatTiles from '~/components/bottomsheet/RouteStatTiles.svelte';
     import { showRoutePage } from '~/routeFeatures/page/index';
+    import { beginNavigation } from '~/routeFeatures/ride/start';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationProgress } from '~/stores/navigationStore';
     import { formatDistance } from '~/helpers/formatter';
@@ -296,7 +297,7 @@
         information: { tap: () => showItemInformation(item), long: () => openItemInOpenStreetMap(item) },
         plan: { tap: () => showRoutePage(item) },
         save: { tap: () => saveItem() },
-        navigate: { tap: () => startNavigation() },
+        navigate: { tap: () => startNavigation(), long: () => startNavigation(true) },
         instructions: { tap: () => getTrackInstructions() },
         profile: { tap: () => getProfile(), long: (event) => showElevationProfileSettings(event) },
         stats: { tap: () => getStats() },
@@ -503,10 +504,10 @@
         }
     }
 
-    async function startNavigation() {
+    async function startNavigation(longPress = false) {
         try {
             // Map watches isNavigating and moves both sheets
-            await navigationService.start(item);
+            await beginNavigation(item, longPress);
         } catch (error) {
             showError(error);
         }

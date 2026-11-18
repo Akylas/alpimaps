@@ -251,7 +251,7 @@
         {/if}
         <label colSpan={2} marginTop={4} row={1} textWrap={true}>
             <cspan color={colorOnSurfaceVariant} fontSize={12} text={`${data.attribution.text} (${data.attribution.license})`} />
-            <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + lc('weather_disclaimer')} />
+            <cspan color={colorOnSurfaceVariant} fontSize={11} text={'\n' + (data.past ? lc(data.past === 'archive-era5' ? 'weather_past_era5' : 'weather_past_historical') : lc('weather_disclaimer'))} />
         </label>
     </gridlayout>
 {:else}
@@ -260,7 +260,7 @@
         <label
             color={colorOnSurfaceVariant}
             fontSize={13}
-            text={stateKey ? lc(stateKey) : lc('weather_send_points', data.points, data.decimals, data.provider)}
+            text={stateKey ? lc(stateKey) : lc(data.past ? 'weather_send_points_past' : 'weather_send_points', data.points, data.decimals, data.provider)}
             textWrap={true}
             verticalAlignment="middle" />
         {#if data.state === 'absent' || data.state === 'failed'}

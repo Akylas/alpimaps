@@ -1,7 +1,7 @@
 import Observable from '@nativescript-community/observable';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { type GeoHandler, type GeoLocation, UserLocationdEvent } from '~/handlers/GeoHandler';
+import { type GeoHandler, type GeoLocation, type Session, UserLocationdEvent } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { ValhallaProfile } from '~/utils/routing';
 import { IItem, Item, type RouteInstruction, RoutingAction } from '~/models/Item';
@@ -19,6 +19,7 @@ import {
     navigationBackgroundUpdateInterval,
     navigationBearingRefreshAngle,
     navigationDetour,
+    navigationFinishedRide,
     navigationGpsUpdateDistance,
     navigationItem,
     navigationLocation,
@@ -28,6 +29,7 @@ import {
     navigationOffRouteFixes,
     navigationOriginalItem,
     navigationProgress,
+    navigationRecordMode,
     navigationRecordStats,
     navigationRejoinTarget,
     navigationRerouting,
@@ -198,7 +200,8 @@ export class NavigationService extends Observable {
         return isNavigableRoute(item) && !!item.instructions?.length;
     }
 
-    async start(item: Item) {
+    /** @param record keep the track of this navigation, to save it as a ride: the record mode when not said */
+    async start(item: Item, { record = get(navigationRecordMode) === 'record' } = {}) {
         if (!this.canNavigate(item)) {
             throw new Error('not_navigable_route');
         }
@@ -230,8 +233,14 @@ export class NavigationService extends Observable {
             await userLocationModule.startWatchLocation({ force: true });
             userLocationModule.navigationMode = true;
 
-            if (get(navigationRecordStats) && !this.geoHandler.isSessionRunning()) {
-                await this.geoHandler.startSession();
+            // stopped while the watch was starting: a session now would never be stopped
+            // the live stats and the ride are both made of the session
+            if ((record || get(navigationRecordStats)) && this.isNavigating) {
+                // one left from before (restored paused after the app was killed) is not this navigation's: it would swallow its fixes
+                this.geoHandler.discardRestoredSession();
+                if (!this.geoHandler.isSessionRunning()) {
+                    await this.geoHandler.startSession(undefined, { recordTrack: record });
+                }
             }
         } catch (error) {
             // the state is already RUNNING: take a half started navigation back down
@@ -247,14 +256,16 @@ export class NavigationService extends Observable {
         DEV_LOG && console.log(TAG, 'stop, watching before teardown:', this.geoHandler.isWatching());
         const userLocationModule = this.userLocationModule;
         const keepWatching = this.wasWatchingBeforeStart;
+        // what was navigated, as the user chose it: a full reroute replaced `route` with its own
+        const navigated = this.route?.originalItem ?? this.route?.item;
+        let session: Session | undefined;
         // best effort: whatever fails, the gps and the stores must still end up in a sane state
         try {
             this.unlisten();
             // stopWatch does not drop it while navigating
             this.geoHandler.hideForegroundNotification();
-            if (this.geoHandler.isSessionRunning()) {
-                this.geoHandler.stopSession();
-            }
+            // the session may have ended by itself (the gps turned off): its track is the navigation's all the same
+            session = this.geoHandler.isSessionRunning() ? this.geoHandler.stopSession() : this.geoHandler.takeEndedSession();
             if (userLocationModule) {
                 userLocationModule.navigationZoom = 0;
                 userLocationModule.navigationMode = false;
@@ -272,6 +283,10 @@ export class NavigationService extends Observable {
         } finally {
             this.setState(NavigationState.IDLE);
             this.wasWatchingBeforeStart = false;
+            // the track it recorded is a ride: the app saves it
+            if (session?.locs?.length) {
+                navigationFinishedRide.set({ session, route: navigated });
+            }
             try {
                 // always stop first, then put back only what the user had running before we started.
                 // Restarting from a known stopped state is the only way to be sure nothing lingers
@@ -491,8 +506,9 @@ export class NavigationService extends Observable {
             navigationProgress.set(progress);
             this.notify({ eventName: NavigationProgressEvent, object: this, data: progress });
 
+            // nothing to do when no session runs
+            this.geoHandler.updateSessionWithLoc(location);
             if (get(navigationRecordStats)) {
-                this.geoHandler.updateSessionWithLoc(location);
                 this.publishStats();
             }
 

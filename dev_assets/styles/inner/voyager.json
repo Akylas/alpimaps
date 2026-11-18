@@ -8,8 +8,13 @@
         "navigation",
         "navigation_hint",
         "maneuver",
+        "recording",
+        "recording_tail",
+        "recording_tail_case",
+        "recording_case",
         "stops",
-        "search"
+        "search",
+        "junctions"
     ],
     "styles": [
         "voyager/style.mss",

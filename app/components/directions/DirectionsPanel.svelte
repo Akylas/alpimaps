@@ -42,11 +42,10 @@
     import type { ValhallaProfile } from '~/utils/routing';
     import { type MapPos, boundsOfPositions, fromPosition, isLocationOnPath, toPosition } from '~/utils/geo';
     import { ClickType, type ElementClickData, type FeatureClickData, type MapClickData } from '~/mapModules/MapModule';
+    import { SETTINGS_DEFAULT_DIRECTION_PROFILE } from '~/utils/constants';
     import { showSliderPopover } from '~/utils/ui';
     import { ellipsiseString, promiseSeq } from '~/utils/utils';
     import { colors, fontScaleMaxed, fonts } from '~/variables';
-
-    const DEFAULT_PROFILE_KEY = 'default_direction_profile';
 
     interface ItemFeature extends Feature {
         route?: Route;
@@ -123,7 +122,7 @@
     let waypoints: ObservableArray<WayPoint> = new ObservableArray([]);
     let nbWayPoints = 0;
     let features: ItemFeature[] = [];
-    let profile = ApplicationSettings.getString(DEFAULT_PROFILE_KEY, 'pedestrian') as ValhallaProfile;
+    let profile = ApplicationSettings.getString(SETTINGS_DEFAULT_DIRECTION_PROFILE, 'pedestrian') as ValhallaProfile;
     // a mode a feature adds (public transport...) is not a Valhalla profile: it has its own options and result
     const modes = featureDirectionsModes();
     let activeMode: DirectionsMode = null;
@@ -300,7 +299,7 @@
 
     function setProfile(p: ValhallaProfile) {
         profile = p;
-        ApplicationSettings.setString(DEFAULT_PROFILE_KEY, p);
+        ApplicationSettings.setString(SETTINGS_DEFAULT_DIRECTION_PROFILE, p);
         // to trigger an update
         profileCostingOptions = profileCostingOptions;
     }
