@@ -22,7 +22,7 @@
     import { routeFeatures, tellDeparture } from '~/routeFeatures/registry';
     import { activityOf } from '~/utils/routeAnalysis/activity';
     import { fixedStart, isSnapshot, resolveStart, routeTimeZone, stampNow } from '~/utils/routeAnalysis/departure';
-    import { createAnalysis, withActivity, withDeparture, withPace } from '~/utils/routeAnalysis/storage';
+    import { createAnalysis, withActivity, withDeparture, withPace, withoutRecording } from '~/utils/routeAnalysis/storage';
     import { timelineSource } from '~/utils/routeAnalysis/timeline';
     import type { Activity, RouteAnalysis } from '~/utils/routeAnalysis/types';
     import { syncList } from '~/utils/syncList';
@@ -75,6 +75,12 @@
     $: imported = !!item?.properties?.imported;
     $: inputs = (analysis ?? createAnalysis(item.geometry)).inputs;
     $: activity = activityOf(item, analysis);
+    // a ride that was done is not planned: it was ridden at the times it was recorded
+    $: done = inputs.departure.mode === 'recorded';
+    // the ride is a route again (made-up times in a GPX, say): what was recorded and pinned for it goes
+    function planRoute() {
+        dispatch('change', { analysis: withoutRecording(analysis, item.geometry), full: true });
+    }
     $: [lon, lat] = routeCoordinates(item.geometry)[0] ?? [0, 0];
     $: chosenAt = resolveStart(inputs.departure, now);
     // the strip keeps its window when another departure is chosen in it, so the choice moves along the strip: it is
@@ -285,6 +291,12 @@
             {/each}
         </wraplayout>
     {/if}
+    {#if done}
+        <stacklayout marginTop={4} orientation="horizontal">
+            <Pill height={32} icon="mdi-history" label={lc('when_recorded')} marginRight={6} selected={true} />
+            <Pill height={32} label={lc('when_plan_route')} on:tap={planRoute} />
+        </stacklayout>
+    {:else}
     <gridlayout columns="auto,auto,*,auto" marginTop={4}>
         <Pill
             height={32}
@@ -416,5 +428,6 @@
             <Pill height={32} icon="mdi-check" label={lc('when_leave_at', clock(previewAt))} marginRight={6} primary={true} on:tap={() => leaveAt(previewAt)} />
             <Pill height={32} label={lc('cancel')} on:tap={cancelLook} />
         </stacklayout>
+    {/if}
     {/if}
 </stacklayout>

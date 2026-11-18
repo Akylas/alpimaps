@@ -336,7 +336,8 @@ export interface RoutePageSection {
     icon: string;
     /** The icon in place of `icon`, when it says something of the route: the sky of its weather. */
     iconOf?: (ctx: RouteCtx) => string | undefined;
-    title: () => string;
+    /** `ctx`: a section may name itself after the route, a ride that was done has the weather it had. */
+    title: (ctx?: RouteCtx) => string;
     /** One line under the title. */
     summary?: (ctx: RouteCtx) => string | undefined;
     /** What the line holds, as icons with their figures and colours: drawn in its place when there are any. */

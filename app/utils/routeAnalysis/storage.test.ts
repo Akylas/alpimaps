@@ -2,7 +2,7 @@ import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
-import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording } from './storage';
+import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording, withoutRecording } from './storage';
 import type { Layer } from './types';
 
 function line(vertexCount: number): LineString {
@@ -216,5 +216,29 @@ describe('withRecording', () => {
     it('drops the layers of another geometry', () => {
         const base = { ...createAnalysis(line(5)), layers: { weather: weatherLayer } };
         expect(withRecording(base, geometry, recorded).layers).toEqual({});
+    });
+});
+
+describe('withoutRecording', () => {
+    const geometry = line(3);
+    const recorded = { t: [0, 10, 30], startedAt: 1_700_000_000_000 };
+    const pinnedWeather = { ...weatherLayer, pinned: true };
+    const done = () => ({ ...withRecording(withActivity(null, geometry, { kind: 'bike', origin: 'user' }), geometry, recorded), layers: { weather: pinnedWeather, terrain: weatherLayer } });
+
+    it('takes the ride back to a route that leaves now, at the usual pace', () => {
+        const analysis = withoutRecording(done(), geometry);
+        expect(analysis.recorded).toBeUndefined();
+        expect(analysis.inputs.departure).toEqual({ mode: 'now' });
+        expect(analysis.inputs.pace.model).toBe(DEFAULT_PACE.model);
+    });
+    it('keeps what the route knows of itself, and its zone', () => {
+        const base = done();
+        base.inputs.departure = { ...base.inputs.departure, tz: 'Europe/Paris', utcOffset: 60 };
+        const analysis = withoutRecording(base, geometry);
+        expect(analysis.inputs.activity).toEqual({ kind: 'bike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'now', tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops what was pinned for the day it was ridden, keeps the rest', () => {
+        expect(Object.keys(withoutRecording(done(), geometry).layers)).toEqual(['terrain']);
     });
 });

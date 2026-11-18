@@ -238,7 +238,10 @@
         const day = dayFormat(daysFrom(at, now, offsetAt));
         return `${day ? formatTime(at, day, offsetAt(at)) + ' ' : ''}${clock(at)}`;
     }
-    $: whenLabel = `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
+    // a ride that was done is not planned: the button says it was recorded, the bar when it was ridden
+    $: recorded = departure.mode === 'recorded';
+    $: rideLabel = recorded && trip ? `${lc('when_ridden')} · ${clock(trip.start)} – ${clock(trip.end)}` : '';
+    $: whenLabel = recorded ? lc('when_recorded') : `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
     // the times change in place: what shows them follows the analysis' changes. The activity changes what the whole page reads.
     // A departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
@@ -263,7 +266,8 @@
     function isSaved(route: Item) {
         return route?.id !== undefined && route.id !== null;
     }
-    const departNow = () => leaveNow(item);
+    // a ride that was done did not leave now: its times are the recording's
+    const departNow = () => !recorded && leaveNow(item);
 
     // a body is its section's own component: one template for each, whose views are only reused by rows of the same section
     function itemTemplateSelector(row: ListRow) {
@@ -352,7 +356,7 @@
                 fontSize={11.5}
                 lineBreak="end"
                 maxLines={1}
-                text={(tripHidden && !isNaN(arrivalAt) ? whenLabel : subtitle) || ''}
+                text={(tripHidden && !isNaN(arrivalAt) ? (rideLabel || whenLabel) : subtitle) || ''}
                 visibility={(tripHidden && !isNaN(arrivalAt)) || subtitle ? 'visible' : 'collapse'} />
         </stacklayout>
         <appBarItem android.position="actionBar" icon={mdiIcon('mdi-dots-vertical')} ios.position="right" {menu} text={lc('more')} />
@@ -432,7 +436,7 @@
                             verticalTextAlignment="middle"
                             width={36} />
                         <stacklayout col={1} paddingLeft={12} verticalAlignment="middle">
-                            <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title()} />
+                            <label color={colorOnSurface} fontSize={14.5} fontWeight="bold" text={row.section.title({ item })} />
                             <!-- the summary as chips: an icon and its figure, in their colours, open or not: the rows under it do not say it again.
                                  A template keeps its views whatever the row: the chips are slots, collapsed when empty, and so is the summary line.
                                  They wrap onto a line of their own when there are more than fit: none is cut off -->

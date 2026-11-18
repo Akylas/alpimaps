@@ -1,4 +1,5 @@
 /** What a ride's own clock gives: the time of each fix of a recording or of a GPX with `<time>`. Pure: nothing here may import NativeScript. */
+import { timelineSource } from './timeline';
 import type { RouteAnalysis } from './types';
 
 export type Recorded = NonNullable<RouteAnalysis['recorded']>;
@@ -99,4 +100,24 @@ export function rideFigures(t: ArrayLike<number>, distances: ArrayLike<number>):
         }
     }
     return { elapsedSec: t[count - 1] - t[0], movingSec, avgSpeed: movingSec > 0 ? (movingMeters / movingSec) * 3.6 : 0 };
+}
+
+export interface DoneRide extends RideFigures {
+    /** epoch ms */
+    startedAt: number;
+    endAt: number;
+}
+
+/** What a ride that was done tells of itself, from its recording. None for a route that was planned, or whose recording is not of its geometry. */
+export function doneRide(item: Parameters<typeof timelineSource>[0]): DoneRide | undefined {
+    const recorded = item.analysis?.recorded;
+    if (item.analysis?.inputs.departure.mode !== 'recorded' || !recorded) {
+        return undefined;
+    }
+    const { distances } = timelineSource(item);
+    if (recorded.t.length < 2 || recorded.t.length !== distances.length) {
+        return undefined;
+    }
+    const figures = rideFigures(recorded.t, distances);
+    return { ...figures, startedAt: recorded.startedAt, endAt: recorded.startedAt + recorded.t[recorded.t.length - 1] * 1000 };
 }

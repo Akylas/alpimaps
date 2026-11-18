@@ -88,3 +88,16 @@ export function withRecording(analysis: RouteAnalysis | null | undefined, geomet
     const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
     return { ...base, recorded, inputs: { ...base.inputs, departure: { ...zone, mode: 'recorded', at: recorded.startedAt }, pace: { ...base.inputs.pace, model: 'recorded' } } };
 }
+
+/**
+ * A ride that was done, planned again: it leaves now at the usual pace. What was pinned for the day it was ridden (its weather) goes,
+ * it says nothing of a ride that has not happened.
+ */
+export function withoutRecording(analysis: RouteAnalysis, geometry: Geometry): RouteAnalysis {
+    const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
+    const { tz, tzFromPhone, utcOffset } = base.inputs.departure;
+    const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
+    const { recorded: _recorded, ...rest } = base;
+    const layers = Object.fromEntries(Object.entries(base.layers).filter(([, layer]) => !layer.pinned));
+    return { ...rest, layers, inputs: { ...base.inputs, departure: { ...zone, mode: 'now' }, pace: { ...base.inputs.pace, model: DEFAULT_PACE.model } } };
+}

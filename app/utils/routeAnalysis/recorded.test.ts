@@ -1,7 +1,8 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { gpx } from '@tmcw/togeojson';
 import { describe, expect, it } from 'vitest';
-import { buildRecorded, recordedFromGpx, recordedFromLocations, rideFigures } from './recorded';
+import { buildRecorded, doneRide, recordedFromGpx, recordedFromLocations, rideFigures } from './recorded';
+import { createAnalysis, withRecording } from './storage';
 
 const NOW = Date.UTC(2026, 10, 18, 12);
 const START = Date.UTC(2026, 10, 2, 8, 12);
@@ -90,5 +91,34 @@ describe('rideFigures', () => {
     });
     it('copes with no fixes', () => {
         expect(rideFigures([], [])).toEqual({ elapsedSec: 0, movingSec: 0, avgSpeed: 0 });
+    });
+});
+
+describe('doneRide', () => {
+    // 100 m north every 10 s, then a 5 min stop, then 100 m in 10 s
+    const geometry = {
+        type: 'LineString' as const,
+        coordinates: [0, 100, 200, 200, 300].map((meters) => [6, 45 + meters / 111320])
+    };
+    const recorded = { startedAt: START, t: [0, 10, 20, 320, 330] };
+    const item = { geometry, analysis: withRecording(null, geometry, recorded) };
+
+    it('tells when it began and ended, with the figures of its recording', () => {
+        const ride = doneRide(item);
+        expect(ride?.startedAt).toBe(START);
+        expect(ride?.endAt).toBe(START + 330_000);
+        expect(ride?.elapsedSec).toBe(330);
+        expect(ride?.movingSec).toBe(30);
+        expect(ride?.avgSpeed).toBeCloseTo(36, 0);
+    });
+    it('is none for a ride that was planned', () => {
+        expect(doneRide({ geometry, analysis: createAnalysis(geometry) })).toBeUndefined();
+        expect(doneRide({ geometry })).toBeUndefined();
+    });
+    it('is none once the route is planned again, whatever recording is left', () => {
+        expect(doneRide({ geometry, analysis: { ...item.analysis, inputs: { ...item.analysis.inputs, departure: { mode: 'now' } } } })).toBeUndefined();
+    });
+    it('is none when the recording is not of this geometry', () => {
+        expect(doneRide({ geometry, analysis: { ...item.analysis, recorded: { startedAt: START, t: [0, 10] } } })).toBeUndefined();
     });
 });
