@@ -1,6 +1,6 @@
 import { ApplicationSettings } from '@nativescript/core';
 import { derived, get, writable } from 'svelte/store';
-import type { GeoLocation } from '~/handlers/GeoHandler';
+import type { GeoLocation, Session } from '~/handlers/GeoHandler';
 import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/formatter';
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
@@ -128,6 +128,12 @@ export const navigationRerouting = writable(false);
 export const navigationProgress = writable<RouteProgress>(null);
 /** last fix received while navigating, for the live speed and elevation readouts */
 export const navigationLocation = writable<GeoLocation>(null);
+export interface FinishedRide {
+    session: Session;
+    route?: IItem;
+}
+/** The session of the navigation that just ended, with the route that was navigated: the app saves its track as a ride, then clears it. */
+export const navigationFinishedRide = writable<FinishedRide | null>(null);
 /** null unless navigation_record_stats is on */
 export const navigationStats = writable<NavigationStats>(null);
 

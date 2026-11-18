@@ -750,14 +750,18 @@ export class GeoHandler extends Handler {
         }
         session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
     }
-    stopSession() {
+    /** The session as it ended, with its fixes when the track is recorded; none when there was no session or it did not move. */
+    stopSession(): Session | undefined {
+        let ended: Session;
         if (this.currentSession) {
             // remove('pausedSession');
             this.stopWatch();
 
             if (this.currentSession.distance > 0) {
                 this.prepareSessionForStoring(this.currentSession);
-                this.sessionsHistory.push(this.currentSession);
+                ended = this.currentSession;
+                // the fixes of a long ride are megabytes, which do not belong in a setting: the track is saved as a ride
+                this.sessionsHistory.push({ ...ended, locs: [] });
                 ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
             }
             this.setSessionState(SessionState.STOPPED);
@@ -766,6 +770,7 @@ export class GeoHandler extends Handler {
             this.onUpdatedSession = null;
         }
         this.stopChronoTimer();
+        return ended;
     }
     pauseSession() {
         if (this.currentSession && this.sessionState !== SessionState.PAUSED) {

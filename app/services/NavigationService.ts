@@ -1,7 +1,7 @@
 import Observable from '@nativescript-community/observable';
 import { Application, ApplicationEventData } from '@nativescript/core';
 import { get } from 'svelte/store';
-import { type GeoHandler, type GeoLocation, UserLocationdEvent } from '~/handlers/GeoHandler';
+import { type GeoHandler, type GeoLocation, type Session, UserLocationdEvent } from '~/handlers/GeoHandler';
 import { getMapContext } from '~/mapModules/MapModule';
 import type { ValhallaProfile } from '~/utils/routing';
 import { IItem, Item, type RouteInstruction, RoutingAction } from '~/models/Item';
@@ -19,6 +19,7 @@ import {
     navigationBackgroundUpdateInterval,
     navigationBearingRefreshAngle,
     navigationDetour,
+    navigationFinishedRide,
     navigationGpsUpdateDistance,
     navigationItem,
     navigationLocation,
@@ -247,13 +248,16 @@ export class NavigationService extends Observable {
         DEV_LOG && console.log(TAG, 'stop, watching before teardown:', this.geoHandler.isWatching());
         const userLocationModule = this.userLocationModule;
         const keepWatching = this.wasWatchingBeforeStart;
+        // what was navigated, as the user chose it: a full reroute replaced `route` with its own
+        const navigated = this.route?.originalItem ?? this.route?.item;
+        let session: Session | undefined;
         // best effort: whatever fails, the gps and the stores must still end up in a sane state
         try {
             this.unlisten();
             // stopWatch does not drop it while navigating
             this.geoHandler.hideForegroundNotification();
             if (this.geoHandler.isSessionRunning()) {
-                this.geoHandler.stopSession();
+                session = this.geoHandler.stopSession();
             }
             if (userLocationModule) {
                 userLocationModule.navigationZoom = 0;
@@ -272,6 +276,10 @@ export class NavigationService extends Observable {
         } finally {
             this.setState(NavigationState.IDLE);
             this.wasWatchingBeforeStart = false;
+            // the track it recorded is a ride: the app saves it
+            if (session?.locs?.length) {
+                navigationFinishedRide.set({ session, route: navigated });
+            }
             try {
                 // always stop first, then put back only what the user had running before we started.
                 // Restarting from a known stopped state is the only way to be sure nothing lingers
