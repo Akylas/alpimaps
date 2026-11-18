@@ -1382,5 +1382,7 @@
     "ride_not_saved_too_short": "Sortie non sauvegardée : seulement %s enregistrés, il en faut au moins %s.",
     "ride_not_saved_too_brief": "Sortie non sauvegardée : elle a duré %s, il en faut au moins %s.",
     "gesture_navigate_title": "Lancer l'enregistrement",
-    "gesture_navigate_desc": "Un appui long sur le bouton de démarrage de la navigation la lance en enregistrant la sortie, quel que soit le réglage d'enregistrement."
+    "gesture_navigate_desc": "Un appui long sur le bouton de démarrage de la navigation la lance en enregistrant la sortie, quel que soit le réglage d'enregistrement.",
+    "recording": "enregistrement",
+    "navigation_blocked_recording": "Une sortie est en cours d'enregistrement : arrêtez-la pour lancer une navigation."
 }

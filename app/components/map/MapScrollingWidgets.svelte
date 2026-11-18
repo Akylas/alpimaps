@@ -354,8 +354,8 @@
         horizontalAlignment="right"
         marginBottom={72}
         row={2}
-        verticalAlignment="bottom"
-        visibility={$watchingLocation && !$queryingLocation && !$isNavigating ? 'visible' : 'collapse'} />
+        shown={$watchingLocation && !$queryingLocation && !$isNavigating}
+        verticalAlignment="bottom" />
     <stacklayout id="stack2" horizontalAlignment="left" marginTop={80} row={2} verticalAlignment="bottom" visibility={$isNavigating ? 'collapse' : 'visible'}>
         <!-- <mdbutton on:tap={open3DMap} class="small-floating-btn" color={colorPrimary} text="mdi-video-3d" /> -->
         <mdbutton id="list" class="small-floating-btn" text="mdi-format-list-checkbox" on:tap={showItemsList} on:longPress={onListItemLongPress} />

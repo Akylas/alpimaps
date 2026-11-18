@@ -1,7 +1,9 @@
 // recording a ride without navigating: the session of the geo handler, started and stopped while following the position
-import { type GeoHandler, SessionState } from '~/handlers/GeoHandler';
+import { get } from 'svelte/store';
+import { type GeoHandler, SessionChronoEvent, SessionState, SessionStateEvent, SessionUpdatedEvent, recordingState } from '~/handlers/GeoHandler';
 import { getBGServiceInstance } from '~/services/BgService';
-import { navigationFinishedRide } from '~/stores/navigationStore';
+import { onServiceLoaded } from '~/services/BgService.common';
+import { isNavigating, navigationFinishedRide, navigationStats } from '~/stores/navigationStore';
 
 function geoHandler(): GeoHandler | undefined {
     return getBGServiceInstance()?.geoHandler;
@@ -48,3 +50,35 @@ export function resumeRecording() {
         handler.resumeSession();
     }
 }
+
+// the recording bar reads the same stats the navigation dock does: while a ride is recorded without
+// navigating, they are the session's. A navigation publishes its own.
+let publishing = false;
+function publishStats() {
+    if (get(isNavigating)) {
+        return;
+    }
+    const handler = geoHandler();
+    const session = handler?.getCurrentSession();
+    if (!session || get(recordingState) === null) {
+        if (publishing) {
+            publishing = false;
+            navigationStats.set(null);
+        }
+        return;
+    }
+    publishing = true;
+    navigationStats.set({
+        duration: handler.getCurrentSessionChrono(),
+        distance: session.distance,
+        currentSpeed: session.currentSpeed,
+        averageSpeed: session.averageSpeed,
+        altitudeGain: session.altitudeGain,
+        altitudeNegative: session.altitudeNegative
+    });
+}
+onServiceLoaded((handler) => {
+    handler.on(SessionUpdatedEvent, publishStats);
+    handler.on(SessionChronoEvent, publishStats);
+    handler.on(SessionStateEvent, publishStats);
+});

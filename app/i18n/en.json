@@ -1613,5 +1613,7 @@
     "ride_not_saved_too_short": "Ride not saved: only %s recorded, a ride needs at least %s.",
     "ride_not_saved_too_brief": "Ride not saved: it lasted %s, a ride needs at least %s.",
     "gesture_navigate_title": "Start recording",
-    "gesture_navigate_desc": "Long-press the start navigation button to start with the ride recorded, whatever the record setting says."
+    "gesture_navigate_desc": "Long-press the start navigation button to start with the ride recorded, whatever the record setting says.",
+    "recording": "recording",
+    "navigation_blocked_recording": "A ride is being recorded: stop it to start a navigation."
 }
