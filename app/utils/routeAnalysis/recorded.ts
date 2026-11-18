@@ -8,6 +8,8 @@ export type Recorded = NonNullable<RouteAnalysis['recorded']>;
 const MIN_TIMED = 0.9;
 /** m/s: slower than this the rider is stopped, as the recording session counts it. */
 const STOPPED_SPEED = 0.3;
+/** seconds: a gap between two fixes longer than this is a pause or a lost signal, not riding, whatever the distance across it. */
+const MAX_GAP = 120;
 
 /**
  * Per-vertex seconds from the first fix, from the epoch ms of each vertex (NaN where it has none). Fixes with no time are read
@@ -43,8 +45,8 @@ export function buildRecorded(times: ArrayLike<number>, now: number): Recorded |
     for (let index = previous + 1; index < count; index++) {
         seconds[index] = seconds[previous];
     }
-    const t = Array.from(seconds, (value) => Math.round(value * 10) / 10);
-    return t[count - 1] > 0 ? { t, startedAt } : null;
+    const offsets = Array.from(seconds, (value) => Math.round(value * 10) / 10);
+    return offsets[count - 1] > 0 ? { t: offsets, startedAt } : null;
 }
 
 /** The fixes of a recording session. */
@@ -83,23 +85,23 @@ export interface RideFigures {
     avgSpeed: number;
 }
 
-/** The figures of a ride: `t` the seconds of each vertex, `distances` the metres from the start. */
-export function rideFigures(t: ArrayLike<number>, distances: ArrayLike<number>): RideFigures {
-    const count = Math.min(t.length, distances.length);
+/** The figures of a ride: `offsets` the seconds of each vertex, `distances` the metres from the start. */
+export function rideFigures(offsets: ArrayLike<number>, distances: ArrayLike<number>): RideFigures {
+    const count = Math.min(offsets.length, distances.length);
     if (count < 2) {
         return { elapsedSec: 0, movingSec: 0, avgSpeed: 0 };
     }
     let movingSec = 0;
     let movingMeters = 0;
     for (let index = 1; index < count; index++) {
-        const seconds = t[index] - t[index - 1];
+        const seconds = offsets[index] - offsets[index - 1];
         const meters = distances[index] - distances[index - 1];
-        if (seconds > 0 && meters / seconds > STOPPED_SPEED) {
+        if (seconds > 0 && seconds <= MAX_GAP && meters / seconds > STOPPED_SPEED) {
             movingSec += seconds;
             movingMeters += meters;
         }
     }
-    return { elapsedSec: t[count - 1] - t[0], movingSec, avgSpeed: movingSec > 0 ? (movingMeters / movingSec) * 3.6 : 0 };
+    return { elapsedSec: offsets[count - 1] - offsets[0], movingSec, avgSpeed: movingSec > 0 ? (movingMeters / movingSec) * 3.6 : 0 };
 }
 
 export interface DoneRide extends RideFigures {

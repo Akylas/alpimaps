@@ -32,6 +32,27 @@ describe('rideTrack', () => {
         expect(track?.coordinates).toHaveLength(41);
         expect(track?.recorded.t).toHaveLength(41);
     });
+    it('leaves out the fixes the gps itself doubts: a bad accuracy, a speed of a stopped rider', () => {
+        // jitter while stopped, 4 m apart: the step filter alone would take it for riding
+        const jitter = Array.from({ length: 200 }, (_, index) => ({
+            lat: 45.5 + (index % 2) * 4 * METER,
+            lon: 6,
+            timestamp: ride[40].timestamp + (index + 1) * 1000,
+            speed: 0.1,
+            horizontalAccuracy: 5
+        }));
+        expect(rideTrack([...ride, ...jitter], NOW)?.coordinates).toHaveLength(41);
+        const vague = ride.map((fix) => ({ ...fix, horizontalAccuracy: 80 }));
+        expect(rideTrack(vague, NOW)).toBeNull();
+    });
+    it('keeps the fixes that carry no speed or accuracy', () => {
+        expect(
+            rideTrack(
+                ride.map((fix) => ({ ...fix, speed: -1 })),
+                NOW
+            )?.coordinates
+        ).toHaveLength(41);
+    });
     it('leaves out a fix with no position or no time', () => {
         const track = rideTrack([{ lat: NaN, lon: 6, timestamp: START }, ...ride, { lat: 45.5, lon: 6, timestamp: NaN }], NOW);
         expect(track?.coordinates).toHaveLength(41);

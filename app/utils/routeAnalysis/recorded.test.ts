@@ -86,6 +86,12 @@ describe('rideFigures', () => {
     it('averages the speed over the moving time, km/h', () => {
         expect(rideFigures(t, distances).avgSpeed).toBeCloseTo(36, 5);
     });
+    it('counts a long gap as a stop, however far the next fix is: a pause or a lost signal is not riding', () => {
+        // 100 m, then 10 min with no fix and 2 km further, then 100 m
+        const figures = rideFigures([0, 10, 610, 620], [0, 100, 2100, 2200]);
+        expect(figures.movingSec).toBe(20);
+        expect(figures.avgSpeed).toBeCloseTo(36, 5);
+    });
     it('has no speed for a ride that did not move', () => {
         expect(rideFigures([0, 10], [0, 0])).toEqual({ elapsedSec: 10, movingSec: 0, avgSpeed: 0 });
     });

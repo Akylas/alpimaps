@@ -231,7 +231,8 @@ export class NavigationService extends Observable {
             await userLocationModule.startWatchLocation({ force: true });
             userLocationModule.navigationMode = true;
 
-            if (get(navigationRecordStats) && !this.geoHandler.isSessionRunning()) {
+            // stopped while the watch was starting: a session now would never be stopped
+            if (get(navigationRecordStats) && this.isNavigating && !this.geoHandler.isSessionRunning()) {
                 await this.geoHandler.startSession();
             }
         } catch (error) {
@@ -256,9 +257,8 @@ export class NavigationService extends Observable {
             this.unlisten();
             // stopWatch does not drop it while navigating
             this.geoHandler.hideForegroundNotification();
-            if (this.geoHandler.isSessionRunning()) {
-                session = this.geoHandler.stopSession();
-            }
+            // the session may have ended by itself (the gps turned off): its track is the navigation's all the same
+            session = this.geoHandler.isSessionRunning() ? this.geoHandler.stopSession() : this.geoHandler.takeEndedSession();
             if (userLocationModule) {
                 userLocationModule.navigationZoom = 0;
                 userLocationModule.navigationMode = false;

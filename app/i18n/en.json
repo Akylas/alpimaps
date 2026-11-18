@@ -1596,5 +1596,5 @@
     "gesture_when_now_title": "Leave now",
     "gesture_sun_chip_title": "What a chip says",
     "gesture_sun_chip_desc": "Tap a sun or moon chip on the route page to read what it means, and where on the ride it falls.",
-    "gesture_when_now_desc": "Long press the departure button at the bottom of the route page to move the departure to now: the times are set to the current time and the weather and sun are read again. A tap opens the When panel to plan a departure."
+    "gesture_when_now_desc": "Long press the departure button at the bottom of the route page to move the departure to now: the times are set to the current time and the weather and sun are read again. A tap opens the When panel to plan a departure. A ride you did keeps its recorded times: its panel offers to plan it again."
 }

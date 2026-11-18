@@ -250,7 +250,8 @@ export class GeoHandler extends Handler {
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
-            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            // the fixes of a long ride are megabytes, which do not belong in a setting
+            ApplicationSettings.setString('pausedSession', JSON.stringify({ ...this.currentSession, locs: [] }));
             this.currentSession = null; // to prevent storing in history
         }
         this.stopSession();
@@ -690,6 +691,7 @@ export class GeoHandler extends Handler {
             return Promise.reject('already_running');
         }
         return this.enableLocation().then((r) => {
+            this.endedSession = undefined;
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
@@ -750,6 +752,13 @@ export class GeoHandler extends Handler {
         }
         session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
     }
+    /** The last session that ended and was not taken: it can end on its own (the gps was turned off), with nobody to hand it to. */
+    private endedSession: Session | undefined;
+    takeEndedSession() {
+        const ended = this.endedSession;
+        this.endedSession = undefined;
+        return ended;
+    }
     /** The session as it ended, with its fixes when the track is recorded; none when there was no session or it did not move. */
     stopSession(): Session | undefined {
         let ended: Session;
@@ -759,7 +768,7 @@ export class GeoHandler extends Handler {
 
             if (this.currentSession.distance > 0) {
                 this.prepareSessionForStoring(this.currentSession);
-                ended = this.currentSession;
+                ended = this.endedSession = this.currentSession;
                 // the fixes of a long ride are megabytes, which do not belong in a setting: the track is saved as a ride
                 this.sessionsHistory.push({ ...ended, locs: [] });
                 ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));

@@ -7,6 +7,10 @@ export const MIN_RIDE_METERS = 500;
 export const MIN_RIDE_MS = 5 * 60_000;
 /** metres: a fix closer than this to the last one kept is the position wandering while stopped, not the ride going on. */
 const MIN_STEP = 3;
+/** metres: a fix the gps is less sure of than this is left out, as the session leaves it out of its distance. */
+const MAX_ACCURACY = 30;
+/** m/s: at or under this the rider is stopped, whatever the position says. */
+const STOPPED_SPEED = 0.3;
 const METERS_PER_DEGREE = 111320;
 
 export interface RideFix {
@@ -14,6 +18,10 @@ export interface RideFix {
     lon: number;
     /** epoch ms */
     timestamp: number;
+    /** metres; none: not told */
+    horizontalAccuracy?: number;
+    /** m/s over ground, negative when the gps has none */
+    speed?: number;
 }
 
 export interface RideTrack {
@@ -34,6 +42,9 @@ export function rideTrack(fixes: RideFix[], now: number): RideTrack | null {
     const kept: RideFix[] = [];
     for (const fix of fixes) {
         if (!Number.isFinite(fix.lat) || !Number.isFinite(fix.lon) || !Number.isFinite(fix.timestamp)) {
+            continue;
+        }
+        if (fix.horizontalAccuracy > MAX_ACCURACY || (fix.speed >= 0 && fix.speed <= STOPPED_SPEED)) {
             continue;
         }
         if (!kept.length || metersBetween(kept[kept.length - 1], fix) >= MIN_STEP) {

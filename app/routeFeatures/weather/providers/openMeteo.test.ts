@@ -265,6 +265,23 @@ describe('past weather', () => {
         await expect(openMeteoProvider.past?.(ride2024, http)).rejects.toMatchObject({ reason: 'rate-limited' });
     });
 
+    it('says the dates are out of its range on a 400 for a ride that is not over', async () => {
+        const tomorrow = Math.floor(Date.now() / 1000 / DAY) * DAY + DAY;
+        const http = async () => {
+            throw Object.assign(new Error('out of range'), { statusCode: 400 });
+        };
+        await expect(openMeteoProvider.past?.({ ...ride2024, from: tomorrow, to: tomorrow + DAY }, http)).rejects.toMatchObject({ reason: 'out-of-coverage' });
+    });
+
+    it('lets a 400 for a ride that is over through as the failure it is: that is a mistake of ours', async () => {
+        const failure = Object.assign(new Error('Parameter hourly is wrong'), { statusCode: 400 });
+        await expect(
+            openMeteoProvider.past?.(ride2024, async () => {
+                throw failure;
+            })
+        ).rejects.toBe(failure);
+    });
+
     it('lets any other failure through as it is', async () => {
         const failure = new Error('socket closed');
         await expect(

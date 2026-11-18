@@ -1365,5 +1365,5 @@
     "gesture_when_now_title": "Partir maintenant",
     "gesture_sun_chip_title": "Ce que dit une pastille",
     "gesture_sun_chip_desc": "Appuyez sur une pastille de soleil ou de lune de la page d’itinéraire pour lire ce qu’elle veut dire, et où elle tombe sur le trajet.",
-    "gesture_when_now_desc": "Appui long sur le bouton de départ en bas de la page d’itinéraire pour ramener le départ à maintenant : les heures passent à l’heure actuelle et la météo et le soleil sont relus. Un appui ouvre le panneau Quand pour planifier un départ."
+    "gesture_when_now_desc": "Appui long sur le bouton de départ en bas de la page d’itinéraire pour ramener le départ à maintenant : les heures passent à l’heure actuelle et la météo et le soleil sont relus. Un appui ouvre le panneau Quand pour planifier un départ. Une sortie effectuée garde ses heures enregistrées : son panneau propose de la planifier à nouveau."
 }

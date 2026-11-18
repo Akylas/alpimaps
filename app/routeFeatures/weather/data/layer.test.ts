@@ -152,8 +152,8 @@ describe('computeWeatherLayer', () => {
 
 describe('computeWeatherLayer for a ride that was done', () => {
     const startedAt = Date.UTC(2025, 5, 1, 8);
-    const recordedItem = { ...item, analysis: { v: 1 as const, inputs: {} as AnalysisInputs, layers: {}, recorded: { startedAt, t: coordinates.map((_, index) => index * 60) } } };
     const recordedInputs: AnalysisInputs = { ...inputs, departure: { mode: 'recorded', at: startedAt }, pace: { ...DEFAULT_PACE, model: 'recorded' } };
+    const recordedItem = { ...item, analysis: { v: 1 as const, inputs: recordedInputs, layers: {}, recorded: { startedAt, t: coordinates.map((_, index) => index * 60) } } };
 
     function pastFetcher(source: 'historical-forecast' | 'archive-era5' = 'historical-forecast') {
         const calls: { query: WeatherQuery; past: boolean }[] = [];

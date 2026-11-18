@@ -143,6 +143,7 @@ export const openMeteoProvider: WeatherProvider = {
     },
     async past(query: WeatherQuery, http: WeatherHttp) {
         const source = pastSourceOf(query.from);
-        return { ...(await ask(query, http, source, false)), source };
+        // a 400 is the dates not there yet, only when the ride is not over
+        return { ...(await ask(query, http, source, query.to * 1000 > Date.now())), source };
     }
 };
