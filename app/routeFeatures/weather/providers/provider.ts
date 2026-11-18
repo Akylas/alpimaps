@@ -28,7 +28,12 @@ export interface WeatherResponse {
     /** what was asked of the source, kept with the layer to tell what it was computed from */
     vars: string[];
     models: string;
+    /** a source that reconstructs the past says which: it is not measured, and the coarse one is not the fine one */
+    source?: PastWeatherSource;
 }
+
+/** Where the weather of a ride that was done comes from: archived forecast runs (about 2 km), or a reanalysis (about 25 km). */
+export type PastWeatherSource = 'historical-forecast' | 'archive-era5';
 
 /** Gets a JSON document. The source does not know how: the app has its own network layer. */
 export type WeatherHttp = (url: string) => Promise<unknown>;
@@ -49,6 +54,8 @@ export interface WeatherProvider {
     maxPoints: number;
     /** Throws `WeatherProviderError` for what it understands: a window out of its range, a limit reached. */
     fetch(query: WeatherQuery, http: WeatherHttp): Promise<WeatherResponse>;
+    /** The weather there was, for a ride that was done. Absent: the source has no past. Same errors as `fetch`. */
+    past?(query: WeatherQuery, http: WeatherHttp): Promise<WeatherResponse>;
 }
 
 /** The reason is what the layer's status says. */

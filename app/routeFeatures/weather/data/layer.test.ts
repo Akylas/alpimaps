@@ -149,3 +149,49 @@ describe('computeWeatherLayer', () => {
         expect(queries).toHaveLength(0);
     });
 });
+
+describe('computeWeatherLayer for a ride that was done', () => {
+    const startedAt = Date.UTC(2025, 5, 1, 8);
+    const recordedItem = { ...item, analysis: { v: 1 as const, inputs: {} as AnalysisInputs, layers: {}, recorded: { startedAt, t: coordinates.map((_, index) => index * 60) } } };
+    const recordedInputs: AnalysisInputs = { ...inputs, departure: { mode: 'recorded', at: startedAt }, pace: { ...DEFAULT_PACE, model: 'recorded' } };
+
+    function pastFetcher(source: 'historical-forecast' | 'archive-era5' = 'historical-forecast') {
+        const calls: { query: WeatherQuery; past: boolean }[] = [];
+        const fetch: WeatherFetcher = async (query, options) => {
+            calls.push({ query, past: options.past });
+            return { provider: { id: 'open-meteo', source: 'open-meteo/forecast' }, response: answer(query, { source }) };
+        };
+        return { fetch, calls };
+    }
+
+    it('asks the past, for the hours the ride was under way', async () => {
+        const { calls, fetch } = pastFetcher();
+        await compute(fetch, { item: recordedItem, inputs: recordedInputs });
+        expect(calls[0].past).toBe(true);
+        // 200 min recorded
+        expect({ from: calls[0].query.from, to: calls[0].query.to }).toEqual(weatherCoverage(startedAt, 200 * 60));
+    });
+
+    it('keeps it pinned, with where it comes from', async () => {
+        const layer = await compute(pastFetcher().fetch, { item: recordedItem, inputs: recordedInputs });
+        expect(layer.pinned).toBe(true);
+        expect(layer.prov.source).toBe('historical-forecast');
+        expect(layer.prov.provider).toBe('open-meteo/historical-forecast');
+        expect(layer.prov.quality).toBe('ok');
+    });
+
+    it('says an ERA5 reconstruction is an estimate', async () => {
+        const layer = await compute(pastFetcher('archive-era5').fetch, { item: recordedItem, inputs: recordedInputs });
+        expect(layer.prov.source).toBe('archive-era5');
+        expect(layer.prov.provider).toBe('open-meteo/archive-era5');
+        expect(layer.prov.quality).toBe('estimated');
+    });
+
+    it('does not ask the past, nor pin, for a ride that is not recorded', async () => {
+        const { calls, fetch } = pastFetcher();
+        const layer = await compute(fetch);
+        expect(calls[0].past).toBe(false);
+        expect(layer.pinned).toBeUndefined();
+        expect(layer.prov.source).toBe('forecast');
+    });
+});
