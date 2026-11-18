@@ -115,7 +115,8 @@
 }
 
 // the ride being recorded, as far as it went. Two layers with one look: the tail is redrawn on every position,
-// the rest only now and then (see RideTraceModule)
+// the rest only now and then (see RideTraceModule). Named `recording*` on purpose: the terrain's no-drape filter
+// (`recording.*`, whole name) keeps it live in 3D, where a baked layer would not follow the ride
 #recording['mapnik::geometry_type'=2],
 #recording_tail['mapnik::geometry_type'=2] {
 	line-border-color: @rec_casing_color;
