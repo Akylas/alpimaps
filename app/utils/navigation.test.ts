@@ -116,6 +116,7 @@ describe('recordingBarHeight', () => {
         expect(recordingBarHeight(1)).toBe(DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT + 8);
     });
     it('follows the navigation scale, as the dock does', () => {
-        expect(recordingBarHeight(1.5)).toBe(Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT + 8) * 1.5));
+        // the dock card margin stays a fixed 8, only the card scales
+        expect(recordingBarHeight(1.5)).toBe(Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT) * 1.5) + 8);
     });
 });

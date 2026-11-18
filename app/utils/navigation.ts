@@ -41,7 +41,7 @@ export const RECORDING_STRIP_HEIGHT = 14;
 
 /** What the recording bar takes at the bottom of the map: the dock's summary row under its strip, and the 8 of gap under the card. */
 export function recordingBarHeight(scale: number) {
-    return Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT + 8) * scale);
+    return Math.round((DOCK_SUMMARY_HEIGHT + RECORDING_STRIP_HEIGHT) * scale) + 8;
 }
 
 /**
