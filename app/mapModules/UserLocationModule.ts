@@ -26,7 +26,7 @@ import { colors, screenHeightDips } from '~/variables';
 import { request } from '@nativescript-community/perms';
 import { CLog } from '@nativescript-community/sentry';
 import { stopRecording } from '~/routeFeatures/ride/recorder';
-import { isNavigating } from '~/stores/navigationStore';
+import { isNavigating, navigationTilt } from '~/stores/navigationStore';
 import { confirm } from '@nativescript-community/ui-dialogs';
 
 const LOCATION_ANIMATION_DURATION = 300;
@@ -120,6 +120,10 @@ export default class UserLocationModule extends MapModule {
         return get(navigationModeStore);
     }
     set navigationMode(value: boolean) {
+        // leaving the mode, the tilt the user chose is the one the next navigation starts with
+        if (!value && this.navigationMode && this.userTiltOverride) {
+            this.rememberNavigationTilt();
+        }
         navigationModeStore.set(value);
         // (re)engaging the mode, or leaving it, hands the camera back
         this.userZoomOverride = false;
@@ -131,6 +135,14 @@ export default class UserLocationModule extends MapModule {
         if (value) {
             this.userFollow = true;
             this.moveToUserLocation();
+        }
+    }
+
+    /** The camera's tilt becomes the navigation one: it is what the settings show, and what the next navigation starts with. */
+    private rememberNavigationTilt() {
+        const tilt = mapContext.getMap()?.camera().tilt();
+        if (Number.isFinite(tilt) && tilt > 0) {
+            navigationTilt.set(Math.round(tilt));
         }
     }
 

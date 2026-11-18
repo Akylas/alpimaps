@@ -680,7 +680,7 @@
     "navigation_speed_drop_wake_ratio": "slowdown threshold",
     "navigation_surface_span": "surface preview distance",
     "navigation_surface_span_desc": "how far ahead the surface preview looks",
-    "navigation_tilt": "Map tilt to apply while in navigation mode",
+    "navigation_tilt": "Map tilt to apply while in navigation mode. The tilt you set during a navigation is kept for the next one",
     "navigation_turn_refresh_angle": "sharp turn angle",
     "navigation_turn_refresh_angle_desc": "past this turn angle a maneuver is owed a refresh once it is behind you. Roundabouts and u-turns always are, whatever their own angle says",
     "navigation_turn_refresh_delay": "maneuver refresh timeout",
