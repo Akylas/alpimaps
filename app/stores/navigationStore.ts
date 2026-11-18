@@ -5,6 +5,7 @@ import { UNITS, formatDistance, formatDuration, formatValue } from '~/helpers/fo
 import { lc } from '~/helpers/locale';
 import type { IItem } from '~/models/Item';
 import type { NavigationDetour } from '~/services/navigation/NavigationRoute';
+import { RIDE_RECORD_MODES, type RideRecordMode, migrateRecordMode } from '~/routeFeatures/ride/mode';
 import { type RouteNavPage, liveRouteFeatures, migrateNavPages, parseNavPages, routeFeatures, routeNavPageChoices, routeNavPages } from '~/routeFeatures/registry';
 import { SettingsStore, settingsStore } from '~/stores/settingsStore';
 import {
@@ -27,8 +28,8 @@ import {
     DEFAULT_NAVIGATION_PAGE,
     DEFAULT_NAVIGATION_PAGES,
     DEFAULT_NAVIGATION_POSITION_OFFSET,
+    DEFAULT_NAVIGATION_RECORD_MODE,
     DEFAULT_NAVIGATION_RECORD_STATS,
-    DEFAULT_NAVIGATION_RECORD_TRACK,
     DEFAULT_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE,
     DEFAULT_NAVIGATION_SPEED_DROP_WAKE_RATIO,
@@ -49,6 +50,7 @@ import {
     DEFAULT_NAVIGATION_ZOOM_MIN_LOOK_AHEAD,
     DEFAULT_SHOW_NO_ENTRY,
     DEFAULT_SHOW_TURN_OPTIONS,
+    LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_JUNCTION_LOOK_AHEAD,
     SETTINGS_NAVIGATION_ARROW_MARKER,
     SETTINGS_NAVIGATION_AUTO_PAUSE,
@@ -68,8 +70,8 @@ import {
     SETTINGS_NAVIGATION_PAGE,
     SETTINGS_NAVIGATION_PAGES,
     SETTINGS_NAVIGATION_POSITION_OFFSET,
+    SETTINGS_NAVIGATION_RECORD_MODE,
     SETTINGS_NAVIGATION_RECORD_STATS,
-    SETTINGS_NAVIGATION_RECORD_TRACK,
     SETTINGS_NAVIGATION_SCREEN_REFRESH_INTERVAL,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE,
     SETTINGS_NAVIGATION_SPEED_DROP_WAKE_RATIO,
@@ -173,7 +175,17 @@ export const navigationAutoPause = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE,
 export const navigationAutoPauseSpeed = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED, DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED);
 export const navigationAutoPauseDelay = settingsStore(SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY, DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY);
 export const navigationRecordStats = settingsStore(SETTINGS_NAVIGATION_RECORD_STATS, DEFAULT_NAVIGATION_RECORD_STATS);
-export const navigationRecordTrack = settingsStore(SETTINGS_NAVIGATION_RECORD_TRACK, DEFAULT_NAVIGATION_RECORD_TRACK);
+
+// the on / off switch became a mode: whoever set it keeps what they chose
+if (!ApplicationSettings.hasKey(SETTINGS_NAVIGATION_RECORD_MODE) && ApplicationSettings.hasKey(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK)) {
+    const migrated = migrateRecordMode(ApplicationSettings.getBoolean(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK));
+    if (migrated && migrated !== DEFAULT_NAVIGATION_RECORD_MODE) {
+        ApplicationSettings.setString(SETTINGS_NAVIGATION_RECORD_MODE, migrated);
+    }
+}
+ApplicationSettings.remove(LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK);
+/** what a navigation does about recording its ride */
+export const navigationRecordMode = settingsStore<RideRecordMode>(SETTINGS_NAVIGATION_RECORD_MODE, DEFAULT_NAVIGATION_RECORD_MODE);
 
 const LEGACY_SHOW_ELEVATION_CHART = 'navigation_show_elevation_chart';
 const LEGACY_SHOW_SURFACE = 'navigation_show_surface';
@@ -248,12 +260,14 @@ const NAVIGATION_SECTION_TITLES: Record<NavigationSection, () => string> = {
 export interface NavigationParam {
     key: string;
     store: SettingsStore<any>;
-    type: 'boolean' | 'number';
+    type: 'boolean' | 'number' | 'choice';
     default: any;
     section: NavigationSection;
     /** lazy so the label follows a language change */
     title: () => string;
     description?: () => string;
+    /** for a `choice`: what can be picked, lazy so the titles follow a language change */
+    choices?: () => { value: string; title: string }[];
     min?: number;
     max?: number;
     step?: number;
@@ -664,13 +678,14 @@ export const NAVIGATION_PARAMS: NavigationParam[] = [
         quick: true
     },
     {
-        key: SETTINGS_NAVIGATION_RECORD_TRACK,
+        key: SETTINGS_NAVIGATION_RECORD_MODE,
         section: NavigationSection.Recording,
-        store: navigationRecordTrack,
-        type: 'boolean',
-        default: DEFAULT_NAVIGATION_RECORD_TRACK,
-        title: () => lc('navigation_record_track'),
-        description: () => lc('navigation_record_track_desc')
+        store: navigationRecordMode,
+        type: 'choice',
+        default: DEFAULT_NAVIGATION_RECORD_MODE,
+        title: () => lc('navigation_record_mode'),
+        description: () => lc('navigation_record_mode_desc'),
+        choices: () => RIDE_RECORD_MODES.map((mode) => ({ value: mode, title: lc(`navigation_record_mode_${mode}`) }))
     },
     {
         key: SETTINGS_NAVIGATION_GRADE_LOOK_AHEAD,
@@ -770,7 +785,21 @@ export function getNavigationSettingsOptions() {
                         .join(' · ') || lc('navigation_pages_none')
             });
         }
-        sectionParams.forEach((param) =>
+        sectionParams.forEach((param) => {
+            if (param.type === 'choice') {
+                options.push({
+                    id: 'setting',
+                    key: param.key,
+                    title: param.title(),
+                    description: param.description?.(),
+                    store: param.store,
+                    valueType: 'string',
+                    currentValue: () => getStoreValue(param),
+                    rightValue: () => param.choices().find((choice) => choice.value === getStoreValue(param))?.title ?? getStoreValue(param),
+                    values: param.choices()
+                });
+                return;
+            }
             options.push(
                 param.type === 'boolean'
                     ? {
@@ -797,8 +826,8 @@ export function getNavigationSettingsOptions() {
                           // without this the slider popover shows the raw number while being dragged
                           valueFormatter: (value: number) => (param.formatter ? param.formatter(value) : value + '')
                       }
-            )
-        );
+            );
+        });
         return options;
     }, [] as any[]);
 }

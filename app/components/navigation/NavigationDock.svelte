@@ -10,9 +10,10 @@
     import { formatTime } from '~/helpers/locale';
     import { isEInk } from '~/helpers/theme';
     import { lazyComponents } from '~/routeFeatures/registry';
+    import { SessionState, recordingState } from '~/handlers/GeoHandler';
     import { NavigationReroutedEvent, navigationService } from '~/services/NavigationService';
     import { NavigationState, navigationDockPages, navigationItem, navigationPage, navigationPageShown, navigationProgress, navigationScale, navigationState, navigationStats, navigationSummaryDone } from '~/stores/navigationStore';
-    import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, dockFigures, formatNavigationDuration, splitDistance, splitElevation } from '~/utils/navigation';
+    import { DOCK_DOTS_HEIGHT, DOCK_PAGE_HEIGHT, DOCK_SUMMARY_HEIGHT, RECORDING_STRIP_HEIGHT, dockFigures, formatNavigationDuration, splitDistance, splitElevation, splitSpeed } from '~/utils/navigation';
     import { showSnack } from '~/utils/ui';
     import { colors } from '~/variables';
 
@@ -30,7 +31,9 @@
     navigationService.on(NavigationReroutedEvent, onRerouted);
     onDestroy(() => navigationService.off(NavigationReroutedEvent, onRerouted));
 
-    $: pages = $navigationDockPages;
+    /** the dock of a ride recorded from the position: the summary row alone, of what was done, in place of a navigation's */
+    export let recording = false;
+    $: pages = recording ? [] : $navigationDockPages;
     // the pages' components load the first time they are in the dock
     const pageComponents = lazyComponents();
     $: pages.forEach((page) => pageComponents.load(page.id, page.component));
@@ -41,8 +44,11 @@
     );
 
     // the pages that cost something to read wait for the user to be on them
-    $: navigationPageShown.set(pages[selectedIndex]?.id ?? null);
-    onDestroy(() => navigationPageShown.set(null));
+    // (not for a recording, whose bar must not take the page away from a navigation that replaces it)
+    $: if (!recording) {
+        navigationPageShown.set(pages[selectedIndex]?.id ?? null);
+    }
+    onDestroy(() => !recording && navigationPageShown.set(null));
 
     // the pager also says its page when the pages change under it: only the user's swipe is remembered
     function onPageChange(event: { value?: number }) {
@@ -52,12 +58,14 @@
         }
     }
 
+    // a recording has no route to say what is left
+    $: done = recording || $navigationSummaryDone;
     $: figures = dockFigures({
-        progress: $navigationProgress,
+        progress: recording ? null : $navigationProgress,
         stats: $navigationStats,
-        profile: $navigationItem?.profile,
-        done: $navigationSummaryDone,
-        paused: $navigationState === NavigationState.PAUSED,
+        profile: recording ? undefined : $navigationItem?.profile,
+        done,
+        paused: recording ? $recordingState === SessionState.PAUSED : $navigationState === NavigationState.PAUSED,
         now: Date.now()
     });
     $: distanceParts = figures.distance === null ? null : splitDistance(figures.distance);
@@ -67,25 +75,42 @@
     $: thirdLabel = third?.kind === 'moving' ? lc('navigation_moving') : third?.kind === 'arrival' ? lc('navigation_arrival') : '';
     $: thirdValue = !third ? '' : third.kind === 'off_route' ? lc('navigation_off_route_by', splitDistance(third.distance).join(' ')) : third.kind === 'moving' ? formatNavigationDuration(third.seconds) : formatTime(third.at);
 
+    $: speedParts = $navigationStats ? splitSpeed($navigationStats.currentSpeed || 0) : null;
+    $: recordingLabel = $recordingState === SessionState.PAUSED ? lc('navigation_paused') : lc('recording');
+
     $: scale = $navigationScale;
     $: pageHeight = Math.round(DOCK_PAGE_HEIGHT * scale);
+    // the strip over the summary row, where a recording says it is one
+    $: stripHeight = recording ? Math.round(RECORDING_STRIP_HEIGHT * scale) : 0;
 </script>
 
 <!-- the dock: the main figures and the primary button, then one page of data to swipe through -->
-<NavigationCard margin="0 8 8 8" rows={[Math.round(DOCK_SUMMARY_HEIGHT * scale), pages.length ? pageHeight : 0, pages.length ? Math.round(DOCK_DOTS_HEIGHT * scale) : 0].join(',')} {...$$restProps}>
+<NavigationCard margin="0 8 8 8" rows={[Math.round(DOCK_SUMMARY_HEIGHT * scale) + stripHeight, pages.length ? pageHeight : 0, pages.length ? Math.round(DOCK_DOTS_HEIGHT * scale) : 0].join(',')} {...$$restProps}>
     <!-- the sheet drags from anywhere on the dock; the handle says it does -->
-    <absolutelayout backgroundColor={colorOutline} borderRadius={2} height={4} horizontalAlignment="center" marginTop={1} opacity={0.6} verticalAlignment="top" width={32} />
+    {#if recording}
+        <!-- not a navigation: no route, the map stays free. The dot is the colour of a recording light -->
+        <label color={colorError} fontSize={10 * scale} fontWeight="bold" height={stripHeight} horizontalAlignment="left" marginLeft={14} marginTop={2} verticalAlignment="top">
+            <cspan text="●  " />
+            <cspan text={recordingLabel.toUpperCase()} />
+        </label>
+    {:else}
+        <absolutelayout backgroundColor={colorOutline} borderRadius={2} height={4} horizontalAlignment="center" marginTop={1} opacity={0.6} verticalAlignment="top" width={32} />
+    {/if}
     <!-- a tap on the figures says what is done instead of what is left -->
-    <gridlayout columns="*,*,1.5*,auto" marginTop={Math.round(4 * scale)} padding="0 8 0 14" on:tap={() => navigationSummaryDone.update((done) => !done)}>
+    <gridlayout
+        columns={recording ? '*,*,*,*,auto' : '*,*,1.5*,auto'}
+        marginTop={recording ? stripHeight : Math.round(4 * scale)}
+        padding="0 8 0 14"
+        on:tap={() => !recording && navigationSummaryDone.update((value) => !value)}>
         <NavigationInfo
-            label={$navigationSummaryDone ? lc('navigation_done') : lc('remaining_distance')}
+            label={done ? lc('navigation_done') : lc('remaining_distance')}
             labelFontSize={10}
             unit={distanceParts?.[1]}
             value={distanceParts ? distanceParts[0] + '' : '-'}
             valueFontSize={19} />
         <NavigationInfo
             col={1}
-            label={$navigationSummaryDone ? lc('navigation_climbed') : lc('remaining_ascent')}
+            label={done ? lc('navigation_climbed') : lc('remaining_ascent')}
             labelFontSize={10}
             unit={ascentParts?.[1]}
             value={ascentParts ? '+' + ascentParts[0] : '-'}
@@ -94,7 +119,10 @@
             <cspan color={colorOnSurfaceVariant} fontSize={10 * scale} text={thirdLabel ? thirdLabel + '\n' : ''} />
             <cspan color={third?.kind === 'off_route' && !isEInk ? colorError : colorOnSurface} fontSize={(third?.kind === 'off_route' ? 15 : 19) * scale} fontWeight="bold" text={thirdValue} />
         </label>
-        <NavigationControls col={3} verticalAlignment="center" />
+        {#if recording}
+            <NavigationInfo col={3} label={lc('speed')} labelFontSize={10} unit={speedParts?.[1]} value={speedParts ? speedParts[0] + '' : '-'} valueFontSize={19} />
+        {/if}
+        <NavigationControls col={recording ? 4 : 3} {recording} verticalAlignment="center" />
     </gridlayout>
 
     {#if pages.length}

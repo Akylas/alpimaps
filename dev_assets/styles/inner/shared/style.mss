@@ -109,3 +109,10 @@
 @nav_original_color: #787E7B;
 @nav_original_width: linear([view::zoom], (10, 2), (16, 3));
 @nav_original_dash: 8, 6;
+// the trace of the ride being recorded, over the route: red like a recording light, with the route's white
+// outline so it stands out of a route of its own colour as well as of the map
+@rec_color: #E5484D;
+@rec_casing_color: #ffffff;
+@rec_width: linear([view::zoom], (10, 2.5), (16, 4.5), (18, 6));
+// the line plus a border each side: 1, 2 and 3 at these zooms
+@rec_case_width: linear([view::zoom], (10, 4.5), (16, 8.5), (18, 12));

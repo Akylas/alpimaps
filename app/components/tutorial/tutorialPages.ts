@@ -153,6 +153,7 @@ export const tutorialPages: TutorialPage[] = [
         zones: [
             zone('place_swipe', 'swipe', 10, 178, 280, 56),
             zone('info', 'longPress', 10, 238, 45, 44),
+            zone('navigate', 'longPress', 104, 238, 45, 44),
             zone('elevation', 'longPress', 151, 238, 45, 44),
             zone('web', 'longPress', 198, 238, 45, 44),
             zone('weather', 'longPress', 245, 238, 45, 44, () => __ANDROID__),

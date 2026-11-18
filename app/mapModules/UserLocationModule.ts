@@ -7,7 +7,7 @@ import { showSnack } from '~/utils/ui';
 import { ApplicationSettings, Color, ImageSource, Utils, knownFolders, path } from '@nativescript/core';
 import dayjs from 'dayjs';
 import { get, writable } from 'svelte/store';
-import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData } from '~/handlers/GeoHandler';
+import { GeoHandler, GeoLocation, UserLocationdEvent, UserLocationdEventData, recordingState } from '~/handlers/GeoHandler';
 import { getBGServiceInstance } from '~/services/BgService';
 import { packageService } from '~/services/PackageService';
 import { queryingLocation, watchingLocation } from '~/stores/mapStore';
@@ -25,7 +25,9 @@ import {
 import { colors, screenHeightDips } from '~/variables';
 import { request } from '@nativescript-community/perms';
 import { CLog } from '@nativescript-community/sentry';
+import { stopRecording } from '~/routeFeatures/ride/recorder';
 import { isNavigating, navigationTilt } from '~/stores/navigationStore';
+import { confirm } from '@nativescript-community/ui-dialogs';
 
 const LOCATION_ANIMATION_DURATION = 300;
 /** pixels of the generated marker bitmaps: big enough to stay clean when carto scales them */
@@ -448,6 +450,10 @@ export default class UserLocationModule extends MapModule {
 
     stopWatchLocation() {
         // console.log('stopWatchLocation');
+        // a ride recorded from the position has nothing left to record: it is saved, not lost with the watch
+        if (!get(isNavigating)) {
+            stopRecording();
+        }
         this.geoHandler.stopWatch();
         watchingLocation.set(false);
         queryingLocation.set(false);
@@ -469,11 +475,23 @@ export default class UserLocationModule extends MapModule {
             this.moveToUserLocation();
         }
     }
-    onWatchLocation() {
+    async onWatchLocation() {
         queryingLocation.set(false);
         if (!get(watchingLocation)) {
             this.startWatchLocation();
         } else {
+            // same confirmation as the recording bar's stop button
+            if (get(recordingState) !== null && !get(isNavigating)) {
+                try {
+                    const result = await confirm({ title: lc('stop_recording'), okButtonText: lc('stop_recording'), cancelButtonText: lc('cancel') });
+                    if (!result) {
+                        return;
+                    }
+                } catch (error) {
+                    console.error('onWatchLocation', error, error?.stack);
+                    return;
+                }
+            }
             this.stopWatchLocation();
             // no fixes come any more to redraw the marker: the arrow is for following, not for a navigation in progress
             if (!get(isNavigating)) {

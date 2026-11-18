@@ -1,4 +1,5 @@
 import { Screen } from '@nativescript/core';
+import type { RideRecordMode } from '~/routeFeatures/ride/mode';
 
 export const ALERT_OPTION_MAX_HEIGHT = Screen.mainScreen.heightDIPs * 0.47;
 
@@ -50,7 +51,9 @@ export const SETTINGS_NAVIGATION_AUTO_PAUSE = 'navigation_auto_pause';
 export const SETTINGS_NAVIGATION_AUTO_PAUSE_SPEED = 'navigation_auto_pause_speed';
 export const SETTINGS_NAVIGATION_AUTO_PAUSE_DELAY = 'navigation_auto_pause_delay';
 export const SETTINGS_NAVIGATION_RECORD_STATS = 'navigation_record_stats';
-export const SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
+/** whether a navigation records its ride: off, record or ask. Replaces the on / off `navigation_record_track` */
+export const SETTINGS_NAVIGATION_RECORD_MODE = 'navigation_record_mode';
+export const LEGACY_SETTINGS_NAVIGATION_RECORD_TRACK = 'navigation_record_track';
 export const SETTINGS_NAVIGATION_PAGES = 'navigation_pages';
 /** the routing profile the directions panel last used */
 export const SETTINGS_DEFAULT_DIRECTION_PROFILE = 'default_direction_profile';
@@ -127,7 +130,7 @@ export const DEFAULT_NAVIGATION_AUTO_PAUSE = true;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED = 0.5;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY = 120;
 export const DEFAULT_NAVIGATION_RECORD_STATS = true;
-export const DEFAULT_NAVIGATION_RECORD_TRACK = true;
+export const DEFAULT_NAVIGATION_RECORD_MODE: RideRecordMode = 'record';
 /** the dock pages that are on, in order: ids of the route features' `navPages` */
 export const DEFAULT_NAVIGATION_PAGES = 'climb,profile,ahead,trip';
 export const DEFAULT_NAVIGATION_PAGE = '';

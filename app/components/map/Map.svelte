@@ -37,6 +37,7 @@
     import JunctionChips from '~/components/navigation/JunctionChips.svelte';
     import { registerJunctionOptionsModule } from '~/mapModules/JunctionOptionsModule';
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
+    import { registerRideTraceModule } from '~/mapModules/RideTraceModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
     import {
@@ -74,8 +75,9 @@
     import { onServiceLoaded, onServiceUnloaded } from '~/services/BgService.common';
     import { navigationService } from '~/services/NavigationService';
     import { isNavigating, navigationDockPages, navigationScale } from '~/stores/navigationStore';
+    import { recordingState } from '~/handlers/GeoHandler';
     import { lazyComponents, routeFeatures, routeNavBanners } from '~/routeFeatures/registry';
-    import { MANEUVER_VIEW_HEIGHT, NAVRAIL_BUTTON_SIZE, navigationSheetSteps } from '~/utils/navigation';
+    import { MANEUVER_VIEW_HEIGHT, NAVRAIL_BUTTON_SIZE, navigationSheetSteps, recordingBarHeight } from '~/utils/navigation';
     import type { NetworkConnectionStateEventData } from '~/services/NetworkService';
     import { NetworkConnectionStateEvent, networkService } from '~/services/NetworkService';
     import { packageService } from '~/services/PackageService';
@@ -178,6 +180,19 @@
     $: navBanners = routeNavBanners($routeFeatures);
     $: if ($isNavigating) {
         navBanners.forEach((banner) => navBannerComponents.load(banner.id, banner.component));
+    }
+
+    // a ride recorded from the position: the dock's summary row, at the bottom under the item sheet, which makes room for it
+    let recordingBarComponent = null;
+    $: recordingBarShown = $recordingState !== null && !$isNavigating;
+    $: recordingReserve = recordingBarShown ? recordingBarHeight($navigationScale) : 0;
+    async function loadRecordingBar() {
+        if (!recordingBarComponent) {
+            recordingBarComponent = (await import('~/components/navigation/NavigationDock.svelte')).default;
+        }
+    }
+    $: if (recordingBarShown) {
+        loadRecordingBar();
     }
 
     async function loadNavigationViews() {
@@ -473,6 +488,7 @@
         // draws the route being navigated, which is never the selected item
         registerNavigationRouteModule();
         registerJunctionOptionsModule();
+        registerRideTraceModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {
@@ -605,7 +621,7 @@
         const { height, width } = massifMap.size();
         const left = Utils.layout.toDevicePixels(40);
         const top = Utils.layout.toDevicePixels(windowInsetTop + 90 + topTranslationY);
-        const bottom = Utils.layout.toDevicePixels(windowInsetBottom - mapTranslation + 0);
+        const bottom = Utils.layout.toDevicePixels(windowInsetBottom + recordingReserve - mapTranslation + 0);
         const min = Math.min(width - 2 * left, height - top - bottom);
         const deltaX = (width - min) / 2;
         const result = {
@@ -1183,7 +1199,7 @@
             // positive x moves the focus left)
             mapContext.focusOffset = landscapeNavigation
                 ? { x: -Utils.layout.toDevicePixels(navigationColumnLeft + navigationColumnWidth) / 2, y: 0 }
-                : { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight) / 2 };
+                : { x: 0, y: Utils.layout.toDevicePixels(activeSheetHeight + recordingReserve) / 2 };
             // a ScreenPos crosses as `[x, y]`, not as the {x, y} the rest of the app passes around
             massifMap?.set('focusPointOffset', [mapContext.focusOffset.x, mapContext.focusOffset.y]);
         }
@@ -2200,7 +2216,7 @@
             </gridlayout>
         </bottomsheet>
         <bottomsheet
-            marginBottom={windowInsetBottom}
+            marginBottom={windowInsetBottom + recordingReserve}
             marginLeft={windowInsetLeft}
             marginRight={windowInsetRight}
             panGestureOptions={{ failOffsetXEnd: 20, minDist: 40 }}
@@ -2390,6 +2406,16 @@
         <!-- the live map underneath is only covered: the SDK renders when dirty, so it costs nothing idle -->
         {#if $peakFinderActive && peakFinderMapComponent}
             <svelte:component this={peakFinderMapComponent} />
+        {/if}
+
+        <!-- recording a ride without navigating: the navigation dock's summary row, under the item sheet. The map stays usable -->
+        {#if recordingBarShown && recordingBarComponent}
+            <svelte:component
+                this={recordingBarComponent}
+                horizontalAlignment="stretch"
+                margin={`0 ${8 + windowInsetRight} ${8 + windowInsetBottom} ${8 + windowInsetLeft}`}
+                recording={true}
+                verticalAlignment="bottom" />
         {/if}
 
         <!-- the peak finder's own chrome, over the map and above every other widget -->

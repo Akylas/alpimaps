@@ -144,8 +144,9 @@ export const terrainTouchMode = settingsStore<TerrainTouchMode>('terrainTouchMod
 
 export const TERRAIN_AUTO_FLATTEN_TILT = 88;
 /** Style layers kept out of the drape bake and drawn live. Contours must be: baked, they survive in
- *  cached tiles below the zoom the style stops drawing them at. */
-export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*';
+ *  cached tiles below the zoom the style stops drawing them at. The maneuver arrows and the trace of a
+ *  ride being recorded change on every fix: baked, they would not follow. */
+export const TERRAIN_NO_DRAPE_FILTER = '^contour|maneuver.*|recording.*';
 /**
  * Per-tile drape texture px (res² × 4 bytes/tile, SDK-clamped to [128, 2048]); 0 derives it from the screen.
  * A fixed value is not sized against the cache (2048 thrashed it on an S22), so the cache follows this.
