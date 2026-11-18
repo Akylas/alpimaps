@@ -37,28 +37,49 @@ function metersBetween(from: RideFix, to: RideFix) {
     return Math.hypot(dx, to.lat - from.lat) * METERS_PER_DEGREE;
 }
 
-/** The ride a session recorded, or none when it is too short to keep. */
-export function rideTrack(fixes: RideFix[], now: number): RideTrack | null {
+/** A fix worth keeping: it has a place and a time, and the gps is neither unsure of it nor saying the rider is stopped. */
+export function isRideFix(fix: RideFix) {
+    if (!Number.isFinite(fix.lat) || !Number.isFinite(fix.lon) || !Number.isFinite(fix.timestamp)) {
+        return false;
+    }
+    return !(fix.horizontalAccuracy > MAX_ACCURACY || (fix.speed >= 0 && fix.speed <= STOPPED_SPEED));
+}
+
+/** Whether `fix` is further on than the last one kept, not the position wandering. */
+export function isRideStep(last: RideFix | undefined, fix: RideFix) {
+    return !last || metersBetween(last, fix) >= MIN_STEP;
+}
+
+/** why a recording is not kept: nothing moved, it went too short a way, or it did not last */
+export type RideRejection = 'no_movement' | 'too_short' | 'too_brief';
+export type RideOutcome = { track: RideTrack } | { reason: RideRejection; /** metres */ distance: number; /** seconds */ elapsed: number };
+
+/** The ride a session recorded, or why it is too short to keep. */
+export function rideOutcome(fixes: RideFix[], now: number): RideOutcome {
     const kept: RideFix[] = [];
     for (const fix of fixes) {
-        if (!Number.isFinite(fix.lat) || !Number.isFinite(fix.lon) || !Number.isFinite(fix.timestamp)) {
-            continue;
-        }
-        if (fix.horizontalAccuracy > MAX_ACCURACY || (fix.speed >= 0 && fix.speed <= STOPPED_SPEED)) {
-            continue;
-        }
-        if (!kept.length || metersBetween(kept[kept.length - 1], fix) >= MIN_STEP) {
+        if (isRideFix(fix) && isRideStep(kept[kept.length - 1], fix)) {
             kept.push(fix);
         }
     }
-    if (kept.length < 2) {
-        return null;
+    const recorded = kept.length < 2 ? null : recordedFromLocations(kept, now);
+    if (!recorded) {
+        return { reason: 'no_movement', distance: 0, elapsed: 0 };
     }
-    const recorded = recordedFromLocations(kept, now);
     const coordinates = kept.map((fix): [number, number] => [fix.lon, fix.lat]);
     const distance = cumulativeDistances(coordinates)[coordinates.length - 1];
-    if (!recorded || distance < MIN_RIDE_METERS || recorded.t[recorded.t.length - 1] * 1000 < MIN_RIDE_MS) {
-        return null;
+    const elapsed = recorded.t[recorded.t.length - 1];
+    if (distance < MIN_RIDE_METERS) {
+        return { reason: 'too_short', distance, elapsed };
     }
-    return { coordinates, recorded, distance };
+    if (elapsed * 1000 < MIN_RIDE_MS) {
+        return { reason: 'too_brief', distance, elapsed };
+    }
+    return { track: { coordinates, recorded, distance } };
+}
+
+/** The ride a session recorded, or none when it is too short to keep. */
+export function rideTrack(fixes: RideFix[], now: number): RideTrack | null {
+    const outcome = rideOutcome(fixes, now);
+    return 'track' in outcome ? outcome.track : null;
 }

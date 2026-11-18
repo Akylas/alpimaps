@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MIN_RIDE_METERS, MIN_RIDE_MS, rideTrack } from '~/routeFeatures/ride/track';
+import { MIN_RIDE_METERS, MIN_RIDE_MS, rideOutcome, rideTrack } from '~/routeFeatures/ride/track';
 
 const START = Date.UTC(2026, 10, 2, 8, 12);
 const NOW = Date.UTC(2026, 10, 18, 12);
@@ -66,5 +66,28 @@ describe('rideTrack', () => {
     it('is none for a session with no fixes, or one', () => {
         expect(rideTrack([], NOW)).toBeNull();
         expect(rideTrack(ride.slice(0, 1), NOW)).toBeNull();
+    });
+});
+
+describe('rideOutcome', () => {
+    it('gives the track of a ride that is kept', () => {
+        const outcome = rideOutcome(fixes(41, { meters: 100, step: 15 }), NOW);
+        expect('track' in outcome && outcome.track.coordinates).toHaveLength(41);
+    });
+    it('says no movement when nothing but stopped fixes came: a simulator that sends a speed of 0', () => {
+        const stopped = fixes(41, { meters: 100, step: 15 }).map((fix) => ({ ...fix, speed: 0 }));
+        expect(rideOutcome(stopped, NOW)).toEqual({ reason: 'no_movement', distance: 0, elapsed: 0 });
+        expect(rideOutcome([], NOW)).toEqual({ reason: 'no_movement', distance: 0, elapsed: 0 });
+    });
+    it('says too short, with what was ridden', () => {
+        const outcome = rideOutcome(fixes(41, { meters: 10, step: 15 }), NOW);
+        expect(outcome).toMatchObject({ reason: 'too_short', elapsed: 600 });
+        expect('distance' in outcome && outcome.distance).toBeCloseTo(400, -1);
+    });
+    it('says too brief when the distance is there but not the time', () => {
+        expect(rideOutcome(fixes(41, { meters: 100, step: 5 }), NOW)).toMatchObject({ reason: 'too_brief', elapsed: 200 });
+    });
+    it('tells too short before too brief when both fail', () => {
+        expect(rideOutcome(fixes(41, { meters: 10, step: 5 }), NOW)).toMatchObject({ reason: 'too_short' });
     });
 });

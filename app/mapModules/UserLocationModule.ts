@@ -25,6 +25,7 @@ import {
 import { colors, screenHeightDips } from '~/variables';
 import { request } from '@nativescript-community/perms';
 import { CLog } from '@nativescript-community/sentry';
+import { stopRecording } from '~/routeFeatures/ride/recorder';
 import { isNavigating } from '~/stores/navigationStore';
 
 const LOCATION_ANIMATION_DURATION = 300;
@@ -436,6 +437,10 @@ export default class UserLocationModule extends MapModule {
 
     stopWatchLocation() {
         // console.log('stopWatchLocation');
+        // a ride recorded from the position has nothing left to record: it is saved, not lost with the watch
+        if (!get(isNavigating)) {
+            stopRecording();
+        }
         this.geoHandler.stopWatch();
         watchingLocation.set(false);
         queryingLocation.set(false);

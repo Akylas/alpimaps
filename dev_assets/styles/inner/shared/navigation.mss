@@ -114,6 +114,18 @@
 	line-cap: round;
 }
 
+// the ride being recorded, as far as it went. Two layers with one look: the tail is redrawn on every position,
+// the rest only now and then (see RideTraceModule)
+#recording['mapnik::geometry_type'=2],
+#recording_tail['mapnik::geometry_type'=2] {
+	line-border-color: @rec_casing_color;
+	line-border-width: @rec_border_width;
+	line-color: @rec_color;
+	line-width: @rec_width;
+	line-join: round;
+	line-cap: round;
+}
+
 // the side streets at the next junctions, for the travel mode: a street that may be entered is drawn like a
 // maneuver arrow (solid, accent casing), one that may not is a dashed grey stub, which black and white shows too
 #junctions['mapnik::geometry_type'=2] {

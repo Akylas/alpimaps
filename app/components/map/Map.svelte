@@ -37,6 +37,7 @@
     import JunctionChips from '~/components/navigation/JunctionChips.svelte';
     import { registerJunctionOptionsModule } from '~/mapModules/JunctionOptionsModule';
     import { registerNavigationRouteModule } from '~/mapModules/NavigationRouteModule';
+    import { registerRideTraceModule } from '~/mapModules/RideTraceModule';
     import type { LayerType } from '~/mapModules/layerStack';
     import { LayerStack } from '~/mapModules/layerStack';
     import {
@@ -473,6 +474,7 @@
         // draws the route being navigated, which is never the selected item
         registerNavigationRouteModule();
         registerJunctionOptionsModule();
+        registerRideTraceModule();
         // mapResultsPager registers itself: it is behind an {#if}, so it does not exist yet
 
         onServiceLoaded((handler: GeoHandler) => {

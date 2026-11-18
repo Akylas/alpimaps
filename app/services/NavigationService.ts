@@ -29,6 +29,7 @@ import {
     navigationOffRouteFixes,
     navigationOriginalItem,
     navigationProgress,
+    navigationRecordMode,
     navigationRecordStats,
     navigationRejoinTarget,
     navigationRerouting,
@@ -199,7 +200,8 @@ export class NavigationService extends Observable {
         return isNavigableRoute(item) && !!item.instructions?.length;
     }
 
-    async start(item: Item) {
+    /** @param record keep the track of this navigation, to save it as a ride: the record mode when not said */
+    async start(item: Item, { record = get(navigationRecordMode) === 'record' } = {}) {
         if (!this.canNavigate(item)) {
             throw new Error('not_navigable_route');
         }
@@ -232,11 +234,12 @@ export class NavigationService extends Observable {
             userLocationModule.navigationMode = true;
 
             // stopped while the watch was starting: a session now would never be stopped
-            if (get(navigationRecordStats) && this.isNavigating) {
+            // the live stats and the ride are both made of the session
+            if ((record || get(navigationRecordStats)) && this.isNavigating) {
                 // one left from before (restored paused after the app was killed) is not this navigation's: it would swallow its fixes
                 this.geoHandler.discardRestoredSession();
                 if (!this.geoHandler.isSessionRunning()) {
-                    await this.geoHandler.startSession();
+                    await this.geoHandler.startSession(undefined, { recordTrack: record });
                 }
             }
         } catch (error) {
@@ -503,8 +506,9 @@ export class NavigationService extends Observable {
             navigationProgress.set(progress);
             this.notify({ eventName: NavigationProgressEvent, object: this, data: progress });
 
+            // nothing to do when no session runs
+            this.geoHandler.updateSessionWithLoc(location);
             if (get(navigationRecordStats)) {
-                this.geoHandler.updateSessionWithLoc(location);
                 this.publishStats();
             }
 
