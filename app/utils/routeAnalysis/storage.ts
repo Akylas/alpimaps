@@ -80,3 +80,11 @@ export function withPace(analysis: RouteAnalysis | null | undefined, geometry: G
     const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
     return { ...base, inputs: { ...base.inputs, pace: { ...base.inputs.pace, ...pace } } };
 }
+
+/** A ride that was done: its recording gives the timeline and its start. The route's zone, once known, stays. */
+export function withRecording(analysis: RouteAnalysis | null | undefined, geometry: Geometry, recorded: NonNullable<RouteAnalysis['recorded']>): RouteAnalysis {
+    const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
+    const { tz, tzFromPhone, utcOffset } = base.inputs.departure;
+    const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
+    return { ...base, recorded, inputs: { ...base.inputs, departure: { ...zone, mode: 'recorded', at: recorded.startedAt }, pace: { ...base.inputs.pace, model: 'recorded' } } };
+}

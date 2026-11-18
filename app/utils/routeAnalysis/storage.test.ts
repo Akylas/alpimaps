@@ -2,7 +2,7 @@ import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
-import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace } from './storage';
+import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording } from './storage';
 import type { Layer } from './types';
 
 function line(vertexCount: number): LineString {
@@ -194,5 +194,27 @@ describe('withPace', () => {
     it('keeps the departure', () => {
         const base = withDeparture(null, geometry, { mode: 'planned', at: 1000 });
         expect(withPace(base, geometry, { multiplier: 0.9 }).inputs.departure).toEqual({ mode: 'planned', at: 1000 });
+    });
+});
+
+describe('withRecording', () => {
+    const geometry = line(3);
+    const recorded = { t: [0, 10, 30], startedAt: 1_700_000_000_000 };
+    it('makes the ride a recorded one: the recording, its start, its model', () => {
+        const analysis = withRecording(null, geometry, recorded);
+        expect(analysis.recorded).toEqual(recorded);
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: recorded.startedAt });
+        expect(analysis.inputs.pace.model).toBe('recorded');
+        expect(analysis.inputs.geometryKey).toBe(geometryKey(geometry));
+    });
+    it('keeps what the route knows of itself: the activity, the zone of its start', () => {
+        const base = withDeparture(withActivity(null, geometry, { kind: 'bike', origin: 'user' }), geometry, { mode: 'now', tz: 'Europe/Paris', utcOffset: 60 });
+        const analysis = withRecording(base, geometry, recorded);
+        expect(analysis.inputs.activity).toEqual({ kind: 'bike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: recorded.startedAt, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops the layers of another geometry', () => {
+        const base = { ...createAnalysis(line(5)), layers: { weather: weatherLayer } };
+        expect(withRecording(base, geometry, recorded).layers).toEqual({});
     });
 });
