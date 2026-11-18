@@ -524,6 +524,8 @@ class PackageService extends Observable {
             spec.geometry = { type: 'geojson', geojson: { type: 'Point', coordinates: toPosition(options.position) } };
         } else if (options.geometry) {
             spec.geometry = { type: 'geojson', geojson: options.geometry };
+            // a request with a geometry and no projection is refused: ours is lon/lat
+            spec.projection = 'EPSG:4326';
         }
         return api.create('search', `search.request.${++searchRequestId}`, spec);
     }
@@ -749,7 +751,7 @@ class PackageService extends Observable {
         return result;
     }
     /** A MultiLineString is flattened. */
-    getRouteItemPoses(item: Item): MapPos[] {
+    getRouteItemPoses(item: Pick<Item, 'geometry' | '_geometry'>): MapPos[] {
         const geometry = (item?.geometry ?? (item?._geometry ? JSON.parse(item._geometry) : null)) as LineString | MultiLineString;
         if (!geometry) {
             return null;

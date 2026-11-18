@@ -1,5 +1,6 @@
 import '~/routeFeatures/basics';
 import '~/routeFeatures/climbs';
+import '~/routeFeatures/difficulty';
 import '~/routeFeatures/lens';
 import '~/routeFeatures/profile';
 import '~/routeFeatures/road';

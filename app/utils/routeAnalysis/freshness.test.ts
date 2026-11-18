@@ -78,10 +78,11 @@ describe('layerInputsHash', () => {
         const rescheduled = inputs({ departure: { mode: 'planned', at: NOW + HOUR } });
         const slower = inputs({ pace: { ...DEFAULT_PACE, multiplier: 1.2 } });
         const running = inputs({ activity: { kind: 'hike', origin: 'user' } });
-        expect(['terrain', 'risk', 'weather', 'sun'].map((layer: LayerId) => hash(layer, moved))).toEqual([false, false, false, false]);
-        expect(['terrain', 'risk', 'weather', 'sun'].map((layer: LayerId) => hash(layer, rescheduled))).toEqual([true, true, true, false]);
-        expect(['terrain', 'risk', 'weather', 'sun'].map((layer: LayerId) => hash(layer, slower))).toEqual([true, true, true, false]);
-        expect(['terrain', 'risk', 'weather', 'sun'].map((layer: LayerId) => hash(layer, running))).toEqual([true, false, true, true]);
+        const layers: LayerId[] = ['terrain', 'risk', 'weather', 'sun', 'difficulty'];
+        expect(layers.map((layer) => hash(layer, moved))).toEqual([false, false, false, false, false]);
+        expect(layers.map((layer) => hash(layer, rescheduled))).toEqual([true, true, true, false, true]);
+        expect(layers.map((layer) => hash(layer, slower))).toEqual([true, true, true, false, true]);
+        expect(layers.map((layer) => hash(layer, running))).toEqual([true, false, true, true, false]);
     });
     it('ignores the activity subtype and the zone', () => {
         const base = inputs();
@@ -107,9 +108,9 @@ describe('what changed', () => {
         expect(changedInputs(base, inputs({ departure: { mode: 'now', tz: 'Europe/Paris' } }))).toEqual([]);
     });
     it('maps them to the layers to recompute', () => {
-        expect(affectedLayers(['geometry'])).toEqual(['terrain', 'risk', 'weather', 'sun', 'timeline']);
+        expect(affectedLayers(['geometry'])).toEqual(['terrain', 'risk', 'weather', 'sun', 'difficulty', 'timeline']);
         expect(affectedLayers(['departure', 'pace'])).toEqual(['sun', 'timeline']);
-        expect(affectedLayers(['activity'])).toEqual(['risk', 'timeline']);
+        expect(affectedLayers(['activity'])).toEqual(['risk', 'difficulty', 'timeline']);
         expect(affectedLayers([])).toEqual([]);
     });
 });
@@ -214,7 +215,7 @@ describe('evaluateTimeline', () => {
 describe('evaluateAnalysis and layersToRefresh', () => {
     it('evaluates every layer, an analysis that does not exist being all absent', () => {
         const statuses = evaluateAnalysis(null, context());
-        expect(Object.values(statuses).map((status) => status.state)).toEqual(['absent', 'absent', 'absent', 'absent', 'fresh']);
+        expect(Object.values(statuses).map((status) => status.state)).toEqual(['absent', 'absent', 'absent', 'absent', 'absent', 'fresh']);
     });
     it('refreshes the outdated and failed layers, not the fresh, the absent or the timeline', () => {
         const ctx = context({ timeline: { startAt: NOW + 6 * HOUR, totalSec: 3600 }, runs: { sun: { state: 'failed', reason: 'error' } } });

@@ -34,6 +34,7 @@ export const LAYER_DEPENDENCIES: Record<StatusKey, InputKey[]> = {
     risk: ['geometry', 'activity'],
     weather: ['geometry'],
     sun: ['geometry', 'departure', 'pace'],
+    difficulty: ['geometry', 'activity'],
     timeline: ['geometry', 'activity', 'departure', 'pace']
 };
 
@@ -216,6 +217,7 @@ export function evaluateAnalysis(analysis: RouteAnalysis | null | undefined, con
         risk: evaluateLayer('risk', layers.risk, context),
         weather: evaluateLayer('weather', layers.weather, context),
         sun: evaluateLayer('sun', layers.sun, context),
+        difficulty: evaluateLayer('difficulty', layers.difficulty, context),
         timeline: evaluateTimeline(context)
     };
 }

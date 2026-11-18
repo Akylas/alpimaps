@@ -56,10 +56,10 @@ export interface RouteSheetCardLayout {
     height: number;
 }
 
-export type LensId = 'overview' | 'climbs' | 'road' | 'weather' | 'sun' | 'surface';
+export type LensId = 'overview' | 'climbs' | 'road' | 'weather' | 'sun' | 'surface' | 'difficulty';
 
 /** The lens bar's fixed order, whatever the order the features register in. */
-export const LENS_ORDER: LensId[] = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface'];
+export const LENS_ORDER: LensId[] = ['overview', 'climbs', 'road', 'weather', 'sun', 'surface', 'difficulty'];
 
 /** What a lens shows on its chip, next to its label. */
 export interface LensChip {

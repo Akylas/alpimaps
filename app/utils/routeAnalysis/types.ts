@@ -1,8 +1,8 @@
 /** The route analysis model. Pure types: nothing here may import NativeScript. */
 
-export type LayerId = 'terrain' | 'risk' | 'weather' | 'sun';
+export type LayerId = 'terrain' | 'risk' | 'weather' | 'sun' | 'difficulty';
 
-export const LAYER_IDS: LayerId[] = ['terrain', 'risk', 'weather', 'sun'];
+export const LAYER_IDS: LayerId[] = ['terrain', 'risk', 'weather', 'sun', 'difficulty'];
 
 export interface Activity {
     kind: 'hike' | 'bike' | 'motor';
@@ -75,6 +75,13 @@ export interface RiskRun {
     shoulder?: boolean;
 }
 
+/** A stretch of the route of one difficulty level, `UNKNOWN_LEVEL` (-1) when it is not rated. `start`, `end`: profile data indexes. */
+export interface DifficultyRun {
+    start: number;
+    end: number;
+    level: number;
+}
+
 export interface WeatherData {
     /** profile vertex index and distance of each sample; coordinates are re-derived from the geometry */
     samples: { i: number; d: number; alt: number }[];
@@ -113,6 +120,8 @@ export interface RouteAnalysis {
         risk?: Layer<{ v: 1; src: 'valhalla' | 'tiles'; candidates: RiskRun[]; unknown: number }>;
         weather?: Layer<WeatherData>;
         sun?: Layer<SunData>;
+        /** `scale` is what the levels are of: the layer is read only while the route's activity has that scale. `src`: where the levels come from. */
+        difficulty?: Layer<{ v: 1; scale: 'sac' | 'mtb'; src: 'valhalla' | 'tiles'; runs: DifficultyRun[] }>;
     };
     /** done rides: per-vertex seconds from the recording, replaces the modelled timeline */
     recorded?: { t: number[]; startedAt: number };
