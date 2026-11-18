@@ -2,7 +2,7 @@ import type { LineString, MultiLineString } from 'geojson';
 import { describe, expect, it } from 'vitest';
 import { activityFromRoute, activityOf, needsActivity, statsProfile } from './activity';
 import { geometryKey } from './geometryKey';
-import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording, withoutRecording } from './storage';
+import { DEFAULT_PACE, createAnalysis, parseAnalysis, reconcileAnalysis, withActivity, withDeparture, withPace, withRecording, withRidden, withoutRecording } from './storage';
 import type { Layer } from './types';
 
 function line(vertexCount: number): LineString {
@@ -240,5 +240,32 @@ describe('withoutRecording', () => {
     });
     it('drops what was pinned for the day it was ridden, keeps the rest', () => {
         expect(Object.keys(withoutRecording(done(), geometry).layers)).toEqual(['terrain']);
+    });
+});
+
+describe('withRidden', () => {
+    const geometry = line(3);
+    const ridden = 1_700_000_000_000;
+    it('makes the route a ride that was done at that time, with no recording to say how it went', () => {
+        const analysis = withRidden(null, geometry, ridden);
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: ridden });
+        expect(analysis.recorded).toBeUndefined();
+        expect(analysis.inputs.pace).toEqual(DEFAULT_PACE);
+    });
+    it('keeps what the route knows of itself, and its zone', () => {
+        const base = withDeparture(withActivity(null, geometry, { kind: 'hike', origin: 'user' }), geometry, { mode: 'now', tz: 'Europe/Paris', utcOffset: 60 });
+        const analysis = withRidden(base, geometry, ridden);
+        expect(analysis.inputs.activity).toEqual({ kind: 'hike', origin: 'user' });
+        expect(analysis.inputs.departure).toEqual({ mode: 'recorded', at: ridden, tz: 'Europe/Paris', utcOffset: 60, tzFromPhone: undefined });
+    });
+    it('drops a forecast it had, which says nothing of the day it was ridden, and keeps the rest', () => {
+        const base = { ...createAnalysis(geometry), layers: { weather: weatherLayer, terrain: weatherLayer } };
+        expect(Object.keys(withRidden(base, geometry, ridden).layers)).toEqual(['terrain']);
+        const pinned = { ...createAnalysis(geometry), layers: { weather: { ...weatherLayer, pinned: true } } };
+        expect(Object.keys(withRidden(pinned, geometry, ridden).layers)).toEqual(['weather']);
+    });
+    it('is the date changed on a ride already ridden', () => {
+        const again = withRidden(withRidden(null, geometry, ridden), geometry, ridden + 86_400_000);
+        expect(again.inputs.departure.at).toBe(ridden + 86_400_000);
     });
 });

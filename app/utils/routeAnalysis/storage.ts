@@ -101,3 +101,16 @@ export function withoutRecording(analysis: RouteAnalysis, geometry: Geometry): R
     const layers = Object.fromEntries(Object.entries(base.layers).filter(([, layer]) => !layer.pinned));
     return { ...rest, layers, inputs: { ...base.inputs, departure: { ...zone, mode: 'now' }, pace: { ...base.inputs.pace, model: DEFAULT_PACE.model } } };
 }
+
+/**
+ * A route that was ridden at a time, with no recording to say how it went: it is timed as any route, from that start. What was read for
+ * another time goes (a forecast says nothing of that day), what was pinned stays.
+ */
+export function withRidden(analysis: RouteAnalysis | null | undefined, geometry: Geometry, at: number): RouteAnalysis {
+    const base = reconcileAnalysis(analysis, geometry) ?? createAnalysis(geometry);
+    const { tz, tzFromPhone, utcOffset } = base.inputs.departure;
+    const zone = tz ? { tz, utcOffset, tzFromPhone } : {};
+    const { recorded: _recorded, ...rest } = base;
+    const layers = Object.fromEntries(Object.entries(base.layers).filter(([id, layer]) => id !== 'weather' || layer.pinned));
+    return { ...rest, layers, inputs: { ...base.inputs, departure: { ...zone, mode: 'recorded', at } } };
+}

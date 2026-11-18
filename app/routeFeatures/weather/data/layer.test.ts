@@ -187,6 +187,13 @@ describe('computeWeatherLayer for a ride that was done', () => {
         expect(layer.prov.quality).toBe('estimated');
     });
 
+    it('asks the past for a ride that was done on a date, with no recording to time it', async () => {
+        const { calls, fetch } = pastFetcher();
+        const layer = await compute(fetch, { inputs: { ...inputs, departure: { mode: 'recorded', at: startedAt } } });
+        expect(calls[0].past).toBe(true);
+        expect(layer.pinned).toBe(true);
+    });
+
     it('does not ask the past, nor pin, for a ride that is not recorded', async () => {
         const { calls, fetch } = pastFetcher();
         const layer = await compute(fetch);

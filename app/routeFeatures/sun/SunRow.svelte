@@ -1,7 +1,6 @@
 <script lang="ts">
-    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, the figures of the ride as chips in
-    // their colours (the sun and the moon's events, the dark, the moonlight, the glare), where the sun is against the way, the note on what is
-    // left out. The shade is in the bar's legend. A tap on a chip says what it is and where it falls
+    // a row of the Sun card of the route page: the bar of what the route is made of by class of the sun, the events of the sun and the moon the
+    // header does not say as chips in their colours, where the sun is against the way, the note on what is left out. The shade is in the bar's legend. A tap on a chip says what it is and where it falls
     import { showError } from '@shared/utils/showError';
     import Chip from '~/components/common/Chip.svelte';
     import { formatDistance } from '~/helpers/formatter';
@@ -10,7 +9,7 @@
     import type { IItem } from '~/models/Item';
     import { barGradient } from '~/routeFeatures/lens/barGradient';
     import { currentLensPalette } from '~/routeFeatures/lens/lensStyle';
-    import { type SunChip, eventChip, figureChip } from '~/routeFeatures/sun/chips';
+    import { type SunChip, eventChip } from '~/routeFeatures/sun/chips';
     import { SUN_PALETTE_KEYS, type SunClass } from '~/routeFeatures/sun/read';
     import { startRouteSunMode } from '~/routeFeatures/sun/sunMode';
     import { showSnack } from '~/utils/ui';
@@ -29,18 +28,10 @@
     const swatch = (sunClass: SunClass) => palette[SUN_PALETTE_KEYS[sunClass]];
 
     $: chips = data.type === 'chips' ? chipsOf(data) : [];
+    // the header already says what the ride goes through where the rider is (its sunrise and sunset, the dark, the moonlight, the glare): this
+    // row only adds the events it does not, which are not the same moments (the sun sets minutes later further west)
     function chipsOf(row: Extract<SunRowData, { type: 'chips' }>): SunChip[] {
-        const result = row.events.map((event) => eventChip(event, (at) => formatTime(at, 'LT', event.offset)));
-        if (row.darkMs > 0) {
-            result.push(figureChip('dark', row.darkMs));
-        }
-        if (row.moonlitMs > 0) {
-            result.push(figureChip('moonlit', row.moonlitMs));
-        }
-        if (row.glareMeters > 0) {
-            result.push(figureChip('glare', row.glareMeters));
-        }
-        return result;
+        return row.events.filter((event) => event.relation !== 'during' || (event.id !== 'sunrise' && event.id !== 'sunset')).map((event) => eventChip(event, (at) => formatTime(at, 'LT', event.offset)));
     }
 
     async function preview() {
@@ -71,7 +62,7 @@
         {/each}
     </gridlayout>
 {:else if data.type === 'chips'}
-    <wraplayout padding="6 12 2 12">
+    <wraplayout padding="6 12 2 12" visibility={chips.length ? 'visible' : 'collapse'}>
         {#each chips as chip (chip.key)}
             <Chip alert={chip.alert ?? false} color={chip.color} height={24} icon={chip.icon} text={chip.text} on:tap={() => showSnack({ message: chip.help })} />
         {/each}

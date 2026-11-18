@@ -45,7 +45,8 @@ export async function computeWeatherLayer({
     const samples = sampleRoute({ distances: source.distances, altitudes: source.altitudes });
     const points = samples.map(({ alt, i: index }) => ({ lat: roundCoordinate(coordinates[index][1], decimals), lon: roundCoordinate(coordinates[index][0], decimals), alt }));
 
-    const past = timeline.model === 'recorded';
+    // done at a date, with its own times or not: what was is asked, not a forecast
+    const past = inputs.departure.mode === 'recorded';
     const { provider, response } = await fetch({ points, from: window.from, to: window.to }, { past });
     const weatherSource = past ? (response.source ?? 'historical-forecast') : 'forecast';
 

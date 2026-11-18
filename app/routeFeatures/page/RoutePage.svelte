@@ -241,7 +241,8 @@
     // a ride that was done is not planned: the button says it was recorded, the bar when it was ridden
     $: recorded = departure.mode === 'recorded';
     $: rideLabel = recorded && trip ? `${lc('when_ridden')} · ${clock(trip.start)} – ${clock(trip.end)}` : '';
-    $: whenLabel = recorded ? lc('when_recorded') : `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
+    // with no recording, the day it was ridden
+    $: whenLabel = recorded ? (analysis?.recorded || !trip ? lc('when_recorded') : `${lc('when_ridden')} · ${dayAndClock(trip.start)}`) : `${fixedStart(departure) !== undefined ? dayAndClock(fixedStart(departure)) : lc('now')}${isNaN(arrivalAt) ? '' : ' → ' + clock(arrivalAt)}`;
 
     // the times change in place: what shows them follows the analysis' changes. The activity changes what the whole page reads.
     // A departure looked at in the When panel: the page shows the route as it would be, and the runner keeps what the item had to give
@@ -420,8 +421,8 @@
                         backgroundColor={colorCard}
                         borderRadius={row.open ? `${CARD_RADIUS} ${CARD_RADIUS} 0 0` : CARD_RADIUS}
                         columns="36,*,auto"
-                        height={SECTION_HEADER_HEIGHT}
-                        padding="0 12"
+                        minHeight={SECTION_HEADER_HEIGHT}
+                        padding="6 12"
                         rippleColor={colorPrimary}
                         on:tap={() => toggleSection(row.section)}>
                         <label

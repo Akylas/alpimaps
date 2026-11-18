@@ -1582,6 +1582,7 @@
     "ride_default_name": "Ride",
     "ride_see": "See ride",
     "ride_discard": "Discard",
+    "when_ridden_pick": "Ridden on…",
     "when_recorded": "Recorded",
     "when_ridden": "Ridden",
     "when_plan_route": "Plan this route",

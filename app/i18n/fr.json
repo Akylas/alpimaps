@@ -1351,6 +1351,7 @@
     "ride_default_name": "Sortie",
     "ride_see": "Voir la sortie",
     "ride_discard": "Supprimer",
+    "when_ridden_pick": "Parcourue le…",
     "when_recorded": "Enregistrée",
     "when_ridden": "Parcourue",
     "when_plan_route": "Planifier cet itinéraire",
