@@ -261,10 +261,13 @@ export class GeoHandler extends Handler {
             return;
         }
         this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
+        // taken once: it stays paused in memory, and is not found again by a start that follows a clean exit
+        ApplicationSettings.remove('pausedSession');
         if (this.currentSession) {
             this.currentSession.startTime = new Date(this.currentSession.startTime);
             this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
             this.sessionState = SessionState.PAUSED;
+            this.restoredSession = true;
             this.onUpdateSessionChrono();
         }
         DEV_LOG && console.log(TAG, 'start');
@@ -692,6 +695,7 @@ export class GeoHandler extends Handler {
         }
         return this.enableLocation().then((r) => {
             this.endedSession = undefined;
+            this.restoredSession = false;
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
@@ -751,6 +755,21 @@ export class GeoHandler extends Handler {
             session.lastPauseTime = null;
         }
         session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
+    }
+    /** The session `start` restored from a paused one the app was killed with: nobody is running it. */
+    private restoredSession = false;
+    /**
+     * Drops the session restored paused after the app was killed, if that is the one there is: a navigation that starts would otherwise take
+     * it for its own and never record into it. The watch and the history are left alone, and a session someone is running stays.
+     */
+    discardRestoredSession() {
+        if (this.restoredSession) {
+            this.restoredSession = false;
+            this.currentSession = null;
+            this.onUpdatedSession = null;
+            this.sessionState = SessionState.STOPPED;
+            this.stopChronoTimer();
+        }
     }
     /** The last session that ended and was not taken: it can end on its own (the gps was turned off), with nobody to hand it to. */
     private endedSession: Session | undefined;

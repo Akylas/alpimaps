@@ -232,8 +232,12 @@ export class NavigationService extends Observable {
             userLocationModule.navigationMode = true;
 
             // stopped while the watch was starting: a session now would never be stopped
-            if (get(navigationRecordStats) && this.isNavigating && !this.geoHandler.isSessionRunning()) {
-                await this.geoHandler.startSession();
+            if (get(navigationRecordStats) && this.isNavigating) {
+                // one left from before (restored paused after the app was killed) is not this navigation's: it would swallow its fixes
+                this.geoHandler.discardRestoredSession();
+                if (!this.geoHandler.isSessionRunning()) {
+                    await this.geoHandler.startSession();
+                }
             }
         } catch (error) {
             // the state is already RUNNING: take a half started navigation back down
