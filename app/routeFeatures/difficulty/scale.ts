@@ -40,3 +40,8 @@ export function mtbLevel(value: string | number | undefined): number {
 export function levelLabel(scale: DifficultyScale, level: number): string {
     return (scale === 'sac' ? 'T' : 'S') + level;
 }
+
+/** The label with what the scale calls the level, `T3 · demanding mountain hiking`; a stretch that is not rated has no label. */
+export function levelName(scale: DifficultyScale, level: number, translate: (key: string) => string): string {
+    return level === UNKNOWN_LEVEL ? translate('difficulty_unknown') : `${levelLabel(scale, level)} · ${translate(`difficulty_${scale}_${level}`)}`;
+}

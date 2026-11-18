@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Activity } from '~/utils/routeAnalysis/types';
-import { UNKNOWN_LEVEL, levelLabel, mtbLevel, sacLevel, scaleForActivity } from './scale';
+import { UNKNOWN_LEVEL, levelLabel, levelName, mtbLevel, sacLevel, scaleForActivity } from './scale';
 
 const activity = (kind: Activity['kind'], subtype?: Activity['subtype']): Activity => ({ kind, subtype, origin: 'route' });
 
@@ -64,5 +64,17 @@ describe('levelLabel', () => {
     it('is T for the sac scale, S for the mtb one', () => {
         expect(levelLabel('sac', 4)).toBe('T4');
         expect(levelLabel('mtb', 0)).toBe('S0');
+    });
+});
+
+describe('levelName', () => {
+    it('puts the label before what the scale calls the level', () => {
+        const translate = (key: string) => `<${key}>`;
+        expect(levelName('sac', 3, translate)).toBe('T3 · <difficulty_sac_3>');
+        expect(levelName('mtb', 0, translate)).toBe('S0 · <difficulty_mtb_0>');
+    });
+
+    it('is the word for a stretch that is not rated, whatever the scale', () => {
+        expect(levelName('mtb', UNKNOWN_LEVEL, (key) => `<${key}>`)).toBe('<difficulty_unknown>');
     });
 });
