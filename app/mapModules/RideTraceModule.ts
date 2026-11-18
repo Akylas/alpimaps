@@ -13,14 +13,15 @@ function lineCollection(coordinates: [number, number][]): FeatureCollection {
 }
 
 /**
- * The track of the ride being recorded, drawn as it goes. The trace comes in two layers of one source: the
- * committed part is handed to the map every few dozen fixes, the tail (the last stretch) on every fix.
+ * The track of the ride being recorded, drawn as it goes. The trace comes in two parts: the committed one is
+ * handed to the map every few dozen fixes (`TRACE_TAIL_LENGTH`), the tail (the last stretch) on every fix.
  */
 export default class RideTraceModule extends MapModule {
     private dataSource: MassifSource<'massif::GeoJSONVectorTileDataSource'>;
     private layer: MassifLayer<'massif::VectorTileLayer'>;
-    private committedIndex: number;
-    private tailIndex: number;
+    /** the layers of the committed part and of the tail: the casing of each under all the lines, so the two meet without a notch */
+    private committedIndexes: number[] = [];
+    private tailIndexes: number[] = [];
     private geoHandler: GeoHandler;
     private readonly trace = createTrace();
     /** how many fixes of the session the trace has seen */
@@ -99,8 +100,8 @@ export default class RideTraceModule extends MapModule {
         this.consumed = 0;
         this.committedDirty = false;
         if (drawn && this.dataSource) {
-            this.dataSource.setGeoJSON(this.committedIndex, lineCollection([]));
-            this.dataSource.setGeoJSON(this.tailIndex, lineCollection([]));
+            this.setLine(this.committedIndexes, []);
+            this.setLine(this.tailIndexes, []);
         }
     }
 
@@ -112,18 +113,26 @@ export default class RideTraceModule extends MapModule {
         }
         this.getOrCreateLayer();
         if (this.committedDirty) {
-            this.dataSource.setGeoJSON(this.committedIndex, lineCollection(this.trace.committed()));
+            this.setLine(this.committedIndexes, this.trace.committed());
             this.committedDirty = false;
         }
-        this.dataSource.setGeoJSON(this.tailIndex, lineCollection(this.trace.tail()));
+        this.setLine(this.tailIndexes, this.trace.tail());
+    }
+
+    private setLine(indexes: number[], coordinates: [number, number][]) {
+        const collection = lineCollection(coordinates);
+        indexes.forEach((index) => this.dataSource.setGeoJSON(index, collection));
     }
 
     private getOrCreateLayer() {
         if (!this.layer) {
             const map = mapContext.getMap();
             this.dataSource = map.source('source.recording', { type: 'geojson', minZoom: 0, maxZoom: 24 });
-            this.committedIndex = this.dataSource.createLayer('recording');
-            this.tailIndex = this.dataSource.createLayer('recording_tail');
+            // the style draws them in this order: both casings, then both lines
+            const committedCase = this.dataSource.createLayer('recording_case');
+            const tailCase = this.dataSource.createLayer('recording_tail_case');
+            this.committedIndexes = [committedCase, this.dataSource.createLayer('recording')];
+            this.tailIndexes = [tailCase, this.dataSource.createLayer('recording_tail')];
             this.layer = map.buildLayer('layer.recording', {
                 type: 'vector',
                 source: this.dataSource.id,

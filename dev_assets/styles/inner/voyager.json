@@ -8,6 +8,8 @@
         "navigation",
         "navigation_hint",
         "maneuver",
+        "recording_case",
+        "recording_tail_case",
         "recording",
         "recording_tail",
         "stops",

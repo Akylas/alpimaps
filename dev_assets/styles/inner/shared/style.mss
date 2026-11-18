@@ -114,4 +114,5 @@
 @rec_color: #E5484D;
 @rec_casing_color: #ffffff;
 @rec_width: linear([view::zoom], (10, 2.5), (16, 4.5), (18, 6));
-@rec_border_width: linear([view::zoom], (10, 1), (16, 2), (18, 3));
+// the line plus a border each side: 1, 2 and 3 at these zooms
+@rec_case_width: linear([view::zoom], (10, 4.5), (16, 8.5), (18, 12));
