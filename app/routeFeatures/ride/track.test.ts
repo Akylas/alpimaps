@@ -74,7 +74,7 @@ describe('rideOutcome', () => {
         const outcome = rideOutcome(fixes(41, { meters: 100, step: 15 }), NOW);
         expect('track' in outcome && outcome.track.coordinates).toHaveLength(41);
     });
-    it('says no movement when nothing but stopped fixes came: a simulator that sends a speed of 0', () => {
+    it('says no movement when nothing but stopped fixes came', () => {
         const stopped = fixes(41, { meters: 100, step: 15 }).map((fix) => ({ ...fix, speed: 0 }));
         expect(rideOutcome(stopped, NOW)).toEqual({ reason: 'no_movement', distance: 0, elapsed: 0 });
         expect(rideOutcome([], NOW)).toEqual({ reason: 'no_movement', distance: 0, elapsed: 0 });
