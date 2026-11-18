@@ -250,7 +250,8 @@ export class GeoHandler extends Handler {
 
         if (this.currentSession && this.currentSession.state !== SessionState.STOPPED && this.currentSession.distance > 0) {
             this.pauseSession();
-            ApplicationSettings.setString('pausedSession', JSON.stringify(this.currentSession));
+            // the fixes of a long ride are megabytes, which do not belong in a setting
+            ApplicationSettings.setString('pausedSession', JSON.stringify({ ...this.currentSession, locs: [] }));
             this.currentSession = null; // to prevent storing in history
         }
         this.stopSession();
@@ -260,10 +261,13 @@ export class GeoHandler extends Handler {
             return;
         }
         this.currentSession = JSON.parse(ApplicationSettings.getString('pausedSession', null));
+        // taken once: it stays paused in memory, and is not found again by a start that follows a clean exit
+        ApplicationSettings.remove('pausedSession');
         if (this.currentSession) {
             this.currentSession.startTime = new Date(this.currentSession.startTime);
             this.currentSession.lastPauseTime = new Date(this.currentSession.lastPauseTime);
             this.sessionState = SessionState.PAUSED;
+            this.restoredSession = true;
             this.onUpdateSessionChrono();
         }
         DEV_LOG && console.log(TAG, 'start');
@@ -690,6 +694,8 @@ export class GeoHandler extends Handler {
             return Promise.reject('already_running');
         }
         return this.enableLocation().then((r) => {
+            this.endedSession = undefined;
+            this.restoredSession = false;
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
@@ -750,14 +756,40 @@ export class GeoHandler extends Handler {
         }
         session.averageSpeed = Math.round((session.distance / (session.endTime.valueOf() - session.startTime.valueOf() - session.pauseDuration)) * 3600);
     }
-    stopSession() {
+    /** The session `start` restored from a paused one the app was killed with: nobody is running it. */
+    private restoredSession = false;
+    /**
+     * Drops the session restored paused after the app was killed, if that is the one there is: a navigation that starts would otherwise take
+     * it for its own and never record into it. The watch and the history are left alone, and a session someone is running stays.
+     */
+    discardRestoredSession() {
+        if (this.restoredSession) {
+            this.restoredSession = false;
+            this.currentSession = null;
+            this.onUpdatedSession = null;
+            this.sessionState = SessionState.STOPPED;
+            this.stopChronoTimer();
+        }
+    }
+    /** The last session that ended and was not taken: it can end on its own (the gps was turned off), with nobody to hand it to. */
+    private endedSession: Session | undefined;
+    takeEndedSession() {
+        const ended = this.endedSession;
+        this.endedSession = undefined;
+        return ended;
+    }
+    /** The session as it ended, with its fixes when the track is recorded; none when there was no session or it did not move. */
+    stopSession(): Session | undefined {
+        let ended: Session;
         if (this.currentSession) {
             // remove('pausedSession');
             this.stopWatch();
 
             if (this.currentSession.distance > 0) {
                 this.prepareSessionForStoring(this.currentSession);
-                this.sessionsHistory.push(this.currentSession);
+                ended = this.endedSession = this.currentSession;
+                // the fixes of a long ride are megabytes, which do not belong in a setting: the track is saved as a ride
+                this.sessionsHistory.push({ ...ended, locs: [] });
                 ApplicationSettings.setString('sessionsHistory', JSON.stringify(this.sessionsHistory));
             }
             this.setSessionState(SessionState.STOPPED);
@@ -766,6 +798,7 @@ export class GeoHandler extends Handler {
             this.onUpdatedSession = null;
         }
         this.stopChronoTimer();
+        return ended;
     }
     pauseSession() {
         if (this.currentSession && this.sessionState !== SessionState.PAUSED) {

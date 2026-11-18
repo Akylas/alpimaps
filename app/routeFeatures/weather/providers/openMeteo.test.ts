@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { openMeteoProvider, openMeteoUrl, parseOpenMeteo } from '~/routeFeatures/weather/providers/openMeteo';
+import { openMeteoProvider, openMeteoUrl, parseOpenMeteo, pastSourceOf } from '~/routeFeatures/weather/providers/openMeteo';
 import { WeatherProviderError, type WeatherQuery } from '~/routeFeatures/weather/providers/provider';
 
 const DAY = 86400;
@@ -209,5 +209,85 @@ describe('openMeteoProvider', () => {
 
     it('does not ask more points than it takes', () => {
         expect(openMeteoProvider.maxPoints).toBeGreaterThanOrEqual(40);
+    });
+});
+
+describe('past weather', () => {
+    const ride2024 = { ...query, from: Date.UTC(2024, 6, 10) / 1000, to: Date.UTC(2024, 6, 11) / 1000 };
+    const ride2019 = { ...query, from: Date.UTC(2019, 6, 10) / 1000, to: Date.UTC(2019, 6, 11) / 1000 };
+
+    it('reads a ride from 2022 in the historical forecast, an earlier one in ERA5', () => {
+        expect(pastSourceOf(Date.UTC(2022, 0, 1) / 1000)).toBe('historical-forecast');
+        expect(pastSourceOf(Date.UTC(2021, 11, 31) / 1000)).toBe('archive-era5');
+        expect(pastSourceOf(Date.now() / 1000 - 86400)).toBe('historical-forecast');
+    });
+
+    it('builds the historical forecast url as the forecast one, same variables and rounding', () => {
+        const url = new URL(openMeteoUrl(ride2024, 'historical-forecast'));
+        expect(url.origin + url.pathname).toBe('https://historical-forecast-api.open-meteo.com/v1/forecast');
+        const forecast = new URL(openMeteoUrl(ride2024));
+        expect(url.searchParams.get('hourly')).toBe(forecast.searchParams.get('hourly'));
+        expect(url.searchParams.get('latitude')).toBe('45.5,45.6');
+        expect(url.searchParams.get('start_date')).toBe('2024-07-09');
+    });
+
+    it('builds the archive url', () => {
+        const url = new URL(openMeteoUrl(ride2019, 'archive-era5'));
+        expect(url.origin + url.pathname).toBe('https://archive-api.open-meteo.com/v1/archive');
+        expect(url.searchParams.get('timeformat')).toBe('unixtime');
+    });
+
+    it('asks the historical forecast for a recent ride, and says so', async () => {
+        const urls: string[] = [];
+        const response = await openMeteoProvider.past?.(ride2024, async (url) => {
+            urls.push(url);
+            return [location(ride2024.from - DAY, 96), location(ride2024.from - DAY, 96)];
+        });
+        expect(urls).toEqual([openMeteoUrl(ride2024, 'historical-forecast')]);
+        expect(response?.source).toBe('historical-forecast');
+        expect(response?.n).toBe(25);
+    });
+
+    it('asks ERA5 for an old ride, and says so', async () => {
+        const urls: string[] = [];
+        const response = await openMeteoProvider.past?.(ride2019, async (url) => {
+            urls.push(url);
+            return [location(ride2019.from - DAY, 96), location(ride2019.from - DAY, 96)];
+        });
+        expect(urls).toEqual([openMeteoUrl(ride2019, 'archive-era5')]);
+        expect(response?.source).toBe('archive-era5');
+    });
+
+    it('says the limit was reached on a 429', async () => {
+        const http = async () => {
+            throw Object.assign(new Error('Too many requests'), { statusCode: 429 });
+        };
+        await expect(openMeteoProvider.past?.(ride2024, http)).rejects.toMatchObject({ reason: 'rate-limited' });
+    });
+
+    it('says the dates are out of its range on a 400 for a ride that is not over', async () => {
+        const tomorrow = Math.floor(Date.now() / 1000 / DAY) * DAY + DAY;
+        const http = async () => {
+            throw Object.assign(new Error('out of range'), { statusCode: 400 });
+        };
+        await expect(openMeteoProvider.past?.({ ...ride2024, from: tomorrow, to: tomorrow + DAY }, http)).rejects.toMatchObject({ reason: 'out-of-coverage' });
+    });
+
+    it('lets a 400 for a ride that is over through as the failure it is: that is a mistake of ours', async () => {
+        const failure = Object.assign(new Error('Parameter hourly is wrong'), { statusCode: 400 });
+        await expect(
+            openMeteoProvider.past?.(ride2024, async () => {
+                throw failure;
+            })
+        ).rejects.toBe(failure);
+    });
+
+    it('lets any other failure through as it is', async () => {
+        const failure = new Error('socket closed');
+        await expect(
+            openMeteoProvider.past?.(ride2024, async () => {
+                throw failure;
+            })
+        ).rejects.toBe(failure);
     });
 });

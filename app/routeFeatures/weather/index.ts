@@ -18,7 +18,7 @@ import {
 import type { IItem } from '~/models/Item';
 import { type LayerReason, type LayerStatus, tierOf } from '~/utils/routeAnalysis/freshness';
 import { timelineSource } from '~/utils/routeAnalysis/timeline';
-import { getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
+import { type PastWeatherSource, getWeatherProvider, weatherProviders } from '~/routeFeatures/weather/providers/provider';
 import { sampleRoute } from '~/routeFeatures/weather/data/samples';
 import { weatherAssessment, weatherNeedsFetch } from '~/routeFeatures/weather/data/departure';
 import { weatherLegend } from '~/routeFeatures/weather/ui/legend';
@@ -104,6 +104,15 @@ function pointsToSend(item: IItem) {
 
 const fetchWeather = (item: IItem) => () => computeLayers(item, ['weather']);
 
+/** A ride that was done has the weather it had, not a forecast. */
+const wasRidden = (item: IItem) => item?.analysis?.inputs.departure.mode === 'recorded';
+
+/** Where the weather of a ride that was done was reconstructed from, once fetched. */
+function pastSourceOf(item: IItem): PastWeatherSource | undefined {
+    const source = item.analysis?.layers.weather?.prov.source;
+    return source === 'historical-forecast' || source === 'archive-era5' ? source : undefined;
+}
+
 function missingHeadline(item: IItem, status: LayerStatus): LensHeadline {
     switch (status.state) {
         case 'queued':
@@ -114,7 +123,12 @@ function missingHeadline(item: IItem, status: LayerStatus): LensHeadline {
         default:
             return networkService.connected
                 ? {
-                      facts: [{ icon: 'mdi-cloud-upload-outline', text: lc('weather_send_points', pointsToSend(item), weatherDecimals(), getWeatherProvider(get(weatherProviderId))?.name) }],
+                      facts: [
+                          {
+                              icon: 'mdi-cloud-upload-outline',
+                              text: lc(wasRidden(item) ? 'weather_send_points_past' : 'weather_send_points', pointsToSend(item), weatherDecimals(), getWeatherProvider(get(weatherProviderId))?.name)
+                          }
+                      ],
                       action: { label: lc('weather_fetch'), run: fetchWeather(item) }
                   }
                 : { facts: [{ icon: 'mdi-cloud-off-outline', text: lc('weather_offline') }] };
@@ -223,7 +237,7 @@ const weatherPageSection: RoutePageSection = {
         const read = readOf(item, statusOf(item));
         return read ? heroGlyph(read.summary) : undefined;
     },
-    title: () => lc('lens_weather'),
+    title: (ctx) => lc(wasRidden(ctx?.item) ? 'weather_you_had' : 'lens_weather'),
     lens: 'weather',
     summary: ({ item }) => {
         const read = readOf(item, statusOf(item));
@@ -244,7 +258,8 @@ const weatherPageSection: RoutePageSection = {
         if (!read) {
             return [];
         }
-        return summaryFacts(read.summary, factsWords);
+        const facts = summaryFacts(read.summary, factsWords);
+        return wasRidden(item) ? [{ icon: 'mdi-history', text: lc('weather_reconstructed') }, ...facts] : facts;
     },
     rows: ({ item }) => {
         const status = statusOf(item);
@@ -257,9 +272,10 @@ const weatherPageSection: RoutePageSection = {
                 attribution: provider?.attribution ?? { text: '', url: '', license: '' },
                 updatedAt: updatedAt(item),
                 outdated: isOutdated(status),
-                canUpdate: networkService.connected && !busy
+                canUpdate: networkService.connected && !busy,
+                past: wasRidden(item) ? pastSourceOf(item) : undefined
             },
-            fetch: { state, points: pointsToSend(item), decimals: weatherDecimals(), provider: provider?.name ?? '' }
+            fetch: { state, points: pointsToSend(item), decimals: weatherDecimals(), provider: provider?.name ?? '', past: wasRidden(item) }
         });
     },
     component: () => import('~/routeFeatures/weather/ui/WeatherRow.svelte')

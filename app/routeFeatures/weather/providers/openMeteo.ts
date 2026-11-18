@@ -1,8 +1,14 @@
 /** Open-Meteo as a weather provider. Pure: nothing here may import NativeScript. */
-import { type WeatherHttp, type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse } from '~/routeFeatures/weather/providers/provider';
+import { type PastWeatherSource, type WeatherHttp, type WeatherProvider, WeatherProviderError, type WeatherQuery, type WeatherResponse } from '~/routeFeatures/weather/providers/provider';
 import type { WeatherVar } from '~/routeFeatures/weather/data/series';
 
-const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
+const URLS: Record<'forecast' | PastWeatherSource, string> = {
+    forecast: 'https://api.open-meteo.com/v1/forecast',
+    'historical-forecast': 'https://historical-forecast-api.open-meteo.com/v1/forecast',
+    'archive-era5': 'https://archive-api.open-meteo.com/v1/archive'
+};
+/** The archived forecast runs go back to about here: before it, only the reanalysis has the day. */
+const HISTORICAL_FORECAST_FROM = Date.UTC(2022, 0, 1) / 1000;
 const DAY = 86400;
 const HOUR = 3600;
 /** the model Open-Meteo picks for the place: AROME, ICON-D2, ICON-CH1... where they cover, a global one elsewhere */
@@ -28,7 +34,7 @@ const day = (epochSeconds: number) => new Date(epochSeconds * 1000).toISOString(
  * The dates are those of the place, which is not known before the answer: a day more on each side
  * makes sure the window is in, and `parseOpenMeteo` cuts the rest.
  */
-export function openMeteoUrl({ from, points, to }: WeatherQuery): string {
+export function openMeteoUrl({ from, points, to }: WeatherQuery, source: 'forecast' | PastWeatherSource = 'forecast'): string {
     const params = [
         `latitude=${points.map((point) => point.lat).join(',')}`,
         `longitude=${points.map((point) => point.lon).join(',')}`,
@@ -41,7 +47,7 @@ export function openMeteoUrl({ from, points, to }: WeatherQuery): string {
         `start_date=${day(from - DAY)}`,
         `end_date=${day(to + DAY)}`
     ];
-    return `${FORECAST_URL}?${params.join('&')}`;
+    return `${URLS[source]}?${params.join('&')}`;
 }
 
 interface OpenMeteoLocation {
@@ -56,6 +62,11 @@ function isLocation(value: unknown): value is OpenMeteoLocation {
     }
     const { hourly } = value;
     return !!hourly && typeof hourly === 'object' && 'time' in hourly && Array.isArray(hourly.time);
+}
+
+/** The finer source that has the day: the historical forecast from 2022, the reanalysis before. */
+export function pastSourceOf(from: number): PastWeatherSource {
+    return from >= HISTORICAL_FORECAST_FROM ? 'historical-forecast' : 'archive-era5';
 }
 
 /** One object for one point, a list for several. */
@@ -101,29 +112,38 @@ const FORECAST_DAYS = 15;
 const PAST_DAYS = 90;
 const DAY_MS = DAY * 1000;
 
+/** `beyond`: the dates are further than the source goes, which is what a 400 then says. */
+async function ask(query: WeatherQuery, http: WeatherHttp, source: 'forecast' | PastWeatherSource, beyond: boolean) {
+    let json: unknown;
+    try {
+        json = await http(openMeteoUrl(query, source));
+    } catch (error) {
+        const message = error instanceof Error ? error.message : undefined;
+        // the free quota is shared by everyone behind the same address. A 400 is the dates further than it goes, only when they are:
+        // the body, which says why, does not reach us, and a 400 for anything else is a mistake of ours to see as it is
+        if (statusOf(error) === 429) {
+            throw new WeatherProviderError('rate-limited', message);
+        }
+        if (statusOf(error) === 400 && beyond) {
+            throw new WeatherProviderError('out-of-coverage', message);
+        }
+        throw error;
+    }
+    return parseOpenMeteo(json, query);
+}
+
 export const openMeteoProvider: WeatherProvider = {
     id: 'open-meteo',
     name: 'Open-Meteo',
     source: 'open-meteo/forecast',
     attribution: { text: 'Weather data by Open-Meteo.com', url: 'https://open-meteo.com/', license: 'CC BY 4.0' },
     maxPoints: 100,
-    async fetch(query: WeatherQuery, http: WeatherHttp) {
-        let json: unknown;
-        try {
-            json = await http(openMeteoUrl(query));
-        } catch (error) {
-            const message = error instanceof Error ? error.message : undefined;
-            // the free quota is shared by everyone behind the same address. A 400 is the dates further than it forecasts, only when they are:
-            // the body, which says why, does not reach us, and a 400 for anything else is a mistake of ours to see as it is
-            const beyond = query.to * 1000 > Date.now() + FORECAST_DAYS * DAY_MS || query.from * 1000 < Date.now() - PAST_DAYS * DAY_MS;
-            if (statusOf(error) === 429) {
-                throw new WeatherProviderError('rate-limited', message);
-            }
-            if (statusOf(error) === 400 && beyond) {
-                throw new WeatherProviderError('out-of-coverage', message);
-            }
-            throw error;
-        }
-        return parseOpenMeteo(json, query);
+    fetch(query: WeatherQuery, http: WeatherHttp) {
+        return ask(query, http, 'forecast', query.to * 1000 > Date.now() + FORECAST_DAYS * DAY_MS || query.from * 1000 < Date.now() - PAST_DAYS * DAY_MS);
+    },
+    async past(query: WeatherQuery, http: WeatherHttp) {
+        const source = pastSourceOf(query.from);
+        // a 400 is the dates not there yet, only when the ride is not over
+        return { ...(await ask(query, http, source, query.to * 1000 > Date.now())), source };
     }
 };

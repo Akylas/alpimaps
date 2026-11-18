@@ -806,6 +806,12 @@ export default class ItemsModule extends MapModule {
             }
         }
     }
+    /** A ride that was recorded, saved like a route of its own: on the map, in the `rides` group. */
+    async saveRecordedRide(item: IItem) {
+        const dbItem = await this.saveItem(item);
+        await this.itemRepository.setItemGroup(dbItem, 'rides');
+        return dbItem;
+    }
     async importGeoJSONFile(link: string) {
         // const strData = await File.fromPath(link).read();
         // const str = (new java.lang.String(strData, 'UTF_8')).toString()

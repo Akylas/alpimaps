@@ -127,7 +127,7 @@ export const DEFAULT_NAVIGATION_AUTO_PAUSE = true;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE_SPEED = 0.5;
 export const DEFAULT_NAVIGATION_AUTO_PAUSE_DELAY = 120;
 export const DEFAULT_NAVIGATION_RECORD_STATS = true;
-export const DEFAULT_NAVIGATION_RECORD_TRACK = false;
+export const DEFAULT_NAVIGATION_RECORD_TRACK = true;
 /** the dock pages that are on, in order: ids of the route features' `navPages` */
 export const DEFAULT_NAVIGATION_PAGES = 'climb,profile,ahead,trip';
 export const DEFAULT_NAVIGATION_PAGE = '';

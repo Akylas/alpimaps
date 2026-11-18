@@ -1,5 +1,5 @@
 /** The rows of the weather card of the route page. Pure: nothing here may import NativeScript. */
-import type { WeatherAttribution } from '~/routeFeatures/weather/providers/provider';
+import type { PastWeatherSource, WeatherAttribution } from '~/routeFeatures/weather/providers/provider';
 import type { RideRow, WeatherRead, WeatherSummary } from '~/routeFeatures/weather/data/read';
 import { CLOUD_GRAY, RAIN_BLUE, SUNNY_CLOUD, SUN_COLOR } from '~/routeFeatures/weather/ui/colors';
 
@@ -7,9 +7,10 @@ export type WeatherRowData =
     | { type: 'summary'; summary: WeatherSummary }
     /** the samples of the ride, side by side */
     | { type: 'strip'; rows: RideRow[] }
-    | { type: 'footer'; attribution: WeatherAttribution; updatedAt: number; outdated: boolean; canUpdate: boolean }
+    /** `past`: the weather a ride that was done had, and where it was reconstructed from: the note says it is not measured */
+    | { type: 'footer'; attribution: WeatherAttribution; updatedAt: number; outdated: boolean; canUpdate: boolean; past?: PastWeatherSource }
     /** nothing fetched: what the first fetch sends, or why it cannot be asked */
-    | { type: 'fetch'; state: 'absent' | 'running' | 'failed' | 'offline'; points: number; decimals: number; provider: string };
+    | { type: 'fetch'; state: 'absent' | 'running' | 'failed' | 'offline'; points: number; decimals: number; provider: string; past?: boolean };
 
 export interface WeatherRowsInput {
     read: Pick<WeatherRead, 'rows' | 'summary'> | null;
