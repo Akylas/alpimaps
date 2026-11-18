@@ -128,8 +128,7 @@ export default class RideTraceModule extends MapModule {
         if (!this.layer) {
             const map = mapContext.getMap();
             this.dataSource = map.source('source.recording', { type: 'geojson', minZoom: 0, maxZoom: 24 });
-            // the style draws them in this order: both casings, then both lines
-            const committedCase = this.dataSource.createLayer('recording_case');
+                        const committedCase = this.dataSource.createLayer('recording_case');
             const tailCase = this.dataSource.createLayer('recording_tail_case');
             this.committedIndexes = [committedCase, this.dataSource.createLayer('recording')];
             this.tailIndexes = [tailCase, this.dataSource.createLayer('recording_tail')];

@@ -115,8 +115,8 @@
 }
 
 // the ride being recorded, as far as it went. Two parts with one look: the tail is redrawn on every position,
-// the rest only now and then (see RideTraceModule). The casings are layers of their own, drawn before both
-// lines: a casing in the line's layer would cut a notch in the end of the part under it. Named `recording*` on purpose: the terrain's no-drape filter
+// the rest only now and then (see RideTraceModule). The casings are layers of their own, drawn under both
+// lines (the first layer of voyager.json is the top one, so they come last there): a casing in the line's layer would cut a notch in the end of the part under it. Named `recording*` on purpose: the terrain's no-drape filter
 // (`recording.*`, whole name) keeps it live in 3D, where a baked layer would not follow the ride
 #recording_case['mapnik::geometry_type'=2],
 #recording_tail_case['mapnik::geometry_type'=2] {
