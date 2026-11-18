@@ -709,6 +709,7 @@ export class GeoHandler extends Handler {
         return this.enableLocation().then((r) => {
             this.endedSession = undefined;
             this.restoredSession = false;
+            this.recordTrack = recordTrack;
             this.currentSession = {
                 lastLoc: null,
                 state: SessionState.RUNNING,
